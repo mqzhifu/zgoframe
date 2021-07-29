@@ -1,0 +1,52 @@
+[jwt]
+key = "chukong"
+expiresTime = 3600
+bufferTime = 3600
+
+[zap]
+level = "info"
+dir = "/data/www/golang/src/logs"
+showLine = true
+linkName = "latest_log"
+LogInConsole = true
+format = "console"
+StacktraceKey = "stacktrace"
+Prefix = "zgo"
+encodeLevel = "LowercaseColorLevelEncoder"
+
+[redis]
+db-number = 1
+ip = "127.0.0.1"
+port = "6379"
+password =  ''
+
+[captcha]
+numberLength = 4
+imgWidth = 240
+imgHeight = 80
+
+
+[gin]
+ip = "127.0.0.1"
+port = "5555"
+staticPath ="/data/www/golang/src/zgoframe/static"
+reqLimitTimes= 100
+
+[mysql]
+ip = "127.0.0.1"
+port = "3306"
+config = "charset=utf8mb4&parseTime=True&loc=Local"
+db-name = "pg_account"
+username = "root"
+password = "mqzhifu"
+maxIdleConns = 10
+maxOpenConns = 100
+logMode = true
+logZap = false
+
+[system]
+dbType = "mysql"
+env = ""
+
+[casbin]
+modelPath = "/data/www/golang/src/zgoframe/static/data/rbac_model.conf"

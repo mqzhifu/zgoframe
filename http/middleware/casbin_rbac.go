@@ -2,7 +2,7 @@ package httpmiddleware
 
 import (
 	"github.com/gin-gonic/gin"
-	"zgoframe/global"
+	"zgoframe/core/global"
 	"zgoframe/http/request"
 	httpresponse "zgoframe/http/response"
 	"zgoframe/service"

@@ -1,10 +1,10 @@
 package v1
 
 import (
-	"zgoframe/global"
 	"github.com/gin-gonic/gin"
 	"github.com/mojocn/base64Captcha"
 	"go.uber.org/zap"
+	"zgoframe/core/global"
 	httpresponse "zgoframe/http/response"
 )
 

@@ -5,7 +5,7 @@ import (
 	uuid "github.com/satori/go.uuid"
 	"gorm.io/gorm"
 	"strconv"
-	"zgoframe/global"
+	"zgoframe/core/global"
 	"zgoframe/http/request"
 	"zgoframe/model"
 	"zgoframe/util"

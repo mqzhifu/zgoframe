@@ -4,7 +4,7 @@ import (
 	"errors"
 	"gorm.io/gorm"
 	"time"
-	"zgoframe/global"
+	"zgoframe/core/global"
 	"zgoframe/model"
 )
 

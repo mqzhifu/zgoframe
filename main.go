@@ -1,27 +1,76 @@
 package main
 
 import (
+	"context"
 	"flag"
-	"zgoframe/core"
-	"zlib"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
+	"zgoframe/core/global"
+	"zgoframe/core/initialize"
+	"zgoframe/util"
 )
 
-
 func main(){
-	zlib.LogLevelFlag = zlib.LOG_LEVEL_DEBUG
+	util.LogLevelFlag = util.LOG_LEVEL_DEBUG
 
-	envList := zlib.GetEnvList()
+	envList := util.GetEnvList()
 
 
-	configType 		:= flag.String("ct", core.DEFAULT_CONFIT_TYPE, "configType")
-	configFileName 	:= flag.String("cfn", core.DEFAULT_CONFIG_FILE_NAME, "configFileName")
+	configType 		:= flag.String("ct", global.DEFAULT_CONFIT_TYPE, "configType")
+	configFileName 	:= flag.String("cfn", global.DEFAULT_CONFIG_FILE_NAME, "configFileName")
 	env 			:= flag.String("e", "must require", "env")
 
 	flag.Parse()
 
-	if !zlib.CheckEnvExist(*env){
-		zlib.ExitPrint(  "env is err , list:",envList)
+	if !util.CheckEnvExist(*env){
+		util.ExitPrint(  "env is err , list:",envList)
 	}
 
-	core.Init(*env,*configType,*configFileName)
+	err := initialize.Init(*env,*configType,*configFileName)
+	if err != nil{
+		util.MyPrint("nitialize.Init err:",err)
+	}else{
+		mainCxt := context.Background()
+		cancelCTX ,cancelFunc := context.WithCancel(mainCxt)
+
+		DemonSignal(cancelFunc)
+		select {
+		case <-cancelCTX.Done():
+			Quit()
+		}
+	}
+	util.MyPrint("main end.")
+}
+func Quit(){
+	global.V.Zap.Warn("main quit")
+	initialize.Quit()
+}
+//信号 处理
+func DemonSignal(cancelFunc context.CancelFunc){
+	global.V.Zap.Warn("SIGNAL init : ")
+	c := make(chan os.Signal)
+	//syscall.SIGHUP :ssh 挂断会造成这个信号被捕获，先注释掉吧
+	signal.Notify(c, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT, syscall.SIGUSR1, syscall.SIGUSR2)
+	prefix := "SIGNAL-DEMON :"
+	for{
+		sign := <- c
+		global.V.Zap.Warn(prefix)
+		switch sign {
+		case syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT:
+			global.V.Zap.Warn(prefix+"SIGINT | SIGTERM | SIGQUIT  , exit!!!")
+			cancelFunc()
+			goto end
+		case syscall.SIGUSR1:
+			global.V.Zap.Warn(prefix+" usr1!!!")
+		case syscall.SIGUSR2:
+			global.V.Zap.Warn(prefix+" usr2!!!")
+		default:
+			global.V.Zap.Warn(prefix+" unknow!!!")
+		}
+		time.Sleep(time.Second * 1)
+	}
+end:
+	global.V.Zap.Warn("DemonSignal DONE.")
 }

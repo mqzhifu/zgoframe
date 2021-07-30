@@ -5,7 +5,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 	"time"
-	"zgoframe/global"
+	"zgoframe/core/global"
 	httpresponse "zgoframe/http/response"
 )
 
@@ -13,7 +13,7 @@ import (
 func RateMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// 如果ip请求连接数在两秒内超过5次，返回429并抛出error
-		ltime := global.C.Gin.ReqLimitTimes
+		ltime := global.C.Http.ReqLimitTimes
 		if ltime <= 0 {
 			ltime = 100
 		}

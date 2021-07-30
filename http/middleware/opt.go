@@ -6,11 +6,11 @@ import (
 	"go.uber.org/zap"
 	"io/ioutil"
 	"net/http"
-	"zgoframe/global"
-	"zgoframe/model"
-	"zgoframe/http/request"
 	"strconv"
 	"time"
+	"zgoframe/core/global"
+	"zgoframe/http/request"
+	"zgoframe/model"
 )
 
 func OperationRecord() gin.HandlerFunc {

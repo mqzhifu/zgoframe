@@ -2,8 +2,8 @@
 package model
 
 import (
-	"zgoframe/global"
 	"time"
+	"zgoframe/core/global"
 )
 
 // 如果含有time.Time 请自行import time包

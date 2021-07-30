@@ -1,7 +1,7 @@
 package model
 
 import (
-	"zgoframe/global"
+	"zgoframe/core/global"
 )
 
 type JwtBlacklist struct {

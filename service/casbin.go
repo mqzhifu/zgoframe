@@ -7,7 +7,7 @@ import (
 	gormadapter "github.com/casbin/gorm-adapter/v3"
 	_ "github.com/go-sql-driver/mysql"
 	"strings"
-	"zgoframe/global"
+	"zgoframe/core/global"
 	request "zgoframe/http/request"
 	"zgoframe/model"
 )

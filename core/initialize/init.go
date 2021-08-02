@@ -60,22 +60,22 @@ func Init(ENV string ,configType string , configFileName string )error{
 		StartHttpGin()
 	}
 
-	//if global.C.Etcd.Status  == global.CONFIG_STATUS_OPEN{
-	//	global.V.Etcd ,err = GetNewEtcd()
-	//	if err != nil{
-	//		util.MyPrint("GetNewEtcd err:",err)
-	//		return err
-	//	}
-	//}
-	//
-	//if global.C.Service.Status  == global.CONFIG_STATUS_OPEN{
-	//	//global.V.Service ,err = GetNewService()
-	//	//if err != nil{
-	//	//	util.MyPrint("GetNewEtcd err:",err)
-	//	//	return err
-	//	//}
-	//	global.V.Service  = GetNewService()
-	//}
+	if global.C.Etcd.Status  == global.CONFIG_STATUS_OPEN{
+		global.V.Etcd ,err = GetNewEtcd()
+		if err != nil{
+			util.MyPrint("GetNewEtcd err:",err)
+			return err
+		}
+	}
+
+	if global.C.Service.Status  == global.CONFIG_STATUS_OPEN{
+		//global.V.Service ,err = GetNewService()
+		//if err != nil{
+		//	util.MyPrint("GetNewEtcd err:",err)
+		//	return err
+		//}
+		global.V.Service  = GetNewService()
+	}
 
 
 
@@ -103,13 +103,14 @@ func GetNewApp()(util.App,error){
 
 func GetNewEtcd()(myEtcd *util.MyEtcd,err error){
 	option := util.EtcdOption{
-		AppName: global.V.App.Name,
-		AppENV: global.C.System.ENV,
-		FindEtcdUrl :global.C.Etcd.Url,
-		Username: global.C.Etcd.Username,
-		Password: global.C.Etcd.Port,
-		Ip: global.C.Etcd.Ip,
-		Port: global.C.Etcd.Port,
+		AppName		: global.V.App.Name,
+		AppENV		: global.C.System.ENV,
+		FindEtcdUrl :	global.C.Etcd.Url,
+		Username	: global.C.Etcd.Username,
+		Password	: global.C.Etcd.Port,
+		Ip			: global.C.Etcd.Ip,
+		Port		: global.C.Etcd.Port,
+		Log			: global.V.Zap,
 	}
 	myEtcd,err  = util.NewMyEtcdSdk(option)
 	return myEtcd,err

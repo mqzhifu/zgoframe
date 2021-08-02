@@ -10,8 +10,11 @@ import (
 	"zgoframe/core/global"
 	"zgoframe/core/initialize"
 	"zgoframe/util"
+	_ "zgoframe/docs"
 )
-
+// @title z golang 框架
+// @version 0.1
+// @description 拼装一个GO的基础框架方便日常使用
 func main(){
 	util.LogLevelFlag = util.LOG_LEVEL_DEBUG
 

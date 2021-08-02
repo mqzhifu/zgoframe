@@ -15,8 +15,9 @@ import (
 	"zgoframe/util"
 )
 
+// @Summary 用户登陆
+// @Description 用户登陆，验证，生成token
 // @Tags Base
-// @Summary 用户登录
 // @Produce  application/json
 // @Param data body request.Login true "用户名, 密码, 验证码"
 // @Success 200 {string} string "{"success":true,"data":{},"msg":"登陆成功"}"
@@ -109,7 +110,7 @@ func tokenNext(c *gin.Context, user model.User) {
 // @Tags SysUser
 // @Summary 用户注册账号
 // @Produce  application/json
-// @Param data body model.SysUser true "用户名, 昵称, 密码, 角色ID"
+// @Param data body model.User true "用户名, 昵称, 密码, 角色ID"
 // @Success 200 {string} string "{"success":true,"data":{},"msg":"注册成功"}"
 // @Router /user/register [post]
 func Register(c *gin.Context) {
@@ -236,7 +237,7 @@ func DeleteUser(c *gin.Context) {
 // @Security ApiKeyAuth
 // @accept application/json
 // @Produce application/json
-// @Param data body model.SysUser true "ID, 用户名, 昵称, 头像链接"
+// @Param data body model.User true "ID, 用户名, 昵称, 头像链接"
 // @Success 200 {string} string "{"success":true,"data":{},"msg":"设置成功"}"
 // @Router /user/setUserInfo [put]
 func SetUserInfo(c *gin.Context) {

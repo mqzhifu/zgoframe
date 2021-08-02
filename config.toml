@@ -70,7 +70,7 @@ ip = ""
 port = ""
 username = ""
 password = ""
-url = ""
+url = "http://114.116.212.202/account/dev/v1/sys/etcd"
 
 [service]
 status = "open"

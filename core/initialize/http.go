@@ -2,6 +2,8 @@ package initialize
 
 import (
 	"github.com/gin-gonic/gin"
+	ginSwagger "github.com/swaggo/gin-swagger"
+	"github.com/swaggo/gin-swagger/swaggerFiles"
 	httpmiddleware "zgoframe/http/middleware"
 	"zgoframe/util"
 	"context"
@@ -43,18 +45,14 @@ func GetNewHttpGIN()(*gin.Engine,error) {
 	ginRouter := gin.Default()
 	ginRouter.StaticFS("/static",http.Dir(global.C.Http.StaticPath))
 
-	//ginRouter.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	ginRouter.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	ginRouter.Use(httpmiddleware.Cors())
 
-	//PublicGroup := ginRouter.Group("")
-	//{
-	//	// 注册基础功能路由 不做鉴权
-	//	BaseRouter := PublicGroup.Group("base")
-	//	{
-	//		BaseRouter.POST("login", v1.Login)
-	//		BaseRouter.POST("captcha", v1.Captcha)
-	//	}
-	//}
+	PublicGroup := ginRouter.Group("")
+	{
+		router.InitBaseRouter(PublicGroup)
+
+	}
 
 	ginRouter.Use(httpmiddleware.RateMiddleware())
 	PrivateGroup := ginRouter.Group("")

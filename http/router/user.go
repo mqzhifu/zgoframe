@@ -17,3 +17,13 @@ func InitUserRouter(Router *gin.RouterGroup) {
 		UserRouter.PUT("setUserInfo", v1.SetUserInfo)            // 设置用户信息
 	}
 }
+
+
+func InitBaseRouter(Router *gin.RouterGroup) {
+	BaseRouter := Router.Group("user").Use(httpmiddleware.OperationRecord())
+	{
+		BaseRouter.POST("login", v1.Login)
+		BaseRouter.POST("captcha", v1.Captcha)
+	}
+}
+

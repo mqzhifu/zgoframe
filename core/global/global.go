@@ -21,6 +21,8 @@ type Global struct {
 	Etcd       *util.MyEtcd
 	HttpServer *http.Server
 	Service    *util.Service
+	Metric 		*util.MyMetrics
+	Grpc 		*util.MyGrpc
 }
 
 func New()*Global {

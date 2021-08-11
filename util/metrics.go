@@ -9,8 +9,18 @@ type MyMetrics struct {
 	Groups map[string]interface{}
 }
 
-func NewMyMetrics(){
+func NewMyMetrics()*MyMetrics{
+	myMetrics := new(MyMetrics)
+	return myMetrics
+}
 
+func (myMetrics *MyMetrics)Test(){
+	myMetrics.CreateCounter("paySuccess")
+	myMetrics.CounterInc("paySuccess")
+	myMetrics.CounterInc("paySuccess")
+
+	myMetrics.CreateGauge("payUser")
+	myMetrics.GaugeSet("payUser",100)
 }
 
 func (myMetrics *MyMetrics)GroupNameHasExist(name string)bool{

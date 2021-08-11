@@ -78,6 +78,7 @@ func Init(ENV string ,configType string , configFileName string )error{
 	}
 
 
+	global.V.Metric =  util.NewMyMetrics()
 
 	global.C.System.ENV = ENV
 

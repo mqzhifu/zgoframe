@@ -2,6 +2,7 @@ package util
 
 import (
 	"errors"
+	"fmt"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
@@ -25,12 +26,14 @@ func (myMetrics *MyMetrics)Test(){
 
 func (myMetrics *MyMetrics)GroupNameHasExist(name string)bool{
 	_,ok := myMetrics.Groups[name]
+	rs := false
 	if ok {
-		return true
-	}else{
-		return false
+		rs = true
 	}
+	fmt.Println("GroupNameHasExist "+ name + " rs:",rs)
+	return rs
 }
+
 func (myMetrics *MyMetrics)CreateGauge(name string )error{
 	if myMetrics.GroupNameHasExist(name) {
 		return errors.New("GroupNameHasExist:"+name)

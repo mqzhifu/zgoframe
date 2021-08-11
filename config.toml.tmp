@@ -1,0 +1,76 @@
+[system]
+dbType = "mysql"
+env = ""
+appId = 5
+
+[jwt]
+status = "open"
+key = "chukong"
+expiresTime = 3600
+bufferTime = 3600
+
+
+[viper]
+status = "open"
+watch = "open"
+
+[zap]
+status = "open"
+level = "info"
+dir = "/data/www/golang/src/logs"
+showLine = true
+linkName = "latest_log"
+LogInConsole = true
+format = "console"
+StacktraceKey = "stacktrace"
+Prefix = "zgo"
+encodeLevel = "LowercaseColorLevelEncoder"
+
+[redis]
+status = "open"
+db-number = 1
+ip = "127.0.0.1"
+port = "6379"
+password =  ''
+
+[captcha]
+status = "open"
+numberLength = 4
+imgWidth = 240
+imgHeight = 80
+
+
+[http]
+status = "open"
+ip = "127.0.0.1"
+port = "5555"
+staticPath ="/data/www/golang/src/zgoframe/static"
+reqLimitTimes= 100
+
+[mysql]
+status = "open"
+ip = "127.0.0.1"
+port = "3306"
+config = "charset=utf8mb4&parseTime=True&loc=Local"
+db-name = "pg_account"
+username = "root"
+password = "mqzhifu"
+maxIdleConns = 10
+maxOpenConns = 100
+logMode = true
+logZap = false
+
+[casbin]
+status = "open"
+modelPath = "/data/www/golang/src/zgoframe/static/data/rbac_model.conf"
+
+[etcd]
+status = "open"
+ip = ""
+port = ""
+username = ""
+password = ""
+url = "http://114.116.212.202/account/dev/v1/sys/etcd"
+
+[service]
+status = "open"

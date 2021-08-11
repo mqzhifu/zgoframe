@@ -12,6 +12,7 @@ type MyMetrics struct {
 
 func NewMyMetrics()*MyMetrics{
 	myMetrics := new(MyMetrics)
+	myMetrics.Groups = make(map[string]interface{})
 	return myMetrics
 }
 

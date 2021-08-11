@@ -80,7 +80,7 @@ func Init(ENV string ,configType string , configFileName string )error{
 
 	global.V.Metric =  util.NewMyMetrics()
 	global.V.Metric.Test()
-	
+
 	global.C.System.ENV = ENV
 
 	return nil

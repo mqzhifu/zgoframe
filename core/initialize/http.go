@@ -48,6 +48,14 @@ func GetNewHttpGIN()(*gin.Engine,error) {
 
 
 	ginRouter.GET("/metrics", gin.WrapH(promhttp.Handler()))
+	
+	ginRouter.GET("/metrics/count", func(c *gin.Context) {
+		global.V.Metric.CounterInc("paySuccess")
+	})
+
+	ginRouter.GET("/metrics/gauge", func(c *gin.Context) {
+		global.V.Metric.CounterInc("payUser")
+	})
 
 
 	//var AccessCounter = prometheus.NewCounterVec(

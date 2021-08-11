@@ -1,0 +1,52 @@
+syntax = "proto3";
+
+import "proto/common.proto";
+
+package pb;
+option go_package ="./;pb";
+
+service First {
+  rpc SayHello (RequestRegPlayer) returns (ResponseReg) {}
+  rpc SayHi (RequestRegPlayer) returns (ResponseReg) {}
+}
+
+
+
+message RequestRegPlayer{
+    int32               add_time    = 1;
+    repeated    Player              player_list = 3;
+    Player              player_info = 4;
+    map<fixed64,Channel> channel_map = 5;
+}
+
+
+message Player{
+    uint64       id             = 1;
+    bytes       role_name       = 2;
+    string      nickname        = 3;
+    fixed32     status          = 4;
+    float       score           = 5;
+    PhoneType   phone_type      = 6;
+    bool        sex            = 7;
+    sint32      level           = 8;
+}
+
+message Channel{
+    sint64 id = 1;
+    string name = 2;
+}
+
+enum PhoneType {
+    //allow_alias = true;
+    mobile = 0;
+    home = 1;
+    word = 2;
+}
+
+message ResponseReg{
+    bool    rs  = 1;
+}
+
+message MyHeader {
+    Common common = 1;
+}

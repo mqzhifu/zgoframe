@@ -1,16 +1,17 @@
 package initialize
 
 import (
+	"context"
 	"github.com/gin-gonic/gin"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"github.com/swaggo/gin-swagger/swaggerFiles"
-	httpmiddleware "zgoframe/http/middleware"
-	"zgoframe/util"
-	"context"
 	"net/http"
 	"time"
 	"zgoframe/core/global"
+	httpmiddleware "zgoframe/http/middleware"
 	"zgoframe/http/router"
+	"zgoframe/util"
 )
 
 func StartHttpGin(){
@@ -44,6 +45,55 @@ func HttpServerShutdown(){
 func GetNewHttpGIN()(*gin.Engine,error) {
 	ginRouter := gin.Default()
 	ginRouter.StaticFS("/static",http.Dir(global.C.Http.StaticPath))
+
+
+	ginRouter.GET("/metrics", gin.WrapH(promhttp.Handler()))
+
+
+	//var AccessCounter = prometheus.NewCounterVec(
+	//	prometheus.CounterOpts{
+	//		Name: "grpc_request_count",
+	//	},
+	//	[]string{"service1","rs"},
+	//)
+	//
+	////var AccessCounter = prometheus.NewCounterVec(
+	////	prometheus.CounterOpts{
+	////		Name: "api_requests_total",
+	////	},
+	////	[]string{"method", "path"},
+	////)
+	//
+	//prometheus.MustRegister(AccessCounter)
+	//
+	//
+	//ginRouter.GET("/counter", func(c *gin.Context) {
+	//	//purl, _ := url.Parse(c.Request.RequestURI)
+	//	//AccessCounter.With(prometheus.Labels{
+	//	//	"service1": c.Request.Method,
+	//	//	"rs":   purl.Path,
+	//	//}).Add(1)
+	//
+	//	AccessCounter.With(prometheus.Labels{
+	//		"service1": "s1",
+	//		"rs":   "success",
+	//	}).Add(1)
+	//
+	//
+	//	AccessCounter.With(prometheus.Labels{
+	//		"service1": "s1",
+	//		"rs":   "failed",
+	//	}).Add(1)
+	//
+	//
+	//
+	//})
+
+
+
+
+
+
 
 	ginRouter.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	ginRouter.Use(httpmiddleware.Cors())

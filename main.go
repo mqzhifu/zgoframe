@@ -11,6 +11,7 @@ import (
 	"zgoframe/core/initialize"
 	"zgoframe/util"
 	_ "zgoframe/docs"
+
 )
 // @title z golang 框架
 // @version 0.1
@@ -24,8 +25,12 @@ func main(){
 	configType 		:= flag.String("ct", global.DEFAULT_CONFIT_TYPE, "configType")
 	configFileName 	:= flag.String("cfn", global.DEFAULT_CONFIG_FILE_NAME, "configFileName")
 	env 			:= flag.String("e", "must require", "env")
+	testFlag 		:= flag.String("t", "", "testFlag")
 
 	flag.Parse()
+
+	test(*testFlag)
+	//return
 
 	if !util.CheckEnvExist(*env){
 		util.ExitPrint(  "env is err , list:",envList)
@@ -46,6 +51,15 @@ func main(){
 	}
 	util.MyPrint("main end.")
 }
+
+func test(testFlag string ){
+	//if testFlag == ""{
+	//	util.TestGrpcServer()
+	//}else{
+	//	util.TestGrpcClient()
+	//}
+}
+
 func Quit(){
 	global.V.Zap.Warn("main quit")
 	initialize.Quit()

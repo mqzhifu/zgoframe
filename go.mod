@@ -2,48 +2,85 @@ module zgoframe
 
 go 1.16
 
+replace github.com/coreos/bbolt v1.3.4 => go.etcd.io/bbolt v1.3.4
+
+replace google.golang.org/grpc => google.golang.org/grpc v1.26.0
+
+//replace go.etcd.io/bbolt v1.3.4 => github.com/coreos/bbolt v1.3.4
+
 require (
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751
+	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/casbin/casbin v1.9.1
-	github.com/casbin/casbin/v2 v2.11.0
-	github.com/casbin/gorm-adapter/v3 v3.0.2
+	github.com/casbin/casbin/v2 v2.35.0
+	github.com/casbin/gorm-adapter/v3 v3.3.3
 	github.com/coreos/bbolt v1.3.4 // indirect
 	github.com/coreos/etcd v3.3.25+incompatible // indirect
-	github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf // indirect
+	github.com/coreos/go-semver v0.3.0 // indirect
 	github.com/coreos/pkg v0.0.0-20180928190104-399ea9e2e55f // indirect
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/dustin/go-humanize v1.0.0 // indirect
 	github.com/fsnotify/fsnotify v1.4.9
-	github.com/gin-gonic/gin v1.6.3
-	github.com/go-redis/redis v6.15.7+incompatible
-	github.com/go-sql-driver/mysql v1.5.0
+	github.com/gin-contrib/sse v0.1.0 // indirect
+	github.com/gin-gonic/gin v1.3.0
+	github.com/go-redis/redis v6.15.9+incompatible
+	github.com/go-sql-driver/mysql v1.6.0
+	github.com/gogo/protobuf v1.3.2 // indirect
+	github.com/golang/groupcache v0.0.0-20200121045136-8c9f03a8e57e // indirect
+	github.com/golang/mock v1.5.0 // indirect
+	github.com/golang/protobuf v1.3.2
+	github.com/google/btree v1.0.0 // indirect
+	github.com/google/go-cmp v0.5.5 // indirect
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/gorilla/websocket v1.4.2 // indirect
-	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0 // indirect
+	github.com/grpc-ecosystem/go-grpc-middleware v1.0.0 // indirect
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0 // indirect
+	github.com/grpc-ecosystem/grpc-gateway v1.7.0 // indirect
 	github.com/jonboulle/clockwork v0.2.2 // indirect
-	github.com/lestrrat-go/file-rotatelogs v2.3.0+incompatible
+	github.com/json-iterator/go v1.1.11 // indirect
+	github.com/lestrrat-go/file-rotatelogs v2.4.0+incompatible
 	github.com/lestrrat-go/strftime v1.0.5 // indirect
-	github.com/mojocn/base64Captcha v1.3.1
-	github.com/onsi/gomega v1.14.0 // indirect
-	github.com/prometheus/client_golang v1.11.0 // indirect
+	github.com/magiconair/properties v1.8.5 // indirect
+	github.com/mitchellh/mapstructure v1.4.1 // indirect
+	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
+	github.com/modern-go/reflect2 v1.0.1 // indirect
+	github.com/mojocn/base64Captcha v1.3.5
+	github.com/nxadm/tail v1.4.8 // indirect
+	github.com/onsi/ginkgo v1.12.1 // indirect
+	github.com/onsi/gomega v1.10.0 // indirect
+	github.com/pelletier/go-toml v1.9.3 // indirect
+	github.com/pkg/errors v0.9.1 // indirect
+	github.com/prometheus/client_golang v0.9.2
+	github.com/prometheus/client_model v0.2.0 // indirect
+	github.com/prometheus/common v0.4.1 // indirect
+	github.com/prometheus/procfs v0.6.0 // indirect
 	github.com/satori/go.uuid v1.2.0
+	github.com/sirupsen/logrus v1.6.0 // indirect
 	github.com/soheilhy/cmux v0.1.5 // indirect
-	github.com/spf13/viper v1.8.1
-	github.com/swaggo/gin-swagger v1.3.0
-	github.com/swaggo/swag v1.6.7
+	github.com/spf13/afero v1.6.0 // indirect
+	github.com/spf13/cast v1.3.1 // indirect
+	github.com/spf13/jwalterweatherman v1.1.0 // indirect
+	github.com/spf13/pflag v1.0.5 // indirect
+	github.com/spf13/viper v1.3.2
+	github.com/swaggo/gin-swagger v1.1.0
+	github.com/swaggo/swag v1.7.0
 	github.com/tmc/grpc-websocket-proxy v0.0.0-20201229170055-e5319fda7802 // indirect
+	github.com/ugorji/go v1.1.13 // indirect
 	github.com/xiang90/probing v0.0.0-20190116061207-43a291ad63a2 // indirect
 	go.etcd.io/etcd v3.3.25+incompatible
-	go.uber.org/zap v1.17.0
-	gorm.io/driver/mysql v0.3.0
-	gorm.io/gorm v1.20.9
+	go.uber.org/zap v1.18.1
+	golang.org/x/image v0.0.0-20190802002840-cff245a6509b // indirect
+	golang.org/x/lint v0.0.0-20210508222113-6edffad5e616 // indirect
+	golang.org/x/net v0.0.0-20210428140749-89ef3d95e781 // indirect
+	golang.org/x/sys v0.0.0-20210603081109-ebe580a85c40 // indirect
+	golang.org/x/time v0.0.0-20191024005414-555d28b269f0 // indirect
+	golang.org/x/tools v0.1.5 // indirect
+	google.golang.org/grpc v1.39.0
+	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
+	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
+	gopkg.in/yaml.v2 v2.4.0 // indirect
+	gorm.io/driver/mysql v1.1.1
+	gorm.io/gorm v1.21.12
 	sigs.k8s.io/yaml v1.2.0 // indirect
 
 )
-
-replace github.com/coreos/bbolt v1.3.4 => go.etcd.io/bbolt v1.3.4
-
-//replace go.etcd.io/bbolt v1.3.4 => github.com/coreos/bbolt v1.3.4
-
-replace google.golang.org/grpc => google.golang.org/grpc v1.26.0

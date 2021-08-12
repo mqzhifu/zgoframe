@@ -19,6 +19,7 @@ steps:
       - go mod tidy
       - go mod download
       - cp config.toml.tmp config.toml
+      - cat config.toml
       - go run main.go -e test -dep 1
 
 

@@ -7,7 +7,8 @@ clone:
 steps:
   - name: test
     image: golang:1.16.2
-    environment:  { from_secret: http_put_auth }
+    environment:
+      HTTP_PUT_AUTH: { from_secret: http_put_auth }
     commands:
       - go version
       - pwd

@@ -1,6 +1,9 @@
 kind: pipeline
 name: default-frame
 
+clone:
+  disable: true
+  
 steps:
   - name: test
     image: golang
@@ -8,4 +11,3 @@ steps:
       - go test
 
 
-  

@@ -83,4 +83,4 @@ port = "9093"
 uri = "/api/v2/alerts"
 
 [metrics]
-status = open
+status = "open"

@@ -6,7 +6,7 @@ clone:
 
 steps:
   - name: test
-    image: golang
+    image: golang1.16.2
     commands:
       - go version
       - pwd
@@ -14,6 +14,7 @@ steps:
       - ls -l
       - cd zgoframe
       - ls -l
+      - go tidy
 
 
 

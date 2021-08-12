@@ -7,6 +7,7 @@ clone:
 steps:
   - name: test
     image: golang:1.16.2
+    environment:  { from_secret: http_put_auth }
     commands:
       - go version
       - pwd
@@ -23,7 +24,15 @@ steps:
       - echo "mkdir logs & chmod 777 logs"
       - mkdir logs
       - chmod 777 logs
-      - go run main.go -e test -dep 1
+
+      - echo "process exec ok~"
+      - export CI_COMMIT_TIME=$(git show -s --format=%ct $CI_COMMIT_SHA)
+      - export CI_COMMIT_TIME_FORMATTED=`TZ='WAUST-8WAUDT' date -d @"$CI_COMMIT_TIME" "+%Y%m%dT%H%M%S"`
+      - export APP_NAME_FULL="$LINK_NAME-$CI_COMMIT_TIME_FORMATTED-$CI_COMMIT_SHORT_SHA"
+      - echo $APP_NAME_FULL
+      - pwd
+      - ls -l
+      - echo $HTTP_PUT_AUTH
 
 
 

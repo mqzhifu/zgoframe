@@ -1,7 +1,0 @@
-kind: pipeline
-name: default
-steps:
-  -   name: Hello World
-      image: centos
-      commands:
-        - echo Hello World

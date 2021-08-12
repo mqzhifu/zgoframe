@@ -8,7 +8,7 @@ steps:
   - name: test
     image: golang:1.16.2
     settings:
-      - DRONE_OPEN:imenvvar
+      - DRONE_OPEN: imenvvar
     commands:
       - go version
       - pwd

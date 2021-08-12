@@ -41,6 +41,7 @@ imgWidth = 240
 imgHeight = 80
 
 
+
 [http]
 status = "open"
 ip = "127.0.0.1"

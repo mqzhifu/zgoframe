@@ -18,7 +18,7 @@ steps:
       - go env -w GOPROXY=https://goproxy.cn,direct
       - go mod tidy
       - go mod download
-      - gp run main.go -e test -dep 1
+      - go run main.go -e test -dep 1
 
 
 

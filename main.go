@@ -22,10 +22,12 @@ func main(){
 	envList := util.GetEnvList()
 
 
-	configType 		:= flag.String("ct", global.DEFAULT_CONFIT_TYPE, "configType")
+	configSourceType 		:= flag.String("cs", "file", "configSource:file or etcd")
+	configFileType 		:= flag.String("ct", global.DEFAULT_CONFIT_TYPE, "configFileType")
 	configFileName 	:= flag.String("cfn", global.DEFAULT_CONFIG_FILE_NAME, "configFileName")
-	env 			:= flag.String("e", "must require", "env")
-	testFlag 		:= flag.String("t", "", "testFlag")
+	etcdUrl 	:= flag.String("etl", "", "get etcd config url")
+	env 			:= flag.String("e", "must require", "env:loca test pre dev online")
+	testFlag 		:= flag.String("t", "", "testFlag:empty or 1")
 
 	flag.Parse()
 
@@ -36,7 +38,7 @@ func main(){
 		util.ExitPrint(  "env is err , list:",envList)
 	}
 
-	err := initialize.Init(*env,*configType,*configFileName)
+	err := initialize.Init(*env,*configFileType,*configFileName,*configSourceType,*etcdUrl)
 	if err != nil{
 		util.MyPrint("nitialize.Init err:",err)
 	}else{

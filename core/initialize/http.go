@@ -3,7 +3,6 @@ package initialize
 import (
 	"context"
 	"github.com/gin-gonic/gin"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"github.com/swaggo/gin-swagger/swaggerFiles"
 	"net/http"
@@ -47,15 +46,7 @@ func GetNewHttpGIN()(*gin.Engine,error) {
 	ginRouter.StaticFS("/static",http.Dir(global.C.Http.StaticPath))
 
 
-	ginRouter.GET("/metrics", gin.WrapH(promhttp.Handler()))
-	
-	ginRouter.GET("/metrics/count", func(c *gin.Context) {
-		global.V.Metric.CounterInc("paySuccess")
-	})
 
-	ginRouter.GET("/metrics/gauge", func(c *gin.Context) {
-		global.V.Metric.CounterInc("payUser")
-	})
 
 
 	//var AccessCounter = prometheus.NewCounterVec(

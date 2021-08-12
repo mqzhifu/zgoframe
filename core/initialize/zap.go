@@ -1,6 +1,7 @@
 package initialize
 
 import (
+	"fmt"
 	zaprotatelogs "github.com/lestrrat-go/file-rotatelogs"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -13,7 +14,7 @@ import (
 
 //以下均是，zap-log 初始化
 var level zapcore.Level
-func GetNewZapLog() (logger *zap.Logger,err error) {
+func GetNewZapLog(alert *util.Alert) (logger *zap.Logger,err error) {
 	if ok, _ := util.PathExists(global.C.Zap.Dir); !ok { // 判断是否有Director文件夹
 		util.MyPrint("create directory:", global.C.Zap.Dir)
 		err = os.Mkdir(global.C.Zap.Dir, os.ModePerm)
@@ -23,28 +24,40 @@ func GetNewZapLog() (logger *zap.Logger,err error) {
 	}
 
 	switch global.C.Zap.Level { // 初始化配置文件的Level
-	case "debug":
-		level = zap.DebugLevel
-	case "info":
-		level = zap.InfoLevel
-	case "warn":
-		level = zap.WarnLevel
-	case "error":
-		level = zap.ErrorLevel
-	case "dpanic":
-		level = zap.DPanicLevel
-	case "panic":
-		level = zap.PanicLevel
-	case "fatal":
-		level = zap.FatalLevel
-	default:
-		level = zap.InfoLevel
+		case "debug":
+			level = zap.DebugLevel
+		case "info":
+			level = zap.InfoLevel
+		case "warn":
+			level = zap.WarnLevel
+		case "error":
+			level = zap.ErrorLevel
+		case "dpanic":
+			level = zap.DPanicLevel
+		case "panic":
+			level = zap.PanicLevel
+		case "fatal":
+			level = zap.FatalLevel
+		default:
+			level = zap.InfoLevel
 	}
 
+	hook := zap.Hooks(func(entry zapcore.Entry) error {
+		if !global.C.Zap.AutoAlert{
+			//alert.Push()
+			return nil
+		}
+		num := zap.ErrorLevel | zap.PanicLevel |  zap.FatalLevel |  zap.DPanicLevel
+		if entry.Level & num == 0{
+			fmt.Println("need alert...")
+		}
+		return nil
+	})
+
 	if level == zap.DebugLevel || level == zap.ErrorLevel {
-		logger = zap.New(getEncoderCore(), zap.AddStacktrace(level))
+		logger = zap.New(getEncoderCore(), zap.AddStacktrace(level),hook)
 	} else {
-		logger = zap.New(getEncoderCore())
+		logger = zap.New(getEncoderCore(),hook)
 	}
 	if global.C.Zap.ShowLine{
 		logger = logger.WithOptions(zap.AddCaller())

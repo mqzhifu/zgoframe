@@ -12,6 +12,8 @@ type Config struct {
 	Viper 	Viper
 	Etcd 	Etcd
 	Service Service
+	Alert Alert
+	Metrics Metrics
 }
 
 type ConfigMysql struct {
@@ -66,6 +68,7 @@ type Zap struct {
 	StacktraceKey string
 	Prefix string
 	EncodeLevel string
+	AutoAlert bool
 }
 
 type Captcha struct {
@@ -99,4 +102,15 @@ type Etcd struct{
 
 type Service struct {
 	Status string
+}
+
+type Metrics struct {
+	Status string
+}
+
+type Alert struct {
+	Status string
+	Ip string
+	Port string
+	Uri string
 }

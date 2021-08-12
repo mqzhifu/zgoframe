@@ -37,3 +37,8 @@ pkg.go.com 上的包是:v3.3.25+incompatible
 go get -u github.com/golang/protobuf/protoc-gen-go@v1.2.0
 go get github.com/golang/protobuf/protoc-gen-go@v1.3.2
 
+
+必须有的组件：
+配置类->viper
+APP->所有项目必须得有APPID ，统计管理
+日志->zap

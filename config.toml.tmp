@@ -25,6 +25,7 @@ format = "console"
 StacktraceKey = "stacktrace"
 Prefix = "zgo"
 encodeLevel = "LowercaseColorLevelEncoder"
+auoAlert = true
 
 [redis]
 status = "open"
@@ -74,3 +75,12 @@ url = "http://114.116.212.202/account/dev/v1/sys/etcd"
 
 [service]
 status = "open"
+
+[alert]
+status = "open"
+host = "127.0.0.1"
+port = "9093"
+uri = "/api/v2/alerts"
+
+[metrics]
+status = open

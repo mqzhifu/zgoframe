@@ -23,6 +23,7 @@ type Global struct {
 	Service    *util.Service
 	Metric 		*util.MyMetrics
 	Grpc 		*util.MyGrpc
+	Alert 		*util.Alert
 }
 
 func New()*Global {

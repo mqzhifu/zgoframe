@@ -51,7 +51,7 @@ reqLimitTimes= 100
 
 [mysql]
 status = "open"
-ip = "127.0.0.1"
+ip = "172.20.39.109"
 port = "3306"
 config = "charset=utf8mb4&parseTime=True&loc=Local"
 db-name = "pg_account"
@@ -67,7 +67,7 @@ status = "open"
 modelPath = "static/data/rbac_model.conf"
 
 [etcd]
-status = "open"
+status = "close"
 ip = ""
 port = ""
 username = ""

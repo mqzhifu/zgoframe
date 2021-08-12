@@ -7,8 +7,8 @@ clone:
 steps:
   - name: test
     image: golang:1.16.2
-    environment:
-      - DRONE_OPEN=imenvvar
+    settings:
+      - DRONE_OPEN:imenvvar
     commands:
       - go version
       - pwd

@@ -11,5 +11,6 @@ steps:
       - go version
       - pwd
       - git clone git://github.com/mqzhifu/zgoframe.git
+      - ls -l
 
 

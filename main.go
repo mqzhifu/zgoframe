@@ -29,6 +29,9 @@ func main(){
 	env 			:= flag.String("e", "must require", "env:loca test pre dev online")
 	testFlag 		:= flag.String("t", "", "testFlag:empty or 1")
 
+
+	deploy 	:= flag.String("dep", "", "deploy")
+
 	flag.Parse()
 
 	test(*testFlag)
@@ -45,11 +48,17 @@ func main(){
 		mainCxt := context.Background()
 		cancelCTX ,cancelFunc := context.WithCancel(mainCxt)
 
-		DemonSignal(cancelFunc)
-		select {
-		case <-cancelCTX.Done():
-			Quit()
+		if *deploy == ""{
+			DemonSignal(cancelFunc)
+			select {
+			case <-cancelCTX.Done():
+				Quit()
+			}
+		}else{
+			time.Sleep(5)
 		}
+
+
 	}
 	util.MyPrint("main end.")
 }

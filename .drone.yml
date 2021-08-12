@@ -14,7 +14,8 @@ steps:
       - ls -l
       - cd zgoframe
       - ls -l
-      - go tidy
+      - go mod tidy
+      - gp run main.go -e test -dep 1
 
 
 

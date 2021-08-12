@@ -31,7 +31,7 @@ auoAlert = true
 status = "open"
 db-number = 1
 ip = "127.0.0.1"
-port = "6379"
+port = "6370"
 password =  ''
 
 [captcha]

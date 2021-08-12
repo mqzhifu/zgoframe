@@ -7,8 +7,8 @@ clone:
 steps:
   - name: test
     image: golang:1.16.2
-    settings:
-      - DRONE_OPEN: imenvvar
+    environment:
+      USERNAME: 1
     commands:
       - go version
       - pwd
@@ -33,7 +33,7 @@ steps:
       - echo $APP_NAME_FULL
       - pwd
       - ls -l
-      - echo $DRONE_OPEN
+      - echo $USERNAME
 
 
 

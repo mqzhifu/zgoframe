@@ -71,6 +71,7 @@ func Init(ENV string ,configType string , configFileName string,configSourceType
 	}
 	//etcd
 	if global.C.Etcd.Status  == global.CONFIG_STATUS_OPEN{
+		util.ExitPrint(12341231234)
 		global.V.Etcd ,err = GetNewEtcd()
 		if err != nil{
 			util.MyPrint("GetNewEtcd err:",err)
@@ -79,8 +80,9 @@ func Init(ENV string ,configType string , configFileName string,configSourceType
 	}
 
 	if global.C.Service.Status  == global.CONFIG_STATUS_OPEN{
-		global.V.Service = GetNewService()
-		global.V.Service  = GetNewService()
+		//这个依赖etcd 我还没想好如何操作
+		//global.V.Service = GetNewService()
+		//global.V.Service  = GetNewService()
 	}
 	//metrics
 	if global.C.Metrics.Status == global.CONFIG_STATUS_OPEN{

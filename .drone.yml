@@ -6,7 +6,7 @@ clone:
 
 steps:
   - name: test
-    image: golang1.16.2
+    image: golang:1.16.2
     commands:
       - go version
       - pwd

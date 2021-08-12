@@ -18,6 +18,7 @@ steps:
       - go env -w GOPROXY=https://goproxy.cn,direct
       - go mod tidy
       - go mod download
+      - cp config.toml.tmp config.toml
       - go run main.go -e test -dep 1
 
 

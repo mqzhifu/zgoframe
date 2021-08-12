@@ -8,7 +8,7 @@ steps:
   - name: test
     image: golang:1.16.2
     environment:
-      HTTP_PUT_AUTH: { from_secret: http_put_auth }
+      - DRONE_OPEN=imenvvar
     commands:
       - go version
       - pwd
@@ -33,7 +33,7 @@ steps:
       - echo $APP_NAME_FULL
       - pwd
       - ls -l
-      - echo $HTTP_PUT_AUTH
+      - echo $DRONE_OPEN
 
 
 

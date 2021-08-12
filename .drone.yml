@@ -3,11 +3,13 @@ name: default-frame
 
 clone:
   disable: true
-  
+
 steps:
   - name: test
     image: golang
     commands:
-      - go test
+      - go version
+      - pwd
+      - ll
 
 

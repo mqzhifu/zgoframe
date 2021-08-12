@@ -20,6 +20,8 @@ steps:
       - go mod download
       - cp config.toml.tmp config.toml
       - cat config.toml
+      - mkdir logs
+      - chmod 777 logs
       - go run main.go -e test -dep 1
 
 

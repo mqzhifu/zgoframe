@@ -1,11 +1,9 @@
-pipeline:
-  build:
-     image: golang:alpine
-     # pull: true
-     environment:
-       - KEY=VALUE
-     secrets: [key1, key2]
-     commands:
-       - echo $$KEY
-       - pwd
-       - ls
+kind: pipeline
+name: default-frame
+
+steps:
+  - name: test
+    image: golang
+    commands:
+      - go test
+  

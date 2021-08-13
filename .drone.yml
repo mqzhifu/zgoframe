@@ -43,6 +43,7 @@ steps:
       - scp -r $PROJECT_NAME root@114.116.212.202:$TARGET_GIT_PROJECT_DIR
       - ssh root@114.116.212.202 "ls -l /www/git_project/$PROJECT_NAME"
       - ssh root@114.116.212.202 "go version"
+      - ssh root@114.116.212.202 "go env -w GO111MODULE=on ; go env -w GOPROXY=https://goproxy.cn,direct ; go mod tidy ; go mod download"
 
 
 

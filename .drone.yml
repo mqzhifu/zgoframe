@@ -12,7 +12,6 @@ steps:
       ENV: test
       PROJECT_NAME: zgoframe
       TARGET_GIT_PROJECT_DIR: /www/git_project
-      TARGET_GIT_PROJECT_BUILD_ORI_DIR: $TARGET_GIT_PROJECT_DIR/$PROJECT_NAME
       GIT_ORI_URL: git://github.com/mqzhifu
 
       KNOWN_HOST_202:
@@ -21,6 +20,7 @@ steps:
         from_secret: ID_RSA_202
     commands:
       - id
+      - export  TARGET_GIT_PROJECT_BUILD_ORI_DIR=$TARGET_GIT_PROJECT_DIR/$PROJECT_NAME
       - echo "$ENV $GIT_ORI_URL  $PROJECT_NAME $TARGET_GIT_PROJECT_DIR $TARGET_GIT_PROJECT_BUILD_ORI_DIR"
       - mkdir -p /root/.ssh
       - echo "$KNOWN_HOST_202" > /root/.ssh/known_hosts

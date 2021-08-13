@@ -13,13 +13,19 @@ steps:
       ID_RAS:
         from_secret: ID_RSA_202
     commands:
-      - go version
       - id
       - echo $ID_RAS
       - mkdir -p /root/.ssh
       - echo "$KNOWN_HOST_202" > /root/.ssh/known_hosts
       - echo "$ID_RAS" > /root/.ssh/id_rsa
       - chmod 600 /root/.ssh/id_rsa && chmod 700 /root/.ssh
-      - ssh root@114.116.212.202 "ls -l /www"
 
-
+      - pwd
+      - go version
+      - git clone git://github.com/mqzhifu/zgoframe.git
+      - ls -l
+      - cd zgoframe
+      - ls -l
+      - cd ..
+      - ls -l
+      - scp -r zgoframe root@114.116.212.202:/www/git_project

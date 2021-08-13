@@ -8,24 +8,34 @@ steps:
   - name: test
     image: golang:1.16.2
     environment:
+      PROJECT_NAME: zgoframe
       ENV: test
-      KNOWN_HOST_202: 114.116.212.202 ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBOdyMWzDditH6hBI3BrB13VTxDMo9BZfICToB5kQDss1C0gLGuJxQNl97tDvzJ0I/g2VY4GJNJOxTJhdoC4Rgkw=
-      ID_RAS:
+      KNOWN_HOST_202:
+        from_secret: KNOWN_HOST_202
+      ID_RSA_202:
         from_secret: ID_RSA_202
     commands:
       - id
       - echo $ID_RAS
       - mkdir -p /root/.ssh
       - echo "$KNOWN_HOST_202" > /root/.ssh/known_hosts
-      - echo "$ID_RAS" > /root/.ssh/id_rsa
+      - echo "$ID_RSA_202" > /root/.ssh/id_rsa
       - chmod 600 /root/.ssh/id_rsa && chmod 700 /root/.ssh
 
       - pwd
       - go version
-      - git clone git://github.com/mqzhifu/zgoframe.git
+      - git clone git://github.com/mqzhifu/$PROJECT_NAME.git
       - ls -l
-      - cd zgoframe
+      - cd $PROJECT_NAME
       - ls -l
       - cd ..
       - ls -l
-      - scp -r zgoframe root@114.116.212.202:/www/git_project
+
+      - export CI_COMMIT_TIME=$(git show -s --format=%ct $CI_COMMIT_SHA)
+      - export CI_COMMIT_TIME_FORMATTED=`TZ='WAUST-8WAUDT' date -d @"$CI_COMMIT_TIME" "+%Y%m%dT%H%M%S"`
+      - export APP_NAME_FULL="$CI_COMMIT_TIME_FORMATTED-$CI_COMMIT_SHORT_SHA"
+      - echo $APP_NAME_FULL
+
+
+
+

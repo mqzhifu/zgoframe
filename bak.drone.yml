@@ -11,8 +11,7 @@ steps:
       ENV: test
     commands:
 
-
-  if [ "$(ps -ef |grep msgServer|grep -v grep|wc -l)" -gt 0 ];then echo "process exist ,need kill "; ps aux|grep zgoframe|grep -v grep|awk '{print $2}'|xargs kill   ;else echo process not exist;fi
+  - ssh root@"$SERVER_HOST" 'if [ "$(ps -ef |grep $PROJECT_NAME|grep -v grep|wc -l)" -gt 0 ];then echo "process exist ,need kill " ;else echo process not exist;fi'
 
       - ssh root@"$SERVER_HOST" "ps aux|grep zgoframe|grep -v grep|awk '{print $2}'|xargs kill"
       - sleep 1

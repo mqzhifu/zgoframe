@@ -47,6 +47,7 @@ steps:
       - ssh root@114.116.212.202 "go env -w GO111MODULE=on ; go env -w GOPROXY=https://goproxy.cn,direct "
       - ssh root@114.116.212.202 "cd  $TARGET_GIT_PROJECT_DIR/$PROJECT_NAME; go mod tidy ; go mod download"
       - ssh root@114.116.212.202 "cd  $TARGET_GIT_PROJECT_DIR/$PROJECT_NAME; go build -o $PROJECT_NAME "
+      - - ssh root@114.116.212.202 "cd  $TARGET_GIT_PROJECT_DIR/$PROJECT_NAME; du - m $PROJECT_NAME"
 
 
 

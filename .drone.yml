@@ -29,9 +29,10 @@ steps:
       - cd $PROJECT_NAME
       - ls -l
 
-      - export CI_COMMIT_TIME=$(git show -s --format=%ct $CI_COMMIT_SHA)
+      - export CI_COMMIT_TIME=$(git show -s --format=%ct)
       - export CI_COMMIT_TIME_FORMATTED=`TZ='WAUST-8WAUDT' date -d @"$CI_COMMIT_TIME" "+%Y%m%dT%H%M%S"`
-      - export APP_NAME_FULL="$CI_COMMIT_TIME_FORMATTED-$CI_COMMIT_SHORT_SHA"
+      - export CI_COMMIT_ID=$(git rev-parse --short HEAD)
+      - export APP_NAME_FULL="$CI_COMMIT_TIME_FORMATTED-$CI_COMMIT_ID"
       - echo $APP_NAME_FULL
 
       - cd ..

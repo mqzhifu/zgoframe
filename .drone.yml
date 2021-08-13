@@ -8,10 +8,12 @@ steps:
   - name: test
     image: golang:1.16.2
     environment:
+      ENV: test
       PROJECT_NAME: zgoframe
       TARGET_GIT_PROJECT_DIR: /www/git_project
-      ENV: test
+      TARGET_GIT_PROJECT_BUILD_ORI_DIR: $TARGET_GIT_PROJECT_DIR/$PROJECT_NAME
       GIT_ORI_URL: git://github.com/mqzhifu
+
       KNOWN_HOST_202:
         from_secret: KNOWN_HOST_202
       ID_RSA_202:
@@ -30,6 +32,8 @@ steps:
       - ls -l
       - cd $PROJECT_NAME
       - ls -l
+
+
 
       - date
       - export CI_COMMIT_TIME=$(git show -s --format=%ct)

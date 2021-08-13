@@ -41,7 +41,7 @@ steps:
       - git clone $GIT_ORI_URL/$PROJECT_NAME.git
       - cd $PROJECT_NAME
       - ls -l
-      - rm -rf .git
+
 
       - export CI_COMMIT_TIME=$(git show -s --format=%ct)
       - export CI_COMMIT_TIME_FORMATTED=`TZ='Asia/Shanghai' date -d @"$CI_COMMIT_TIME" "+%Y%m%d_%H%M%S"`
@@ -56,6 +56,7 @@ steps:
 
       - ssh root@"$SERVER_HOST" "if [ -f $TARGET_GIT_PROJECT_BUILD_ORI_DIR ]; then mkdir $TARGET_GIT_PROJECT_BUILD_ORI_DIR; chmod 777 $TARGET_GIT_PROJECT_BUILD_ORI_DIR; fi;"
       - ssh root@"$SERVER_HOST" "mkdir $BUILD_DIR ; chmod 777 $BUILD_DIR "
+      - rm -rf .git
       - scp -r $PROJECT_NAME/* root@$SERVER_HOST:$BUILD_DIR
 
       - ssh root@"$SERVER_HOST" "ls -l $BUILD_DIR"

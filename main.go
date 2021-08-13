@@ -55,6 +55,7 @@ func main(){
 				Quit()
 			}
 		}else{
+			util.MyPrint("deploy: sleep 5 ,and auto quit...")
 			time.Sleep(5)
 		}
 

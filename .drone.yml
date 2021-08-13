@@ -52,13 +52,13 @@ steps:
       - export PROJECT_DIR_FINAL=PROJECT_DIR/$APP_NAME_FULL
       - export BUILD_DIR="$TARGET_GIT_PROJECT_BUILD_ORI_DIR/$APP_NAME_FULL"
 
-      - echo "debug APP_NAME_FULL:$APP_NAME_FULL PROJECT_DIR_FINAL:PROJECT_DIR_FINAL BUILD_DIR:$BUILD_DIR"
+      - echo "debug APP_NAME_FULL:$APP_NAME_FULL PROJECT_DIR_FINAL:$PROJECT_DIR_FINAL BUILD_DIR:$BUILD_DIR"
 
 
       - ssh root@"$SERVER_HOST" "if [ -f $TARGET_GIT_PROJECT_BUILD_ORI_DIR ]; then mkdir $TARGET_GIT_PROJECT_BUILD_ORI_DIR; chmod 777 $TARGET_GIT_PROJECT_BUILD_ORI_DIR; fi;"
       - ssh root@"$SERVER_HOST" "mkdir $BUILD_DIR ; chmod 777 $BUILD_DIR "
       - rm -rf .git
-      - scp -r $PROJECT_NAME/* root@$SERVER_HOST:$BUILD_DIR
+      - scp -r ./* root@$SERVER_HOST:$BUILD_DIR
 
       - ssh root@"$SERVER_HOST" "ls -l $BUILD_DIR"
       - ssh root@"$SERVER_HOST" "go version"

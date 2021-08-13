@@ -57,11 +57,14 @@ steps:
       - ssh root@"$SERVER_HOST" "go version"
       - ssh root@"$SERVER_HOST" "go env -w GO111MODULE=on ; go env -w GOPROXY=https://goproxy.cn,direct "
 
-      - ssh root@114.116.212.202 "cd  $BUILD_DIR; go mod tidy ; go mod download"
-      - ssh root@114.116.212.202 "cd  $BUILD_DIR; go build -o $PROJECT_NAME "
-      - ssh root@114.116.212.202 "cd  $BUILD_DIR; du -m $PROJECT_NAME"
+      - ssh root@"$SERVER_HOST" "cd  $BUILD_DIR; go mod tidy ; go mod download"
+      - ssh root@"$SERVER_HOST" "cd  $BUILD_DIR; go build -o $PROJECT_NAME "
+      - ssh root@"$SERVER_HOST" "cd  $BUILD_DIR; du -m $PROJECT_NAME"
 
 
-
+      - ssh root@"$SERVER_HOST" "cp $BUILD_DIR/config.toml.tmp $BUILD_DIR/config.toml"
+      - ssh root@"$SERVER_HOST" "mkdir $BUILD_DIR/logs"
+      - ssh root@"$SERVER_HOST" "chmod 777 $BUILD_DIR/logs"
+      - ssh root@"$SERVER_HOST" "$BUILD_DIR/$PROJECT_NAME -h"
 
 

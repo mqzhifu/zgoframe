@@ -11,6 +11,7 @@ steps:
       ENV: test
     commands:
       - go version
+      - id
       - cd  /root/.ssh/
       - ls -l
 

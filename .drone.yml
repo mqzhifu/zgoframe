@@ -69,7 +69,7 @@ steps:
       - ssh root@"$SERVER_HOST" "$BUILD_DIR/$PROJECT_NAME -h"
 
 
-      - ssh root@"$SERVER_HOST" "mkdir -p $PROJECT_DIR_FINAL ; mkdir $PROJECT_DIR_FINAL/logs; chmod 777 $PROJECT_DIR_FINAL/logs"
+      - ssh root@"$SERVER_HOST" "mkdir -p $PROJECT_DIR_FINAL ; mkdir $PROJECT_DIR/logs; chmod 777 $PROJECT_DIR/logs"
       - ssh root@"$SERVER_HOST" "cp $BUILD_DIR/$PROJECT_NAME $PROJECT_DIR_FINAL"
       - ssh root@"$SERVER_HOST" "cd $PROJECT_ORI_DIR/$CONFIG_PROJTECT_NAME/$PROJECT_NAME/$ENV/ ; ls -l"
       - ssh root@"$SERVER_HOST" "cp $PROJECT_ORI_DIR/$CONFIG_PROJTECT_NAME/$PROJECT_NAME/$ENV/config.toml $PROJECT_DIR_FINAL/"

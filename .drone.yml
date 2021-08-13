@@ -9,6 +9,7 @@ steps:
     image: golang:1.16.2
     environment:
       PROJECT_NAME: zgoframe
+      TARGET_GIT_PROJECT_DIR: /www/git_project
       ENV: test
       KNOWN_HOST_202:
         from_secret: KNOWN_HOST_202
@@ -36,8 +37,12 @@ steps:
       - export APP_NAME_FULL="$CI_COMMIT_TIME_FORMATTED-$CI_COMMIT_ID"
       - echo $APP_NAME_FULL
 
+      - rm -rf .git
       - cd ..
       - ls -l
+      - scp -r $PROJECT_NAME root@114.116.212.202:$TARGET_GIT_PROJECT_DIR
+      - ssh root@114.116.212.202 "ls -l /www/git_project/$PROJECT_NAME"
+      - ssh root@114.116.212.202 "go version"
 
 
 

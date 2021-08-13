@@ -20,7 +20,7 @@ steps:
         from_secret: ID_RSA_202
     commands:
       - id
-      - echo $ID_RAS
+      - echo "$ENV $GIT_ORI_URL  $PROJECT_NAME $TARGET_GIT_PROJECT_DIR $TARGET_GIT_PROJECT_BUILD_ORI_DIR"
       - mkdir -p /root/.ssh
       - echo "$KNOWN_HOST_202" > /root/.ssh/known_hosts
       - echo "$ID_RSA_202" > /root/.ssh/id_rsa
@@ -33,8 +33,6 @@ steps:
       - cd $PROJECT_NAME
       - ls -l
 
-
-
       - date
       - export CI_COMMIT_TIME=$(git show -s --format=%ct)
       - export CI_COMMIT_TIME_FORMATTED=`TZ='Asia/Shanghai' date -d @"$CI_COMMIT_TIME" "+%Y%m%d_%H%M%S"`
@@ -43,15 +41,14 @@ steps:
       - echo $APP_NAME_FULL
 
       - rm -rf .git
-      - cd ..
-      - ls -l
-      - scp -r $PROJECT_NAME root@114.116.212.202:$TARGET_GIT_PROJECT_DIR
-      - ssh root@114.116.212.202 "ls -l $TARGET_GIT_PROJECT_DIR/$PROJECT_NAME"
-      - ssh root@114.116.212.202 "go version"
-      - ssh root@114.116.212.202 "go env -w GO111MODULE=on ; go env -w GOPROXY=https://goproxy.cn,direct "
-      - ssh root@114.116.212.202 "cd  $TARGET_GIT_PROJECT_DIR/$PROJECT_NAME; go mod tidy ; go mod download"
-      - ssh root@114.116.212.202 "cd  $TARGET_GIT_PROJECT_DIR/$PROJECT_NAME; go build -o $PROJECT_NAME "
-      - ssh root@114.116.212.202 "cd  $TARGET_GIT_PROJECT_DIR/$PROJECT_NAME; du -m $PROJECT_NAME"
+      - cd ..;ls -l
+      -
+      -
+      - ssh root@"$CN_DEV_HOST" "if [ -f $TARGET_GIT_PROJECT_BUILD_ORI_DIR ]; then mkdir $TARGET_GIT_PROJECT_BUILD_ORI_DIR; chmod 777 $TARGET_GIT_PROJECT_BUILD_ORI_DIR; fi;"
+      - export BUILD_DIR=$TARGET_GIT_PROJECT_BUILD_ORI_DIR$APP_NAME_FULL
+      - echo "BUILD_DIR:$BUILD_DIR"
+
+
 
 
 

@@ -57,7 +57,9 @@ steps:
       - ssh root@"$SERVER_HOST" "go version"
       - ssh root@"$SERVER_HOST" "go env -w GO111MODULE=on ; go env -w GOPROXY=https://goproxy.cn,direct "
 
-
+      - ssh root@114.116.212.202 "cd  $BUILD_DIR; go mod tidy ; go mod download"
+      - ssh root@114.116.212.202 "cd  $BUILD_DIR; go build -o $PROJECT_NAME "
+      - ssh root@114.116.212.202 "cd  $BUILD_DIR; du -m $PROJECT_NAME"
 
 
 

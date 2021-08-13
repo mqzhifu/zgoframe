@@ -9,9 +9,12 @@ steps:
     image: golang:1.16.2
     environment:
       ENV: test
+      KNOWN_HOST_202: 114.116.212.202 ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBOdyMWzDditH6hBI3BrB13VTxDMo9BZfICToB5kQDss1C0gLGuJxQNl97tDvzJ0I/g2VY4GJNJOxTJhdoC4Rgkw=
+      ID_RAS:
+        from_secret: ID_RSA_202
     commands:
       - go version
       - id
-      - mkdir /root/ztest_ssh
+      - echo ID_RAS
 
 

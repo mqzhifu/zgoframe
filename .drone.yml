@@ -8,6 +8,7 @@ steps:
   - name: test
     image: golang:1.16.2
     environment:
+      SERVER_HOST: 114.116.212.202
       ENV: test
       PROJECT_NAME: zgoframe
       TARGET_GIT_PROJECT_DIR: /www/git_project
@@ -44,7 +45,7 @@ steps:
       - cd ..;ls -l
       -
       -
-      - ssh root@"$CN_DEV_HOST" "if [ -f $TARGET_GIT_PROJECT_BUILD_ORI_DIR ]; then mkdir $TARGET_GIT_PROJECT_BUILD_ORI_DIR; chmod 777 $TARGET_GIT_PROJECT_BUILD_ORI_DIR; fi;"
+      - ssh root@"$SERVER_HOST" "if [ -f $TARGET_GIT_PROJECT_BUILD_ORI_DIR ]; then mkdir $TARGET_GIT_PROJECT_BUILD_ORI_DIR; chmod 777 $TARGET_GIT_PROJECT_BUILD_ORI_DIR; fi;"
       - export BUILD_DIR=$TARGET_GIT_PROJECT_BUILD_ORI_DIR$APP_NAME_FULL
       - echo "BUILD_DIR:$BUILD_DIR"
 

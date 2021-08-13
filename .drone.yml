@@ -8,32 +8,9 @@ steps:
   - name: test
     image: golang:1.16.2
     environment:
-      USERNAME: 1
+      ENV: test
     commands:
       - go version
-      - pwd
-      - git clone git://github.com/mqzhifu/zgoframe.git
-      - ls -l
-      - cd zgoframe
-      - ls -l
-      - go env -w GO111MODULE=on
-      - go env -w GOPROXY=https://goproxy.cn,direct
-      - go mod tidy
-      - go mod download
-      - cp config.toml.tmp config.toml
-      - cat config.toml
-      - echo "mkdir logs & chmod 777 logs"
-      - mkdir logs
-      - chmod 777 logs
-
-      - echo "process exec ok~"
-      - export CI_COMMIT_TIME=$(git show -s --format=%ct $CI_COMMIT_SHA)
-      - export CI_COMMIT_TIME_FORMATTED=`TZ='WAUST-8WAUDT' date -d @"$CI_COMMIT_TIME" "+%Y%m%dT%H%M%S"`
-      - export APP_NAME_FULL="$LINK_NAME-$CI_COMMIT_TIME_FORMATTED-$CI_COMMIT_SHORT_SHA"
-      - echo $APP_NAME_FULL
-      - pwd
-      - ls -l
-      - echo $USERNAME
-
+      - ls -l /root/.ssh/
 
 

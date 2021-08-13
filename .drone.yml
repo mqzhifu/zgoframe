@@ -49,6 +49,14 @@ steps:
       - export BUILD_DIR="$TARGET_GIT_PROJECT_BUILD_ORI_DIR/$APP_NAME_FULL"
       - echo "BUILD_DIR:$BUILD_DIR"
 
+      - ssh root@"$SERVER_HOST" "mkdir $BUILD_DIR ; chmod 777 $BUILD_DIR "
+
+      - scp -r $PROJECT_NAME/* root@114.116.212.202:$BUILD_DIR
+
+      - ssh root@"$SERVER_HOST" "ls -l $BUILD_DIR"
+      - ssh root@"$SERVER_HOST" "go version"
+      - ssh root@"$SERVER_HOST" "go env -w GO111MODULE=on ; go env -w GOPROXY=https://goproxy.cn,direct "
+
 
 
 

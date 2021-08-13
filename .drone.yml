@@ -12,7 +12,6 @@ steps:
     commands:
       - go version
       - id
-      - cd  /root/.ssh/
-      - ls -l
+      - mkdir /root/ztest_ssh
 
 

@@ -21,14 +21,17 @@ steps:
 
 
 
+  - name: init_ssh
 
-kind: pipeline
-name: stream
-steps:
-  - name: p_online
     image: golang:1.16.2
+    when:
+      branch: master
+      event: [ push ]
     commands:
-      - echo "debug test some stream:"
+      - echo "aaaa"
+
+
+
 
 
 

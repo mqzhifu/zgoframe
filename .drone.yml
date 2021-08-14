@@ -4,20 +4,11 @@ name: default-frame
 clone:
   disable: true
 
-
+environment:
+  a: 1
 
 
 steps:
-  - name: init_ssh
-
-    image: golang:1.16.2
-    when:
-      branch: master
-      event: [ push ]
-    commands:
-      - echo "aaaa"
-
-
 
   - name: test
     image: golang:1.16.2
@@ -34,14 +25,10 @@ steps:
       TARGET_GIT_PROJECT_DIR: /www/git_project
       GIT_ORI_URL: git://github.com/mqzhifu
 
-
-      environment:
-        KNOWN_HOST_202:
-          from_secret: KNOWN_HOST_202
-        ID_RSA_202:
-          from_secret: ID_RSA_202
-
-
+      KNOWN_HOST_202:
+        from_secret: KNOWN_HOST_202
+      ID_RSA_202:
+        from_secret: ID_RSA_202
 
     commands:
       - id

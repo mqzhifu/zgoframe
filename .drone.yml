@@ -6,19 +6,7 @@ clone:
 
 
 environment:
-  SERVER_HOST: 114.116.212.202
-  ENV: test
-  PROJECT_ORI_DIR: /www/project
-  PROJECT_NAME: zgoframe
-  CONFIG_PROJTECT_NAME: configcenter
-  TARGET_GIT_PROJECT_DIR: /www/git_project
-  GIT_ORI_URL: git://github.com/mqzhifu
-
-  KNOWN_HOST_202:
-    from_secret: KNOWN_HOST_202
-  ID_RSA_202:
-    from_secret: ID_RSA_202
-
+  a: 1
 steps:
 
   - name: test
@@ -26,6 +14,19 @@ steps:
     when:
       branch: master
       event: [ push ]
+    environment:
+      SERVER_HOST: 114.116.212.202
+      ENV: test
+      PROJECT_ORI_DIR: /www/project
+      PROJECT_NAME: zgoframe
+      CONFIG_PROJTECT_NAME: configcenter
+      TARGET_GIT_PROJECT_DIR: /www/git_project
+      GIT_ORI_URL: git://github.com/mqzhifu
+
+      KNOWN_HOST_202:
+        from_secret: KNOWN_HOST_202
+      ID_RSA_202:
+        from_secret: ID_RSA_202
 
     commands:
       - id

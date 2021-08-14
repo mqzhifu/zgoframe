@@ -5,13 +5,10 @@ clone:
   disable: true
 
 
-
-
 steps:
 
   - name: test
     image: golang:1.16.2
-    depends_on: [init_ssh]
     when:
       branch: master
       event: [ push ]
@@ -23,7 +20,6 @@ steps:
       CONFIG_PROJTECT_NAME: configcenter
       TARGET_GIT_PROJECT_DIR: /www/git_project
       GIT_ORI_URL: git://github.com/mqzhifu
-
 
       KNOWN_HOST_202:
         from_secret: KNOWN_HOST_202

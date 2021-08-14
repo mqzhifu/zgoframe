@@ -74,7 +74,10 @@ steps:
       - ssh root@"$SERVER_HOST" "cd $PROJECT_ORI_DIR/$CONFIG_PROJTECT_NAME/$PROJECT_NAME/$ENV/ ; ls -l"
       - ssh root@"$SERVER_HOST" "cp $PROJECT_ORI_DIR/$CONFIG_PROJTECT_NAME/$PROJECT_NAME/$ENV/config.toml $PROJECT_DIR_FINAL/"
 
-
+steps:
+  - name: p_online
+    commands:
+      - echo "debug befroe:"
 
 
 

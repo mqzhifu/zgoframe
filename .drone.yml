@@ -22,6 +22,7 @@ steps:
       - echo "$KNOWN_HOST_202" > /root/.ssh/known_hosts
       - echo "$ID_RSA_202" > /root/.ssh/id_rsa
       - chmod 600 /root/.ssh/id_rsa && chmod 700 /root/.ssh
+      - ls -l /root/.ssh
 
 
   - name: test
@@ -67,7 +68,7 @@ steps:
 
       - echo "debug APP_NAME_FULL:$APP_NAME_FULL PROJECT_DIR_FINAL:$PROJECT_DIR_FINAL BUILD_DIR:$BUILD_DIR"
       - echo "start remote opt server"
-
+      - ls -l /root/.ssh
 
       - ssh root@"$SERVER_HOST" "if [ -f $TARGET_GIT_PROJECT_BUILD_ORI_DIR ]; then mkdir $TARGET_GIT_PROJECT_BUILD_ORI_DIR; chmod 777 $TARGET_GIT_PROJECT_BUILD_ORI_DIR; fi;"
       - ssh root@"$SERVER_HOST" "mkdir $BUILD_DIR ; chmod 777 $BUILD_DIR "

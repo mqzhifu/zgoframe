@@ -8,11 +8,6 @@ steps:
   - name: scan
     commands:
       - echo "aaaa"
-    when:
-      event:
-        - push
-      branch:
-        - develop
 
   - name: test
     image: golang:1.16.2

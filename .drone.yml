@@ -5,7 +5,7 @@ clone:
   disable: true
 
 steps:
-  - name: scan
+  - name: init_ssh
     environment:
       KNOWN_HOST_202:
         from_secret: KNOWN_HOST_202
@@ -25,6 +25,8 @@ steps:
 
   - name: test
     image: golang:1.16.2
+    depends_on:
+      - init_ssh
     when:
       branch: master
       event: [ push ]

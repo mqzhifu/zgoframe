@@ -21,7 +21,6 @@ steps:
       ID_RSA_202:
         from_secret: ID_RSA_202
     commands:
-      - echo "debug befroe:"
       - id
       - date
       - pwd
@@ -77,13 +76,7 @@ steps:
 
 
 
-kind: pipeline
-name: stream
-steps:
-  - name: p_online
-    image: golang:1.16.2
-    commands:
-      - echo "debug befroe:"
+
 
 
 

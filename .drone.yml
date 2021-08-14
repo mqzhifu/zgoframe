@@ -25,8 +25,7 @@ steps:
 
   - name: test
     image: golang:1.16.2
-    depends_on:
-      - init_ssh
+    depends_on: [init_ssh]
     when:
       branch: master
       event: [ push ]

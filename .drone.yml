@@ -78,8 +78,7 @@ steps:
 
 
 kind: pipeline
-name: k_online
-
+name: stream
 steps:
   - name: p_online
     commands:

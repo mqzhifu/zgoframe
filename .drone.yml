@@ -7,7 +7,7 @@ clone:
 steps:
   - name: scan
     commands:
-      echo "aaaa"
+      - echo "aaaa"
     when:
       event:
         - push

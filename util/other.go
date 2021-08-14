@@ -82,7 +82,7 @@ func CheckStrEmpty(str string)bool{
 	return false
 }
 //检查一个文件是否已存在
-func checkFileIsExist(filename string) bool {
+func CheckFileIsExist(filename string) bool {
 	var exist = true
 	if _, err := os.Stat(filename);os.IsNotExist(err){
 		exist = false

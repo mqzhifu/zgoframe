@@ -2,9 +2,13 @@ package main
 
 import (
 	"context"
+	"errors"
 	"flag"
+	"io"
+	"io/ioutil"
 	"os"
 	"os/signal"
+	"strconv"
 	"syscall"
 	"time"
 	"zgoframe/core/global"
@@ -48,6 +52,16 @@ func main(){
 		mainCxt := context.Background()
 		cancelCTX ,cancelFunc := context.WithCancel(mainCxt)
 
+		pathFilePid := "/tmp/zgoframe.pid"
+
+		pid ,err := initPid(pathFilePid)
+		if err != nil{
+			global.V.Zap.Error("initPid,err:" + err.Error())
+			return
+		}
+
+		global.V.Zap.Warn("mainPid:"+strconv.Itoa(pid))
+
 		if *deploy == ""{
 			DemonSignal(cancelFunc)
 			select {
@@ -60,9 +74,50 @@ func main(){
 		}
 
 
+		pid ,err = delPid(pathFilePid)
+		util.MyPrint("del pid:",pid,err)
+
 	}
 	util.MyPrint("main end.")
 }
+func delPid(pathFile string )(int,error){
+	if !util.CheckFileIsExist(pathFile){
+		return 0,errors.New(pathFile + " not exist~ ")
+	}
+
+
+	b, err := ioutil.ReadFile(pathFile) // just pass the file name
+	if err != nil {
+		return 0,err
+	}
+
+	str := string(b)
+	pid ,_ := strconv.Atoi(str)
+	return pid,nil
+}
+//进程PID保存到文件
+func initPid(pathFile string )(int,error){
+	pid := os.Getpid()
+	if util.CheckFileIsExist(pathFile){
+		return pid,errors.New(pathFile + " has exist~ ")
+	}
+
+	fd, err  := os.OpenFile(pathFile, os.O_WRONLY | os.O_CREATE | os.O_TRUNC , 0777)
+	defer fd.Close()
+	if err != nil{
+		return pid,errors.New(pathFile + " " + err.Error())
+	}
+
+	_, err = io.WriteString(fd, strconv.Itoa(pid))
+	if err != nil{
+		return pid,errors.New(pathFile + " " + err.Error())
+	}
+
+	err = os.Remove(pathFile)
+
+	return pid,err
+}
+
 
 func test(testFlag string ){
 	//if testFlag == ""{

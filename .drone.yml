@@ -5,8 +5,21 @@ clone:
   disable: true
 
 steps:
+  environment:
+    SERVER_HOST: 114.116.212.202
+    ENV: test
+    PROJECT_ORI_DIR: /www/project
+    PROJECT_NAME: zgoframe
+    CONFIG_PROJTECT_NAME: configcenter
+    TARGET_GIT_PROJECT_DIR: /www/git_project
+    GIT_ORI_URL: git://github.com/mqzhifu
+
+    KNOWN_HOST_202:
+      from_secret: KNOWN_HOST_202
+    ID_RSA_202:
+      from_secret: ID_RSA_202
+  
   - name: scan
-    image: golang:1.16.2
     when:
       branch: master
       event: [ push ]
@@ -18,19 +31,7 @@ steps:
     when:
       branch: master
       event: [ push ]
-    environment:
-      SERVER_HOST: 114.116.212.202
-      ENV: test
-      PROJECT_ORI_DIR: /www/project
-      PROJECT_NAME: zgoframe
-      CONFIG_PROJTECT_NAME: configcenter
-      TARGET_GIT_PROJECT_DIR: /www/git_project
-      GIT_ORI_URL: git://github.com/mqzhifu
 
-      KNOWN_HOST_202:
-        from_secret: KNOWN_HOST_202
-      ID_RSA_202:
-        from_secret: ID_RSA_202
     commands:
       - id
       - date

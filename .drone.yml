@@ -4,25 +4,24 @@ name: default-frame
 clone:
   disable: true
 
+
+
+environment:
+  KNOWN_HOST_202:
+    from_secret: KNOWN_HOST_202
+  ID_RSA_202:
+    from_secret: ID_RSA_202
+
 steps:
   - name: init_ssh
-    environment:
-      KNOWN_HOST_202:
-        from_secret: KNOWN_HOST_202
-      ID_RSA_202:
-        from_secret: ID_RSA_202
+
     image: golang:1.16.2
     when:
       branch: master
       event: [ push ]
     commands:
       - echo "aaaa"
-      - echo "process ssh"
-      - mkdir -p /root/.ssh
-      - echo "$KNOWN_HOST_202" > /root/.ssh/known_hosts
-      - echo "$ID_RSA_202" > /root/.ssh/id_rsa
-      - chmod 600 /root/.ssh/id_rsa && chmod 700 /root/.ssh
-      - ls -l /root/.ssh
+
 
 
   - name: test
@@ -52,7 +51,12 @@ steps:
       - echo "debug SERVER_HOST:$SERVER_HOST ENV:$ENV PROJECT_NAME:$PROJECT_NAME CONFIG_PROJTECT_NAME:CONFIG_PROJTECT_NAME   GIT_ORI_URL:$GIT_ORI_URL "
       - echo "debug TARGET_GIT_PROJECT_DIR:$TARGET_GIT_PROJECT_DIR TARGET_GIT_PROJECT_BUILD_ORI_DIR:$TARGET_GIT_PROJECT_BUILD_ORI_DIR PROJECT_DIR:$PROJECT_DIR"
 
-
+      - echo "process ssh"
+      - mkdir -p /root/.ssh
+      - echo "$KNOWN_HOST_202" > /root/.ssh/known_hosts
+      - echo "$ID_RSA_202" > /root/.ssh/id_rsa
+      - chmod 600 /root/.ssh/id_rsa && chmod 700 /root/.ssh
+      - ls -l /root/.ssh
 
       - git clone $GIT_ORI_URL/$PROJECT_NAME.git
       - cd $PROJECT_NAME

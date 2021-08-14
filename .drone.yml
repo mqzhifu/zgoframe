@@ -21,6 +21,7 @@ steps:
       - echo "$ID_RSA_202" > /root/.ssh/id_rsa
       - chmod 600 /root/.ssh/id_rsa && chmod 700 /root/.ssh
 
+
   - name: test
     image: golang:1.16.2
     when:

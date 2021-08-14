@@ -19,7 +19,7 @@ steps:
   - name: test
     image: golang:1.16.2
     when:
-      branch: dev
+      branch: master
       event: [ push ]
     environment:
 
@@ -86,4 +86,3 @@ steps:
       - ssh root@"$SERVER_HOST" "cp $PROJECT_ORI_DIR/$CONFIG_PROJTECT_NAME/$PROJECT_NAME/$ENV/config.toml $PROJECT_DIR_FINAL/"
 
 
-        

@@ -73,7 +73,8 @@ steps:
       - ssh root@"$SERVER_HOST" "cp $BUILD_DIR/$PROJECT_NAME $PROJECT_DIR_FINAL"
       - ssh root@"$SERVER_HOST" "cd $PROJECT_ORI_DIR/$CONFIG_PROJTECT_NAME/$PROJECT_NAME/$ENV/ ; ls -l"
       - ssh root@"$SERVER_HOST" "cp $PROJECT_ORI_DIR/$CONFIG_PROJTECT_NAME/$PROJECT_NAME/$ENV/config.toml $PROJECT_DIR_FINAL/"
-
+kind: pipeline
+name: k_online
 steps:
   - name: p_online
     commands:

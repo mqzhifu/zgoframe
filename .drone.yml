@@ -5,6 +5,13 @@ clone:
   disable: true
 
 steps:
+  - name: scan
+    when:
+      event:
+        - push
+      branch:
+        - develop
+
   - name: test
     image: golang:1.16.2
     environment:
@@ -73,17 +80,6 @@ steps:
       - ssh root@"$SERVER_HOST" "cd $PROJECT_ORI_DIR/$CONFIG_PROJTECT_NAME/$PROJECT_NAME/$ENV/ ; ls -l"
       - ssh root@"$SERVER_HOST" "cp $PROJECT_ORI_DIR/$CONFIG_PROJTECT_NAME/$PROJECT_NAME/$ENV/config.toml $PROJECT_DIR_FINAL/"
 
-
-kind: pipeline
-name: stream
-steps:
-  - name: p_online
-    image: golang:1.16.2
-    commands:
-      - echo "debug test some stream:"
-    when:
-      environment: production
-      event: deployment
 
 
 

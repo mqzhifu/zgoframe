@@ -7,7 +7,6 @@ clone:
 
 environment:
   SERVER_HOST: 114.116.212.202
-  ENV: test
   PROJECT_ORI_DIR: /www/project
   PROJECT_NAME: zgoframe
   CONFIG_PROJTECT_NAME: configcenter
@@ -19,9 +18,10 @@ steps:
   - name: test
     image: golang:1.16.2
     when:
-      branch: master
+      branch: dev
       event: [ push ]
     environment:
+      ENV: test
       KNOWN_HOST_202:
         from_secret: KNOWN_HOST_202
       ID_RSA_202:

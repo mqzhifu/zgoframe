@@ -81,6 +81,7 @@ kind: pipeline
 name: stream
 steps:
   - name: p_online
+    image: golang:1.16.2
     commands:
       - echo "debug befroe:"
 

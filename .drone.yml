@@ -5,6 +5,8 @@ clone:
   disable: true
 
 
+environment:
+  a: 1
 steps:
 
   - name: test

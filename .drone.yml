@@ -6,6 +6,7 @@ clone:
 
 steps:
   - name: scan
+    image: golang:1.16.2
     when:
       branch: master
       event: [ push ]

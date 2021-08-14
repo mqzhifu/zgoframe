@@ -6,12 +6,18 @@ clone:
 
 steps:
   - name: scan
+    image: golang:1.16.2
+    when:
+      branch: master
+      event: [ push ]
     commands:
       - echo "aaaa"
 
-steps:
   - name: test
     image: golang:1.16.2
+    when:
+      branch: master
+      event: [ push ]
     environment:
       SERVER_HOST: 114.116.212.202
       ENV: test

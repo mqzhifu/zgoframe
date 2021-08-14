@@ -1,10 +1,11 @@
 kind: pipeline
 name: default-frame
-type: docker
 
 clone:
   disable: true
 
+environment:
+  a: 1
 
 
 steps:

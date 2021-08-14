@@ -21,15 +21,6 @@ steps:
 
 
 
-  - name: init_ssh
-
-    image: golang:1.16.2
-    when:
-      branch: master
-      event: [ push ]
-    commands:
-      - echo "aaaa"
-
 
 
 

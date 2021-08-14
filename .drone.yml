@@ -1,5 +1,6 @@
 kind: pipeline
 name: default-frame
+type: docker
 
 clone:
   disable: true

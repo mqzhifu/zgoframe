@@ -6,21 +6,23 @@ clone:
 
 
 environment:
-  SERVER_HOST: 114.116.212.202
+
+  TEST_SERVER_HOST: 114.116.212.202
+  ONLOINE_SERVER_HOST: 0.0.0.0
   PROJECT_ORI_DIR: /www/project
-  PROJECT_NAME: zgoframe
   CONFIG_PROJTECT_NAME: configcenter
   TARGET_GIT_PROJECT_DIR: /www/git_project
   GIT_ORI_URL: git://github.com/mqzhifu
+  PROJECT_NAME: zgoframe
 
 steps:
-
   - name: test
     image: golang:1.16.2
     when:
       branch: dev
       event: [ push ]
     environment:
+
       ENV: test
       KNOWN_HOST_202:
         from_secret: KNOWN_HOST_202
@@ -35,6 +37,7 @@ steps:
 
       - export TARGET_GIT_PROJECT_BUILD_ORI_DIR=$TARGET_GIT_PROJECT_DIR/$PROJECT_NAME
       - export PROJECT_DIR=$PROJECT_ORI_DIR/$PROJECT_NAME
+      - export SERVER_HOST:$TEST_SERVER_HOST
 
       - echo "debug SERVER_HOST:$SERVER_HOST ENV:$ENV PROJECT_NAME:$PROJECT_NAME CONFIG_PROJTECT_NAME:CONFIG_PROJTECT_NAME   GIT_ORI_URL:$GIT_ORI_URL "
       - echo "debug TARGET_GIT_PROJECT_DIR:$TARGET_GIT_PROJECT_DIR TARGET_GIT_PROJECT_BUILD_ORI_DIR:$TARGET_GIT_PROJECT_BUILD_ORI_DIR PROJECT_DIR:$PROJECT_DIR"
@@ -83,8 +86,4 @@ steps:
       - ssh root@"$SERVER_HOST" "cp $PROJECT_ORI_DIR/$CONFIG_PROJTECT_NAME/$PROJECT_NAME/$ENV/config.toml $PROJECT_DIR_FINAL/"
 
 
-
-
-
-
-
+        

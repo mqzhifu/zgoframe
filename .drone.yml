@@ -1,6 +1,5 @@
 kind: pipeline
 name: default-frame
-type: drone-cicd
 
 clone:
   disable: true

@@ -18,7 +18,7 @@ steps:
   - name: test
     image: golang:1.16.2
     when:
-      branch: master
+      branch: dev
       event: [ push ]
     environment:
       ENV: test

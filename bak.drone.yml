@@ -13,7 +13,7 @@ steps:
       - ssh root@"$SERVER_HOST" "if [ $(ps -ef |grep $PROJECT_NAME|grep -v grep|wc -l) -gt 0 ];then echo processexist-need kill ;else echo process-not-exist;fi"
       - ssh root@"$SERVER_HOST" "if [ $(ps -ef |grep $PROJECT_NAME|grep -v grep|wc -l) -gt 0 ];then echo processexist-need kill ;echo `ps aux|grep zgoframe|grep -v grep`;else echo process-not-exist;fi"
 
-      - ssh root@"$SERVER_HOST" "ps aux|grep zgoframe|grep -v grep|awk '{print $2}'|xargs kill"
+
       - sleep 1
 
       - ssh root@"$SERVER_HOST" "cd $PROJECT_DIR_FINAL;./$PROJECT_NAME -e test"
@@ -21,6 +21,19 @@ steps:
 
 
 
+
+volumes:
+  - name: cache
+    host:
+      path: /data/www/js/adminserver-webz/node_modules
+  - name: cache2
+    host:
+      path: /root/.npm
+  - name: project
+    host:
+      path: /data/www/js/adminserver-webz
+
+        - cp /usr/local/project/package-lock.json ./
 
 
 

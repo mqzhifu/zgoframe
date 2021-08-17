@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"flag"
+	"github.com/gin-gonic/gin"
 	"io"
 	"io/ioutil"
 	"os"
@@ -53,7 +54,6 @@ func main(){
 		cancelCTX ,cancelFunc := context.WithCancel(mainCxt)
 
 		pathFilePid := "/tmp/zgoframe.pid"
-
 		pid ,err := initPid(pathFilePid)
 		if err != nil{
 			global.V.Zap.Error("initPid,err:" + err.Error())
@@ -61,6 +61,10 @@ func main(){
 		}
 
 		global.V.Zap.Warn("mainPid:"+strconv.Itoa(pid))
+
+
+		global.V.Gin.GET("/sys/quit",httpQuit)
+		global.V.Gin.GET("/sys/config",getConfig)
 
 		if *deploy == ""{
 			DemonSignal(cancelFunc)
@@ -80,11 +84,18 @@ func main(){
 	}
 	util.MyPrint("main end.")
 }
+func httpQuit(c *gin.Context){
+	Quit()
+}
+
+func getConfig(c *gin.Context){
+	Quit()
+}
+
 func delPid(pathFile string )(int,error){
 	if !util.CheckFileIsExist(pathFile){
 		return 0,errors.New(pathFile + " not exist~ ")
 	}
-
 
 	b, err := ioutil.ReadFile(pathFile) // just pass the file name
 	if err != nil {
@@ -93,7 +104,10 @@ func delPid(pathFile string )(int,error){
 
 	str := string(b)
 	pid ,_ := strconv.Atoi(str)
-	return pid,nil
+
+	err = os.Remove(pathFile)
+
+	return pid,err
 }
 //进程PID保存到文件
 func initPid(pathFile string )(int,error){
@@ -112,8 +126,6 @@ func initPid(pathFile string )(int,error){
 	if err != nil{
 		return pid,errors.New(pathFile + " " + err.Error())
 	}
-
-	err = os.Remove(pathFile)
 
 	return pid,err
 }

@@ -8,15 +8,10 @@ clone:
 
 environment:
 
-  TEST_SERVER_HOST: 114.116.212.202
-  ONLOINE_SERVER_HOST: 0.0.0.0
-  PROJECT_ORI_DIR: /www/project
-  CONFIG_PROJTECT_NAME: configcenter
-  TARGET_GIT_PROJECT_DIR: /www/git_project
-  GIT_ORI_URL: git://github.com/mqzhifu
   PROJECT_NAME: zgoframe
 
 steps:
+
   - name: test
     image: golang:1.16.2
     when:
@@ -31,43 +26,17 @@ steps:
         from_secret: ID_RSA_202
 
     commands:
-      - id
-      - date
-      - pwd
+      - id ; date ; pwd
       - go version
 
-      - export TARGET_GIT_PROJECT_BUILD_ORI_DIR=$TARGET_GIT_PROJECT_DIR/$PROJECT_NAME
-      - export PROJECT_DIR=$PROJECT_ORI_DIR/$PROJECT_NAME
-      - export SERVER_HOST=$TEST_SERVER_HOST
-
-      - echo "debug SERVER_HOST:$SERVER_HOST ENV:$ENV PROJECT_NAME:$PROJECT_NAME CONFIG_PROJTECT_NAME:CONFIG_PROJTECT_NAME   GIT_ORI_URL:$GIT_ORI_URL "
-      - echo "debug TARGET_GIT_PROJECT_DIR:$TARGET_GIT_PROJECT_DIR TARGET_GIT_PROJECT_BUILD_ORI_DIR:$TARGET_GIT_PROJECT_BUILD_ORI_DIR PROJECT_DIR:$PROJECT_DIR"
-
-      - echo "process ssh"
-      - mkdir -p /root/.ssh
-      - echo "$KNOWN_HOST_202" > /root/.ssh/known_hosts
-      - echo "$ID_RSA_202" > /root/.ssh/id_rsa
-      - chmod 600 /root/.ssh/id_rsa && chmod 700 /root/.ssh
-      - ls -l /root/.ssh
-
-      - git clone $GIT_ORI_URL/$PROJECT_NAME.git
+      - git clone $GIT_URL_PROTOCOL:$GIT_URL_PREFIX/$PROJECT_NAME.git
       - cd $PROJECT_NAME
-      - ls -l
+      - chmod 777 $CICD_INIT_SH_NAME
+      - ./$CICD_SH_NAME $TEST_SERVER_HOST $PROJECT_ORI_DIR $TARGET_GIT_PROJECT_DIR $CONFIG_PROJTECT_NAME $PROJECT_NAME $ENV_FILE
+      - cat $ENV_FILE
+      - . $ENV_FILE
 
-
-      - export CI_COMMIT_TIME=$(git show -s --format=%ct)
-      - export CI_COMMIT_TIME_FORMATTED=`TZ='Asia/Shanghai' date -d @"$CI_COMMIT_TIME" "+%Y%m%d_%H%M%S"`
-      - export CI_COMMIT_ID=$(git rev-parse --short HEAD)
-      - export APP_NAME_FULL="$CI_COMMIT_TIME_FORMATTED-$CI_COMMIT_ID"
-
-      - export PROJECT_DIR_FINAL=$PROJECT_DIR/$APP_NAME_FULL
-      - export BUILD_DIR="$TARGET_GIT_PROJECT_BUILD_ORI_DIR/$APP_NAME_FULL"
-
-      - echo "debug APP_NAME_FULL:$APP_NAME_FULL PROJECT_DIR_FINAL:$PROJECT_DIR_FINAL BUILD_DIR:$BUILD_DIR"
-      - echo "start remote opt server"
-      - ls -l /root/.ssh
-
-      - ssh root@"$SERVER_HOST" "if [ -f $TARGET_GIT_PROJECT_BUILD_ORI_DIR ]; then mkdir $TARGET_GIT_PROJECT_BUILD_ORI_DIR; chmod 777 $TARGET_GIT_PROJECT_BUILD_ORI_DIR; fi;"
+      - ssh root@"$SERVER_HOST" "if [ ! -f $TARGET_GIT_PROJECT_BUILD_ORI_DIR ]; then mkdir $TARGET_GIT_PROJECT_BUILD_ORI_DIR; chmod 777 $TARGET_GIT_PROJECT_BUILD_ORI_DIR; fi;"
       - ssh root@"$SERVER_HOST" "mkdir $BUILD_DIR ; chmod 777 $BUILD_DIR "
       - rm -rf .git
       - scp -r ./* root@$SERVER_HOST:$BUILD_DIR

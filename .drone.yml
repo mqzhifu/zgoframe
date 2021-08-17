@@ -64,4 +64,3 @@ steps:
       - ssh root@"$SERVER_HOST" "ln -s $PROJECT_DIR_FINAL $PROJECT_DIR/$PROJECT_NAME "
 
 
-

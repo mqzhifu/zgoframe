@@ -60,7 +60,7 @@ steps:
 
       - ssh root@"$SERVER_HOST" "chmod 777 $BUILD_DIR/checkprocess.sh ; $BUILD_DIR/checkprocess.sh test /tmp/$PROJECT_NAME.pid"
 
-      - ssh root@"$SERVER_HOST" "if [ -d $PROJECT_DIR/$PROJECT_NAME ];then rm -rf $PROJECT_DIR/$PROJECT_NAME fi; "
+      - ssh root@"$SERVER_HOST" "if [ -d $PROJECT_DIR/$PROJECT_NAME ];then rm -rf $PROJECT_DIR/$PROJECT_NAME; fi "
       - ssh root@"$SERVER_HOST" "ln -s $PROJECT_DIR_FINAL $PROJECT_DIR/$PROJECT_NAME "
 
 

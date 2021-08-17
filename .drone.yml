@@ -37,7 +37,7 @@ steps:
       - cat $ENV_FILE
       - . $ENV_FILE
 
-      - ssh root@"$SERVER_HOST" "if [ ! -f $TARGET_GIT_PROJECT_BUILD_ORI_DIR ]; then mkdir $TARGET_GIT_PROJECT_BUILD_ORI_DIR; chmod 777 $TARGET_GIT_PROJECT_BUILD_ORI_DIR; fi;"
+      - ssh root@"$SERVER_HOST" "if [ ! -d $TARGET_GIT_PROJECT_BUILD_ORI_DIR ]; then mkdir $TARGET_GIT_PROJECT_BUILD_ORI_DIR; chmod 777 $TARGET_GIT_PROJECT_BUILD_ORI_DIR; fi;"
       - ssh root@"$SERVER_HOST" "mkdir $BUILD_DIR ; chmod 777 $BUILD_DIR "
       - rm -rf .git
       - scp -r ./* root@$SERVER_HOST:$BUILD_DIR
@@ -58,6 +58,9 @@ steps:
 
 
 
+      - ssh root@"$SERVER_HOST" "$PROJECT_DIR_FINAL/checkprocess.sh test /tmp/$PROJECT_NAME.pid"
 
+      - ssh root@"$SERVER_HOST" "if [ -d $PROJECT_DIR/$PROJECT_NAME ];then rm -rf $PROJECT_DIR/$PROJECT_NAME fi; "
+      - ssh root@"$SERVER_HOST" "ln -s $PROJECT_DIR_FINAL $PROJECT_DIR/$PROJECT_NAME "
 
 

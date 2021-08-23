@@ -13,7 +13,10 @@ import (
 	"strings"
 	"time"
 )
-
+const (
+	POROTOCOL_HTTP = 1
+	POROTOCOL_GRPC = 2
+)
 type DynamicService struct {
 	Name 	string
 	Value 	string
@@ -29,6 +32,7 @@ type Service struct {
 	watchList []context.CancelFunc
 	etcd      *MyEtcd
 	option    ServiceOption
+	Porotocol	int 		//1http 2grpc
 }
 
 type ServiceOption struct {
@@ -68,10 +72,10 @@ func (service *Service)ReadAdnRegThird( ){
 		serviceListMap[serviceArr[1]] = append(serviceListMap[serviceArr[1]], serviceArr[2])
 	}
 	//service.option.Log.Info("RegThird:",serviceListMap)
-
 	service.list = serviceListMap
 	//service.option.Log.Debug(serviceListMap)
 	//AddRoutineList("WatchThridService")
+	//监听3方服务变化
 	go service.WatchThridService()
 	//service.option.Goroutine.CreateExec(service,"WatchThridService")
 }

@@ -14,7 +14,7 @@ import (
 
 //以下均是，zap-log 初始化
 var level zapcore.Level
-func GetNewZapLog(alert *util.Alert) (logger *zap.Logger,err error) {
+func GetNewZapLog(alert *util.AlertPush) (logger *zap.Logger,err error) {
 	if ok, _ := util.PathExists(global.C.Zap.Dir); !ok { // 判断是否有Director文件夹
 		util.MyPrint("create directory:", global.C.Zap.Dir)
 		err = os.Mkdir(global.C.Zap.Dir, os.ModePerm)

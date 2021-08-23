@@ -14,6 +14,8 @@ type Config struct {
 	Service Service
 	Alert Alert
 	Metrics Metrics
+	Websocket Websocket
+	Grpc Grpc
 }
 
 type ConfigMysql struct {
@@ -114,3 +116,15 @@ type Alert struct {
 	Port string
 	Uri string
 }
+
+type Websocket struct {
+	Status string
+	Uri string
+}
+
+type Grpc struct {
+	Status string
+	Ip string
+	Port string
+}
+

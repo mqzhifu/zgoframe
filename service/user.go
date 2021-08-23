@@ -14,19 +14,56 @@ import (
 
 //@author: [piexlmax](https://github.com/piexlmax)
 //@function: Register
-//@description: 用户注册
+//@description: 用户注册-仅限：邮件、用户名、手机
 //@param: u model.User
 //@return: err error, userInter model.User
-
-func Register(u model.User) (err error, userInter model.User) {
+func Register(u model.User,h request.Header) (err error, userInter model.User) {
 	var user model.User
-	if !errors.Is(global.V.Gorm.Where("username = ?", u.Username).First(&user).Error, gorm.ErrRecordNotFound) { // 判断用户名是否注册
+	if !errors.Is(global.V.Gorm.Where("username = ? and app_id = ?", u.Username,u.AppId).First(&user).Error, gorm.ErrRecordNotFound) { // 判断用户名是否注册
 		return errors.New("用户名已注册"), userInter
+	}
+	isEmail := util.CheckEmailRule(u.Username)
+	isMobile := util.CheckMobileRule(u.Username)
+	userRegType := model.USER_REG_TYPE_NAME
+	if isEmail{
+		userRegType = model.USER_REG_TYPE_EMAIL
+	}else if isMobile{
+		userRegType = model.USER_REG_TYPE_MOBILE
 	}
 	// 否则 附加uuid 密码md5简单加密 注册
 	u.Password = util.MD5V([]byte(u.Password))
-	u.UUID = uuid.NewV4()
+	u.Uuid = uuid.NewV4()
 	err = global.V.Gorm.Create(&u).Error
+
+	//util.MyPrint("u.id:",u.Id)
+
+	if err == nil{
+		userReg := model.UserReg{
+			AppId: u.AppId,
+			Uid: u.Id,
+			Type: userRegType,
+			Ip: h.Ip,
+			AutoIp: h.AutoIp,
+			AppVersion: h.AppVersion,
+			SourceType: h.SourceType,
+			Os: h.OS,
+			OsVersion: h.OSVersion,
+			Device: h.Device,
+			DeviceVersion: h.DeviceVersion,
+			Lat: h.Lat,
+			Lon: h.Lon,
+			DeviceId: h.DeviceId,
+			Dpi: h.DPI,
+			Channel: model.CHANNEL_DEFAULT,
+		}
+		util.PrintStruct(userReg,":")
+		//fmt.Sprintf("aaaaf:%+v", &userReg)
+		//util.MyPrint("userReg:",userReg)
+		err = global.V.Gorm.Create(&userReg).Error
+		if err != nil{
+			global.V.Zap.Error("create user_Reg err:"+err.Error())
+		}
+	}
 	return err, u
 }
 
@@ -39,7 +76,7 @@ func Register(u model.User) (err error, userInter model.User) {
 func Login(u *model.User) (err error, userInter *model.User) {
 	var user model.User
 	u.Password = util.MD5V([]byte(u.Password))
-	err = global.V.Gorm.Where("username = ? AND password = ?", u.Username, u.Password).Preload("Authority").First(&user).Error
+	err = global.V.Gorm.Where("username = ? AND password = ? AND app_id = ? ", u.Username, u.Password,u.AppId).Preload("Authority").First(&user).Error
 	return err, &user
 }
 

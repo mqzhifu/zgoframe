@@ -1,9 +1,10 @@
 package initialize
 
 import (
-	"go.uber.org/zap"
+	"fmt"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
+	"gorm.io/gorm/schema"
 	"zgoframe/core/global"
 )
 
@@ -19,6 +20,7 @@ func GetNewGorm() (*gorm.DB,error) {
 func GormMysql() (*gorm.DB,error) {
 	m := global.C.Mysql
 	dsn := m.Username + ":" + m.Password + "@tcp(" + m.Ip + ":" + m.Port + ")/" + m.DbName + "?" + m.Config
+	fmt.Println("GormMysql:"+dsn)
 	mysqlConfig := mysql.Config{
 		DSN:                       dsn,   // DSN data source name
 		DefaultStringSize:         191,   // string 类型字段的默认长度
@@ -28,7 +30,7 @@ func GormMysql() (*gorm.DB,error) {
 		SkipInitializeWithVersion: false, // 根据版本自动配置
 	}
 	if db, err := gorm.Open(mysql.New(mysqlConfig), gormConfig(m.LogMode)); err != nil {
-		global.V.Zap.Error("MySQL启动异常", zap.Any("err", err))
+		fmt.Println("MySQL启动异常", err.Error())
 		return nil,err
 	} else {
 		sqlDB, _ := db.DB()
@@ -39,7 +41,7 @@ func GormMysql() (*gorm.DB,error) {
 }
 
 func gormConfig(mod bool) *gorm.Config {
-	var config = &gorm.Config{DisableForeignKeyConstraintWhenMigrating: true}
+	var config = &gorm.Config{DisableForeignKeyConstraintWhenMigrating: true,NamingStrategy: schema.NamingStrategy{SingularTable: true}}
 	//switch global.G.Config.Mysql.LogZap {
 	//case "silent", "Silent":
 	//	config.Logger = internal.Default.LogMode(logger.Silent)

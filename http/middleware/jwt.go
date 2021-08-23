@@ -6,14 +6,18 @@ import (
 	"github.com/gin-gonic/gin"
 	"strconv"
 	"time"
+
 	"zgoframe/core/global"
 	"zgoframe/http/request"
 	httpresponse "zgoframe/http/response"
-	"zgoframe/model"
+
 	"zgoframe/service"
+	"github.com/go-redis/redis"
 )
 
-
+//"strconv"
+//"time"
+//"zgoframe/model"
 
 type JWT struct {
 	SigningKey []byte
@@ -30,6 +34,10 @@ func NewJWT() *JWT {
 	return &JWT{
 		[]byte(global.C.Jwt.Key),
 	}
+}
+
+func JWTAuth() gin.HandlerFunc {
+	return RealJWTAuth
 }
 
 // 创建一个token
@@ -70,60 +78,76 @@ func (j *JWT) ParseToken(tokenString string) (*request.CustomClaims, error) {
 
 }
 
-func JWTAuth() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		// 我们这里jwt鉴权取头部信息 x-token 登录时回返回token信息 这里前端需要把token存储到cookie或者本地localStorage中 不过需要跟后端协商过期时间 可以约定刷新令牌或者重新登录
-		token := c.Request.Header.Get("x-token")
-		if token == "" {
-			httpresponse.FailWithDetailed(gin.H{"reload": true}, "未登录或非法访问", c)
-			c.Abort()
-			return
-		}
-		if service.IsBlacklist(token) {
-			httpresponse.FailWithDetailed(gin.H{"reload": true}, "您的帐户异地登陆或令牌失效", c)
-			c.Abort()
-			return
-		}
-		j := NewJWT()
-		// parseToken 解析token包含的信息
-		claims, err := j.ParseToken(token)
-		if err != nil {
-			if err == TokenExpired {
-				httpresponse.FailWithDetailed(gin.H{"reload": true}, "授权已过期", c)
-				c.Abort()
-				return
-			}
-			httpresponse.FailWithDetailed(gin.H{"reload": true}, err.Error(), c)
-			c.Abort()
-			return
-		}
-		err, sys_user := service.FindUserByUuid(claims.UUID.String());
-		if err != nil {
-			_ = service.JsonInBlacklist(model.JwtBlacklist{Jwt: token})
-			httpresponse.FailWithDetailed(gin.H{"reload": true}, err.Error(), c)
-			c.Abort()
-		}
-		if claims.ExpiresAt-time.Now().Unix() < claims.BufferTime {
-			claims.ExpiresAt = time.Now().Unix() + global.C.Jwt.ExpiresTime
-			newToken, _ := j.CreateToken(*claims)
-			newClaims, _ := j.ParseToken(newToken)
-			c.Header("new-token", newToken)
-			c.Header("new-expires-at", strconv.FormatInt(newClaims.ExpiresAt, 10))
-			//if global.GVA_CONFIG.System.UseMultipoint {
-			//	err, RedisJwtToken := service.GetRedisJWT(newClaims.Username)
-			//	if err != nil {
-			//		global.GVA_LOG.Error("get redis jwt failed", zap.Any("err", err))
-			//	} else { // 当之前的取成功时才进行拉黑操作
-			//		_ = service.JsonInBlacklist(model.JwtBlacklist{Jwt: RedisJwtToken})
-			//	}
-			//	// 无论如何都要记录当前的活跃状态
-			//	_ = service.SetRedisJWT(newToken, newClaims.Username)
-			//}
-		}
-		c.Set("claims", claims)
-		c.Set("userId", int(sys_user.ID))
-		c.Next()
+func RealJWTAuth(c *gin.Context) {
+	err,newToken ,CustomClaims  := CheckToken(request.GetMyHeader(c))
+	if err != nil{
+		httpresponse.FailWithDetailed(gin.H{"reload": true}, err.Error(), c)
+		c.Abort()
+		return
 	}
+	if newToken != ""{
+		c.Header("new-token", newToken)
+		c.Header("new-expires-at", strconv.FormatInt(CustomClaims.ExpiresAt, 10))
+	}
+
+	c.Set("claims", CustomClaims)
+	c.Set("userId", int(CustomClaims.ID))
+	c.Next()
+
+}
+
+func CheckToken(myHeader request.Header )(err error,newToken string,CustomClaims *request.CustomClaims){
+	token := myHeader.Token
+	sourceType := myHeader.SourceType
+	if token == "" {
+		return errors.New("未登录或非法访问"),newToken,CustomClaims
+	}
+	// 我们这里jwt鉴权取头部信息 x-token 登录时回返回token信息 这里前端需要把token存储到cookie或者本地localStorage中 不过需要跟后端协商过期时间 可以约定刷新令牌或者重新登录
+
+	//if service.IsBlacklist(token) {
+	//	httpresponse.FailWithDetailed(gin.H{"reload": true}, "您的帐户异地登陆或令牌失效", c)
+	//	c.Abort()
+	//	return
+	//}
+	j := NewJWT()
+	// parseToken 解析token包含的信息
+	claims, err := j.ParseToken(token)
+	if err != nil {
+		if err == TokenExpired {
+			return errors.New("授权已过期"),newToken,CustomClaims
+		}
+		return errors.New(err.Error()),newToken,CustomClaims
+	}
+	err, user := service.FindUserByUuid(claims.UUID.String())
+	//if err != nil {
+	//	_ = service.JsonInBlacklist(model.JwtBlacklist{Jwt: token})
+	//	httpresponse.FailWithDetailed(gin.H{"reload": true}, err.Error(), c)
+	//	c.Abort()
+	//}
+
+	key := service.GetLoginJwtKey(sourceType,user.AppId,user.Id)
+	err, jwtStr := service.GetRedisJWT(key)
+	if err != nil || jwtStr == "" || err == redis.Nil {
+		return errors.New("token 不在redis 中"),newToken,CustomClaims
+	}
+	if claims.ExpiresAt-time.Now().Unix() < claims.BufferTime {
+		claims.ExpiresAt = time.Now().Unix() + global.C.Jwt.ExpiresTime
+		newToken, _ = j.CreateToken(*claims)
+		CustomClaims, _ = j.ParseToken(newToken)
+		//expiresAt = CustomClaims.ExpiresAt
+		//if global.GVA_CONFIG.System.UseMultipoint {
+		//	err, RedisJwtToken := service.GetRedisJWT(newClaims.Username)
+		//	if err != nil {
+		//		global.GVA_LOG.Error("get redis jwt failed", zap.Any("err", err))
+		//	} else { // 当之前的取成功时才进行拉黑操作
+		//		_ = service.JsonInBlacklist(model.JwtBlacklist{Jwt: RedisJwtToken})
+		//	}
+		//	// 无论如何都要记录当前的活跃状态
+		//	_ = service.SetRedisJWT(newToken, newClaims.Username)
+		//}
+	}
+
+	return nil,newToken,CustomClaims
 }
 
 // 更新token

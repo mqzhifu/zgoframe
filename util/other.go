@@ -21,20 +21,12 @@ import (
 	"fmt"
 )
 
-//@author: [piexlmax](https://github.com/piexlmax)
-//@function: MD5V
-//@description: md5加密
-//@param: str []byte
-//@return: string
 
 func MD5V(str []byte) string {
 	h := md5.New()
 	h.Write(str)
 	return hex.EncodeToString(h.Sum(nil))
 }
-
-
-
 //这个函数只是懒......
 func MyPrint(a ...interface{}) (n int, err error) {
 	if LogLevelFlag == LOG_LEVEL_DEBUG{
@@ -42,14 +34,23 @@ func MyPrint(a ...interface{}) (n int, err error) {
 	}
 	return
 }
-
+//这个函数只是懒......
 func PanicPrint(a ...interface{})   {
 	if LogLevelFlag == LOG_LEVEL_DEBUG{
 		fmt.Println(a)
 	}
 	panic(a[0])
 }
-
+func CheckMobileRule(mobile string)bool{
+	pattern := "^1[3|4|5|6|7|8|9][0-9]\\d{8}$"
+	reg := regexp.MustCompile(pattern)
+	return reg.MatchString(mobile)
+}
+func CheckEmailRule(email string)bool{
+	pattern := `\w+([-+.]\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*` //匹配电子邮箱
+	reg := regexp.MustCompile(pattern)
+	return reg.MatchString(email)
+}
 //debug 调试使用
 func ExitPrint(a ...interface{})   {
 	fmt.Println(a)
@@ -61,6 +62,7 @@ func GetRandIntNum(max int) int{
 	rand.Seed(time.Now().UnixNano())
 	return rand.Intn(max)
 }
+//获取一个随机整数32位
 func GetRandInt32Num(max int32) int{
 	rand.Seed(time.Now().UnixNano())
 	return rand.Intn(int(max))
@@ -245,10 +247,25 @@ func GetDateHour(now int64)string{
 	return str
 }
 
+//驼峰式 转 下划线 式,针对普通字符串
+func CamelToSnake2(marshalled []byte)[]byte{
+	var keyMatchRegex = regexp.MustCompile(`(\w+)`)
+	var wordBarrierRegex = regexp.MustCompile(`(\w)([A-Z])`)
+	converted := keyMatchRegex.ReplaceAllFunc(
+		marshalled,
+		func(match []byte) []byte {
+			return bytes.ToLower(wordBarrierRegex.ReplaceAll(
+				match,
+				[]byte(`${1}_${2}`),
+			))
+		},
+	)
+	return converted
+}
 
 
 
-//驼峰式 转 下划线 式
+//驼峰式 转 下划线 式,针对json串
 func CamelToSnake(marshalled []byte)[]byte{
 	var keyMatchRegex = regexp.MustCompile(`\"(\w+)\":`)
 	var wordBarrierRegex = regexp.MustCompile(`(\w)([A-Z])`)
@@ -294,6 +311,7 @@ func CmsArgs(data interface{})(argMap map[string]string,err error){
 	}
 	return cmsArg,nil
 }
+
 func Md5(text string) string {
 	hashMd5 := md5.New()
 	io.WriteString(hashMd5, text)
@@ -333,6 +351,10 @@ func BytesCombine(pBytes ...[]byte) []byte {
 func GetNowMillisecond()int64{
 	return time.Now().UnixNano() / 1e6
 }
+
+
+
+
 func MapCovertStruct(inMap map[string]interface{},outStruct interface{})interface{}{
 	fmt.Printf("%+v",inMap)
 	fmt.Printf("%+v",outStruct)

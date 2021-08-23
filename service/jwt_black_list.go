@@ -3,6 +3,7 @@ package service
 import (
 	"errors"
 	"gorm.io/gorm"
+	"strconv"
 	"time"
 	"zgoframe/core/global"
 	"zgoframe/model"
@@ -41,6 +42,11 @@ func GetRedisJWT(userName string) (err error, redisJWT string) {
 	return err, redisJWT
 }
 
+func DelRedisJWT(userName string) int64 {
+	IntCmd := global.V.Redis.Del(userName)
+	return IntCmd.Val()
+}
+
 //@author: [piexlmax](https://github.com/piexlmax)
 //@function: SetRedisJWT
 //@description: jwt存入redis并设置过期时间
@@ -52,4 +58,9 @@ func SetRedisJWT(jwt string, userName string) (err error) {
 	timer := time.Duration(global.C.Jwt.ExpiresTime) * time.Second
 	err = global.V.Redis.Set(userName, jwt, timer).Err()
 	return err
+}
+
+func GetLoginJwtKey(sourceType int ,appId int ,uid int)string{
+	key := "jwt:login:"+ strconv.Itoa(sourceType) + ":"+ strconv.Itoa(appId) + ":" + strconv.Itoa(int(uid))
+	return key
 }

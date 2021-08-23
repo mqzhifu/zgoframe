@@ -7,8 +7,9 @@ import (
 
 // Custom claims structure
 type CustomClaims struct {
+	AppId 		int
 	UUID        uuid.UUID
-	ID          uint
+	ID          int
 	Username    string
 	NickName    string
 	AuthorityId string

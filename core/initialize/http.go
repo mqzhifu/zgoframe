@@ -40,76 +40,44 @@ func HttpServerShutdown(){
 	global.V.HttpServer.Shutdown(cancelCtx)
 }
 
+func HandleNotFound(c *gin.Context){
+	handleErr := "404 not found."
+	//handleErr.Request = c.Request.Method + " " + c.Request.URL.String()
+	c.JSON(404,handleErr)
+	return
+}
+
+
 //GIN: 监听HTTP   中间件  文件上传
 func GetNewHttpGIN()(*gin.Engine,error) {
 	ginRouter := gin.Default()
+	//获取目录加载
 	ginRouter.StaticFS("/static",http.Dir(global.C.Http.StaticPath))
-
-
-
-
-
-	//var AccessCounter = prometheus.NewCounterVec(
-	//	prometheus.CounterOpts{
-	//		Name: "grpc_request_count",
-	//	},
-	//	[]string{"service1","rs"},
-	//)
-	//
-	////var AccessCounter = prometheus.NewCounterVec(
-	////	prometheus.CounterOpts{
-	////		Name: "api_requests_total",
-	////	},
-	////	[]string{"method", "path"},
-	////)
-	//
-	//prometheus.MustRegister(AccessCounter)
-	//
-	//
-	//ginRouter.GET("/counter", func(c *gin.Context) {
-	//	//purl, _ := url.Parse(c.Request.RequestURI)
-	//	//AccessCounter.With(prometheus.Labels{
-	//	//	"service1": c.Request.Method,
-	//	//	"rs":   purl.Path,
-	//	//}).Add(1)
-	//
-	//	AccessCounter.With(prometheus.Labels{
-	//		"service1": "s1",
-	//		"rs":   "success",
-	//	}).Add(1)
-	//
-	//
-	//	AccessCounter.With(prometheus.Labels{
-	//		"service1": "s1",
-	//		"rs":   "failed",
-	//	}).Add(1)
-	//
-	//
-	//
-	//})
-
-
-
-
-
-
-
+	//加载swagger api 工具
 	ginRouter.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	//设置跨域
 	ginRouter.Use(httpmiddleware.Cors())
-
+	//设置非登陆可访问API
 	PublicGroup := ginRouter.Group("")
 	{
 		router.InitBaseRouter(PublicGroup)
-
 	}
+	PublicGroup.Use(httpmiddleware.ProcessHeader())
 
-	ginRouter.Use(httpmiddleware.RateMiddleware())
+
+	//加载限流中间件
+	//ginRouter.Use(httpmiddleware.RateMiddleware())
 	PrivateGroup := ginRouter.Group("")
+	//设置正常API（需要验证）
 	PrivateGroup.Use(httpmiddleware.JWTAuth()).Use(httpmiddleware.CasbinHandler())
 	{
 		router.InitUserRouter(PrivateGroup)
-
 	}
+
+	//global.V.Gin.GET("/sys/quit",  HttpQuit)
+	//global.V.Gin.GET("/sys/config", GetConfig)
+
+	//ginRouter.NoMethod(HandleNotFound)
 
 	return ginRouter,nil
 

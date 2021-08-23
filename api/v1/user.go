@@ -24,32 +24,38 @@ import (
 // @Router /base/login [post]
 func Login(c *gin.Context) {
 	var L request.Login
-	_ = c.ShouldBindJSON(&L)
-
+	c.ShouldBind(&L)
 	if err := util.Verify(L, util.LoginVerify); err != nil {
-
 		httpresponse.FailWithMessage(err.Error(), c)
 		return
 	}
-	if store.Verify(L.CaptchaId, L.Captcha, true) {
-		U := &model.User{Username: L.Username, Password: L.Password}
-		if err, user := service.Login(U); err != nil {
+
+	if !request.CheckPlatformExist(request.GetMyHeader(c).SourceType){
+		httpresponse.FailWithMessage("Header.SourceType unknow", c)
+		return
+	}
+
+	//if store.Verify(L.CaptchaId, L.Captcha, true) {
+		U := &model.User{Username: L.Username, Password: L.Password,AppId: L.AppId}
+		err, user := service.Login(U)
+		if  err != nil {
 			global.V.Zap.Error("登陆失败! 用户名不存在或者密码错误", zap.Any("err", err))
 			httpresponse.FailWithMessage("用户名不存在或者密码错误", c)
 		} else {
 			tokenNext(c, *user)
 		}
-	} else {
-		httpresponse.FailWithMessage("验证码错误", c)
-	}
+	//} else {
+	//	httpresponse.FailWithMessage("验证码错误", c)
+	//}
 }
 
 // 登录以后签发jwt
 func tokenNext(c *gin.Context, user model.User) {
 	j := &httpmiddleware.JWT{SigningKey: []byte(global.C.Jwt.Key)} // 唯一签名
 	claims := request.CustomClaims{
-		UUID:        user.UUID,
-		ID:          user.ID,
+		AppId: user.AppId,
+		UUID:        user.Uuid,
+		ID:          user.Id,
 		NickName:    user.NickName,
 		Username:    user.Username,
 		AuthorityId: user.AuthorityId,
@@ -74,8 +80,12 @@ func tokenNext(c *gin.Context, user model.User) {
 	//	}, "登录成功", c)
 	//	return
 	//}
-	if err, jwtStr := service.GetRedisJWT(user.Username); err == redis.Nil {
-		if err := service.SetRedisJWT(token, user.Username); err != nil {
+	key := service.GetLoginJwtKey(request.GetMyHeader(c).SourceType,user.AppId,user.Id)
+	//util.MyPrint(key)
+	err, jwtStr := service.GetRedisJWT(key)
+	util.MyPrint("jwtStr:",jwtStr)
+	if  err == redis.Nil {
+		if err := service.SetRedisJWT(token, key); err != nil {
 			global.V.Zap.Error("设置登录状态失败", zap.Any("err", err))
 			httpresponse.FailWithMessage("设置登录状态失败", c)
 			return
@@ -89,13 +99,13 @@ func tokenNext(c *gin.Context, user model.User) {
 		global.V.Zap.Error("设置登录状态失败", zap.Any("err", err))
 		httpresponse.FailWithMessage("设置登录状态失败", c)
 	} else {
-		var blackJWT model.JwtBlacklist
-		blackJWT.Jwt = jwtStr
-		if err := service.JsonInBlacklist(blackJWT); err != nil {
-			httpresponse.FailWithMessage("jwt作废失败", c)
-			return
-		}
-		if err := service.SetRedisJWT(token, user.Username); err != nil {
+		//var blackJWT model.JwtBlacklist
+		//blackJWT.Jwt = jwtStr
+		//if err := service.JsonInBlacklist(blackJWT); err != nil {
+		//	httpresponse.FailWithMessage("jwt作废失败", c)
+		//	return
+		//}
+		if err := service.SetRedisJWT(token, key); err != nil {
 			httpresponse.FailWithMessage("设置登录状态失败", c)
 			return
 		}
@@ -107,21 +117,21 @@ func tokenNext(c *gin.Context, user model.User) {
 	}
 }
 
-// @Tags SysUser
+// @Tags User
 // @Summary 用户注册账号
 // @Produce  application/json
-// @Param data body model.User true "用户名, 昵称, 密码, 角色ID"
+// @Param data body model.User true "用户名, 昵称, 密码, 角色ID ,AppId"
 // @Success 200 {string} string "{"success":true,"data":{},"msg":"注册成功"}"
 // @Router /user/register [post]
 func Register(c *gin.Context) {
 	var R request.Register
-	_ = c.ShouldBindJSON(&R)
+	_ = c.ShouldBind(&R)
 	if err := util.Verify(R, util.RegisterVerify); err != nil {
 		httpresponse.FailWithMessage(err.Error(), c)
 		return
 	}
-	user := &model.User{Username: R.Username, NickName: R.NickName, Password: R.Password, HeaderImg: R.HeaderImg, AuthorityId: R.AuthorityId}
-	err, userReturn := service.Register(*user)
+	user := &model.User{Username: R.Username, NickName: R.NickName, Password: R.Password, HeaderImg: R.HeaderImg, AuthorityId: R.AuthorityId ,AppId: R.AppId}
+	err, userReturn := service.Register(*user,request.GetMyHeader(c))
 	if err != nil {
 		global.V.Zap.Error("注册失败", zap.Any("err", err))
 		httpresponse.FailWithDetailed(httpresponse.SysUserResponse{User: userReturn}, "注册失败", c)
@@ -130,7 +140,20 @@ func Register(c *gin.Context) {
 	}
 }
 
-// @Tags SysUser
+// @Summary 用户退出
+// @Description 用户退出
+// @Tags User
+// @Security ApiKeyAuth
+// @Produce  application/json
+// @Success 200 {string} string "{"success":true,"data":{},"msg":"退出成功"}"
+// @Router /base/logout [post]
+func Logout(c *gin.Context) {
+	key := service.GetLoginJwtKey(request.GetMyHeader(c).SourceType,getUserAppID(c),getUserID(c))
+	service.DelRedisJWT(key)
+}
+
+
+// @Tags User
 // @Summary 用户修改密码
 // @Security ApiKeyAuth
 // @Produce  application/json
@@ -153,7 +176,7 @@ func ChangePassword(c *gin.Context) {
 	}
 }
 
-// @Tags SysUser
+// @Tags User
 // @Summary 分页获取用户列表
 // @Security ApiKeyAuth
 // @accept application/json
@@ -181,7 +204,7 @@ func GetUserList(c *gin.Context) {
 	}
 }
 
-// @Tags SysUser
+// @Tags User
 // @Summary 设置用户权限
 // @Security ApiKeyAuth
 // @accept application/json
@@ -204,35 +227,7 @@ func SetUserAuthority(c *gin.Context) {
 	}
 }
 
-// @Tags SysUser
-// @Summary 删除用户
-// @Security ApiKeyAuth
-// @accept application/json
-// @Produce application/json
-// @Param data body request.GetById true "用户ID"
-// @Success 200 {string} string "{"success":true,"data":{},"msg":"删除成功"}"
-// @Router /user/deleteUser [delete]
-func DeleteUser(c *gin.Context) {
-	var reqId request.GetById
-	_ = c.ShouldBindJSON(&reqId)
-	if err := util.Verify(reqId, util.IdVerify); err != nil {
-		httpresponse.FailWithMessage(err.Error(), c)
-		return
-	}
-	jwtId := getUserID(c)
-	if jwtId == uint(reqId.Id) {
-		httpresponse.FailWithMessage("删除失败, 自杀失败", c)
-		return
-	}
-	if err := service.DeleteUser(reqId.Id); err != nil {
-		global.V.Zap.Error("删除失败!", zap.Any("err", err))
-		httpresponse.FailWithMessage("删除失败", c)
-	} else {
-		httpresponse.OkWithMessage("删除成功", c)
-	}
-}
-
-// @Tags SysUser
+// @Tags User
 // @Summary 设置用户信息
 // @Security ApiKeyAuth
 // @accept application/json
@@ -254,15 +249,52 @@ func SetUserInfo(c *gin.Context) {
 		httpresponse.OkWithDetailed(gin.H{"userInfo": ReqUser}, "设置成功", c)
 	}
 }
+// @Tags User
+// @Summary 删除用户
+// @Security ApiKeyAuth
+// @accept application/json
+// @Produce application/json
+// @Param data body request.GetById true "用户ID"
+// @Success 200 {string} string "{"success":true,"data":{},"msg":"删除成功"}"
+// @Router /user/deleteUser [delete]
+func DeleteUser(c *gin.Context) {
+	var reqId request.GetById
+	_ = c.ShouldBindJSON(&reqId)
+	if err := util.Verify(reqId, util.IdVerify); err != nil {
+		httpresponse.FailWithMessage(err.Error(), c)
+		return
+	}
+	jwtId := getUserID(c)
+	if jwtId == int(reqId.Id) {
+		httpresponse.FailWithMessage("删除失败, 自杀失败", c)
+		return
+	}
+	if err := service.DeleteUser(reqId.Id); err != nil {
+		global.V.Zap.Error("删除失败!", zap.Any("err", err))
+		httpresponse.FailWithMessage("删除失败", c)
+	} else {
+		httpresponse.OkWithMessage("删除成功", c)
+	}
+}
 
 // 从Gin的Context中获取从jwt解析出来的用户ID
-func getUserID(c *gin.Context) uint {
+func getUserID(c *gin.Context) int {
 	if claims, exists := c.Get("claims"); !exists {
 		global.V.Zap.Error("从Gin的Context中获取从jwt解析出来的用户ID失败, 请检查路由是否使用jwt中间件")
 		return 0
 	} else {
 		waitUse := claims.(*request.CustomClaims)
 		return waitUse.ID
+	}
+}
+
+func getUserAppID(c *gin.Context) int {
+	if claims, exists := c.Get("claims"); !exists {
+		global.V.Zap.Error("从Gin的Context中获取从jwt解析出来的user_appID失败, 请检查路由是否使用jwt中间件")
+		return 0
+	} else {
+		waitUse := claims.(*request.CustomClaims)
+		return waitUse.AppId
 	}
 }
 

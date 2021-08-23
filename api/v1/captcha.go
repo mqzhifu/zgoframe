@@ -11,7 +11,7 @@ import (
 var store = base64Captcha.DefaultMemStore
 
 // @Tags Base
-// @Summary 生成验证码
+// @Summary 生成图片验证码
 // @Security ApiKeyAuth
 // @accept application/json
 // @Produce application/json

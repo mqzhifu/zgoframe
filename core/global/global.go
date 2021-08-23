@@ -7,7 +7,6 @@ import (
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 	"net/http"
-	"time"
 	"zgoframe/util"
 )
 
@@ -23,7 +22,9 @@ type Global struct {
 	Service    *util.Service
 	Metric 		*util.MyMetrics
 	Grpc 		*util.MyGrpc
-	Alert 		*util.Alert
+	AlertPush	*util.AlertPush	//报警推送： prometheus
+	AlertHook 	*util.AlertHook	//报警：邮件 手机
+	Websocket  *util.Websocket
 }
 
 func New()*Global {
@@ -34,16 +35,10 @@ func New()*Global {
 var V = New()
 var C Config
 
-type MODEL struct {
-	ID        uint `gorm:"primarykey"`
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	DeletedAt gorm.DeletedAt `gorm:"index" json:"-"`
-}
-
 const (
 	DEFAULT_CONFIT_TYPE  = "toml"
 	DEFAULT_CONFIG_FILE_NAME = "config"
+	DEFAULT_CONFIG_SOURCE_TYPE = "file"
 
 	CONFIG_STATUS_OPEN = "open"
 )

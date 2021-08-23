@@ -31,7 +31,6 @@ func NewAlertHook()*AlertHook{
 	}
 
 	alertHook.Email = NewMyEmail(emailOption)
-
 	//myEmail.SendOneEmail()
 	return alertHook
 }

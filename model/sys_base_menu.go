@@ -1,11 +1,7 @@
 package model
 
-import (
-	"zgoframe/core/global"
-)
-
 type SysBaseMenu struct {
-	global.MODEL
+	MODEL
 	MenuLevel     uint   `json:"-"`
 	ParentId      string `json:"parentId" gorm:"comment:父菜单ID"`
 	Path          string `json:"path" gorm:"comment:路由path"`
@@ -27,7 +23,7 @@ type Meta struct {
 }
 
 type SysBaseMenuParameter struct {
-	global.MODEL
+	MODEL
 	SysBaseMenuID uint
 	Type          string `json:"type" gorm:"comment:地址栏携带参数为params还是query"`
 	Key           string `json:"key" gorm:"comment:地址栏携带参数的key"`

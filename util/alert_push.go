@@ -6,15 +6,15 @@ import (
 	"net/http"
 )
 
-type Alert struct {
+type AlertPush struct {
 	Ip	string
 	Port string
 	Uri string
 	Url string
 }
 
-func NewAlert( ip string , port string, uri string)*Alert{
-	alert := new(Alert)
+func NewAlertPush( ip string , port string, uri string)*AlertPush{
+	alert := new(AlertPush)
 	alert.Ip = ip
 	alert.Port = port
 	alert.Uri = uri
@@ -41,10 +41,10 @@ type AlertMsg struct {
 //	...
 //]
 
-func(alert *Alert) Push(alertMsg AlertMsg){
+func(alertPush *AlertPush) Push(alertMsg AlertMsg){
 	str ,err := json.Marshal(alertMsg)
 
-	req, err := http.NewRequest("POST", alert.Url, bytes.NewReader(str))
+	req, err := http.NewRequest("POST", alertPush.Url, bytes.NewReader(str))
 	// req.Header.Set("X-Custom-Header", "myvalue")
 	req.Header.Set("Content-Type", "application/json")
 

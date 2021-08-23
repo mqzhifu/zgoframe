@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 )
+
 type ResponseMsgST struct {
 	Code	int
 	Msg 	interface{}
@@ -35,6 +36,7 @@ type EtcdOption struct {
 	Port 	string
 	Log *zap.Logger
 }
+//通过http 请求配置中心，获取返回结果
 type EtcdHttpResp struct {
 	Code int        `json:"code"`
 	Data Etcdconfig `json:"data"`
@@ -48,13 +50,16 @@ func NewMyEtcdSdk(etcdOption EtcdOption)(myEtcd *MyEtcd,errs error){
 	myEtcd = new (MyEtcd)
 	var clientv3Config  clientv3.Config
 	dns := etcdOption.Ip + ":" + etcdOption.Port
+	etcdOption.Log.Info("etcd connect:"+dns)
+	//建立连接，优先使用 FindEtcdUrl ，走网络发现，这种 扩展更好
 	if etcdOption.FindEtcdUrl != ""{
+		etcdOption.Log.Info("use FindEtcdUrl node")
 		//获取etcd 服务器配置信息
 		jsonStruct ,errs := getEtcdHostPort(etcdOption)
 		if errs != nil {
 			return nil,errors.New("http request err :" + errs.Error())
 		}
-		//etcdOption.Log.Info("etcdConfig ip list : ", jsonStruct.Data.Hosts)
+		//etcdOption.Log.Info("etcdConfig ip list : ", json.Marshal(jsonStruct.Data.Hosts))
 		etcdOption.LinkAddressList = jsonStruct.Data.Hosts
 		//开启建立连接
 		clientv3Config  = clientv3.Config{
@@ -64,9 +69,15 @@ func NewMyEtcdSdk(etcdOption EtcdOption)(myEtcd *MyEtcd,errs error){
 			Password: jsonStruct.Data.Password,
 		}
 	}else{
+		etcdOption.Log.Info("use configFile node")
+		dns := etcdOption.Ip + ":" + etcdOption.Port
+
+		etcdOption.Log.Info("etcd confg: " +  dns+ " , username:"+etcdOption.Username + " ps:"+etcdOption.Password)
+
 		etcdOption.LinkAddressList = append(etcdOption.LinkAddressList,dns)
 
 		clientv3Config  = clientv3.Config{
+			//#http://114.116.212.202/account/dev/v1/sys/etcd
 			Endpoints:  etcdOption.LinkAddressList,
 			DialTimeout: 5 * time.Second,
 			Username: etcdOption.Username,
@@ -80,7 +91,7 @@ func NewMyEtcdSdk(etcdOption EtcdOption)(myEtcd *MyEtcd,errs error){
 	}
 	myEtcd.cli = cli
 	myEtcd.option = etcdOption
-
+	//获取自己项目想着的配置信息
 	myEtcd.iniAppConf()
 	return myEtcd,nil
 }

@@ -10,6 +10,10 @@ service First {
   rpc SayHi (RequestRegPlayer) returns (ResponseReg) {}
 }
 
+service Second {
+  rpc SayHello2 (RequestRegPlayer) returns (ResponseReg) {}
+  rpc SayHi2 (RequestRegPlayer) returns (ResponseReg) {}
+}
 
 
 message RequestRegPlayer{

@@ -1,36 +1,10 @@
 package service
 
 import (
-	"errors"
-	"gorm.io/gorm"
 	"strconv"
 	"time"
 	"zgoframe/core/global"
-	"zgoframe/model"
 )
-
-//@author: [piexlmax](https://github.com/piexlmax)
-//@function: JsonInBlacklist
-//@description: 拉黑jwt
-//@param: jwtList model.JwtBlacklist
-//@return: err error
-
-func JsonInBlacklist(jwtList model.JwtBlacklist) (err error) {
-	err = global.V.Gorm.Create(&jwtList).Error
-	return
-}
-
-//@author: [piexlmax](https://github.com/piexlmax)
-//@function: IsBlacklist
-//@description: 判断JWT是否在黑名单内部
-//@param: jwt string
-//@return: bool
-
-func IsBlacklist(jwt string) bool {
-	isNotFound := errors.Is(global.V.Gorm.Where("jwt = ?", jwt).First(&model.JwtBlacklist{}).Error, gorm.ErrRecordNotFound)
-	return !isNotFound
-}
-
 //@author: [piexlmax](https://github.com/piexlmax)
 //@function: GetRedisJWT
 //@description: 从redis取jwt

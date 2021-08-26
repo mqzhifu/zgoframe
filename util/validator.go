@@ -284,5 +284,6 @@ var (
 	ChangePasswordVerify   = Rules{"Username": {NotEmpty()}, "Password": {NotEmpty()}, "NewPassword": {NotEmpty()}}
 	SetUserAuthorityVerify = Rules{"UUID": {NotEmpty()}, "AuthorityId": {NotEmpty()}}
 	SendSMSVerify          = Rules{"AppId": {NotEmpty()},"Code": {NotEmpty()}, "Mobile": {NotEmpty()}, "RuleId": {NotEmpty()}}
+	LogReceiveVerify          = Rules{"Msg": {NotEmpty()},"Level": {NotEmpty()}}
 )
 

@@ -2,30 +2,56 @@ package httpmiddleware
 
 import (
 	"github.com/gin-gonic/gin"
+	uuid "github.com/satori/go.uuid"
 	"reflect"
 	"strconv"
 	"strings"
+	"zgoframe/core/global"
 	"zgoframe/http/request"
 	"zgoframe/util"
 )
 
 func ProcessHeader()gin.HandlerFunc{
 	return func(c *gin.Context) {
-
+		//string header map 映射到 request.Header 结构体中
 		header := HttpHeaderSureMapCovertSureStruct(c.Request.Header)
-
+		//验证SourceType
 		if !request.CheckPlatformExist(header.SourceType){
 			header.SourceType = request.PLATFORM_UNKNOW
 		}
+
+		if header.AppId <= 0{
+
+		}
+
+		_ , empty := global.V.AppMng.GetById(header.AppId)
+		if empty{
+
+		}
+
 		header.AutoIp = c.Request.RemoteAddr
 
+		if header.RequestId == ""{
+			header.RequestId = CreateOneRequestId()
+		}
+
+		if header.TraceId == ""{
+			header.TraceId = CreateOneTraceId()
+		}
+
 		c.Set("myheader",header)
-		//request.Header{
-		//	RequestId: c.GetHeader("request_id"),
-		//}
 		c.Next()
 	}
 }
+
+func CreateOneRequestId()string{
+	return uuid.NewV4().String()
+}
+
+func CreateOneTraceId()string{
+	return uuid.NewV4().String()
+}
+
 //字符串 下划线转中划线
 func StrCovertHttpHeader(str string)string{
 	rsStr := ""

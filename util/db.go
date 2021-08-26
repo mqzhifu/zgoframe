@@ -95,9 +95,14 @@ func (db *Db)processOneTable(tableStruct interface{}){
 			sql += " UNSIGNED "
 		}
 		if k != "DeletedAt"{//这个特殊，得允许null
-			//if v.Null != ""{
-			sql += " not null "
-			//}
+			if v.Define == "text"{
+				sql += " null "
+			}else{
+				//if v.Null != ""{
+				sql += " not null "
+				//}
+			}
+
 		}
 
 

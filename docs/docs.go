@@ -52,12 +52,17 @@ var doc = `{
         },
         "/base/checktoken": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "checktoken",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "Base"
+                    "User"
                 ],
                 "summary": "checktoken",
                 "responses": {
@@ -101,24 +106,54 @@ var doc = `{
                 }
             }
         },
-        "/base/logout": {
+        "/base/parserToken": {
             "post": {
                 "security": [
                     {
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "用户退出",
+                "description": "ParserToken",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Base"
+                ],
+                "summary": "ParserToken",
+                "responses": {
+                    "200": {
+                        "description": "{\"success\":true,\"data\":{},\"msg\":\"登陆成功\"}",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/base/register": {
+            "post": {
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "User"
                 ],
-                "summary": "用户退出",
+                "summary": "用户注册账号",
+                "parameters": [
+                    {
+                        "description": "用户名, 昵称, 密码, 角色ID ,AppId",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/model.User"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
-                        "description": "{\"success\":true,\"data\":{},\"msg\":\"退出成功\"}",
+                        "description": "{\"success\":true,\"data\":{},\"msg\":\"注册成功\"}",
                         "schema": {
                             "type": "string"
                         }
@@ -150,6 +185,53 @@ var doc = `{
                 "responses": {
                     "200": {
                         "description": "{\"success\":true,\"data\":{},\"msg\":\"发送成功\"}",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/logslave/getWsServer": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "获取长连接API映射表",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Logslave"
+                ],
+                "summary": "获取长连接API映射表"
+            }
+        },
+        "/logslave/receive": {
+            "post": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Logslave"
+                ],
+                "summary": "接收日志",
+                "parameters": [
+                    {
+                        "description": "level,msg",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/v1.LogData"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"success\":true,\"data\":{},\"msg\":\"已收录\"}",
                         "schema": {
                             "type": "string"
                         }
@@ -268,67 +350,24 @@ var doc = `{
                 }
             }
         },
-        "/user/register": {
-            "post": {
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "User"
-                ],
-                "summary": "用户注册账号",
-                "parameters": [
-                    {
-                        "description": "用户名, 昵称, 密码, 角色ID ,AppId",
-                        "name": "data",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/model.User"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "{\"success\":true,\"data\":{},\"msg\":\"注册成功\"}",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/user/setUserAuthority": {
+        "/user/logout": {
             "post": {
                 "security": [
                     {
                         "ApiKeyAuth": []
                     }
                 ],
-                "consumes": [
-                    "application/json"
-                ],
+                "description": "用户退出",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "User"
                 ],
-                "summary": "设置用户权限",
-                "parameters": [
-                    {
-                        "description": "用户UUID, 角色ID",
-                        "name": "data",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/request.SetUserAuth"
-                        }
-                    }
-                ],
+                "summary": "用户退出",
                 "responses": {
                     "200": {
-                        "description": "{\"success\":true,\"data\":{},\"msg\":\"修改成功\"}",
+                        "description": "{\"success\":true,\"data\":{},\"msg\":\"退出成功\"}",
                         "schema": {
                             "type": "string"
                         }
@@ -541,9 +580,6 @@ var doc = `{
                 "nickName": {
                     "type": "string"
                 },
-                "reg_type": {
-                    "type": "integer"
-                },
                 "robot": {
                     "type": "integer"
                 },
@@ -634,14 +670,20 @@ var doc = `{
                 }
             }
         },
-        "request.SetUserAuth": {
+        "v1.LogData": {
             "type": "object",
             "properties": {
-                "authorityId": {
+                "app_id": {
+                    "type": "integer"
+                },
+                "level": {
+                    "type": "integer"
+                },
+                "msg": {
                     "type": "string"
                 },
-                "uuid": {
-                    "type": "string"
+                "uid": {
+                    "type": "integer"
                 }
             }
         }

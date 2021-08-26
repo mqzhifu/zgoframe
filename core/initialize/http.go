@@ -59,19 +59,20 @@ func GetNewHttpGIN()(*gin.Engine,error) {
 	ginRouter.Use(httpmiddleware.Cors())
 	//设置非登陆可访问API
 	PublicGroup := ginRouter.Group("")
+	PublicGroup.Use(httpmiddleware.OperationRecord()).Use(httpmiddleware.RateMiddleware()).Use(httpmiddleware.ProcessHeader())
 	{
 		router.InitBaseRouter(PublicGroup)
 	}
-	PublicGroup.Use(httpmiddleware.ProcessHeader())
-
 
 	//加载限流中间件
 	//ginRouter.Use(httpmiddleware.RateMiddleware())
 	PrivateGroup := ginRouter.Group("")
 	//设置正常API（需要验证）
-	PrivateGroup.Use(httpmiddleware.JWTAuth()).Use(httpmiddleware.CasbinHandler())
+	//PrivateGroup.Use(httpmiddleware.JWTAuth()).Use(httpmiddleware.CasbinHandler())
+	PrivateGroup.Use(httpmiddleware.OperationRecord()).Use(httpmiddleware.RateMiddleware()).Use(httpmiddleware.ProcessHeader(),httpmiddleware.JWTAuth())
 	{
 		router.InitUserRouter(PrivateGroup)
+		router.InitLogslaveRouter(PrivateGroup)
 	}
 
 	//global.V.Gin.GET("/sys/quit",  HttpQuit)

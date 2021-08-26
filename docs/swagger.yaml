@@ -108,8 +108,6 @@ definitions:
         type: string
       nickName:
         type: string
-      reg_type:
-        type: integer
       robot:
         type: integer
       sex:
@@ -168,12 +166,16 @@ definitions:
       rule_id:
         type: integer
     type: object
-  request.SetUserAuth:
+  v1.LogData:
     properties:
-      authorityId:
+      app_id:
+        type: integer
+      level:
+        type: integer
+      msg:
         type: string
-      uuid:
-        type: string
+      uid:
+        type: integer
     type: object
 info:
   contact: {}
@@ -207,9 +209,11 @@ paths:
           description: '{"success":true,"data":{},"msg":"登陆成功"}'
           schema:
             type: string
+      security:
+      - ApiKeyAuth: []
       summary: checktoken
       tags:
-      - Base
+      - User
   /base/login:
     post:
       description: 用户登陆，验证，生成token
@@ -230,19 +234,38 @@ paths:
       summary: 用户登陆
       tags:
       - Base
-  /base/logout:
+  /base/parserToken:
     post:
-      description: 用户退出
+      description: ParserToken
       produces:
       - application/json
       responses:
         "200":
-          description: '{"success":true,"data":{},"msg":"退出成功"}'
+          description: '{"success":true,"data":{},"msg":"登陆成功"}'
           schema:
             type: string
       security:
       - ApiKeyAuth: []
-      summary: 用户退出
+      summary: ParserToken
+      tags:
+      - Base
+  /base/register:
+    post:
+      parameters:
+      - description: 用户名, 昵称, 密码, 角色ID ,AppId
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/model.User'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"success":true,"data":{},"msg":"注册成功"}'
+          schema:
+            type: string
+      summary: 用户注册账号
       tags:
       - User
   /base/sendSMS:
@@ -265,6 +288,35 @@ paths:
       summary: 发送验证码
       tags:
       - Base
+  /logslave/getWsServer:
+    get:
+      description: 获取长连接API映射表
+      produces:
+      - application/json
+      security:
+      - ApiKeyAuth: []
+      summary: 获取长连接API映射表
+      tags:
+      - Logslave
+  /logslave/receive:
+    post:
+      parameters:
+      - description: level,msg
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/v1.LogData'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"success":true,"data":{},"msg":"已收录"}'
+          schema:
+            type: string
+      summary: 接收日志
+      tags:
+      - Logslave
   /user/changePassword:
     put:
       parameters:
@@ -332,46 +384,19 @@ paths:
       summary: 分页获取用户列表
       tags:
       - User
-  /user/register:
+  /user/logout:
     post:
-      parameters:
-      - description: 用户名, 昵称, 密码, 角色ID ,AppId
-        in: body
-        name: data
-        required: true
-        schema:
-          $ref: '#/definitions/model.User'
+      description: 用户退出
       produces:
       - application/json
       responses:
         "200":
-          description: '{"success":true,"data":{},"msg":"注册成功"}'
-          schema:
-            type: string
-      summary: 用户注册账号
-      tags:
-      - User
-  /user/setUserAuthority:
-    post:
-      consumes:
-      - application/json
-      parameters:
-      - description: 用户UUID, 角色ID
-        in: body
-        name: data
-        required: true
-        schema:
-          $ref: '#/definitions/request.SetUserAuth'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: '{"success":true,"data":{},"msg":"修改成功"}'
+          description: '{"success":true,"data":{},"msg":"退出成功"}'
           schema:
             type: string
       security:
       - ApiKeyAuth: []
-      summary: 设置用户权限
+      summary: 用户退出
       tags:
       - User
   /user/setUserInfo:

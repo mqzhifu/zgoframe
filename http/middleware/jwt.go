@@ -4,15 +4,13 @@ import (
 	"errors"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
+	"github.com/go-redis/redis"
 	"strconv"
 	"time"
-
 	"zgoframe/core/global"
 	"zgoframe/http/request"
 	httpresponse "zgoframe/http/response"
-
 	"zgoframe/service"
-	"github.com/go-redis/redis"
 )
 
 //"strconv"
@@ -22,6 +20,7 @@ import (
 type JWT struct {
 	SigningKey []byte
 }
+
 
 var (
 	TokenExpired     = errors.New("Token is expired")
@@ -79,75 +78,75 @@ func (j *JWT) ParseToken(tokenString string) (*request.CustomClaims, error) {
 }
 
 func RealJWTAuth(c *gin.Context) {
-	err,newToken ,CustomClaims  := CheckToken(request.GetMyHeader(c))
+	parserTokenData,err := CheckToken(request.GetMyHeader(c))
 	if err != nil{
 		httpresponse.FailWithDetailed(gin.H{"reload": true}, err.Error(), c)
 		c.Abort()
 		return
 	}
-	if newToken != ""{
-		c.Header("new-token", newToken)
-		c.Header("new-expires-at", strconv.FormatInt(CustomClaims.ExpiresAt, 10))
+	if parserTokenData.NewToken != ""{
+		c.Header("new-token", parserTokenData.NewToken)
+		c.Header("new-expires-at", strconv.FormatInt(parserTokenData.Claims.ExpiresAt, 10))
 	}
 
-	c.Set("claims", CustomClaims)
-	c.Set("userId", int(CustomClaims.ID))
+	c.Set("parserTokenData", parserTokenData)
+	//c.Set("userId", ParserTokenData.Claims.Id)
+	//c.Set("user",ParserTokenData.User)
+
 	c.Next()
 
 }
 
-func CheckToken(myHeader request.Header )(err error,newToken string,CustomClaims *request.CustomClaims){
-	token := myHeader.Token
-	sourceType := myHeader.SourceType
-	if token == "" {
-		return errors.New("未登录或非法访问"),newToken,CustomClaims
-	}
-	// 我们这里jwt鉴权取头部信息 x-token 登录时回返回token信息 这里前端需要把token存储到cookie或者本地localStorage中 不过需要跟后端协商过期时间 可以约定刷新令牌或者重新登录
+func CheckToken(myHeader request.Header )(parserTokenData request.ParserTokenData,err error){
+	parserTokenData.Token = myHeader.Token
+	parserTokenData.SourceType = myHeader.SourceType
 
-	//if service.IsBlacklist(token) {
-	//	httpresponse.FailWithDetailed(gin.H{"reload": true}, "您的帐户异地登陆或令牌失效", c)
-	//	c.Abort()
-	//	return
-	//}
+	if parserTokenData.Token == "" || parserTokenData.SourceType <= 0{
+		return parserTokenData,errors.New("SourceType错误，未登录或非法访问")
+	}
+	//登录时回返回token信息 这里前端需要把token存储到cookie或者本地localStorage中 不过需要跟后端协商过期时间 可以约定刷新令牌或者重新登录
 	j := NewJWT()
 	// parseToken 解析token包含的信息
-	claims, err := j.ParseToken(token)
+	claims, err := j.ParseToken(parserTokenData.Token)
 	if err != nil {
 		if err == TokenExpired {
-			return errors.New("授权已过期"),newToken,CustomClaims
+			return parserTokenData,errors.New("授权已过期")
 		}
-		return errors.New(err.Error()),newToken,CustomClaims
+		return parserTokenData,errors.New(err.Error())
 	}
-	err, user := service.FindUserByUuid(claims.UUID.String())
-	//if err != nil {
-	//	_ = service.JsonInBlacklist(model.JwtBlacklist{Jwt: token})
-	//	httpresponse.FailWithDetailed(gin.H{"reload": true}, err.Error(), c)
-	//	c.Abort()
-	//}
 
-	key := service.GetLoginJwtKey(sourceType,user.AppId,user.Id)
-	err, jwtStr := service.GetRedisJWT(key)
+	if claims.AppId <0 || claims.Id < 0 {
+		return parserTokenData,errors.New("AppId or Id is null")
+	}
+
+	if claims.SourceType != parserTokenData.SourceType{
+		return parserTokenData,errors.New("SourceType错误")
+	}
+	//util.MyPrint(claims.AppId,claims.ID,claims.Username)
+	err, user := service.FindUserById(claims.Id)
+	parserTokenData.User = user
+	if err != nil {
+		//_ = service.JsonInBlacklist(model.JwtBlacklist{Jwt: token})
+		return parserTokenData,errors.New("id not in db")
+	}
+
+	redisLoginJwtKey := service.GetLoginJwtKey(parserTokenData.SourceType,claims.AppId,claims.Id)
+	global.V.Zap.Debug("user token key:"+redisLoginJwtKey)
+
+	err, jwtStr := service.GetRedisJWT(redisLoginJwtKey)
 	if err != nil || jwtStr == "" || err == redis.Nil {
-		return errors.New("token 不在redis 中"),newToken,CustomClaims
+		return parserTokenData,errors.New("token 不在redis 中")
 	}
 	if claims.ExpiresAt-time.Now().Unix() < claims.BufferTime {
 		claims.ExpiresAt = time.Now().Unix() + global.C.Jwt.ExpiresTime
-		newToken, _ = j.CreateToken(*claims)
-		CustomClaims, _ = j.ParseToken(newToken)
-		//expiresAt = CustomClaims.ExpiresAt
-		//if global.GVA_CONFIG.System.UseMultipoint {
-		//	err, RedisJwtToken := service.GetRedisJWT(newClaims.Username)
-		//	if err != nil {
-		//		global.GVA_LOG.Error("get redis jwt failed", zap.Any("err", err))
-		//	} else { // 当之前的取成功时才进行拉黑操作
-		//		_ = service.JsonInBlacklist(model.JwtBlacklist{Jwt: RedisJwtToken})
-		//	}
-		//	// 无论如何都要记录当前的活跃状态
-		//	_ = service.SetRedisJWT(newToken, newClaims.Username)
-		//}
+		newToken, _ := j.CreateToken(*claims)
+		//CustomClaims, _ = j.ParseToken(newToken)
+		claims, _ = j.ParseToken(newToken)
+		parserTokenData.NewToken = newToken
 	}
+	parserTokenData.Claims = claims
 
-	return nil,newToken,CustomClaims
+	return parserTokenData,nil
 }
 
 // 更新token

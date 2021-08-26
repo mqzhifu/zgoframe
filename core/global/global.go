@@ -17,6 +17,7 @@ type Global struct {
 	Gin        *gin.Engine
 	Gorm       *gorm.DB
 	App        util.App
+	AppMng		*util.AppManager
 	Etcd       *util.MyEtcd
 	HttpServer *http.Server
 	Service    *util.Service
@@ -25,6 +26,10 @@ type Global struct {
 	AlertPush	*util.AlertPush	//报警推送： prometheus
 	AlertHook 	*util.AlertHook	//报警：邮件 手机
 	Websocket  *util.Websocket
+	ConnMng 	*util.ConnManager
+	ConnPRotocol *util.ConnProtocol
+	RecoverGo	*util.RecoverGo
+	ProtobufMap *util.ProtobufMap
 }
 
 func New()*Global {

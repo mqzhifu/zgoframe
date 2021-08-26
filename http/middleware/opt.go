@@ -7,10 +7,11 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strconv"
-	"time"
 	"zgoframe/core/global"
 	"zgoframe/http/request"
 	"zgoframe/model"
+	"zgoframe/util"
+	"zgoframe/service"
 )
 
 func OperationRecord() gin.HandlerFunc {
@@ -29,7 +30,7 @@ func OperationRecord() gin.HandlerFunc {
 		}
 		if claims, ok := c.Get("claims"); ok {
 			waitUse := claims.(*request.CustomClaims)
-			userId = int(waitUse.ID)
+			userId = int(waitUse.Id)
 		} else {
 			id, err := strconv.Atoi(c.Request.Header.Get("x-user-id"))
 			if err != nil {
@@ -37,7 +38,7 @@ func OperationRecord() gin.HandlerFunc {
 			}
 			userId = id
 		}
-		record := model.SysOperationRecord{
+		record := model.OperationRecord{
 			Ip:     c.ClientIP(),
 			Method: c.Request.Method,
 			Path:   c.Request.URL.Path,
@@ -55,19 +56,19 @@ func OperationRecord() gin.HandlerFunc {
 			body:           &bytes.Buffer{},
 		}
 		c.Writer = writer
-		now := time.Now()
+		startTime := util.GetNowTimeSecondToInt()
 
 		c.Next()
 
-		latency := time.Now().Sub(now)
+		latency := util.GetNowTimeSecondToInt() - startTime
 		record.ErrorMessage = c.Errors.ByType(gin.ErrorTypePrivate).String()
 		record.Status = c.Writer.Status()
 		record.Latency = latency
 		record.Resp = writer.body.String()
 
-		//if err := service.CreateSysOperationRecord(record); err != nil {
-		//	global.GVA_LOG.Error("create operation record error:", zap.Any("err", err))
-		//}
+		if err := service.CreateSysOperationRecord(record); err != nil {
+			global.V.Zap.Error("create operation record error:", zap.Any("err", err))
+		}
 	}
 }
 

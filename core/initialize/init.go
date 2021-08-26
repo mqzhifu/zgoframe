@@ -1,6 +1,7 @@
 package initialize
 
 import (
+	"context"
 	"errors"
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -11,15 +12,29 @@ import (
 	"zgoframe/util"
 )
 
-func Init(ENV string ,configType string , configFileName string,configSourceType string ,etcdUrl string,mainDirName string)error{
+type InitOption struct {
+	Env 				string
+	ConfigType 			string
+	ConfigFileName 		string
+	ConfigSourceType 	string
+	EtcdConfigFindUrl	string
+	RootDirName 		string
+	RootCtx 			context.Context
+	RootCancelFunc		context.CancelFunc
+	RootQuitFunc		func(source int)
+}
+
+
+func Init(option InitOption)error{
 	//createDbTable()
+
 	//初始化配置信息
 	viperOption := ViperOption{
-		ConfigFileName: configFileName,
-		ConfigFileType:  configType,
-		SourceType: configSourceType,
-		EtcdUrl: etcdUrl,
-		ENV: ENV,
+		ConfigFileName: option.ConfigFileName,
+		ConfigFileType:  option.ConfigType,
+		SourceType: option.ConfigSourceType,
+		EtcdUrl: option.EtcdConfigFindUrl,
+		ENV: option.Env,
 	}
 
 	myViper,config,err := GetNewViper(viperOption)
@@ -51,10 +66,7 @@ func Init(ENV string ,configType string , configFileName string,configSourceType
 		util.MyPrint("GetNewApp err:",err)
 		return err
 	}
-
-
-
-
+	//根据APPId去DB中查找详细信息
  	app,empty := global.V.AppMng.GetById(global.C.System.AppId)
 	if empty {
 		return errors.New("AppId not match : " + strconv.Itoa(global.C.System.AppId) )
@@ -62,10 +74,11 @@ func Init(ENV string ,configType string , configFileName string,configSourceType
 	global.V.App = app
 
 	//这里要求，项目表里配置的key与项目目录名必须一致.
-	if mainDirName != global.V.App.Key{
-		return errors.New("mainDirName != app name , "+mainDirName + " "+  global.V.App.Name)
+	if option.RootDirName != global.V.App.Key{
+		return errors.New("mainDirName != app name , "+option.RootDirName + " "+  global.V.App.Name)
 	}
-	//预/报警器
+	//预/报警->推送器，这里是推送到3方，如：prometheus
+	//这个是必须优先zap日志类优化处理，因为zap里有用
 	if global.C.Alert.Status == global.CONFIG_STATUS_OPEN{
 		global.V.AlertPush = util.NewAlertPush(global.C.Alert.Ip,global.C.Alert.Port,global.C.Alert.Uri)
 	}
@@ -75,6 +88,7 @@ func Init(ENV string ,configType string , configFileName string,configSourceType
 		util.MyPrint("GetNewZapLog err:",err)
 		return err
 	}
+	//基础类：用于恢复一个挂了的协程
 	global.V.RecoverGo = util.NewRecoverGo(global.V.Zap)
 	//redis
 	if global.C.Redis.Status == global.CONFIG_STATUS_OPEN{
@@ -125,10 +139,10 @@ func Init(ENV string ,configType string , configFileName string,configSourceType
 		//})
 		//global.V.Metric.Test()
 	}
+	//初始化-protobuf 映射文件
 	pwd,_ := os.Getwd()
 	dir := pwd + "/protobuf"
 	global.V.ProtobufMap = util.NewProtobufMap(global.V.Zap,dir)
-
 	//websocket
 	if global.C.Websocket.Status == global.CONFIG_STATUS_OPEN{
 		if global.C.Http.Status != global.CONFIG_STATUS_OPEN{
@@ -136,6 +150,7 @@ func Init(ENV string ,configType string , configFileName string,configSourceType
 		}
 		initSocket()
 	}
+	//grpc
 	if global.C.Grpc.Status == global.CONFIG_STATUS_OPEN{
 		grpcOption := util.GrpcOption{
 			AppId 		: global.V.App.Id,
@@ -161,24 +176,33 @@ func Init(ENV string ,configType string , configFileName string,configSourceType
 		//}
 		//pbServiceFirst := pb.NewFirstClient(grpcClientConn)
 	}
+	//预/报警,这个是真正的报警，如：邮件 SMS 等
 	global.V.AlertHook = util.NewAlertHook()
 
 
-	global.C.System.ENV = ENV
+	global.C.System.ENV = option.Env
 	//启动http
 	if global.C.Http.Status == global.CONFIG_STATUS_OPEN{
 		StartHttpGin()
 	}
+	//_ ,cancelFunc := context.WithCancel(option.RootCtx)
+	//进程通信相关
+	ProcessPathFileName := "/tmp/"+global.V.App.Name+".pid"
+	global.V.Process = util.NewProcess(ProcessPathFileName,option.RootCancelFunc,global.V.Zap,option.RootQuitFunc)
+	global.V.Process.InitProcess()
 
 	return nil
 }
 
 func Quit(){
+	global.V.Zap.Warn("init quit start:")
 	HttpServerShutdown()
+	global.V.Zap.Warn("init quit mmmmm:")
 	global.V.Redis.Close()
 	db , _ := global.V.Gorm.DB()
 	db.Close()
 	global.V.Vip.WatchRemoteConfig()
+	global.V.Zap.Warn("init quit finish.")
 }
 
 func createDbTable(){

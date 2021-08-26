@@ -36,8 +36,9 @@ func StartHttpGin(){
 }
 
 func HttpServerShutdown(){
-	cancelCtx , _ := context.WithCancel(context.Background())
+	cancelCtx , cancel := context.WithTimeout(context.Background(),time.Second * 3)
 	global.V.HttpServer.Shutdown(cancelCtx)
+	cancel()
 }
 
 func HandleNotFound(c *gin.Context){
@@ -73,12 +74,13 @@ func GetNewHttpGIN()(*gin.Engine,error) {
 	{
 		router.InitUserRouter(PrivateGroup)
 		router.InitLogslaveRouter(PrivateGroup)
+		router.InitSysRouter(PrivateGroup)
 	}
 
 	//global.V.Gin.GET("/sys/quit",  HttpQuit)
 	//global.V.Gin.GET("/sys/config", GetConfig)
 
-	//ginRouter.NoMethod(HandleNotFound)
+	ginRouter.NoMethod(HandleNotFound)
 
 	return ginRouter,nil
 

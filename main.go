@@ -4,6 +4,7 @@ import (
 	"context"
 	"flag"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 	"zgoframe/core/global"
@@ -32,52 +33,65 @@ func main(){
 	etcdUrl 			:= flag.String("etl", "", "get etcd config url")
 	//当前环境
 	env 				:= flag.String("e", "must require", "env:local test pre dev online")
-	//开启测试模式
-	//testFlag 			:= flag.String("t", "", "testFlag:empty or 1")
 	//是否为CICD模式
 	deploy 				:= flag.String("dep", "", "deploy")
+	//开启测试模式
+	//testFlag 			:= flag.String("t", "", "testFlag:empty or 1")
 	//解析命令行参数
 	flag.Parse()
 
 	//test(*testFlag)
-	//return
-	//检测环境变量是否正常
+	//检测环境变量值ENV是否正常
 	if !util.CheckEnvExist(*env){
-		util.ExitPrint(  "env is err , list:",envList)
+		util.MyPrint(  "env is err , list:",envList)
+		return
 	}
 
-	pwd, _ := os.Getwd()
-	pwdArr:=strings.Split(pwd,"/")
-	mainDirName = pwdArr[len(pwdArr)-1]
+	pwd, _ := os.Getwd()//当前路径
+	pwdArr:=strings.Split(pwd,"/")//切割路径字符串
+	mainDirName = pwdArr[len(pwdArr)-1]//获取路径数组最后一个元素：当前路径的文件夹名
 	//开始初始化模块
-	err := initialize.Init(*env,*configFileType,*configFileName,*configSourceType,*etcdUrl,mainDirName)
-	if err != nil{
-		util.MyPrint("nitialize.Init err:",err)
-	}else{
-		//主协程的 context
-		mainCxt := context.Background()
-		cancelCTX ,cancelFunc := context.WithCancel(mainCxt)
-		//进程通信相关
-		initialize.InitProcess()
-
-		//这里才是 应用层代码需要DIY自己东西的入口
-		applicationDoSomething()
-
-		if *deploy == ""{
-			initialize.DemonSignal(cancelFunc)
-			select {
-			case <-cancelCTX.Done():
-				initialize.QuitAll()
-			}
-		}else{
-			util.MyPrint("deploy: sleep 5 ,and auto quit...")
-			time.Sleep(5)
-		}
-
+	//主协程的 context
+	mainCxt,mainCancelFunc := context.WithCancel(context.Background())
+	initOption := initialize.InitOption  {
+		Env 				:*env,
+		ConfigType 			:*configFileType,
+		ConfigFileName 		:*configFileName,
+		ConfigSourceType 	:*configSourceType,
+		EtcdConfigFindUrl	:*etcdUrl,
+		RootDirName 		:mainDirName,
+		RootCtx				:mainCxt,
+		RootCancelFunc		:mainCancelFunc,
+		RootQuitFunc 		:QuitAll,
 	}
+	//开始正式全局初始化
+	err := initialize.Init(initOption)
+	if err != nil{
+		util.MyPrint("initialize.Init err:",err)
+		return
+	}
+
+	if *deploy == ""{
+		go global.V.Process.DemonSignal()
+		util.MyPrint("wait mainCxt.done...")
+		select {
+		case <-mainCxt.Done():
+			QuitAll(1)
+		}
+	}else{
+		util.MyPrint("deploy: sleep 5 ,and auto quit...")
+		time.Sleep(5)
+	}
+
 	util.MyPrint("main end.")
 }
 
-func applicationDoSomething(){
+func QuitAll(source int){
+	global.V.Zap.Warn("main quit , source : " + strconv.Itoa(source))
+	initialize.Quit()
+	pid ,err := global.V.Process.DelPid()
+	util.MyPrint("del pid:",pid,err)
 
+	util.MyPrint("QuitAll finish.")
 }
+

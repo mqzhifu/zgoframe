@@ -30,6 +30,7 @@ type Global struct {
 	ConnPRotocol *util.ConnProtocol
 	RecoverGo	*util.RecoverGo
 	ProtobufMap *util.ProtobufMap
+	Process 	*util.Process
 }
 
 func New()*Global {

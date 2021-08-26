@@ -317,6 +317,36 @@ paths:
       summary: 接收日志
       tags:
       - Logslave
+  /sys/config:
+    post:
+      description: Config
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"success":true,"data":{},"msg":"登陆成功"}'
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: Config
+      tags:
+      - User
+  /sys/quit:
+    post:
+      description: Quit
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"success":true,"data":{},"msg":"登陆成功"}'
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: Quit
+      tags:
+      - User
   /user/changePassword:
     put:
       parameters:

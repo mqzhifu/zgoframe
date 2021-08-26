@@ -39,6 +39,17 @@ func InitBaseRouter(Router *gin.RouterGroup) {
 	}
 }
 
+func InitSysRouter(Router *gin.RouterGroup) {
+	SysRouter := Router.Group("sys")
+	{
+		//
+		SysRouter.POST("quit", v1.Quit)
+		//
+		SysRouter.POST("config", v1.Config)
+	}
+}
+
+
 func InitLogslaveRouter(Router *gin.RouterGroup) {
 	LogsalveRouter := Router.Group("logslave")
 	{

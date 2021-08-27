@@ -25,3 +25,7 @@ func GetNewRedis()(*redis.Client,error) {
 	return client,nil
 }
 
+func RedisShutdown(){
+	global.V.Redis.Close()
+}
+

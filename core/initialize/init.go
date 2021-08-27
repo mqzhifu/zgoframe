@@ -5,12 +5,17 @@ import (
 	"errors"
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"os"
 	"strconv"
+	"strings"
 	"zgoframe/core/global"
-	"zgoframe/model"
+	"zgoframe/protobuf/pb"
+	"zgoframe/protobuf/pbservice"
 	"zgoframe/util"
 )
+
+type Initialize struct {
+	Option InitOption
+}
 
 type InitOption struct {
 	Env 				string
@@ -18,34 +23,40 @@ type InitOption struct {
 	ConfigFileName 		string
 	ConfigSourceType 	string
 	EtcdConfigFindUrl	string
+	RootDir				string
 	RootDirName 		string
 	RootCtx 			context.Context
 	RootCancelFunc		context.CancelFunc
 	RootQuitFunc		func(source int)
 }
 
+func NewInitialize(option InitOption)*Initialize{
+	initialize := new(Initialize)
+	initialize.Option = option
+	return initialize
+}
 
-func Init(option InitOption)error{
-	//createDbTable()
-
+//初始化-入口
+func (initialize * Initialize)Start()error{
 	//初始化配置信息
 	viperOption := ViperOption{
-		ConfigFileName: option.ConfigFileName,
-		ConfigFileType:  option.ConfigType,
-		SourceType: option.ConfigSourceType,
-		EtcdUrl: option.EtcdConfigFindUrl,
-		ENV: option.Env,
+		ConfigFileName	: initialize.Option.ConfigFileName,
+		ConfigFileType	: initialize.Option.ConfigType,
+		SourceType		: initialize.Option.ConfigSourceType,
+		EtcdUrl			: initialize.Option.EtcdConfigFindUrl,
+		ENV				: initialize.Option.Env,
 	}
-	util.MyPrint("config flow : ")
-	util.PrintStruct(option,":")
+
+	util.MyPrint("config option~~ ")
+	util.PrintStruct(initialize.Option,":")
 
 	myViper,config,err := GetNewViper(viperOption)
 	if err != nil{
 		util.MyPrint("GetNewViper err:",err)
 		return err
 	}
-	global.V.Vip = myViper
-	global.C = config
+	global.V.Vip = myViper	//全局变量管理者
+	global.C = config		//全局变量容器
 	//---config end -----
 
 	//mysql
@@ -59,28 +70,15 @@ func Init(option InitOption)error{
 	//}
 
 	//初始化APP信息，所有项目都需要有AppId
-	if global.C.System.AppId <=0 {
-		return errors.New("appid is empty")
-	}
-
-	global.V.AppMng ,err  = GetNewApp()
-	if err != nil{
-		util.MyPrint("GetNewApp err:",err)
+	err = InitApp()
+	if err !=nil{
 		return err
 	}
-	//根据APPId去DB中查找详细信息
- 	app,empty := global.V.AppMng.GetById(global.C.System.AppId)
-	if empty {
-		return errors.New("AppId not match : " + strconv.Itoa(global.C.System.AppId) )
+	initialize.Option.RootDirName,err = InitPath(initialize.Option.RootDir)
+	if err !=nil{
+		return err
 	}
-	global.V.App = app
-	util.MyPrint("project app info flow:")
-	util.PrintStruct(app,":")
-
-	//这里要求，项目表里配置的key与项目目录名必须一致.
-	if option.RootDirName != global.V.App.Key{
-		return errors.New("mainDirName != app name , "+option.RootDirName + " "+  global.V.App.Name)
-	}
+	global.V.RootDir = initialize.Option.RootDir
 	//预/报警->推送器，这里是推送到3方，如：prometheus
 	//这个是必须优先zap日志类优化处理，因为zap里有用
 	if global.C.Alert.Status == global.CONFIG_STATUS_OPEN{
@@ -90,6 +88,11 @@ func Init(option InitOption)error{
 	global.V.Zap , err  = GetNewZapLog(global.V.AlertPush,"main","main",1)
 	if err != nil{
 		util.MyPrint("GetNewZapLog err:",err)
+		return err
+	}
+	//错误 文案 管理
+	global.V.Err ,err  = util.NewErrMsg(global.V.Zap,  global.C.Http.StaticPath)
+	if err != nil{
 		return err
 	}
 	//基础类：用于恢复一个挂了的协程
@@ -150,8 +153,7 @@ func Init(option InitOption)error{
 		//global.V.Metric.Test()
 	}
 	//初始化-protobuf 映射文件
-	pwd,_ := os.Getwd()
-	dir := pwd + "/protobuf"
+	dir := initialize.Option.RootDir + "/protobuf"
 	global.V.ProtobufMap = util.NewProtobufMap(global.V.Zap,dir)
 	//websocket
 	if global.C.Websocket.Status == global.CONFIG_STATUS_OPEN{
@@ -169,16 +171,16 @@ func Init(option InitOption)error{
 			Port 		: global.C.Grpc.Port,
 			Log			: global.V.Zap,
 		}
-		global.V.Grpc =  util.NewMyGrpc(grpcOption)
-		//grpcInc,listen,err := global.V.Grpc.GetServer()
-		//if err != nil{
-		//	return errors.New(err.Error())
-		//}
-		////挂载服务的handler
-		//pb.RegisterFirstServer(grpcInc, &pbservice.First{})
-		//pb.RegisterSecondServer(grpcInc, &pbservice.Second{})
-		//// 注册反射服务 这个服务是CLI使用的 跟服务本身没有关系
-		//go global.V.Grpc.StartServer(grpcInc,listen)
+		global.V.Grpc,_ =  util.NewMyGrpc(grpcOption)
+		grpcInc,listen,err := global.V.Grpc.GetServer()
+		if err != nil{
+			return errors.New(err.Error())
+		}
+		//挂载服务的handler
+		pb.RegisterFirstServer(grpcInc, &pbservice.First{})
+		pb.RegisterSecondServer(grpcInc, &pbservice.Second{})
+		// 注册反射服务 这个服务是CLI使用的 跟服务本身没有关系
+		go global.V.Grpc.StartServer(grpcInc,listen)
 		//
 		//grpcClientConn,err := global.V.Grpc.GetClient("127.0.0.1","6666")
 		//if err != nil{
@@ -189,8 +191,7 @@ func Init(option InitOption)error{
 	//预/报警,这个是真正的报警，如：邮件 SMS 等
 	global.V.AlertHook = util.NewAlertHook(global.V.Zap)
 
-
-	global.C.System.ENV = option.Env
+	global.C.System.ENV = initialize.Option.Env
 	//启动http
 	if global.C.Http.Status == global.CONFIG_STATUS_OPEN{
 		StartHttpGin()
@@ -198,29 +199,59 @@ func Init(option InitOption)error{
 	//_ ,cancelFunc := context.WithCancel(option.RootCtx)
 	//进程通信相关
 	ProcessPathFileName := "/tmp/"+global.V.App.Name+".pid"
-	global.V.Process = util.NewProcess(ProcessPathFileName,option.RootCancelFunc,global.V.Zap,option.RootQuitFunc)
+	global.V.Process = util.NewProcess(ProcessPathFileName,initialize.Option.RootCancelFunc,global.V.Zap,initialize.Option.RootQuitFunc)
 	global.V.Process.InitProcess()
 
 	return nil
 }
 
-func Quit(){
+func (initialize * Initialize)Quit(){
 	global.V.Zap.Warn("init quit start:")
 	HttpServerShutdown()
-	global.V.Zap.Warn("init quit mmmmm:")
-	global.V.Redis.Close()
-	db , _ := global.V.Gorm.DB()
-	db.Close()
-	global.V.Vip.WatchRemoteConfig()
+	RedisShutdown()
+	GormShutdown()
+	global.V.Websocket.Shutdown()
+	ViperShutdown()
+	global.V.Grpc.Shutdown()
+	global.V.Etcd.Shutdown()
+	global.V.Service.Shutdown()
 	global.V.Zap.Warn("init quit finish.")
 }
 
-func createDbTable(){
-	mydb := util.NewDb(global.V.Gorm)
-	mydb.CreateTable(&model.User{},&model.SmsLog{},&model.SmsRule{},&model.App{},&model.UserReg{} , &model.OperationRecord{})
-	util.ExitPrint("init done.")
+
+func InitApp()(err error){
+	if global.C.System.AppId <=0 {
+		return errors.New("appId is empty")
+	}
+
+	global.V.AppMng ,err  = GetNewApp()
+	if err != nil{
+		util.MyPrint("GetNewApp err:",err)
+		return err
+	}
+	//根据APPId去DB中查找详细信息
+	app,empty := global.V.AppMng.GetById(global.C.System.AppId)
+	if empty {
+		return errors.New("AppId not match : " + strconv.Itoa(global.C.System.AppId) )
+	}
+	global.V.App = app
+	util.MyPrint("project app info flow:")
+	util.PrintStruct(app,":")
+
+	return nil
 }
 
+func InitPath(rootDir string)(rootDirName string,err error){
+	pwdArr:=strings.Split(rootDir,"/")//切割路径字符串
+	rootDirName = pwdArr[len(pwdArr)-1]//获取路径数组最后一个元素：当前路径的文件夹名
+	//option.RootDirName = rootDirName
+	//global.V.RootDir = option.RootDir
+	//这里要求，项目表里配置的key与项目目录名必须一致.
+	if rootDirName != global.V.App.Key{
+		return rootDirName,errors.New("mainDirName != app name , "+rootDirName + " "+  global.V.App.Name)
+	}
+	return rootDirName,nil
+}
 
 //初始化app管理容器
 func GetNewApp()(m *util.AppManager,e error){

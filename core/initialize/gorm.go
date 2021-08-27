@@ -40,6 +40,11 @@ func GormMysql() (*gorm.DB,error) {
 	}
 }
 
+func GormShutdown(){
+	db , _ := global.V.Gorm.DB()
+	db.Close()
+}
+
 func gormConfig(mod bool) *gorm.Config {
 	var config = &gorm.Config{DisableForeignKeyConstraintWhenMigrating: true,NamingStrategy: schema.NamingStrategy{SingularTable: true}}
 	//switch global.G.Config.Mysql.LogZap {

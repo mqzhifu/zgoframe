@@ -17,6 +17,7 @@ import (
 
 type MyGrpc struct {
 	Option GrpcOption
+	Listen  net.Listener
 	//ServerStartUp int	//标识：服务器已启动，避免重复启动
 	//ClientStartUp int
 }
@@ -32,10 +33,20 @@ type GrpcOption struct {
 //var serverInterceptor grpc.UnaryServerInterceptor
 //var clientInterceptor grpc.UnaryClientInterceptor
 
-func NewMyGrpc(grpcOption GrpcOption)*MyGrpc{
+func NewMyGrpc(grpcOption GrpcOption)(*MyGrpc,error){
 	myGrpc := new(MyGrpc)
 	myGrpc.Option = grpcOption
-	return myGrpc
+
+	dns := myGrpc.GetDns()
+	myGrpc.Option.Log.Info("grpc GetServer:"+dns)
+	listen, err := net.Listen("tcp", dns)
+	if err != nil {
+		MyPrint("failed to listen:",err.Error())
+		return nil,errors.New("failed to listen:"+ err.Error())
+	}
+	myGrpc.Listen = listen
+
+	return myGrpc,nil
 }
 
 func (myGrpc *MyGrpc)GetDns()string{
@@ -51,20 +62,14 @@ func  (myGrpc *MyGrpc)StartServer(grpcInc *grpc.Server,listen net.Listener){
 		myGrpc.Option.Log.Info("failed to serve:" + err.Error())
 	}
 }
-
+func (myGrpc *MyGrpc)Shutdown(){
+	myGrpc.Listen.Close()
+}
 func (myGrpc *MyGrpc)GetServer()(*grpc.Server,net.Listener,error){
-	dns := myGrpc.GetDns()
-	myGrpc.Option.Log.Info("grpc GetServer:"+dns)
-	lis, err := net.Listen("tcp", dns)
-	if err != nil {
-		MyPrint("failed to listen:",err.Error())
-		return nil,nil,errors.New("failed to listen:"+ err.Error())
-	}
-
 	var opts []grpc.ServerOption//grpc为使用的第三方的grpc包
 	opts = append(opts, grpc.UnaryInterceptor(serverInterceptorBack))
 	grpcInc := grpc.NewServer(opts...) //创建一个grpc 实例
-	return grpcInc,lis,nil
+	return grpcInc,myGrpc.Listen,nil
 }
 
 func serverInterceptorBack(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp interface{}, err error){
@@ -145,18 +150,18 @@ func (myGrpc *MyGrpc) GetClient(ip string,port string)(*grpc.ClientConn,error){
 	return conn,nil
 }
 //===================================================
-var ip = "127.0.0.1"
-var port = "1111"
-func TestGrpcServer(){
-	grpcOption := GrpcOption{
-		ListenIp:ip,
-		OutIp: ip,
-		Port: port,
-		//Role: ROLE_SERVER,
-	}
-	grpcClass := NewMyGrpc(grpcOption)
-	grpcClass.GetServer()
-}
+//var ip = "127.0.0.1"
+//var port = "1111"
+//func TestGrpcServer(){
+//	grpcOption := GrpcOption{
+//		ListenIp:ip,
+//		OutIp: ip,
+//		Port: port,
+//		//Role: ROLE_SERVER,
+//	}
+//	grpcClass := NewMyGrpc(grpcOption)
+//	grpcClass.GetServer()
+//}
 
 func TestGrpcClient(){
 	//grpcOption := GrpcOption{

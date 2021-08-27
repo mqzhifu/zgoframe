@@ -5,7 +5,6 @@ import (
 	"flag"
 	"os"
 	"strconv"
-	"strings"
 	"time"
 	"zgoframe/core/global"
 	"zgoframe/core/initialize"
@@ -13,11 +12,11 @@ import (
 	"zgoframe/util"
 )
 
+var initializeVar *initialize.Initialize
 // @title z golang 框架
 // @version 0.1
 // @description 拼装一个GO的基础框架方便日常使用
 
-var mainDirName string
 func main(){
 	util.LogLevelFlag = util.LOG_LEVEL_DEBUG
 
@@ -48,8 +47,6 @@ func main(){
 	}
 
 	pwd, _ := os.Getwd()//当前路径
-	pwdArr:=strings.Split(pwd,"/")//切割路径字符串
-	mainDirName = pwdArr[len(pwdArr)-1]//获取路径数组最后一个元素：当前路径的文件夹名
 	//开始初始化模块
 	//主协程的 context
 	mainCxt,mainCancelFunc := context.WithCancel(context.Background())
@@ -59,13 +56,14 @@ func main(){
 		ConfigFileName 		:*configFileName,
 		ConfigSourceType 	:*configSourceType,
 		EtcdConfigFindUrl	:*etcdUrl,
-		RootDirName 		:mainDirName,
+		RootDir				:pwd,
 		RootCtx				:mainCxt,
 		RootCancelFunc		:mainCancelFunc,
 		RootQuitFunc 		:QuitAll,
 	}
 	//开始正式全局初始化
-	err := initialize.Init(initOption)
+	initializeVar = initialize.NewInitialize(initOption)
+	err := initializeVar.Start()
 	if err != nil{
 		util.MyPrint("initialize.Init err:",err)
 		return
@@ -88,7 +86,7 @@ func main(){
 
 func QuitAll(source int){
 	global.V.Zap.Warn("main quit , source : " + strconv.Itoa(source))
-	initialize.Quit()
+	initializeVar.Quit()
 	pid ,err := global.V.Process.DelPid()
 	util.MyPrint("del pid:",pid,err)
 

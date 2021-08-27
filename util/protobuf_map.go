@@ -24,9 +24,8 @@ type ActionMap struct {
 
 //var actionMap  	map[string]map[int]ActionMap
 func NewProtobufMap(log *zap.Logger,configFileDir string)*ProtobufMap {
-	log.Info("NewProtobufMap")
+	log.Info("NewProtobufMap:"+configFileDir)
 
-	log.Info("NewProtocolActions instance:")
 	protobufMap := new(ProtobufMap)
 	protobufMap.Log = log
 	protobufMap.ConfigFileDir = configFileDir

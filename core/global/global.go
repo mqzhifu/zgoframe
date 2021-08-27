@@ -31,6 +31,8 @@ type Global struct {
 	RecoverGo	*util.RecoverGo
 	ProtobufMap *util.ProtobufMap
 	Process 	*util.Process
+	Err 		*util.ErrMsg
+	RootDir 	string
 }
 
 func New()*Global {

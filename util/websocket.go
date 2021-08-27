@@ -30,7 +30,7 @@ type WebsocketOption struct{
 	OutIp 			string	`json:"outIp"`
 	OutCxt 			context.Context
 	Log				*zap.Logger
-	OpenNewConnBack	func ( connFD FDAdapter)
+	OpenNewConnBack	func ( connFD FDAdapter)	//来了新连接后，回调函数
 }
 
 func NewWebsocket(httpGin *gin.Engine , option WebsocketOption)*Websocket{
@@ -40,7 +40,7 @@ func NewWebsocket(httpGin *gin.Engine , option WebsocketOption)*Websocket{
 	//ctx,cancelFunc := context.WithCancel(context.Background())
 	return websocket
 }
-func (ws *Websocket )Quit(){
+func (ws *Websocket )Shutdown(){
 
 }
 

@@ -1,5 +1,5 @@
 go.sum
 .idea/
-latest_log
+latest_log*
 config.toml
 ./zgoframe

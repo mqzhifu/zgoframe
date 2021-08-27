@@ -7,6 +7,7 @@ import (
 	"go.uber.org/zap/zapcore"
 	"os"
 	"path"
+	"strings"
 	"time"
 	"zgoframe/core/global"
 	"zgoframe/util"
@@ -14,14 +15,22 @@ import (
 
 //以下均是，zap-log 初始化
 var level zapcore.Level
-func GetNewZapLog(alert *util.AlertPush) (logger *zap.Logger,err error) {
-	if ok, _ := util.PathExists(global.C.Zap.Dir); !ok { // 判断是否有Director文件夹
-		util.MyPrint("create directory:", global.C.Zap.Dir)
-		err = os.Mkdir(global.C.Zap.Dir, os.ModePerm)
+var zapDir string
+var zapFileName string
+var zapInConsole int
+func GetNewZapLog(alert *util.AlertPush,moduleName string,FileName string,InConsole int) (logger *zap.Logger,err error) {
+	zapDir = global.C.Zap.Dir + "/" + moduleName
+	zapFileName = global.C.Zap.LinkName +  "_" + FileName
+	zapInConsole = InConsole
+	if ok, _ := util.PathExists(zapDir); !ok { // 判断是否有Director文件夹
+		util.MyPrint("create directory:", zapDir)
+		err = os.Mkdir(zapDir, os.ModePerm)
 		if err != nil{
 			return nil,err
 		}
 	}
+
+	util.MyPrint("zap.dir:"+zapDir + " "+zapFileName)
 
 	switch global.C.Zap.Level { // 初始化配置文件的Level
 		case "debug":
@@ -95,7 +104,9 @@ func getEncoderConfig() (config zapcore.EncoderConfig) {
 		EncodeLevel:    zapcore.LowercaseLevelEncoder,
 		EncodeTime:     CustomTimeEncoder,
 		EncodeDuration: zapcore.SecondsDurationEncoder,
-		EncodeCaller:   zapcore.FullCallerEncoder,
+		//EncodeCaller:   zapcore.FullCallerEncoder,
+		EncodeCaller: diy,
+		ConsoleSeparator: " | ",
 	}
 	switch {
 	case global.C.Zap.EncodeLevel == "LowercaseLevelEncoder": // 小写编码器(默认)
@@ -112,20 +123,29 @@ func getEncoderConfig() (config zapcore.EncoderConfig) {
 	return config
 }
 
+func diy(caller zapcore.EntryCaller, enc zapcore.PrimitiveArrayEncoder) {
+	if strings.Contains(caller.String(), "http.go:70")  {
+		return
+	}
+	enc.AppendString(caller.String())
+}
+
 // 自定义日志输出时间格式
 func CustomTimeEncoder(t time.Time, enc zapcore.PrimitiveArrayEncoder) {
-	enc.AppendString(t.Format(global.C.Zap.Prefix + "2006/01/02 - 15:04:05.000"))
+	enc.AppendString(t.Format(global.C.Zap.Prefix + "2006-01-02 - 15:04:05.000"))
 }
 
 func GetWriteSyncer() (zapcore.WriteSyncer, error) {
 	fileWriter, err := zaprotatelogs.New(
-		path.Join(global.C.Zap.Dir, "%Y-%m-%d.log"),
-		zaprotatelogs.WithLinkName(global.C.Zap.LinkName),
+		path.Join(zapDir, "%Y-%m-%d.log"),
+		zaprotatelogs.WithLinkName(zapFileName),
 		zaprotatelogs.WithMaxAge(7*24*time.Hour),
 		zaprotatelogs.WithRotationTime(24*time.Hour),
 	)
-	if global.C.Zap.LogInConsole {
+	if zapInConsole == 1 {
 		return zapcore.NewMultiWriteSyncer(zapcore.AddSync(os.Stdout), zapcore.AddSync(fileWriter)), err
+	}else{
+		return zapcore.NewMultiWriteSyncer( zapcore.AddSync(fileWriter)), err
 	}
 	return zapcore.AddSync(fileWriter), err
 }

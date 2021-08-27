@@ -3,12 +3,14 @@ package util
 //
 import (
 	"github.com/go-gomail/gomail"
+	"go.uber.org/zap"
 	"net/smtp"
 )
 
 type AlertHook struct {
 	Email *MyEmail
 	EmailOption EmailOption
+	Log *zap.Logger
 }
 
 type EmailOption struct {
@@ -18,9 +20,9 @@ type EmailOption struct {
 	Password string
 }
 
-func NewAlertHook()*AlertHook{
+func NewAlertHook(log *zap.Logger)*AlertHook{
 	alertHook := new (AlertHook)
-
+	alertHook.Log = log
 
 	emailOption :=EmailOption{
 		Host: "smtp.qq.com",
@@ -32,6 +34,9 @@ func NewAlertHook()*AlertHook{
 
 	alertHook.Email = NewMyEmail(emailOption)
 	//myEmail.SendOneEmail()
+
+	log.Info("NewAlertHook")
+
 	return alertHook
 }
 

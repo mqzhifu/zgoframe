@@ -23,7 +23,7 @@ type ViperOption struct {
 }
 //读取配置文件：目前权支持文件，ETCD只写了一半
 func GetNewViper(viperOption  ViperOption )(myViper *viper.Viper,config global.Config,err error){
-	util.MyPrint("SourceType:",viperOption.SourceType, " ConfigFileType:",viperOption.ConfigFileType ," , ConfigFileName:",viperOption.ConfigFileName)
+	//util.MyPrint("SourceType:",viperOption.SourceType, " ConfigFileType:",viperOption.ConfigFileType ," , ConfigFileName:",viperOption.ConfigFileName)
 	myViper = viper.New()
 
 
@@ -31,7 +31,7 @@ func GetNewViper(viperOption  ViperOption )(myViper *viper.Viper,config global.C
 		myViper.SetConfigType(viperOption.ConfigFileType)
 		//myViper.SetConfigName(ConfigName + "." + ConfigType)
 		configFile := viperOption.ConfigFileName + "." + viperOption.ConfigFileType
-		util.MyPrint(configFile)
+		//util.MyPrint(configFile)
 		myViper.SetConfigFile(configFile)
 		myViper.AddConfigPath(".")
 		err = myViper.ReadInConfig()

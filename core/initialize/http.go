@@ -5,7 +5,9 @@ import (
 	"github.com/gin-gonic/gin"
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"github.com/swaggo/gin-swagger/swaggerFiles"
+	"go.uber.org/zap"
 	"net/http"
+	"strconv"
 	"time"
 	"zgoframe/core/global"
 	httpmiddleware "zgoframe/http/middleware"
@@ -47,11 +49,39 @@ func HandleNotFound(c *gin.Context){
 	c.JSON(404,handleErr)
 	return
 }
+var HttpZapLog *zap.Logger
+func ZapLog()gin.HandlerFunc {
+	return func(c *gin.Context) {
+		//start := time.Now()
+		path := c.Request.URL.Path
+		query := c.Request.URL.RawQuery
+
+		//zap.Int("status", c.Writer.Status()),
+		//	zap.String("method", c.Request.Method),
+		//	zap.String("path", path),
+		//	zap.String("query", query),
+		//	zap.String("ip", c.ClientIP()),
+		//	zap.String("user-agent", c.Request.UserAgent()),
+		//	zap.String("errors", c.Errors.ByType(gin.ErrorTypePrivate).String()),
+		//	zap.Duration("cost", cost),
+		s := " "
+		context :=  strconv.Itoa(c.Writer.Status()) + s + c.Request.Method + s + path + s + query + c.ClientIP()
+			// + s + c.Request.UserAgent() + c.Errors.ByType(gin.ErrorTypePrivate).String()
+
+		HttpZapLog.Info(context)
+		//global.V.Zap.Info("eeeeee", zap.String("time", `http://foo.com`))
+
+		c.Next()
+	}
+}
+
 
 
 //GIN: 监听HTTP   中间件  文件上传
-func GetNewHttpGIN()(*gin.Engine,error) {
+func GetNewHttpGIN(zapLog *zap.Logger)(*gin.Engine,error) {
+	HttpZapLog = zapLog
 	ginRouter := gin.Default()
+	ginRouter.Use(ZapLog())
 	//获取目录加载
 	ginRouter.StaticFS("/static",http.Dir(global.C.Http.StaticPath))
 	//加载swagger api 工具

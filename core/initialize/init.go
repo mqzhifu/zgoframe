@@ -36,6 +36,8 @@ func Init(option InitOption)error{
 		EtcdUrl: option.EtcdConfigFindUrl,
 		ENV: option.Env,
 	}
+	util.MyPrint("config flow : ")
+	util.PrintStruct(option,":")
 
 	myViper,config,err := GetNewViper(viperOption)
 	if err != nil{
@@ -72,6 +74,8 @@ func Init(option InitOption)error{
 		return errors.New("AppId not match : " + strconv.Itoa(global.C.System.AppId) )
 	}
 	global.V.App = app
+	util.MyPrint("project app info flow:")
+	util.PrintStruct(app,":")
 
 	//这里要求，项目表里配置的key与项目目录名必须一致.
 	if option.RootDirName != global.V.App.Key{
@@ -83,7 +87,7 @@ func Init(option InitOption)error{
 		global.V.AlertPush = util.NewAlertPush(global.C.Alert.Ip,global.C.Alert.Port,global.C.Alert.Uri)
 	}
 	//日志
-	global.V.Zap , err  = GetNewZapLog(global.V.AlertPush)
+	global.V.Zap , err  = GetNewZapLog(global.V.AlertPush,"main","main",1)
 	if err != nil{
 		util.MyPrint("GetNewZapLog err:",err)
 		return err
@@ -98,9 +102,15 @@ func Init(option InitOption)error{
 			return err
 		}
 	}
+	//Http log zap
+	HttpZap , err  := GetNewZapLog(global.V.AlertPush,"http","http",0)
+	if err != nil{
+		util.MyPrint("GetNewZapLog err:",err)
+		return err
+	}
 	//http server
 	if global.C.Http.Status == global.CONFIG_STATUS_OPEN{
-		global.V.Gin ,err = GetNewHttpGIN()
+		global.V.Gin ,err = GetNewHttpGIN(HttpZap)
 		if err != nil{
 			util.MyPrint("GetNewHttpGIN err:",err)
 			return err
@@ -123,7 +133,7 @@ func Init(option InitOption)error{
 	}
 	//metrics
 	if global.C.Metrics.Status == global.CONFIG_STATUS_OPEN{
-		global.V.Metric =  util.NewMyMetrics()
+		global.V.Metric =  util.NewMyMetrics(global.V.Zap)
 
 		if global.C.Http.Status != global.CONFIG_STATUS_OPEN{
 			return errors.New("metrics need gin open!")
@@ -177,7 +187,7 @@ func Init(option InitOption)error{
 		//pbServiceFirst := pb.NewFirstClient(grpcClientConn)
 	}
 	//预/报警,这个是真正的报警，如：邮件 SMS 等
-	global.V.AlertHook = util.NewAlertHook()
+	global.V.AlertHook = util.NewAlertHook(global.V.Zap)
 
 
 	global.C.System.ENV = option.Env
@@ -231,7 +241,7 @@ func GetNewEtcd()(myEtcd *util.MyEtcd,err error){
 		Password	: global.C.Etcd.Password,
 		Ip			: global.C.Etcd.Ip,
 		Port		: global.C.Etcd.Port,
-		Log: global.V.Zap,
+		Log			: global.V.Zap,
 	}
 	myEtcd,err  = util.NewMyEtcdSdk(option)
 	return myEtcd,err
@@ -239,11 +249,12 @@ func GetNewEtcd()(myEtcd *util.MyEtcd,err error){
 
 func GetNewService()*util.Service {
 	serviceOption := util.ServiceOption{
-		Log: global.V.Zap,
-		Etcd: global.V.Etcd,
-		Prefix: global.V.App.Name,
+		Log		: global.V.Zap,
+		Etcd	: global.V.Etcd,
+		Prefix	: global.V.App.Name,
 	}
 	myService := util.NewService(serviceOption)
+
 	return myService
 }
 

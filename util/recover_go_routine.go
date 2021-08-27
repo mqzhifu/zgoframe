@@ -20,6 +20,9 @@ func NewRecoverGo(log	*zap.Logger)*RecoverGo{
 	recoverGo.RetryTimes  = make(map[string]int)
 	recoverGo.RetryTimesRWLock = &sync.RWMutex{}
 	recoverGo.Log = log
+
+	log.Info("NewRecoverGo")
+
 	return recoverGo
 }
 

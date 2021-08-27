@@ -1,8 +1,8 @@
 package util
 
 import (
-	"encoding/json"
 	"bytes"
+	"encoding/json"
 	"net/http"
 )
 
@@ -20,6 +20,9 @@ func NewAlertPush( ip string , port string, uri string)*AlertPush{
 	alert.Uri = uri
 	url := "http://"+ip + ":" + port + "/" + uri
 	alert.Url = url
+
+
+	MyPrint("NewAlertPush:"+ alert.Url)
 
 	return alert
 }

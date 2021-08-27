@@ -8,6 +8,7 @@ import (
 
 func GetNewRedis()(*redis.Client,error) {
 	redisCfg := global.C.Redis
+	global.V.Zap.Info("redis conn:"+redisCfg.Ip + ":" +  redisCfg.Port)
 	client := redis.NewClient(&redis.Options{
 		Addr:     redisCfg.Ip + ":"+ redisCfg.Port,
 		Password: redisCfg.Password, // no password set

@@ -49,6 +49,9 @@ func NewService(serviceOption ServiceOption)*Service {
 	service.option = serviceOption
 	service.selfList = make(map[string]DynamicService)
 	service.ReadAdnRegThird()
+
+	serviceOption.Log.Info("NewService")
+
 	return service
 }
 //从配置中心读取：3方可用服务列表,注册到内存中

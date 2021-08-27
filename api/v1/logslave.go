@@ -15,7 +15,6 @@ type LogData struct {
 	Uid 	int		`json:"uid" form:"uid"`
 	Level 	int		`json:"level" form:"level"`
 	Msg 	string	`json:"msg" form:"msg"`
-
 }
 
 // @Tags Logslave

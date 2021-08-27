@@ -4,15 +4,21 @@ import (
 	"errors"
 	"fmt"
 	"github.com/prometheus/client_golang/prometheus"
+	"go.uber.org/zap"
 )
 
 type MyMetrics struct {
 	Groups map[string]interface{}
+	Log *zap.Logger
 }
 
-func NewMyMetrics()*MyMetrics{
+func NewMyMetrics(log *zap.Logger)*MyMetrics{
 	myMetrics := new(MyMetrics)
 	myMetrics.Groups = make(map[string]interface{})
+	myMetrics.Log = log
+
+	log.Info("NewMyMetrics")
+
 	return myMetrics
 }
 

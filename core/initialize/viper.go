@@ -52,7 +52,7 @@ func GetNewViper(viperOption  ViperOption )(myViper *viper.Viper,config global.C
 			util.MyPrint(" myViper.Unmarshal err:",err)
 			return myViper,config,err
 		}
-	}else{//从3方分布式存储软件中读取配置信息
+	}else{//从3方分布式存储软件中读取配置信息，没写完，回头优化
 		util.MyPrint("get etcd config url:",viperOption.EtcdUrl)
 		if viperOption.SourceType != "etcd"{
 			util.MyPrint("configSourceType err: etcd or file")
@@ -88,7 +88,8 @@ func GetNewViper(viperOption  ViperOption )(myViper *viper.Viper,config global.C
 		//etcdList,err := GetListByPrefix(cli,prefix)
 		//util.ExitPrint(err,etcdList)
 	}
-
+	//监听 配置文件 变化
+	//有点鸡肋，如果是单独的字符串变更还好，重新再加载一下全局变量，而如果像IP PORT 这些变了，当前已经建立的TCP连接必须得断掉，那跟重启没啥区分了...
 	if config.Viper.Watch == global.CONFIG_STATUS_OPEN{
 		util.MyPrint("viper watch startup")
 		myViper.WatchConfig()
@@ -99,7 +100,6 @@ func GetNewViper(viperOption  ViperOption )(myViper *viper.Viper,config global.C
 			//}
 		}
 		myViper.OnConfigChange(handleFunc)
-		//viper.OnConfigChange(handleFunc)
 	}
 
 	return myViper,config,nil

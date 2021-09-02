@@ -45,6 +45,7 @@ type System struct {
 	AppId int
 	DbType string
 	ENV string
+	ErrorMsgFile string
 }
 
 type Jwt struct {

@@ -2,12 +2,13 @@
 dbType = "mysql"
 env = ""
 appId = 5
+errorMsgFile = "/data/lang.txt"
 
 [jwt]
 status = "open"
 key = "chukong"
-expiresTime = 3600
-bufferTime = 3600
+expiresTime = 360000
+bufferTime = 36000
 
 
 [viper]
@@ -17,21 +18,21 @@ watch = "open"
 [zap]
 status = "open"
 level = "info"
-dir = "logs"
+dir = "/data/www/golang/src/logs/service/zgoframe"
 showLine = true
 linkName = "latest_log"
 LogInConsole = true
 format = "console"
 StacktraceKey = "stacktrace"
-Prefix = "zgo"
+Prefix = ""
 encodeLevel = "LowercaseColorLevelEncoder"
 auoAlert = true
 
 [redis]
 status = "open"
 db-number = 1
-ip = "172.20.39.109"
-port = "6370"
+ip = "127.0.0.1"
+port = "6379"
 password =  ''
 
 [captcha]
@@ -41,20 +42,19 @@ imgWidth = 240
 imgHeight = 80
 
 
-
 [http]
 status = "open"
 ip = "127.0.0.1"
 port = "5555"
-staticPath ="static"
+staticPath ="/data/www/golang/src/zgoframe/static"
 reqLimitTimes= 100
 
 [mysql]
 status = "open"
-ip = "172.20.39.109"
+ip = "127.0.0.1"
 port = "3306"
 config = "charset=utf8mb4&parseTime=True&loc=Local"
-db-name = "pg_account"
+DbName= "test"
 username = "root"
 password = "mqzhifu"
 maxIdleConns = 10
@@ -64,18 +64,15 @@ logZap = false
 
 [casbin]
 status = "open"
-modelPath = "static/data/rbac_model.conf"
+modelPath = "/data/www/golang/src/zgoframe/static/data/rbac_model.conf"
 
 [etcd]
-status = "close"
-ip = ""
-port = ""
-username = ""
-password = ""
-url = "http://114.116.212.202/account/dev/v1/sys/etcd"
-
-[service]
 status = "open"
+ip = "59.110.167.206"
+port = "2379"
+username = "root"
+password = "mqzhifu"
+url = ""
 
 [alert]
 status = "open"
@@ -84,4 +81,16 @@ port = "9093"
 uri = "/api/v2/alerts"
 
 [metrics]
+status = "open"
+
+[websocket]
+status = "open"
+uri = "/ws"
+
+[grpc]
+status = "open"
+ip = "127.0.0.1"
+port = "6666"
+
+[service]
 status = "open"

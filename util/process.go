@@ -55,6 +55,8 @@ func (process *Process) DelPid()(int,error){
 
 	err = os.Remove(process.PathFileName)
 
+	MyPrint("del pid finish ",pid,err)
+
 	return pid,err
 }
 //进程PID保存到文件

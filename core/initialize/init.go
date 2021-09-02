@@ -38,7 +38,7 @@ func NewInitialize(option InitOption)*Initialize{
 
 //初始化-入口
 func (initialize * Initialize)Start()error{
-	//初始化配置信息
+	//初始化 : 配置信息
 	viperOption := ViperOption{
 		ConfigFileName	: initialize.Option.ConfigFileName,
 		ConfigFileType	: initialize.Option.ConfigType,
@@ -60,7 +60,7 @@ func (initialize * Initialize)Start()error{
 	//---config end -----
 
 	//mysql
-	//这里按说不应该先初始化MYSQL，而且不一定所有项目都用MYSQL，但是项目是基于多APP/PROJECT的模式，强依赖app_id
+	//这里按说不应该先初始化MYSQL，应该最早初始化LOG类，并且不一定所有项目都用MYSQL，但是项目是基于多APP/PROJECT的模式，强依赖app_id
 	//if global.C.Mysql.Status == global.CONFIG_STATUS_OPEN{
 		global.V.Gorm ,err = GetNewGorm()
 		if err != nil{
@@ -68,8 +68,7 @@ func (initialize * Initialize)Start()error{
 			return err
 		}
 	//}
-
-	//初始化APP信息，所有项目都需要有AppId
+	//初始化APP信息，所有项目都需要有AppId，因为要做验证，同时目录名也包含在里面
 	err = InitApp()
 	if err !=nil{
 		return err
@@ -91,7 +90,7 @@ func (initialize * Initialize)Start()error{
 		return err
 	}
 	//错误 文案 管理
-	global.V.Err ,err  = util.NewErrMsg(global.V.Zap,  global.C.Http.StaticPath)
+	global.V.Err ,err  = util.NewErrMsg(global.V.Zap,  global.C.Http.StaticPath + global.C.System.ErrorMsgFile )
 	if err != nil{
 		return err
 	}
@@ -105,7 +104,7 @@ func (initialize * Initialize)Start()error{
 			return err
 		}
 	}
-	//Http log zap
+	//Http log zap 这里单独再开个zap 实例，用于专门记录http 请求
 	HttpZap , err  := GetNewZapLog(global.V.AlertPush,"http","http",0)
 	if err != nil{
 		util.MyPrint("GetNewZapLog err:",err)
@@ -215,6 +214,7 @@ func (initialize * Initialize)Quit(){
 	global.V.Grpc.Shutdown()
 	global.V.Etcd.Shutdown()
 	global.V.Service.Shutdown()
+
 	global.V.Zap.Warn("init quit finish.")
 }
 

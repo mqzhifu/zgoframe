@@ -14,11 +14,10 @@ import (
 
 var initializeVar *initialize.Initialize
 // @title z golang 框架
-// @version 0.1
-// @description 拼装一个GO的基础框架方便日常使用
+// @version 0.1 测试版
+// @description 拼装一个GO的基础框架方便日常使用，主要是想把经常用的类统一化，像：log 链路追踪 etcd等，保证项目高可用
 
 func main(){
-	util.LogLevelFlag = util.LOG_LEVEL_DEBUG
 
 	envList := util.GetEnvList()
 
@@ -43,7 +42,7 @@ func main(){
 	//检测环境变量值ENV是否正常
 	if !util.CheckEnvExist(*env){
 		util.MyPrint(  "env is err , list:",envList)
-		return
+		panic("env is err : "+*env)
 	}
 
 	pwd, _ := os.Getwd()//当前路径
@@ -66,9 +65,10 @@ func main(){
 	err := initializeVar.Start()
 	if err != nil{
 		util.MyPrint("initialize.Init err:",err)
+		panic("initialize.Init err:"+err.Error())
 		return
 	}
-
+	//deploy 是用来方便布置的，看着挺恶心，我回头再优化
 	if *deploy == ""{
 		go global.V.Process.DemonSignal()
 		util.MyPrint("wait mainCxt.done...")
@@ -85,10 +85,13 @@ func main(){
 }
 
 func QuitAll(source int){
+	defer func() {
+		global.V.Process.DelPid()
+	}()
+
 	global.V.Zap.Warn("main quit , source : " + strconv.Itoa(source))
 	initializeVar.Quit()
-	pid ,err := global.V.Process.DelPid()
-	util.MyPrint("del pid:",pid,err)
+
 
 	util.MyPrint("QuitAll finish.")
 }

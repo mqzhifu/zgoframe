@@ -69,7 +69,7 @@ func (protobufMap *ProtobufMap)loadingActionMapConfigFile(fileName string)map[in
 	}
 	if len(am) <= 0{
 		protobufMap.Log.Error("protocolActions len(am) <= 0")
-		PanicPrint("protocolActions len(am) <= 0")
+		panic("protocolActions len(am) <= 0")
 	}
 	return am
 }

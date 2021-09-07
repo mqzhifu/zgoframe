@@ -45,7 +45,6 @@ func (myMetrics *MyMetrics)CreateGauge(name string )error{
 	if myMetrics.GroupNameHasExist(name) {
 		return errors.New("GroupNameHasExist:"+name)
 	}
-
 	gauge := prometheus.NewGauge(prometheus.GaugeOpts{
 		Name:      name,
 		//Help:      "the temperature of CPU",

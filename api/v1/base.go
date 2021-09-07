@@ -111,3 +111,32 @@ func Login(c *gin.Context) {
 	//}
 }
 
+// @Summary AppList
+// @Description AppList
+// @Security ApiKeyAuth
+// @Tags Base
+// @Produce  application/json
+// @Success 200 {string} string "{"success":true,"data":{},"msg":"登陆成功"}"
+// @Router /base/parserToken [post]
+func AppList(c *gin.Context ) {
+	var  a model.App
+	c.ShouldBind(&a)
+
+	rs := global.V.AppMng.Pool
+
+	httpresponse.OkWithDetailed(rs, "成功", c)
+}
+
+// @Summary AppTypeList
+// @Description AppTypeList
+// @Security ApiKeyAuth
+// @Tags Base
+// @Produce  application/json
+// @Success 200 {string} string "{"success":true,"data":{},"msg":"登陆成功"}"
+// @Router /base/parserToken [post]
+func AppTypeList(c *gin.Context ) {
+	var  a model.App
+	c.ShouldBind(&a)
+
+	httpresponse.OkWithDetailed(util.APP_TYPE_MAP, "成功", c)
+}

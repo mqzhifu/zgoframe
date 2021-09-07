@@ -36,6 +36,11 @@ func InitBaseRouter(Router *gin.RouterGroup) {
 		//BaseRouter.POST("register/third", v1.Register)
 		//发送短信
 		//BaseRouter.POST("sendsms", v1.SendSMS)
+
+		//获取APP 列表
+		BaseRouter.POST("appList", v1.AppList)
+		//获取APP TYPE 常量值
+		BaseRouter.POST("appTypeList", v1.AppTypeList)
 	}
 }
 

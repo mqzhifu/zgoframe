@@ -1,4 +1,4 @@
-
+主要包说明 ：
 | 类库 | 说明 |版本  |
 | --- | --- | --- |
 | viper | 解析配置文件 ||
@@ -17,6 +17,10 @@
 | base64Captcha| 图片二进制转码 ||
 | sigs.k8s.io/yaml| 解析yaml配置文件 ||
 | prometheus/client_golang| metrics ||
+
+辅助软件：
+
+filebeat  prometheus grafana alertManager metrics cicd( superVisor git ) rabbitmq kafka
 
 
 这里最恶心的是ETCD，不兼容MOD模式。  

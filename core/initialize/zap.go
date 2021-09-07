@@ -21,6 +21,10 @@ var zapInConsole int
 func GetNewZapLog(alert *util.AlertPush,moduleName string,FileName string,InConsole int) (logger *zap.Logger,err error) {
 	zapDir = global.C.Zap.Dir + "/" + moduleName
 	zapFileName = global.C.Zap.LinkName +  "_" + FileName
+
+
+	util.MyPrint("GetNewZapLog:",moduleName ,FileName ,InConsole )
+
 	zapInConsole = InConsole
 	if ok, _ := util.PathExists(zapDir); !ok { // 判断是否有Director文件夹
 		util.MyPrint("create directory:", zapDir)
@@ -71,6 +75,8 @@ func GetNewZapLog(alert *util.AlertPush,moduleName string,FileName string,InCons
 	if global.C.Zap.ShowLine{
 		logger = logger.WithOptions(zap.AddCaller())
 	}
+	logger = logger.With(zap.Int("appId", global.V.App.Id))
+	//logger.With(zap.String("appId","5"))
 	return logger,nil
 }
 

@@ -39,7 +39,7 @@ func NewInitialize(option InitOption)*Initialize{
 
 //初始化-入口
 func (initialize * Initialize)Start()error{
-	createDbTable()
+	//createDbTable()
 	//初始化 : 配置信息
 	viperOption := ViperOption{
 		ConfigFileName	: initialize.Option.ConfigFileName,

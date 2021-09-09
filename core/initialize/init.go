@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 	"zgoframe/core/global"
+	"zgoframe/model"
 	"zgoframe/protobuf/pb"
 	"zgoframe/protobuf/pbservice"
 	"zgoframe/util"
@@ -38,6 +39,7 @@ func NewInitialize(option InitOption)*Initialize{
 
 //初始化-入口
 func (initialize * Initialize)Start()error{
+	createDbTable()
 	//初始化 : 配置信息
 	viperOption := ViperOption{
 		ConfigFileName	: initialize.Option.ConfigFileName,
@@ -203,6 +205,13 @@ func (initialize * Initialize)Start()error{
 
 	return nil
 }
+
+func createDbTable(){
+	mydb := util.NewDb(global.V.Gorm)
+	mydb.CreateTable(&model.User{},&model.SmsLog{},&model.SmsRule{},&model.App{},&model.UserReg{} , &model.OperationRecord{})
+	util.ExitPrint("init done.")
+}
+
 
 func (initialize * Initialize)Quit(){
 	global.V.Zap.Warn("init quit start:")

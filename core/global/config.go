@@ -16,6 +16,7 @@ type Config struct {
 	Metrics Metrics
 	Websocket Websocket
 	Grpc Grpc
+	Email Email
 }
 
 type ConfigMysql struct {
@@ -127,5 +128,13 @@ type Grpc struct {
 	Status string
 	Ip string
 	Port string
+}
+
+type Email struct {
+	Status string
+	Host string
+	Ps string
+	Port int
+	From string
 }
 

@@ -189,12 +189,26 @@ func (initialize * Initialize)Start()error{
 		//}
 		//pbServiceFirst := pb.NewFirstClient(grpcClientConn)
 	}
+
+	if global.C.Email.Status == global.CONFIG_STATUS_OPEN {
+		emailOption := util.EmailOption{
+			Host: global.C.Email.Host,
+			Port: global.C.Email.Port,
+			FromEmail: global.C.Email.From,
+			Password: global.C.Email.Ps,
+		}
+
+		global.V.AlertHook.Email = util.NewMyEmail(emailOption)
+	}
 	//预/报警,这个是真正的报警，如：邮件 SMS 等
-	global.V.AlertHook = util.NewAlertHook(global.V.Zap)
+	global.V.AlertHook = util.NewAlertHook(-1,"程序出错了：#body#","报错",global.V.Zap)
+
+	util.ExitPrint(123123123)
 
 	global.C.System.ENV = initialize.Option.Env
 	//启动http
 	if global.C.Http.Status == global.CONFIG_STATUS_OPEN{
+		RegGinHttpRoute()//这里注册项目自己的http 路由策略
 		StartHttpGin()
 	}
 	//_ ,cancelFunc := context.WithCancel(option.RootCtx)

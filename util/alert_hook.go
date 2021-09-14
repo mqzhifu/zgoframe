@@ -2,83 +2,100 @@ package util
 
 //
 import (
-	"github.com/go-gomail/gomail"
 	"go.uber.org/zap"
-	"net/smtp"
+	"strings"
 )
 
+const (
+	ALERT_LEVEL_ALL = -1
+
+	ALERT_LEVEL_SMS = 1
+	ALERT_LEVEL_EMAIL = 2
+	ALERT_LEVEL_FEISHU = 4
+	ALERT_LEVEL_WEIXIN = 8
+	ALERT_LEVEL_DINGDING = 16
+)
+
+
+func GetAlertHookLevelList()map[string]int{
+	mm := make(map[string]int)
+	mm["ALERT_LEVEL_SMS"] = 1
+	mm["ALERT_LEVEL_EMAIL"] = 2
+	mm["ALERT_LEVEL_FEISHU"] = 4
+	mm["ALERT_LEVEL_WEIXIN"] = 8
+	mm["ALERT_LEVEL_DINGDING"] = 16
+
+	return mm
+}
+
 type AlertHook struct {
+	Level int
 	Email *MyEmail
 	EmailOption EmailOption
 	Log *zap.Logger
+	Template string
+	Title 	string
 }
 
-type EmailOption struct {
-	Host string
-	Port int
-	FromEmail string
-	Password string
-}
 
-func NewAlertHook(log *zap.Logger)*AlertHook{
+
+func NewAlertHook(level int ,template string,Title string,log *zap.Logger)*AlertHook{
 	alertHook := new (AlertHook)
 	alertHook.Log = log
-
-	emailOption :=EmailOption{
-		Host: "smtp.qq.com",
-		Port: 465,
-		//Port: 587,
-		FromEmail: "78878296@qq.com",
-		Password: "mM123456",
+	ExitPrint(level)
+	if level == -1{
+		levelList := GetAlertHookLevelList()
+		allLevel := 0
+		for _,v :=range levelList{
+			allLevel += v
+		}
+		ExitPrint(allLevel)
+		alertHook.Level = allLevel
+	}else{
+		alertHook.Level = level
 	}
 
-	alertHook.Email = NewMyEmail(emailOption)
-	//myEmail.SendOneEmail()
+	alertHook.Template = template
+	alertHook.Title = Title
 
 	log.Info("NewAlertHook")
 
 	return alertHook
 }
 
-func SendSMS(){
+
+func (alertHook *AlertHook)Alert(msg string){
+	if alertHook.Level & ALERT_LEVEL_SMS == ALERT_LEVEL_SMS{
+
+	}
+
+	if alertHook.Level & ALERT_LEVEL_EMAIL == ALERT_LEVEL_EMAIL{
+
+	}
+
+	if alertHook.Level & ALERT_LEVEL_FEISHU == ALERT_LEVEL_FEISHU{
+		body := strings.Replace(alertHook.Template , "#body#",msg,-1)
+		alertHook.Email.SendOneEmailSync( "mqzhifu@sina.com" ,alertHook.Title,body)
+	}
+
+	if alertHook.Level & ALERT_LEVEL_WEIXIN == ALERT_LEVEL_WEIXIN{
+
+	}
+}
+
+
+func (alertHook *AlertHook)SendSMS(){
 
 }
 
-func GetEmailInc(){
+func (alertHook *AlertHook)SendEmail(){
 
 }
 
-//func SendEmail(){
-//
-//}
-
-func SendFeishu(){
+func (alertHook *AlertHook)SendFeishu(){
 
 }
 
-type MyEmail struct {
-	Dialer  *gomail.Dialer
-	EmailOption EmailOption
-}
+func (alertHook *AlertHook)SendWeixin(){
 
-func NewMyEmail (emailOption EmailOption)*MyEmail{
-	myEmail := new (MyEmail)
-
-	myEmail.Dialer = gomail.NewDialer(emailOption.Host, emailOption.Port,emailOption.FromEmail, emailOption.Password)
-	auth := smtp.PlainAuth("", emailOption.FromEmail,  "glnteewafftmcaje", emailOption.Host )
-	myEmail.Dialer.Auth = auth
-	return myEmail
-}
-
-func(myEmail *MyEmail) SendOneEmail()error{
-	addr := "78878296@qq.com"
-
-	m := gomail.NewMessage()
-	//m.SetHeader("From",addr + "<" + myEmail.EmailOption.FromEmail + ">")
-	m.SetHeader("From",addr)
-	m.SetHeader("Subject", "testGoLib")
-	m.SetHeader("To", "mqzhifu@sina.com")
-	m.SetBody("text/html", "rt")
-	err := myEmail.Dialer.DialAndSend(m)
-	return err
 }

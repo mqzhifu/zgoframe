@@ -33,6 +33,7 @@ type Global struct {
 	Process 	*util.Process
 	Err 		*util.ErrMsg
 	RootDir 	string
+	Email 		*util.MyEmail
 }
 
 func New()*Global {

@@ -18,7 +18,7 @@ var initializeVar *initialize.Initialize
 // @description 拼装一个GO的基础框架方便日常使用，主要是想把经常用的类统一化，像：log 链路追踪 etcd等，保证项目高可用
 
 func main(){
-
+	//获取<环境变量>枚举值
 	envList := util.GetEnvList()
 
 	//配置读取源类型，1 文件  2 etcd

@@ -53,20 +53,31 @@ func GetNewHttpGIN(zapLog *zap.Logger)(*gin.Engine,error) {
 	//单独的日志记录，GIN默认的日志不会持久化的
 	ginRouter.Use(ZapLog())
 	//加载静态目录
+	//	Router.Static("/form-generator", "./resource/page")
 	ginRouter.StaticFS("/static",http.Dir(global.C.Http.StaticPath))
 	//加载swagger api 工具
 	ginRouter.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	//设置跨域
 	ginRouter.Use(httpmiddleware.Cors())
+
+
+	ginRouter.NoMethod(HandleNotFound)
+
+	return ginRouter,nil
+
+
+}
+
+func RegGinHttpRoute(){
 	//设置非登陆可访问API
-	PublicGroup := ginRouter.Group("")
+	PublicGroup := global.V.Gin.Group("")
 	PublicGroup.Use(httpmiddleware.OperationRecord()).Use(httpmiddleware.RateMiddleware()).Use(httpmiddleware.ProcessHeader())
 	{
 		router.InitBaseRouter(PublicGroup)
 	}
 
 	//加载限流中间件
-	PrivateGroup := ginRouter.Group("")
+	PrivateGroup :=  global.V.Gin.Group("")
 	//设置正常API（需要验证）
 	//httpmiddleware.CasbinHandler()
 	PrivateGroup.Use(httpmiddleware.OperationRecord()).Use(httpmiddleware.RateMiddleware()).Use(httpmiddleware.ProcessHeader(),httpmiddleware.JWTAuth())
@@ -76,17 +87,8 @@ func GetNewHttpGIN(zapLog *zap.Logger)(*gin.Engine,error) {
 		router.InitSysRouter(PrivateGroup)
 	}
 
-
-	ginRouter.NoMethod(HandleNotFound)
-
-	return ginRouter,nil
-	//	Router.Static("/form-generator", "./resource/page")
-	//
-	//	address := fmt.Sprintf(":%d", global.GVA_CONFIG.System.Addr)
-	//	s := initServer(address, Router)
-	//	time.Sleep(10 * time.Microsecond)
-	//	global.GVA_LOG.Info("server run success on ", zap.String("address", address))
 }
+
 
 var HttpZapLog *zap.Logger
 func ZapLog()gin.HandlerFunc {

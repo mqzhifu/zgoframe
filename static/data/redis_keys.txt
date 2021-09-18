@@ -1,0 +1,2 @@
+userInfo|uinfo_{0}|
+userToken|utoken_{0}_{1}

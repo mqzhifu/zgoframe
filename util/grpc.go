@@ -72,6 +72,14 @@ func (myGrpc *MyGrpc)GetServer()(*grpc.Server,net.Listener,error){
 	return grpcInc,myGrpc.Listen,nil
 }
 
+func m1(){
+
+}
+
+func m2(){
+
+}
+
 func serverInterceptorBack(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp interface{}, err error){
 	fmt.Println("gRPC method: %s, %v", info.FullMethod, req)
 
@@ -106,6 +114,7 @@ func serverInterceptorBack(ctx context.Context, req interface{}, info *grpc.Unar
 	)
 	//ctx = metadata.NewOutgoingContext(ctx, md)
 	grpc.SendHeader(ctx,md)
+
 	return resp, err
 }
 

@@ -105,6 +105,7 @@ func (initialize * Initialize)Start()error{
 			util.MyPrint("GetRedis err:",err)
 			return err
 		}
+		TestRedis()
 	}
 	//Http log zap 这里单独再开个zap 实例，用于专门记录http 请求
 	HttpZap , err  := GetNewZapLog(global.V.AlertPush,"http","http",0)
@@ -120,6 +121,7 @@ func (initialize * Initialize)Start()error{
 			return err
 		}
 	}
+
 	//etcd
 	if global.C.Etcd.Status  == global.CONFIG_STATUS_OPEN{
 		global.V.Etcd ,err = GetNewEtcd()
@@ -196,14 +198,19 @@ func (initialize * Initialize)Start()error{
 			Port: global.C.Email.Port,
 			FromEmail: global.C.Email.From,
 			Password: global.C.Email.Ps,
+			Log: global.V.Zap,
 		}
 
-		global.V.AlertHook.Email = util.NewMyEmail(emailOption)
+		global.V.Email = util.NewMyEmail(emailOption)
 	}
 	//预/报警,这个是真正的报警，如：邮件 SMS 等
-	global.V.AlertHook = util.NewAlertHook(-1,"程序出错了：#body#","报错",global.V.Zap)
+	if global.C.Alert.Status == global.CONFIG_STATUS_OPEN {
+		global.V.AlertHook = util.NewAlertHook(-1,"程序出错了：#body#","报错",util.ALERT_METHOD_SYNC,global.V.Zap)
+		global.V.AlertHook.Email = global.V.Email
+		//global.V.AlertHook.Alert("Aaaa")
+		//util.ExitPrint(123123123)
+	}
 
-	util.ExitPrint(123123123)
 
 	global.C.System.ENV = initialize.Option.Env
 	//启动http

@@ -2,7 +2,6 @@ package global
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/go-redis/redis"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
@@ -13,7 +12,7 @@ import (
 type Global struct {
 	Vip        *viper.Viper
 	Zap        *zap.Logger
-	Redis      *redis.Client
+	Redis      *util.MyRedis
 	Gin        *gin.Engine
 	Gorm       *gorm.DB
 	App        util.App

@@ -129,11 +129,11 @@ func CheckToken(myHeader request.Header )(parserTokenData request.ParserTokenDat
 		//_ = service.JsonInBlacklist(model.JwtBlacklist{Jwt: token})
 		return parserTokenData,errors.New("id not in db")
 	}
-
-	redisLoginJwtKey := service.GetLoginJwtKey(parserTokenData.SourceType,claims.AppId,claims.Id)
-	global.V.Zap.Debug("user token key:"+redisLoginJwtKey)
-
-	err, jwtStr := service.GetRedisJWT(redisLoginJwtKey)
+	redisElement ,_:= global.V.Redis.GetElementByIndex("jwt",strconv.Itoa(claims.AppId),strconv.Itoa(parserTokenData.SourceType),strconv.Itoa(claims.Id))
+	//redisLoginJwtKey := service.GetLoginJwtKey(parserTokenData.SourceType,claims.AppId,claims.Id)
+	global.V.Zap.Debug("user token key:"+redisElement.Key)
+	//err, jwtStr := service.GetRedisJWT(redisLoginJwtKey)
+	jwtStr , err  := global.V.Redis.Get(redisElement)
 	if err != nil || jwtStr == "" || err == redis.Nil {
 		return parserTokenData,errors.New("token 不在redis 中")
 	}

@@ -105,7 +105,7 @@ func (initialize * Initialize)Start()error{
 			util.MyPrint("GetRedis err:",err)
 			return err
 		}
-		TestRedis()
+		//TestRedis()
 	}
 	//Http log zap 这里单独再开个zap 实例，用于专门记录http 请求
 	HttpZap , err  := GetNewZapLog(global.V.AlertPush,"http","http",0)

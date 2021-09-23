@@ -2,199 +2,139 @@ package util
 
 import (
 	"gorm.io/gorm"
-	"reflect"
-	"strings"
-	"zgoframe/model"
+	"strconv"
 )
 
+type DbQueryListPara struct {
+	Where	string
+	Fields 	string
+	Order 	string
+	Group   string
+	Limit 	int
+	Offset	int
+}
+
 type Db struct {
-	FieldTagName string
-	Br string
+	Orm *gorm.DB
 }
-
-
-
-type TableOption struct {
-	Name string
-	Comment string
-	Engine string
-	Charset string
-	ColumnsOption map[string]TableColumnOption
-}
-type TableColumnOption struct {
-	Comment string
-	Unique string
-	Index string
-	Primarykey string
-	Unsigned string
-	Define string
-
-	DefaultValue string
-	Null string
-	AutoIncrement string
-}
-
 
 func NewDb(gorm *gorm.DB)*Db{
 	db := new (Db)
-	db.FieldTagName = "db"
-	db.Br = "\n"
+	db.Orm = gorm
 	return db
 }
-
-func(db *Db) CreateTable(tableStruct ...interface{} ){
-	for i:=0;i<len(tableStruct);i++{
-		db.processOneTable(tableStruct[i])
-
-	}
-	ExitPrint(111)
+//gorm.ErrRecordNotFound
+//查询
+//根据主键ID查找一条记录
+func (db *Db) GetRowById(model interface{} , Id int)(interface{}, error){
+	//这里没必要用first|last ，因为它会排序，既然ID是主键不可能出现重复，不可能有多条记录，也就不需要排序
+	//first last take 会自动给sql 加上：limit 1
+	txDb := db.Orm.Take( model,Id)
+	return model, txDb.Error
+}
+//
+func  (db *Db)GetRow(model interface{} , where string)(interface{}, error){
+	err := db.Orm.Where(where).First(model).Error
+	return model, err
 }
 
-func (db *Db)processOneTable(tableStruct interface{}){
-	MyPrint("processOneTable:",tableStruct)
+//根据主键ID查找一组记录
+func (db *Db)GetListByIds(modelList interface{},Ids []int)(interface{}, error){
+	txDb := db.Orm.Find( modelList,Ids)
+	return modelList, txDb.Error
+}
 
-	ValueOfTableStruct := reflect.ValueOf(tableStruct)
-	//查找方法
-	method := ValueOfTableStruct.MethodByName("TableOptions")
-	//动态执行方法
-	rs := method.Call([]reflect.Value{})
-	//执行方法结果：一个表的基础信息
-	tableOptionString := rs[0].Interface().(map[string]string)
-	tableOption := TableOption{
-		Comment: tableOptionString["comment"],
+func  (db *Db)  GetList(modelList interface{},para DbQueryListPara )(interface{}, error){
+	query := db.Orm
+
+	if para.Where != ""{
+		MyPrint("im where")
+		query = query.Where(para.Where)
 	}
-	//MyPrint(tableOption)
-	if tableOption.Name == "" {
-		structFullName := ValueOfTableStruct.Elem().Type()
-		tableOption.Name = Lcfirst( structFullName.Name() )
+
+	if para.Fields != ""{
+		query = query.Select(para.Fields)
 	}
-	//MyPrint(tableOption)
-	sql := db.Br+"create table " + string( CamelToSnake2([]byte(tableOption.Name)))  + "(" + db.Br
-	columnsOption := make(map[string]TableColumnOption)
 
-	TypeOfOneTableStruct := reflect.TypeOf(tableStruct)
-	db.GetField(TypeOfOneTableStruct.Elem(),columnsOption)
+	if para.Group != ""{
+		query = query.Order(para.Group)
+	}
 
+	if para.Order != ""{
+		query = query.Order(para.Order)
+	}
 
-	//type TableColumnOption struct {
-	//	Unique string
-	//	Index string
+	if para.Offset >= 0 {
+		query = query.Offset(para.Offset)
+	}
+
+	if para.Limit  >= 0{
+		query = query.Limit(para.Limit )
+	}
+
+	err := query.Find(modelList).Error
+	return modelList, err
+}
+//
+func  (db *Db)Count(model interface{} ,  where string)(int64, error){
+	//if fields == ""{
+	//	fields = " count ( id ) as cnt "
 	//}
-
-	sqlMid := ""
-	primarykey := false
-	for k,v :=  range columnsOption{
-		ak := string(CamelToSnake2([]byte(k)))
-		//ak := CamelToSnake2([]byte("addHeaderCddddDdddd"))
-		sql +=  "    `"+ ak + "` "
-		if v.Define != ""{
-			sql += v.Define + " "
-		}
-
-		if v.Unsigned != ""{
-			sql += " UNSIGNED "
-		}
-		if k != "DeletedAt"{//这个特殊，得允许null
-			if v.Define == "text"{
-				sql += " null "
-			}else{
-				//if v.Null != ""{
-				sql += " not null "
-				//}
-			}
-
-		}
-
-
-		if v.DefaultValue != ""{
-			sql += " default   "+  v.DefaultValue + " "
-		}
-
-		if v.AutoIncrement != ""{
-			sql += " auto_increment "
-		}
-
-		if v.Comment != ""{
-			sql += " comment '"+v.Comment+"' "
-		}
-
-		if v.Primarykey != ""{
-			if primarykey {
-				ExitPrint("primarykey repeat")
-			}
-			sql += " primary key "
-			primarykey  = true
-		}
-
-		if v.Unique != ""{
-			sqlMid += " Unique " + " (`"+ak+"`)  ,"
-		}
-
-		if v.Index != ""{
-			sqlMid += " index " + " (`"+ak+"`) ,"
-		}
-		sql +=  " , " + db.Br
-	}
-	if sqlMid != ""{
-		sqlMid = string([]byte(sqlMid)[0:len(sqlMid)-1])
-		sql += sqlMid + ")" + db.Br
-	}
-
-
-
-	// charset=utf8,comment="test Table";
-	Engine := "innodb"
-	if tableOption.Engine != ""{
-		ExitPrint(tableOption.Engine)
-		Engine = tableOption.Engine
-	}
-	sql += " engine=" + Engine
-
-	Charset := "utf8"
-	if tableOption.Charset != ""{
-		Charset = tableOption.Charset
-	}
-	sql += " charset="+ Charset
-
-	comment := "''"
-	if tableOption.Comment != ""{
-		comment = "'" +tableOption.Comment + "'"
-	}
-	sql += " comment="+ comment + db.Br
-
-	MyPrint(sql)
-
+	var cnt int64
+	//err := db.Orm.Where(where).Select(fields).Take(model).Error
+	err := db.Orm.Model(model).Where(where).Count(&cnt).Error
+	return cnt, err
 }
 
-func  (db *Db)GetField(typeOfStruct reflect.Type,columnsOption map[string]TableColumnOption){
-	for i:=0;i<typeOfStruct.NumField();i++{
-		tableOneColumnOption := TableColumnOption{}
-		structFiled := typeOfStruct.Field(i)
 
-		//MyPrint(structFiled.Type.String())
-		if structFiled.Type.Name() == "MODEL"{
-			commonMODEL := model.MODEL{}
-			typeOfGlobalMODEL := reflect.TypeOf(commonMODEL)
-			db.GetField(typeOfGlobalMODEL,columnsOption)
-			continue
-		}
+//save是全保存，即使字段中有为 空串 or 0 ，且不需要加where ，会根据结构体里自带的ID字段匹配
+//另外，问题：没有主键的时候是新增，有主键的时候是更新...很乱！
+//func (db *Db) UpSave(model interface{})(interface{}, error){
+//	return nil,nil
+//}
 
-		structFiledTagName := structFiled.Tag.Get(db.FieldTagName)
-		//MyPrint(structFiledTagName)
-		if structFiledTagName != ""{
-			ValueOfTableOneColumnOption := reflect.ValueOf(&tableOneColumnOption)
-			//ColumnMap := make(map[string]string)
-			arr := strings.Split(structFiledTagName,";")
-			for _,oneKeyStr:=range arr{
-				//MyPrint("oneKeyStr :",oneKeyStr)
-				oneKeyArr := strings.Split(oneKeyStr,":")
-				MyPrint("oneKeyArr :",oneKeyArr)
-				//MyPrint(ValueOfTableOneColumnOption.Elem().FieldByName(oneKeyArr[0]).Type())
-				//MyPrint(oneKeyArr[1],StrFirstToUpper(oneKeyArr[0]))
-				ValueOfTableOneColumnOption.Elem().FieldByName(StrFirstToUpper(oneKeyArr[0])).SetString(oneKeyArr[1])
-			}
-			//MyPrint(tableOneColumnOption)
-		}
-		columnsOption[structFiled.Name] = tableOneColumnOption
-	}
+//修改
+func (db *Db) UpRowById(fields interface{} , Id int)(int64 , error){
+	txDb := db.Orm.Updates(fields).Where(" id = "+ strconv.Itoa(Id))
+	return txDb.RowsAffected, txDb.Error
+}
+//根据主键ID查找一组记录
+func (db *Db)UpListByIds(fields interface{},Ids string)(int64, error){
+	txDb := db.Orm.Updates(fields).Where(" id in ( " + Ids + " ) ")
+	return txDb.RowsAffected, txDb.Error
+}
+//
+func  (db *Db) UpRow(fields interface{} , where string)(int64, error){
+	txDb := db.Orm.Updates(fields).Where(where).Limit(1)
+	return txDb.RowsAffected, txDb.Error
+}
+
+func  (db *Db) UpList(fields interface{} , where string)(int64, error){
+	txDb := db.Orm.Updates(fields).Where(where)
+	return txDb.RowsAffected, txDb.Error
+}
+//删除
+func  (db *Db) DeleteList(model interface{} , where string)(int64, error){
+	txDb := db.Orm.Where(where).Delete(model)
+	return txDb.RowsAffected, txDb.Error
+}
+//根据主键ID查找一条记录
+func (db *Db) DeleteRowById(model interface{} , Id int)(int64, error){
+	txDb := db.Orm.Delete( model,Id)
+	return txDb.RowsAffected, txDb.Error
+}
+//根据主键ID查找一组记录
+func (db *Db)DeleteListByIds(modelList interface{},Ids []int)(int64, error){
+	txDb := db.Orm.Delete( modelList,Ids)
+	return txDb.RowsAffected, txDb.Error
+}
+//删除一条记录
+func  (db *Db) DeleteRow(model interface{} , where string)(int64, error){
+	txDb := db.Orm.Where(where).Delete(model)
+	return txDb.RowsAffected , txDb.Error
+}
+//插入一条新记录
+func  (db *Db) InsertRow(fields interface{})(int64, error){
+	txDb := db.Orm.Create(fields)
+	return txDb.RowsAffected , txDb.Error
 }

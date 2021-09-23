@@ -45,6 +45,9 @@ type AlertMsg struct {
 //]
 
 func(alertPush *AlertPush) Push(alertMsg AlertMsg){
+	MyPrint("need alert pu sh....")
+	return
+
 	str ,err := json.Marshal(alertMsg)
 
 	req, err := http.NewRequest("POST", alertPush.Url, bytes.NewReader(str))

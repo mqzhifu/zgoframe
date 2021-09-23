@@ -1,7 +1,6 @@
 package initialize
 
 import (
-	"fmt"
 	zaprotatelogs "github.com/lestrrat-go/file-rotatelogs"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -62,7 +61,7 @@ func GetNewZapLog(alert *util.AlertPush,moduleName string,FileName string,InCons
 		}
 		num := zap.ErrorLevel | zap.PanicLevel |  zap.FatalLevel |  zap.DPanicLevel
 		if entry.Level & num == 0{
-			fmt.Println("need alert...")
+			global.V.AlertPush.Push(util.AlertMsg{})
 		}
 		return nil
 	})

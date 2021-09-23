@@ -60,7 +60,7 @@ func GetNewHttpGIN(zapLog *zap.Logger)(*gin.Engine,error) {
 	//设置跨域
 	ginRouter.Use(httpmiddleware.Cors())
 
-
+	//404
 	ginRouter.NoMethod(HandleNotFound)
 
 	return ginRouter,nil

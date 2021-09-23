@@ -69,12 +69,14 @@ func (initialize * Initialize)Start()error{
 			util.MyPrint("GetGorm err:",err)
 			return err
 		}
+		model.Db = global.V.Gorm
 	//}
 	//初始化APP信息，所有项目都需要有AppId，因为要做验证，同时目录名也包含在里面
 	err = InitApp()
 	if err !=nil{
 		return err
 	}
+	//项目目录名，必须跟APP-INFO里的key相同
 	initialize.Option.RootDirName,err = InitPath(initialize.Option.RootDir)
 	if err !=nil{
 		return err
@@ -121,7 +123,6 @@ func (initialize * Initialize)Start()error{
 			return err
 		}
 	}
-
 	//etcd
 	if global.C.Etcd.Status  == global.CONFIG_STATUS_OPEN{
 		global.V.Etcd ,err = GetNewEtcd()
@@ -210,8 +211,7 @@ func (initialize * Initialize)Start()error{
 		//global.V.AlertHook.Alert("Aaaa")
 		//util.ExitPrint(123123123)
 	}
-
-
+	//TestGorm()
 	global.C.System.ENV = initialize.Option.Env
 	//启动http
 	if global.C.Http.Status == global.CONFIG_STATUS_OPEN{
@@ -227,8 +227,10 @@ func (initialize * Initialize)Start()error{
 	return nil
 }
 
+
+
 func createDbTable(){
-	mydb := util.NewDb(global.V.Gorm)
+	mydb := util.NewDbTool(global.V.Gorm)
 	mydb.CreateTable(&model.User{},&model.SmsLog{},&model.SmsRule{},&model.App{},&model.UserReg{} , &model.OperationRecord{})
 	util.ExitPrint("init done.")
 }

@@ -364,8 +364,8 @@ func clientInterceptorBack(ctx context.Context, method string, req, reply interf
 	opts = []grpc.CallOption{grpc.Header(&header)}
 
 	//nowString:=strconv.FormatInt(util.GetNowTimeSecondToInt64(),10)
-	md := metadata.Pairs("Host","First")
-	ctx = metadata.NewOutgoingContext(ctx, md)
+	//md := metadata.Pairs("Host","First")
+	//ctx = metadata.NewOutgoingContext(ctx, md)
 
 	invoker(ctx,method,req,reply,cc,opts...)
 

@@ -264,8 +264,8 @@ func (initialize *Initialize)StartClient()error{
 	pbServiceFirst := pb.NewFirstClient(grpcClientConn)
 	RequestRegPlayer := pb.RequestRegPlayer{}
 	RequestRegPlayer.AddTime = 123123
-	res ,_:= pbServiceFirst.SayHello(context.Background(),&RequestRegPlayer)
-	util.MyPrint("grpc return:",res)
+	res ,err:= pbServiceFirst.SayHello(context.Background(),&RequestRegPlayer)
+	util.MyPrint("grpc return:",res , " err:",err)
 	return nil
 }
 

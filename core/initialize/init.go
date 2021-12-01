@@ -253,7 +253,9 @@ func (initialize *Initialize)StartService()error{
 
 func (initialize *Initialize)StartClient()error{
 	//grpcClientConn,err := global.V.Grpc.GetClient(global.C.Grpc.Ip,global.C.Grpc.Port)
-	grpcClientConn, err := grpc.Dial(global.C.Grpc.Ip+ ":4140",grpc.WithInsecure())
+	dns := global.C.Grpc.Ip+ ":4141"
+	util.MyPrint("client grp dns:",dns)
+	grpcClientConn, err := grpc.Dial(dns,,grpc.WithInsecure())
 	if err != nil{
 		util.MyPrint(err)
 		return errors.New(err.Error())

@@ -254,8 +254,8 @@ func (initialize *Initialize)StartService()error{
 
 func (initialize *Initialize)StartClient()error{
 	//grpcClientConn,err := global.V.Grpc.GetClient(global.C.Grpc.Ip,global.C.Grpc.Port)
-	//dns := global.C.Grpc.Ip+ ":4141"
-	dns := global.C.Grpc.Ip+ ":6666"
+	dns := global.C.Grpc.Ip+ ":4141"
+	//dns := global.C.Grpc.Ip+ ":6666"
 	//grpcClientConn, err := grpc.Dial(dns,grpc.WithInsecure())
 	grpcClientConn, err := grpc.Dial(dns,grpc.WithInsecure(),grpc.WithUnaryInterceptor(clientInterceptorBack))
 	util.MyPrint("client grp dns:",dns , " err:",err)

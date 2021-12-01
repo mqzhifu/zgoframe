@@ -69,7 +69,7 @@ func (myGrpc *MyGrpc)Shutdown(){
 }
 func (myGrpc *MyGrpc)GetServer()(*grpc.Server,net.Listener,error){
 	var opts []grpc.ServerOption//grpc为使用的第三方的grpc包
-	//opts = append(opts, grpc.UnaryInterceptor(serverInterceptorBack))
+	opts = append(opts, grpc.UnaryInterceptor(serverInterceptorBack))
 	grpcInc := grpc.NewServer(opts...) //创建一个grpc 实例
 	return grpcInc,myGrpc.Listen,nil
 }
@@ -89,6 +89,7 @@ func serverInterceptorBack(ctx context.Context, req interface{}, info *grpc.Unar
 	common := pb.Common{
 		ServerReceiveTime: time.Now().Unix(),
 	}
+	fmt.Println("server md:",md)
 	if !ok{
 		MyPrint("metadata.FromIncomingContext err:",ok)
 	}else{

@@ -1,6 +1,7 @@
 package main
 
 import (
+	_ "embed"
 	"context"
 	"flag"
 	"os"

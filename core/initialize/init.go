@@ -255,8 +255,8 @@ func (initialize *Initialize)StartService()error{
 func (initialize *Initialize)StartClient()error{
 	//grpcClientConn,err := global.V.Grpc.GetClient(global.C.Grpc.Ip,global.C.Grpc.Port)
 	dns := global.C.Grpc.Ip+ ":4141"
-	grpcClientConn, err := grpc.Dial(dns,grpc.WithInsecure())
-	//grpcClientConn, err := grpc.Dial(dns,grpc.WithInsecure(),grpc.WithUnaryInterceptor(clientInterceptorBack))
+	//grpcClientConn, err := grpc.Dial(dns,grpc.WithInsecure())
+	grpcClientConn, err := grpc.Dial(dns,grpc.WithInsecure(),grpc.WithUnaryInterceptor(clientInterceptorBack))
 	util.MyPrint("client grp dns:",dns , " err:",err)
 	if err != nil{
 		util.MyPrint(err)
@@ -365,7 +365,7 @@ func clientInterceptorBack(ctx context.Context, method string, req, reply interf
 	opts = []grpc.CallOption{grpc.Header(&header)}
 
 	//nowString:=strconv.FormatInt(util.GetNowTimeSecondToInt64(),10)
-	md := metadata.Pairs("Host","First")
+	md := metadata.Pairs("Host","pb.First")
 	ctx = metadata.NewOutgoingContext(ctx, md)
 
 	invoker(ctx,method,req,reply,cc,opts...)

@@ -371,7 +371,7 @@ func clientInterceptorBack(ctx context.Context, method string, req, reply interf
 
 	//md ,ok := metadata.FromIncomingContext(ctx)
 	//util.MyPrint("md:",md,ok)
-	util.MyPrint("method:",method,"req:",req,"reply:",reply,"opts:",header)
+	util.MyPrint("method:",method,"req:",req,"reply:",reply,"opts:",header,cc.GetState())
 
 
 	return nil

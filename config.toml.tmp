@@ -22,11 +22,11 @@ dir = "/data/www/golang/src/logs/service/zgoframe"
 showLine = true
 linkName = "latest_log"
 LogInConsole = true
-format = "console"
+format = ""
 StacktraceKey = "stacktrace"
 Prefix = ""
-encodeLevel = "LowercaseColorLevelEncoder"
-auoAlert = true
+encodeLevel = "LowercaseLevelEncoder"
+autoAlert = true
 
 [redis]
 status = "open"
@@ -43,7 +43,7 @@ imgHeight = 80
 
 
 [http]
-status = "open"
+status = "close"
 ip = "127.0.0.1"
 port = "5555"
 staticPath ="/data/www/golang/src/zgoframe/static"
@@ -68,10 +68,10 @@ modelPath = "/data/www/golang/src/zgoframe/static/data/rbac_model.conf"
 
 [etcd]
 status = "open"
-ip = "59.110.167.206"
+ip = "8.142.177.235"
 port = "2379"
-username = "root"
-password = "mqzhifu"
+username = ""
+password = ""
 url = ""
 
 [alert]
@@ -81,7 +81,7 @@ port = "9093"
 uri = "/api/v2/alerts"
 
 [metrics]
-status = "open"
+status = "close"
 
 [websocket]
 status = "open"
@@ -94,3 +94,11 @@ port = "6666"
 
 [service]
 status = "open"
+
+[email]
+status = "open"
+host = "smtp.qq.com"
+port = 465
+from = "78878296@qq.com"
+ps = "mM123456"
+

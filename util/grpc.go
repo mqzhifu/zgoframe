@@ -108,10 +108,10 @@ func serverInterceptorBack(ctx context.Context, req interface{}, info *grpc.Unar
 	ServerReceiveTimeString := strconv.FormatInt(common.ServerReceiveTime,10)
 	ServerResponseTimeString := strconv.FormatInt(common.ServerResponseTime,10)
 	md = metadata.Pairs(
-		"trace_id", md["trace_id"][0],
-		"request_id",md["request_id"][0],
-		"client_req_time",md["client_req_time"][0],
-		"app_id",md["app_id"][0],
+		//"trace_id", md["trace_id"][0],
+		//"request_id",md["request_id"][0],
+		//"client_req_time",md["client_req_time"][0],
+		//"app_id",md["app_id"][0],
 		"server_receive_time",ServerReceiveTimeString,
 		"server_response_time",ServerResponseTimeString,
 	)

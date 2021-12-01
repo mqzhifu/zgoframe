@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
 	"strconv"
 	"strings"
 	"zgoframe/core/global"
@@ -254,8 +255,7 @@ func (initialize *Initialize)StartService()error{
 func (initialize *Initialize)StartClient()error{
 	//grpcClientConn,err := global.V.Grpc.GetClient(global.C.Grpc.Ip,global.C.Grpc.Port)
 	dns := global.C.Grpc.Ip+ ":4141"
-
-	grpcClientConn, err := grpc.Dial(dns,grpc.WithInsecure())
+	grpcClientConn, err := grpc.Dial(dns,grpc.WithInsecure(),grpc.WithUnaryInterceptor(clientInterceptorBack))
 	util.MyPrint("client grp dns:",dns , " err:",err)
 	if err != nil{
 		util.MyPrint(err)
@@ -355,6 +355,26 @@ func GetNewService()*util.Service {
 	myService := util.NewService(serviceOption)
 
 	return myService
+}
+
+func clientInterceptorBack(ctx context.Context, method string, req, reply interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error{
+	//MyPrint("req:",req,"reply:",reply,"opts:",opts)
+	var header  metadata.MD
+
+	opts = []grpc.CallOption{grpc.Header(&header)}
+
+	//nowString:=strconv.FormatInt(util.GetNowTimeSecondToInt64(),10)
+	md := metadata.Pairs("Host","First")
+	ctx = metadata.NewOutgoingContext(ctx, md)
+
+	invoker(ctx,method,req,reply,cc,opts...)
+
+	md ,ok := metadata.FromIncomingContext(ctx)
+	util.MyPrint("md:",md,ok)
+	util.MyPrint("method:",method,"req:",req,"reply:",reply,"opts:",header)
+
+
+	return nil
 }
 
 

@@ -68,6 +68,9 @@ func main(){
 		panic("initialize.Init err:"+err.Error())
 		return
 	}
+	//initializeVar.StartService()
+	initializeVar.StartClient()
+
 	//deploy 是用来方便布置的，看着挺恶心，我回头再优化
 	if *deploy == ""{
 		go global.V.Process.DemonSignal()

@@ -63,14 +63,16 @@ func (initialize * Initialize)Start()error{
 
 	//mysql
 	//这里按说不应该先初始化MYSQL，应该最早初始化LOG类，并且不一定所有项目都用MYSQL，但是项目是基于多APP/PROJECT的模式，强依赖app_id
-	//if global.C.Mysql.Status == global.CONFIG_STATUS_OPEN{
-		global.V.Gorm ,err = GetNewGorm()
-		if err != nil{
-			util.MyPrint("GetGorm err:",err)
-			return err
-		}
-		model.Db = global.V.Gorm
-	//}
+	if global.C.Mysql.Status != global.CONFIG_STATUS_OPEN{
+		util.MyPrint("not open mysql db, need read app_id from db.")
+		return err
+	}
+	global.V.Gorm ,err = GetNewGorm()
+	if err != nil{
+		util.MyPrint("GetGorm err:",err)
+		return err
+	}
+	model.Db = global.V.Gorm
 	//初始化APP信息，所有项目都需要有AppId，因为要做验证，同时目录名也包含在里面
 	err = InitApp()
 	if err !=nil{
@@ -125,7 +127,7 @@ func (initialize * Initialize)Start()error{
 	}
 	//etcd
 	if global.C.Etcd.Status  == global.CONFIG_STATUS_OPEN{
-		global.V.Etcd ,err = GetNewEtcd()
+		global.V.Etcd ,err = GetNewEtcd(initialize.Option.Env)
 		if err != nil{
 			util.MyPrint("GetNewEtcd err:",err)
 			return err
@@ -158,14 +160,15 @@ func (initialize * Initialize)Start()error{
 	}
 	//初始化-protobuf 映射文件
 	dir := initialize.Option.RootDir + "/protobuf"
+	//将rpc service 中的方法，转化成ID（由PHP生成 的ID map）
 	global.V.ProtobufMap = util.NewProtobufMap(global.V.Zap,dir)
 	//websocket
-	if global.C.Websocket.Status == global.CONFIG_STATUS_OPEN{
-		if global.C.Http.Status != global.CONFIG_STATUS_OPEN{
-			return errors.New("Websocket need gin open!")
-		}
-		initSocket()
-	}
+	//if global.C.Websocket.Status == global.CONFIG_STATUS_OPEN{
+	//	if global.C.Http.Status != global.CONFIG_STATUS_OPEN{
+	//		return errors.New("Websocket need gin open!")
+	//	}
+	//	initSocket()
+	//}
 	//grpc
 	if global.C.Grpc.Status == global.CONFIG_STATUS_OPEN{
 		grpcOption := util.GrpcOption{
@@ -176,21 +179,8 @@ func (initialize * Initialize)Start()error{
 			Log			: global.V.Zap,
 		}
 		global.V.Grpc,_ =  util.NewMyGrpc(grpcOption)
-		grpcInc,listen,err := global.V.Grpc.GetServer()
-		if err != nil{
-			return errors.New(err.Error())
-		}
-		//挂载服务的handler
-		pb.RegisterFirstServer(grpcInc, &pbservice.First{})
-		pb.RegisterSecondServer(grpcInc, &pbservice.Second{})
-		// 注册反射服务 这个服务是CLI使用的 跟服务本身没有关系
-		go global.V.Grpc.StartServer(grpcInc,listen)
 		//
-		//grpcClientConn,err := global.V.Grpc.GetClient("127.0.0.1","6666")
-		//if err != nil{
-		//	return errors.New(err.Error())
-		//}
-		//pbServiceFirst := pb.NewFirstClient(grpcClientConn)
+
 	}
 
 	if global.C.Email.Status == global.CONFIG_STATUS_OPEN {
@@ -218,6 +208,7 @@ func (initialize * Initialize)Start()error{
 		RegGinHttpRoute()//这里注册项目自己的http 路由策略
 		StartHttpGin()
 	}
+
 	//_ ,cancelFunc := context.WithCancel(option.RootCtx)
 	//进程通信相关
 	ProcessPathFileName := "/tmp/"+global.V.App.Name+".pid"
@@ -234,6 +225,36 @@ func createDbTable(){
 	mydb.CreateTable(&model.User{},&model.SmsLog{},&model.SmsRule{},&model.App{},&model.UserReg{} , &model.OperationRecord{})
 	util.ExitPrint("init done.")
 }
+
+func (initialize *Initialize)StartService()error{
+	grpcInc,listen,err := global.V.Grpc.GetServer()
+	if err != nil{
+		return errors.New(err.Error())
+	}
+
+	//挂载服务的handler
+	pb.RegisterFirstServer(grpcInc, &pbservice.First{})
+	pb.RegisterSecondServer(grpcInc, &pbservice.Second{})
+	// 注册反射服务 这个服务是CLI使用的 跟服务本身没有关系
+	go global.V.Grpc.StartServer(grpcInc,listen)
+
+	return nil
+}
+
+func (initialize *Initialize)StartClient()error{
+	grpcClientConn,err := global.V.Grpc.GetClient(global.C.Grpc.Ip,global.C.Grpc.Port)
+	if err != nil{
+		util.MyPrint(err)
+		return errors.New(err.Error())
+	}
+	pbServiceFirst := pb.NewFirstClient(grpcClientConn)
+	RequestRegPlayer := pb.RequestRegPlayer{}
+	RequestRegPlayer.AddTime = 123123
+	res ,_:= pbServiceFirst.SayHello(context.Background(),&RequestRegPlayer)
+	util.MyPrint("grpc return:",res)
+	return nil
+}
+
 
 
 func (initialize * Initialize)Quit(){
@@ -295,10 +316,11 @@ func GetNewApp()(m *util.AppManager,e error){
 	return appM,nil
 }
 
-func GetNewEtcd()(myEtcd *util.MyEtcd,err error){
+func GetNewEtcd(env string)(myEtcd *util.MyEtcd,err error){
 	option := util.EtcdOption{
 		AppName		: global.V.App.Name,
-		AppENV		: global.C.System.ENV,
+		AppENV		: env,
+		AppKey: global.V.App.Key,
 		FindEtcdUrl : global.C.Etcd.Url,
 		Username	: global.C.Etcd.Username,
 		Password	: global.C.Etcd.Password,
@@ -314,7 +336,7 @@ func GetNewService()*util.Service {
 	serviceOption := util.ServiceOption{
 		Log		: global.V.Zap,
 		Etcd	: global.V.Etcd,
-		Prefix	: global.V.App.Name,
+		Prefix	: "/service",
 	}
 	myService := util.NewService(serviceOption)
 

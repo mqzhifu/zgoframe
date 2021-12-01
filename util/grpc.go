@@ -34,6 +34,8 @@ type GrpcOption struct {
 //var clientInterceptor grpc.UnaryClientInterceptor
 
 func NewMyGrpc(grpcOption GrpcOption)(*MyGrpc,error){
+	//这里其实除了初始化变量外，只是创建一个TCP SOCKET，给后面的GRPC用
+
 	myGrpc := new(MyGrpc)
 	myGrpc.Option = grpcOption
 
@@ -67,7 +69,7 @@ func (myGrpc *MyGrpc)Shutdown(){
 }
 func (myGrpc *MyGrpc)GetServer()(*grpc.Server,net.Listener,error){
 	var opts []grpc.ServerOption//grpc为使用的第三方的grpc包
-	opts = append(opts, grpc.UnaryInterceptor(serverInterceptorBack))
+	//opts = append(opts, grpc.UnaryInterceptor(serverInterceptorBack))
 	grpcInc := grpc.NewServer(opts...) //创建一个grpc 实例
 	return grpcInc,myGrpc.Listen,nil
 }
@@ -150,7 +152,8 @@ func (myGrpc *MyGrpc)clientInterceptorBack(ctx context.Context, method string, r
 
 func (myGrpc *MyGrpc) GetClient(ip string,port string)(*grpc.ClientConn,error){
 	dns := ip + ":" + port
-	conn, err := grpc.Dial(dns,grpc.WithInsecure(),grpc.WithUnaryInterceptor(myGrpc.clientInterceptorBack))
+	//conn, err := grpc.Dial(dns,grpc.WithInsecure(),grpc.WithUnaryInterceptor(myGrpc.clientInterceptorBack))
+	conn, err := grpc.Dial(dns,grpc.WithInsecure())
 	if err != nil {
 		MyPrint("did not connect: %v", err)
 		return nil,errors.New("did not connect: %v"+err.Error())

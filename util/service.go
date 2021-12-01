@@ -48,14 +48,14 @@ func NewService(serviceOption ServiceOption)*Service {
 	service.etcd = serviceOption.Etcd
 	service.option = serviceOption
 	service.selfList = make(map[string]DynamicService)
-	service.ReadAdnRegThird()
+	service.ReadThirdService()
 
 	serviceOption.Log.Info("NewService")
 
 	return service
 }
 //从配置中心读取：3方可用服务列表,注册到内存中
-func (service *Service)ReadAdnRegThird( ){
+func (service *Service)ReadThirdService( ){
 	//从etcd 中读取，已注册的服务
 	allServiceList,err := service.etcd.GetListByPrefix(service.option.Prefix)
 	if err != nil{
@@ -119,6 +119,30 @@ func (service *Service)WatchThridService(){
 //	service.selfList[serviceName] = ipPort
 //	service.option.Log.Info("etcd put one ",putResponse.Header)
 //}
+
+//func (service *Service)RegOneGrpc(serviceName string,ipPort string,impService interface{}){
+//	grpcOption := GrpcOption{
+//		AppId 		: global.V.App.Id,
+//		ListenIp	: global.C.Grpc.Ip,
+//		OutIp		: global.C.Grpc.Ip,
+//		Port 		: global.C.Grpc.Port,
+//		Log			: global.V.Zap,
+//	}
+//	myGrpc,_ :=  NewMyGrpc(grpcOption)
+//	grpcInc,listen,err := global.V.Grpc.GetServer()
+//	if err != nil{
+//		errors.New(err.Error())
+//	}
+//	//pb.RegisterFirstServer(grpcInc, &pbservice.First{})
+//	//pb.RegisterFirstServer(grpcInc, &pbservice.First{})
+//	service.SetGrpcServer(serviceName,grpcInc)
+//	myGrpc.StartServer(grpcInc,listen)
+//}
+//
+//func (service *Service)GrpcCall(serviceName string,methodName string){
+//
+//}
+
 //删除自己的服务
 func (service *Service)DelOne(serviceName string,ipPort string){
 	//now := GetNowTimeSecondToInt()

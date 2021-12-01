@@ -27,6 +27,7 @@ type MyEtcd struct {
 
 type EtcdOption struct {
 	AppName string
+	AppKey string
 	AppENV	string
 	FindEtcdUrl		string
 	LinkAddressList	[]string
@@ -159,7 +160,7 @@ func (myEtcd *MyEtcd)putLease(ctx context.Context,leaseId clientv3.LeaseID,k str
 }
 //根据前缀，获取该前缀下面的所有路径信息
 func (myEtcd *MyEtcd)GetListByPrefix(key string)(list map[string]string,err error){
-	//myEtcd.option.Log.Info(" etcd GetListByPrefix , ",key ," : ")
+	myEtcd.option.Log.Info(" etcd GetListByPrefix key: " + key)
 	rootContext := context.Background()
 	kvc := clientv3.NewKV(myEtcd.cli)
 	//获取值
@@ -272,7 +273,7 @@ func  (myEtcd *MyEtcd)Watch(ctx context.Context,key string) <-chan clientv3.Watc
 }
 
 func  (myEtcd *MyEtcd)getConfRootPrefix()string{
-	rootPath := "/"+myEtcd.option.AppName + "/"+  myEtcd.option.AppENV + "/"
+	rootPath := "/config/"+myEtcd.option.AppKey + "/"+  myEtcd.option.AppENV + "/"
 	return rootPath
 }
 //初始化，一个项目下的，所有配置文件（ 路径：/项目名/环境名/）

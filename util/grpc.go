@@ -152,8 +152,8 @@ func (myGrpc *MyGrpc)clientInterceptorBack(ctx context.Context, method string, r
 
 func (myGrpc *MyGrpc) GetClient(ip string,port string)(*grpc.ClientConn,error){
 	dns := ip + ":" + port
-	//conn, err := grpc.Dial(dns,grpc.WithInsecure(),grpc.WithUnaryInterceptor(myGrpc.clientInterceptorBack))
-	conn, err := grpc.Dial(dns,grpc.WithInsecure())
+	conn, err := grpc.Dial(dns,grpc.WithInsecure(),grpc.WithUnaryInterceptor(myGrpc.clientInterceptorBack))
+	//conn, err := grpc.Dial(dns,grpc.WithInsecure())
 	if err != nil {
 		MyPrint("did not connect: %v", err)
 		return nil,errors.New("did not connect: %v"+err.Error())

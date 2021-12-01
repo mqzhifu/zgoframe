@@ -5,6 +5,7 @@ import (
 	"errors"
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"google.golang.org/grpc"
 	"strconv"
 	"strings"
 	"zgoframe/core/global"
@@ -171,14 +172,14 @@ func (initialize * Initialize)Start()error{
 	//}
 	//grpc
 	if global.C.Grpc.Status == global.CONFIG_STATUS_OPEN{
-		grpcOption := util.GrpcOption{
-			AppId 		: global.V.App.Id,
-			ListenIp	: global.C.Grpc.Ip,
-			OutIp		: global.C.Grpc.Ip,
-			Port 		: global.C.Grpc.Port,
-			Log			: global.V.Zap,
-		}
-		global.V.Grpc,_ =  util.NewMyGrpc(grpcOption)
+		//grpcOption := util.GrpcOption{
+		//	AppId 		: global.V.App.Id,
+		//	ListenIp	: global.C.Grpc.Ip,
+		//	OutIp		: global.C.Grpc.Ip,
+		//	Port 		: global.C.Grpc.Port,
+		//	Log			: global.V.Zap,
+		//}
+		//global.V.Grpc,_ =  util.NewMyGrpc(grpcOption)
 		//
 
 	}
@@ -227,6 +228,15 @@ func createDbTable(){
 }
 
 func (initialize *Initialize)StartService()error{
+	grpcOption := util.GrpcOption{
+		AppId 		: global.V.App.Id,
+		ListenIp	: global.C.Grpc.Ip,
+		OutIp		: global.C.Grpc.Ip,
+		Port 		: global.C.Grpc.Port,
+		Log			: global.V.Zap,
+	}
+	global.V.Grpc,_ =  util.NewMyGrpc(grpcOption)
+
 	grpcInc,listen,err := global.V.Grpc.GetServer()
 	if err != nil{
 		return errors.New(err.Error())
@@ -242,7 +252,8 @@ func (initialize *Initialize)StartService()error{
 }
 
 func (initialize *Initialize)StartClient()error{
-	grpcClientConn,err := global.V.Grpc.GetClient(global.C.Grpc.Ip,global.C.Grpc.Port)
+	//grpcClientConn,err := global.V.Grpc.GetClient(global.C.Grpc.Ip,global.C.Grpc.Port)
+	grpcClientConn, err := grpc.Dial(global.C.Grpc.Ip+ ":4140")
 	if err != nil{
 		util.MyPrint(err)
 		return errors.New(err.Error())

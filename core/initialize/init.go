@@ -5,14 +5,10 @@ import (
 	"errors"
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/metadata"
 	"strconv"
 	"strings"
 	"zgoframe/core/global"
 	"zgoframe/model"
-	"zgoframe/protobuf/pb"
-	"zgoframe/protobuf/pbservice"
 	"zgoframe/util"
 )
 
@@ -140,7 +136,7 @@ func (initialize * Initialize)Start()error{
 		if global.C.Etcd.Status != global.CONFIG_STATUS_OPEN{
 			return errors.New("Service need Etcd open!")
 		}
-		global.V.Service = GetNewService()
+		global.V.ServiceManager = GetNewService()
 	}
 	//metrics
 	if global.C.Metrics.Status == global.CONFIG_STATUS_OPEN{
@@ -173,16 +169,7 @@ func (initialize * Initialize)Start()error{
 	//}
 	//grpc
 	if global.C.Grpc.Status == global.CONFIG_STATUS_OPEN{
-		//grpcOption := util.GrpcOption{
-		//	AppId 		: global.V.App.Id,
-		//	ListenIp	: global.C.Grpc.Ip,
-		//	OutIp		: global.C.Grpc.Ip,
-		//	Port 		: global.C.Grpc.Port,
-		//	Log			: global.V.Zap,
-		//}
-		//global.V.Grpc,_ =  util.NewMyGrpc(grpcOption)
-		//
-
+		global.V.Grpc,_ =  util.NewGrpcManager(global.V.App.Id,global.V.Zap)
 	}
 
 	if global.C.Email.Status == global.CONFIG_STATUS_OPEN {
@@ -228,49 +215,6 @@ func createDbTable(){
 	util.ExitPrint("init done.")
 }
 
-func (initialize *Initialize)StartService()error{
-	grpcOption := util.GrpcOption{
-		AppId 		: global.V.App.Id,
-		ListenIp	: global.C.Grpc.Ip,
-		OutIp		: global.C.Grpc.Ip,
-		Port 		: global.C.Grpc.Port,
-		Log			: global.V.Zap,
-	}
-	global.V.Grpc,_ =  util.NewMyGrpc(grpcOption)
-
-	grpcInc,listen,err := global.V.Grpc.GetServer()
-	if err != nil{
-		return errors.New(err.Error())
-	}
-
-	//挂载服务的handler
-	pb.RegisterFirstServer(grpcInc, &pbservice.First{})
-	pb.RegisterSecondServer(grpcInc, &pbservice.Second{})
-	// 注册反射服务 这个服务是CLI使用的 跟服务本身没有关系
-	go global.V.Grpc.StartServer(grpcInc,listen)
-
-	return nil
-}
-
-func (initialize *Initialize)StartClient()error{
-	//grpcClientConn,err := global.V.Grpc.GetClient(global.C.Grpc.Ip,global.C.Grpc.Port)
-	dns := global.C.Grpc.Ip+ ":4141"
-	//dns := global.C.Grpc.Ip+ ":6666"
-	//grpcClientConn, err := grpc.Dial(dns,grpc.WithInsecure())
-	grpcClientConn, err := grpc.Dial(dns,grpc.WithInsecure(),grpc.WithUnaryInterceptor(clientInterceptorBack))
-	util.MyPrint("client grp dns:",dns , " err:",err)
-	if err != nil{
-		util.MyPrint(err)
-		return errors.New(err.Error())
-	}
-	pbServiceFirst := pb.NewFirstClient(grpcClientConn)
-	RequestRegPlayer := pb.RequestRegPlayer{}
-	RequestRegPlayer.AddTime = 123123
-	res ,err:= pbServiceFirst.SayHello(context.Background(),&RequestRegPlayer)
-	util.MyPrint("grpc return:",res , " err:",err)
-	return nil
-}
-
 
 
 func (initialize * Initialize)Quit(){
@@ -282,7 +226,7 @@ func (initialize * Initialize)Quit(){
 	ViperShutdown()
 	global.V.Grpc.Shutdown()
 	global.V.Etcd.Shutdown()
-	global.V.Service.Shutdown()
+	global.V.ServiceManager.Shutdown()
 
 	global.V.Zap.Warn("init quit finish.")
 }
@@ -348,37 +292,14 @@ func GetNewEtcd(env string)(myEtcd *util.MyEtcd,err error){
 	return myEtcd,err
 }
 
-func GetNewService()*util.Service {
+func GetNewService()*util.ServiceManager {
 	serviceOption := util.ServiceOption{
 		Log		: global.V.Zap,
 		Etcd	: global.V.Etcd,
 		Prefix	: "/service",
+		DiscoveryType: util.SERVICE_DISCOVERY_ETCD,
 	}
-	myService := util.NewService(serviceOption)
+	myService := util.NewServiceManager(serviceOption)
 
 	return myService
 }
-
-func clientInterceptorBack(ctx context.Context, method string, req, reply interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error{
-	//MyPrint("req:",req,"reply:",reply,"opts:",opts)
-	var header  metadata.MD
-
-	opts = []grpc.CallOption{grpc.Header(&header)}
-
-	//nowString:=strconv.FormatInt(util.GetNowTimeSecondToInt64(),10)
-	md := metadata.Pairs("Host","pb.First")
-	ctx = metadata.NewOutgoingContext(ctx, md)
-
-	invoker(ctx,method,req,reply,cc,opts...)
-
-	//md ,ok := metadata.FromIncomingContext(ctx)
-	//util.MyPrint("md:",md,ok)
-	util.MyPrint("method:",method,"req:",req,"reply:",reply,"opts:",header,cc.GetState())
-
-
-	return nil
-}
-
-
-
-

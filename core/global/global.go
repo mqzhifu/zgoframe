@@ -19,9 +19,9 @@ type Global struct {
 	AppMng		*util.AppManager
 	Etcd       *util.MyEtcd
 	HttpServer *http.Server
-	Service    *util.Service
+	ServiceManager    *util.ServiceManager
 	Metric 		*util.MyMetrics
-	Grpc 		*util.MyGrpc
+	Grpc 		*util.GrpcManager
 	AlertPush	*util.AlertPush	//报警推送： prometheus
 	AlertHook 	*util.AlertHook	//报警：邮件 手机
 	Websocket  *util.Websocket

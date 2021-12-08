@@ -11,6 +11,7 @@ import (
 	"zgoframe/core/initialize"
 	_ "zgoframe/docs"
 	"zgoframe/util"
+	"zgoframe/test"
 )
 
 var initializeVar *initialize.Initialize
@@ -70,8 +71,8 @@ func main(){
 		return
 	}
 	//initializeVar.StartService()
-	initializeVar.StartClient()
-
+	//initializeVar.StartClient()
+	test.Index()
 	//deploy 是用来方便布置的，看着挺恶心，我回头再优化
 	if *deploy == ""{
 		go global.V.Process.DemonSignal()

@@ -9,6 +9,7 @@ replace google.golang.org/grpc => google.golang.org/grpc v1.26.0
 //replace go.etcd.io/bbolt v1.3.4 => github.com/coreos/bbolt v1.3.4
 
 require (
+	github.com/abrander/go-supervisord v0.0.0-20210517172913-a5469a4c50e2
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/casbin/casbin v1.9.1
 	github.com/casbin/casbin/v2 v2.35.0
@@ -40,6 +41,7 @@ require (
 	github.com/grpc-ecosystem/grpc-gateway v1.7.0 // indirect
 	github.com/jonboulle/clockwork v0.2.2 // indirect
 	github.com/json-iterator/go v1.1.11 // indirect
+	github.com/kolo/xmlrpc v0.0.0-20201022064351-38db28db192b // indirect
 	github.com/lestrrat-go/file-rotatelogs v2.4.0+incompatible
 	github.com/lestrrat-go/strftime v1.0.5 // indirect
 	github.com/magiconair/properties v1.8.5 // indirect
@@ -83,5 +85,4 @@ require (
 	gorm.io/driver/mysql v1.1.1
 	gorm.io/gorm v1.21.12
 	sigs.k8s.io/yaml v1.2.0 // indirect
-
 )

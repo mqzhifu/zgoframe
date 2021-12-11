@@ -33,24 +33,25 @@ const (
 
 //一个服务下面的一个节点
 type ServiceNode struct {
-	ServiceName string
-	Ip	string
-	Port	string
-	Protocol string
-	Desc string
-	Status int
-	watch context.CancelFunc
-	IsSelfReg bool
+	ServiceName string	`json:"service_name"`
+	Ip			string	`json:"ip"`
+	Port		string	`json:"port"`
+	Protocol 	string	`json:"protocol"`
+	Desc 		string	`json:"desc"`
+	Status 		int		`json:"status"`
+	IsSelfReg 	bool	`json:"is_self_reg"`
+	RegTime 	int 	`json:"reg_time"`
+	watch 		context.CancelFunc	`json:"-"`
 
-	LeaseGrantId clientv3.LeaseID
-	Lease clientv3.Lease
-	LeaseCancelCtx context.Context
+	LeaseGrantId clientv3.LeaseID	`json:"-"`
+	Lease clientv3.Lease			`json:"-"`
+	LeaseCancelCtx context.Context	`json:"-"`
 }
 //一个服务
 type Service struct {
-	Id int
-	Name string
-	List []*ServiceNode
+	Id int	`json:"id"`
+	Name string	`json:"name"`
+	List []*ServiceNode	`json:"list"`
 }
 //服务管理器
 //ServiceManager.list->service.list->serviceNode
@@ -304,6 +305,42 @@ func (serviceManager *ServiceManager)Register(service Service ,serviceNode Servi
 	serviceManager.option.Log.Info("register one service success.")
 	return nil
 }
+func (serviceManager *ServiceManager)ShowJsonByService()string{
+	if len(serviceManager.list) <=0 {
+		return ""
+	}
+
+	jsonByte,err := json.Marshal(serviceManager.list)
+	jsonStr := string(jsonByte)
+	MyPrint(jsonStr , "err:",err)
+
+	return jsonStr
+}
+func (serviceManager *ServiceManager)ShowJsonByNodeServer()string{
+	if len(serviceManager.list) <=0 {
+		return ""
+	}
+
+	list := make(map[string][]string)
+	for _,service:=range serviceManager.list{
+		if len(service.List) <= 0{
+			//list[service.Name] = []*ServiceNode{}
+			continue
+		}
+
+		for _,node :=range service.List{
+			list[node.Ip] = append(list[node.Ip],service.Name)
+		}
+
+	}
+
+	jsonByte,err := json.Marshal(list)
+	jsonStr := string(jsonByte)
+	MyPrint(jsonStr , "err:",err)
+
+	return jsonStr
+}
+
 //整体关闭
 func (serviceManager *ServiceManager)Shutdown( ){
 	serviceManager.option.Log.Warn("service Shutdown:")

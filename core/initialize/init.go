@@ -37,7 +37,6 @@ func NewInitialize(option InitOption)*Initialize{
 
 //初始化-入口
 func (initialize * Initialize)Start()error{
-	//createDbTable()
 	//初始化 : 配置信息
 	viperOption := ViperOption{
 		ConfigFileName	: initialize.Option.ConfigFileName,
@@ -56,14 +55,15 @@ func (initialize * Initialize)Start()error{
 		return err
 	}
 	global.V.Vip = myViper	//全局变量管理者
-	global.C = config		//全局变量容器
+	global.C = config		//全局变量
 	//---config end -----
 
 	//mysql
-	//这里按说不应该先初始化MYSQL，应该最早初始化LOG类，并且不一定所有项目都用MYSQL，但是项目是基于多APP/PROJECT的模式，强依赖app_id
+	//这里按说不应该先初始化MYSQL，应该最早初始化LOG类，并且不一定所有项目都用MYSQL，但是项目是基于多APP/SERVICE，强依赖app_id service_id
 	if global.C.Mysql.Status != global.CONFIG_STATUS_OPEN{
-		util.MyPrint("not open mysql db, need read app_id from db.")
-		return err
+		errMsg := "not open mysql db, need read app_id from db."
+		util.MyPrint(errMsg)
+		return errors.New(errMsg)
 	}
 	global.V.Gorm ,err = GetNewGorm()
 	if err != nil{
@@ -71,8 +71,8 @@ func (initialize * Initialize)Start()error{
 		return err
 	}
 	model.Db = global.V.Gorm
-	//初始化APP信息，所有项目都需要有AppId，因为要做验证，同时目录名也包含在里面
-	err = InitApp()
+	//初始化APP信息，所有项目都需要有AppId或serviceId，因为要做验证，同时目录名也包含在里面
+	err = InitAppService()
 	if err !=nil{
 		return err
 	}
@@ -82,8 +82,8 @@ func (initialize * Initialize)Start()error{
 		return err
 	}
 	global.V.RootDir = initialize.Option.RootDir
-	//预/报警->推送器，这里是推送到3方，如：prometheus
-	//这个是必须优先zap日志类优化处理，因为zap里有用
+	util.MyPrint("global.V.RootDir:",global.V.RootDir)
+	//预/报警->推送器，这里是推送到3方，如：prometheus,ps:这个是必须优先zap日志类优化处理，因为zap里的钩子-有用
 	if global.C.Alert.Status == global.CONFIG_STATUS_OPEN{
 		global.V.AlertPush = util.NewAlertPush(global.C.Alert.Ip,global.C.Alert.Port,global.C.Alert.Uri)
 	}
@@ -93,7 +93,7 @@ func (initialize * Initialize)Start()error{
 		util.MyPrint("GetNewZapLog err:",err)
 		return err
 	}
-	//错误 文案 管理
+	//错误码 文案 管理
 	global.V.Err ,err  = util.NewErrMsg(global.V.Zap,  global.C.Http.StaticPath + global.C.System.ErrorMsgFile )
 	if err != nil{
 		return err
@@ -107,7 +107,6 @@ func (initialize * Initialize)Start()error{
 			util.MyPrint("GetRedis err:",err)
 			return err
 		}
-		//TestRedis()
 	}
 	//Http log zap 这里单独再开个zap 实例，用于专门记录http 请求
 	HttpZap , err  := GetNewZapLog(global.V.AlertPush,"http","http",0)
@@ -131,12 +130,15 @@ func (initialize * Initialize)Start()error{
 			return err
 		}
 	}
-	//service 服务发现
-	if global.C.Service.Status  == global.CONFIG_STATUS_OPEN{
+	//service 服务发现，这里有个顺序，必须先实现化完成:serviceManager
+	if global.C.ServiceDiscovery.Status  == global.CONFIG_STATUS_OPEN{
 		if global.C.Etcd.Status != global.CONFIG_STATUS_OPEN{
-			return errors.New("Service need Etcd open!")
+			return errors.New("ServiceDiscovery need Etcd open!")
 		}
-		global.V.ServiceManager = GetNewService()
+		global.V.ServiceDiscovery ,err = GetNewServiceDiscovery()
+		if err != nil{
+			return err
+		}
 	}
 	//metrics
 	if global.C.Metrics.Status == global.CONFIG_STATUS_OPEN{
@@ -190,7 +192,6 @@ func (initialize * Initialize)Start()error{
 		//global.V.AlertHook.Alert("Aaaa")
 		//util.ExitPrint(123123123)
 	}
-	//TestGorm()
 	global.C.System.ENV = initialize.Option.Env
 	//启动http
 	if global.C.Http.Status == global.CONFIG_STATUS_OPEN{
@@ -198,6 +199,7 @@ func (initialize * Initialize)Start()error{
 		StartHttpGin()
 	}
 
+	autoCreateUpDbTable()
 	//_ ,cancelFunc := context.WithCancel(option.RootCtx)
 	//进程通信相关
 	ProcessPathFileName := "/tmp/"+global.V.App.Name+".pid"
@@ -209,10 +211,10 @@ func (initialize * Initialize)Start()error{
 
 
 
-func createDbTable(){
-	mydb := util.NewDbTool(global.V.Gorm)
-	mydb.CreateTable(&model.User{},&model.SmsLog{},&model.SmsRule{},&model.App{},&model.UserReg{} , &model.OperationRecord{})
-	util.ExitPrint("init done.")
+func autoCreateUpDbTable(){
+	//mydb := util.NewDbTool(global.V.Gorm)
+	//mydb.CreateTable(&model.User{},&model.SmsLog{},&model.SmsRule{},&model.App{},&model.UserReg{} , &model.OperationRecord{})
+	//util.ExitPrint("init done.")
 }
 
 
@@ -226,31 +228,50 @@ func (initialize * Initialize)Quit(){
 	ViperShutdown()
 	global.V.Grpc.Shutdown()
 	global.V.Etcd.Shutdown()
-	global.V.ServiceManager.Shutdown()
+	//global.V.ServiceManager.Shutdown()
 
 	global.V.Zap.Warn("init quit finish.")
 }
 
 
-func InitApp()(err error){
-	if global.C.System.AppId <=0 {
-		return errors.New("appId is empty")
+func InitAppService()(err error){
+	if global.C.System.AppId <=0 && global.C.System.ServiceId <=0 {
+		return errors.New("appId and serviceId both empty")
+	}
+	//一个项目要么是APP 要么是service
+	if global.C.System.AppId >=0 && global.C.System.ServiceId >=0 {
+		return errors.New("appId and serviceId both >= 0 ")
 	}
 
-	global.V.AppMng ,err  = GetNewApp()
-	if err != nil{
-		util.MyPrint("GetNewApp err:",err)
-		return err
+	if global.C.System.AppId >=0{
+		global.V.AppMng ,err  = GetNewAppManager()
+		if err != nil{
+			util.MyPrint("GetNewApp err:",err)
+			return err
+		}
+		//根据APPId去DB中查找详细信息
+		app,empty := global.V.AppMng.GetById(global.C.System.AppId)
+		if empty {
+			return errors.New("AppId not match : " + strconv.Itoa(global.C.System.AppId) )
+		}
+		global.V.App = app
+		//util.MyPrint("project app info flow:")
+		//util.PrintStruct(app,":")
+	}else{
+		global.V.ServiceManager ,err  = GetNewServiceManager()
+		if err != nil{
+			util.MyPrint("GetNewServiceManager err:",err)
+			return err
+		}
+		//根据APPId去DB中查找详细信息
+		service,empty := global.V.ServiceManager.GetById(global.C.System.AppId)
+		if empty {
+			return errors.New("AppId not match : " + strconv.Itoa(global.C.System.AppId) )
+		}
+		global.V.Service = service
+		//util.MyPrint("service info flow:")
+		//util.PrintStruct(service,":")
 	}
-	//根据APPId去DB中查找详细信息
-	app,empty := global.V.AppMng.GetById(global.C.System.AppId)
-	if empty {
-		return errors.New("AppId not match : " + strconv.Itoa(global.C.System.AppId) )
-	}
-	global.V.App = app
-	util.MyPrint("project app info flow:")
-	util.PrintStruct(app,":")
-
 	return nil
 }
 
@@ -267,7 +288,7 @@ func InitPath(rootDir string)(rootDirName string,err error){
 }
 
 //初始化app管理容器
-func GetNewApp()(m *util.AppManager,e error){
+func GetNewAppManager()(m *util.AppManager,e error){
 	appM,err := util.NewAppManager(global.V.Gorm)
 	if err != nil{
 		return m,err
@@ -276,11 +297,20 @@ func GetNewApp()(m *util.AppManager,e error){
 	return appM,nil
 }
 
+func GetNewServiceManager()(m *util.ServiceManager,e error){
+	sm,err := util.NewServiceManager(global.V.Gorm)
+	if err != nil{
+		return sm,err
+	}
+
+	return sm,nil
+}
+
 func GetNewEtcd(env string)(myEtcd *util.MyEtcd,err error){
 	option := util.EtcdOption{
 		AppName		: global.V.App.Name,
 		AppENV		: env,
-		AppKey: global.V.App.Key,
+		AppKey		: global.V.App.Key,
 		FindEtcdUrl : global.C.Etcd.Url,
 		Username	: global.C.Etcd.Username,
 		Password	: global.C.Etcd.Password,
@@ -292,14 +322,14 @@ func GetNewEtcd(env string)(myEtcd *util.MyEtcd,err error){
 	return myEtcd,err
 }
 
-func GetNewService()*util.ServiceManager {
-	serviceOption := util.ServiceOption{
+func GetNewServiceDiscovery()(serviceDiscovery *util.ServiceDiscovery,err error) {
+	serviceOption := util.ServiceDiscoveryOption{
 		Log		: global.V.Zap,
 		Etcd	: global.V.Etcd,
 		Prefix	: "/service",
 		DiscoveryType: util.SERVICE_DISCOVERY_ETCD,
+		ServiceManager: global.V.ServiceManager,
 	}
-	myService := util.NewServiceManager(serviceOption)
-
-	return myService
+	serviceDiscovery ,err = util.NewServiceDiscovery(serviceOption)
+	return serviceDiscovery,err
 }

@@ -45,7 +45,7 @@ type AlertMsg struct {
 //]
 
 func(alertPush *AlertPush) Push(alertMsg AlertMsg){
-	//MyPrint("need alert pu sh....")
+	MyPrint("program has error,need push alert....")
 	return
 
 	str ,err := json.Marshal(alertMsg)

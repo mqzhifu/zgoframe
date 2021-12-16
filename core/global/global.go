@@ -16,10 +16,12 @@ type Global struct {
 	Gin        *gin.Engine
 	Gorm       *gorm.DB
 	App        util.App
+	Service		util.Service
 	AppMng		*util.AppManager
 	Etcd       *util.MyEtcd
 	HttpServer *http.Server
 	ServiceManager    *util.ServiceManager
+	ServiceDiscovery		*util.ServiceDiscovery
 	Metric 		*util.MyMetrics
 	Grpc 		*util.GrpcManager
 	AlertPush	*util.AlertPush	//报警推送： prometheus

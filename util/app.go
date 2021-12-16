@@ -21,6 +21,7 @@ type App struct {
 	Type 	int			`json:"type"`
 	SecretKey string 	`json:"secretKey"`
 	Status  int 		`json:"status"`
+	Git 	string 		`json:"git"`
 }
 
 var APP_TYPE_MAP = map[int]string{
@@ -36,62 +37,17 @@ type AppManager struct {
 }
 
 func NewAppManager (gorm *gorm.DB)(*AppManager,error) {
-	appManager := new(AppManager)
+	appManager 		:= new(AppManager)
 	appManager.Pool = make(map[int]App)
 	appManager.Gorm = gorm
+
 	err := appManager.initAppPool()
 
 	return appManager,err
 }
 
 func (appManager *AppManager)initAppPool()error{
-	//app := App{
-	//	Id:        1,
-	//	Name:      "gamematch",
-	//	Type:      APP_TYPE_SERVICE,
-	//	Desc:      "游戏匹配",
-	//	Key:       "gamematch",
-	//	SecretKey: "123456",
-	//}
-	//appManager.AddOne(app)
-	//app = App{
-	//	Id:        2,
-	//	Name:      "frame_sync",
-	//	Type:      APP_TYPE_SERVICE,
-	//	Desc:      "帧同步",
-	//	Key:       "frame_sync",
-	//	SecretKey: "123456",
-	//}
-	//appManager.AddOne(app)
-	//app = App{
-	//	Id:        3,
-	//	Name:      "logslave",
-	//	Type:      APP_TYPE_SERVICE,
-	//	Desc:      "日志收集器",
-	//	Key:       "logslave",
-	//	SecretKey: "123456",
-	//}
-	//appManager.AddOne(app)
-	//app = App{
-	//	Id:        4,
-	//	Name:      "frame_sync_fe",
-	//	Type:      APP_TYPE_FE,
-	//	Desc:      "帧同步-前端",
-	//	Key:       "frame_sync_fe",
-	//	SecretKey: "123456",
-	//}
-	//appManager.AddOne(app)
-	//app = App{
-	//	Id:        5,
-	//	Name:      "zgoframe",
-	//	Type:      APP_TYPE_SERVICE,
-	//	Desc:      "测试-框架端",
-	//	Key:       "test_frame",
-	//	SecretKey: "123456",
-	//}
-	//appManager.AddOne(app)
-
-
+	//appManager.GetTestData()
 	return appManager.GetFromDb()
 }
 
@@ -108,14 +64,14 @@ func (appManager *AppManager)GetFromDb()error{
 
 	for _,v:=range appList{
 		n := App{
-			Id : int(v.Id),
-			Status: v.Status,
-			Name: v.Name,
-			Desc: v.Desc,
-			Key: v.Key,
-			Type: v.Type,
+			Id 		: v.Id,
+			Status	: v.Status,
+			Name	: v.Name,
+			Desc	: v.Desc,
+			Key		: v.Key,
+			Type	: v.Type,
+			Git		: v.Git,
 			SecretKey: v.SecretKey,
-
 		}
 		appManager.AddOne(n)
 	}
@@ -141,4 +97,52 @@ func  (appManager *AppManager)GetTypeName(typeValue int)string{
 
 func BasePathPlusTypeStr(basePath string,typeStr string)string{
 	return basePath + "/" + typeStr + "/"
+}
+
+func (appManager *AppManager)GetTestData(){
+	app := App{
+		Id:        1,
+		Name:      "gamematch",
+		Type:      APP_TYPE_SERVICE,
+		Desc:      "游戏匹配",
+		Key:       "gamematch",
+		SecretKey: "123456",
+	}
+	appManager.AddOne(app)
+	app = App{
+		Id:        2,
+		Name:      "frame_sync",
+		Type:      APP_TYPE_SERVICE,
+		Desc:      "帧同步",
+		Key:       "frame_sync",
+		SecretKey: "123456",
+	}
+	appManager.AddOne(app)
+	app = App{
+		Id:        3,
+		Name:      "logslave",
+		Type:      APP_TYPE_SERVICE,
+		Desc:      "日志收集器",
+		Key:       "logslave",
+		SecretKey: "123456",
+	}
+	appManager.AddOne(app)
+	app = App{
+		Id:        4,
+		Name:      "frame_sync_fe",
+		Type:      APP_TYPE_FE,
+		Desc:      "帧同步-前端",
+		Key:       "frame_sync_fe",
+		SecretKey: "123456",
+	}
+	appManager.AddOne(app)
+	app = App{
+		Id:        5,
+		Name:      "zgoframe",
+		Type:      APP_TYPE_SERVICE,
+		Desc:      "测试-框架端",
+		Key:       "test_frame",
+		SecretKey: "123456",
+	}
+	appManager.AddOne(app)
 }

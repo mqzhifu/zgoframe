@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	uuid "github.com/satori/go.uuid"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
@@ -14,27 +13,7 @@ import (
 	"time"
 )
 
-type ClientHeader struct {
-	TraceId string	`json:"trace_id"`
-	RequestId string	`json:"request_id"`
-	Protocol string	`json:"protocol"`
-	AppId string	`json:"app_id"`
-	RequestTime string	`json:"request_time"`
-	TargetServiceName string	`json:"target_service_name"`
-	ServerReceiveTime string	`json:"server_receive_time"`
-	ServerResponseTime string	`json:"server_response_time"`
-}
 
-type ServerHeader struct {
-	TraceId string
-	RequestId string
-	Protocol string
-	AppId string
-	TargetAppId string
-	ServiceName string
-	ReceiveTime string
-	ResponseTime string
-}
 
 type MyGrpcClient struct {
 	ServiceName string
@@ -156,16 +135,6 @@ func (grpcManager *GrpcManager) GetClient(serviceName string, appId int,ip strin
 	return conn,nil
 }
 
-func MakeTraceId()string{
-	id :=  uuid.NewV4()
-	return id.String()
-}
-
-func MakeRequestId()string{
-	id :=  uuid.NewV4()
-	return id.String()
-}
-
 func  (myGrpcServer *MyGrpcServer) serverInterceptorBack(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp interface{}, err error){
 	fmt.Println("gRPC serverInterceptorBack ", ctx, req , info)
 
@@ -174,7 +143,7 @@ func  (myGrpcServer *MyGrpcServer) serverInterceptorBack(ctx context.Context, re
 	//	ServerReceiveTime: time.Now().Unix(),
 	//}
 	//fmt.Println("server md:",md)
-	serverHeader := ServerHeader{
+	serverHeader := ServiceServerHeader{
 		AppId : strconv.Itoa( myGrpcServer.AppId),
 		ServiceName : myGrpcServer.ServiceName,
 		ReceiveTime: strconv.FormatInt( time.Now().Unix(),10),
@@ -194,8 +163,8 @@ func  (myGrpcServer *MyGrpcServer) serverInterceptorBack(ctx context.Context, re
 		//	AppId:clientAppId ,
 		//	Protocol: md["protocol"][0],
 		//}
-		clientHeader := ClientHeader{}
-		err = json.Unmarshal([]byte(md["diy"][0]),&clientHeader)
+		clientHeader := ServiceClientHeader{}
+		err = json.Unmarshal([]byte(md[SERVICE_HEADER_KEY][0]),&clientHeader)
 		MyPrint("json.Unmarshal err:",err)
 
 		MyPrint("grpc server receive clientHeader:",clientHeader)
@@ -229,7 +198,7 @@ func  (myGrpcServer *MyGrpcServer) serverInterceptorBack(ctx context.Context, re
 	//headerInfo["service_name"] = serverHeader.ServiceName
 	//headerInfo["target_app_id"] = strconv.Itoa(serverHeader.TargetAppId)
 	jsonServerHeader,_ := json.Marshal(serverHeader)
-	headerInfo["diy"]= string(jsonServerHeader)
+	headerInfo[SERVICE_HEADER_KEY]= string(jsonServerHeader)
 	mdData := metadata.New(headerInfo)
 	//md = metadata.Pairs(
 	//	//"trace_id", md["trace_id"][0],
@@ -264,7 +233,7 @@ func (myGrpcClient *MyGrpcClient) clientInterceptorBack(ctx context.Context, met
 	//md := metadata.Pairs(
 	//	"trace_id", traceId,"request_id",MakeRequestId(),"client_req_time",nowString,"app_id",strconv.Itoa(myGrpcClient.AppId),"protocol","grpc")
 
-	clientHeader := ClientHeader{
+	clientHeader := ServiceClientHeader{
 		TraceId: MakeTraceId(),
 		RequestTime: strconv.FormatInt(GetNowTimeSecondToInt64(),10),
 		AppId: strconv.Itoa(myGrpcClient.AppId),
@@ -275,7 +244,7 @@ func (myGrpcClient *MyGrpcClient) clientInterceptorBack(ctx context.Context, met
 	clientHeaderJson,err := json.Marshal(clientHeader)
 	MyPrint("json.Marshal:",err)
 	headerInfo := make(map[string]string)
-	headerInfo["diy"] = string( clientHeaderJson)
+	headerInfo[SERVICE_HEADER_KEY] = string( clientHeaderJson)
 	//headerInfo["trace_id"] = MakeTraceId()
 	//headerInfo["client_req_time"] = strconv.FormatInt(GetNowTimeSecondToInt64(),10)
 	//headerInfo["request_id"] = MakeRequestId()
@@ -303,8 +272,8 @@ func (myGrpcClient *MyGrpcClient) clientInterceptorBack(ctx context.Context, met
 	//	RequestId: MakeRequestId(),
 	//	Protocol: "grpc",
 	//}
-	serviceResponseHeaderDiyString  :=  header.Get("diy")[0]
-	serverHeader := ServerHeader{}
+	serviceResponseHeaderDiyString  :=  header.Get(SERVICE_HEADER_KEY)[0]
+	serverHeader := ServiceServerHeader{}
 	json.Unmarshal([]byte(serviceResponseHeaderDiyString),&serverHeader)
 	MyPrint("clientInterceptorBack receive , method:",method,"req:",req,"reply:",reply,"opts:",serverHeader)
 

@@ -11,7 +11,7 @@ type Config struct {
 	Casbin  Casbin
 	Viper 	Viper
 	Etcd 	Etcd
-	Service Service
+	ServiceDiscovery ServiceDiscovery
 	Alert Alert
 	Metrics Metrics
 	Websocket Websocket
@@ -44,6 +44,7 @@ type Http struct {
 type System struct {
 	Status string
 	AppId int
+	ServiceId int
 	DbType string
 	ENV string
 	ErrorMsgFile string
@@ -104,7 +105,7 @@ type Etcd struct{
 	Url string
 }
 
-type Service struct {
+type ServiceDiscovery struct {
 	Status string
 }
 

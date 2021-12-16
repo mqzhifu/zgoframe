@@ -48,6 +48,7 @@ func main(){
 	}
 
 	pwd, _ := os.Getwd()//当前路径
+	util.MyPrint("now pwd:"+pwd)
 	//开始初始化模块
 	//主协程的 context
 	mainCxt,mainCancelFunc := context.WithCancel(context.Background())
@@ -70,8 +71,7 @@ func main(){
 		panic("initialize.Init err:"+err.Error())
 		return
 	}
-	//initializeVar.StartService()
-	//initializeVar.StartClient()
+	//测试
 	test.Index()
 	//deploy 是用来方便布置的，看着挺恶心，我回头再优化
 	if *deploy == ""{

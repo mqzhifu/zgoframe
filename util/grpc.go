@@ -133,6 +133,7 @@ func (grpcManager *GrpcManager) GetClient(serviceName string, appId int,ip strin
 
 	client ,ok := grpcManager.ClientList[dns]
 	if ok {
+		grpcManager.Option.Log.Info(" use has exist inc :"+dns)
 		return client.ClientConn,nil
 	}
 
@@ -153,7 +154,7 @@ func (grpcManager *GrpcManager) GetClient(serviceName string, appId int,ip strin
 
 	myClient.ClientConn = conn
 
-	//grpcManager.ClientList[serviceName] = &myClient
+	grpcManager.ClientList[dns] = &myClient
 
 	return conn,nil
 }
@@ -280,8 +281,9 @@ func (myGrpcClient *MyGrpcClient) clientInterceptorBack(ctx context.Context, met
 	md := metadata.New(headerInfo)
 	ctx = metadata.NewOutgoingContext(ctx, md)
 
-	invoker(ctx,method,req,reply,cc,opts...)
+	err = invoker(ctx,method,req,reply,cc,opts...)
 
+	MyPrint("clientInterceptorBack receive , method:",method,"req:",req,"reply:",reply,"opts:",opts,  " cc:",cc.GetState() , " err:",err)
 	//md ,ok := metadata.FromIncomingContext(ctx)
 
 	//MyPrint("md:",md,ok)
@@ -298,7 +300,7 @@ func (myGrpcClient *MyGrpcClient) clientInterceptorBack(ctx context.Context, met
 	serviceResponseHeaderDiyString  :=  header.Get(SERVICE_HEADER_KEY)[0]
 	serverHeader := ServiceServerHeader{}
 	json.Unmarshal([]byte(serviceResponseHeaderDiyString),&serverHeader)
-	MyPrint("clientInterceptorBack receive , method:",method,"req:",req,"reply:",reply,"opts:",serverHeader)
+	MyPrint(serverHeader)
 
 
 	return nil

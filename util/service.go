@@ -11,6 +11,7 @@ import (
 type ServiceNode struct {
 	ServiceId 	int 			`json:"service_id"`
 	ServiceName string			`json:"service_name"`
+	ListenIp 	string			`json:"listen_ip"`
 	Ip			string			`json:"ip"`
 	Port		string			`json:"port"`
 	Protocol 	int				`json:"protocol"`		//暂未实现

@@ -46,6 +46,7 @@ type Service struct {
 }
 //给一个新的节点添加到一个服务中
 func (service *Service)AddServiceList(node *ServiceNode)error{
+	MyPrint("insert node to serviceList.")
 	//msgPrefix := "AddServiceList "
 	//if node.ServiceName == ""{
 	//	errMsg := msgPrefix + " serviceName empty"

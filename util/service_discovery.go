@@ -159,7 +159,7 @@ func (serviceDiscovery *ServiceDiscovery)WatchOneService(service *Service)error{
 		watchChan := serviceDiscovery.option.Etcd.Watch(ctx,service.DBKey)
 		service.watchCancel = cancelFunc
 		prefix := "third service watching receive , "
-		serviceDiscovery.option.Log.Info(prefix  +  " , new key : " + service.DBKey)
+		serviceDiscovery.option.Log.Info(prefix  +  " , in service key : " + service.DBKey)
 		//进入阻塞模式
 		for wresp := range watchChan{
 			for _, ev := range wresp.Events{
@@ -184,6 +184,7 @@ func (serviceDiscovery *ServiceDiscovery)WatchOneService(service *Service)error{
 				}
 
 				if action == "PUT"{//添加|编辑
+					serviceDiscovery.option.Log.Info("now service list len:"+strconv.Itoa(len(service.List)))
 					isEdit := 0
 					for _,node :=range service.List{
 						if node.DBKey == key{

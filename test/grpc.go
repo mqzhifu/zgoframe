@@ -13,8 +13,8 @@ import (
 
 func Grpc(){
 	//StartClient()
-	client2()
-	//StartService()
+	//client2()
+	StartService()
 }
 
 

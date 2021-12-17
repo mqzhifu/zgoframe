@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+option go_package ="./;pb";
+
+service Zgoframe {
+  rpc SayHello (RequestUser) returns (ResponseUser) {}
+}
+
+message RequestUser{
+    uint64      id              = 1;
+    string      nickname        = 2;
+}
+
+message ResponseUser{
+    uint64      id              = 1;
+    string      nickname        = 2;
+}

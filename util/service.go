@@ -68,39 +68,44 @@ func (service *Service)AddServiceList(node *ServiceNode)error{
 	return nil
 	//serviceManager.list[service.Name] = service
 }
+func (serviceNode *ServiceNode)GetDns()string{
+	return serviceNode.Ip + ":" + serviceNode.Port
+}
 //创建一个新的服务的节点
 func (service *Service)NewServiceNode(node ServiceNode)error{
 	prefix := "NewServiceNode"
-	msgPrefix := prefix + " , info check err:"
+	msgPrefix := prefix + " err: info check err:"
 	if !CheckServiceProtocolExist(node.Protocol){
-		errMsg := msgPrefix + " protocol empty"
-		MyPrint(errMsg)
+		errMsg := msgPrefix + " err: protocol empty"
+		//MyPrint(errMsg)
 		return errors.New(errMsg)
 	}
 
 	if node.Ip == ""{
-		errMsg := msgPrefix + " ip empty"
-		MyPrint(errMsg)
+		errMsg := msgPrefix + " err:ip empty"
+		//MyPrint(errMsg)
 		return errors.New(errMsg)
 	}
 
 	if node.Port == ""{
-		errMsg := msgPrefix + " port empty"
-		MyPrint(errMsg)
+		errMsg := msgPrefix + " err:port empty"
+		//MyPrint(errMsg)
 		return errors.New(errMsg)
 	}
 
-	if node.DBKey == ""{
-		errMsg := msgPrefix + " DBKey empty"
-		MyPrint(errMsg)
-		return errors.New(errMsg)
-	}
+	//if node.DBKey == ""{
+	//	errMsg := msgPrefix + " DBKey empty"
+	//	MyPrint(errMsg)
+	//	return errors.New(errMsg)
+	//}
 
 	if node.ServiceName == ""{
-		errMsg := msgPrefix + " serviceName empty"
-		MyPrint(errMsg)
+		errMsg := msgPrefix + " err:serviceName empty"
+		//MyPrint(errMsg)
 		return errors.New(errMsg)
 	}
+
+	MyPrint("NewServiceNode success:" , node)
 
 	err := service.AddServiceList(&node)
 	return err

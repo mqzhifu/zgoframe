@@ -57,7 +57,6 @@ func (initialize * Initialize)Start()error{
 	global.C = config		//全局变量
 	//---config end -----
 
-	util.ExitPrint(234243)
 	//mysql
 	//这里按说不应该先初始化MYSQL，应该最早初始化LOG类，并且不一定所有项目都用MYSQL，但是项目是基于多APP/SERVICE，强依赖app_id service_id
 	if global.C.Mysql.Status != global.CONFIG_STATUS_OPEN{
@@ -221,14 +220,29 @@ func autoCreateUpDbTable(){
 
 func (initialize * Initialize)Quit(){
 	global.V.Zap.Warn("init quit start:")
-	HttpServerShutdown()
-	RedisShutdown()
+	if global.C.Http.Status == global.CONFIG_STATUS_OPEN{
+		HttpServerShutdown()
+	}
+
+	if global.C.Redis.Status == global.CONFIG_STATUS_OPEN{
+		RedisShutdown()
+	}
+	//这个得优于etcd先关
+	if global.C.Grpc.Status == global.CONFIG_STATUS_OPEN{
+		global.V.Grpc.Shutdown()
+	}
+	//这个得优于etcd先关
+	if global.C.ServiceDiscovery.Status == global.CONFIG_STATUS_OPEN{
+		global.V.ServiceDiscovery.Shutdown()
+	}
+
+	if global.C.Etcd.Status == global.CONFIG_STATUS_OPEN{
+		global.V.Etcd.Shutdown()
+	}
+	//global.V.Websocket.Shutdown()
+
 	GormShutdown()
-	global.V.Websocket.Shutdown()
 	ViperShutdown()
-	global.V.Grpc.Shutdown()
-	global.V.Etcd.Shutdown()
-	//global.V.ServiceManager.Shutdown()
 
 	global.V.Zap.Warn("init quit finish.")
 }
@@ -242,9 +256,16 @@ func InitPath(rootDir string)(rootDirName string,err error){
 	//option.RootDirName = rootDirName
 	//global.V.RootDir = option.RootDir
 	//这里要求，项目表里配置的key与项目目录名必须一致.
-	if rootDirName != global.V.App.Key{
-		return rootDirName,errors.New("mainDirName != app name , "+rootDirName + " "+  global.V.App.Name)
+	if global.C.System.AppId > 0 {
+		if rootDirName != global.V.App.Key {
+			return rootDirName,errors.New("mainDirName != app name , "+rootDirName + " "+  global.V.App.Key)
+		}
+	}else{
+		if rootDirName != global.V.Service.Key {
+			return rootDirName,errors.New("mainDirName != serviceName name , "+rootDirName + " "+  global.V.Service.Key)
+		}
 	}
+
 	return rootDirName,nil
 }
 
@@ -268,7 +289,8 @@ func GetNewServiceDiscovery()(serviceDiscovery *util.ServiceDiscovery,err error)
 	serviceOption := util.ServiceDiscoveryOption{
 		Log		: global.V.Zap,
 		Etcd	: global.V.Etcd,
-		Prefix	: "/service",
+		//Prefix	: "/service",
+		Prefix: global.C.ServiceDiscovery.Prefix,
 		DiscoveryType: util.SERVICE_DISCOVERY_ETCD,
 		ServiceManager: global.V.ServiceManager,
 	}

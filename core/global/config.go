@@ -107,6 +107,7 @@ type Etcd struct{
 
 type ServiceDiscovery struct {
 	Status string
+	Prefix string
 }
 
 type Metrics struct {
@@ -129,6 +130,7 @@ type Grpc struct {
 	Status string
 	Ip string
 	Port string
+	ServicePackagePrefix string
 }
 
 type Email struct {

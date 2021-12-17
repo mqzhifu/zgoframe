@@ -2,11 +2,24 @@
 //正则匹配一个service 块时，结尾必须是：} ，上一行必须是\n结束
 define("DEBUG",0);
 
-$servicePackage = "pbservice";
-$protoFilePath = "proto";
-$protoFileName = "demo.proto";
+
+$argcNoticeMsg = "servicePackage=xxxx protoFilePath=xxx protoFileName=xxxx outPath=xxx pbClassName=xxxx";
+if (count($argv) < 6){
+    exit($argcNoticeMsg);
+}
+
+// $servicePackage = "pbservice";
+// $protoFilePath = "proto";
+// $protoFileName = "demo.proto";
+// $outPath = "$servicePackage";
+// $pbClassName = "pb.";
+$servicePackage = $argv[1];
+$protoFilePath = $argv[2];
+$protoFileName = $argv[3];
 $outPath = "$servicePackage";
-$pbClassName = "pb.";
+$pbClassName = $argv[5];
+
+
 
 $outFile = $outPath . "/" . $protoFileName. ".go";
 $protoFileContent = file_get_contents($protoFilePath . "/".$protoFileName);

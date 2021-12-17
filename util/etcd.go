@@ -299,6 +299,7 @@ func  (myEtcd *MyEtcd)iniAppConf() {
 	myEtcd.AppConflist = confList
 }
 func  (myEtcd *MyEtcd)DelOne(key string)error{
+	myEtcd.option.Log.Info("myEtcd DelOne:" + key)
 	_, err := myEtcd.cli.Delete(context.TODO(),key)
 	if err != nil{
 		myEtcd.option.Log.Error(" etcd del one err:" + err.Error())

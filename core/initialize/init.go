@@ -170,7 +170,15 @@ func (initialize * Initialize)Start()error{
 	//}
 	//grpc
 	if global.C.Grpc.Status == global.CONFIG_STATUS_OPEN{
-		global.V.Grpc,_ =  util.NewGrpcManager(global.V.App.Id,global.V.Zap)
+		grpcManagerOption := util.GrpcManagerOption{
+			AppId: global.V.App.Id,
+			ServiceId: global.V.Service.Id,
+			Log: global.V.Zap,
+		}
+		if global.C.ServiceDiscovery.Status == global.CONFIG_STATUS_OPEN{
+			grpcManagerOption.ServiceDiscovery = global.V.ServiceDiscovery
+		}
+		global.V.Grpc,_ =  util.NewGrpcManager(grpcManagerOption)
 	}
 
 	if global.C.Email.Status == global.CONFIG_STATUS_OPEN {

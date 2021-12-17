@@ -2,6 +2,7 @@ package test
 
 import (
 	"fmt"
+	"time"
 	"zgoframe/core/global"
 	"zgoframe/protobuf/pb"
 	"zgoframe/protobuf/pbservice"
@@ -11,8 +12,9 @@ import (
 )
 
 func Grpc(){
-	StartClient()
-	//StartService()
+	//StartClient()
+	//client2()
+	StartService()
 }
 
 
@@ -53,12 +55,8 @@ func StartService()error{
 	}
 	//挂载服务的handler
 	pb.RegisterZgoframeServer(MyGrpcServer.GrpcServer, &pbservice.Zgoframe{})
-	//pb.RegisterSecondServer(MyGrpcServer.GrpcServer, &pbservice.Second{})
-	// 注册反射服务 这个服务是CLI使用的 跟服务本身没有关系
-	//go global.V.Grpc.StartServer(grpcInc,listen)
 	fmt.Println("grpc ServerStart...")
 	MyGrpcServer.ServerStart()
-	//go MyGrpcServer.GrpcServer.Serve(MyGrpcServer.Listen)
 	fmt.Println("GrpcServer.Serve:",err)
 	return nil
 }
@@ -98,6 +96,34 @@ func  StartClient()error{
 	global.V.ServiceDiscovery.ShowJsonByNodeServer()
 
 	return nil
+}
+
+func client2()error{
+
+	go clientSend()
+
+	return nil
+}
+
+func clientSend(){
+	for{
+		serviceName :=  global.V.Service.Name
+		grpcClientConn, err := global.V.Grpc.GetClientByLoadBalance(serviceName,0)
+		if err != nil{
+			util.MyPrint("grpc GetClient err:",err)
+			return
+		}
+
+		pbServiceFirst := pb.NewZgoframeClient(grpcClientConn)
+		RequestRegPlayer := pb.RequestUser{}
+		RequestRegPlayer.Id = 123123
+		RequestRegPlayer.Nickname = "xiaoz"
+		res ,err:= pbServiceFirst.SayHello(context.Background(),&RequestRegPlayer)
+		util.MyPrint("grpc return:",res , " err:",err)
+
+		time.Sleep(time.Second * 1)
+		util.MyPrint("sleep 1 second...")
+	}
 }
 
 

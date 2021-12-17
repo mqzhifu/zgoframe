@@ -17,45 +17,52 @@ import (
 
 type MyGrpcClient struct {
 	ServiceName string
-	AppId int
-	Ip 		string
+	AppId 		int
+	ServiceId 	int
+	Ip 			string
 	Port 		string
-	Listen  net.Listener
+	Listen  	net.Listener
 	Log 		*zap.Logger
-	ClientConn *grpc.ClientConn
+	ClientConn 	*grpc.ClientConn
 }
 
 type MyGrpcServer struct {
 	ServiceName string
 	AppId 		int
+	ServiceId 	int
 	ListenIp	string
 	OutIp		string
 	Port 		string
 	Log 		*zap.Logger
 
-	Listen  net.Listener
+	Listen  	net.Listener
 	GrpcServer *grpc.Server
 }
 
 type GrpcManager struct {
-	//Option GrpcOption
-	AppId 	int
-	Log 		*zap.Logger
+	Option 		GrpcManagerOption
 	ClientList 	map[string]*MyGrpcClient
 	ServiceList map[string]*MyGrpcServer
 	//ServerStartUp int	//标识：服务器已启动，避免重复启动
 	//ClientStartUp int
 }
 
-//type GrpcOption struct {
-//	Log 		*zap.Logger
-//}
+type GrpcManagerOption struct {
+	AppId 				int
+	ServiceId 			int
+	Log 				*zap.Logger
+	ServiceDiscovery *ServiceDiscovery
+}
 
-func NewGrpcManager(AppId int,Log *zap.Logger)(*GrpcManager,error){
+func NewGrpcManager(grpcManagerOption GrpcManagerOption)(*GrpcManager,error){
+	//AppId int,Log *zap.Logger,serviceId int
 
 	grpcManager := new(GrpcManager)
-	grpcManager.Log = Log
-	grpcManager.AppId = AppId
+	grpcManager.Option = grpcManagerOption
+	//grpcManager.Log = Log
+	//grpcManager.AppId = AppId
+	//grpcManager.ServiceId = serviceId
+
 	//存储自己创建的服务
 	grpcManager.ServiceList = make(map[string]*MyGrpcServer)
 	//存储它人创建的服务
@@ -81,7 +88,7 @@ func (myGrpcServer *MyGrpcServer)ServerStart(){
 
 func (grpcManager *GrpcManager) GetServer(serviceName string ,ip string ,port string)(*MyGrpcServer,error){
 	dns := ip +":"+port
-	grpcManager.Log.Debug("GetServer serviceName:"+serviceName + " dns:" + dns)
+	grpcManager.Option.Log.Debug("GetServer serviceName:"+serviceName + " dns:" + dns)
 
 	listen, err := net.Listen("tcp", dns)
 	if err != nil {
@@ -90,13 +97,14 @@ func (grpcManager *GrpcManager) GetServer(serviceName string ,ip string ,port st
 	}
 
 	myServer := MyGrpcServer{
-		ServiceName: serviceName,
-		AppId: grpcManager.AppId,
-		ListenIp: ip,
-		OutIp: ip,
-		Port: port,
-		Listen: listen,
-		Log: grpcManager.Log,
+		ServiceName	: serviceName,
+		AppId		: grpcManager.Option.AppId,
+		ServiceId 	: grpcManager.Option.ServiceId,
+		ListenIp	: ip,
+		OutIp		: ip,
+		Port		: port,
+		Listen		: listen,
+		Log			: grpcManager.Option.Log,
 	}
 
 	var opts []grpc.ServerOption//grpc为使用的第三方的grpc包
@@ -108,17 +116,30 @@ func (grpcManager *GrpcManager) GetServer(serviceName string ,ip string ,port st
 
 	return &myServer,nil
 }
+func (grpcManager *GrpcManager)GetClientByLoadBalance(serviceName string, appId int)(clientConn *grpc.ClientConn,err error){
+	serviceNode ,err :=  grpcManager.Option.ServiceDiscovery.GetLoadBalanceServiceNodeByServiceName(serviceName,"")
+	if err != nil{
+		return clientConn,err
+	}
 
+	grpcClientConn, err := grpcManager.GetClient(serviceName,appId,serviceNode.Ip,serviceNode.Port)
+	return grpcClientConn, err
+}
 
 func (grpcManager *GrpcManager) GetClient(serviceName string, appId int,ip string,port string)(*grpc.ClientConn,error){
 	dns := ip + ":" + port
+
+	client ,ok := grpcManager.ClientList[dns]
+	if ok {
+		return client.ClientConn,nil
+	}
 
 	myClient := MyGrpcClient{
 		ServiceName: serviceName,
 		AppId: appId,
 		Port: port,
 		Ip: ip,
-		Log: grpcManager.Log,
+		Log: grpcManager.Option.Log,
 	}
 
 	conn, err := grpc.Dial(dns,grpc.WithInsecure(),grpc.WithUnaryInterceptor(myClient.clientInterceptorBack))
@@ -130,7 +151,7 @@ func (grpcManager *GrpcManager) GetClient(serviceName string, appId int,ip strin
 
 	myClient.ClientConn = conn
 
-	grpcManager.ClientList[serviceName] = &myClient
+	//grpcManager.ClientList[serviceName] = &myClient
 
 	return conn,nil
 }

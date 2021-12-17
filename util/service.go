@@ -2,7 +2,9 @@ package util
 
 import (
 	"errors"
+	"go.uber.org/zap"
 	"gorm.io/gorm"
+	"strconv"
 	"zgoframe/model"
 	"context"
 	"go.etcd.io/etcd/clientv3"
@@ -20,6 +22,8 @@ type ServiceNode struct {
 	IsSelfReg 	bool			`json:"is_self_reg"`	//是否为当前服务自己注册的服务
 	RegTime 	int 			`json:"reg_time"`		//注册时间
 	DBKey		string 			`json:"db_key"`
+	CreateTime 	int				`json:"create_time"`
+	Log			*zap.Logger		`json:"-"`
 }
 //服务，这里两个地方用，
 //1. 从DB里读出来，后台录入的情况
@@ -38,15 +42,21 @@ type Service struct {
 	LBType 		int
 	List 		[]*ServiceNode	`json:"list"`
 
+	Log			*zap.Logger		`json:"-"`
+
 	watchCancel	context.CancelFunc	`json:"-"`			//监听 分布式DB 取消函数
 
 	LeaseGrantId clientv3.LeaseID	`json:"-"`			//etcd
 	Lease clientv3.Lease			`json:"-"`			//etcd
 	LeaseCancelCtx context.Context	`json:"-"`			//etcd
 }
+func (service *Service)ToString()string{
+	str := "id:"+strconv.Itoa(service.Id) + " name:" + service.Name  + " DBKey:" + service.DBKey +  " CreateTime:" +strconv.Itoa(service.CreateTime) + " LBType:" + strconv.Itoa(service.LBType)
+	return str
+}
 //给一个新的节点添加到一个服务中
 func (service *Service)AddServiceList(node *ServiceNode)error{
-	MyPrint("insert node to serviceList.")
+	service.Log.Info("insert node to serviceList:" + node.ToString())
 	//msgPrefix := "AddServiceList "
 	//if node.ServiceName == ""{
 	//	errMsg := msgPrefix + " serviceName empty"
@@ -73,6 +83,18 @@ func (service *Service)AddServiceList(node *ServiceNode)error{
 func (serviceNode *ServiceNode)GetDns()string{
 	return serviceNode.Ip + ":" + serviceNode.Port
 }
+
+func (serviceNode *ServiceNode)ToString()string{
+	isSelf := "false"
+	if serviceNode.IsSelfReg {
+		isSelf = "true"
+	}
+	//ServiceId 	int 			`json:"service_id"`
+	//RegTime 	int 			`json:"reg_time"`		//注册时间
+	debugInfo := " ServiceName:"+ serviceNode.ServiceName +  " dns : "+serviceNode.GetDns()+ ", protocol:"+ strconv.Itoa(serviceNode.Protocol) + ", isSelf:"+isSelf + " ,ListenIp:" + serviceNode.ListenIp + " DBKey:" + serviceNode.DBKey + " createTime:" + strconv.Itoa(serviceNode.CreateTime)
+	return debugInfo
+}
+
 //创建一个新的服务的节点
 func (service *Service)NewServiceNode(node ServiceNode)error{
 	prefix := "NewServiceNode"
@@ -101,13 +123,13 @@ func (service *Service)NewServiceNode(node ServiceNode)error{
 	//	return errors.New(errMsg)
 	//}
 
+	node.CreateTime = GetNowTimeSecondToInt()
+
 	if node.ServiceName == ""{
 		errMsg := msgPrefix + " err:serviceName empty"
 		//MyPrint(errMsg)
 		return errors.New(errMsg)
 	}
-
-	MyPrint("NewServiceNode success:" , node)
 
 	err := service.AddServiceList(&node)
 	return err

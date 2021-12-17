@@ -7,6 +7,7 @@ import (
 	"go.uber.org/zap"
 	"strconv"
 	"strings"
+	"sync"
 )
 
 var CONSUL_NOT_OPEN = errors.New("consule not open.")
@@ -19,6 +20,7 @@ type ServiceDiscovery struct {
 	WatchMsg 		chan string	//监听的数据发生变化时，发送通知给调用者,暂关闭
 	CancelCxt 		context.Context
 	CancelFunc 		context.CancelFunc
+	OPLock 			sync.Mutex		// 注册|删除：互斥，锁的粒度有点大，后期优化
 	//consul 		int //待处理
 }
 //实例化 ServiceManager 参数
@@ -96,7 +98,7 @@ func (serviceDiscovery *ServiceDiscovery)Discovery()( err error){
 			serviceDiscovery.option.Log.Warn( " allServiceList is empty !")
 			return err
 		}
-
+		serviceDiscovery.option.Log.Info("allServiceEtcdList len:"+strconv.Itoa(len(allServiceEtcdList)))
 		for k,_ := range allServiceEtcdList{
 			//先把KEY 转换成 结构体
 			etcdKeyInfo,err := serviceDiscovery.EtcdKeyCovertStruct(k)
@@ -131,7 +133,7 @@ func (serviceDiscovery *ServiceDiscovery)Discovery()( err error){
 
 //给一个新的服务添加到管理列表中
 func (serviceDiscovery *ServiceDiscovery)AddServiceManagerList(service *Service){
-	serviceDiscovery.option.Log.Info("AddServiceManagerList :"+service.Name)
+	serviceDiscovery.option.Log.Info("insert service to list :"+service.ToString())
 	serviceDiscovery.list[service.Name] = service
 }
 
@@ -170,73 +172,7 @@ func (serviceDiscovery *ServiceDiscovery)WatchOneService(service *Service)error{
 				msg := prefix  + " chan has event : " + action + ", key : " + key +  " val : " +val
 				serviceDiscovery.option.Log.Warn(msg)
 
-				//给使用者发送信息，第一时间通知
-				//serviceDiscovery.WatchMsg <- msg
-				//这是种比较极端的情况，人为的错误操作，直接在根上面执行了操作
-				if key == serviceDiscovery.option.Prefix {
-					serviceDiscovery.option.Log.Fatal("some body op root dir : "+ key)
-					continue
-				}
-				//这是种比较极端的情况，人为的错误操作，添加了个空的服务名，但却没有增加任何Node
-				if key == service.DBKey {
-					serviceDiscovery.option.Log.Fatal("some body op service root dir : "+ key)
-					continue
-				}
-
-				if action == "PUT"{//添加|编辑
-					serviceDiscovery.option.Log.Info("now service list len:"+strconv.Itoa(len(service.List)))
-					isEdit := 0
-					for _,node :=range service.List{
-						if node.DBKey == key{
-							serviceDiscovery.option.Log.Info(" watch , etcd action is :edit , need up node info.")
-							etcdKeyInfo,err  := serviceDiscovery.EtcdKeyCovertStruct(key)
-							if err != nil{
-								continue
-							}
-							node.Ip = etcdKeyInfo.Ip
-							node.Port = etcdKeyInfo.Port
-
-							isEdit = 1
-							break
-						}
-					}
-					if isEdit == 0 {
-						serviceDiscovery.option.Log.Info(" watch , etcd action is :add , need add new node .")
-						etcdKeyInfo,err   := serviceDiscovery.EtcdKeyCovertStruct(key)
-						if err != nil{
-							continue
-						}
-						newServiceNode := ServiceNode{
-							//ServiceId: oriService.Id,
-							ServiceName: etcdKeyInfo.ServiceName,
-							Ip:etcdKeyInfo.Ip,
-							Port: etcdKeyInfo.Port,
-							Protocol: SERVICE_PROTOCOL_GRPC,//暂未实现
-							IsSelfReg: false,//非本服务注册，属于3方服务注册
-							DBKey: key,
-						}
-						serviceDiscovery.Register(newServiceNode)
-						//ss := serviceDiscovery.list[etcdKeyInfo.ServiceName]
-						serviceDiscovery.option.Log.Info("up after ,node len:" + strconv.Itoa(len(service.List)))
-					}
-				}else if action == "DELETE"{
-					serviceDiscovery.option.Log.Info("delete before , node len:" + strconv.Itoa(len(service.List)))
-					hasSearch := 0
-					for _,node :=range service.List{
-						if node.DBKey == key{
-							serviceDiscovery.DelOneServiceNode(node)
-							hasSearch = 1
-							break
-						}
-					}
-					if hasSearch == 0{
-						serviceDiscovery.option.Log.Error("etcd watching has event DELETE, no search this key:" + key)
-					}else{
-						serviceDiscovery.option.Log.Info("delete after , node len:" + strconv.Itoa(len(service.List)))
-					}
-				}else{
-					serviceDiscovery.option.Log.Error("WatchOneService event err:" + action)
-				}
+				serviceDiscovery.ServiceHasChange(service,action,key,val)
 
 				//MyPrint(ev.Type.String(), string(ev.Kv.Key), string(ev.Kv.Value))
 				//fmt.Printf("%s %q:%q\n", ev.Type, ev.Kv.Key, ev.Kv.Value)
@@ -252,6 +188,77 @@ func (serviceDiscovery *ServiceDiscovery)WatchOneService(service *Service)error{
 	}
 
 	return nil
+}
+
+func (serviceDiscovery *ServiceDiscovery)ServiceHasChange(service *Service,action string ,key string ,val string){
+	prefix := "ServiceHasChange "
+	//给使用者发送信息，第一时间通知,暂时先注释掉，如调用者不接收容易出问题
+	//serviceDiscovery.WatchMsg <- msg
+	//这是种比较极端的情况，人为的错误操作，直接在根上面执行了操作
+	if key == serviceDiscovery.option.Prefix {
+		serviceDiscovery.option.Log.Fatal(prefix + "some body op root dir : "+ key)
+		return
+	}
+	//这是种比较极端的情况，人为的错误操作，添加了个空的服务名，但却没有增加任何Node
+	if key == service.DBKey {
+		serviceDiscovery.option.Log.Fatal(prefix + "some body op service root dir : "+ key)
+		return
+	}
+
+	serviceDiscovery.option.Log.Info(prefix + "now service list len:"+strconv.Itoa(len(service.List)))
+	if action == "PUT"{//添加|编辑
+		isEdit := 0
+		for _,node :=range service.List{
+			//serviceDiscovery.option.Log.Info("foreach noed.DBkey:"+ node.DBKey)
+			if node.DBKey == key{
+				serviceDiscovery.option.Log.Info(prefix + " action is :edit , need up node info.")
+				etcdKeyInfo,err  := serviceDiscovery.EtcdKeyCovertStruct(key)
+				if err != nil{
+					continue
+				}
+				node.Ip = etcdKeyInfo.Ip
+				node.Port = etcdKeyInfo.Port
+
+				isEdit = 1
+				serviceDiscovery.option.Log.Info(prefix + " up node info:" + node.Ip + " , " + node.Port)
+				break
+			}
+		}
+		if isEdit == 0 {
+			serviceDiscovery.option.Log.Info(prefix + "  action is :add , need create new serviceNode .")
+			etcdKeyInfo,err   := serviceDiscovery.EtcdKeyCovertStruct(key)
+			if err != nil{
+				return
+			}
+			newServiceNode := ServiceNode{
+				//ServiceId: oriService.Id,
+				ServiceName: etcdKeyInfo.ServiceName,
+				Ip:etcdKeyInfo.Ip,
+				Port: etcdKeyInfo.Port,
+				Protocol: SERVICE_PROTOCOL_GRPC,//暂未实现
+				IsSelfReg: false,//非本服务注册，属于3方服务注册
+				DBKey: key,
+			}
+			serviceDiscovery.Register(newServiceNode)
+		}
+	}else if action == "DELETE"{
+		serviceDiscovery.option.Log.Info(prefix + "action is delete .  ")
+		hasSearch := 0
+		for _,node :=range service.List{
+			if node.DBKey == key{
+				serviceDiscovery.DelOneServiceNode(node)
+				hasSearch = 1
+				break
+			}
+		}
+		if hasSearch == 0{
+			serviceDiscovery.option.Log.Error(prefix + " delete failed ,  no search key:" + key)
+		}
+
+	}else{
+		serviceDiscovery.option.Log.Error("WatchOneService event err:" + action)
+	}
+	serviceDiscovery.option.Log.Info(prefix + "up after ,node len:" + strconv.Itoa(len(service.List)))
 }
 //根据服务名，获取该服务下的一个节点，需要负载均衡
 func (serviceDiscovery *ServiceDiscovery)GetLoadBalanceServiceNodeByServiceName(serviceName string,factor string)(serviceNode *ServiceNode,err error){
@@ -288,26 +295,27 @@ func (serviceManager *ServiceDiscovery)balanceHost(service *Service ,factor stri
 }
 
 //删除自己的服务
-func (serviceManager *ServiceDiscovery)DelOneServiceNode(serviceNode *ServiceNode){
-	serviceManager.option.Log.Info("DelOneServiceNode:" + serviceNode.ServiceName)
-	//now := GetNowTimeSecondToInt()
-	//putResponse,err := service.etcd.PutOne( service.option.Prefix +"/"+serviceName +"/"+ipPort , strconv.Itoa(now))
-	service ,ok := serviceManager.list[serviceNode.ServiceName]
+func (serviceDiscovery *ServiceDiscovery)DelOneServiceNode(serviceNode *ServiceNode){
+	serviceDiscovery.option.Log.Info("DelOneServiceNode:" + serviceNode.ServiceName)
+
+	serviceDiscovery.OPLock.Lock()
+	defer serviceDiscovery.OPLock.Unlock()
+
+	service ,ok := serviceDiscovery.list[serviceNode.ServiceName]
 	if !ok {
-		serviceManager.option.Log.Error("DelOneServiceNode err: ServiceName not in map")
+		serviceDiscovery.option.Log.Error("DelOneServiceNode err: ServiceName not in map")
 		return
 	}
-	if serviceManager.option.DiscoveryType == SERVICE_DISCOVERY_ETCD{
+	if serviceDiscovery.option.DiscoveryType == SERVICE_DISCOVERY_ETCD{
 		//name := serviceManager.option.Prefix +"/"+serviceNode.ServiceName
-		err := serviceManager.option.Etcd.DelOne(serviceNode.DBKey)
+		err := serviceDiscovery.option.Etcd.DelOne(serviceNode.DBKey)
 		if err != nil{
-			serviceManager.option.Log.Error("service.etcd.PutOne err " + err.Error())
+			serviceDiscovery.option.Log.Error("service.etcd.DelOne err " + err.Error())
 			return
 		}
 		hasDel := false
 		for k,n := range service.List{
 			if n.DBKey == serviceNode.DBKey{
-				//MyPrint(" has search , k:",k)
 				service.List = append( service.List[:k],service.List[k+1:]... )
 				hasDel = true
 				break
@@ -315,27 +323,29 @@ func (serviceManager *ServiceDiscovery)DelOneServiceNode(serviceNode *ServiceNod
 		}
 
 		if !hasDel{
-			serviceManager.option.Log.Warn("DelOneServiceNode err:no search node")
+			serviceDiscovery.option.Log.Warn("DelOneServiceNode err:no search node")
 			return
 		}
 
-		serviceManager.option.Log.Info("delete one ok.")
+		serviceDiscovery.option.Log.Info("delete one ok.")
 
 		if len(service.List) == 0{
 			service.Lease.Revoke(service.LeaseCancelCtx,service.LeaseGrantId)
-			delete(serviceManager.list,service.Name)
+			delete(serviceDiscovery.list,service.Name)
 		}
+	}else{
+		str := CONSUL_NOT_OPEN.Error()
+		serviceDiscovery.option.Log.Error(str)
 	}
 	//serviceManager.option.Log.Info("etcd DelOne :" + err.Error())
 }
 //动态（租约）注册一个服务，一但服务停止该服务自动取消
 func (serviceDiscovery *ServiceDiscovery)Register( serviceNode ServiceNode )error {
-	prinfIsSelf := "false"
-	if serviceNode.IsSelfReg {
-		prinfIsSelf = "true"
-	}
-	debugInfo := "RegisterService Name:"+ serviceNode.ServiceName +  " dns : "+serviceNode.GetDns()+ ", protocol:"+ strconv.Itoa(serviceNode.Protocol) + ", isSelf:"+prinfIsSelf
+	debugInfo := "RegisterService nodeInfo:"+ serviceNode.ToString()
 	serviceDiscovery.option.Log.Info(debugInfo)
+
+	serviceDiscovery.OPLock.Lock()
+	defer serviceDiscovery.OPLock.Unlock()
 
 	oriService ,empty := serviceDiscovery.option.ServiceManager.GetByName(serviceNode.ServiceName)
 	if empty{
@@ -345,11 +355,9 @@ func (serviceDiscovery *ServiceDiscovery)Register( serviceNode ServiceNode )erro
 	}
 
 	serviceNode.ServiceId = oriService.Id
-	//_ ,empty = serviceDiscovery.option.ServiceManager.GetById(serviceNode.ServiceId)
-	//if empty{
-	//	msg := "Register serviceId err:" + strconv.Itoa(serviceNode.ServiceId)
-	//	return errors.New(msg)
-	//}
+	serviceNode.DBKey = serviceDiscovery.GetServiceNodeDbKey( serviceNode.ServiceName,serviceNode.Ip , serviceNode.Port)
+	serviceNode.Log = serviceDiscovery.option.Log
+
 	service,ok := serviceDiscovery.list[serviceNode.ServiceName]
 	if !ok{
 		//自动创建新服务
@@ -360,8 +368,10 @@ func (serviceDiscovery *ServiceDiscovery)Register( serviceNode ServiceNode )erro
 			Name: serviceNode.ServiceName,
 			DBKey: dbKey,
 			LBType: serviceDiscovery.option.AutoCreateServiceLBType,
+			Log : serviceDiscovery.option.Log,
+			CreateTime: GetNowTimeSecondToInt(),
 		}
-		serviceNode.DBKey = serviceDiscovery.GetServiceNodeDbKey( serviceNode.ServiceName,serviceNode.Ip , serviceNode.Port)
+
 		err := newService.NewServiceNode(serviceNode)
 		if err != nil{
 			serviceDiscovery.option.Log.Error(err.Error())
@@ -383,32 +393,29 @@ func (serviceDiscovery *ServiceDiscovery)Register( serviceNode ServiceNode )erro
 
 			ctx, cancelFunc := context.WithCancel(context.Background())
 			lease, leaseGrantId, err := serviceDiscovery.option.Etcd.NewLeaseGrand(ctx, 60, 1)
-			//_      , leaseGrantId, err := serviceManager.etcd.NewLeaseGrand(ctx, 60, 1)
-			//service.option.Log.Debug("leaseGrantId : ",leaseGrantId ,err)
 			if err != nil {
+				serviceDiscovery.option.Log.Error(" apply etcd leaseGrand failed,err:"+err.Error())
 				cancelFunc()
 				return err
 			}
 			now := GetNowTimeSecondToInt()
-			//key := serviceDiscovery.option.Prefix + "/" + serviceNode.ServiceName + "/" + serviceNode.Ip + ":" + serviceNode.Port
-			key := serviceDiscovery.GetServiceNodeDbKey(serviceNode.ServiceName,serviceNode.Ip,serviceNode.Port)
-			serviceDiscovery.option.Log.Info("create service("+serviceNode.ServiceName+") lease... key:"+key)
+			//key := serviceDiscovery.GetServiceNodeDbKey(serviceNode.ServiceName,serviceNode.Ip,serviceNode.Port)
+			serviceDiscovery.option.Log.Info("create service("+serviceNode.ServiceName+") lease... key:"+serviceNode.DBKey)
 			val := strconv.Itoa(now)
-			_, err = serviceDiscovery.option.Etcd.putLease(ctx, leaseGrantId, key, val)
+			_, err = serviceDiscovery.option.Etcd.putLease(ctx, leaseGrantId, serviceNode.DBKey, val)
 			if err != nil {
+				serviceDiscovery.option.Log.Error(" put etcd lease failed,err:"+err.Error())
 				cancelFunc()
 				return errors.New("service.etcd.PutOne err :" + err.Error())
 			}
 
-			serviceNode.DBKey = key
-
 			service.Lease = lease
 			service.LeaseGrantId = leaseGrantId
-			service .LeaseCancelCtx = ctx
+			service.LeaseCancelCtx = ctx
 		}
 	}
 
-	serviceDiscovery.option.Log.Info("register one service success :"+service.Name + " dns:"+serviceNode.GetDns())
+	serviceDiscovery.option.Log.Info("register one service success :"+ serviceNode.ToString())
 	return nil
 }
 func (serviceManager *ServiceDiscovery)ShowJsonByService()string{

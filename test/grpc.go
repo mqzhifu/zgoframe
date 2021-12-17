@@ -24,12 +24,12 @@ func StartService()error{
 	serviceName :=  global.V.Service.Name
 	//serviceName := "pb.First"
 
-	//ip := "127.0.0.1"
-	//listenIp := "127.0.0.1"
-	//port := "6666"
-	ip := "8.142.177.235"
-	listenIp := "0.0.0.0"
-	port := "7777"
+	ip := "127.0.0.1"
+	listenIp := "127.0.0.1"
+	port := "6666"
+	//ip := "8.142.177.235"
+	//listenIp := "0.0.0.0"
+	//port := "7777"
 
 
 	node := util.ServiceNode{
@@ -81,8 +81,6 @@ func  StartClient()error{
 	if err != nil{
 		util.ExitPrint("GetServiceNodeByServiceName err:",err)
 	}
-
-
 
 	fmt.Println("serviceNode:",serviceNode)
 	grpcClientConn, err := global.V.Grpc.GetClient(serviceName,global.V.App.Id,serviceNode.Ip,serviceNode.Port)

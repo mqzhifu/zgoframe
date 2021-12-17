@@ -122,6 +122,8 @@ func (grpcManager *GrpcManager)GetClientByLoadBalance(serviceName string, appId 
 		return clientConn,err
 	}
 
+	grpcManager.Option.Log.Info("serviceNode LoadBalance , ip:"+serviceNode.Ip + " , port:"+serviceNode.Port)
+
 	grpcClientConn, err := grpcManager.GetClient(serviceName,appId,serviceNode.Ip,serviceNode.Port)
 	return grpcClientConn, err
 }

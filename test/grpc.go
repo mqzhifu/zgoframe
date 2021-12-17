@@ -24,10 +24,10 @@ func StartService()error{
 	serviceName :=  global.V.Service.Name
 	//serviceName := "pb.First"
 
-	//ip := "127.0.0.1"
-	//port := "6666"
-	ip := "8.142.177.235"
-	port := "7777"
+	ip := "127.0.0.1"
+	port := "6666"
+	//ip := "8.142.177.235"
+	//port := "7777"
 
 
 	node := util.ServiceNode{

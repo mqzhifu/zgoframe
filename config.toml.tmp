@@ -1,7 +1,8 @@
 [system]
 dbType = "mysql"
 env = ""
-appId = 5
+appId = 0
+serviceId = 1
 errorMsgFile = "/data/lang.txt"
 
 [jwt]
@@ -84,16 +85,18 @@ uri = "/api/v2/alerts"
 status = "close"
 
 [websocket]
-status = "open"
+status = "close"
 uri = "/ws"
 
 [grpc]
 status = "open"
 ip = "127.0.0.1"
 port = "6666"
+servicePackagePrefix = "pb"
 
-[service]
+[serviceDiscovery]
 status = "open"
+prefix = "/service"
 
 [email]
 status = "open"

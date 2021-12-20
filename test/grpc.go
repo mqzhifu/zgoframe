@@ -1,20 +1,20 @@
 package test
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"time"
 	"zgoframe/core/global"
 	"zgoframe/protobuf/pb"
 	"zgoframe/protobuf/pbservice"
 	"zgoframe/util"
-	"errors"
-	"context"
 )
 
 func Grpc(){
 	//StartClient()
-	//client2()
-	StartService()
+	client2()
+	//StartService()
 }
 
 

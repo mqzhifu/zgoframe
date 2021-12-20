@@ -473,7 +473,7 @@ func (serviceManager *ServiceDiscovery)Shutdown( ){
 }
 
 func (serviceDiscovery *ServiceDiscovery)EtcdKeyCovertStruct(key string)(etcdKeyInfo EtcdKeyInfo,err error){
-	eg := "/prefix/serviceName/127.0.0.1:8888"
+	eg := "/prefix/serviceName/127.0.0.1:9999"
 	//把前缀去掉~
 	keyUriStr := strings.Replace(key,serviceDiscovery.option.Prefix,"",-1)
 

@@ -28,12 +28,13 @@ func PathExists(path string) (bool, error) {
 	return false, err
 }
 
-
+//打开一个文件，并按照换行符 读取到一个数组中
 func ReadLine(fileName string) ([]string,error){
 	f, err := os.Open(fileName)
 	if err != nil {
 		return nil,err
 	}
+	defer f.Close()
 	buf := bufio.NewReader(f)
 	var result []string
 	for {
@@ -48,6 +49,30 @@ func ReadLine(fileName string) ([]string,error){
 		result = append(result,line)
 	}
 	return result,nil
+}
+
+//打开一个文件，并按照换行符 读取到一个数组中
+func ReadString(fileName string) (string,error){
+	f, err := os.Open(fileName)
+	if err != nil {
+		return "",err
+	}
+	defer f.Close()
+
+	//buf := bufio.NewReader(f)
+	var strings string
+	for {
+		buf := make([]byte, 1024)
+		n, err := f.Read(buf)
+		if err != nil && err != io.EOF {
+			panic(err)
+		}
+		if n == 0 {
+			break
+		}
+		strings += string(buf)
+	}
+	return strings,nil
 }
 
 //遍历一个目录的所有文件列表，但 子目录不处理

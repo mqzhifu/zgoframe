@@ -31,16 +31,17 @@ type ServiceNode struct {
 type Service struct {
 	Id 			int				`json:"id"`
 	Name 		string			`json:"name"`
-	Key 		string
-	DBKey 		string
-	Status 		int
-	Desc 		string
-	Type 		int
-	CreateTime 	int
-	SecretKey	string
-	Git 		string
-	LBType 		int
-	List 		[]*ServiceNode	`json:"list"`
+	Key 		string			`json:"key"`
+	DBKey 		string			`json:"db_key"`
+	Status 		int				`json:"status"`
+	Desc 		string			`json:"desc"`
+	Type 		int				`json:"type"`
+	CreateTime 	int				`json:"create_time"`
+	SecretKey	string			`json:"secret_key"`
+	Git 		string			`json:"git"`
+	LBType 		int				`json:"lb_type"`
+
+	List 		[]*ServiceNode	`json:"-"`
 
 	Log			*zap.Logger		`json:"-"`
 

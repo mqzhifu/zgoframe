@@ -19,7 +19,7 @@ watch = "open"
 [zap]
 status = "open"
 level = "info"
-dir = "/data/www/golang/src/logs/service/zgoframe"
+dir = "#log_dir#"
 showLine = true
 linkName = "latest_log"
 LogInConsole = true
@@ -32,9 +32,9 @@ autoAlert = true
 [redis]
 status = "open"
 db-number = 1
-ip = "127.0.0.1"
-port = "6379"
-password =  ''
+ip = "#redis_ip#"
+port = "#redis_ip#"
+password =  '#redis_ps#'
 
 [captcha]
 status = "open"
@@ -52,12 +52,12 @@ reqLimitTimes= 100
 
 [mysql]
 status = "open"
-ip = "127.0.0.1"
-port = "3306"
+ip = "#mysql_ip#"
+port = "#mysql_port#"
 config = "charset=utf8mb4&parseTime=True&loc=Local"
 DbName= "test"
-username = "root"
-password = "mqzhifu"
+username = "#mysql_user#"
+password = "#mysql_ps#"
 maxIdleConns = 10
 maxOpenConns = 100
 logMode = true
@@ -69,16 +69,16 @@ modelPath = "/data/www/golang/src/zgoframe/static/data/rbac_model.conf"
 
 [etcd]
 status = "open"
-ip = "8.142.177.235"
-port = "2379"
-username = ""
-password = ""
+ip = "#etcd_ip#"
+port = "#etcd_port#"
+username = "#etcd_user#"
+password = "#etcd_ps#"
 url = ""
 
 [alert]
 status = "open"
-host = "127.0.0.1"
-port = "9093"
+host = "#alert_ip#"
+port = "#alert_port#"
 uri = "/api/v2/alerts"
 
 [metrics]

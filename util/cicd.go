@@ -15,6 +15,7 @@ import (
 
 const (
 	DIR_SEPARATOR = "/"
+	STR_SEPARATOR
 )
 
 type CicdPublish struct {
@@ -78,6 +79,8 @@ type SuperVisor struct {
 	RpcPort string
 	ConfTemplateFile string
 	ConfTemplateFileContent string
+	ServiceName string
+	ConfDir string
 	Separator string
 	Cli *supervisord.Client
 }
@@ -86,15 +89,14 @@ type CicdManager struct {
 	Option CicdManagerOption
 }
 
-func NewSuperVisor(ip string,port string,ConfTemplateFile string)*SuperVisor{
+func NewSuperVisor(ip string,port string,ConfTemplateFile string,serviceName string,confDir string)*SuperVisor{
 	superVisor := new(SuperVisor)
 	superVisor.Ip = ip
 	superVisor.RpcPort = port
 
-
-
-
-	superVisor.Separator = "#"
+	superVisor.ConfDir = confDir
+	superVisor.ServiceName = serviceName
+	superVisor.Separator = STR_SEPARATOR
 
 	superVisorConfTemplateFileContent ,err := ReadString(ConfTemplateFile)
 	if err != nil{
@@ -104,7 +106,7 @@ func NewSuperVisor(ip string,port string,ConfTemplateFile string)*SuperVisor{
 	superVisor.ConfTemplateFile = ConfTemplateFile
 	superVisor.ConfTemplateFileContent = superVisorConfTemplateFileContent
 
-	ExitPrint(superVisorConfTemplateFileContent)
+	//ExitPrint(superVisorConfTemplateFileContent)
 
 	return superVisor
 }
@@ -119,30 +121,40 @@ func(superVisor *SuperVisor) Init(){
 
 }
 
-func(superVisor *SuperVisor)CreateServiceConfFile(string){
+func(superVisor *SuperVisor)CreateServiceConfFile(content string)error{
+	fileName := superVisor.ConfDir +STR_SEPARATOR +  superVisor.ServiceName + ".ini"
+	file ,err := os.Create(fileName)
+	MyPrint("os.Create:" ,fileName)
+	if err!= nil{
+		MyPrint("os.Create :",fileName , " err:",err)
+		return err
+	}
 
+	file.Write([]byte(content))
+	return nil
 }
 
 func(superVisor *SuperVisor)ReplaceConfTemplate(replaceSource SuperVisorReplace)string{
 
 	content := superVisor.ConfTemplateFileContent
 	key := superVisor.Separator+"script_name"+superVisor.Separator
+	MyPrint(key)
 	content = strings.Replace(content,key,replaceSource.script_name,-1)
 
-	key = superVisor.Separator+"script_name"+superVisor.Separator
-	content = strings.Replace(content,key,replaceSource.script_name,-1)
+	key = superVisor.Separator+"startup_script_command"+superVisor.Separator
+	content = strings.Replace(content,key,replaceSource.startup_script_command,-1)
 
-	key = superVisor.Separator+"script_name"+superVisor.Separator
-	content = strings.Replace(content,key,replaceSource.script_name,-1)
+	key = superVisor.Separator+"script_work_dir"+superVisor.Separator
+	content = strings.Replace(content,key,replaceSource.script_work_dir,-1)
 
-	key = superVisor.Separator+"script_name"+superVisor.Separator
-	content = strings.Replace(content,key,replaceSource.script_name,-1)
+	key = superVisor.Separator+"stdout_logfile"+superVisor.Separator
+	content = strings.Replace(content,key,replaceSource.stdout_logfile,-1)
 
-	key = superVisor.Separator+"script_name"+superVisor.Separator
-	content = strings.Replace(content,key,replaceSource.script_name,-1)
+	key = superVisor.Separator+"stderr_logfile"+superVisor.Separator
+	content = strings.Replace(content,key,replaceSource.stderr_logfile,-1)
 
-	key = superVisor.Separator+"script_name"+superVisor.Separator
-	content = strings.Replace(content,key,replaceSource.script_name,-1)
+	key = superVisor.Separator+"process_name"+superVisor.Separator
+	content = strings.Replace(content,key,replaceSource.process_name,-1)
 
 	return content
 }
@@ -176,8 +188,9 @@ func NewCicdManager(cicdManagerOption CicdManagerOption)*CicdManager{
 func(cicdManager *CicdManager)ReplaceInstance(content string,serviceName string ,env string)string{
 	category := []string{"mysql","redis","etcd","rabbitmq","kafka","log","alert"}
 	//attr := []string{"ip","port","user","ps"}
-	separator := "#"
+	separator := STR_SEPARATOR
 	content = strings.Replace(content,separator + "env" + separator,env,-1)
+	content = strings.Replace(content,separator + "log_dir" + separator,cicdManager.Option.Config.System.LogDir,-1)
 	for _,v := range category{
 		//for _,attrOne := range attr{
 			instance,empty :=  cicdManager.Option.InstanceManager.GetByEnvName(env,serviceName)
@@ -195,7 +208,6 @@ func(cicdManager *CicdManager)ReplaceInstance(content string,serviceName string 
 
 			key = separator+v +"_" + "ps" + "_" + instance.Name  +separator
 			content = strings.Replace(content,key,instance.Ps,-1)
-
 
 		//}
 	}
@@ -239,47 +251,46 @@ func(cicdManager *CicdManager)Init(){
 
 			MyPrint("gitLastCommitId:",gitLastCommitId)
 			//刚刚clone完后，项目的目录
-			serviceCodeGitClonePath := serviceGitClonePath + "/" + service.Name
+			serviceCodeGitClonePath := serviceGitClonePath + DIR_SEPARATOR + service.Name
 			//新刚刚克隆好的项目目录，移动一个新目录下，新目录名：git_master_versionId + 当前时间
 			newGitCodeDir := servicePath + "/" + strconv.Itoa(GetNowTimeSecondToInt())  + "_" + gitLastCommitId
 			MyPrint("service code move :",serviceCodeGitClonePath +" to "+ newGitCodeDir)
 			//执行 移动操作
 			os.Rename(serviceCodeGitClonePath,newGitCodeDir)
 
-			ExitPrint(1111)
 			//项目自带的CICD配置文件，这里有 服务启动脚本 和 依赖的环境
-			serviceSelfCICDConf := newGitCodeDir + "/" + serviceSelfCICDConfFile
+			serviceSelfCICDConf := newGitCodeDir + DIR_SEPARATOR + serviceSelfCICDConfFile
 			MyPrint("read file:"+serviceSelfCICDConf)
 			serviceCICDConfig := ServiceCICDConfig{}
 			ReadConfFile(serviceSelfCICDConf,&serviceCICDConfig)
 			PrintStruct(serviceCICDConfig,":")
 
 			//生成该服务的，superVisor 配置文件
-			serviceSuperVisor := NewSuperVisor(server.OutIp,cicdManager.Option.Config.SuperVisor.RpcPort, cicdManager.Option.Config.SuperVisor.ConfTemplateFile)
+			serviceSuperVisor := NewSuperVisor(server.OutIp,cicdManager.Option.Config.SuperVisor.RpcPort, cicdManager.Option.Config.SuperVisor.ConfTemplateFile,service.Name,cicdManager.Option.Config.SuperVisor.ConfDir)
 			superVisorReplace := SuperVisorReplace{
 				script_name: service.Name,
 				startup_script_command:serviceCICDConfig.System.Startup,
 				script_work_dir :serviceMasterPath,
-				stdout_logfile :serviceBaseDir + " /" + "super_visor_stdout.log",
-				stderr_logfile :serviceBaseDir + " /" + "super_visor_stderr.log",
+				stdout_logfile :serviceBaseDir + DIR_SEPARATOR + "super_visor_stdout.log",
+				stderr_logfile :serviceBaseDir + DIR_SEPARATOR + "super_visor_stderr.log",
 				process_name :"service_"+service.Name,
 			}
 			//替换配置文件中的动态值，并生成配置文件
 			serviceConfFileContent := serviceSuperVisor.ReplaceConfTemplate(superVisorReplace)
 			serviceSuperVisor.CreateServiceConfFile(serviceConfFileContent)
-			ExitPrint(33)
 
 			//读取该服务自己的配置文件
-			serviceSelfConfigTmpFileDir := newGitCodeDir + "/" + serviceSelfConfigTmpFile
+			serviceSelfConfigTmpFileDir := newGitCodeDir + DIR_SEPARATOR + serviceSelfConfigTmpFile
 			MyPrint("read file:"+serviceSelfConfigTmpFileDir)
-			//serviceSelfConfigTmpFileContent,err := ReadString(serviceSelfConfigTmpFileDir)
-			//if err != nil{
-			//	ExitPrint("read file err ,"+err.Error())
-			//}
+			serviceSelfConfigTmpFileContent,err := ReadString(serviceSelfConfigTmpFileDir)
+			if err != nil{
+				ExitPrint("read file err ,"+err.Error())
+			}
 
 			//开始替换 服务自己配置文件中的，实例信息，如：IP PORT
-			//serviceSelfConfigTmpFileContentNew := cicdManager.ReplaceInstance(serviceSelfConfigTmpFileContent,service.Name,server.Env)
+			serviceSelfConfigTmpFileContentNew := cicdManager.ReplaceInstance(serviceSelfConfigTmpFileContent,service.Name,server.Env)
 
+			ExitPrint(serviceSelfConfigTmpFileContentNew)
 			//先执行 服务自带的 shell 预处理
 			if serviceCICDConfig.System.Command != ""{
 				ExecShellCommand(serviceCICDConfig.System.Command,"")
@@ -295,7 +306,7 @@ func(cicdManager *CicdManager)Init(){
 
 			//将master软链 指向 上面刚刚clone下的最新代码上
 			MyPrint("os.Symlink:",newGitCodeDir , " to ",serviceMasterPath)
-			err := os.Symlink(newGitCodeDir, serviceMasterPath)
+			err = os.Symlink(newGitCodeDir, serviceMasterPath)
 			if err != nil{
 				ExitPrint("os.Symlink err :",err)
 			}

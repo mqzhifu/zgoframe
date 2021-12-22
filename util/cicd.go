@@ -1,12 +1,17 @@
 package util
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/abrander/go-supervisord"
+	"github.com/gin-gonic/gin"
+	"net/http"
 	"os"
 	"os/exec"
 	"strconv"
 	"strings"
+	"time"
+	"zgoframe/model"
 )
 
 //已知：依赖
@@ -15,26 +20,17 @@ import (
 
 const (
 	DIR_SEPARATOR = "/"
-	STR_SEPARATOR
+	STR_SEPARATOR = "#"
 )
 
-type CicdPublish struct {
-	Id				int
-	RegTime 		int
-	Status 			int
-	ServiceName 	string
-	Logs			[]string
-	TotalExecTime 	int
-	Server 			HostServer
-}
-
-type CicdConfigSystem struct {
+//===============配置 结构体 开始===================
+type ConfigCicdSystem struct {
 	Env []string
 	LogDir string
 	ServiceDir string
 }
 
-type ServiceCICDConfigSystem struct{
+type ConfigServiceCICDSystem struct{
 	Startup	string
 	ListeningPorts string
 	TestUnit string
@@ -42,28 +38,31 @@ type ServiceCICDConfigSystem struct{
 	Command string
 }
 
-type ServiceCICDConfigDepend struct{
+type ConfigServiceCICDDepend struct{
 	Go string
 	Node string
 	Mysql string
 	Redis string
 }
 
-type ServiceCICDConfig struct {
-	System	ServiceCICDConfigSystem
-	Depend	ServiceCICDConfigDepend
+type ConfigServiceCICD struct {
+	System	ConfigServiceCICDSystem
+	Depend	ConfigServiceCICDDepend
 }
 
-type CicdConfigSuperVisor struct {
+type ConfigCicdSuperVisor struct {
 	RpcPort	string
 	ConfTemplateFile string
 	ConfDir string
 }
 
-type CicdConfig struct {
-	System CicdConfigSystem
-	SuperVisor CicdConfigSuperVisor
+type ConfigCicd struct {
+	System ConfigCicdSystem
+	SuperVisor ConfigCicdSuperVisor
 }
+//===============配置 结构体 结束===================
+
+
 
 type SuperVisorReplace struct{
 	script_name	string
@@ -74,51 +73,21 @@ type SuperVisorReplace struct{
 	process_name string
 }
 
-type SuperVisor struct {
-	Ip	string
-	RpcPort string
-	ConfTemplateFile string
-	ConfTemplateFileContent string
-	ServiceName string
-	ConfDir string
-	Separator string
-	Cli *supervisord.Client
+//==============superVisor===========
+
+type CicdPublish struct {
+	Id				int
+	RegTime 		int
+	Status 			int
+	ServiceName 	string
+	Logs			[]string
+	TotalExecTime 	int
+	Server 			Server
 }
+
 
 type CicdManager struct {
 	Option CicdManagerOption
-}
-
-func NewSuperVisor(ip string,port string,ConfTemplateFile string,serviceName string,confDir string)*SuperVisor{
-	superVisor := new(SuperVisor)
-	superVisor.Ip = ip
-	superVisor.RpcPort = port
-
-	superVisor.ConfDir = confDir
-	superVisor.ServiceName = serviceName
-	superVisor.Separator = STR_SEPARATOR
-
-	superVisorConfTemplateFileContent ,err := ReadString(ConfTemplateFile)
-	if err != nil{
-		ExitPrint("read superVisorConfTemplateFileContent err.")
-	}
-
-	superVisor.ConfTemplateFile = ConfTemplateFile
-	superVisor.ConfTemplateFileContent = superVisorConfTemplateFileContent
-
-	//ExitPrint(superVisorConfTemplateFileContent)
-
-	return superVisor
-}
-
-func(superVisor *SuperVisor) Init(){
-	dns := "http://" + superVisor.Ip + ":" + superVisor.RpcPort + "/RPC2"
-	c, err := supervisord.NewClient(dns)
-	if err != nil{
-
-	}
-	superVisor.Cli = c
-
 }
 
 func(superVisor *SuperVisor)CreateServiceConfFile(content string)error{
@@ -134,54 +103,20 @@ func(superVisor *SuperVisor)CreateServiceConfFile(content string)error{
 	return nil
 }
 
-func(superVisor *SuperVisor)ReplaceConfTemplate(replaceSource SuperVisorReplace)string{
 
-	content := superVisor.ConfTemplateFileContent
-	key := superVisor.Separator+"script_name"+superVisor.Separator
-	MyPrint(key)
-	content = strings.Replace(content,key,replaceSource.script_name,-1)
-
-	key = superVisor.Separator+"startup_script_command"+superVisor.Separator
-	content = strings.Replace(content,key,replaceSource.startup_script_command,-1)
-
-	key = superVisor.Separator+"script_work_dir"+superVisor.Separator
-	content = strings.Replace(content,key,replaceSource.script_work_dir,-1)
-
-	key = superVisor.Separator+"stdout_logfile"+superVisor.Separator
-	content = strings.Replace(content,key,replaceSource.stdout_logfile,-1)
-
-	key = superVisor.Separator+"stderr_logfile"+superVisor.Separator
-	content = strings.Replace(content,key,replaceSource.stderr_logfile,-1)
-
-	key = superVisor.Separator+"process_name"+superVisor.Separator
-	content = strings.Replace(content,key,replaceSource.process_name,-1)
-
-	return content
-}
 
 type CicdManagerOption struct{
-	ServerList map[int]HostServer
-	AppList map[int]App
-	ServiceList map[int]Service
+	ServerList 		map[int]Server
+	AppList 		map[int]App
+	ServiceList 	map[int]Service
 	InstanceManager *InstanceManager
-	Config CicdConfig
-	PublicManager *CICDPublicManager
+	Config 			ConfigCicd
+	PublicManager 	*CICDPublicManager
 }
 
 func NewCicdManager(cicdManagerOption CicdManagerOption)*CicdManager{
 	cicdManager := new(CicdManager)
 	cicdManager.Option = cicdManagerOption
-
-	//cicdManager.Option.AppList = make(map[int]App)
-	//cicdManager.ServerList = hostServerList
-	//cicdManager.AppList[1] = App{
-	//	Name: "zgoframe",
-	//	Git: "git://github.com/mqzhifu/zgoframe.git",
-	//}
-
-	//cicdManager.ServerList["127.0.0.1"] = Server{
-	//	Ip: "127.0.0.1",
-	//}
 
 	return cicdManager
 }
@@ -193,20 +128,21 @@ func(cicdManager *CicdManager)ReplaceInstance(content string,serviceName string 
 	content = strings.Replace(content,separator + "log_dir" + separator,cicdManager.Option.Config.System.LogDir,-1)
 	for _,v := range category{
 		//for _,attrOne := range attr{
-			instance,empty :=  cicdManager.Option.InstanceManager.GetByEnvName(env,serviceName)
+			instance,empty :=  cicdManager.Option.InstanceManager.GetByEnvName(env,v)
 			if empty{
-				ExitPrint("cicdManager.Option.InstanceManager.GetByEnvName is empty,",env,serviceName)
+				MyPrint("cicdManager.Option.InstanceManager.GetByEnvName is empty,",env,v)
+				continue
 			}
-			key := separator+v +"_" + "ip" + "_" + instance.Name  +separator
-			content = strings.Replace(content,key,strconv.Itoa(instance.Id),-1)
+			key := separator+ v  +"_" + "ip"  +separator
+			content = strings.Replace(content,key,instance.Host,-1)
 
-			key = separator+v +"_" + "port" + "_" + instance.Name  +separator
+		key = separator  + v  +"_" + "port"  +separator
 			content = strings.Replace(content,key,instance.Port,-1)
 
-			key = separator+v +"_" + "user" + "_" + instance.Name  +separator
+		key = separator  + v  +"_" + "user"  +separator
 			content = strings.Replace(content,key,instance.User,-1)
 
-			key = separator+v +"_" + "ps" + "_" + instance.Name  +separator
+		key = separator  + v  +"_" + "ps"  +separator
 			content = strings.Replace(content,key,instance.Ps,-1)
 
 		//}
@@ -219,12 +155,9 @@ func(cicdManager *CicdManager)Init(){
 	serviceMasterPathName := "master"
 	serviceSelfCICDConfFile := "cicd.toml"
 	serviceSelfConfigTmpFile := "config.toml.tmp"
-	//fmt.Println("superVisorPort:",superVisorPort)
-	//fmt.Println("serviceBaseDir:",serviceBaseDir)
-	//fmt.Println("serviceMasterPathName:",serviceMasterPathName)
-
-
-
+	serviceSelfConfigFile := "config.toml"
+	gitCloneTmpDirName := "clone"
+	cicdShellFile := "./cicd.sh"
 
 	for _,server :=range cicdManager.Option.ServerList{
 		fmt.Println("for each servce:" + server.OutIp + " " + server.Env)
@@ -242,18 +175,18 @@ func(cicdManager *CicdManager)Init(){
 			MyPrint("serviceMasterPath:"+serviceMasterPath)
 
 			//git clone 目录
-			serviceGitClonePath := servicePath + DIR_SEPARATOR + "clone"
+			serviceGitClonePath := servicePath + DIR_SEPARATOR + gitCloneTmpDirName
 			pathNotExistCreate(serviceGitClonePath)
 			//通过shell 执行git clone ，同时获取当前clone master 的版本号
 			//gitLastCommitId :=GitCloneAndGetLastCommitIdByShell(serviceGitClonePath,service.Name,service.Git)
 			shellArgc := service.Git + " " + serviceGitClonePath + " " +  service.Name
-			gitLastCommitId := ExecShellFile("./cicd.sh",shellArgc)
+			gitLastCommitId := ExecShellFile(cicdShellFile,shellArgc)
 
 			MyPrint("gitLastCommitId:",gitLastCommitId)
 			//刚刚clone完后，项目的目录
 			serviceCodeGitClonePath := serviceGitClonePath + DIR_SEPARATOR + service.Name
 			//新刚刚克隆好的项目目录，移动一个新目录下，新目录名：git_master_versionId + 当前时间
-			newGitCodeDir := servicePath + "/" + strconv.Itoa(GetNowTimeSecondToInt())  + "_" + gitLastCommitId
+			newGitCodeDir := servicePath + DIR_SEPARATOR + strconv.Itoa(GetNowTimeSecondToInt())  + "_" + gitLastCommitId
 			MyPrint("service code move :",serviceCodeGitClonePath +" to "+ newGitCodeDir)
 			//执行 移动操作
 			os.Rename(serviceCodeGitClonePath,newGitCodeDir)
@@ -261,19 +194,26 @@ func(cicdManager *CicdManager)Init(){
 			//项目自带的CICD配置文件，这里有 服务启动脚本 和 依赖的环境
 			serviceSelfCICDConf := newGitCodeDir + DIR_SEPARATOR + serviceSelfCICDConfFile
 			MyPrint("read file:"+serviceSelfCICDConf)
-			serviceCICDConfig := ServiceCICDConfig{}
+			serviceCICDConfig := ConfigServiceCICD{}
 			ReadConfFile(serviceSelfCICDConf,&serviceCICDConfig)
 			PrintStruct(serviceCICDConfig,":")
 
 			//生成该服务的，superVisor 配置文件
-			serviceSuperVisor := NewSuperVisor(server.OutIp,cicdManager.Option.Config.SuperVisor.RpcPort, cicdManager.Option.Config.SuperVisor.ConfTemplateFile,service.Name,cicdManager.Option.Config.SuperVisor.ConfDir)
+			superVisorOption := SuperVisorOption{
+				Ip:	server.OutIp,
+				Port: cicdManager.Option.Config.SuperVisor.RpcPort,
+				ConfTemplateFile: cicdManager.Option.Config.SuperVisor.ConfTemplateFile,
+				ServiceName:	service.Name,
+				ConfDir: cicdManager.Option.Config.SuperVisor.ConfDir,
+			}
+			serviceSuperVisor := NewSuperVisor(superVisorOption)
 			superVisorReplace := SuperVisorReplace{
 				script_name: service.Name,
 				startup_script_command:serviceCICDConfig.System.Startup,
 				script_work_dir :serviceMasterPath,
 				stdout_logfile :serviceBaseDir + DIR_SEPARATOR + "super_visor_stdout.log",
 				stderr_logfile :serviceBaseDir + DIR_SEPARATOR + "super_visor_stderr.log",
-				process_name :"service_"+service.Name,
+				process_name : service.Name,
 			}
 			//替换配置文件中的动态值，并生成配置文件
 			serviceConfFileContent := serviceSuperVisor.ReplaceConfTemplate(superVisorReplace)
@@ -289,30 +229,209 @@ func(cicdManager *CicdManager)Init(){
 
 			//开始替换 服务自己配置文件中的，实例信息，如：IP PORT
 			serviceSelfConfigTmpFileContentNew := cicdManager.ReplaceInstance(serviceSelfConfigTmpFileContent,service.Name,server.Env)
+			newConfig := newGitCodeDir + DIR_SEPARATOR + serviceSelfConfigFile
+			newConfigFile ,_:= os.Create(newConfig)
+			newConfigFile.Write([]byte(serviceSelfConfigTmpFileContentNew))
 
-			ExitPrint(serviceSelfConfigTmpFileContentNew)
 			//先执行 服务自带的 shell 预处理
-			if serviceCICDConfig.System.Command != ""{
-				ExecShellCommand(serviceCICDConfig.System.Command,"")
-			}
-
-			if serviceCICDConfig.System.Build != ""{
-				ExecShellCommand(serviceCICDConfig.System.Build,"")
-			}
-
-			if serviceCICDConfig.System.TestUnit != ""{
-				ExecShellCommand(serviceCICDConfig.System.TestUnit,"")
-			}
+			//if serviceCICDConfig.System.Command != ""{
+			//	ExecShellCommand(serviceCICDConfig.System.Command,"")
+			//}
+			//
+			//if serviceCICDConfig.System.Build != ""{
+			//	ExecShellCommand(serviceCICDConfig.System.Build,"")
+			//}
+			//
+			//if serviceCICDConfig.System.TestUnit != ""{
+			//	ExecShellCommand(serviceCICDConfig.System.TestUnit,"")
+			//}
 
 			//将master软链 指向 上面刚刚clone下的最新代码上
 			MyPrint("os.Symlink:",newGitCodeDir , " to ",serviceMasterPath)
+			pathExist ,_ := PathExists(serviceMasterPath)
+			if pathExist{
+				MyPrint("master path exist , so need del .",serviceMasterPath)
+				err = os.Remove(serviceMasterPath)
+				if err != nil{
+					MyPrint("os.Remove ",serviceMasterPath, " err:",err)
+				}
+			}
+
 			err = os.Symlink(newGitCodeDir, serviceMasterPath)
 			if err != nil{
 				ExitPrint("os.Symlink err :",err)
 			}
+			cicdManager.Option.PublicManager.UpStatus(publish,2)
 			return
 		}
 	}
+}
+
+
+func (cicdManager *CicdManager)StartHttp(staticDir string){
+	//HttpZapLog = zapLog
+	ginRouter := gin.Default()
+	//单独的日志记录，GIN默认的日志不会持久化的
+	//ginRouter.Use(ZapLog())
+	//加载静态目录
+	//	Router.Static("/form-generator", "./resource/page")
+	//加载swagger api 工具
+	//ginRouter.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	//设置跨域
+	//ginRouter.Use(httpmiddleware.Cors())
+
+	ginRouter.StaticFS("/static",http.Dir(staticDir))
+
+
+	ginRouter.GET("/getServerList", cicdManager.GetServerList)
+	ginRouter.GET("/getInstanceList", cicdManager.GetInstanceList)
+	ginRouter.GET("/getPublishList", cicdManager.GetPublishList)
+	ginRouter.GET("/getSuperVisorList", cicdManager.GetSuperVisorList)
+	ginRouter.GET("/getServiceList", cicdManager.GetServiceList)
+
+	ginRouter.Run("127.0.0.1:1111")
+
+	//404
+	//ginRouter.NoMethod(HandleNotFound)
+}
+
+func (cicdManager *CicdManager)GetServiceList(c *gin.Context){
+
+	str,_ := json.Marshal(cicdManager.Option.ServiceList)
+	c.String(200,string(str))
+
+}
+
+func (cicdManager *CicdManager)GetServerList(c *gin.Context){
+
+	str,_ := json.Marshal(cicdManager.Option.ServerList)
+	c.String(200,string(str))
+
+}
+
+func (cicdManager *CicdManager)GetInstanceList(c *gin.Context){
+
+	str,_ := json.Marshal(cicdManager.Option.InstanceManager.Pool)
+	c.String(200,string(str))
+
+}
+
+func (cicdManager *CicdManager)GetPublishList(c *gin.Context){
+	listArr,_ := cicdManager.Option.PublicManager.GetList()
+	listMap := make(map[int]model.CICDPublish)
+	for _,v:= range listArr{
+		listMap[v.Id] = v
+	}
+	str,_ := json.Marshal(listArr)
+	c.String(200,string(str))
+
+}
+//这里有一条简单的操作，80端口基本上都得用，测试服务器状态，用ping curl 也可以.
+func (cicdManager *CicdManager)TestServerStateHttp(hostUri string)int{
+	httpClient := http.Client{
+		Timeout: time.Second * 1,
+	}
+
+	resp,err := httpClient.Get(hostUri)
+	if err != nil{
+		MyPrint("http get err:",err)
+		return 0
+	}
+
+	MyPrint("http get status:",resp.Status)
+
+	return 1
+
+}
+
+func (cicdManager *CicdManager)GetSuperVisorList(c *gin.Context){
+	serviceBaseDir := cicdManager.Option.Config.System.ServiceDir
+
+	if len(cicdManager.Option.ServerList) == 0{
+		MyPrint("GetSuperVisorList err:ServerList is empty")
+		return
+	}
+
+	if len(cicdManager.Option.ServiceList) == 0{
+		MyPrint("GetSuperVisorList err:ServiceList is empty")
+		return
+	}
+
+	MyPrint("serverList len:",len(cicdManager.Option.ServerList), " ServiceList len:",len(cicdManager.Option.ServiceList))
+
+	//serverId=>superVisorList
+	serverServiceSuperVisor := make(map[int][]supervisord.ProcessInfo)
+	serverStatus := make(map[int]int)
+	for _,server :=range cicdManager.Option.ServerList{
+		fmt.Println("for each servce:" + server.OutIp + " " + server.Env)
+
+		testServerRs := cicdManager.TestServerStateHttp("http://" + server.OutIp)
+		if testServerRs == 0{
+			MyPrint("")
+			serverStatus[server.Id] = 3
+			continue
+		}
+		//c.String(200,"ok")
+		//return
+		//生成该服务的，superVisor 配置文件
+		superVisorOption := SuperVisorOption{
+			Ip:	server.OutIp,
+			Port: cicdManager.Option.Config.SuperVisor.RpcPort,
+			ConfTemplateFile: cicdManager.Option.Config.SuperVisor.ConfTemplateFile,
+			ServiceName : "" ,
+			ConfDir: cicdManager.Option.Config.SuperVisor.ConfDir,
+		}
+		serviceSuperVisor := NewSuperVisor(superVisorOption)
+		err := serviceSuperVisor.InitXMLRpc()
+		if err != nil {
+			MyPrint("serviceSuperVisor InitXMLRpc err:",err)
+			serverStatus[server.Id] = 4
+			continue
+		}
+
+		serverStatus[server.Id] = server.Status
+
+		processInfoList,_ := serviceSuperVisor.Cli.GetAllProcessInfo()
+		for _,service :=range cicdManager.Option.ServiceList{
+			servicePath := serviceBaseDir + DIR_SEPARATOR +  service.Name
+			MyPrint("servicePath:",servicePath)
+
+			superVisorProcessInfo := supervisord.ProcessInfo{
+				Name: SUPER_VISOR_PROCESS_NAME_SERVICE_PREFIX + service.Name,
+				State: 999,//项目未部署过
+			}
+
+			for _,process :=range processInfoList{
+				if process.Name == SUPER_VISOR_PROCESS_NAME_SERVICE_PREFIX + service.Name{
+					superVisorProcessInfo = process
+					break
+				}
+			}
+
+			_ ,ok := serverServiceSuperVisor[server.Id]
+			if !ok {
+				MyPrint(22222)
+				serverServiceSuperVisor[server.Id] = []supervisord.ProcessInfo{superVisorProcessInfo}
+			}else{
+				MyPrint(3333)
+				serverServiceSuperVisor[server.Id] = append(serverServiceSuperVisor[server.Id],superVisorProcessInfo)
+			}
+		}
+
+	}
+
+	type response struct{
+		ServerStatus 			map[int]int							`json:"server_status"`
+		ServerServiceSuperVisor	map[int][]supervisord.ProcessInfo	`json:"server_service_super_visor"`
+	}
+
+	myresponse := response{
+		ServerStatus : serverStatus,
+		ServerServiceSuperVisor: serverServiceSuperVisor,
+	}
+	str ,err := json.Marshal(myresponse)
+	MyPrint("json err:",err)
+	c.String(200 , string(str) )
 }
 
 func pathNotExistCreate(path string){
@@ -337,6 +456,7 @@ func ExecShellCommand(command string ,argc string)string{
 	output, err := c.CombinedOutput()
 	if err != nil{
 		fmt.Println("exec.Command err:",err)
+		return ""
 	}
 	outStr := string(output)
 	outArr := strings.Split(outStr,"\n")

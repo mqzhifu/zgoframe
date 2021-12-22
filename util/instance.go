@@ -15,12 +15,12 @@ const(
 
 type Instance struct {
 	Id int
-	Name        string
-	Host 		string
-	Port        string
-	Env 		string
-	User 		string
-	Ps 			string
+	Name        string	`json:"name"`
+	Host 		string	`json:"host"`
+	Port        string	`json:"port"`
+	Env 		string	`json:"env"`
+	User 		string	`json:"user"`
+	Ps 			string	`json:"ps"`
 }
 
 //var APP_TYPE_MAP = map[int]string{
@@ -51,7 +51,7 @@ func (instanceManager *InstanceManager)initInstancePool()error{
 }
 
 func (instanceManager *InstanceManager)GetFromDb()error{
-	db := instanceManager.Gorm.Model(&model.Host{})
+	db := instanceManager.Gorm.Model(&model.Instance{})
 	var instanceList []model.Instance
 	err := db.Where(" status = ?  ", 1).Find(&instanceList).Error
 	if err != nil{
@@ -66,7 +66,7 @@ func (instanceManager *InstanceManager)GetFromDb()error{
 			Id 		: v.Id,
 			Name	: v.Name,
 			Host 	: v.Host,
-			Port   : v.Port,
+			Port    : v.Port,
 			Env 	: v.Env,
 			User 	: v.User,
 			Ps 	: v.Ps,

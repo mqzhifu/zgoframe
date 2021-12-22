@@ -9,7 +9,7 @@ func test_cicd(){
 
 	//config := Config{}
 
-	cicdConfig := util.CicdConfig{}
+	cicdConfig := util.ConfigCicd{}
 	configFile := "host" + "." +"toml"
 	util.ReadConfFile(configFile,&cicdConfig)
 	util.PrintStruct(cicdConfig, " : ")
@@ -17,13 +17,13 @@ func test_cicd(){
 
 	instanceManager ,_:= util.NewInstanceManager(global.V.Gorm)
 
-	hostServer,_ := util.NewHostServer(global.V.Gorm)
-	hostServerList := hostServer.Pool
+	serverManger,_ := util.NewServerManger(global.V.Gorm)
+	serverList := serverManger.Pool
 
 	publicManager := util.NewCICDPublicManager(global.V.Gorm)
 
 	op := util.CicdManagerOption{
-		ServerList :hostServerList,
+		ServerList :serverList,
 		Config: cicdConfig,
 		ServiceList: global.V.ServiceManager.Pool,
 		InstanceManager :instanceManager,
@@ -31,7 +31,10 @@ func test_cicd(){
 	}
 
 	cicd := util.NewCicdManager(op)
-	cicd.Init()
+
+	//cicd.GetSuperVisorList()
+	//cicd.Init()
+	go cicd.StartHttp(global.C.Http.StaticPath)
 }
 
 

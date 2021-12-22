@@ -1,0 +1,299 @@
+<html>
+
+    <head>
+        <title>cicd</title>
+        <script src="/static/js/jquery.min.js" type="text/javascript" ></script>
+    </head>
+    <style>
+    table
+    {
+        border-collapse: collapse;
+        /*margin: 0 auto;*/
+        text-align: left;
+    }
+    table td, table th
+    {
+        border: 1px solid #cad9ea;
+        color: #666;
+        height: 30px;
+    }
+    table thead th
+    {
+        background-color: #CCE8EB;
+        width: 100px;
+    }
+    table tr:nth-child(odd)
+    {
+        background: #fff;
+    }
+    table tr:nth-child(even) {
+        background: #F5FAFA;
+    }
+
+    .portlet {
+        border:1px solid #ff0000;
+        margin:5px;
+    }
+
+    </style>
+
+<body>
+
+server service superVisor :<br/>
+<div id="server_service_super_visor">
+
+</div>
+
+
+
+
+server:<br/>
+<table class='table' id="table_server_list">
+
+</table>
+<br/>
+
+service:<br/>
+<table class='table' id="table_service_list">
+
+</table>
+<br/>
+
+instance:<br/>
+<table class='table' id="table_instance_list">
+
+</table>
+<br/>
+
+publish:<br/>
+<table class='table' id="table_publish_list">
+
+</table>
+<b/>
+
+
+
+
+
+<script>
+    var serviceList = null;
+    var serverList = null;
+    var instanceList = null;
+    var publishList = null;
+
+    var serverStatusDesc = {1:"正常",2:"关闭",3:"down机",4:"未开启superVisor"};
+
+    $(document).ready(function(){
+        $.ajax({
+            type: "GET",
+            contentType: "application/json;charset=utf-8",
+            url: "/getServerList",
+            // data: {username:$("#username").val(), content:$("#content").val()},
+            // dataType: "json",
+            success: function(backData){
+                // backData = eval(   backData  );
+                // if(backData.Code != 200){
+                //     return alert("ajax req back data err");
+                // }
+                // data = backData
+                serverList =  $.parseJSON(backData)
+                ProcessList("table_server_list",serverList)
+            }
+        });
+    });
+
+    $(document).ready(function(){
+        $.ajax({
+            type: "GET",
+            contentType: "application/json;charset=utf-8",
+            url: "/getInstanceList",
+            success: function(backData){
+                instanceList = $.parseJSON(backData)
+                ProcessList("table_instance_list",instanceList)
+            }
+        });
+    });
+
+    $(document).ready(function(){
+        $.ajax({
+            type: "GET",
+            contentType: "application/json;charset=utf-8",
+            url: "/getPublishList",
+            success: function(backData){
+                publishList = $.parseJSON(backData)
+                ProcessPublishList("table_publish_list",publishList)
+            }
+        });
+    });
+
+    $(document).ready(function(){
+        $.ajax({
+            type: "GET",
+            contentType: "application/json;charset=utf-8",
+            url: "/getServiceList",
+            success: function(backData){
+                serviceList =  $.parseJSON(backData)
+                ProcessServiceList("table_service_list",serviceList)
+            }
+        });
+    });
+
+    $(document).ready(function(){
+        $.ajax({
+            type: "GET",
+            contentType: "application/json;charset=utf-8",
+            url: "/getSuperVisorList",
+            success: function(backData){
+                var serverService = $.parseJSON(backData)
+                ProcessServerService( serverService)
+            }
+        });
+    });
+
+
+    function GetOptBnt(){
+        var optBnt = "<a href='#'>停止</a>&nbsp;";
+        optBnt += "<a href='#'>重启</a>&nbsp;";
+        optBnt += "<a href='#'>启动</a>&nbsp;";
+        optBnt += "<a href='#'>部署代码</a>&nbsp;";
+        optBnt += "<a href='#'>发布代码</a>&nbsp;";
+        optBnt += "<a href='#'>回滚</a>&nbsp;";
+
+        return optBnt;
+    }
+
+    function ProcessServerService(serverService){
+        var serverStatsList = serverService.server_status;
+        // alert(serverStatsList);
+        var serviceSuperVisorList = serverService.server_service_super_visor;
+        var tableHtml = "<table><th>server_id</th><th>status</th><th>env</th><th>service_super_visor</th>";
+
+        for(let serverId  in serverStatsList){
+            var status = serverStatsList[serverId];
+            var tr = "<tr><td>"+serverId+"</td><td>"+serverStatusDesc[status]+"</td><td>"+serverList[serverId].env+"</td>";
+            if (status == 4 || status == 3){
+                alert("server status err.");
+                tr +="<td></td></tr>";
+            }else{
+                tr += "<td>";
+                var serviceSuperVisor = serviceSuperVisorList[serverId];
+
+                var processListTable = "<table>";
+
+
+                for(var i=0;i<serviceSuperVisor.length;i++){
+                    processListTable += "<tr><td>"+serviceSuperVisor[i].Name+"</td><td>"+serviceSuperVisor[i].State+"</td><td>&nbsp;</td><td>"+GetOptBnt()+"</td></tr>";
+                }
+                processListTable += "</table>";
+
+                tr += processListTable;
+                tr += "</td>";
+            }
+            tableHtml += tr;
+        }
+
+        tableHtml += "</table>";
+
+        $("#server_service_super_visor").html(tableHtml);
+    }
+
+    function ProcessServiceList(objId,data_list){
+        var tableObj = $("#"+objId);
+        // alert(servier_list[0]);
+        // var server_list =
+        var tableTh = "";
+
+        var server_list_first_key = 0;
+        var trTdAll = "";
+        for(let key  in data_list){
+            server_list_first_key = key;
+            var trTd = "<tr>";
+            for(let key2  in data_list[key]){
+                trTd += "<td>"+data_list[key][key2]+ "</td>";
+            }
+            trTd += "<td><a href='#'>"+GetOptBnt()+"</a></td></tr>"
+            trTdAll += trTd;
+        }
+
+        for(let key  in data_list[server_list_first_key]){
+            tableTh += "<th>"+key+"</th>";
+        }
+
+        tableTh += "<th></th>";
+
+        // alert(trTdAll);
+        // var html = tableTh + trTdAll;
+        // alert(html);
+        // $("#table_server_list").html(html);
+        tableObj.append(tableTh);
+        tableObj.append(trTdAll);
+    }
+
+    function ProcessPublishList(objId,data_list){
+        var tableObj = $("#"+objId);
+        // alert(servier_list[0]);
+        // var server_list =
+        var tableTh = "";
+
+        var server_list_first_key = 0;
+        var trTdAll = "";
+        for(let key  in data_list){
+            server_list_first_key = key;
+            var trTd = "<tr>";
+            for(let key2  in data_list[key]){
+                trTd += "<td>"+data_list[key][key2]+ "</td>";
+            }
+            trTd += "<td><a href='#'>取消发布</a>&nbsp;<a href='#'>重新发布</a></td></tr>"
+            trTdAll += trTd;
+        }
+
+        for(let key  in data_list[server_list_first_key]){
+            tableTh += "<th>"+key+"</th>";
+        }
+
+        tableTh += "<th></th>";
+
+        // alert(trTdAll);
+        // var html = tableTh + trTdAll;
+        // alert(html);
+        // $("#table_server_list").html(html);
+        tableObj.append(tableTh);
+        tableObj.append(trTdAll);
+    }
+
+
+    function ProcessList(objId,data_list){
+        var tableObj = $("#"+objId);
+        // alert(servier_list[0]);
+        // var server_list =
+        var tableTh = "";
+
+        var server_list_first_key = 0;
+        var trTdAll = "";
+        for(let key  in data_list){
+            server_list_first_key = key;
+            var trTd = "<tr>";
+            for(let key2  in data_list[key]){
+                trTd += "<td>"+data_list[key][key2]+ "</td>";
+            }
+            trTd += "</tr>"
+            trTdAll += trTd;
+        }
+
+        for(let key  in data_list[server_list_first_key]){
+            tableTh += "<th>"+key+"</th>";
+        }
+
+        // alert(trTdAll);
+        // var html = tableTh + trTdAll;
+        // alert(html);
+        // $("#table_server_list").html(html);
+        tableObj.append(tableTh);
+        tableObj.append(trTdAll);
+    }
+
+</script>
+
+</body>
+
+</html>

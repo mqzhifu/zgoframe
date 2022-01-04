@@ -3,7 +3,13 @@ syntax = "proto3";
 option go_package ="./;pb";
 
 service Zgoframe {
-  rpc SayHello (RequestUser) returns (ResponseUser) {}
+    rpc SayHello (RequestUser) returns (ResponseUser) {}
+    rpc Comm (RequestUser) returns (ResponseUser) {}
+}
+
+
+service Sync {
+    rpc Heartbeat (CSHeartbeat) returns (SCHeartbeat) {}
 }
 
 message RequestUser{
@@ -14,4 +20,31 @@ message RequestUser{
 message ResponseUser{
     uint64      id              = 1;
     string      nickname        = 2;
+}
+
+message CSHeartbeat {
+    uint64  time     = 1;
+    uint32  uid      = 2;
+}
+
+message SCHeartbeat {
+    uint64  time     = 1;
+    uint32  uid      = 2;
+}
+
+
+
+
+message CommMessage{
+    uint32      id      =1;
+    bytes       body    =2;
+}
+
+message Common{
+    string request_id  = 1 ;
+    string trace_id  = 2 ;
+    int64 client_req_time = 3 ;
+    int64 client_receive_time = 4 ;
+    int64 server_receive_time = 5 ;
+    int64 server_response_time = 6 ;
 }

@@ -48,7 +48,7 @@ func StartService()error{
 	//	util.ExitPrint("GetServiceNodeByServiceName err")
 	//}
 
-	MyGrpcServer,err := global.V.Grpc.GetServer(serviceName,node.ListenIp,node.Port)
+	MyGrpcService,err := global.V.Grpc.CreateService(serviceName,node.ListenIp,node.Port)
 	//grpcOption := util.GrpcOption{
 	//	AppId 		: global.V.App.Id,
 	//	ListenIp	: global.C.Grpc.Ip,
@@ -63,9 +63,10 @@ func StartService()error{
 		return errors.New(err.Error())
 	}
 	//挂载服务的handler
-	pb.RegisterZgoframeServer(MyGrpcServer.GrpcServer, &pbservice.Zgoframe{})
+	pb.RegisterZgoframeServer(MyGrpcService.GrpcServer, &pbservice.Zgoframe{})
+	//pb.RegisterSyncServer(MyGrpcService.GrpcServer, &pbservice.Sync{})
 	fmt.Println("grpc ServerStart...")
-	MyGrpcServer.ServerStart()
+	MyGrpcService.ServerStart()
 	fmt.Println("GrpcServer.Serve:",err)
 	return nil
 }

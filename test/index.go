@@ -1,9 +1,9 @@
 package test
 
 func Index(){
-	//Grpc()
+	Grpc()
 	//test_supervisor()
 	//test_command()
-	test_cicd()
+	//test_cicd()
 	//test_consul()
 }

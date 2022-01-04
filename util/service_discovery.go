@@ -346,7 +346,7 @@ func (serviceDiscovery *ServiceDiscovery)Register( serviceNode ServiceNode )erro
 
 	serviceDiscovery.OPLock.Lock()
 	defer serviceDiscovery.OPLock.Unlock()
-
+	//从服务发现中，找寻服务是否存在(新服务必须申请且注册到DB中)
 	oriService ,empty := serviceDiscovery.option.ServiceManager.GetByName(serviceNode.ServiceName)
 	if empty{
 		msg := "Register serviceName err:" + serviceNode.ServiceName
@@ -355,6 +355,7 @@ func (serviceDiscovery *ServiceDiscovery)Register( serviceNode ServiceNode )erro
 	}
 
 	serviceNode.ServiceId = oriService.Id
+	//找到公用 DB KEY
 	serviceNode.DBKey = serviceDiscovery.GetServiceNodeDbKey( serviceNode.ServiceName,serviceNode.Ip , serviceNode.Port)
 	serviceNode.Log = serviceDiscovery.option.Log
 

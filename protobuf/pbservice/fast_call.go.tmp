@@ -1,0 +1,42 @@
+
+
+    func (grpcManager *GrpcManager)GetFrameSyncClient(name string)(pb.FrameSyncClient,error){
+        client, err := grpcManager.GetClientByLoadBalance(name,0)
+        if err != nil{
+            return nil,err
+        }
+    
+        return client.(pb.FrameSyncClient),nil
+    }
+    func (grpcManager *GrpcManager)GetGatewayClient(name string)(pb.GatewayClient,error){
+        client, err := grpcManager.GetClientByLoadBalance(name,0)
+        if err != nil{
+            return nil,err
+        }
+    
+        return client.(pb.GatewayClient),nil
+    }
+    func (grpcManager *GrpcManager)GetZgoframeClient(name string)(pb.ZgoframeClient,error){
+        client, err := grpcManager.GetClientByLoadBalance(name,0)
+        if err != nil{
+            return nil,err
+        }
+    
+        return client.(pb.ZgoframeClient),nil
+    }
+
+
+    func  (myGrpcClient *MyGrpcClient)MountClientToConnect(serviceName string){
+        var incClient interface{}
+        switch serviceName {
+                case "FrameSync":
+        incClient = pb.NewFrameSyncClient(myGrpcClient.ClientConn)
+    case "Gateway":
+        incClient = pb.NewGatewayClient(myGrpcClient.ClientConn)
+    case "Zgoframe":
+        incClient = pb.NewZgoframeClient(myGrpcClient.ClientConn)
+
+        }
+    
+        myGrpcClient.GrpcClientList[serviceName] = incClient
+	}

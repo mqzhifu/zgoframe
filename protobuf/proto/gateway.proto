@@ -1,0 +1,148 @@
+syntax = "proto3";
+
+import "proto/common.proto";
+
+package pb;
+option go_package ="./;pb";
+
+
+service FrameSync {
+
+    rpc ClientLogin             (RequestLogin)              returns (ResponseLoginRes) {}//登陆
+    rpc ClientPing              (RequestClientPing)         returns (ResponseServerPong) {}//客户端PING服务端
+    rpc ClientPong              (RequestClientPong)         returns (ResponseServerPong) {}//C端响应S端PIN
+    rpc ClientHeartbeat         (RequestClientHeartbeat)    returns (Empty) {}//心跳
+
+    rpc ServerPing              (ResponseServerPing)        returns (RequestClientPong) {}//S端测试RTT
+    rpc ServerPong              (ResponseServerPong)        returns (Empty) {}//S端测试RTT
+    rpc ServerHeartbeat         (RequestClientHeartbeat)    returns (Empty) {}//心跳
+    rpc ServerLogin             (ResponseLoginRes)          returns (Empty) {}//登陆
+
+    rpc KickOff                 (ResponseKickOff)           returns (Empty) {}//该玩家在其它地方登陆，踢掉了当前连接
+
+    rpc ProjectPush             (RequestProjectPush)        returns (ResponseProjectPush) {}//service通知网关，给某些用户推送消息
+}
+
+
+message RequestProjectPush{
+    string  project_id  = 1;
+    string  msg         = 2;
+    string  target_uids = 3;
+    string  action_id   = 4;
+    string  service_id  = 5;
+}
+
+message ResponseProjectPush{
+    int32   code        = 1;
+    string  msg         = 2;
+}
+
+message RequestLogin{
+    string token = 1;
+}
+
+message RequestClientPong{
+    int64 add_time              = 1;
+    int64 client_receive_time   = 2;
+    int64 server_response_time  = 3;
+    int64 rtt_timeout           = 4;
+    int32 rtt_times             = 5;
+}
+
+message RequestClientPing{
+    int64 add_time                = 1;
+    int64 client_receive_time     = 2;
+    int64 server_response_time    = 3;
+    int64 rtt_timeout             = 4;
+    int32 rtt_times               = 5;
+}
+
+message RequestClientHeartbeat{
+    int64 time = 1;
+}
+
+message ResponseLoginRes{
+    int32   code          = 1;
+    string  errMsg       = 2;
+    int32   uid       = 3;
+}
+
+message ResponseKickOff{
+    int64 time = 1;
+}
+
+message ResponseServerPing{
+    int64 add_time                = 1;
+    int64 client_receive_time     = 2;
+    int64 server_response_time    = 3;
+    int64 rtt_timeout             = 4;
+    int32 rtt_times               = 5;
+}
+
+message ResponseServerPong{
+    int64 add_time              = 1;
+    int64 client_receive_time   = 2;
+    int64 server_response_time  = 3;
+    int64 rtt_timeout           = 4;
+    int32 rtt_times             = 5;
+}
+
+
+
+message CfgServer{
+    	string  ListenIp            = 1;
+    	string  OutIp               = 2;
+    	string  HttpdRootPath       = 3;
+    	string  HttpPort            = 4;
+    	string  WsPort              = 5;
+    	string  UdpPort             = 6;
+    	int32   Protocol            = 7;
+    	string  WsUri               = 8;
+    	int32   ContentType         = 9;
+
+    	string  LoginAuthType       =10;
+    	string  LoginAuthSecretKey  =11;
+
+    	int32   MaxClientConnNum    =12;
+    	int32   MsgContentMax       =13;
+    	int64   IOTimeout           =14;
+    	int32   ConnTimeout         =15;
+
+    	int32   MapSize             =16;
+    	int32   RoomPeople          =17;
+    	int32   RoomTimeout         =18;
+    	int32   OffLineWaitTime     =19;
+
+    	int32   LockMode            =20;
+    	int32   FPS                 =21;
+    	int32   RoomReadyTimeout    =22;
+    	int32   Store               =23;
+    	string  TcpPort             =24;
+}
+
+message CfgProtocolActions{
+    map<int32,CfgActions> client = 1;
+    map<int32,CfgActions> server = 2;
+}
+
+message CfgActions{
+    int32 id        = 1;
+    string action   = 2;
+    string desc     = 3;
+    string demo     = 4;
+}
+
+message Msg{
+    int32   data_length      = 1;
+    int32   content_type     = 2;
+    int32   protocol_type    = 3;
+
+    int32   action_id        = 4;
+    int32   service_id       = 5;
+
+    string  action           = 6;
+    string  content          = 7;
+
+    string  reserved         = 8;
+}
+

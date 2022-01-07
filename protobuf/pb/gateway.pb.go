@@ -24,6 +24,124 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
 
+type RequestProjectPush struct {
+	ProjectId            string   `protobuf:"bytes,1,opt,name=project_id,json=projectId,proto3" json:"project_id,omitempty"`
+	Msg                  string   `protobuf:"bytes,2,opt,name=msg,proto3" json:"msg,omitempty"`
+	TargetUids           string   `protobuf:"bytes,3,opt,name=target_uids,json=targetUids,proto3" json:"target_uids,omitempty"`
+	ActionId             string   `protobuf:"bytes,4,opt,name=action_id,json=actionId,proto3" json:"action_id,omitempty"`
+	ServiceId            string   `protobuf:"bytes,5,opt,name=service_id,json=serviceId,proto3" json:"service_id,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *RequestProjectPush) Reset()         { *m = RequestProjectPush{} }
+func (m *RequestProjectPush) String() string { return proto.CompactTextString(m) }
+func (*RequestProjectPush) ProtoMessage()    {}
+func (*RequestProjectPush) Descriptor() ([]byte, []int) {
+	return fileDescriptor_85acbde2a6adc437, []int{0}
+}
+
+func (m *RequestProjectPush) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_RequestProjectPush.Unmarshal(m, b)
+}
+func (m *RequestProjectPush) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_RequestProjectPush.Marshal(b, m, deterministic)
+}
+func (m *RequestProjectPush) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_RequestProjectPush.Merge(m, src)
+}
+func (m *RequestProjectPush) XXX_Size() int {
+	return xxx_messageInfo_RequestProjectPush.Size(m)
+}
+func (m *RequestProjectPush) XXX_DiscardUnknown() {
+	xxx_messageInfo_RequestProjectPush.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_RequestProjectPush proto.InternalMessageInfo
+
+func (m *RequestProjectPush) GetProjectId() string {
+	if m != nil {
+		return m.ProjectId
+	}
+	return ""
+}
+
+func (m *RequestProjectPush) GetMsg() string {
+	if m != nil {
+		return m.Msg
+	}
+	return ""
+}
+
+func (m *RequestProjectPush) GetTargetUids() string {
+	if m != nil {
+		return m.TargetUids
+	}
+	return ""
+}
+
+func (m *RequestProjectPush) GetActionId() string {
+	if m != nil {
+		return m.ActionId
+	}
+	return ""
+}
+
+func (m *RequestProjectPush) GetServiceId() string {
+	if m != nil {
+		return m.ServiceId
+	}
+	return ""
+}
+
+type ResponseProjectPush struct {
+	Code                 int32    `protobuf:"varint,1,opt,name=code,proto3" json:"code,omitempty"`
+	Msg                  string   `protobuf:"bytes,2,opt,name=msg,proto3" json:"msg,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *ResponseProjectPush) Reset()         { *m = ResponseProjectPush{} }
+func (m *ResponseProjectPush) String() string { return proto.CompactTextString(m) }
+func (*ResponseProjectPush) ProtoMessage()    {}
+func (*ResponseProjectPush) Descriptor() ([]byte, []int) {
+	return fileDescriptor_85acbde2a6adc437, []int{1}
+}
+
+func (m *ResponseProjectPush) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_ResponseProjectPush.Unmarshal(m, b)
+}
+func (m *ResponseProjectPush) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_ResponseProjectPush.Marshal(b, m, deterministic)
+}
+func (m *ResponseProjectPush) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ResponseProjectPush.Merge(m, src)
+}
+func (m *ResponseProjectPush) XXX_Size() int {
+	return xxx_messageInfo_ResponseProjectPush.Size(m)
+}
+func (m *ResponseProjectPush) XXX_DiscardUnknown() {
+	xxx_messageInfo_ResponseProjectPush.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ResponseProjectPush proto.InternalMessageInfo
+
+func (m *ResponseProjectPush) GetCode() int32 {
+	if m != nil {
+		return m.Code
+	}
+	return 0
+}
+
+func (m *ResponseProjectPush) GetMsg() string {
+	if m != nil {
+		return m.Msg
+	}
+	return ""
+}
+
 type RequestLogin struct {
 	Token                string   `protobuf:"bytes,1,opt,name=token,proto3" json:"token,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
@@ -35,7 +153,7 @@ func (m *RequestLogin) Reset()         { *m = RequestLogin{} }
 func (m *RequestLogin) String() string { return proto.CompactTextString(m) }
 func (*RequestLogin) ProtoMessage()    {}
 func (*RequestLogin) Descriptor() ([]byte, []int) {
-	return fileDescriptor_85acbde2a6adc437, []int{0}
+	return fileDescriptor_85acbde2a6adc437, []int{2}
 }
 
 func (m *RequestLogin) XXX_Unmarshal(b []byte) error {
@@ -78,7 +196,7 @@ func (m *RequestClientPong) Reset()         { *m = RequestClientPong{} }
 func (m *RequestClientPong) String() string { return proto.CompactTextString(m) }
 func (*RequestClientPong) ProtoMessage()    {}
 func (*RequestClientPong) Descriptor() ([]byte, []int) {
-	return fileDescriptor_85acbde2a6adc437, []int{1}
+	return fileDescriptor_85acbde2a6adc437, []int{3}
 }
 
 func (m *RequestClientPong) XXX_Unmarshal(b []byte) error {
@@ -149,7 +267,7 @@ func (m *RequestClientPing) Reset()         { *m = RequestClientPing{} }
 func (m *RequestClientPing) String() string { return proto.CompactTextString(m) }
 func (*RequestClientPing) ProtoMessage()    {}
 func (*RequestClientPing) Descriptor() ([]byte, []int) {
-	return fileDescriptor_85acbde2a6adc437, []int{2}
+	return fileDescriptor_85acbde2a6adc437, []int{4}
 }
 
 func (m *RequestClientPing) XXX_Unmarshal(b []byte) error {
@@ -216,7 +334,7 @@ func (m *RequestClientHeartbeat) Reset()         { *m = RequestClientHeartbeat{}
 func (m *RequestClientHeartbeat) String() string { return proto.CompactTextString(m) }
 func (*RequestClientHeartbeat) ProtoMessage()    {}
 func (*RequestClientHeartbeat) Descriptor() ([]byte, []int) {
-	return fileDescriptor_85acbde2a6adc437, []int{3}
+	return fileDescriptor_85acbde2a6adc437, []int{5}
 }
 
 func (m *RequestClientHeartbeat) XXX_Unmarshal(b []byte) error {
@@ -257,7 +375,7 @@ func (m *ResponseLoginRes) Reset()         { *m = ResponseLoginRes{} }
 func (m *ResponseLoginRes) String() string { return proto.CompactTextString(m) }
 func (*ResponseLoginRes) ProtoMessage()    {}
 func (*ResponseLoginRes) Descriptor() ([]byte, []int) {
-	return fileDescriptor_85acbde2a6adc437, []int{4}
+	return fileDescriptor_85acbde2a6adc437, []int{6}
 }
 
 func (m *ResponseLoginRes) XXX_Unmarshal(b []byte) error {
@@ -310,7 +428,7 @@ func (m *ResponseKickOff) Reset()         { *m = ResponseKickOff{} }
 func (m *ResponseKickOff) String() string { return proto.CompactTextString(m) }
 func (*ResponseKickOff) ProtoMessage()    {}
 func (*ResponseKickOff) Descriptor() ([]byte, []int) {
-	return fileDescriptor_85acbde2a6adc437, []int{5}
+	return fileDescriptor_85acbde2a6adc437, []int{7}
 }
 
 func (m *ResponseKickOff) XXX_Unmarshal(b []byte) error {
@@ -353,7 +471,7 @@ func (m *ResponseServerPing) Reset()         { *m = ResponseServerPing{} }
 func (m *ResponseServerPing) String() string { return proto.CompactTextString(m) }
 func (*ResponseServerPing) ProtoMessage()    {}
 func (*ResponseServerPing) Descriptor() ([]byte, []int) {
-	return fileDescriptor_85acbde2a6adc437, []int{6}
+	return fileDescriptor_85acbde2a6adc437, []int{8}
 }
 
 func (m *ResponseServerPing) XXX_Unmarshal(b []byte) error {
@@ -424,7 +542,7 @@ func (m *ResponseServerPong) Reset()         { *m = ResponseServerPong{} }
 func (m *ResponseServerPong) String() string { return proto.CompactTextString(m) }
 func (*ResponseServerPong) ProtoMessage()    {}
 func (*ResponseServerPong) Descriptor() ([]byte, []int) {
-	return fileDescriptor_85acbde2a6adc437, []int{7}
+	return fileDescriptor_85acbde2a6adc437, []int{9}
 }
 
 func (m *ResponseServerPong) XXX_Unmarshal(b []byte) error {
@@ -514,7 +632,7 @@ func (m *CfgServer) Reset()         { *m = CfgServer{} }
 func (m *CfgServer) String() string { return proto.CompactTextString(m) }
 func (*CfgServer) ProtoMessage()    {}
 func (*CfgServer) Descriptor() ([]byte, []int) {
-	return fileDescriptor_85acbde2a6adc437, []int{8}
+	return fileDescriptor_85acbde2a6adc437, []int{10}
 }
 
 func (m *CfgServer) XXX_Unmarshal(b []byte) error {
@@ -715,7 +833,7 @@ func (m *CfgProtocolActions) Reset()         { *m = CfgProtocolActions{} }
 func (m *CfgProtocolActions) String() string { return proto.CompactTextString(m) }
 func (*CfgProtocolActions) ProtoMessage()    {}
 func (*CfgProtocolActions) Descriptor() ([]byte, []int) {
-	return fileDescriptor_85acbde2a6adc437, []int{9}
+	return fileDescriptor_85acbde2a6adc437, []int{11}
 }
 
 func (m *CfgProtocolActions) XXX_Unmarshal(b []byte) error {
@@ -764,7 +882,7 @@ func (m *CfgActions) Reset()         { *m = CfgActions{} }
 func (m *CfgActions) String() string { return proto.CompactTextString(m) }
 func (*CfgActions) ProtoMessage()    {}
 func (*CfgActions) Descriptor() ([]byte, []int) {
-	return fileDescriptor_85acbde2a6adc437, []int{10}
+	return fileDescriptor_85acbde2a6adc437, []int{12}
 }
 
 func (m *CfgActions) XXX_Unmarshal(b []byte) error {
@@ -831,7 +949,7 @@ func (m *Msg) Reset()         { *m = Msg{} }
 func (m *Msg) String() string { return proto.CompactTextString(m) }
 func (*Msg) ProtoMessage()    {}
 func (*Msg) Descriptor() ([]byte, []int) {
-	return fileDescriptor_85acbde2a6adc437, []int{11}
+	return fileDescriptor_85acbde2a6adc437, []int{13}
 }
 
 func (m *Msg) XXX_Unmarshal(b []byte) error {
@@ -909,6 +1027,8 @@ func (m *Msg) GetReserved() string {
 }
 
 func init() {
+	proto.RegisterType((*RequestProjectPush)(nil), "pb.RequestProjectPush")
+	proto.RegisterType((*ResponseProjectPush)(nil), "pb.ResponseProjectPush")
 	proto.RegisterType((*RequestLogin)(nil), "pb.RequestLogin")
 	proto.RegisterType((*RequestClientPong)(nil), "pb.RequestClientPong")
 	proto.RegisterType((*RequestClientPing)(nil), "pb.RequestClientPing")
@@ -928,71 +1048,78 @@ func init() {
 func init() { proto.RegisterFile("proto/gateway.proto", fileDescriptor_85acbde2a6adc437) }
 
 var fileDescriptor_85acbde2a6adc437 = []byte{
-	// 1023 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xd4, 0x56, 0x5f, 0x6f, 0x23, 0x35,
-	0x10, 0x27, 0xc9, 0x6d, 0x92, 0x9d, 0xf4, 0x4f, 0xea, 0xf6, 0x8a, 0xc9, 0x01, 0x57, 0x42, 0x91,
-	0x2a, 0x38, 0xe5, 0x4a, 0x79, 0x41, 0xe5, 0xe9, 0x88, 0xae, 0xba, 0xe8, 0x1a, 0x1a, 0x6d, 0x7a,
-	0xaa, 0x84, 0x90, 0xa2, 0xcd, 0xae, 0x93, 0xae, 0x9a, 0xac, 0x97, 0x5d, 0xa7, 0x5c, 0xf8, 0x38,
-	0x7c, 0x20, 0x78, 0xe7, 0x93, 0xf0, 0x82, 0x84, 0x3c, 0x63, 0xa7, 0x9b, 0x34, 0xe5, 0x01, 0x9e,
-	0xfa, 0xe6, 0xf9, 0xcd, 0x6f, 0xc6, 0x33, 0xf6, 0xcc, 0xd8, 0xb0, 0x9b, 0xa4, 0x52, 0xc9, 0x97,
-	0x63, 0x5f, 0x89, 0x5f, 0xfc, 0x79, 0x0b, 0x25, 0x56, 0x4c, 0x86, 0x0d, 0x46, 0x8a, 0x40, 0x4e,
-	0xa7, 0x32, 0x26, 0xbc, 0x79, 0x08, 0x1b, 0x9e, 0xf8, 0x79, 0x26, 0x32, 0x75, 0x2e, 0xc7, 0x51,
-	0xcc, 0xf6, 0xc0, 0x51, 0xf2, 0x46, 0xc4, 0xbc, 0x70, 0x50, 0x38, 0x72, 0x3d, 0x12, 0x9a, 0xbf,
-	0x17, 0x60, 0xc7, 0xd0, 0xda, 0x93, 0x48, 0xc4, 0xaa, 0x27, 0xe3, 0x31, 0xfb, 0x08, 0xaa, 0x7e,
-	0x18, 0x0e, 0x54, 0x34, 0x15, 0x48, 0x2f, 0x79, 0x15, 0x3f, 0x0c, 0x2f, 0xa3, 0xa9, 0x60, 0x2d,
-	0xd8, 0x0d, 0x90, 0x38, 0x48, 0x45, 0x20, 0xa2, 0x5b, 0x41, 0xac, 0x22, 0xb2, 0x76, 0x48, 0xe5,
-	0x91, 0x06, 0xf9, 0xc7, 0xb0, 0x97, 0x89, 0xf4, 0x56, 0xa4, 0x83, 0x54, 0x64, 0x89, 0x8c, 0x33,
-	0x63, 0x50, 0x42, 0x03, 0x46, 0x3a, 0xcf, 0xa8, 0xd0, 0xe2, 0x39, 0xd4, 0x52, 0xa5, 0x90, 0x25,
-	0x67, 0x8a, 0x3f, 0x41, 0x22, 0xa4, 0x4a, 0x5d, 0x12, 0xc2, 0x9e, 0x81, 0x6b, 0x09, 0x19, 0x77,
-	0x0e, 0x0a, 0x47, 0x8e, 0x57, 0x35, 0xea, 0x6c, 0x4d, 0x42, 0xd1, 0xe3, 0x4e, 0xe8, 0x05, 0xec,
-	0x2f, 0xe5, 0xf3, 0x46, 0xf8, 0xa9, 0x1a, 0x0a, 0x5f, 0x31, 0x06, 0x4f, 0x72, 0x09, 0xe1, 0xba,
-	0xd9, 0x83, 0xba, 0xdd, 0x1b, 0xaf, 0xdd, 0x13, 0x99, 0xe6, 0x05, 0x32, 0x24, 0x9e, 0xe3, 0xe1,
-	0x9a, 0xed, 0x43, 0x59, 0xa4, 0x69, 0x37, 0x1b, 0x63, 0xa2, 0xae, 0x67, 0x24, 0x56, 0x87, 0xd2,
-	0x2c, 0x0a, 0x31, 0x19, 0xc7, 0xd3, 0xcb, 0xe6, 0x17, 0xb0, 0x6d, 0x3d, 0xbe, 0x8d, 0x82, 0x9b,
-	0x8b, 0xd1, 0x68, 0xed, 0xc6, 0x7f, 0x14, 0x80, 0x59, 0x5e, 0x1f, 0xcf, 0xe0, 0xb1, 0x1f, 0xfc,
-	0x9a, 0x8c, 0x1e, 0x79, 0x6f, 0xfc, 0xed, 0x80, 0xdb, 0x1e, 0x8d, 0x29, 0x19, 0xd6, 0x80, 0xea,
-	0x79, 0x94, 0x29, 0x11, 0x77, 0x12, 0x33, 0x13, 0x16, 0xb2, 0x1e, 0x16, 0x17, 0x33, 0xd5, 0x49,
-	0x4c, 0x75, 0x90, 0xc0, 0x0e, 0x61, 0xf3, 0x8d, 0x52, 0x49, 0xe8, 0x49, 0xa9, 0x7a, 0xbe, 0xba,
-	0xc6, 0x40, 0x5d, 0x6f, 0x19, 0xd4, 0x7e, 0x35, 0xd0, 0x93, 0x29, 0x05, 0xe8, 0x7a, 0x0b, 0x59,
-	0x97, 0xdd, 0x55, 0x86, 0x1a, 0x87, 0xca, 0x8e, 0x24, 0xc6, 0xa1, 0xf2, 0x2e, 0x24, 0x93, 0x32,
-	0x2a, 0xac, 0xa8, 0xbd, 0xf5, 0xf4, 0x3c, 0x0b, 0xe4, 0x84, 0x57, 0x28, 0x1f, 0x2b, 0xeb, 0x28,
-	0xaf, 0xb2, 0x77, 0x69, 0xc4, 0xab, 0x14, 0x25, 0x0a, 0xec, 0x00, 0x6a, 0x6d, 0x19, 0x2b, 0x11,
-	0xab, 0xcb, 0x79, 0x22, 0xb8, 0x8b, 0x46, 0x79, 0x48, 0xe7, 0x81, 0xcd, 0xf1, 0x6a, 0xa6, 0xae,
-	0x91, 0x03, 0x94, 0xc7, 0x12, 0xc8, 0x5a, 0xc0, 0x16, 0x40, 0x5f, 0x04, 0xa9, 0x50, 0x6f, 0xc5,
-	0x9c, 0xd7, 0x90, 0xba, 0x46, 0xc3, 0xbe, 0x84, 0x7a, 0xd7, 0x7f, 0x4f, 0x4d, 0xda, 0x96, 0x71,
-	0xfc, 0xc3, 0x6c, 0xca, 0x37, 0x70, 0xf3, 0x7b, 0xb8, 0x8e, 0xa0, 0x9b, 0x8d, 0x4d, 0x4c, 0x5d,
-	0xff, 0x3d, 0xdf, 0x44, 0xe2, 0x32, 0xc8, 0x3e, 0x06, 0xb7, 0x73, 0x61, 0x6e, 0x96, 0x6f, 0xe1,
-	0x5d, 0xdf, 0x01, 0x26, 0xcf, 0xd8, 0xea, 0xb7, 0x17, 0x79, 0x5a, 0x48, 0x9f, 0x6a, 0xd7, 0x4f,
-	0xfa, 0xd1, 0xaf, 0x82, 0xd7, 0x51, 0x6b, 0x45, 0xf6, 0x29, 0x80, 0x27, 0xe5, 0xb4, 0x27, 0x64,
-	0x32, 0x11, 0x7c, 0x07, 0x95, 0x39, 0x44, 0xfb, 0xd6, 0x92, 0xf5, 0xcd, 0xc8, 0x77, 0x0e, 0x62,
-	0x47, 0xb0, 0x7d, 0x31, 0x1a, 0x9d, 0x47, 0xb1, 0xb8, 0xf2, 0x23, 0xac, 0x2f, 0xbe, 0x8b, 0xac,
-	0x55, 0x18, 0xeb, 0x4c, 0x06, 0x37, 0x5d, 0x3d, 0x82, 0xf6, 0xe8, 0x06, 0xad, 0xac, 0xc7, 0xcd,
-	0x59, 0xaf, 0xcf, 0x9f, 0xd2, 0xb8, 0x39, 0xeb, 0xf5, 0xf5, 0x29, 0xea, 0x6d, 0x3c, 0xe1, 0x87,
-	0x73, 0xbb, 0xfd, 0x3e, 0x9d, 0xe2, 0x2a, 0xae, 0xef, 0xbf, 0xaf, 0x64, 0x2a, 0xf8, 0x87, 0x48,
-	0x20, 0x41, 0x67, 0x7d, 0x19, 0x50, 0x2d, 0x71, 0xaa, 0x25, 0x23, 0x36, 0x7f, 0x2b, 0x02, 0x6b,
-	0x8f, 0xc6, 0xb6, 0x7e, 0x5e, 0x05, 0x2a, 0x92, 0x71, 0xc6, 0x4e, 0xa1, 0x4c, 0xbd, 0xc9, 0x0b,
-	0x07, 0xa5, 0xa3, 0xda, 0x49, 0xb3, 0x95, 0x0c, 0x5b, 0xf7, 0x79, 0x2d, 0xba, 0xc2, 0xd7, 0xb1,
-	0x4a, 0xe7, 0x9e, 0xb1, 0xd0, 0xb6, 0xd4, 0xa6, 0xbc, 0xf8, 0xaf, 0xb6, 0xd4, 0x73, 0xc6, 0x96,
-	0x2c, 0x1a, 0x1d, 0xa8, 0xe5, 0x5c, 0xea, 0xb3, 0xb8, 0x11, 0x73, 0x33, 0xa5, 0xf5, 0x92, 0x1d,
-	0x82, 0x73, 0xeb, 0x4f, 0x66, 0x34, 0x41, 0x6a, 0x27, 0x5b, 0xc6, 0xb7, 0xf1, 0xe9, 0x91, 0xf2,
-	0xb4, 0xf8, 0x6d, 0x41, 0xbb, 0xca, 0xed, 0xf0, 0x7f, 0x5c, 0x35, 0x7f, 0x02, 0xb8, 0x53, 0xb0,
-	0x2d, 0x28, 0x46, 0xa1, 0x71, 0x54, 0x8c, 0x42, 0xdd, 0xc0, 0x3e, 0xaa, 0xec, 0xbb, 0x41, 0x92,
-	0x7e, 0x12, 0x42, 0x91, 0x05, 0x66, 0x22, 0xe0, 0x9a, 0xb0, 0xa9, 0x34, 0x43, 0x00, 0xd7, 0xcd,
-	0xbf, 0x0a, 0x50, 0xd2, 0xef, 0xcc, 0x73, 0xa8, 0x85, 0xbe, 0xf2, 0x07, 0x13, 0x11, 0x8f, 0xd5,
-	0xb5, 0xd9, 0x00, 0x34, 0x74, 0x8e, 0x08, 0xfb, 0x0c, 0x36, 0x02, 0xea, 0x84, 0x81, 0xd2, 0x2d,
-	0x5a, 0xa4, 0x12, 0x0c, 0x72, 0x6d, 0xfc, 0x39, 0x6c, 0x26, 0xe6, 0x98, 0x89, 0x43, 0xaf, 0xd6,
-	0x86, 0x05, 0x91, 0xf4, 0x0c, 0x5c, 0x0a, 0x71, 0x10, 0x85, 0x18, 0x89, 0xe3, 0x55, 0x09, 0xe8,
-	0x84, 0xec, 0x13, 0x00, 0x7d, 0x17, 0x51, 0x20, 0xb4, 0x96, 0xc6, 0xa5, 0x6b, 0x90, 0x4e, 0x3e,
-	0xd9, 0xf2, 0x52, 0xb2, 0x1c, 0x2a, 0x26, 0x0e, 0x1c, 0x49, 0xae, 0x67, 0x45, 0x5d, 0xeb, 0xa9,
-	0xc0, 0xeb, 0x0d, 0xcd, 0x50, 0x5a, 0xc8, 0x27, 0x7f, 0x96, 0xc0, 0x3d, 0x4b, 0xfd, 0xa9, 0xe8,
-	0xcf, 0xe3, 0x80, 0xbd, 0xb0, 0x97, 0x4f, 0xbf, 0xb3, 0xba, 0xbe, 0x90, 0xfc, 0x7f, 0xad, 0xe1,
-	0x6a, 0xe4, 0xf5, 0x34, 0x51, 0xf3, 0xe6, 0x07, 0xec, 0x18, 0x20, 0xf7, 0x9b, 0x79, 0x9a, 0x23,
-	0xdf, 0xc1, 0x0f, 0x59, 0xc8, 0xf5, 0x16, 0x72, 0xd5, 0xe2, 0x14, 0xb6, 0x57, 0x7f, 0x18, 0x8d,
-	0x7b, 0x66, 0x0b, 0xdd, 0xb2, 0xed, 0xd7, 0x00, 0xb9, 0x47, 0x7f, 0x9f, 0xcc, 0x56, 0x3f, 0x03,
-	0x0f, 0x99, 0xc8, 0x07, 0x4c, 0xd6, 0x45, 0x48, 0xaa, 0xff, 0x10, 0xe1, 0xb1, 0xed, 0x10, 0xf3,
-	0x1b, 0xce, 0xef, 0x67, 0x7f, 0x4a, 0xcb, 0x16, 0x5f, 0x41, 0xc5, 0x7e, 0x78, 0x76, 0xf3, 0x6c,
-	0x03, 0x2e, 0x91, 0xbf, 0xaf, 0xfc, 0xe8, 0xb4, 0x5e, 0x7e, 0x97, 0x0c, 0x87, 0x65, 0xac, 0xbe,
-	0x6f, 0xfe, 0x09, 0x00, 0x00, 0xff, 0xff, 0xc5, 0xc6, 0xf1, 0x99, 0xac, 0x0b, 0x00, 0x00,
+	// 1125 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xd4, 0x56, 0xdf, 0x6f, 0x1b, 0xc5,
+	0x13, 0x8f, 0xed, 0x5c, 0x1c, 0x8f, 0xf3, 0x73, 0x93, 0xa6, 0xfb, 0xf5, 0x17, 0x68, 0x38, 0x82,
+	0x14, 0x01, 0x72, 0x4b, 0x78, 0x00, 0xa5, 0x42, 0xa2, 0x44, 0x2d, 0xb5, 0x1a, 0x13, 0xeb, 0x9c,
+	0x28, 0x12, 0x42, 0xb2, 0x2e, 0x77, 0x6b, 0xe7, 0x48, 0x7c, 0x7b, 0xdc, 0xad, 0x43, 0xcd, 0x9f,
+	0xd3, 0x7f, 0x07, 0x09, 0xfe, 0x1d, 0x5e, 0x90, 0xd0, 0xce, 0xec, 0x3a, 0xeb, 0xd8, 0xe4, 0x01,
+	0x9e, 0xf2, 0xb6, 0xf3, 0x99, 0xdf, 0xbb, 0x33, 0xb3, 0x03, 0x5b, 0x59, 0x2e, 0x95, 0x7c, 0x3a,
+	0x08, 0x95, 0xf8, 0x25, 0x1c, 0x37, 0x91, 0x62, 0xe5, 0xec, 0xa2, 0xc1, 0x88, 0x11, 0xc9, 0xe1,
+	0x50, 0xa6, 0x84, 0xfb, 0xef, 0x4a, 0xc0, 0x02, 0xf1, 0xf3, 0x48, 0x14, 0xaa, 0x93, 0xcb, 0x9f,
+	0x44, 0xa4, 0x3a, 0xa3, 0xe2, 0x92, 0xbd, 0x0f, 0x90, 0x11, 0xd9, 0x4b, 0x62, 0x5e, 0xda, 0x2d,
+	0xed, 0xd7, 0x82, 0x9a, 0x41, 0x5a, 0x31, 0xdb, 0x80, 0xca, 0xb0, 0x18, 0xf0, 0x32, 0xe2, 0xfa,
+	0xc8, 0x9e, 0x40, 0x5d, 0x85, 0xf9, 0x40, 0xa8, 0xde, 0x28, 0x89, 0x0b, 0x5e, 0x41, 0x0e, 0x10,
+	0x74, 0x96, 0xc4, 0x05, 0xfb, 0x3f, 0xd4, 0xc2, 0x48, 0x25, 0x32, 0xd5, 0x06, 0x17, 0x91, 0xbd,
+	0x4c, 0x40, 0x2b, 0xd6, 0xee, 0x0a, 0x91, 0xdf, 0x24, 0x91, 0xd0, 0x5c, 0x8f, 0xdc, 0x19, 0xa4,
+	0x15, 0xfb, 0xcf, 0x61, 0x2b, 0x10, 0x45, 0x26, 0xd3, 0x42, 0xb8, 0x41, 0x32, 0x58, 0x8c, 0x64,
+	0x2c, 0x30, 0x3c, 0x2f, 0xc0, 0xf3, 0x6c, 0x64, 0xfe, 0x1e, 0xac, 0x98, 0x04, 0x8f, 0xe5, 0x20,
+	0x49, 0xd9, 0x36, 0x78, 0x4a, 0x5e, 0x89, 0xd4, 0x64, 0x45, 0x84, 0xff, 0x7b, 0x09, 0x36, 0x8d,
+	0xd8, 0xd1, 0x75, 0x22, 0x52, 0xd5, 0x91, 0xe9, 0x80, 0xfd, 0x0f, 0x96, 0xc3, 0x38, 0xee, 0xa9,
+	0x64, 0x48, 0x5e, 0x2a, 0x41, 0x35, 0x8c, 0xe3, 0xd3, 0x64, 0x28, 0x58, 0x13, 0xb6, 0x22, 0x14,
+	0xec, 0xe5, 0x22, 0x12, 0xc9, 0x8d, 0x20, 0xa9, 0x32, 0x4a, 0x6d, 0x12, 0x2b, 0x20, 0x0e, 0xca,
+	0x3f, 0x83, 0x6d, 0x9d, 0x90, 0xc8, 0x7b, 0xb9, 0x49, 0x85, 0x14, 0x2a, 0xa8, 0xc0, 0x88, 0x67,
+	0xb3, 0x44, 0x8d, 0x27, 0x50, 0xcf, 0x95, 0x42, 0x29, 0x39, 0x52, 0x78, 0x67, 0x95, 0x00, 0x72,
+	0xa5, 0x4e, 0x09, 0xd1, 0x57, 0x6a, 0x05, 0x0a, 0xbc, 0x34, 0x2f, 0x58, 0x36, 0xec, 0x62, 0x4e,
+	0x42, 0xc9, 0xc3, 0x4e, 0xe8, 0x33, 0xd8, 0x99, 0xca, 0xe7, 0xb5, 0x08, 0x73, 0x75, 0x21, 0x42,
+	0xa5, 0xeb, 0xc0, 0x49, 0x08, 0xcf, 0x7e, 0x07, 0x36, 0xac, 0x6f, 0x7c, 0xf6, 0x40, 0x14, 0x73,
+	0xeb, 0x65, 0x07, 0x96, 0x44, 0x9e, 0xb7, 0x27, 0x25, 0x63, 0x28, 0x5d, 0x47, 0xa3, 0x24, 0xc6,
+	0x64, 0xbc, 0x40, 0x1f, 0xfd, 0x8f, 0x61, 0xdd, 0x5a, 0x7c, 0x93, 0x44, 0x57, 0x27, 0xfd, 0xfe,
+	0x5c, 0xc7, 0x7f, 0x60, 0x43, 0x91, 0x5c, 0x17, 0xef, 0xe0, 0xa1, 0x5f, 0xfc, 0x9c, 0x8c, 0x1e,
+	0x78, 0x6f, 0xfc, 0xe5, 0x41, 0xed, 0xa8, 0x3f, 0xa0, 0x64, 0x58, 0x03, 0x96, 0x8f, 0x93, 0x42,
+	0x89, 0xb4, 0x95, 0x99, 0x99, 0x30, 0xa1, 0xf5, 0xb0, 0x38, 0x19, 0xa9, 0x56, 0x66, 0xaa, 0x83,
+	0x08, 0xb6, 0x07, 0xab, 0xaf, 0x95, 0xca, 0xe2, 0x40, 0x4a, 0xd5, 0x09, 0xd5, 0xa5, 0x19, 0x77,
+	0xd3, 0xa0, 0xb6, 0xab, 0x81, 0x8e, 0xcc, 0x95, 0x1d, 0x78, 0x96, 0xd6, 0x65, 0x77, 0x5e, 0x20,
+	0x87, 0x86, 0x9d, 0xa1, 0x18, 0x87, 0xea, 0x59, 0x4c, 0x2a, 0x4b, 0xc8, 0xb0, 0xa4, 0xb6, 0xd6,
+	0xd1, 0x13, 0x3b, 0x92, 0xd7, 0xbc, 0x4a, 0xf9, 0x58, 0x5a, 0x47, 0x79, 0x5e, 0x9c, 0xe5, 0x09,
+	0x5f, 0xa6, 0x28, 0x91, 0x60, 0xbb, 0x50, 0x3f, 0x92, 0xa9, 0x12, 0xa9, 0x3a, 0x1d, 0x67, 0x82,
+	0xd7, 0x50, 0xc9, 0x85, 0x74, 0x1e, 0xd8, 0x1c, 0x2f, 0x46, 0xea, 0x12, 0x65, 0x80, 0xf2, 0x98,
+	0x02, 0x59, 0x13, 0xd8, 0x04, 0xe8, 0x8a, 0x28, 0x17, 0xea, 0x8d, 0x18, 0xf3, 0x3a, 0x8a, 0xce,
+	0xe1, 0xb0, 0x4f, 0x60, 0xa3, 0x1d, 0xbe, 0xa5, 0x26, 0x3d, 0x92, 0x69, 0xfa, 0xfd, 0x68, 0xc8,
+	0x57, 0xd0, 0xf9, 0x0c, 0xae, 0x23, 0x68, 0x17, 0x03, 0x13, 0x53, 0x3b, 0x7c, 0xcb, 0x57, 0x51,
+	0x70, 0x1a, 0x64, 0xef, 0x41, 0xad, 0x75, 0x62, 0x5e, 0x96, 0xaf, 0xe1, 0x5b, 0xdf, 0x02, 0x26,
+	0xcf, 0xd4, 0xf2, 0xd7, 0x27, 0x79, 0x5a, 0x48, 0xdf, 0x6a, 0x3b, 0xcc, 0xba, 0xc9, 0xaf, 0x82,
+	0x6f, 0x20, 0xd7, 0x92, 0xec, 0x03, 0x80, 0x40, 0xca, 0x61, 0x47, 0xc8, 0xec, 0x5a, 0xf0, 0x4d,
+	0x64, 0x3a, 0x88, 0xb6, 0xad, 0x29, 0x6b, 0x9b, 0x91, 0x6d, 0x07, 0x62, 0xfb, 0xb0, 0x7e, 0xd2,
+	0xef, 0x1f, 0x27, 0xa9, 0x38, 0x0f, 0x13, 0xac, 0x2f, 0xbe, 0x85, 0x52, 0x77, 0x61, 0xac, 0x33,
+	0x19, 0x5d, 0xb5, 0xf5, 0x08, 0xda, 0xa6, 0x17, 0xb4, 0xb4, 0x1e, 0x37, 0xaf, 0x3a, 0x5d, 0xfe,
+	0x88, 0xc6, 0xcd, 0xab, 0x4e, 0x57, 0xdf, 0xa2, 0x76, 0x13, 0x88, 0x30, 0x1e, 0x5b, 0xf7, 0x3b,
+	0x74, 0x8b, 0x77, 0x71, 0xfd, 0xfe, 0x5d, 0x25, 0x73, 0xc1, 0x1f, 0xa3, 0x00, 0x11, 0x3a, 0xeb,
+	0xd3, 0x88, 0x6a, 0x89, 0x53, 0x2d, 0x19, 0xd2, 0x7f, 0x57, 0x06, 0x76, 0xd4, 0x1f, 0xd8, 0xfa,
+	0x79, 0x81, 0xdf, 0x70, 0xc1, 0x0e, 0x61, 0x89, 0x7a, 0x93, 0x97, 0x76, 0x2b, 0xfb, 0xf5, 0x03,
+	0xbf, 0x99, 0x5d, 0x34, 0x67, 0xe5, 0x9a, 0xf4, 0x84, 0x2f, 0x53, 0x95, 0x8f, 0x03, 0xa3, 0xa1,
+	0x75, 0xa9, 0x4d, 0x79, 0xf9, 0x5e, 0x5d, 0xea, 0x39, 0xa3, 0x4b, 0x1a, 0x8d, 0x16, 0xd4, 0x1d,
+	0x93, 0xfa, 0x2e, 0xae, 0xc4, 0xd8, 0x4c, 0x69, 0x7d, 0x64, 0x7b, 0xe0, 0xdd, 0x84, 0xd7, 0x23,
+	0x9a, 0x20, 0xf5, 0x83, 0x35, 0x63, 0xdb, 0xd8, 0x0c, 0x88, 0x79, 0x58, 0xfe, 0xaa, 0xa4, 0x4d,
+	0x39, 0x1e, 0xfe, 0x8b, 0x29, 0xff, 0x47, 0x80, 0x5b, 0x06, 0x5b, 0x83, 0xb2, 0x59, 0x84, 0xbc,
+	0xa0, 0x9c, 0xc4, 0xba, 0x81, 0x69, 0x7b, 0xb1, 0xff, 0x06, 0x51, 0xfa, 0x4b, 0x88, 0x45, 0x11,
+	0x99, 0x89, 0x80, 0x67, 0xc2, 0x86, 0xd2, 0x0c, 0x01, 0x3c, 0xfb, 0x7f, 0x96, 0xa0, 0xd2, 0xa6,
+	0xbd, 0x29, 0x0e, 0x55, 0xd8, 0xbb, 0x16, 0xe9, 0x40, 0x5d, 0x1a, 0x07, 0xa0, 0xa1, 0x63, 0x44,
+	0xd8, 0x87, 0xb0, 0x12, 0x51, 0x27, 0xf4, 0x94, 0x6e, 0xd1, 0x32, 0x95, 0x60, 0xe4, 0xb4, 0xf1,
+	0x47, 0xb0, 0x9a, 0x99, 0x6b, 0x26, 0x19, 0xfa, 0xb5, 0x56, 0x2c, 0x88, 0x42, 0x33, 0xfb, 0x97,
+	0x77, 0xef, 0xfe, 0xe5, 0x39, 0xfb, 0x97, 0x93, 0xec, 0xd2, 0x54, 0xb2, 0x1c, 0xaa, 0x26, 0x0e,
+	0x1c, 0x49, 0xb5, 0xc0, 0x92, 0xba, 0xd6, 0x73, 0x81, 0xcf, 0x1b, 0x9b, 0xa1, 0x34, 0xa1, 0x0f,
+	0x7e, 0x5b, 0x84, 0xea, 0x77, 0xb4, 0x9c, 0xb2, 0x2f, 0xed, 0xd3, 0xd3, 0x6e, 0xb6, 0xa1, 0x9f,
+	0xc3, 0xdd, 0xd6, 0x1a, 0xdb, 0x84, 0x4c, 0xff, 0xe4, 0xfe, 0x02, 0xfb, 0x1a, 0xc0, 0x59, 0x6b,
+	0x1e, 0x39, 0x7a, 0xb7, 0x70, 0x63, 0xc7, 0x55, 0xbe, 0xfd, 0xba, 0xa6, 0xd4, 0xe5, 0x7c, 0x75,
+	0x79, 0xaf, 0xfa, 0x21, 0xac, 0xdf, 0x5d, 0x42, 0x1a, 0x33, 0x36, 0x26, 0xbc, 0x46, 0x4d, 0xf3,
+	0x5e, 0x0e, 0x33, 0x35, 0x26, 0xd7, 0xce, 0x5e, 0x30, 0xcf, 0x87, 0x0e, 0x7d, 0x7e, 0x48, 0xfe,
+	0x02, 0xfb, 0x7c, 0xa2, 0x2e, 0xff, 0x41, 0x5d, 0x87, 0x3e, 0xe5, 0xf1, 0x10, 0xd6, 0x89, 0xf5,
+	0x2f, 0xa2, 0x7d, 0x66, 0x1b, 0xca, 0x2c, 0xcf, 0xf3, 0x9e, 0x63, 0x5a, 0xe3, 0x53, 0xa8, 0xda,
+	0xfd, 0x68, 0xcb, 0x95, 0x36, 0xe0, 0xb4, 0xf0, 0x37, 0x50, 0x77, 0x37, 0xfa, 0x1d, 0x27, 0x2c,
+	0x07, 0x6f, 0x3c, 0x76, 0x0d, 0x39, 0x0c, 0x7f, 0xe1, 0xdb, 0xea, 0x0f, 0x5e, 0xf3, 0xe9, 0xf3,
+	0xec, 0xe2, 0x62, 0x09, 0xcb, 0xfd, 0x8b, 0xbf, 0x03, 0x00, 0x00, 0xff, 0xff, 0x22, 0x4f, 0xff,
+	0x67, 0xff, 0x0c, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -1003,360 +1130,396 @@ var _ grpc.ClientConn
 // is compatible with the grpc package it is being compiled against.
 const _ = grpc.SupportPackageIsVersion4
 
-// FrameSyncClient is the client API for FrameSync service.
+// GatewayClient is the client API for Gateway service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
-type FrameSyncClient interface {
-	ClientLogin(ctx context.Context, in *RequestLogin, opts ...grpc.CallOption) (*Empty, error)
-	ClientPing(ctx context.Context, in *RequestClientPing, opts ...grpc.CallOption) (*Empty, error)
-	ClientPong(ctx context.Context, in *RequestClientPong, opts ...grpc.CallOption) (*Empty, error)
+type GatewayClient interface {
+	ClientLogin(ctx context.Context, in *RequestLogin, opts ...grpc.CallOption) (*ResponseLoginRes, error)
+	ClientPing(ctx context.Context, in *RequestClientPing, opts ...grpc.CallOption) (*ResponseServerPong, error)
+	ClientPong(ctx context.Context, in *RequestClientPong, opts ...grpc.CallOption) (*ResponseServerPong, error)
 	ClientHeartbeat(ctx context.Context, in *RequestClientHeartbeat, opts ...grpc.CallOption) (*Empty, error)
-	ServerPing(ctx context.Context, in *ResponseServerPing, opts ...grpc.CallOption) (*Empty, error)
+	ServerPing(ctx context.Context, in *ResponseServerPing, opts ...grpc.CallOption) (*RequestClientPong, error)
 	ServerPong(ctx context.Context, in *ResponseServerPong, opts ...grpc.CallOption) (*Empty, error)
 	ServerHeartbeat(ctx context.Context, in *RequestClientHeartbeat, opts ...grpc.CallOption) (*Empty, error)
 	ServerLogin(ctx context.Context, in *ResponseLoginRes, opts ...grpc.CallOption) (*Empty, error)
 	KickOff(ctx context.Context, in *ResponseKickOff, opts ...grpc.CallOption) (*Empty, error)
+	ProjectPush(ctx context.Context, in *RequestProjectPush, opts ...grpc.CallOption) (*ResponseProjectPush, error)
 }
 
-type frameSyncClient struct {
+type gatewayClient struct {
 	cc *grpc.ClientConn
 }
 
-func NewFrameSyncClient(cc *grpc.ClientConn) FrameSyncClient {
-	return &frameSyncClient{cc}
+func NewGatewayClient(cc *grpc.ClientConn) GatewayClient {
+	return &gatewayClient{cc}
 }
 
-func (c *frameSyncClient) ClientLogin(ctx context.Context, in *RequestLogin, opts ...grpc.CallOption) (*Empty, error) {
-	out := new(Empty)
-	err := c.cc.Invoke(ctx, "/pb.FrameSync/ClientLogin", in, out, opts...)
+func (c *gatewayClient) ClientLogin(ctx context.Context, in *RequestLogin, opts ...grpc.CallOption) (*ResponseLoginRes, error) {
+	out := new(ResponseLoginRes)
+	err := c.cc.Invoke(ctx, "/pb.Gateway/ClientLogin", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *frameSyncClient) ClientPing(ctx context.Context, in *RequestClientPing, opts ...grpc.CallOption) (*Empty, error) {
-	out := new(Empty)
-	err := c.cc.Invoke(ctx, "/pb.FrameSync/ClientPing", in, out, opts...)
+func (c *gatewayClient) ClientPing(ctx context.Context, in *RequestClientPing, opts ...grpc.CallOption) (*ResponseServerPong, error) {
+	out := new(ResponseServerPong)
+	err := c.cc.Invoke(ctx, "/pb.Gateway/ClientPing", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *frameSyncClient) ClientPong(ctx context.Context, in *RequestClientPong, opts ...grpc.CallOption) (*Empty, error) {
-	out := new(Empty)
-	err := c.cc.Invoke(ctx, "/pb.FrameSync/ClientPong", in, out, opts...)
+func (c *gatewayClient) ClientPong(ctx context.Context, in *RequestClientPong, opts ...grpc.CallOption) (*ResponseServerPong, error) {
+	out := new(ResponseServerPong)
+	err := c.cc.Invoke(ctx, "/pb.Gateway/ClientPong", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *frameSyncClient) ClientHeartbeat(ctx context.Context, in *RequestClientHeartbeat, opts ...grpc.CallOption) (*Empty, error) {
+func (c *gatewayClient) ClientHeartbeat(ctx context.Context, in *RequestClientHeartbeat, opts ...grpc.CallOption) (*Empty, error) {
 	out := new(Empty)
-	err := c.cc.Invoke(ctx, "/pb.FrameSync/ClientHeartbeat", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/pb.Gateway/ClientHeartbeat", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *frameSyncClient) ServerPing(ctx context.Context, in *ResponseServerPing, opts ...grpc.CallOption) (*Empty, error) {
-	out := new(Empty)
-	err := c.cc.Invoke(ctx, "/pb.FrameSync/ServerPing", in, out, opts...)
+func (c *gatewayClient) ServerPing(ctx context.Context, in *ResponseServerPing, opts ...grpc.CallOption) (*RequestClientPong, error) {
+	out := new(RequestClientPong)
+	err := c.cc.Invoke(ctx, "/pb.Gateway/ServerPing", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *frameSyncClient) ServerPong(ctx context.Context, in *ResponseServerPong, opts ...grpc.CallOption) (*Empty, error) {
+func (c *gatewayClient) ServerPong(ctx context.Context, in *ResponseServerPong, opts ...grpc.CallOption) (*Empty, error) {
 	out := new(Empty)
-	err := c.cc.Invoke(ctx, "/pb.FrameSync/ServerPong", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/pb.Gateway/ServerPong", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *frameSyncClient) ServerHeartbeat(ctx context.Context, in *RequestClientHeartbeat, opts ...grpc.CallOption) (*Empty, error) {
+func (c *gatewayClient) ServerHeartbeat(ctx context.Context, in *RequestClientHeartbeat, opts ...grpc.CallOption) (*Empty, error) {
 	out := new(Empty)
-	err := c.cc.Invoke(ctx, "/pb.FrameSync/ServerHeartbeat", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/pb.Gateway/ServerHeartbeat", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *frameSyncClient) ServerLogin(ctx context.Context, in *ResponseLoginRes, opts ...grpc.CallOption) (*Empty, error) {
+func (c *gatewayClient) ServerLogin(ctx context.Context, in *ResponseLoginRes, opts ...grpc.CallOption) (*Empty, error) {
 	out := new(Empty)
-	err := c.cc.Invoke(ctx, "/pb.FrameSync/ServerLogin", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/pb.Gateway/ServerLogin", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *frameSyncClient) KickOff(ctx context.Context, in *ResponseKickOff, opts ...grpc.CallOption) (*Empty, error) {
+func (c *gatewayClient) KickOff(ctx context.Context, in *ResponseKickOff, opts ...grpc.CallOption) (*Empty, error) {
 	out := new(Empty)
-	err := c.cc.Invoke(ctx, "/pb.FrameSync/KickOff", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/pb.Gateway/KickOff", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-// FrameSyncServer is the server API for FrameSync service.
-type FrameSyncServer interface {
-	ClientLogin(context.Context, *RequestLogin) (*Empty, error)
-	ClientPing(context.Context, *RequestClientPing) (*Empty, error)
-	ClientPong(context.Context, *RequestClientPong) (*Empty, error)
+func (c *gatewayClient) ProjectPush(ctx context.Context, in *RequestProjectPush, opts ...grpc.CallOption) (*ResponseProjectPush, error) {
+	out := new(ResponseProjectPush)
+	err := c.cc.Invoke(ctx, "/pb.Gateway/ProjectPush", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// GatewayServer is the server API for Gateway service.
+type GatewayServer interface {
+	ClientLogin(context.Context, *RequestLogin) (*ResponseLoginRes, error)
+	ClientPing(context.Context, *RequestClientPing) (*ResponseServerPong, error)
+	ClientPong(context.Context, *RequestClientPong) (*ResponseServerPong, error)
 	ClientHeartbeat(context.Context, *RequestClientHeartbeat) (*Empty, error)
-	ServerPing(context.Context, *ResponseServerPing) (*Empty, error)
+	ServerPing(context.Context, *ResponseServerPing) (*RequestClientPong, error)
 	ServerPong(context.Context, *ResponseServerPong) (*Empty, error)
 	ServerHeartbeat(context.Context, *RequestClientHeartbeat) (*Empty, error)
 	ServerLogin(context.Context, *ResponseLoginRes) (*Empty, error)
 	KickOff(context.Context, *ResponseKickOff) (*Empty, error)
+	ProjectPush(context.Context, *RequestProjectPush) (*ResponseProjectPush, error)
 }
 
-// UnimplementedFrameSyncServer can be embedded to have forward compatible implementations.
-type UnimplementedFrameSyncServer struct {
+// UnimplementedGatewayServer can be embedded to have forward compatible implementations.
+type UnimplementedGatewayServer struct {
 }
 
-func (*UnimplementedFrameSyncServer) ClientLogin(ctx context.Context, req *RequestLogin) (*Empty, error) {
+func (*UnimplementedGatewayServer) ClientLogin(ctx context.Context, req *RequestLogin) (*ResponseLoginRes, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ClientLogin not implemented")
 }
-func (*UnimplementedFrameSyncServer) ClientPing(ctx context.Context, req *RequestClientPing) (*Empty, error) {
+func (*UnimplementedGatewayServer) ClientPing(ctx context.Context, req *RequestClientPing) (*ResponseServerPong, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ClientPing not implemented")
 }
-func (*UnimplementedFrameSyncServer) ClientPong(ctx context.Context, req *RequestClientPong) (*Empty, error) {
+func (*UnimplementedGatewayServer) ClientPong(ctx context.Context, req *RequestClientPong) (*ResponseServerPong, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ClientPong not implemented")
 }
-func (*UnimplementedFrameSyncServer) ClientHeartbeat(ctx context.Context, req *RequestClientHeartbeat) (*Empty, error) {
+func (*UnimplementedGatewayServer) ClientHeartbeat(ctx context.Context, req *RequestClientHeartbeat) (*Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ClientHeartbeat not implemented")
 }
-func (*UnimplementedFrameSyncServer) ServerPing(ctx context.Context, req *ResponseServerPing) (*Empty, error) {
+func (*UnimplementedGatewayServer) ServerPing(ctx context.Context, req *ResponseServerPing) (*RequestClientPong, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ServerPing not implemented")
 }
-func (*UnimplementedFrameSyncServer) ServerPong(ctx context.Context, req *ResponseServerPong) (*Empty, error) {
+func (*UnimplementedGatewayServer) ServerPong(ctx context.Context, req *ResponseServerPong) (*Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ServerPong not implemented")
 }
-func (*UnimplementedFrameSyncServer) ServerHeartbeat(ctx context.Context, req *RequestClientHeartbeat) (*Empty, error) {
+func (*UnimplementedGatewayServer) ServerHeartbeat(ctx context.Context, req *RequestClientHeartbeat) (*Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ServerHeartbeat not implemented")
 }
-func (*UnimplementedFrameSyncServer) ServerLogin(ctx context.Context, req *ResponseLoginRes) (*Empty, error) {
+func (*UnimplementedGatewayServer) ServerLogin(ctx context.Context, req *ResponseLoginRes) (*Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ServerLogin not implemented")
 }
-func (*UnimplementedFrameSyncServer) KickOff(ctx context.Context, req *ResponseKickOff) (*Empty, error) {
+func (*UnimplementedGatewayServer) KickOff(ctx context.Context, req *ResponseKickOff) (*Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method KickOff not implemented")
 }
-
-func RegisterFrameSyncServer(s *grpc.Server, srv FrameSyncServer) {
-	s.RegisterService(&_FrameSync_serviceDesc, srv)
+func (*UnimplementedGatewayServer) ProjectPush(ctx context.Context, req *RequestProjectPush) (*ResponseProjectPush, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ProjectPush not implemented")
 }
 
-func _FrameSync_ClientLogin_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func RegisterGatewayServer(s *grpc.Server, srv GatewayServer) {
+	s.RegisterService(&_Gateway_serviceDesc, srv)
+}
+
+func _Gateway_ClientLogin_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(RequestLogin)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(FrameSyncServer).ClientLogin(ctx, in)
+		return srv.(GatewayServer).ClientLogin(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/pb.FrameSync/ClientLogin",
+		FullMethod: "/pb.Gateway/ClientLogin",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(FrameSyncServer).ClientLogin(ctx, req.(*RequestLogin))
+		return srv.(GatewayServer).ClientLogin(ctx, req.(*RequestLogin))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _FrameSync_ClientPing_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Gateway_ClientPing_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(RequestClientPing)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(FrameSyncServer).ClientPing(ctx, in)
+		return srv.(GatewayServer).ClientPing(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/pb.FrameSync/ClientPing",
+		FullMethod: "/pb.Gateway/ClientPing",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(FrameSyncServer).ClientPing(ctx, req.(*RequestClientPing))
+		return srv.(GatewayServer).ClientPing(ctx, req.(*RequestClientPing))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _FrameSync_ClientPong_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Gateway_ClientPong_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(RequestClientPong)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(FrameSyncServer).ClientPong(ctx, in)
+		return srv.(GatewayServer).ClientPong(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/pb.FrameSync/ClientPong",
+		FullMethod: "/pb.Gateway/ClientPong",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(FrameSyncServer).ClientPong(ctx, req.(*RequestClientPong))
+		return srv.(GatewayServer).ClientPong(ctx, req.(*RequestClientPong))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _FrameSync_ClientHeartbeat_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Gateway_ClientHeartbeat_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(RequestClientHeartbeat)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(FrameSyncServer).ClientHeartbeat(ctx, in)
+		return srv.(GatewayServer).ClientHeartbeat(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/pb.FrameSync/ClientHeartbeat",
+		FullMethod: "/pb.Gateway/ClientHeartbeat",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(FrameSyncServer).ClientHeartbeat(ctx, req.(*RequestClientHeartbeat))
+		return srv.(GatewayServer).ClientHeartbeat(ctx, req.(*RequestClientHeartbeat))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _FrameSync_ServerPing_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Gateway_ServerPing_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ResponseServerPing)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(FrameSyncServer).ServerPing(ctx, in)
+		return srv.(GatewayServer).ServerPing(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/pb.FrameSync/ServerPing",
+		FullMethod: "/pb.Gateway/ServerPing",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(FrameSyncServer).ServerPing(ctx, req.(*ResponseServerPing))
+		return srv.(GatewayServer).ServerPing(ctx, req.(*ResponseServerPing))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _FrameSync_ServerPong_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Gateway_ServerPong_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ResponseServerPong)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(FrameSyncServer).ServerPong(ctx, in)
+		return srv.(GatewayServer).ServerPong(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/pb.FrameSync/ServerPong",
+		FullMethod: "/pb.Gateway/ServerPong",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(FrameSyncServer).ServerPong(ctx, req.(*ResponseServerPong))
+		return srv.(GatewayServer).ServerPong(ctx, req.(*ResponseServerPong))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _FrameSync_ServerHeartbeat_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Gateway_ServerHeartbeat_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(RequestClientHeartbeat)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(FrameSyncServer).ServerHeartbeat(ctx, in)
+		return srv.(GatewayServer).ServerHeartbeat(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/pb.FrameSync/ServerHeartbeat",
+		FullMethod: "/pb.Gateway/ServerHeartbeat",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(FrameSyncServer).ServerHeartbeat(ctx, req.(*RequestClientHeartbeat))
+		return srv.(GatewayServer).ServerHeartbeat(ctx, req.(*RequestClientHeartbeat))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _FrameSync_ServerLogin_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Gateway_ServerLogin_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ResponseLoginRes)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(FrameSyncServer).ServerLogin(ctx, in)
+		return srv.(GatewayServer).ServerLogin(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/pb.FrameSync/ServerLogin",
+		FullMethod: "/pb.Gateway/ServerLogin",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(FrameSyncServer).ServerLogin(ctx, req.(*ResponseLoginRes))
+		return srv.(GatewayServer).ServerLogin(ctx, req.(*ResponseLoginRes))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _FrameSync_KickOff_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Gateway_KickOff_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ResponseKickOff)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(FrameSyncServer).KickOff(ctx, in)
+		return srv.(GatewayServer).KickOff(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/pb.FrameSync/KickOff",
+		FullMethod: "/pb.Gateway/KickOff",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(FrameSyncServer).KickOff(ctx, req.(*ResponseKickOff))
+		return srv.(GatewayServer).KickOff(ctx, req.(*ResponseKickOff))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-var _FrameSync_serviceDesc = grpc.ServiceDesc{
-	ServiceName: "pb.FrameSync",
-	HandlerType: (*FrameSyncServer)(nil),
+func _Gateway_ProjectPush_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RequestProjectPush)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GatewayServer).ProjectPush(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/pb.Gateway/ProjectPush",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GatewayServer).ProjectPush(ctx, req.(*RequestProjectPush))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+var _Gateway_serviceDesc = grpc.ServiceDesc{
+	ServiceName: "pb.Gateway",
+	HandlerType: (*GatewayServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
 			MethodName: "ClientLogin",
-			Handler:    _FrameSync_ClientLogin_Handler,
+			Handler:    _Gateway_ClientLogin_Handler,
 		},
 		{
 			MethodName: "ClientPing",
-			Handler:    _FrameSync_ClientPing_Handler,
+			Handler:    _Gateway_ClientPing_Handler,
 		},
 		{
 			MethodName: "ClientPong",
-			Handler:    _FrameSync_ClientPong_Handler,
+			Handler:    _Gateway_ClientPong_Handler,
 		},
 		{
 			MethodName: "ClientHeartbeat",
-			Handler:    _FrameSync_ClientHeartbeat_Handler,
+			Handler:    _Gateway_ClientHeartbeat_Handler,
 		},
 		{
 			MethodName: "ServerPing",
-			Handler:    _FrameSync_ServerPing_Handler,
+			Handler:    _Gateway_ServerPing_Handler,
 		},
 		{
 			MethodName: "ServerPong",
-			Handler:    _FrameSync_ServerPong_Handler,
+			Handler:    _Gateway_ServerPong_Handler,
 		},
 		{
 			MethodName: "ServerHeartbeat",
-			Handler:    _FrameSync_ServerHeartbeat_Handler,
+			Handler:    _Gateway_ServerHeartbeat_Handler,
 		},
 		{
 			MethodName: "ServerLogin",
-			Handler:    _FrameSync_ServerLogin_Handler,
+			Handler:    _Gateway_ServerLogin_Handler,
 		},
 		{
 			MethodName: "KickOff",
-			Handler:    _FrameSync_KickOff_Handler,
+			Handler:    _Gateway_KickOff_Handler,
+		},
+		{
+			MethodName: "ProjectPush",
+			Handler:    _Gateway_ProjectPush_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

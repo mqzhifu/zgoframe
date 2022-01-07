@@ -23,7 +23,7 @@ func ProcessHeader()gin.HandlerFunc{
 
 		}
 
-		_ , empty := global.V.AppMng.GetById(header.AppId)
+		_ , empty := global.V.ProjectMng.GetById(header.AppId)
 		if empty{
 
 		}

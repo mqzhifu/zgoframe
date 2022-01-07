@@ -82,6 +82,6 @@ func (serverManager *ServerManager) GetById(id int)(Server,bool){
 }
 
 func  (serverManager *Server)GetTypeName(typeValue int)string{
-	v ,_ := APP_TYPE_MAP[typeValue]
+	v ,_ := PROJECT_TYPE_MAP[typeValue]
 		return v
 }

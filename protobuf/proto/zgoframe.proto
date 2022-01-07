@@ -7,11 +7,6 @@ service Zgoframe {
     rpc Comm (RequestUser) returns (ResponseUser) {}//测试6
 }
 
-
-service Sync {
-    rpc Heartbeat (CSHeartbeat) returns (SCHeartbeat) {}//测试7
-}
-
 message RequestUser{
     uint64      id              = 1;
     string      nickname        = 2;

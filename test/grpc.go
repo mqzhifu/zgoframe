@@ -1,10 +1,8 @@
 package test
 
 import (
-	"context"
 	"errors"
 	"fmt"
-	"time"
 	"zgoframe/core/global"
 	"zgoframe/protobuf/pb"
 	"zgoframe/protobuf/pbservice"
@@ -33,8 +31,9 @@ func StartService()error{
 
 
 	node := util.ServiceNode{
-		ServiceId: global.C.System.ServiceId,
-		ServiceName: serviceName,
+		ProjectId: global.C.System.ProjectId,
+		//ServiceId: global.C.System.ServiceId,
+		//ServiceName: serviceName,
 		Ip:ip ,
 		ListenIp:listenIp,
 		Port:port ,
@@ -72,36 +71,36 @@ func StartService()error{
 }
 
 func  StartClient()error{
-	//util.ExitPrint(global.V.ServiceManager.GetByName("zgoframe"))
-	//grpcClientConn,err := global.V.Grpc.GetClient(global.C.Grpc.Ip,global.C.Grpc.Port)
-	//dns := global.C.Grpc.Ip+ ":4141"
-	//dns := global.C.Grpc.Ip+ ":6666"
-	//grpcClientConn, err := grpc.Dial(dns,grpc.WithInsecure())
-	serviceName :=  global.V.Service.Name
-	serviceNode ,err := global.V.ServiceDiscovery.GetLoadBalanceServiceNodeByServiceName(serviceName,"")
-	if err != nil{
-		util.ExitPrint("GetServiceNodeByServiceName err:",err)
-	}
-
-	fmt.Println("serviceNode:",serviceNode)
-	grpcClientConn, err := global.V.Grpc.GetClient(serviceName,global.V.App.Id,serviceNode.Ip,serviceNode.Port)
-	//grpcClientConn, err := grpc.Dial(dns,grpc.WithInsecure(),grpc.WithUnaryInterceptor(clientInterceptorBack))
-	//util.MyPrint("client grp dns:",dns , " err:",err)
-	if err != nil{
-		util.MyPrint("grpc GetClient err:",err)
-		return  err
-	}
-
-	pbServiceFirst := pb.NewZgoframeClient(grpcClientConn)
-	RequestRegPlayer := pb.RequestUser{}
-	RequestRegPlayer.Id = 123123
-	RequestRegPlayer.Nickname = "xiaoz"
-	res ,err:= pbServiceFirst.SayHello(context.Background(),&RequestRegPlayer)
-	util.MyPrint("grpc return:",res , " err:",err)
-
-
-	global.V.ServiceDiscovery.ShowJsonByService()
-	global.V.ServiceDiscovery.ShowJsonByNodeServer()
+	////util.ExitPrint(global.V.ServiceManager.GetByName("zgoframe"))
+	////grpcClientConn,err := global.V.Grpc.GetClient(global.C.Grpc.Ip,global.C.Grpc.Port)
+	////dns := global.C.Grpc.Ip+ ":4141"
+	////dns := global.C.Grpc.Ip+ ":6666"
+	////grpcClientConn, err := grpc.Dial(dns,grpc.WithInsecure())
+	//serviceName :=  global.V.Service.Name
+	//serviceNode ,err := global.V.ServiceDiscovery.GetLoadBalanceServiceNodeByServiceName(serviceName,"")
+	//if err != nil{
+	//	util.ExitPrint("GetServiceNodeByServiceName err:",err)
+	//}
+	//
+	//fmt.Println("serviceNode:",serviceNode)
+	//grpcClientConn, err := global.V.Grpc.GetClient(serviceName,global.V.Project.Id,serviceNode.Ip,serviceNode.Port)
+	////grpcClientConn, err := grpc.Dial(dns,grpc.WithInsecure(),grpc.WithUnaryInterceptor(clientInterceptorBack))
+	////util.MyPrint("client grp dns:",dns , " err:",err)
+	//if err != nil{
+	//	util.MyPrint("grpc GetClient err:",err)
+	//	return  err
+	//}
+	//
+	//pbServiceFirst := pb.NewZgoframeClient(grpcClientConn)
+	//RequestRegPlayer := pb.RequestUser{}
+	//RequestRegPlayer.Id = 123123
+	//RequestRegPlayer.Nickname = "xiaoz"
+	//res ,err:= pbServiceFirst.SayHello(context.Background(),&RequestRegPlayer)
+	//util.MyPrint("grpc return:",res , " err:",err)
+	//
+	//
+	//global.V.ServiceDiscovery.ShowJsonByService()
+	//global.V.ServiceDiscovery.ShowJsonByNodeServer()
 
 	return nil
 }
@@ -114,24 +113,24 @@ func client2()error{
 }
 
 func clientSend(){
-	for{
-		serviceName :=  global.V.Service.Name
-		grpcClientConn, err := global.V.Grpc.GetClientByLoadBalance(serviceName,0)
-		if err != nil{
-			util.MyPrint("grpc GetClient err:",err)
-			return
-		}
-
-		pbServiceFirst := pb.NewZgoframeClient(grpcClientConn)
-		RequestRegPlayer := pb.RequestUser{}
-		RequestRegPlayer.Id = 123123
-		RequestRegPlayer.Nickname = "xiaoz"
-		res ,err:= pbServiceFirst.SayHello(context.Background(),&RequestRegPlayer)
-		util.MyPrint("grpc return:",res , " err:",err)
-
-		time.Sleep(time.Second * 1)
-		util.MyPrint("sleep 1 second...")
-	}
+	//for{
+	//	serviceName :=  global.V.Service.Name
+	//	grpcClientConn, err := global.V.Grpc.GetClientByLoadBalance(serviceName,0)
+	//	if err != nil{
+	//		util.MyPrint("grpc GetClient err:",err)
+	//		return
+	//	}
+	//
+	//	pbServiceFirst := pb.NewZgoframeClient(grpcClientConn)
+	//	RequestRegPlayer := pb.RequestUser{}
+	//	RequestRegPlayer.Id = 123123
+	//	RequestRegPlayer.Nickname = "xiaoz"
+	//	res ,err:= pbServiceFirst.SayHello(context.Background(),&RequestRegPlayer)
+	//	util.MyPrint("grpc return:",res , " err:",err)
+	//
+	//	time.Sleep(time.Second * 1)
+	//	util.MyPrint("sleep 1 second...")
+	//}
 }
 
 

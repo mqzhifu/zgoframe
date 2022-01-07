@@ -74,7 +74,7 @@ func GetNewZapLog(alert *util.AlertPush,moduleName string,FileName string,InCons
 	if global.C.Zap.ShowLine{
 		logger = logger.WithOptions(zap.AddCaller())
 	}
-	logger = logger.With(zap.Int("appId", global.V.App.Id))
+	logger = logger.With(zap.Int("appId", global.V.Project.Id))
 	//logger.With(zap.String("appId","5"))
 	return logger,nil
 }

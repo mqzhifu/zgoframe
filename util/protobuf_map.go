@@ -90,7 +90,9 @@ func (protobufMap *ProtobufMap)loadingActionMapConfigFile(fileName string)(map[i
 		//1000|Login|RequestLogin|ResponseLoginRes|登陆
 		serviceName := contentArr[1]
 
-		_, empty := protobufMap.ProjectManager.GetByKey(serviceName)
+		//map txt 里都是首字节大写，这里转成小写
+		lowServiceName :=StrFirstToLower(serviceName)
+		_, empty := protobufMap.ProjectManager.GetByKey(lowServiceName)
 		if empty{
 			return nil,errors.New("serviceName not in project list :" + serviceName)
 		}

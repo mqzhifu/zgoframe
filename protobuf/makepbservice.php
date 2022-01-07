@@ -1,6 +1,19 @@
 <?php
-//php makepbservice.php pb /data/www/golang/src/zgoframe/protobuf/proto /data/www/golang/src/zgoframe/protobuf/pbservice
-//正则匹配一个service 块时，结尾必须是：} ，上一行必须是\n结束
+/*
+脚本执行：
+php makepbservice.php pb /data/www/golang/src/zgoframe/protobuf/proto /data/www/golang/src/zgoframe/protobuf/pbservice
+
+功能描述：快速生成protobuf中间文件等工具集
+
+1. 编译 目录下，所有的.proto ，生成  pb.go
+2. 生成grpc 服务的 快捷实现go文件
+3. 生成一个服务的快捷调用方法go文件
+4. 对每个服务的每个函数生成对应ID，供长连接使用(生成一个txt文件)
+
+以上所有功能，均依赖：.proto 描述文件
+
+注：正则匹配一个service 块时，结尾必须是：} ，上一行必须是\n结束
+*/
 define("DEBUG",1);
 
 
@@ -10,16 +23,20 @@ if (count($argv) < 4){
 }
 
 $packageName = $argv[1];//包名
-$protoFilePath = $argv[2];//.proto路径
-$outPath = $argv[3];//输出路径
+$protoFilePath = $argv[2];//.proto文件路径
+$outPath = $argv[3];//生成输出文件的路径
 
-//$mapFuncIdNo = 1000;//方法ID起始值
+//生成函数映射ID时使用
 $GLOBALS["mapFuncIdNo"] = "0";
 $GLOBALS["mapServiceIdNo"] = "1";
 $GLOBALS["map"] = "";
 $mapIdSeparate = "|";
 
-pp("packageName:$packageName , protoFilePath:$protoFilePath , outPath:$outPath ");
+$compileCommand = "export PATH=\$PATH:/var/root/go/bin; cd /data/www/golang/src/zgoframe/protobuf; protoc --go_out=plugins=grpc:./pb ./proto/#proto_file_name#";
+
+pp("packageName:$packageName , protoFilePath:$protoFilePath , outPath:$outPath");
+pp("compileCommand:$compileCommand");
+
 
 $match = null;
 //读取一个目录下的所有文件
@@ -27,21 +44,24 @@ $protoPathFileList = getDirFiles($protoFilePath);
 if (count($protoPathFileList) <=0 ){
     exit("count(protoPathFileList) <=0");
 }
-
+//处理每一个.proto 文件
 $ServiceFastCallSwitchCase = array();
-foreach ($protoPathFileList as $k=>$v){
-    $fileArr = explode(".",$v);
+foreach ($protoPathFileList as $k=>$fileName){
+    $fileArr = explode(".",$fileName);
     if (count($fileArr) != 2){
-        exit("file name err:$v");
+        exit("file name err:$fileName");
     }
     if ( $fileArr[1] != "proto" ) {
         exit("file exit name must = .proto");
     }
 
+    compileProtoFile($compileCommand,$fileName);
+    //开始具体处理一个文件里的内容，做:编译、分析等处理，注：一个文件里可能包括多个服务
     $serviceList = oneService($outPath,$protoFilePath,$fileArr[0],$packageName);
     if (!$serviceList || count($serviceList) <= 0){
         continue;
     }
+    //生成快捷调用代码 + 函数映射ID
     foreach ($serviceList as $serviceName=>$info){
         $MountClientSwitchCaseStr = MountClientSwitchCase();
         $MountClientSwitchCaseStr = str_replace("#service_name#",$serviceName,$MountClientSwitchCaseStr);
@@ -59,8 +79,14 @@ foreach ($protoPathFileList as $k=>$v){
 createServiceFastCallSwitch($ServiceFastCallSwitchCase,$outPath);
 createMapFile($outPath);
 exit(111);
-
-
+//编译proto文件，生成pb.go 文件
+function compileProtoFile($compileCommand,$fileName){
+    $compileCommandFile = str_replace("#proto_file_name#",$fileName,$compileCommand);
+    pp("compileProtoFile: $compileCommandFile");
+    $output = shell_exec($compileCommandFile);
+    pp("output:$output");
+}
+//函数名映射ID
 function mapFunctionId($serviceName,$serviceFuncListInfo,$mapIdSeparate){
     $serviceId = $GLOBALS["mapServiceIdNo"];
     if(strlen($serviceId) < 2 ){
@@ -94,21 +120,23 @@ function mapFunctionId($serviceName,$serviceFuncListInfo,$mapIdSeparate){
     $GLOBALS["mapServiceIdNo"]++;
 
 }
-
+//具体分析/处理一个文件中的内容
 function oneService($outPath,$protoFilePath,$protoFileNamePrefix,$packName){
     pp("oneService:".$protoFileNamePrefix);
+    //.proto文件名
     $protoFileName = $protoFilePath . "/". $protoFileNamePrefix.".proto";
+    //输出路径
     $outFile = $outPath . "/" . $protoFileNamePrefix. ".go";
-
+    //打开该文件，交获取文件内容
     $protoFileContent = file_get_contents($protoFileName);
-
+    //获取包名
     preg_match_all('/package(.*);/isU',$protoFileContent,$match);
     $package = trim($match[1][0]);
 
-    pp("\n\n\n\n\n");
+    pp("\n\n\n");
     //读取一个文件中的，若干个service 块
     preg_match_all('/service(.*){(.*)\n}/isU',$protoFileContent,$match);
-    pp($match);
+//    pp($match);
 
     if (count($match[0]) == 0){
         pp("no match any service block~");
@@ -120,7 +148,7 @@ function oneService($outPath,$protoFilePath,$protoFileNamePrefix,$packName){
         $serviceName = trim($v);
         $rpcFuncMatch = null;
         preg_match_all("/rpc(.*)\((.*)\)(.*)returns(.*)\((.*)\)(.*)\/\/(.*)\n/isU",$match[0][$k],$rpcFuncMatch);
-        var_dump($rpcFuncMatch[0]);
+//        var_dump($rpcFuncMatch[0]);
         foreach ($rpcFuncMatch[0] as $k2=>$v2){
             $arr = array(
                 'name'=>trim($rpcFuncMatch[1][$k2]),
@@ -135,11 +163,12 @@ function oneService($outPath,$protoFilePath,$protoFileNamePrefix,$packName){
 
     }
     $s = "#";
-
+    $serviceImplementPackage = "pbservice";
 
     $go_file_content = get_new_go_file();
 
-    $go_file_content = str_replace($s."package".$s,$packName,$go_file_content);
+    $go_file_content = str_replace($s."package".$s,$serviceImplementPackage,$go_file_content);
+
 
 
 
@@ -152,9 +181,9 @@ function oneService($outPath,$protoFilePath,$protoFileNamePrefix,$packName){
             $func_str = str_replace($s."class_name".$s,lcfirst($serviceName),$func_str);
             $func_str = str_replace($s."class_type".$s,$serviceName,$func_str);
             $func_str = str_replace($s."func_name".$s,$v['name'],$func_str);
-            $func_str = str_replace($s."para_in_type".$s,$packName.$v['in'] . ".",$func_str);
+            $func_str = str_replace($s."para_in_type".$s,$packName.".".$v['in'] ,$func_str);
             $func_str = str_replace($s."para_in_name".$s,lcfirst($v['in']),$func_str);
-            $func_str = str_replace($s."return_type".$s,$packName.$v['out'].".",$func_str);
+            $func_str = str_replace($s."return_type".$s,$packName.".".$v['out'],$func_str);
             $func_str = str_replace($s."return_name".$s,lcfirst($v['out']),$func_str);
             $func_total_str .= $func_str . "\n";
         }
@@ -163,7 +192,6 @@ function oneService($outPath,$protoFilePath,$protoFileNamePrefix,$packName){
     }
 
     file_put_contents($outFile,$go_file_content);
-
 
     return $service;
 
@@ -184,7 +212,7 @@ function createServiceFastCallSwitch($ServiceFastCallSwitchCase,$outPath){
 
     $content = "\n\n" . $getClient . "\n\n" . $MountClientSwitchStr;
 
-    $outFile = $outPath . "/" . "fast_call.go";
+    $outFile = $outPath . "/" . "fast_call.go.tmp";
     file_put_contents($outFile,$content);
 }
 

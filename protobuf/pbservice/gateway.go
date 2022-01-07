@@ -1,46 +1,50 @@
-package pb
+package pbservice
 
 import (
 	"context"
 	"zgoframe/protobuf/pb"
 )
-type FrameSync struct{}
+type Gateway struct{}
 
 
-func (frameSync *FrameSync)ClientLogin(ctx context.Context,requestLogin *pbRequestLogin.) (*pbResponseLoginRes.,error){
-    responseLoginRes := &pbResponseLoginRes.{}
+func (gateway *Gateway)ClientLogin(ctx context.Context,requestLogin *pb.RequestLogin) (*pb.ResponseLoginRes,error){
+    responseLoginRes := &pb.ResponseLoginRes{}
     return responseLoginRes,nil
 }
-func (frameSync *FrameSync)ClientPing(ctx context.Context,requestClientPing *pbRequestClientPing.) (*pbResponseServerPong.,error){
-    responseServerPong := &pbResponseServerPong.{}
+func (gateway *Gateway)ClientPing(ctx context.Context,requestClientPing *pb.RequestClientPing) (*pb.ResponseServerPong,error){
+    responseServerPong := &pb.ResponseServerPong{}
     return responseServerPong,nil
 }
-func (frameSync *FrameSync)ClientPong(ctx context.Context,requestClientPong *pbRequestClientPong.) (*pbResponseServerPong.,error){
-    responseServerPong := &pbResponseServerPong.{}
+func (gateway *Gateway)ClientPong(ctx context.Context,requestClientPong *pb.RequestClientPong) (*pb.ResponseServerPong,error){
+    responseServerPong := &pb.ResponseServerPong{}
     return responseServerPong,nil
 }
-func (frameSync *FrameSync)ClientHeartbeat(ctx context.Context,requestClientHeartbeat *pbRequestClientHeartbeat.) (*pbEmpty.,error){
-    empty := &pbEmpty.{}
+func (gateway *Gateway)ClientHeartbeat(ctx context.Context,requestClientHeartbeat *pb.RequestClientHeartbeat) (*pb.Empty,error){
+    empty := &pb.Empty{}
     return empty,nil
 }
-func (frameSync *FrameSync)ServerPing(ctx context.Context,responseServerPing *pbResponseServerPing.) (*pbRequestClientPong.,error){
-    requestClientPong := &pbRequestClientPong.{}
+func (gateway *Gateway)ServerPing(ctx context.Context,responseServerPing *pb.ResponseServerPing) (*pb.RequestClientPong,error){
+    requestClientPong := &pb.RequestClientPong{}
     return requestClientPong,nil
 }
-func (frameSync *FrameSync)ServerPong(ctx context.Context,responseServerPong *pbResponseServerPong.) (*pbEmpty.,error){
-    empty := &pbEmpty.{}
+func (gateway *Gateway)ServerPong(ctx context.Context,responseServerPong *pb.ResponseServerPong) (*pb.Empty,error){
+    empty := &pb.Empty{}
     return empty,nil
 }
-func (frameSync *FrameSync)ServerHeartbeat(ctx context.Context,requestClientHeartbeat *pbRequestClientHeartbeat.) (*pbEmpty.,error){
-    empty := &pbEmpty.{}
+func (gateway *Gateway)ServerHeartbeat(ctx context.Context,requestClientHeartbeat *pb.RequestClientHeartbeat) (*pb.Empty,error){
+    empty := &pb.Empty{}
     return empty,nil
 }
-func (frameSync *FrameSync)ServerLogin(ctx context.Context,responseLoginRes *pbResponseLoginRes.) (*pbEmpty.,error){
-    empty := &pbEmpty.{}
+func (gateway *Gateway)ServerLogin(ctx context.Context,responseLoginRes *pb.ResponseLoginRes) (*pb.Empty,error){
+    empty := &pb.Empty{}
     return empty,nil
 }
-func (frameSync *FrameSync)KickOff(ctx context.Context,responseKickOff *pbResponseKickOff.) (*pbEmpty.,error){
-    empty := &pbEmpty.{}
+func (gateway *Gateway)KickOff(ctx context.Context,responseKickOff *pb.ResponseKickOff) (*pb.Empty,error){
+    empty := &pb.Empty{}
     return empty,nil
+}
+func (gateway *Gateway)ProjectPush(ctx context.Context,requestProjectPush *pb.RequestProjectPush) (*pb.ResponseProjectPush,error){
+    responseProjectPush := &pb.ResponseProjectPush{}
+    return responseProjectPush,nil
 }
 

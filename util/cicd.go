@@ -107,7 +107,7 @@ func(superVisor *SuperVisor)CreateServiceConfFile(content string)error{
 
 type CicdManagerOption struct{
 	ServerList 		map[int]Server
-	AppList 		map[int]App
+	AppList 		map[int]Project
 	ServiceList 	map[int]Service
 	InstanceManager *InstanceManager
 	Config 			ConfigCicd

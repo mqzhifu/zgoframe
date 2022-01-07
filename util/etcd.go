@@ -93,8 +93,8 @@ func NewMyEtcdSdk(etcdOption EtcdOption)(myEtcd *MyEtcd,errs error){
 	myEtcd.cli = cli
 	myEtcd.option = etcdOption
 	//获取自己项目想着的配置信息
-	myEtcd.iniAppConf()
-	return myEtcd,nil
+	err := myEtcd.iniAppConf()
+	return myEtcd,err
 }
 func (myEtcd *MyEtcd)Shutdown(){
 	myEtcd.cli.Close()
@@ -278,16 +278,16 @@ func  (myEtcd *MyEtcd)getConfRootPrefix()string{
 }
 //初始化，一个项目下的，所有配置文件（ 路径：/项目名/环境名/）
 //减少请求etcd次数
-func  (myEtcd *MyEtcd)iniAppConf() {
+func  (myEtcd *MyEtcd)iniAppConf() error {
 	myEtcd.option.Log.Info("etcd iniAppConf : ")
 	confListEtcd,err := myEtcd.GetListByPrefix(myEtcd.getConfRootPrefix())
 	if err != nil{
 		myEtcd.option.Log.Error("iniAppConf err:" + err.Error())
-		return
+		return errors.New("GetListByPrefix:" + err.Error())
 	}
 	if len(confListEtcd) == 0{
 		myEtcd.option.Log.Warn("iniAppConf confListEtcd is empty!")
-		return
+		return nil
 	}
 	confList := make(map[string]string)
 	for k,v := range confListEtcd{
@@ -297,6 +297,8 @@ func  (myEtcd *MyEtcd)iniAppConf() {
 		confList[str] = v
 	}
 	myEtcd.AppConflist = confList
+
+	return nil
 }
 func  (myEtcd *MyEtcd)DelOne(key string)error{
 	myEtcd.option.Log.Info("myEtcd DelOne:" + key)

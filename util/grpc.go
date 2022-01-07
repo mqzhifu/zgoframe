@@ -46,7 +46,7 @@ func  (myGrpcClient *MyGrpcClient)MountClientToConnect(serviceName string){
 	case "Zgoframe":
 		grpcClient = pb.NewZgoframeClient(myGrpcClient.ClientConn)
 	case "Sync":
-		grpcClient = pb.NewSyncClient(myGrpcClient.ClientConn)
+		//grpcClient = pb.NewSyncClient(myGrpcClient.ClientConn)
 	}
 
 	myGrpcClient.GrpcClientList[serviceName] = grpcClient

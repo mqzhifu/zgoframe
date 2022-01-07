@@ -2,7 +2,6 @@ package util
 
 import (
 	"errors"
-	"fmt"
 	"github.com/prometheus/client_golang/prometheus"
 	"go.uber.org/zap"
 )
@@ -37,18 +36,20 @@ func (myMetrics *MyMetrics)GroupNameHasExist(name string)bool{
 	if ok {
 		rs = true
 	}
-	fmt.Println("GroupNameHasExist "+ name + " rs:",rs)
+	//fmt.Println("GroupNameHasExist "+ name + " rs:",rs)
 	return rs
 }
 
 func (myMetrics *MyMetrics)CreateGauge(name string )error{
 	if myMetrics.GroupNameHasExist(name) {
-		return errors.New("GroupNameHasExist:"+name)
+		return errors.New("CreateGauge GroupNameHasExist:"+name)
 	}
 	gauge := prometheus.NewGauge(prometheus.GaugeOpts{
 		Name:      name,
 		//Help:      "the temperature of CPU",
 	})
+
+	myMetrics.Log.Info("metrics: CreateGauge "+ name)
 
 	prometheus.MustRegister(gauge)
 	myMetrics.Groups[name] = gauge
@@ -69,7 +70,7 @@ func (myMetrics *MyMetrics)GaugeSet(name string,value float64 )error{
 
 func (myMetrics *MyMetrics)GaugeInc(name string )error{
 	if !myMetrics.GroupNameHasExist(name) {
-		return errors.New("GroupNameHasExist:"+name)
+		return errors.New("GroupName not Exist:"+name)
 	}
 
 	gauge := myMetrics.Groups[name].(prometheus.Gauge)
@@ -104,13 +105,15 @@ func (myMetrics *MyMetrics)GaugeAdd(name string,value float64 )error{
 //Counter start
 func (myMetrics *MyMetrics)CreateCounter(name string )error{
 	if myMetrics.GroupNameHasExist(name) {
-		return errors.New("GroupNameHasExist:"+name)
+		return errors.New("CreateCounter GroupNameHasExist:"+name)
 	}
 	var AccessCounter = prometheus.NewCounter(
 		prometheus.CounterOpts{
 			Name: name,
 		},
 	)
+
+	myMetrics.Log.Info("metrics: CreateCounter "+name )
 
 	prometheus.MustRegister(AccessCounter)
 	myMetrics.Groups[name] = AccessCounter

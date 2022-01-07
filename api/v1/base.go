@@ -121,10 +121,10 @@ func Login(c *gin.Context) {
 // @Success 200 {string} string "{"success":true,"data":{},"msg":"登陆成功"}"
 // @Router /base/parserToken [post]
 func AppList(c *gin.Context ) {
-	var  a model.App
+	var  a model.Project
 	c.ShouldBind(&a)
 
-	rs := global.V.AppMng.Pool
+	rs := global.V.ProjectMng.Pool
 
 	httpresponse.OkWithDetailed(rs, "成功", c)
 }
@@ -137,8 +137,8 @@ func AppList(c *gin.Context ) {
 // @Success 200 {string} string "{"success":true,"data":{},"msg":"登陆成功"}"
 // @Router /base/parserToken [post]
 func AppTypeList(c *gin.Context ) {
-	var  a model.App
+	var  a model.Project
 	c.ShouldBind(&a)
 
-	httpresponse.OkWithDetailed(util.APP_TYPE_MAP, "成功", c)
+	httpresponse.OkWithDetailed(util.PROJECT_TYPE_MAP, "成功", c)
 }

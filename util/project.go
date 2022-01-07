@@ -92,7 +92,7 @@ func (projectManager *ProjectManager) GetById(id int)(Project,bool){
 
 func (projectManager *ProjectManager) GetByKey(name string)(project Project,empty bool){
 	for _,v:= range projectManager.Pool{
-		if v.Name == name{
+		if v.Key == name{
 			return v,false
 		}
 	}

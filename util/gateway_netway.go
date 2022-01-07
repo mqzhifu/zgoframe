@@ -89,6 +89,7 @@ func NewNetWay(option NetWayOption)(*NetWay,error)  {
 		WsUri			: netWay.Option.WsUri,
 		UdpPort			: netWay.Option.UdpPort,
 		OpenNewConnBack	: netWay.OpenNewConn,
+		Log				: option.Log,
 	}
 	netWay.ProtocolManager =  NewProtocolManager(protocolManagerOption)
 	err := netWay.ProtocolManager.Start()
@@ -109,19 +110,19 @@ func NewNetWay(option NetWayOption)(*NetWay,error)  {
 	//统计模块
 	netWay.Metrics = NewMyMetrics(option.Log)
 	//netWay.Metrics.CreateCounter("total.fd.num")
-	netWay.Metrics.CreateCounter("create.fd.ok")
-	netWay.Metrics.CreateCounter("create.fd.failed")
-	netWay.Metrics.CreateCounter("close.fd.num")
-	netWay.Metrics.CreateCounter("total.output.num")
-	netWay.Metrics.CreateGauge("total.output.size")
-	netWay.Metrics.CreateGauge("total.input.num")
-	netWay.Metrics.CreateGauge("total.input.size")
+	netWay.Metrics.CreateCounter("create_fd_ok")
+	netWay.Metrics.CreateCounter("create_fd_failed")
+	netWay.Metrics.CreateCounter("close_fd_num")
+	netWay.Metrics.CreateCounter("total_output_num")
+	netWay.Metrics.CreateGauge("total_output_size")
+	netWay.Metrics.CreateCounter("total_input_num")
+	netWay.Metrics.CreateGauge("total_input_size")
 	//player.fd.num
 	//player.fd.size
 
 	//在外层的CTX上，派生netway自己的根ctx
 	//startupCtx ,cancel := context.WithCancel(netWay.Option.OutCxt)
-	startupCtx , cancelFunc := context.WithCancel(netWay.Option.OutCxt)
+	startupCtx , cancelFunc := context.WithCancel(context.Background())
 	netWay.MyCancelCtx = startupCtx
 	netWay.MyCancelFunc = cancelFunc
 
@@ -137,7 +138,7 @@ func(netWay *NetWay)OpenNewConn( connFD FDAdapter) {
 
 	if netWay.Status == NETWAY_STATUS_CLOSE{//当前网关已经关闭了，还有新的连接进来
 		//记录创建FD失败次数
-		netWay.Metrics.CounterInc("create.fd.failed")
+		netWay.Metrics.CounterInc("create_fd_failed")
 		errMsg := "netWay closing... not accept new connect , sleep 1!"
 		netWay.Option.Log.Error(errMsg)
 		//直接给一个FD发送消息，不做任何封装
@@ -198,7 +199,7 @@ func(netWay *NetWay)OpenNewConn( connFD FDAdapter) {
 	//告知玩家：登陆结果
 	netWay.SendMsgCompressByUid(jwtData.Payload.Uid,"loginRes",&loginRes)
 	//统计 当前FD 数量/历史FD数量
-	netWay.Metrics.CounterInc("create.fd.ok")
+	netWay.Metrics.CounterInc("create_fd_ok")
 	//初始化即登陆成功的响应均完成后，开始该连接的 消息IO 协程
 	go NewConn.IOLoop()
 	//netWay.serverPingRtt(time.Duration(rttMinTimeSecond),NewWsConn,1)
@@ -215,7 +216,7 @@ func(netWay *NetWay)heartbeat(requestClientHeartbeat pb.RequestClientHeartbeat,c
 func(netWay *NetWay)CloseFD(connFD FDAdapter,source int){
 	connFD.Close()
 	//记录主动关闭FD次数
-	netWay.Metrics.CounterInc("close.fd.num")
+	netWay.Metrics.CounterInc("close_fd_num")
 }
 //关闭一个已登陆成功的FD
 func (netWay *NetWay)CloseOneConn(conn *Conn,source int){
@@ -245,7 +246,7 @@ func (netWay *NetWay)CloseOneConn(conn *Conn,source int){
 	//myMetrics.fastLog("total.fd.num",METRICS_OPT_DIM,0)
 	//myMetrics.fastLog("history.fd.destroy",METRICS_OPT_INC,0)
 	//netWay.Metrics.CounterDec("total.fd.num")
-	netWay.Metrics.CounterInc("close.fd.num")
+	netWay.Metrics.CounterInc("close_fd_num")
 }
 //退出，目前能直接调用此函数的，就只有一种情况：
 //MAIN 接收到了中断信号，并执行了：context-cancel()，然后，startup函数的守护监听到，调用些方法

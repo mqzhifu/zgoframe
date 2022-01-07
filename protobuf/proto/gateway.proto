@@ -6,7 +6,7 @@ package pb;
 option go_package ="./;pb";
 
 
-service FrameSync {
+service Gateway {
 
     rpc ClientLogin             (RequestLogin)              returns (ResponseLoginRes) {}//登陆
     rpc ClientPing              (RequestClientPing)         returns (ResponseServerPong) {}//客户端PING服务端

@@ -11,6 +11,7 @@ import (
 )
 //一个服务下面的一个节点,给服务发现使用
 type ServiceNode struct {
+	ProjectId 	int				`json:"project_id"`
 	ServiceId 	int 			`json:"service_id"`
 	ServiceName string			`json:"service_name"`
 	ListenIp 	string			`json:"listen_ip"`
@@ -210,6 +211,6 @@ func (serviceManager *ServiceManager) GetByName(name string)(service Service,isE
 }
 
 func  (serviceManager *ServiceManager)GetTypeName(typeValue int)string{
-	v ,_ := APP_TYPE_MAP[typeValue]
+	v ,_ := PROJECT_TYPE_MAP[typeValue]
 	return v
 }

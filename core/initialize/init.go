@@ -158,7 +158,7 @@ func (initialize * Initialize)Start()error{
 		//global.V.Metric.Test()
 	}
 	//初始化-protobuf 映射文件
-	dir := initialize.Option.RootDir + global.C.Protobuf.BasePath + "/" + global.C.Protobuf.PbServicePath
+	dir := initialize.Option.RootDir + "/" + global.C.Protobuf.BasePath + "/" + global.C.Protobuf.PbServicePath
 	//将rpc service 中的方法，转化成ID（由PHP生成 的ID map）
 	global.V.ProtobufMap ,err = util.NewProtobufMap(global.V.Zap,dir,global.C.Protobuf.IdMapFileName,global.V.ProjectMng)
 	if err != nil{
@@ -299,6 +299,7 @@ func GetNewEtcd(env string)(myEtcd *util.MyEtcd,err error){
 		Log			: global.V.Zap,
 	}
 	myEtcd,err  = util.NewMyEtcdSdk(option)
+	//util.ExitPrint(err)
 	return myEtcd,err
 }
 

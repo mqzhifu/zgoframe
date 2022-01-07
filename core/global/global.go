@@ -15,9 +15,11 @@ type Global struct {
 	Redis      *util.MyRedis
 	Gin        *gin.Engine
 	Gorm       *gorm.DB
-	App        util.App
-	Service		util.Service
-	AppMng		*util.AppManager
+	//App        util.App
+	//Service		util.Service
+	//AppMng		*util.AppManager
+	Project 	util.Project
+	ProjectMng  *util.ProjectManager
 	Etcd       *util.MyEtcd
 	HttpServer *http.Server
 	ServiceManager    *util.ServiceManager
@@ -28,7 +30,7 @@ type Global struct {
 	AlertHook 	*util.AlertHook	//报警：邮件 手机
 	Websocket  *util.Websocket
 	ConnMng 	*util.ConnManager
-	ConnPRotocol *util.ConnProtocol
+	ConnProtocol *util.ConnProtocol
 	RecoverGo	*util.RecoverGo
 	ProtobufMap *util.ProtobufMap
 	Process 	*util.Process

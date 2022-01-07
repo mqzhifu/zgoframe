@@ -1,4 +1,6 @@
 <?php
+//脚本必须在protobuf下执行
+//功能：根据当前目录proto下的.proto文件，快速生成 ：一个函数对应一个id number
 //正则匹配一个service 块时，结尾必须是：} ，上一行必须是\n结束
 define("DEBUG",1);
 
@@ -24,7 +26,7 @@ if (count($match[0]) == 0){
 }
 
 $service = null;
-$idNo = 1000;
+$idNo = 1000;//方法ID起始值
 
 foreach ($match[1] as $k =>$v){
     $serviceName = trim($v);

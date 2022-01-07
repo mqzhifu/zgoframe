@@ -22,8 +22,9 @@ type MyGrpcClient struct {
 
 type MyGrpcService struct {
 	ServiceName string
-	AppId 		int
-	ServiceId 	int
+	//AppId 		int
+	//ServiceId 	int
+	ProjectId 	int
 	ListenIp	string
 	OutIp		string
 	Port 		string
@@ -40,31 +41,16 @@ func (myGrpcServer *MyGrpcService)ServerStart(){
 
 //
 func  (myGrpcClient *MyGrpcClient)MountClientToConnect(serviceName string){
-	var incClient interface{}
+	var grpcClient interface{}
 	switch serviceName {
 	case "Zgoframe":
-		incClient = myGrpcClient.ZgoframeMountToConnect()
+		grpcClient = pb.NewZgoframeClient(myGrpcClient.ClientConn)
 	case "Sync":
-		incClient = myGrpcClient.SyncMountToConnect()
+		grpcClient = pb.NewSyncClient(myGrpcClient.ClientConn)
 	}
 
-	//myGrpcClient.GrpcClient = incClient
-	myGrpcClient.GrpcClientList[serviceName] = incClient
+	myGrpcClient.GrpcClientList[serviceName] = grpcClient
 }
-
-func  (myGrpcClient *MyGrpcClient)ZgoframeMountToConnect()pb.ZgoframeClient{
-	serviceClient := pb.NewZgoframeClient(myGrpcClient.ClientConn)
-	return serviceClient
-}
-
-func  (myGrpcClient *MyGrpcClient)SyncMountToConnect()pb.SyncClient{
-	serviceClient := pb.NewSyncClient(myGrpcClient.ClientConn)
-	return serviceClient
-}
-
-
-
-
 
 //#client#start
 

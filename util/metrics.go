@@ -139,5 +139,9 @@ func (myMetrics *MyMetrics)CounterDec(name string,value float64 )error{
 	return nil
 }
 
+func (myMetrics *MyMetrics)Shutdown(){
+
+}
+
 //Counter end
 

@@ -1,6 +1,8 @@
 package util
 
 import (
+	"bytes"
+	"encoding/binary"
 	"errors"
 	"fmt"
 	"math/rand"
@@ -187,4 +189,16 @@ func TypeConversion(value string, ntype string) (reflect.Value, error) {
 	return reflect.ValueOf(value), errors.New("未知的类型：" + ntype)
 }
 
+func BytesToInt32(bys []byte) int {
+	byteBuff := bytes.NewBuffer(bys)
+	var data int32
+	binary.Read(byteBuff, binary.BigEndian, &data)
+	return int(data)
+}
 
+func Int32ToBytes(n int32) []byte {
+	//x := int32(n)
+	bytesBuffer := bytes.NewBuffer([]byte{})
+	binary.Write(bytesBuffer, binary.BigEndian, n)
+	return bytesBuffer.Bytes()
+}

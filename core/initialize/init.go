@@ -71,8 +71,8 @@ func (initialize * Initialize)Start()error{
 	}
 	model.Db = global.V.Gorm
 	//初始化APP信息，所有项目都需要有AppId或serviceId，因为要做验证，同时目录名也包含在里面
-	err = InitAppService()
-	if err !=nil{
+	err = InitProject()
+	if err !=nil {
 		return err
 	}
 	//项目目录名，必须跟APP-INFO里的key相同
@@ -158,9 +158,13 @@ func (initialize * Initialize)Start()error{
 		//global.V.Metric.Test()
 	}
 	//初始化-protobuf 映射文件
-	dir := initialize.Option.RootDir + "/protobuf"
+	dir := initialize.Option.RootDir + global.C.Protobuf.BasePath + "/" + global.C.Protobuf.PbServicePath
 	//将rpc service 中的方法，转化成ID（由PHP生成 的ID map）
-	global.V.ProtobufMap = util.NewProtobufMap(global.V.Zap,dir)
+	global.V.ProtobufMap ,err = util.NewProtobufMap(global.V.Zap,dir,global.C.Protobuf.IdMapFileName,global.V.ProjectMng)
+	if err != nil{
+		util.MyPrint("GetNewViper err:",err)
+		return err
+	}
 	//websocket
 	//if global.C.Websocket.Status == global.CONFIG_STATUS_OPEN{
 	//	if global.C.Http.Status != global.CONFIG_STATUS_OPEN{
@@ -171,8 +175,9 @@ func (initialize * Initialize)Start()error{
 	//grpc
 	if global.C.Grpc.Status == global.CONFIG_STATUS_OPEN{
 		grpcManagerOption := util.GrpcManagerOption{
-			AppId: global.V.App.Id,
-			ServiceId: global.V.Service.Id,
+			//AppId: global.V.App.Id,
+			//ServiceId: global.V.Service.Id,
+			ProjectId: global.V.Project.Id,
 			Log: global.V.Zap,
 		}
 		if global.C.ServiceDiscovery.Status == global.CONFIG_STATUS_OPEN{
@@ -209,7 +214,7 @@ func (initialize * Initialize)Start()error{
 	autoCreateUpDbTable()
 	//_ ,cancelFunc := context.WithCancel(option.RootCtx)
 	//进程通信相关
-	ProcessPathFileName := "/tmp/"+global.V.App.Name+".pid"
+	ProcessPathFileName := "/tmp/"+global.V.Project.Name+".pid"
 	global.V.Process = util.NewProcess(ProcessPathFileName,initialize.Option.RootCancelFunc,global.V.Zap,initialize.Option.RootQuitFunc)
 	global.V.Process.InitProcess()
 
@@ -264,24 +269,28 @@ func InitPath(rootDir string)(rootDirName string,err error){
 	//option.RootDirName = rootDirName
 	//global.V.RootDir = option.RootDir
 	//这里要求，项目表里配置的key与项目目录名必须一致.
-	if global.C.System.AppId > 0 {
-		if rootDirName != global.V.App.Key {
-			return rootDirName,errors.New("mainDirName != app name , "+rootDirName + " "+  global.V.App.Key)
-		}
-	}else{
-		if rootDirName != global.V.Service.Key {
-			return rootDirName,errors.New("mainDirName != serviceName name , "+rootDirName + " "+  global.V.Service.Key)
-		}
+	if rootDirName != global.V.Project.Key {
+		return rootDirName,errors.New("mainDirName != app name , "+rootDirName + " "+  global.V.Project.Key)
 	}
+
+	//if global.C.System.ProjectId > 0 {
+	//	if rootDirName != global.V.App.Key {
+	//		return rootDirName,errors.New("mainDirName != app name , "+rootDirName + " "+  global.V.App.Key)
+	//	}
+	//}else{
+	//	if rootDirName != global.V.Service.Key {
+	//		return rootDirName,errors.New("mainDirName != serviceName name , "+rootDirName + " "+  global.V.Service.Key)
+	//	}
+	//}
 
 	return rootDirName,nil
 }
 
 func GetNewEtcd(env string)(myEtcd *util.MyEtcd,err error){
 	option := util.EtcdOption{
-		AppName		: global.V.App.Name,
-		AppENV		: env,
-		AppKey		: global.V.App.Key,
+		ProjectName		: global.V.Project.Name,
+		ProjectENV		: env,
+		ProjectKey		: global.V.Project.Key,
 		FindEtcdUrl : global.C.Etcd.Url,
 		Username	: global.C.Etcd.Username,
 		Password	: global.C.Etcd.Password,

@@ -17,6 +17,14 @@ type Config struct {
 	Websocket Websocket
 	Grpc Grpc
 	Email Email
+	Protobuf Protobuf
+}
+
+type Protobuf struct {
+	BasePath 		string
+	PbServicePath 	string
+	ProtoPath 		string
+	IdMapFileName 	string
 }
 
 type ConfigMysql struct {
@@ -43,8 +51,9 @@ type Http struct {
 
 type System struct {
 	Status string
-	AppId int
-	ServiceId int
+	ProjectId int
+	//AppId int
+	//ServiceId int
 	DbType string
 	ENV string
 	ErrorMsgFile string

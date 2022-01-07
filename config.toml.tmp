@@ -1,8 +1,7 @@
 [system]
 dbType = "mysql"
 env = ""
-appId = 0
-serviceId = 1
+projectId = 1
 errorMsgFile = "/data/lang.txt"
 
 [jwt]
@@ -93,6 +92,12 @@ status = "open"
 ip = "127.0.0.1"
 port = "6666"
 servicePackagePrefix = "pb"
+
+[protobuf]
+basePath="protobuf"
+pbServicePath="pbservice"
+protoPath="proto"
+idMapFileName="map.txt"
 
 [serviceDiscovery]
 status = "open"

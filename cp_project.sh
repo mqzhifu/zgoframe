@@ -1,4 +1,8 @@
-#./cp_project.sh /data/www/golang/src/zgoframe /data/www/golang/src/logslave
+#/bin/bash
+
+set -e
+
+#./cp_project.sh /data/www/golang/src/zgoframe /data/www/golang/src/log_slave
 
 ORI_PROJECT_DIR=$1
 TAR_GET_DIR=$2
@@ -12,8 +16,6 @@ ls -l
 
 rm -rf *
 rm -rf .drone.yml .gitignore
-
-
 
 cd $ORI_PROJECT_DIR
 
@@ -29,4 +31,4 @@ ls -l
 unzip $targetZipFileFullName
 rm -rf $targetZipFileFullName
 
-cat ${$ORI_PROJECT_DIR}/config.toml |sed 's/projectId = 6/projectId = 3/'
+cat ${ORI_PROJECT_DIR}/config.toml |sed 's/projectId = 6/projectId = 3/' > $TAR_GET_DIR/config.toml

@@ -271,7 +271,7 @@ func InitPath(rootDir string)(rootDirName string,err error){
 	projectNameByte := util.CamelToSnake([]byte(global.V.Project.Key ))
 	projectName := util.StrFirstToLower(string(projectNameByte))
 	if rootDirName != projectName {
-		return rootDirName,errors.New("mainDirName != app name , "+rootDirName + " "+  global.V.Project.Key)
+		return rootDirName,errors.New("mainDirName != app name , "+rootDirName + " ProjectKey:"+  global.V.Project.Key + " ," + projectName)
 	}
 
 	//if global.C.System.ProjectId > 0 {

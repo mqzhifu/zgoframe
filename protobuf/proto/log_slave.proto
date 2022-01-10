@@ -1,0 +1,14 @@
+syntax = "proto3";
+import "proto/common.proto";
+
+package pb;
+option go_package ="./;pb";
+
+service LogSlave {
+    rpc Push (SlavePushMsg) returns (Empty) {}//前端推送日志
+}
+
+message SlavePushMsg{
+    string  title       = 1;
+    string  content     = 2;
+}

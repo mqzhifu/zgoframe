@@ -16,6 +16,14 @@
     
         return client.(pb.GatewayClient),nil
     }
+    func (grpcManager *GrpcManager)GetLogSlaveClient(name string)(pb.LogSlaveClient,error){
+        client, err := grpcManager.GetClientByLoadBalance(name,0)
+        if err != nil{
+            return nil,err
+        }
+    
+        return client.(pb.LogSlaveClient),nil
+    }
     func (grpcManager *GrpcManager)GetZgoframeClient(name string)(pb.ZgoframeClient,error){
         client, err := grpcManager.GetClientByLoadBalance(name,0)
         if err != nil{
@@ -33,6 +41,8 @@
         incClient = pb.NewFrameSyncClient(myGrpcClient.ClientConn)
     case "Gateway":
         incClient = pb.NewGatewayClient(myGrpcClient.ClientConn)
+    case "LogSlave":
+        incClient = pb.NewLogSlaveClient(myGrpcClient.ClientConn)
     case "Zgoframe":
         incClient = pb.NewZgoframeClient(myGrpcClient.ClientConn)
 

@@ -29,5 +29,6 @@
 50015|Gateway|ServerLogin|ResponseLoginRes|Empty|登陆
 50017|Gateway|KickOff|ResponseKickOff|Empty|该玩家在其它地方登陆，踢掉了当前连接
 50019|Gateway|ProjectPush|RequestProjectPush|ResponseProjectPush|service通知网关，给某些用户推送消息
+30001|LogSlave|Push|SlavePushMsg|Empty|前端推送日志
 60001|Zgoframe|SayHello|RequestUser|ResponseUser|测试5
 60003|Zgoframe|Comm|RequestUser|ResponseUser|测试6

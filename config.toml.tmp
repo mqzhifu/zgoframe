@@ -33,7 +33,7 @@ status = "open"
 db-number = 1
 ip = "#redis_ip#"
 port = "#redis_ip#"
-password =  '#redis_ps#'
+password =  '#redis_port#'
 
 [captcha]
 status = "open"

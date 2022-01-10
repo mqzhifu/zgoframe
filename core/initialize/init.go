@@ -268,7 +268,7 @@ func InitPath(rootDir string)(rootDirName string,err error){
 	//option.RootDirName = rootDirName
 	//global.V.RootDir = option.RootDir
 	//这里要求，项目表里配置的key与项目目录名必须一致.
-	projectNameByte := util.CamelToSnake([]byte(global.V.Project.Key ))
+	projectNameByte := util.CamelToSnake2([]byte(global.V.Project.Key ))
 	projectName := util.StrFirstToLower(string(projectNameByte))
 	if rootDirName != projectName {
 		return rootDirName,errors.New("mainDirName != app name , "+rootDirName + " ProjectKey:"+  global.V.Project.Key + " ," + projectName)

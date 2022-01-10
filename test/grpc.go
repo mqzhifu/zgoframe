@@ -7,6 +7,7 @@ import (
 	"zgoframe/protobuf/pb"
 	"zgoframe/protobuf/pbservice"
 	"zgoframe/util"
+	"context"
 )
 
 func Grpc(){
@@ -17,11 +18,9 @@ func Grpc(){
 
 
 func StartService()error{
-
-	//global.C.Grpc.ServicePackagePrefix +" . " +
-	serviceName :=  global.V.Service.Name
+	//包前缀 + 服务名
+	serviceName :=  global.C.Grpc.ServicePackagePrefix +"." + global.V.Service.Name
 	//serviceName := "pb.First"
-
 	ip := "127.0.0.1"
 	listenIp := "127.0.0.1"
 	port := "6666"
@@ -31,32 +30,31 @@ func StartService()error{
 
 
 	node := util.ServiceNode{
-		ProjectId: global.C.System.ProjectId,
-		//ServiceId: global.C.System.ServiceId,
-		//ServiceName: serviceName,
-		Ip:ip ,
-		ListenIp:listenIp,
-		Port:port ,
-		Protocol: util.SERVICE_PROTOCOL_GRPC,
-		IsSelfReg: true,
+		ProjectId	: global.C.System.ProjectId,
+		Ip			: ip ,
+		ListenIp	: listenIp,
+		Port		: port ,
+		Protocol	: util.SERVICE_PROTOCOL_GRPC,
+		IsSelfReg	: true,
 	}
-
-	global.V.ServiceDiscovery.Register(node)
-	//serviceNode ,err := global.V.ServiceManager.GetServiceNodeByServiceName(serviceName)
-	//if err != nil{
-	//	util.ExitPrint("GetServiceNodeByServiceName err")
-	//}
-
-	MyGrpcService,err := global.V.Grpc.CreateService(serviceName,node.ListenIp,node.Port)
-	//grpcOption := util.GrpcOption{
-	//	AppId 		: global.V.App.Id,
-	//	ListenIp	: global.C.Grpc.Ip,
-	//	OutIp		: global.C.Grpc.Ip,
-	//	Port 		: global.C.Grpc.Port,
-	//	Log			: global.V.Zap,
-	//}
-	//global.V.Grpc,_ =  util.NewMyGrpc(grpcOption)
-	//grpcInc,listen,err := global.V.Grpc.GetServer()
+	//注册一个服务(不牵扯GRPC)
+	err := global.V.ServiceDiscovery.Register(node)
+	if err != nil{
+		util.ExitPrint("erviceDiscovery.Registe failed:"+err.Error())
+	}
+	//测试一下刚刚注册的服务，是否成功，从服务管理池中直接寻找
+	testServerRegRs := false
+	for _,service := range global.V.ServiceManager.Pool{
+		if service.Name == serviceName{
+			testServerRegRs = true
+			break
+		}
+	}
+	if !testServerRegRs{
+		util.ExitPrint("reg failed .")
+	}
+	//服务发现注册成功后，再创建一个grpc server
+	MyGrpcService,err := global.V.GrpcManager.CreateService(serviceName,node.Ip,node.Port)
 	if err != nil{
 		util.MyPrint("GetServer err:",err)
 		return errors.New(err.Error())
@@ -71,12 +69,17 @@ func StartService()error{
 }
 
 func  StartClient()error{
-	////util.ExitPrint(global.V.ServiceManager.GetByName("zgoframe"))
-	////grpcClientConn,err := global.V.Grpc.GetClient(global.C.Grpc.Ip,global.C.Grpc.Port)
-	////dns := global.C.Grpc.Ip+ ":4141"
-	////dns := global.C.Grpc.Ip+ ":6666"
-	////grpcClientConn, err := grpc.Dial(dns,grpc.WithInsecure())
-	//serviceName :=  global.V.Service.Name
+	serviceName :=  global.V.Service.Key
+	zgoframeClient ,err := global.V.GrpcManager.GetZgoframeClient(serviceName,"")
+	if err != nil{
+		RequestRegPlayer := pb.RequestUser{}
+		RequestRegPlayer.Id = 123123
+		RequestRegPlayer.Nickname = "xiaoz"
+		res ,err:= zgoframeClient.SayHello(context.Background(),&RequestRegPlayer)
+		fmt.Println(res,err)
+	}
+
+
 	//serviceNode ,err := global.V.ServiceDiscovery.GetLoadBalanceServiceNodeByServiceName(serviceName,"")
 	//if err != nil{
 	//	util.ExitPrint("GetServiceNodeByServiceName err:",err)

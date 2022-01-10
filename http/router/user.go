@@ -54,6 +54,13 @@ func InitSysRouter(Router *gin.RouterGroup) {
 	}
 }
 
+func InitGatewayRouter(Router *gin.RouterGroup) {
+	GatewayRouter := Router.Group("sys")
+	{
+		GatewayRouter.POST("/service/:name/:func",v1.GatewayService)
+	}
+}
+
 
 func InitLogslaveRouter(Router *gin.RouterGroup) {
 	LogsalveRouter := Router.Group("logslave")

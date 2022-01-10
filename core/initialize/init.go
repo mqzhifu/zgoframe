@@ -179,11 +179,12 @@ func (initialize * Initialize)Start()error{
 			//ServiceId: global.V.Service.Id,
 			ProjectId: global.V.Project.Id,
 			Log: global.V.Zap,
+
 		}
 		if global.C.ServiceDiscovery.Status == global.CONFIG_STATUS_OPEN{
 			grpcManagerOption.ServiceDiscovery = global.V.ServiceDiscovery
 		}
-		global.V.Grpc,_ =  util.NewGrpcManager(grpcManagerOption)
+		global.V.GrpcManager,_ =  util.NewGrpcManager(grpcManagerOption)
 	}
 
 	if global.C.Email.Status == global.CONFIG_STATUS_OPEN {
@@ -221,8 +222,6 @@ func (initialize * Initialize)Start()error{
 	return nil
 }
 
-
-
 func autoCreateUpDbTable(){
 	//mydb := util.NewDbTool(global.V.Gorm)
 	//mydb.CreateTable(&model.User{},&model.SmsLog{},&model.SmsRule{},&model.App{},&model.UserReg{} , &model.OperationRecord{})
@@ -242,7 +241,7 @@ func (initialize * Initialize)Quit(){
 	}
 	//这个得优于etcd先关
 	if global.C.Grpc.Status == global.CONFIG_STATUS_OPEN{
-		global.V.Grpc.Shutdown()
+		global.V.GrpcManager.Shutdown()
 	}
 	//这个得优于etcd先关
 	if global.C.ServiceDiscovery.Status == global.CONFIG_STATUS_OPEN{
@@ -269,7 +268,9 @@ func InitPath(rootDir string)(rootDirName string,err error){
 	//option.RootDirName = rootDirName
 	//global.V.RootDir = option.RootDir
 	//这里要求，项目表里配置的key与项目目录名必须一致.
-	if rootDirName != global.V.Project.Key {
+	projectNameByte := util.CamelToSnake([]byte(global.V.Project.Key ))
+	projectName := util.StrFirstToLower(string(projectNameByte))
+	if rootDirName != projectName {
 		return rootDirName,errors.New("mainDirName != app name , "+rootDirName + " "+  global.V.Project.Key)
 	}
 

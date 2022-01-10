@@ -35,7 +35,7 @@ type NetWayOption struct {
 	//两种快速关闭方式，也可以直接调用shutdown函数
 	OutCxt 				context.Context `json:"-"`			//调用方的CTX，用于所有协程的退出操作
 	CloseChan 			chan int		`json:"-"`
-
+	GrpcManager			*GrpcManager
 	//ProtobufMap			*ProtobufMap	`json:"-"`
 
 	//HttpdRootPath 	string 		`json:"httpdRootPath"`
@@ -63,7 +63,6 @@ type NetWay struct {
 	ConnManager			*ConnManager
 	Metrics 			*MyMetrics
 	ProtobufMap			*ProtobufMap
-
 	Option          	NetWayOption
 }
 
@@ -129,9 +128,10 @@ func NewNetWay(option NetWayOption)(*NetWay,error)  {
 
 	netWay.Status = NETWAY_STATUS_START
 
+	option.Log.Info("netway startup finish.")
 	return netWay,nil
 }
-//一个客户端连接请求进入
+//一个新客户端连接请求进入
 func(netWay *NetWay)OpenNewConn( connFD FDAdapter) {
 	netWay.Option.Log.Info("OpenNewConn:")
 	var loginRes pb.ResponseLoginRes
@@ -188,14 +188,11 @@ func(netWay *NetWay)OpenNewConn( connFD FDAdapter) {
 	//更新当前连接的属性值
 	NewConn.Protocol 	= firstMsg.ProtocolType
 	NewConn.ContentType = firstMsg.ContentType
-	////给用户再绑定到 用户状态池,该池与连接池的区分 是：连接一但关闭，该元素即删除~而用户状态得需要保存
-	//playerConnInfo ,_ := myPlayerManager.addPlayer(jwtData.Payload.Uid,firstMsg)
 	loginRes = pb.ResponseLoginRes{
 		Code: 200,
 		ErrMsg: "",
 		Uid: NewConn.UserId,
 	}
-	//NewConn.SessionId = playerConnInfo.SessionId
 	//告知玩家：登陆结果
 	netWay.SendMsgCompressByUid(jwtData.Payload.Uid,"loginRes",&loginRes)
 	//统计 当前FD 数量/历史FD数量
@@ -279,7 +276,7 @@ func  (netWay *NetWay)loginPreFailed(msg string ,closeSource int,conn *Conn){
 	netWay.CloseOneConn(conn, closeSource)
 	netWay.Option.Log.Error(msg)
 }
-
+//首次建立连接，登陆验证，预处理
 func  (netWay *NetWay)loginPre(conn *Conn)(jwt JwtData,firstMsg pb.Msg,err error,){
 	//var loginRes pb.ResponseLoginRes
 
@@ -308,7 +305,7 @@ func  (netWay *NetWay)loginPre(conn *Conn)(jwt JwtData,firstMsg pb.Msg,err error
 	netWay.Option.Log.Info("login jwt auth ok~~")
 	return jwt,msg,nil
 }
-
+//登陆验证token
 func(netWay *NetWay)login(requestLogin pb.RequestLogin,conn *Conn)(jwtData JwtData,err error){
 	token := ""
 	if netWay.Option.LoginAuthType == "jwt"{

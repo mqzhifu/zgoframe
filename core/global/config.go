@@ -1,23 +1,23 @@
 package global
 
 type Config struct {
-	Mysql   ConfigMysql
-	Jwt     Jwt
-	Zap     Zap
-	Captcha Captcha
-	Redis   Redis
-	System  System
-	Http     Http
-	Casbin  Casbin
-	Viper 	Viper
-	Etcd 	Etcd
+	Mysql   		ConfigMysql
+	Jwt     		Jwt
+	Zap     		Zap
+	Captcha 		Captcha
+	Redis   		Redis
+	System  		System
+	Http     		Http
+	Casbin  		Casbin
+	Viper 			Viper
+	Etcd 			Etcd
+	Alert 			Alert
+	Metrics 		Metrics
+	Websocket 		Websocket
+	Grpc 			Grpc
+	Email 			Email
+	Protobuf 		Protobuf
 	ServiceDiscovery ServiceDiscovery
-	Alert Alert
-	Metrics Metrics
-	Websocket Websocket
-	Grpc Grpc
-	Email Email
-	Protobuf Protobuf
 }
 
 type Protobuf struct {

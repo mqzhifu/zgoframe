@@ -91,8 +91,8 @@ func (protobufMap *ProtobufMap)loadingActionMapConfigFile(fileName string)(map[i
 		serviceName := contentArr[1]
 
 		//map txt 里都是首字节大写，这里转成小写
-		lowServiceName :=StrFirstToLower(serviceName)
-		_, empty := protobufMap.ProjectManager.GetByKey(lowServiceName)
+		//lowServiceName :=StrFirstToLower(serviceName)
+		_, empty := protobufMap.ProjectManager.GetByKey(serviceName)
 		if empty{
 			return nil,errors.New("serviceName not in project list :" + serviceName)
 		}

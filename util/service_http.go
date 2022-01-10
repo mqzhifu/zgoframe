@@ -1,18 +1,19 @@
 package util
 
 import (
+	"bytes"
 	"encoding/json"
+	"errors"
 	"io/ioutil"
 	"net/http"
-	"bytes"
 	"strconv"
 	"time"
-	"errors"
 )
 
 type ServiceHttp struct {
-	AppId 				int
-	ServiceId 			int
+	//AppId 				int
+	//ServiceId 			int
+	ProjectId 			int
 	ServiceName 		string
 	Ip 					string
 	Port 				string
@@ -20,10 +21,11 @@ type ServiceHttp struct {
 	TargetServiceName 	string
 }
 
-func NewServiceHttp (appId int,serviceId int,targetServiceName string,ip string ,port string,targetServiceId int)*ServiceHttp{
+func NewServiceHttp (projectId int,targetServiceName string,ip string ,port string,targetServiceId int)*ServiceHttp{
 	serviceHttp 		   := new(ServiceHttp)
-	serviceHttp.AppId 		= appId
-	serviceHttp.ServiceId 	= serviceId
+	//serviceHttp.AppId 		= appId
+	//serviceHttp.ServiceId 	= serviceId
+	serviceHttp.ProjectId = projectId
 	serviceHttp.Ip 			= ip
 	serviceHttp.Port 		= port
 	serviceHttp.TargetServiceName 	= targetServiceName
@@ -57,8 +59,9 @@ func(serviceHttp *ServiceHttp) Post(uri string ,data interface{}) (responseMsgST
 	req.Header.Add("content-type", "application/json")
 
 	clientHeader := NewServiceClientHeader()
-	clientHeader.AppId = strconv.Itoa(serviceHttp.AppId)
-	clientHeader.ServiceId = strconv.Itoa(serviceHttp.ServiceId)
+	//clientHeader.ProjectId = strconv.Itoa(serviceHttp.AppId)
+	//clientHeader.ServiceId = strconv.Itoa(serviceHttp.ServiceId)
+	clientHeader.ProjectId = strconv.Itoa(serviceHttp.ProjectId)
 	clientHeader.TargetServiceName = serviceHttp.TargetServiceName
 
 	clientHeaderStr ,_ := json.Marshal(clientHeader)

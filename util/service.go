@@ -14,8 +14,8 @@ type ServiceNode struct {
 	ProjectId 	int				`json:"project_id"`
 	ServiceId 	int 			`json:"service_id"`
 	ServiceName string			`json:"service_name"`
-	ListenIp 	string			`json:"listen_ip"`
-	Ip			string			`json:"ip"`
+	ListenIp 	string			`json:"listen_ip"`		//监听IP
+	Ip			string			`json:"ip"`				//对外显示IP
 	Port		string			`json:"port"`
 	Protocol 	int				`json:"protocol"`		//暂未实现
 	Desc 		string			`json:"desc"`
@@ -202,7 +202,7 @@ func (serviceManager *ServiceManager) GetByName(name string)(service Service,isE
 	}
 
 	for _,v:= range serviceManager.Pool{
-		if v.Name == name{
+		if v.Key == name{
 			return v,false
 		}
 	}

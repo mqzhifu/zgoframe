@@ -37,6 +37,4 @@
         incClient = pb.NewZgoframeClient(myGrpcClient.ClientConn)
 
         }
-    
-        myGrpcClient.GrpcClientList[serviceName] = incClient
 	}

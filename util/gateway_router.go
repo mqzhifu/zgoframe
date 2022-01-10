@@ -1,22 +1,53 @@
 package util
 
 import (
-	"zgoframe/protobuf/pb"
+	"context"
+	"github.com/golang/protobuf/proto"
 	"github.com/gorilla/websocket"
 	"strconv"
+	"zgoframe/protobuf/pb"
 )
 
 func(netWay *NetWay) Router(msg pb.Msg,conn *Conn)(data interface{},err error){
 	actionInfo,_ := netWay.ProtobufMap.ActionMaps[int(msg.ActionId)]
-	if  actionInfo.ServiceName == "gateway" {
+	serviceName := actionInfo.ServiceName
+	switch serviceName {
+	case "Gateway":
+		data ,err  = netWay.RouterServiceGateway(msg,conn)
+	case "FrameSync":
+		data ,err  = netWay.RouterServiceSync(msg,conn,actionInfo)
+	default:
 
-		requestLogin := pb.RequestLogin{}
-		requestClientPong := pb.RequestClientPong{}
-		requestClientPing := pb.RequestClientPing{}
-		requestClientHeartbeat := pb.RequestClientHeartbeat{}
+	}
+	return data,nil
+}
+func(netWay *NetWay) RouterServiceSync(msg pb.Msg,conn *Conn,actionMap ActionMap)(data []byte,err error){
+	zgoframeClient ,err := netWay.Option.GrpcManager.GetZgoframeClient(actionMap.ServiceName,strconv.Itoa(int(conn.UserId)))
+	ctx := context.Background()
+	switch msg.Action {
+	case "SayHello": //
+		requestUser := pb.RequestUser{}
+		proto.Unmarshal([]byte(msg.Content),&requestUser)
+		//*ResponseUser
+		dataClass,err := zgoframeClient.SayHello(ctx,&requestUser)
+		if err != nil{
+			return data,err
+		}
+		data ,err = proto.Marshal(dataClass)
+	default:
 
-		//这里有个BUG，LOGIN 函数只能在第一次调用，回头加个限定
-		switch msg.Action {
+	}
+
+	return data,err
+}
+
+func(netWay *NetWay) RouterServiceGateway(msg pb.Msg,conn *Conn)(data interface{},err error){
+	requestLogin := pb.RequestLogin{}
+	requestClientPong := pb.RequestClientPong{}
+	requestClientPing := pb.RequestClientPing{}
+	requestClientHeartbeat := pb.RequestClientHeartbeat{}
+	//这里有个BUG，LOGIN 函数只能在第一次调用，回头加个限定
+	switch msg.Action {
 		case "login": //
 			err = netWay.ProtocolManager.parserContentMsg(msg, &requestLogin, conn.UserId)
 		case "clientPong": //
@@ -28,25 +59,21 @@ func(netWay *NetWay) Router(msg pb.Msg,conn *Conn)(data interface{},err error){
 		default:
 			netWay.Option.Log.Error("Router err:")
 			return data, nil
-		}
-		if err != nil {
-			return data, err
-		}
-		netWay.Option.Log.Info("Router " + msg.Action)
-		switch msg.Action {
+	}
+	if err != nil {
+		return data, err
+	}
+	netWay.Option.Log.Info("Router " + msg.Action)
+	switch msg.Action {
 		case "login": //
-			jwtData, err := netWay.login(requestLogin, conn)
-			return jwtData, err
+			data, err = netWay.login(requestLogin, conn)
+			//return jwtData, err
 		case "clientPong": //
 			//netWay.ClientPong(requestClientPong, conn)
 		case "clientHeartbeat": //心跳
 			netWay.heartbeat(requestClientHeartbeat, conn)
 		case "clientPing": //
 			netWay.clientPing(requestClientPing, conn)
-		}
-	}else{
-
-		//
 	}
 	return data,nil
 }

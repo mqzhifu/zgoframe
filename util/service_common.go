@@ -28,7 +28,7 @@ type ServiceClientHeader struct {//这里全用的string 方便 http header 处�
 	TraceId 			string	`json:"trace_id"`
 	RequestId 			string	`json:"request_id"`
 	Protocol 			string	`json:"protocol"`
-	AppId 				string	`json:"app_id"`
+	ProjectId 			string	`json:"project_id"`
 	ServiceId			string 	`json:"service_id"`
 	RequestTime 		string	`json:"request_time"`
 	TargetServiceName 	string	`json:"target_service_name"`
@@ -40,8 +40,8 @@ type ServiceServerHeader struct {//这里全用的string 方便 http header 处�
 	TraceId 		string	`json:"trace_id"`
 	RequestId 		string	`json:"request_id"`
 	Protocol 		string	`json:"protocol"`
-	AppId 			string	`json:"app_id"`
-	TargetAppId 	string	`json:"target_app_id"`
+	ProjectId 			string	`json:"project_id"`
+	TargetProjectId 	string	`json:"target_project_id"`
 	ServiceName 	string	`json:"service_name"`
 	ReceiveTime 	string	`json:"receive_time"`
 	ResponseTime 	string	`json:"response_time"`

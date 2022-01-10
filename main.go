@@ -1,17 +1,16 @@
 package main
 
 import (
-	_ "embed"
 	"context"
+	_ "embed"
 	"flag"
 	"os"
 	"strconv"
-	"time"
+	"zgoframe/core"
 	"zgoframe/core/global"
 	"zgoframe/core/initialize"
 	_ "zgoframe/docs"
 	"zgoframe/util"
-	"zgoframe/test"
 )
 
 var initializeVar *initialize.Initialize
@@ -34,13 +33,11 @@ func main(){
 	//当前环境
 	env 				:= flag.String("e", "must require", "env:local test pre dev online")
 	//是否为CICD模式
-	deploy 				:= flag.String("dep", "", "deploy")
+	//deploy 				:= flag.String("dep", "", "deploy")//部署模式下，启动程序只是为了测试脚本正常，之后，要立刻退出
 	//开启测试模式
 	//testFlag 			:= flag.String("t", "", "testFlag:empty or 1")
 	//解析命令行参数
 	flag.Parse()
-
-	//test(*testFlag)
 	//检测环境变量值ENV是否正常
 	if !util.CheckEnvExist(*env){
 		util.MyPrint(  "env is err , list:",envList)
@@ -52,6 +49,7 @@ func main(){
 	//开始初始化模块
 	//主协程的 context
 	mainCxt,mainCancelFunc := context.WithCancel(context.Background())
+	//初始化模块需要的参数
 	initOption := initialize.InitOption  {
 		Env 				:*env,
 		ConfigType 			:*configFileType,
@@ -71,19 +69,13 @@ func main(){
 		panic("initialize.Init err:"+err.Error())
 		return
 	}
-	//测试
-	test.Index()
-	//deploy 是用来方便布置的，看着挺恶心，我回头再优化
-	if *deploy == ""{
-		go global.V.Process.DemonSignal()
-		util.MyPrint("wait mainCxt.done...")
-		select {
-		case <-mainCxt.Done():
-			QuitAll(1)
-		}
-	}else{
-		util.MyPrint("deploy: sleep 5 ,and auto quit...")
-		time.Sleep(5)
+	core.DoMySelf()
+	//监听外部进程信号
+	go global.V.Process.DemonSignal()
+	util.MyPrint("wait mainCxt.done...")
+	select {
+	case <-mainCxt.Done():
+		QuitAll(1)
 	}
 
 	util.MyPrint("main end.")

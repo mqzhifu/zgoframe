@@ -21,6 +21,8 @@ service Gateway {
     rpc KickOff                 (ResponseKickOff)           returns (Empty) {}//该玩家在其它地方登陆，踢掉了当前连接
 
     rpc ProjectPush             (RequestProjectPush)        returns (ResponseProjectPush) {}//service通知网关，给某些用户推送消息
+
+
 }
 
 

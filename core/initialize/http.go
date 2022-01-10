@@ -59,7 +59,6 @@ func GetNewHttpGIN(zapLog *zap.Logger)(*gin.Engine,error) {
 	ginRouter.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	//设置跨域
 	ginRouter.Use(httpmiddleware.Cors())
-
 	//404
 	ginRouter.NoMethod(HandleNotFound)
 
@@ -75,7 +74,6 @@ func RegGinHttpRoute(){
 	{
 		router.InitBaseRouter(PublicGroup)
 	}
-
 	//加载限流中间件
 	PrivateGroup :=  global.V.Gin.Group("")
 	//设置正常API（需要验证）
@@ -86,6 +84,14 @@ func RegGinHttpRoute(){
 		router.InitLogslaveRouter(PrivateGroup)
 		router.InitSysRouter(PrivateGroup)
 	}
+
+	GatewayGroup :=  global.V.Gin.Group("")
+	PublicGroup.Use(httpmiddleware.OperationRecord()).Use(httpmiddleware.RateMiddleware()).Use(httpmiddleware.ProcessHeader())
+	{
+		router.InitGatewayRouter(GatewayGroup)
+	}
+
+
 
 }
 

@@ -23,6 +23,7 @@ func LogSlave()  {
 
 	node := util.ServiceNode{
 		ProjectId	: project.Id,
+		ServiceName : project.Key,
 		Ip			: ip ,
 		ListenIp	: listenIp,
 		Port		: port ,

@@ -1,14 +1,14 @@
 package util
 
 import (
+	"context"
 	"errors"
 	"fmt"
+	"go.etcd.io/etcd/clientv3"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 	"strconv"
 	"zgoframe/model"
-	"context"
-	"go.etcd.io/etcd/clientv3"
 )
 //一个服务下面的一个节点,给服务发现使用
 type ServiceNode struct {
@@ -171,7 +171,7 @@ func (serviceManager *ServiceManager)GetFromDb()error{
 	}
 
 	for _,v:=range serviceList{
-		fmt.Println(v)
+		//fmt.Println(v)
 		n := Service{
 			Id : int(v.Id),
 			Status: v.Status,
@@ -200,6 +200,7 @@ func (serviceManager *ServiceManager) GetById(id int)(Service,bool){
 }
 
 func (serviceManager *ServiceManager) GetByName(name string)(service Service,isEmpty bool){
+	fmt.Println("serviceManager GetByName:"+name)
 	if len(serviceManager.Pool) <= 0{
 		return service,isEmpty
 	}

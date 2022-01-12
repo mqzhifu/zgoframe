@@ -86,7 +86,7 @@ func RegGinHttpRoute(){
 	}
 
 	GatewayGroup :=  global.V.Gin.Group("")
-	PublicGroup.Use(httpmiddleware.OperationRecord()).Use(httpmiddleware.RateMiddleware()).Use(httpmiddleware.ProcessHeader())
+	PublicGroup.Use(httpmiddleware.RateMiddleware())
 	{
 		router.InitGatewayRouter(GatewayGroup)
 	}

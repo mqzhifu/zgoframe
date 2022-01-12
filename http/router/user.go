@@ -55,9 +55,10 @@ func InitSysRouter(Router *gin.RouterGroup) {
 }
 
 func InitGatewayRouter(Router *gin.RouterGroup) {
-	GatewayRouter := Router.Group("sys")
+	GatewayRouter := Router.Group("service")
 	{
-		GatewayRouter.POST("/service/:name/:func",v1.GatewayService)
+		GatewayRouter.POST(":name/:func",v1.GatewayService)
+		//GatewayRouter.GET("aaa",v1.GatewayService)
 	}
 }
 

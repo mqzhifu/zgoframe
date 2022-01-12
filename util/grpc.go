@@ -37,8 +37,8 @@ type MyGrpcService struct {
 	GrpcServer *grpc.Server
 }
 
-func (myGrpcServer *MyGrpcService)ServerStart(){
-	go myGrpcServer.GrpcServer.Serve(myGrpcServer.Listen)
+func (myGrpcServer *MyGrpcService)ServerStart()error{
+	return myGrpcServer.GrpcServer.Serve(myGrpcServer.Listen)
 }
 
 

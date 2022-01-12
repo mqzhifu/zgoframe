@@ -1,9 +1,17 @@
 package core
 
-import "zgoframe/test"
+import (
+	"zgoframe/core/global"
+	"zgoframe/test"
+)
 
 func DoMySelf(){
 	//测试
 	//test.Index()
-	test.Gateway()
+	if global.C.System.ProjectId == 3{
+		test.LogSlave()
+	}else{
+		test.Gateway()
+	}
+
 }

@@ -2,6 +2,7 @@ package util
 
 import (
 	"errors"
+	"fmt"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 	"strconv"
@@ -170,6 +171,7 @@ func (serviceManager *ServiceManager)GetFromDb()error{
 	}
 
 	for _,v:=range serviceList{
+		fmt.Println(v)
 		n := Service{
 			Id : int(v.Id),
 			Status: v.Status,

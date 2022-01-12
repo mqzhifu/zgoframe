@@ -16,7 +16,6 @@ func LogSlave()  {
 
 	serviceName := global.V.Project.Key
 	project ,empty := global.V.ServiceManager.GetByName(serviceName)
-	util.ExitPrint(project)
 	if empty{
 		util.ExitPrint("project err:empty")
 		return

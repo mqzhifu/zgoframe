@@ -129,6 +129,7 @@ func (initialize * Initialize)Start()error{
 			return err
 		}
 	}
+	global.V.ServiceManager,_ = util.NewServiceManager(global.V.Gorm)
 	//service 服务发现，这里有个顺序，必须先实现化完成:serviceManager
 	if global.C.ServiceDiscovery.Status  == global.CONFIG_STATUS_OPEN{
 		if global.C.Etcd.Status != global.CONFIG_STATUS_OPEN{

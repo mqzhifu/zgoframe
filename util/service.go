@@ -158,9 +158,10 @@ func (serviceManager *ServiceManager)initAppPool()error{
 }
 
 func (serviceManager *ServiceManager)GetFromDb()error{
-	db := serviceManager.Gorm.Model(&model.Service{})
+	db := serviceManager.Gorm.Model(&model.Project{})
 	var serviceList []model.Service
 	err := db.Where(" status = ? ", 1).Find(&serviceList).Error
+	//err := db.Where(" status = ? and type = ? ", 1 ,PROJECT_TYPE_SERVICE).Find(&serviceList).Error
 	if err != nil{
 		return err
 	}

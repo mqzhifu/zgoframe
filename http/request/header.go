@@ -16,22 +16,23 @@ type ParserTokenData struct {
 }
 
 type Header struct {
+	Access     string  `json:"access"`	//使用网关时，不允许随意访问，得有key
 	RequestId 		string	`json:"request_id"`
 	TraceId 		string	`json:"trace_id"`
 	SourceType 		int		`json:"source_type"`	//pc h5 ios android vr spider unknow
-	AppId			int		`json:"app_id"`
+	ProjectId		int		`json:"project_id"`
 	Token 			string	`json:"token"`
-	AppVersion 		string	`json:"app_version"`
-	OS 				int		`json:"os"`
-	OSVersion 		string	`json:"os_version"`
-	Device			string	`json:"device"`
+	AppVersion 		string	`json:"app_version"`	//app版本/前端版本
+	OS 				int		`json:"os"`				//win mac android ios
+	OSVersion 		string	`json:"os_version"`		//win7 win9 mac10
+	Device			string	`json:"device"`			// ipad iphone huawei mi
 	DeviceVersion 	string	`json:"device_version"`
-	Lat 			string	`json:"lat"`
-	Lon 			string	`json:"lon"`
+	Lat 			string	`json:"lat"`			//纬度
+	Lon 			string	`json:"lon"`			//经度
 	DeviceId 		string	`json:"device_id"`
-	DPI 			string	`json:"dpi"`
+	DPI 			string	`json:"dpi"`			//分辨率
 	Ip 				string	`json:"ip"`
-	AutoIp 			string	`json:"auto_ip"`
+	AutoIp 			string	`json:"auto_ip"`		//获取不到请求方IP时，系统自动生成
 }
 
 const  (

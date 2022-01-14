@@ -9,8 +9,9 @@ php makepbservice.php pb /data/www/golang/src/zgoframe/protobuf/proto /data/www/
 2. 生成grpc 服务的 快捷实现go文件
 3. 生成一个服务的快捷调用方法go文件
 4. 对每个服务的每个函数生成对应ID，供长连接使用(生成一个txt文件)
+5. 生成动态调用一个GRPC服务的函数
 
-以上所有功能，均依赖：.proto 描述文件
+ps:以上所有功能，均依赖：.proto 描述文件
 
 注：正则匹配一个service 块时，结尾必须是：} ，上一行必须是\n结束
 */
@@ -38,6 +39,9 @@ $GLOBALS["map"] = "";
 $mapIdSeparate = "|";
 //快速生成一个服务的具体实现类（包名）
 $serviceImplementPackage = "pbservice";
+$fast_call_file_name = "ast_call.go.tmp";
+$callServiceFuncTotalStr = "";
+
 
 //编译proto 生成 PB 文件的SHELL脚本
 $compileCommand = "export PATH=\$PATH:/var/root/go/bin; cd /data/www/golang/src/zgoframe/protobuf; protoc --go_out=plugins=grpc:./pb ./proto/#proto_file_name#";
@@ -51,6 +55,9 @@ $protoPathFileList = getDirFiles($protoFilePath);
 if (count($protoPathFileList) <=0 ){
     exit("count(protoPathFileList) <=0");
 }
+
+$callGrpcServiceCase = "";
+
 //处理每一个.proto 文件
 $ServiceFastCallSwitchCase = array();
 foreach ($protoPathFileList as $k=>$fileName){
@@ -71,6 +78,8 @@ foreach ($protoPathFileList as $k=>$fileName){
     }
     //生成快捷调用代码 + 函数映射ID
     foreach ($serviceList as $serviceName=>$info){
+        dynamicCallGrpcService($serviceName,$info,$packageName);
+
         $MountClientSwitchCaseStr = $template->MountClientSwitchCase();
         $MountClientSwitchCaseStr = str_replace("#service_name#",$serviceName,$MountClientSwitchCaseStr);
         $MountClientSwitchCaseStr = str_replace("#package_name#",$packageName,$MountClientSwitchCaseStr);
@@ -84,9 +93,48 @@ foreach ($protoPathFileList as $k=>$fileName){
         mapFunctionId($serviceName,$info,$mapIdSeparate);
     }
 }
+
 createServiceFastCallSwitch($ServiceFastCallSwitchCase,$outPath);
 createMapFile($outPath);
+
+$outFile = $outPath . "/" . $fast_call_file_name;
+$fd = fopen($outFile,"a+");
+fwrite($fd,$callServiceFuncTotalStr);
+//file_put_contents($outFile,$callServiceFuncTotalStr);
+
+
+$callGrpcService = $template->CallGrpc();
+$callGrpcService = str_replace("#case#",$callGrpcServiceCase,$callGrpcService);
+fwrite($fd,$callGrpcService);
+
+//var_dump($callServiceFuncTotalStr);exit;
 exit(111);
+//动态调用grpc 服务 方法
+function dynamicCallGrpcService($serviceName, $serviceInfo,$packageName){
+    global $template,$callServiceFuncTotalStr,$callGrpcServiceCase;
+
+    $callServiceFuncStr = $template->CallServiceFunc();
+    $callServiceFuncStr = str_replace("#service_name#",$serviceName,$callServiceFuncStr);
+
+    $serviceFuncListStr = "";
+    foreach ($serviceInfo as $k=>$service){
+        $callServiceFuncCaseStr = $template->CallServiceFuncCase();
+        $callServiceFuncCaseStr = str_replace("#service_name#",$serviceName,$callServiceFuncCaseStr);
+        $callServiceFuncCaseStr = str_replace("#package_name#",$packageName,$callServiceFuncCaseStr);
+        $callServiceFuncCaseStr = str_replace("#request#",$service["in"],$callServiceFuncCaseStr);
+        $callServiceFuncCaseStr = str_replace("#func_name#",$service["name"],$callServiceFuncCaseStr);
+
+        $serviceFuncListStr .= $callServiceFuncCaseStr . "\n";
+
+    }
+    $callServiceFuncStr = str_replace("#case#",$serviceFuncListStr,$callServiceFuncStr);
+    $callServiceFuncTotalStr .= $callServiceFuncStr . "\n";
+
+    $CallGrpcCase = $template->CallGrpcCase();
+    $CallGrpcCase = str_replace("#service_name#",$serviceName,$CallGrpcCase);
+    $callGrpcServiceCase .= $CallGrpcCase . "\n";
+}
+
 //编译proto文件，生成pb.go 文件
 function compileProtoFile($compileCommand,$fileName){
     $compileCommandFile = str_replace("#proto_file_name#",$fileName,$compileCommand);
@@ -227,6 +275,7 @@ function createMapFile($outPath){
 }
 function createServiceFastCallSwitch($ServiceFastCallSwitchCase,$outPath){
     global $template;
+    global $fast_call_file_name;
 
     $cases = "";
     $getClient = "";
@@ -237,10 +286,10 @@ function createServiceFastCallSwitch($ServiceFastCallSwitchCase,$outPath){
     $MountClientSwitchStr = $template->MountClientSwitch();
     $MountClientSwitchStr = str_replace("#switch_case#",$cases,$MountClientSwitchStr);
 
-    $content = "\n\n" . $getClient . "\n\n" . $MountClientSwitchStr;
+    $content = $template->fastCallFileHeader() .   "\n\n" . $getClient . "\n\n" . $MountClientSwitchStr;
 
-    $outFile = $outPath . "/" . "fast_call.go.tmp";
-    file_put_contents($outFile,$content);
+    $outFile = $outPath . "/" . $fast_call_file_name;
+    file_put_contents($outFile,$content . "\n");
 }
 
 function getDirFiles($path){

@@ -34,7 +34,8 @@
     }
 
 
-    func  (myGrpcClient *MyGrpcClient)MountClientToConnect(serviceName string){
+    //根据服务名获取一个GRPC-CLIENT 连接(c端使用)
+    func  (myGrpcClient *MyGrpcClient)GetGrpcClientByServiceName(serviceName string,clientConn *grpc.ClientConn)interface{}{
         var incClient interface{}
         switch serviceName {
                 case "FrameSync":
@@ -47,4 +48,5 @@
         incClient = pb.NewZgoframeClient(myGrpcClient.ClientConn)
 
         }
+        return incClient
 	}

@@ -2,6 +2,25 @@
 class Template
 {
     public $separator = "#";
+
+    function fastCallFileHeader()
+    {
+        $str = <<<EOF
+package util
+
+import (
+    "encoding/json"
+    "errors"
+    "google.golang.org/grpc"
+    "zgoframe/protobuf/pb"
+    "context"
+)
+
+EOF;
+        return $str;
+    }
+
+
     function serviceImplementHeader()
     {
         $str = <<<EOF
@@ -50,12 +69,16 @@ EOF;
     function MountClientSwitch()
     {
         $str = <<<EOF
-    func  (myGrpcClient *MyGrpcClient)MountClientToConnect(serviceName string){
-        var incClient interface{}
-        switch serviceName {
-            #switch_case#
-        }
-	}
+//根据服务名获取一个GRPC-CLIENT 连接(c端使用)
+func  (myGrpcClient *MyGrpcClient)GetGrpcClientByServiceName(serviceName string,clientConn *grpc.ClientConn)(interface{},error){
+    var incClient interface{}
+    switch serviceName {
+#switch_case#
+    default:
+        return incClient,errors.New("service name router failed.")
+    }
+    return incClient,nil
+}
 EOF;
         return $str;
     }
@@ -63,14 +86,75 @@ EOF;
     function GetClient()
     {
         $str = <<<EOF
-    func (grpcManager *GrpcManager)Get#service_name#Client(name string)(#package_name#.#service_name#Client,error){
-        client, err := grpcManager.GetClientByLoadBalance(name,0)
-        if err != nil{
-            return nil,err
-        }
-    
-        return client.(pb.#service_name#Client),nil
+//获取一个服务的grpc client : #service_name#
+func (grpcManager *GrpcManager)Get#service_name#Client(name string,balanceFactor string)(#package_name#.#service_name#Client,error){
+    client, err := grpcManager.GetClientByLoadBalance(name,balanceFactor)
+    if err != nil{
+        return nil,err
     }
+
+    return client.(pb.#service_name#Client),nil
+}
+EOF;
+        return $str;
+    }
+
+    function CallGrpcCase(){
+        $str = <<<EOF
+    case "#service_name#":
+        resData , err = grpcManager.CallServiceFunc#service_name#(funcName,balanceFactor,requestData)
+EOF;
+        return $str;
+    }
+
+    function CallGrpc(){
+        $str = <<<EOF
+//动态调用一个GRPC-SERVER 的一个方法(c端使用)
+func (grpcManager *GrpcManager) CallGrpc(serviceName string,funcName string,balanceFactor string,requestData []byte)( resData interface{},err error){
+	switch serviceName {
+#case#
+    default:
+            return requestData,errors.New("service name router failed.")
+	}
+
+	return resData,err
+}
+EOF;
+        return $str;
+    }
+
+
+    function CallServiceFuncCase(){
+        $str = <<<EOF
+    case "#func_name#":
+        request := #package_name#.#request#{}
+        err := json.Unmarshal(postData,&request)
+        if err != nil{
+            return data,err
+        }
+        data ,err = grpcClient.#func_name#(ctx,&request)
+EOF;
+        return $str;
+    }
+
+    function CallServiceFunc(){
+        $str = <<<EOF
+//动态调用服务的函数 : #service_name#
+func (grpcManager *GrpcManager) CallServiceFunc#service_name#(funcName string,balanceFactor string,postData []byte)( data interface{},err error){
+    //获取GRPC一个连接
+    grpcClient,err := grpcManager.Get#service_name#Client("#service_name#",balanceFactor)
+    if err != nil{
+        return data,err
+    }
+
+    ctx := context.Background()
+    switch funcName {
+#case#
+    default:
+            return data,errors.New("func name router failed.")
+    }
+    return data,err
+}
 EOF;
         return $str;
     }

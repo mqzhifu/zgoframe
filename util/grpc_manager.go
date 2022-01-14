@@ -110,9 +110,9 @@ func (grpcManager *GrpcManager) GetClient(serviceName string,ip string,port stri
 		if ok {
 			return client,nil
 		}
-		myGrpcClient.MountClientToConnect(serviceName)
+		err := myGrpcClient.MountClientToConnect(serviceName)
 		//grpcManager.Option.Log.Info(" use has exist inc :"+dns)
-		return client,nil
+		return client,err
 	}
 
 	myClient := MyGrpcClient{
@@ -134,10 +134,9 @@ func (grpcManager *GrpcManager) GetClient(serviceName string,ip string,port stri
 	myClient.ClientConn = conn
 	grpcManager.ClientList[dns] = &myClient
 
-	myClient.MountClientToConnect(serviceName)
+	err = myClient.MountClientToConnect(serviceName)
     //grpcManager.GrpcClientList[serviceName] = myClient.MountClientToConnect(serviceName)
-
-	return conn,nil
+	return conn,err
 }
 //server端接收拦截器
 func  (myGrpcService *MyGrpcService) serverInterceptorBack(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp interface{}, err error){

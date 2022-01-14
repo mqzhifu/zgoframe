@@ -9,6 +9,7 @@ type Project struct {
 	SecretKey 	string    	`json:"secret_key" form:"secret_key" db:"define:varchar(100);comment:密钥;defaultValue:''"`
 	Status 		int 		`json:"status" form:"status" db:"define:tinyint(1);comment:状态1正常2关闭;defaultValue:0"`
 	Git 		string 		`json:"git" form:"git" db:"define:string(255);comment:git仓地址;defaultValue:''"`
+	Access		string 		`json:"access" form:"access" db:"define:string(255);comment:gate访问权限;defaultValue:''"`
 }
 
 

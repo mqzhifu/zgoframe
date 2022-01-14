@@ -4,7 +4,7 @@ import (
 "github.com/gin-gonic/gin"
 "net/http"
 )
-
+//公共HTTP响应结构体
 type Response struct {
 	Code int         `json:"code"`
 	Data interface{} `json:"data"`
@@ -12,46 +12,9 @@ type Response struct {
 }
 
 const (
-	ERROR   = 4
-	SUCCESS = 200
+	ERROR   = 4		//公共HTTP响应状态码：失败
+	SUCCESS = 200	//公共HTTP响应状态码：成功
 )
-
-func Result(code int, data interface{}, msg string, c *gin.Context) {
-	// 开始时间
-	c.JSON(http.StatusOK, Response{
-		code,
-		data,
-		msg,
-	})
-}
-
-func Ok(c *gin.Context) {
-	Result(SUCCESS, map[string]interface{}{}, "操作成功", c)
-}
-
-func OkWithMessage(message string, c *gin.Context) {
-	Result(SUCCESS, map[string]interface{}{}, message, c)
-}
-
-func OkWithData(data interface{}, c *gin.Context) {
-	Result(SUCCESS, data, "操作成功", c)
-}
-
-func OkWithDetailed(data interface{}, message string, c *gin.Context) {
-	Result(SUCCESS, data, message, c)
-}
-
-func Fail(c *gin.Context) {
-	Result(ERROR, map[string]interface{}{}, "操作失败", c)
-}
-
-func FailWithMessage(message string, c *gin.Context) {
-	Result(ERROR, map[string]interface{}{}, message, c)
-}
-
-func FailWithDetailed(data interface{}, message string, c *gin.Context) {
-	Result(ERROR, data, message, c)
-}
 
 type PageResult struct {
 	List     interface{} `json:"list"`
@@ -64,3 +27,42 @@ type SysCaptchaResponse struct {
 	CaptchaId string `json:"captchaId"`
 	PicPath   string `json:"picPath"`
 }
+
+func Result(code int, data interface{}, msg string, c *gin.Context) {
+	// 开始时间
+	c.JSON(http.StatusOK, Response{
+		code,
+		data,
+		msg,
+	})
+}
+//快速响应-无输出数据
+func Ok(c *gin.Context) {
+	Result(SUCCESS, map[string]interface{}{}, "操作成功", c)
+}
+//快速响应-有简单的输出信息
+func OkWithMessage(message string, c *gin.Context) {
+	Result(SUCCESS, map[string]interface{}{}, message, c)
+}
+//快速响应-有复杂的输出数据
+func OkWithData(data interface{}, c *gin.Context) {
+	Result(SUCCESS, data, "操作成功", c)
+}
+//快速响应-即有简单数据，也有复杂数据
+func OkWithDetailed(data interface{}, message string, c *gin.Context) {
+	Result(SUCCESS, data, message, c)
+}
+//快速响应-失败，无任何输出信息
+func Fail(c *gin.Context) {
+	Result(ERROR, map[string]interface{}{}, "操作失败", c)
+}
+//快速响应-失败，有些简单的输出信息
+func FailWithMessage(message string, c *gin.Context) {
+	Result(ERROR, map[string]interface{}{}, message, c)
+}
+
+func FailWithDetailed(data interface{}, message string, c *gin.Context) {
+	Result(ERROR, data, message, c)
+}
+
+

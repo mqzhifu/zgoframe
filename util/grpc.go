@@ -1,12 +1,9 @@
 package util
 
 import (
-	"context"
-	"encoding/json"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"net"
-	"zgoframe/protobuf/pb"
 )
 
 type MyGrpcClient struct {
@@ -36,78 +33,91 @@ type MyGrpcService struct {
 	Listen  	net.Listener
 	GrpcServer *grpc.Server
 }
-
+//启动一个grpc server ，阻塞模式(s端使用)
 func (myGrpcServer *MyGrpcService)ServerStart()error{
 	return myGrpcServer.GrpcServer.Serve(myGrpcServer.Listen)
 }
-
-
-//func  (myGrpcClient *MyGrpcClient)MountClientToConnect(serviceName string){
-//	var grpcClient interface{}
-//	switch serviceName {
-//	case "Zgoframe":
-//		grpcClient = pb.NewZgoframeClient(myGrpcClient.ClientConn)
-//	case "Sync":
-//		//grpcClient = pb.NewSyncClient(myGrpcClient.ClientConn)
-//	}
-//
-//	myGrpcClient.GrpcClientList[serviceName] = grpcClient
-//}
-
-//将一个服务挂载到一个grpc连接上
-func  (myGrpcClient *MyGrpcClient)MountClientToConnect(serviceName string){
-	myGrpcClient.GrpcClientList[serviceName] = GetGrpcClientByServiceName(serviceName,myGrpcClient.ClientConn)
-}
-
-func GetGrpcClientByServiceName(serviceName string,clientConn *grpc.ClientConn)interface{}{
-	var incClient interface{}
-	switch serviceName {
-	case "FrameSync":
-		incClient = pb.NewFrameSyncClient(clientConn)
-	case "Gateway":
-		incClient = pb.NewGatewayClient(clientConn)
-	case "Zgoframe":
-		incClient = pb.NewZgoframeClient(clientConn)
-	}
-	return incClient
-}
-
-func(grpcManager *GrpcManager) CallServiceFuncZgoframe(funcName string,balanceFactor string,postData []byte)( data interface{},err error){
-	//获取GRPC一个连接
-	grpcClient,err := grpcManager.GetZgoframeClient("zgoframe",balanceFactor)
+//将一个服务挂载到一个grpc连接上(c端使用)
+func  (myGrpcClient *MyGrpcClient)MountClientToConnect(serviceName string)error{
+	client,err:= myGrpcClient.GetGrpcClientByServiceName(serviceName,myGrpcClient.ClientConn)
 	if err != nil{
-		return data,err
+		return err
 	}
-
-	ctx := context.Background()
-	switch funcName {
-	case "FrameSync":
-		requestUser := pb.RequestUser{}
-		err := json.Unmarshal(postData,&requestUser)
-		if err != nil{
-			return data,err
-		}
-		data ,err = grpcClient.SayHello(ctx,&requestUser)
-	}
-
-	return data,err
+	myGrpcClient.GrpcClientList[serviceName] = client
+	return nil
 }
 
-//func  (grpcManager *GrpcManager)CallGrpcResMap(funcName string,data []byte)(responseUser pb.ResponseUser,err error){
-//	//switch funcName {
-//	//case "FrameSync":
-//		//responseUser := pb.ResponseUser{}
-//		err = proto.Unmarshal(data,&responseUser)
-//		if err != nil{
-//			return responseUser,err
-//		}
-//		//data ,err = grpcClient.SayHello(ctx,&requestUser)
-//	//}
+//以下都是动态脚本生成的了=====================================================================
+
+
+// //根据服务名获取一个GRPC-CLIENT 连接(c端使用)
+// func  (myGrpcClient *MyGrpcClient) GetGrpcClientByServiceName(serviceName string,clientConn *grpc.ClientConn)interface{}{
+// 	var incClient interface{}
+// 	switch serviceName {
+// 	case "FrameSync":
+// 		incClient = pb.NewFrameSyncClient(clientConn)
+// 	case "Gateway":
+// 		incClient = pb.NewGatewayClient(clientConn)
+// 	case "Zgoframe":
+// 		incClient = pb.NewZgoframeClient(clientConn)
+// 	}
+// 	return incClient
+// }
+// //动态调用一个GRPC-SERVER 的一个方法(c端使用)
+// func (grpcManager *GrpcManager) CallGrpc(serviceName string,funcName string,balanceFactor string,requestData []byte)( resData interface{},err error){
+// 	switch serviceName {
+// 	case "Zgoframe":
+// 		resData , err = grpcManager.CallServiceFuncZgoframe(funcName,balanceFactor,requestData)
+// 	}
 //
-//	return responseUser,err
-//}
+// 	return resData,err
+// }
+//
+//
+// func (grpcManager *GrpcManager) CallServiceFuncZgoframe(funcName string,balanceFactor string,postData []byte)( data interface{},err error){
+// 	//获取GRPC一个连接
+// 	grpcClient,err := grpcManager.GetZgoframeClient("zgoframe",balanceFactor)
+// 	if err != nil{
+// 		return data,err
+// 	}
+//
+// 	ctx := context.Background()
+// 	switch funcName {
+// 	case "FrameSync":
+// 		requestUser := pb.RequestUser{}
+// 		err := json.Unmarshal(postData,&requestUser)
+// 		if err != nil{
+// 			return data,err
+// 		}
+// 		data ,err = grpcClient.SayHello(ctx,&requestUser)
+// 	}
+//
+// 	return data,err
+// }
+//
+// //以下均是快捷方法，快速获取一个grpc连接的client.(如果return interface 就不需要下面这些方法了，只是方便调用)
+// func (grpcManager *GrpcManager)GetFrameSyncClient(name string,balanceFactor string)(pb.FrameSyncClient,error){
+// 	client, err := grpcManager.GetClientByLoadBalance(name,balanceFactor)
+// 	if err != nil{
+// 		return nil,err
+// 	}
+//
+// 	return client.(pb.FrameSyncClient),nil
+// }
+// func (grpcManager *GrpcManager)GetGatewayClient(name string,balanceFactor string)(pb.GatewayClient,error){
+// 	client, err := grpcManager.GetClientByLoadBalance(name,balanceFactor)
+// 	if err != nil{
+// 		return nil,err
+// 	}
+//
+// 	return client.(pb.GatewayClient),nil
+// }
+// func (grpcManager *GrpcManager)GetZgoframeClient(serviceName string,balanceFactor string)(pb.ZgoframeClient,error){
+// 	client, err := grpcManager.GetClientByLoadBalance(serviceName,balanceFactor)
+// 	if err != nil{
+// 		return nil,err
+// 	}
+//
+// 	return client.(pb.ZgoframeClient),nil
+// }
 
-
-//#client#start
-
-//#client#end

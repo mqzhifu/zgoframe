@@ -22,6 +22,7 @@ type Project struct {
 	SecretKey string 	`json:"secretKey"`
 	Status  int 		`json:"status"`
 	Git 	string 		`json:"git"`
+	Access 	string		`json:"access"`
 }
 
 var PROJECT_TYPE_MAP = map[int]string{
@@ -72,6 +73,7 @@ func (projectManager *ProjectManager)GetFromDb()error{
 			Type	: v.Type,
 			Git		: v.Git,
 			SecretKey: v.SecretKey,
+			Access: v.Access,
 		}
 		projectManager.AddOne(n)
 	}

@@ -17,28 +17,20 @@ func NewGateway(grpcManager *GrpcManager,log *zap.Logger )*Gateway{
 	gateway.Log = log
 	return gateway
 }
-func  (gateway *Gateway)HttpCallGrpc(serviceName string,funcName string,balanceFactor string,requestData []byte)( resJsonStr string,err error){
-	callGrpcResData ,err := gateway.CallGrpc(serviceName,funcName,balanceFactor,requestData)
-	if err != nil{
 
+func  (gateway *Gateway)HttpCallGrpc(serviceName string,funcName string,balanceFactor string,requestData []byte)( resJsonStr string,err error){
+	callGrpcResData ,err := gateway.GrpcManager.CallGrpc(serviceName,funcName,balanceFactor,requestData)
+	if err != nil{
+		return resJsonStr,err
 	}
 	resJsonStrByte ,err  := json.Marshal(callGrpcResData )
 	if err != nil{
-
+		return resJsonStr,err
 	}
 
 	return string(resJsonStrByte),err
 }
 
-func  (gateway *Gateway)CallGrpc(serviceName string,funcName string,balanceFactor string,requestData []byte)( resData interface{},err error){
-	//先确定service,根据service再确定执行哪个函数
-	switch serviceName {
-	case "Zgoframe":
-		resData , err = gateway.GrpcManager.CallServiceFuncZgoframe(funcName,balanceFactor,requestData)
-	}
-
-	return resData,err
-}
 
 func (gateway *Gateway)StartSocket(netWayOption NetWayOption){
 	NewNetWay(netWayOption)

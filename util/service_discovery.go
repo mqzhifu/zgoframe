@@ -60,14 +60,27 @@ func NewServiceDiscovery(serviceDiscoveryOption ServiceDiscoveryOption)(sd *Serv
 
 	serviceDiscovery.list 			= make(map[string]*Service)
 	serviceDiscovery.WatchMsg 		= make(chan string,100)
-	serviceDiscovery.ReadThirdService()
+	//初始化
+	serviceDiscovery.Init()
 
 	return serviceDiscovery,nil
 }
-//从配置中心读取：3方可用服务列表,注册到内存中
-func (serviceDiscovery *ServiceDiscovery)ReadThirdService( )error{
+//初始化
+func (serviceDiscovery *ServiceDiscovery)Init( )error{
+	//先把DB中的所有service 创建空的结构，添加到service list 中，初衷：监听etcd目录名得先确定了，如果有 创建时服务不存在 ，后期动态有人创建的情况，能够监听到
+	for _,v :=range serviceDiscovery.option.ServiceManager.Pool{
+		emptyService  := Service{
+			Id:v.Id,
+			Name: v.Key,
+			DBKey:  serviceDiscovery.GetServiceDbKey( v.Key ),
+			LBType: serviceDiscovery.option.AutoCreateServiceLBType,
+			Log : serviceDiscovery.option.Log,
+			CreateTime: GetNowTimeSecondToInt(),
+		}
+		serviceDiscovery.AddEmptyServiceManagerList(&emptyService)
+	}
 	//从etcd 中读取，已注册的服务
-	err := serviceDiscovery.Discovery()
+	_, err := serviceDiscovery.Discovery()
 	if err != nil{
 		return err
 	}
@@ -82,8 +95,8 @@ type EtcdKeyInfo struct {
 	Port string
 }
 
-//服务发现 - 从分布式DB 中读取
-func (serviceDiscovery *ServiceDiscovery)Discovery()( err error){
+//服务发现 - 从分布式DB 中读取 并注册进容器中
+func (serviceDiscovery *ServiceDiscovery)Discovery()( empty bool,err error){
 	serviceDiscovery.option.Log.Info("Discovery , DiscoveryType:" + strconv.Itoa(serviceDiscovery.option.DiscoveryType))
 
 	if serviceDiscovery.option.DiscoveryType == SERVICE_DISCOVERY_ETCD{
@@ -91,12 +104,12 @@ func (serviceDiscovery *ServiceDiscovery)Discovery()( err error){
 		allServiceEtcdList,err := serviceDiscovery.option.Etcd.GetListByPrefix(serviceDiscovery.option.Prefix)
 		if err != nil{
 			serviceDiscovery.option.Log.Error("etcd GetListByPrefix err:" +err.Error())
-			return err
+			return false,err
 		}
 
 		if len(allServiceEtcdList) == 0{
 			serviceDiscovery.option.Log.Warn( " allServiceList is empty !")
-			return err
+			return true,nil
 		}
 		serviceDiscovery.option.Log.Info("allServiceEtcdList len:"+strconv.Itoa(len(allServiceEtcdList)))
 		for k,_ := range allServiceEtcdList{
@@ -123,17 +136,21 @@ func (serviceDiscovery *ServiceDiscovery)Discovery()( err error){
 			}
 			serviceDiscovery.Register(newServiceNode)
 		}
+		return false,nil
 	}else{
 		//暂未实现
-		return CONSUL_NOT_OPEN
+		return false,CONSUL_NOT_OPEN
 	}
-
-	return nil
 }
 
 //给一个新的服务添加到管理列表中
 func (serviceDiscovery *ServiceDiscovery)AddServiceManagerList(service *Service){
 	serviceDiscovery.option.Log.Info("insert service to list :"+service.ToString())
+	serviceDiscovery.list[service.Name] = service
+}
+//给一个新的服务添加到管理列表中
+func (serviceDiscovery *ServiceDiscovery)AddEmptyServiceManagerList(service *Service){
+	serviceDiscovery.option.Log.Info("insert empty service to list :"+service.ToString())
 	serviceDiscovery.list[service.Name] = service
 }
 
@@ -155,13 +172,14 @@ func (serviceManager *ServiceDiscovery)WatchThirdService(){
 }
 //监听一个服务
 func (serviceDiscovery *ServiceDiscovery)WatchOneService(service *Service)error{
+	prefix := "third service watching , "
 	if serviceDiscovery.option.DiscoveryType == SERVICE_DISCOVERY_ETCD{
-		ctx,cancelFunc := context.WithCancel(context.Background())
 		//创建一个监听，如：/prefix/serviceName
+		ctx,cancelFunc := context.WithCancel(context.Background())
 		watchChan := serviceDiscovery.option.Etcd.Watch(ctx,service.DBKey)
 		service.watchCancel = cancelFunc
-		prefix := "third service watching receive , "
-		serviceDiscovery.option.Log.Info(prefix  +  " , in service key : " + service.DBKey)
+
+		serviceDiscovery.option.Log.Info(prefix + " create :"+service.DBKey + " block.......")
 		//进入阻塞模式
 		for wresp := range watchChan{
 			for _, ev := range wresp.Events{

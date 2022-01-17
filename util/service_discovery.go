@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 )
 
 var CONSUL_NOT_OPEN = errors.New("consule not open.")
@@ -219,10 +220,12 @@ func (serviceDiscovery *ServiceDiscovery)WatchOneService(service *Service)error{
 						//mylog.Warning(prefix , " matchCode : ",matchCode)
 					}
 				default:
+
 			}
 			if isBreak{
 				break
 			}
+			time.Sleep(time.Millisecond * 100)
 		}
 		//for wresp := range watchChan{
 		//	for _, ev := range wresp.Events{

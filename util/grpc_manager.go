@@ -41,10 +41,10 @@ func NewGrpcManager(grpcManagerOption GrpcManagerOption)(*GrpcManager,error){
 func  (grpcManager *GrpcManager)WatchServiceChange(){
 	grpcManager.Option.Log.Info("start WatchServiceChange.")
 	for changeService := range grpcManager.Option.ServiceDiscovery.WatchMsg{
-		grpcManager.Option.Log.Info(" grpc receive serviceChange :"+changeService.Name + " " +changeService.Ip + " " + changeService.Port + " " +changeService.Action)
-		dns := changeService.Name + ":" +changeService.Ip
+		dns := changeService.Ip + ":" +changeService.Port
+		grpcManager.Option.Log.Info(" grpc receive serviceChange :"+changeService.Name + " " +dns + " " +changeService.Action)
 		myGrpcClient , myGrpcClientOk := grpcManager.ClientList[dns]
-		fmt.Println(myGrpcClientOk)
+		//fmt.Println(dns,myGrpcClientOk)
 		if changeService.Action == "PUT"{
 			if myGrpcClientOk {
 				for k ,_ := range myGrpcClient.GrpcClientList{
@@ -55,6 +55,7 @@ func  (grpcManager *GrpcManager)WatchServiceChange(){
 				}
 			}
 			grpcManager.GetClient(changeService.Name,changeService.NewIp,changeService.NewPort)
+			grpcManager.Option.Log.Info("add one ok")
 		}else if  changeService.Action == "DELETE" {
 			if !myGrpcClientOk{
 				grpcManager.Option.Log.Error("grpc watch DELETE failed, not in map")
@@ -72,6 +73,7 @@ func  (grpcManager *GrpcManager)WatchServiceChange(){
 				grpcManager.ClientList[dns].ClientConn.Close()
 				delete(grpcManager.ClientList , dns)
 			}
+			grpcManager.Option.Log.Info("del one ok.")
 			return
 		}else{
 			grpcManager.Option.Log.Error("grpc watch action error.")

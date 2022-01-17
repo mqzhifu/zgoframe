@@ -47,6 +47,15 @@ func  (myGrpcClient *MyGrpcClient)MountClientToConnect(serviceName string)error{
 	return nil
 }
 
+//func  (myGrpcClient *MyGrpcClient)CloseOneService(serviceName string)error{
+//	_ ,ok := myGrpcClient.GrpcClientList[serviceName]
+//	if ok {
+//		delete(myGrpcClient.GrpcClientList,serviceName)
+//		return nil
+//	}
+//	return errors.New("myGrpcClient CloseOneService no search ")
+//}
+
 //以下都是动态脚本生成的了=====================================================================
 
 

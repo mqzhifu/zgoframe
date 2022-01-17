@@ -14,31 +14,74 @@ import (
 )
 //帮助管理GRPC连接、请求、响应
 type GrpcManager struct {
-	Option 		GrpcManagerOption
-	ClientList 	map[string]*MyGrpcClient
-	ServiceList map[string]*MyGrpcService
+	Option 			GrpcManagerOption
+	ClientList 		map[string]*MyGrpcClient	//map[dns]*MyGrpcClient
+	ServiceList 	map[string]*MyGrpcService	//map[dns]*MyGrpcService
 }
-
+//实例化参数
 type GrpcManagerOption struct {
 	ProjectId 			int				//在做链路追踪时，需要有项目ID
 	Log 				*zap.Logger
 	ServiceDiscovery *ServiceDiscovery	//获取一个grpc连接时，需要使用
 }
-
+//创建一个实例
 func NewGrpcManager(grpcManagerOption GrpcManagerOption)(*GrpcManager,error){
-	//projectId int,Log *zap.Logger,serviceId int
-
-	grpcManager := new(GrpcManager)
-	grpcManager.Option = grpcManagerOption
-	//存储自己创建的服务，注册注册
-	grpcManager.ServiceList = make(map[string]*MyGrpcService)
-	//存储它人创建的服务，调用其它人的服务
-	grpcManager.ClientList = make(map[string]*MyGrpcClient)
+	grpcManager 		   := new(GrpcManager)
+	grpcManager.Option 		= grpcManagerOption
+	//存储自己创建的服务
+	grpcManager.ServiceList =	 make(map[string]*MyGrpcService)
+	//存储它人创建的服务
+	grpcManager.ClientList 		= make(map[string]*MyGrpcClient)
+	//监听服务发现发生变更
+	go grpcManager.WatchServiceChange()
 
 	return grpcManager,nil
 }
+//服务发现里的数据发生变更，要连带着更新GRPC里的连接信息
+func  (grpcManager *GrpcManager)WatchServiceChange(){
+	grpcManager.Option.Log.Info("start WatchServiceChange.")
+	for changeService := range grpcManager.Option.ServiceDiscovery.WatchMsg{
+		grpcManager.Option.Log.Info(" grpc receive serviceChange :"+changeService.Name + " " +changeService.Ip + " " + changeService.Port + " " +changeService.Action)
+		dns := changeService.Name + ":" +changeService.Ip
+		myGrpcClient , myGrpcClientOk := grpcManager.ClientList[dns]
+		if changeService.Action == "PUT"{
+			if myGrpcClientOk {
+				for k ,_ := range myGrpcClient.GrpcClientList{
+					if k == changeService.Name{
+						grpcManager.Option.Log.Error("grpc watch don't repeat")
+						return
+					}
+				}
+			}
+			grpcManager.GetClient(changeService.Name,changeService.NewIp,changeService.NewPort)
+		}else if  changeService.Action == "DELETE" {
+			if !myGrpcClientOk{
+				grpcManager.Option.Log.Error("grpc watch DELETE failed, not in map")
+				return
+			}
+			_ ,GrpcClientListOk := myGrpcClient.GrpcClientList[changeService.Name]
+			if !GrpcClientListOk {
+				err := errors.New("myGrpcClient CloseOneService no search ")
+				grpcManager.Option.Log.Error(err.Error())
+				return
+			}
+			delete(myGrpcClient.GrpcClientList,changeService.Name)
 
+			if len(grpcManager.ClientList[dns].GrpcClientList) == 0 {
+				grpcManager.ClientList[dns].ClientConn.Close()
+				delete(grpcManager.ClientList , dns)
+			}
+			return
+		}else{
+			grpcManager.Option.Log.Error("grpc watch action error.")
+			continue
+		}
+	}
+}
+//关闭
 func  (grpcManager *GrpcManager) Shutdown(){
+	//这里主要就是把tcp 连接 给关闭了
+
 	for _,client:=range grpcManager.ClientList{
 		client.ClientConn.Close()
 	}
@@ -84,6 +127,7 @@ func (grpcManager *GrpcManager) CreateService(serviceName string ,ip string ,por
 
 	return &myGrpcService,nil
 }
+//获取一个grpc client 连接，同时支持自动负载
 func (grpcManager *GrpcManager)GetClientByLoadBalance(serviceName string, balanceFactor string)(inter interface{},err error){
 	serviceNode ,err :=  grpcManager.Option.ServiceDiscovery.GetLoadBalanceServiceNodeByServiceName(serviceName,balanceFactor)
 	if err != nil{
@@ -95,7 +139,7 @@ func (grpcManager *GrpcManager)GetClientByLoadBalance(serviceName string, balanc
 	grpcClientConn, err := grpcManager.GetClient(serviceName,serviceNode.Ip,serviceNode.Port)
 	return grpcClientConn, err
 }
-
+//获取一个grpc client 连接
 func (grpcManager *GrpcManager) GetClient(serviceName string,ip string,port string)(interface{},error){
 	serviceInfo,empty := grpcManager.Option.ServiceDiscovery.option.ServiceManager.GetByName(serviceName)
 	if empty{
@@ -156,16 +200,6 @@ func  (myGrpcService *MyGrpcService) serverInterceptorBack(ctx context.Context, 
 	if !ok{
 		myGrpcService.Log.Info("grpc server receive  metadata empty")
 	}else{
-		//clientReqTime, _ := strconv.ParseInt( md["client_req_time"][0], 10, 64)
-		//clientprojectId ,_:= strconv.Atoi(md["app_id"][0])
-		//clientHeader :=ClientHeader{
-		//	RequestTime: clientReqTime,
-		//	TraceId: md["trace_id"][0],
-		//	RequestId: md["request_id"][0],
-		//	TargetServiceName: md["service_name"][0],
-		//	projectId:clientprojectId ,
-		//	Protocol: md["protocol"][0],
-		//}
 		clientHeader := ServiceClientHeader{}
 		err = json.Unmarshal([]byte(md[SERVICE_HEADER_KEY][0]),&clientHeader)
 		if err != nil{
@@ -179,59 +213,27 @@ func  (myGrpcService *MyGrpcService) serverInterceptorBack(ctx context.Context, 
 
 		serverHeader.TraceId = traceId
 		serverHeader.TargetProjectId = clientHeader.ProjectId
-		//common.RequestId = md["request_id"][0]
-		//common.TraceId = md["trace_id"][0]
-		//common.ClientReqTime = clientReqTime
 	}
-	//fmt.Println(md["trace_id"])
 	resp, err = handler(ctx, req)
-	//common.ServerResponseTime = time.Now().Unix()
-
 	serverHeader.ResponseTime = strconv.FormatInt( time.Now().Unix(),10)
-	//serverHeader.ResponseTime = time.Now().Unix()
-	////ServerReceiveTimeString := strconv.FormatInt(common.ServerReceiveTime,10)
-	////ServerResponseTimeString := strconv.FormatInt(common.ServerResponseTime,10)
 	headerInfo := make(map[string]string)
-	////headerInfo["aaaaa"] = "bbbb"
-	//headerInfo["trace_id"] = serverHeader.TraceId
-	//headerInfo["receive_time"] = strconv.FormatInt(serverHeader.ReceiveTime,10)
-	//headerInfo["response_time"] = strconv.FormatInt(serverHeader.ResponseTime,10)
-	//headerInfo["request_id"] = serverHeader.RequestId
-	//headerInfo["app_id"] = strconv.Itoa(serverHeader.projectId)
-	//headerInfo["protocol"] = "grpc"
-	//headerInfo["service_name"] = serverHeader.ServiceName
-	//headerInfo["target_app_id"] = strconv.Itoa(serverHeader.TargetprojectId)
 	jsonServerHeader,_ := json.Marshal(serverHeader)
 	headerInfo[SERVICE_HEADER_KEY]= string(jsonServerHeader)
 	mdData := metadata.New(headerInfo)
-	//md = metadata.Pairs(
-	//	//"trace_id", md["trace_id"][0],
-	//	//"request_id",md["request_id"][0],
-	//	//"client_req_time",md["client_req_time"][0],
-	//	//"app_id",md["app_id"][0],
-	//	//"server_receive_time",ServerReceiveTimeString,
-	//	//"server_response_time",ServerResponseTimeString,
-	//)
 
 	MyPrint("serverHeader:",headerInfo)
 
 	ctx = metadata.NewOutgoingContext(ctx, mdData)
-	//grpc.SetHeader(ctx,md)
-	//grpc.SetTrailer(ctx,md)
 	grpc.SendHeader(ctx,mdData)
 
 	return resp, err
 }
-
+//客户端请求拦截器
 func (myGrpcClient *MyGrpcClient) clientInterceptorBack(ctx context.Context, method string, req, reply interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error{
 	MyPrint("grpc clientInterceptorBack ,  method",method, " req:" , req)
-	//MyPrint("req:",req,"reply:",reply,"opts:",opts)
 	var header  ,trailer metadata.MD
 
 	opts = []grpc.CallOption{grpc.Header(&header),grpc.Trailer(&trailer)}
-
-	//md := metadata.Pairs(
-	//	"trace_id", traceId,"request_id",MakeRequestId(),"client_req_time",nowString,"app_id",strconv.Itoa(myGrpcClient.projectId),"protocol","grpc")
 
 	clientHeader := ServiceClientHeader{
 		TraceId: MakeTraceId(),
@@ -245,12 +247,6 @@ func (myGrpcClient *MyGrpcClient) clientInterceptorBack(ctx context.Context, met
 	MyPrint("json.Marshal:",err)
 	headerInfo := make(map[string]string)
 	headerInfo[SERVICE_HEADER_KEY] = string( clientHeaderJson)
-	//headerInfo["trace_id"] = MakeTraceId()
-	//headerInfo["client_req_time"] = strconv.FormatInt(GetNowTimeSecondToInt64(),10)
-	//headerInfo["request_id"] = MakeRequestId()
-	//headerInfo["app_id"] = strconv.Itoa(myGrpcClient.projectId)
-	//headerInfo["protocol"] = "grpc"
-	//headerInfo["service_name"] = myGrpcClient.ServiceName
 
 	MyPrint("grpc client ready header:",headerInfo)
 
@@ -260,19 +256,6 @@ func (myGrpcClient *MyGrpcClient) clientInterceptorBack(ctx context.Context, met
 	err = invoker(ctx,method,req,reply,cc,opts...)
 
 	MyPrint("clientInterceptorBack receive , method:",method,"req:",req,"reply:",reply,"opts:",opts,  " cc:",cc.GetState() , " err:",err)
-	//md ,ok := metadata.FromIncomingContext(ctx)
-
-	//MyPrint("md:",md,ok)
-	//MyPrint("trailer:",trailer)
-
-	//projectId ,_ := strconv.Atoi( header.Get("app_id")[0])
-	//serverHeader := ServerHeader{
-	//	projectId : projectId,
-	//	ServiceName : header.Get("service_name")[0],
-	//	ReceiveTime: time.Now().Unix(),
-	//	RequestId: MakeRequestId(),
-	//	Protocol: "grpc",
-	//}
 	serviceResponseHeaderDiyString  :=  header.Get(SERVICE_HEADER_KEY)[0]
 	serverHeader := ServiceServerHeader{}
 	json.Unmarshal([]byte(serviceResponseHeaderDiyString),&serverHeader)

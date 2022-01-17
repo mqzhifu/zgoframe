@@ -12,12 +12,12 @@ import (
 
 func Grpc(){
 	//StartClient()
-	client2()
-	//StartService()
+	//client2()
+	//Service()
 }
 
 
-func StartService()error{
+func Service()error{
 	//包前缀 + 服务名
 	serviceName :=  global.C.Grpc.ServicePackagePrefix +"." + global.V.Service.Name
 	//serviceName := "pb.First"
@@ -27,7 +27,6 @@ func StartService()error{
 	//ip := "8.142.177.235"
 	//listenIp := "0.0.0.0"
 	//port := "7777"
-
 
 	node := util.ServiceNode{
 		ProjectId	: global.C.System.ProjectId,
@@ -40,7 +39,7 @@ func StartService()error{
 	//注册一个服务(不牵扯GRPC)
 	err := global.V.ServiceDiscovery.Register(node)
 	if err != nil{
-		util.ExitPrint("erviceDiscovery.Registe failed:"+err.Error())
+		util.ExitPrint("serviceDiscovery.Register failed:"+err.Error())
 	}
 	//测试一下刚刚注册的服务，是否成功，从服务管理池中直接寻找
 	testServerRegRs := false
@@ -51,7 +50,7 @@ func StartService()error{
 		}
 	}
 	if !testServerRegRs{
-		util.ExitPrint("reg failed .")
+		util.ExitPrint("reg failed 1.")
 	}
 	//服务发现注册成功后，再创建一个grpc server
 	MyGrpcService,err := global.V.GrpcManager.CreateService(serviceName,node.Ip,node.Port)

@@ -25,7 +25,7 @@ type ServiceChange struct{
 //服务发现-管理器
 type ServiceDiscovery struct {
 	//list->service.list->serviceNode
-	list      		map[string]*Service      //所有-服务列表
+	list      		map[string]*Service      //所有-服务列表,ps:包括自己注册,包括client server
 	option    		ServiceDiscoveryOption
 	WatchMsg 		chan ServiceChange	//监听的数据发生变化时，发送通知给调用者,暂关闭
 	CancelCxt 		context.Context

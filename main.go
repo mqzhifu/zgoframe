@@ -69,7 +69,7 @@ func main(){
 		panic("initialize.Init err:"+err.Error())
 		return
 	}
-	core.DoMySelf()
+	go core.DoMySelf()
 	//监听外部进程信号
 	go global.V.Process.DemonSignal()
 	util.MyPrint("wait mainCxt.done...")

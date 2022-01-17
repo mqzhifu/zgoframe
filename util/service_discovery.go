@@ -117,7 +117,7 @@ func (serviceDiscovery *ServiceDiscovery)Discovery()( err error){
 				ServiceId	: oriService.Id,
 				Ip			: etcdKeyInfo.Ip,
 				Port		: etcdKeyInfo.Port,
-				Protocol	: SERVICE_PROTOCOL_GRPC,//暂未实现
+				Protocol	: SERVICE_PROTOCOL_GRPC,//仅支持GRPC,暂未实现其它
 				IsSelfReg	: false,//非本服务注册，属于3方服务注册
 				DBKey		: k,
 			}

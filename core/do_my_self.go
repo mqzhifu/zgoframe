@@ -11,7 +11,7 @@ func DoMySelf(){
 	if global.C.System.ProjectId == 3{
 		test.LogSlave()
 	}else{
-		test.Gateway()
+		test.Grpc()
 	}
 
 }

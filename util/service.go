@@ -3,7 +3,6 @@ package util
 import (
 	"context"
 	"errors"
-	"fmt"
 	"go.etcd.io/etcd/clientv3"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
@@ -200,7 +199,7 @@ func (serviceManager *ServiceManager) GetById(id int)(Service,bool){
 }
 
 func (serviceManager *ServiceManager) GetByName(name string)(service Service,isEmpty bool){
-	fmt.Println("serviceManager GetByName:"+name)
+	//fmt.Println("serviceManager GetByName:"+name)
 	if len(serviceManager.Pool) <= 0{
 		return service,isEmpty
 	}

@@ -44,6 +44,7 @@ func  (grpcManager *GrpcManager)WatchServiceChange(){
 		grpcManager.Option.Log.Info(" grpc receive serviceChange :"+changeService.Name + " " +changeService.Ip + " " + changeService.Port + " " +changeService.Action)
 		dns := changeService.Name + ":" +changeService.Ip
 		myGrpcClient , myGrpcClientOk := grpcManager.ClientList[dns]
+		fmt.Println(myGrpcClientOk)
 		if changeService.Action == "PUT"{
 			if myGrpcClientOk {
 				for k ,_ := range myGrpcClient.GrpcClientList{
@@ -150,13 +151,14 @@ func (grpcManager *GrpcManager) GetClient(serviceName string,ip string,port stri
 	dns := ip + ":" + port
 	myGrpcClient ,ok := grpcManager.ClientList[dns]
 	if ok {
+		grpcManager.Option.Log.Info("GetClient has exist map .")
 		client ,ok := myGrpcClient.GrpcClientList[serviceName]
 		if ok {
 			return client,nil
 		}
-		err := myGrpcClient.MountClientToConnect(serviceName)
+		cc , err := myGrpcClient.MountClientToConnect(serviceName)
 		//grpcManager.Option.Log.Info(" use has exist inc :"+dns)
-		return client,err
+		return cc,err
 	}
 
 	myClient := MyGrpcClient{
@@ -178,9 +180,9 @@ func (grpcManager *GrpcManager) GetClient(serviceName string,ip string,port stri
 	myClient.ClientConn = conn
 	grpcManager.ClientList[dns] = &myClient
 
-	err = myClient.MountClientToConnect(serviceName)
+	cc , err := myClient.MountClientToConnect(serviceName)
     //grpcManager.GrpcClientList[serviceName] = myClient.MountClientToConnect(serviceName)
-	return conn,err
+	return cc,err
 }
 //server端接收拦截器
 func  (myGrpcService *MyGrpcService) serverInterceptorBack(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp interface{}, err error){

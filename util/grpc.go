@@ -38,13 +38,14 @@ func (myGrpcServer *MyGrpcService)ServerStart()error{
 	return myGrpcServer.GrpcServer.Serve(myGrpcServer.Listen)
 }
 //将一个服务挂载到一个grpc连接上(c端使用)
-func  (myGrpcClient *MyGrpcClient)MountClientToConnect(serviceName string)error{
+func  (myGrpcClient *MyGrpcClient)MountClientToConnect(serviceName string)(interface{},error){
+	myGrpcClient.Log.Info("MountClientToConnect:"+serviceName)
 	client,err:= myGrpcClient.GetGrpcClientByServiceName(serviceName,myGrpcClient.ClientConn)
 	if err != nil{
-		return err
+		return nil,err
 	}
 	myGrpcClient.GrpcClientList[serviceName] = client
-	return nil
+	return client,nil
 }
 
 //func  (myGrpcClient *MyGrpcClient)CloseOneService(serviceName string)error{

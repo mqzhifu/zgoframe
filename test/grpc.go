@@ -11,8 +11,7 @@ import (
 )
 
 func Grpc(){
-	//StartClient()
-	//client2()
+	Client()
 	//Service()
 }
 
@@ -67,16 +66,19 @@ func Service()error{
 	return nil
 }
 
-func  StartClient()error{
-	serviceName :=  global.V.Service.Key
-	zgoframeClient ,err := global.V.GrpcManager.GetZgoframeClient(serviceName,"")
+func  Client()error{
+	//serviceName :=  global.V.Service.Key
+	//zgoframeClient ,err := global.V.GrpcManager.GetZgoframeClient(serviceName,"")
+	client,err := global.V.GrpcManager.GetLogSlaveClient("LogSlave","")
 	if err != nil{
-		RequestRegPlayer := pb.RequestUser{}
-		RequestRegPlayer.Id = 123123
-		RequestRegPlayer.Nickname = "xiaoz"
-		res ,err:= zgoframeClient.SayHello(context.Background(),&RequestRegPlayer)
-		fmt.Println(res,err)
+		util.ExitPrint("GetLogSlaveClient err:",err.Error())
 	}
+
+	slavePushMsg := pb.SlavePushMsg{}
+	slavePushMsg.Title = "testMsg"
+	slavePushMsg.Content = "im want test pb log slave service push msg"
+	res ,err:= client.Push(context.Background(),&slavePushMsg)
+	fmt.Println("server back info :",res,err)
 
 
 	//serviceNode ,err := global.V.ServiceDiscovery.GetLoadBalanceServiceNodeByServiceName(serviceName,"")

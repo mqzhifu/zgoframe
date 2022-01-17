@@ -31,6 +31,8 @@ type ServiceDiscovery struct {
 	CancelCxt 		context.Context
 	CancelFunc 		context.CancelFunc
 	OPLock 			sync.Mutex		// 注册|删除：互斥，锁的粒度有点大，后期优化
+	//Status			string		//开启 关闭中  ，用于监听接收消息
+	WatchClose		chan bool
 	//consul 		int //待处理
 }
 //实例化 ServiceManager 参数
@@ -67,7 +69,8 @@ func NewServiceDiscovery(serviceDiscoveryOption ServiceDiscoveryOption)(sd *Serv
 	serviceDiscovery.option 		= serviceDiscoveryOption
 	serviceDiscovery.CancelFunc = cancelFunc
 	serviceDiscovery.CancelCxt = ctx
-
+	//serviceDiscovery.Status = "open"
+	serviceDiscovery.WatchClose = make(chan bool)
 	serviceDiscovery.list 			= make(map[string]*Service)
 	serviceDiscovery.WatchMsg 		= make(chan ServiceChange,100)
 	//初始化
@@ -191,26 +194,56 @@ func (serviceDiscovery *ServiceDiscovery)WatchOneService(service *Service)error{
 
 		serviceDiscovery.option.Log.Info(prefix + " create :"+service.DBKey + " block.......")
 		//进入阻塞模式
-		for wresp := range watchChan{
-			for _, ev := range wresp.Events{
-				action := ev.Type.String()
-				key := string(ev.Kv.Key)
-				val := string(ev.Kv.Value)
+		isBreak := false
+		for{
+			select {
+				case <-serviceDiscovery.WatchClose:
+					isBreak = true
+				case wresp := <- watchChan:
+					for _, ev := range wresp.Events{
+						action := ev.Type.String()
+						key := string(ev.Kv.Key)
+						val := string(ev.Kv.Value)
 
-				msg := prefix  + " chan has event : " + action + ", key : " + key +  " val : " +val
-				serviceDiscovery.option.Log.Warn(msg)
+						msg := prefix  + " chan has event : " + action + ", key : " + key +  " val : " +val
+						serviceDiscovery.option.Log.Warn(msg)
 
-				serviceDiscovery.ServiceHasChange(service,action,key,val)
+						serviceDiscovery.ServiceHasChange(service,action,key,val)
 
-				//MyPrint(ev.Type.String(), string(ev.Kv.Key), string(ev.Kv.Value))
-				//fmt.Printf("%s %q:%q\n", ev.Type, ev.Kv.Key, ev.Kv.Value)
+						//MyPrint(ev.Type.String(), string(ev.Kv.Key), string(ev.Kv.Value))
+						//fmt.Printf("%s %q:%q\n", ev.Type, ev.Kv.Key, ev.Kv.Value)
 
-				//matchCode := strings.Replace(key,RuleEtcdConfigPrefix,"",-1)
-				//matchCode = strings.Trim(matchCode," ")
-				//matchCode = strings.Trim(matchCode,"/")
-				//mylog.Warning(prefix , " matchCode : ",matchCode)
+						//matchCode := strings.Replace(key,RuleEtcdConfigPrefix,"",-1)
+						//matchCode = strings.Trim(matchCode," ")
+						//matchCode = strings.Trim(matchCode,"/")
+						//mylog.Warning(prefix , " matchCode : ",matchCode)
+					}
+				default:
+			}
+			if isBreak{
+				break
 			}
 		}
+		//for wresp := range watchChan{
+		//	for _, ev := range wresp.Events{
+		//		action := ev.Type.String()
+		//		key := string(ev.Kv.Key)
+		//		val := string(ev.Kv.Value)
+		//
+		//		msg := prefix  + " chan has event : " + action + ", key : " + key +  " val : " +val
+		//		serviceDiscovery.option.Log.Warn(msg)
+		//
+		//		serviceDiscovery.ServiceHasChange(service,action,key,val)
+		//
+		//		//MyPrint(ev.Type.String(), string(ev.Kv.Key), string(ev.Kv.Value))
+		//		//fmt.Printf("%s %q:%q\n", ev.Type, ev.Kv.Key, ev.Kv.Value)
+		//
+		//		//matchCode := strings.Replace(key,RuleEtcdConfigPrefix,"",-1)
+		//		//matchCode = strings.Trim(matchCode," ")
+		//		//matchCode = strings.Trim(matchCode,"/")
+		//		//mylog.Warning(prefix , " matchCode : ",matchCode)
+		//	}
+		//}
 	}else{
 		return CONSUL_NOT_OPEN
 	}
@@ -253,8 +286,8 @@ func (serviceDiscovery *ServiceDiscovery)ServiceHasChange(service *Service,actio
 		hasSearch := 0
 		for _,node :=range service.List{
 			if node.DBKey == key{
-				serviceDiscovery.DelOneServiceNode(node)
 				hasSearch = 1
+				serviceDiscovery.DelOneServiceNode(node)
 				break
 			}
 		}
@@ -265,7 +298,7 @@ func (serviceDiscovery *ServiceDiscovery)ServiceHasChange(service *Service,actio
 		serviceDiscovery.option.Log.Error("WatchOneService event err:" + action)
 		return
 	}
-	serviceDiscovery.option.Log.Info(prefix + "up after ,node len:" + strconv.Itoa(len(service.List)))
+	//serviceDiscovery.option.Log.Info(prefix + "up after ,node len:" + strconv.Itoa(len(service.List)))
 
 	//给使用者发送信息，第一时间通知,暂时先注释掉，如调用者不接收容易出问题
 	serviceChange := ServiceChange{}
@@ -311,7 +344,7 @@ func (serviceManager *ServiceDiscovery)balanceHost(service *Service ,factor stri
 	return nil
 }
 
-//删除自己的服务
+//
 func (serviceDiscovery *ServiceDiscovery)DelOneServiceNode(serviceNode *ServiceNode){
 	serviceDiscovery.option.Log.Info("DelOneServiceNode:" + serviceNode.ServiceName)
 
@@ -324,12 +357,6 @@ func (serviceDiscovery *ServiceDiscovery)DelOneServiceNode(serviceNode *ServiceN
 		return
 	}
 	if serviceDiscovery.option.DiscoveryType == SERVICE_DISCOVERY_ETCD{
-		//name := serviceManager.option.Prefix +"/"+serviceNode.ServiceName
-		err := serviceDiscovery.option.Etcd.DelOne(serviceNode.DBKey)
-		if err != nil{
-			serviceDiscovery.option.Log.Error("service.etcd.DelOne err " + err.Error())
-			return
-		}
 		hasDel := false
 		for k,n := range service.List{
 			if n.DBKey == serviceNode.DBKey{
@@ -343,13 +370,19 @@ func (serviceDiscovery *ServiceDiscovery)DelOneServiceNode(serviceNode *ServiceN
 			serviceDiscovery.option.Log.Warn("DelOneServiceNode err:no search node")
 			return
 		}
-
 		serviceDiscovery.option.Log.Info("delete one ok.")
-
-		if len(service.List) == 0{
-			service.Lease.Revoke(service.LeaseCancelCtx,service.LeaseGrantId)
-			delete(serviceDiscovery.list,service.Name)
+		if serviceNode.IsSelfReg{
+			err := serviceDiscovery.option.Etcd.DelOne(serviceNode.DBKey)
+			if err != nil{
+				serviceDiscovery.option.Log.Error("service.etcd.DelOne err " + err.Error())
+				return
+			}
+			serviceDiscovery.option.Log.Info("delete etcd one ok.")
 		}
+		//if len(service.List) == 0{
+		//	service.Lease.Revoke(service.LeaseCancelCtx,service.LeaseGrantId)
+		//	delete(serviceDiscovery.list,service.Name)
+		//}
 	}else{
 		str := CONSUL_NOT_OPEN.Error()
 		serviceDiscovery.option.Log.Error(str)
@@ -475,19 +508,22 @@ func (serviceManager *ServiceDiscovery)ShowJsonByNodeServer()string{
 //整体关闭
 func (serviceManager *ServiceDiscovery)Shutdown( ){
 	serviceManager.option.Log.Warn("service Shutdown:")
-
+	//serviceManager.Status = "shutdown"
+	//先把监听协程给关闭了
+	serviceManager.WatchClose <- true
 	for _,service:=range serviceManager.list{
 		for _,serviceNode:=range service.List{
-			if serviceNode.IsSelfReg {
+			//if serviceNode.IsSelfReg {
 				serviceManager.DelOneServiceNode(serviceNode)
-			}else{
-				//取消 所有 watch
-				service.watchCancel()
-			}
+			//}else{
+			//	//取消 所有 watch
+			//	service.watchCancel()
+			//}
 		}
 	}
 	serviceManager.CancelFunc()
 	close(serviceManager.WatchMsg)
+	close(serviceManager.WatchClose)
 }
 
 func (serviceDiscovery *ServiceDiscovery)EtcdKeyCovertStruct(key string)(etcdKeyInfo EtcdKeyInfo,err error){

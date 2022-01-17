@@ -6,5 +6,5 @@ func Index(){
 	//test_command()
 	//test_cicd()
 	//test_consul()
-	Gateway()
+	//Gateway()
 }

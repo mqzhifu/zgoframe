@@ -132,22 +132,24 @@ func  ByteTurnBytes(b byte)[]byte{
 
 //func  (protocolManager *ProtocolManager)packContentMsg(content []byte,conn *Conn ,serviceId int ,actionId int )[]byte{
 func  (protocolManager *ProtocolManager)PackContentMsg(msg pb.Msg)[]byte{
+	PrintStruct(msg,":")
+	
 	dataLengthBytes := Int32ToBytes( int32( len(msg.Content) ))
 	//protocolCtrlInfo := myNetWay.ConnManager.GetPlayerCtrlInfoById(conn.UserId)
 	//int32 -> int -> string - > bytes
 	contentTypeBytes := byte( msg.ContentType)
 	protocolTypeBytes :=  byte(msg.ProtocolType)
 
-	actionIdByte := Int32ToBytes(msg.ActionId)
+	actionIdByte := byte(msg.ActionId)
 	//actionIdByte := []byte(strconv.Itoa(int(msg.ActionId)))
 	reserved := []byte( "reserved--")
 
 	//serviceIdBytes := []byte(strconv.Itoa(int(msg.ServiceId)))
-	serviceIdBytes := Int32ToBytes(msg.ServiceId)
+	serviceIdBytes := byte(msg.ServiceId)
 	ln := "\n"
 	//合并 头 + 消息内容体
 	//content  := BytesCombine(dataLengthBytes,contentTypeBytes,protocolTypeBytes,serviceIdBytes,actionIdByte,reserved,[]byte(msg.Content),[]byte(ln))
-	content  := BytesCombine(dataLengthBytes,ByteTurnBytes(contentTypeBytes),ByteTurnBytes(protocolTypeBytes),serviceIdBytes,actionIdByte,reserved,[]byte(msg.Content),[]byte(ln))
+	content  := BytesCombine(dataLengthBytes,ByteTurnBytes(contentTypeBytes),ByteTurnBytes(protocolTypeBytes),ByteTurnBytes(serviceIdBytes),ByteTurnBytes(actionIdByte),reserved,[]byte(msg.Content),[]byte(ln))
 	return content
 	////var protocolCtrlFirstByteArr []byte
 	////contentTypeByte := byte(contentType)
@@ -198,14 +200,15 @@ func  (protocolManager *ProtocolManager)parserContentProtocol(content string)(me
 	dataLength := BytesToInt32([]byte(content[0:4]))
 	//contentType + protocolType
 	ctrlStream := content[4:6]
-	MyPrint("ctrlStream:",ctrlStream)
+	//MyPrint("ctrlStream:",[]byte(ctrlStream))
 	ctrlInfo := protocolManager.parserProtocolCtrlInfo([]byte(ctrlStream))
+	//PrintStruct(ctrlInfo,":")
 
-	actionId := BytesToInt32([]byte(content[6:7]))
-	serviceId := BytesToInt32([]byte(content[7:9]))
+	serviceId := int( content[6:7][0] )
+	actionId := BytesToInt32([]byte(content[7:9]))
 	//保留字
 	reserved :=  content[9:19]
-
+	MyPrint("serviceId:",serviceId , " actionId:",actionId)
 	protocolManager.Option.Log.Warn("dataLength:"+strconv.Itoa(dataLength) + " actionId:"+strconv.Itoa(actionId) +  " serviceId:"+strconv.Itoa(serviceId))
 	actionMap,empty := protocolManager.Option.ProtobufMap.GetActionName(actionId)
 	if empty{
@@ -239,11 +242,11 @@ func (protocolManager *ProtocolManager)parserProtocolCtrlInfo(stream []byte)Prot
 	//mylog.Debug("firstByte:",firstByte)
 	//firstByteHighThreeBit := (firstByte >> 5 ) & 7
 	//firstByteLowThreeBit := ((firstByte << 5 ) >> 5 )  & 7
-	firstByteHighThreeBit , _:= strconv.Atoi(string(stream[0:1]))
-	firstByteLowThreeBit , _:= strconv.Atoi(string(stream[1:2]))
+	//firstByteHighThreeBit := int32(stream[0])
+	//firstByteLowThreeBit := int32(stream[1])
 	protocolCtrlInfo := ProtocolCtrlInfo{
-		ContentType : int32(firstByteHighThreeBit),
-		ProtocolType : int32(firstByteLowThreeBit),
+		ContentType : int32(stream[0]),
+		ProtocolType : int32(stream[1]),
 	}
 	//mylog.Debug("parserProtocolCtrlInfo ContentType:",protocolCtrlInfo.ContentType,",ProtocolType:",protocolCtrlInfo.ProtocolType)
 	return protocolCtrlInfo

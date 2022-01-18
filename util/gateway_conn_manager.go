@@ -200,7 +200,7 @@ func   (conn *Conn)Read()(content string,err error){
 	//myMetrics.fastLog("player.fd.num."+pid,METRICS_OPT_INC,0)
 	//myMetrics.fastLog("player.fd.size."+pid,METRICS_OPT_PLUS,len(content))
 
-	conn.ConnManager.Log.Debug("conn.ReadMessage messageType:" + strconv.Itoa(messageType) +" len :"+strconv.Itoa(len(dataByte)) + " data:" +string(dataByte))
+	conn.ConnManager.Log.Info("conn.ReadMessage messageType:" + strconv.Itoa(messageType) +" len :"+strconv.Itoa(len(dataByte)) + " data:" +string(dataByte))
 	content = string(dataByte)
 	return content,nil
 }

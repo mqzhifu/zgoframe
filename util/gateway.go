@@ -1,7 +1,7 @@
 package util
 
 import (
-	"fmt"
+	"encoding/json"
 	"go.uber.org/zap"
 	"time"
 )
@@ -19,19 +19,18 @@ func NewGateway(grpcManager *GrpcManager,log *zap.Logger )*Gateway{
 }
 
 func  (gateway *Gateway)HttpCallGrpc(serviceName string,funcName string,balanceFactor string,requestData []byte)( resJsonStr string,err error){
-	fmt.Print("HttpCallGrpc fmt")
-
+	//fmt.Print("HttpCallGrpc fmt")
 	gateway.Log.Info("HttpCallGrpc:")
-	//callGrpcResData ,err := gateway.GrpcManager.CallGrpc(serviceName,funcName,balanceFactor,requestData)
-	//if err != nil{
-	//	return resJsonStr,err
-	//}
-	//resJsonStrByte ,err  := json.Marshal(callGrpcResData )
-	//if err != nil{
-	//	return resJsonStr,err
-	//}
-	//return string(resJsonStrByte),err
-	return resJsonStr,err
+	callGrpcResData ,err := gateway.GrpcManager.CallGrpc(serviceName,funcName,balanceFactor,requestData)
+	if err != nil{
+		return resJsonStr,err
+	}
+	resJsonStrByte ,err  := json.Marshal(callGrpcResData )
+	if err != nil{
+		return resJsonStr,err
+	}
+	return string(resJsonStrByte),err
+	//return resJsonStr,err
 }
 
 

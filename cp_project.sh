@@ -32,3 +32,4 @@ unzip $targetZipFileFullName
 rm -rf $targetZipFileFullName
 
 cat ${ORI_PROJECT_DIR}/config.toml |sed 's/projectId = 6/projectId = 3/' > $TAR_GET_DIR/config.toml
+cat $TAR_GET_DIR/config.toml |sed 's/projectId = 6/projectId = 3/' > $TAR_GET_DIR/config.toml

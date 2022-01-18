@@ -59,7 +59,6 @@ func  (myGrpcClient *MyGrpcClient)GetGrpcClientByServiceName(serviceName string,
         incClient = pb.NewLogSlaveClient(myGrpcClient.ClientConn)
     case "Zgoframe":
         incClient = pb.NewZgoframeClient(myGrpcClient.ClientConn)
-
     default:
         return incClient,errors.New("service name router failed.")
     }

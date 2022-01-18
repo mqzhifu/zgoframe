@@ -7,6 +7,8 @@ import (
 	"zgoframe/model"
 )
 
+//根据结构体描述信息，生成一张mysql 表的创建 sql
+
 type DbTool struct {
 	FieldTagName string
 	Br string

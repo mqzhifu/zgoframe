@@ -17,7 +17,7 @@ type ConnManager struct {
 	Close 				chan int
 	MaxClientConnNum 	int32
 	ConnTimeout			int32
-	Log *zap.Logger
+	Log 				*zap.Logger
 
 	DefaultContentType 	int32
 	DefaultProtocol		int32
@@ -71,6 +71,7 @@ func (connManager *ConnManager)CreateOneConn(connFd FDAdapter)(myConn *Conn  ){
 	myConn.UpTime 		= now
 	myConn.Status  		= CONN_STATUS_INIT
 	myConn.MsgInChan  	= make(chan pb.Msg,5000)
+	myConn.ConnManager	= connManager
 	//myConn.UdpConn    	= false
 	//myConn.RTTCancelChan = make(chan int)
 
@@ -108,6 +109,9 @@ func (connManager *ConnManager)GetPlayerCtrlInfoById(userId int32)ProtocolCtrlIn
 		ContentType: contentType,
 		ProtocolType: protocolType,
 	}
+
+	connManager.Log.Info("GetPlayerCtrlInfo uid : "+strconv.Itoa(int(userId))+" contentType"+ strconv.Itoa(int(contentType)) + " , protocolType:" + strconv.Itoa(int(protocolType)))
+
 	return protocolCtrlInfo
 }
 

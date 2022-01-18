@@ -44,6 +44,7 @@ func (ws *Websocket )Shutdown(){
 }
 
 func (ws *Websocket )Start(){
+	ws.Option.Log.Info("start websocket  dns:"+ws.httpServer.Addr + " uri:"+ ws.Option.WsUri)
 	http.HandleFunc(ws.Option.WsUri, ws.HttpHandler)
 	//这里开始阻塞，直到接收到停止信号
 	err := ws.httpServer.ListenAndServe()
@@ -66,14 +67,14 @@ func (ws *Websocket )HttpHandler(w http.ResponseWriter, r *http.Request){
 		},
 
 	}
+	//fmt.Println("RemoteAddr:",r.RemoteAddr)
 
 	wsConnFD, err := httpUpGrader.Upgrade(w,r, nil)
-	ws.Option.Log.Info("Upgrade this http req to websocket")
+	ws.Option.Log.Info("ws HttpHandler Upgrade this http req to websocket ,http remote:"+r.RemoteAddr)
 	if err != nil {
 		ws.Option.Log.Error("Upgrade websocket failed: " + err.Error())
 		return
 	}
-
 	ws.Option.ProtocolManager.websocketHandler(wsConnFD)
 	//imp := WebsocketConnImpNew(wsConnFD)
 	//ws.Option.OpenNewConnBack(imp)

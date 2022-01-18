@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"zgoframe/protobuf/pb"
 )
-
+//这里分成了两类：gateway 自解析 和 代理后方的请求
 func(netWay *NetWay) Router(msg pb.Msg,conn *Conn)(data interface{},err error){
 	actionInfo,_ := netWay.ProtobufMap.ActionMaps[int(msg.ActionId)]
 	serviceName := actionInfo.ServiceName
@@ -43,19 +43,19 @@ func(netWay *NetWay) RouterServiceSync(msg pb.Msg,conn *Conn,actionMap ActionMap
 
 func(netWay *NetWay) RouterServiceGateway(msg pb.Msg,conn *Conn)(data interface{},err error){
 	requestLogin := pb.RequestLogin{}
-	requestClientPong := pb.RequestClientPong{}
-	requestClientPing := pb.RequestClientPing{}
-	requestClientHeartbeat := pb.RequestClientHeartbeat{}
+	//requestClientPong := pb.RequestClientPong{}
+	//requestClientPing := pb.RequestClientPing{}
+	//requestClientHeartbeat := pb.RequestClientHeartbeat{}
 	//这里有个BUG，LOGIN 函数只能在第一次调用，回头加个限定
 	switch msg.Action {
-		case "login": //
+		case "ClientLogin": //
 			err = netWay.ProtocolManager.parserContentMsg(msg, &requestLogin, conn.UserId)
-		case "clientPong": //
-			err = netWay.ProtocolManager.parserContentMsg(msg, &requestClientPong, conn.UserId)
-		case "clientPing":
-			err = netWay.ProtocolManager.parserContentMsg(msg, &requestClientPing, conn.UserId)
-		case "clientHeartbeat": //心跳
-			err = netWay.ProtocolManager.parserContentMsg(msg, &requestClientHeartbeat, conn.UserId)
+		//case "clientPong": //
+		//	err = netWay.ProtocolManager.parserContentMsg(msg, &requestClientPong, conn.UserId)
+		//case "clientPing":
+		//	err = netWay.ProtocolManager.parserContentMsg(msg, &requestClientPing, conn.UserId)
+		//case "clientHeartbeat": //心跳
+		//	err = netWay.ProtocolManager.parserContentMsg(msg, &requestClientHeartbeat, conn.UserId)
 		default:
 			netWay.Option.Log.Error("Router err:")
 			return data, nil
@@ -65,34 +65,43 @@ func(netWay *NetWay) RouterServiceGateway(msg pb.Msg,conn *Conn)(data interface{
 	}
 	netWay.Option.Log.Info("Router " + msg.Action)
 	switch msg.Action {
-		case "login": //
+		case "ClientLogin": //
 			data, err = netWay.login(requestLogin, conn)
 			//return jwtData, err
-		case "clientPong": //
-			//netWay.ClientPong(requestClientPong, conn)
-		case "clientHeartbeat": //心跳
-			netWay.heartbeat(requestClientHeartbeat, conn)
-		case "clientPing": //
-			netWay.clientPing(requestClientPing, conn)
+		//case "clientPong": //
+		//	//netWay.ClientPong(requestClientPong, conn)
+		//case "clientHeartbeat": //心跳
+		//	netWay.heartbeat(requestClientHeartbeat, conn)
+		//case "clientPing": //
+		//	netWay.clientPing(requestClientPing, conn)
 	}
 	return data,nil
 }
 //直接给一个FD发送消息，基本上不用，只是特殊报错的时候，直接使用
 func(netWay *NetWay)WriteMessage(TextMessage int, connFD FDAdapter,content []byte){
-	connFD.WriteMessage(websocket.BinaryMessage,content)
+	err := connFD.WriteMessage(websocket.BinaryMessage,content)
+	if err != nil{
+		netWay.Option.Log.Error( "WriteMessage err:"+err.Error() )
+	}
 }
 //发送一条消息给一个玩家，根据conn，同时将消息内容进行编码与压缩
 //大部分通信都是这个方法
 func(netWay *NetWay)SendMsgCompressByConn(conn *Conn,actionName string , contentStruct interface{}){
 	netWay.Option.Log.Info("SendMsgCompressByConn  actionName:"+actionName)
 	//conn.UserId=0 时，由函数内部做兼容，主要是用来取content type ,protocol type
-	contentByte ,_ := netWay.ProtocolManager.CompressContent(contentStruct,conn.UserId)
+	contentByte ,err := netWay.ProtocolManager.CompressContent(contentStruct,conn.UserId)
+	if err != nil{
+		return
+	}
 	netWay.SendMsg(conn,actionName,contentByte)
 }
 //发送一条消息给一个玩家，根据UserId，同时将消息内容进行编码与压缩
 func(netWay *NetWay)SendMsgCompressByUid(UserId int32,action string , contentStruct interface{}){
 	netWay.Option.Log.Info("SendMsgCompressByUid UserId:"+strconv.Itoa(int(UserId))  +  " action:" + action)
-	contentByte ,_ := netWay.ProtocolManager.CompressContent(contentStruct,UserId)
+	contentByte ,err := netWay.ProtocolManager.CompressContent(contentStruct,UserId)
+	if err != nil{
+		return
+	}
 	netWay.SendMsgByUid(UserId,action,contentByte)
 }
 //发送一条消息给一个玩家,根据UserId,且不做压缩处理
@@ -112,11 +121,11 @@ func(netWay *NetWay)SendMsgByConn(conn *Conn,action string , content []byte){
 func(netWay *NetWay)SendMsg(conn *Conn,action string,content []byte){
 	//获取协议号结构体
 	actionMap,empty := netWay.ProtobufMap.GetActionId(action)
-	netWay.Option.Log.Info("SendMsg : actionId"+ strconv.Itoa(actionMap.Id )+  strconv.Itoa( int(conn.UserId))  + action)
 	if empty{
 		netWay.Option.Log.Error("GetActionId empty:"+action)
 		return
 	}
+	netWay.Option.Log.Info("SendMsg , actionId:"+ strconv.Itoa(actionMap.Id )+ " , userId:" + strconv.Itoa( int(conn.UserId))  + " , actionName:" + action)
 
 	if conn.Status == CONN_STATUS_CLOSE {
 		netWay.Option.Log.Error("Conn status =CONN_STATUS_CLOSE.")
@@ -124,8 +133,15 @@ func(netWay *NetWay)SendMsg(conn *Conn,action string,content []byte){
 	}
 
 	protocolCtrlInfo := myNetWay.ConnManager.GetPlayerCtrlInfoById(conn.UserId)
-
-	contentBytes := netWay.ProtocolManager.packContentMsg(content,conn,actionMap.ServiceId,actionMap.Id)
+	msg := pb.Msg{
+		Content: string(content),
+		ServiceId: int32(actionMap.ServiceId),
+		ActionId: int32(actionMap.Id),
+		Action: actionMap.Action,
+		ContentType:protocolCtrlInfo.ContentType,
+		ProtocolType: protocolCtrlInfo.ProtocolType,
+	}
+	contentBytes := netWay.ProtocolManager.PackContentMsg(msg)
 
 	if protocolCtrlInfo.ContentType == CONTENT_TYPE_PROTOBUF {
 		conn.Write(contentBytes,websocket.BinaryMessage)

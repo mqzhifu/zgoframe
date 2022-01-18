@@ -14,5 +14,4 @@ func DoMySelf(){
 		//test.Grpc()
 		test.Gateway()
 	}
-
 }

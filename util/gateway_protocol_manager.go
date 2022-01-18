@@ -54,16 +54,19 @@ func  (protocolManager *ProtocolManager)Shutdown(){
 //}
 
 func (protocolManager *ProtocolManager)Start( )error{
+	protocolManager.Option.Log.Info("protocolManager start:")
 	websocketOption := WebsocketOption{
 		WsUri		:protocolManager.Option.WsUri,
 		Port  		:protocolManager.Option.WsPort,
 		ListenerIp 	:protocolManager.Option.Ip,
 		OutIp 		:protocolManager.Option.Ip,
 		Log			:	protocolManager.Option.Log,
+		ProtocolManager : protocolManager,
 		//OutCxt 		:	protocolManager.Option.
 		//OpenNewConnBack	func ( connFD FDAdapter)	//来了新连接后，回调函数
 	}
 	websocket := NewWebsocket(websocketOption)
+
 	protocolManager.WsHttpServer = websocket
 	go protocolManager.WsHttpServer.Start()
 	//tcp server
@@ -121,23 +124,25 @@ func  (protocolManager *ProtocolManager)parserContentMsg(msg pb.Msg ,out interfa
 	return nil
 }
 
-func  (protocolManager *ProtocolManager)packContentMsg(content []byte,conn *Conn ,serviceId int ,actionId int )[]byte{
-	dataLengthBytes := Int32ToBytes( int32( len(content) ))
 
-	protocolCtrlInfo := myNetWay.ConnManager.GetPlayerCtrlInfoById(conn.UserId)
+
+//func  (protocolManager *ProtocolManager)packContentMsg(content []byte,conn *Conn ,serviceId int ,actionId int )[]byte{
+func  (protocolManager *ProtocolManager)PackContentMsg(msg pb.Msg)[]byte{
+	dataLengthBytes := Int32ToBytes( int32( len(msg.Content) ))
+
+	//protocolCtrlInfo := myNetWay.ConnManager.GetPlayerCtrlInfoById(conn.UserId)
 	//int32 -> int -> string - > bytes
-	contentTypeBytes := []byte(strconv.Itoa(int(protocolCtrlInfo.ContentType)))
-	protocolTypeBytes :=  []byte(strconv.Itoa(int(protocolCtrlInfo.ProtocolType)))
+	contentTypeBytes := []byte(strconv.Itoa(int(msg.ContentType)))
+	protocolTypeBytes :=  []byte(strconv.Itoa(int(msg.ProtocolType)))
 
 
-	actionIdByte := []byte(strconv.Itoa(actionId))
+	actionIdByte := []byte(strconv.Itoa(int(msg.ActionId)))
 	reserved := []byte( "reserved--")
 
-	serviceIdBytes := []byte(strconv.Itoa(serviceId))
-
+	serviceIdBytes := []byte(strconv.Itoa(int(msg.ServiceId)))
 	ln := "\n"
 	//合并 头 + 消息内容体
-	content  = BytesCombine(dataLengthBytes,contentTypeBytes,protocolTypeBytes,serviceIdBytes,actionIdByte,reserved,content,[]byte(ln))
+	content  := BytesCombine(dataLengthBytes,contentTypeBytes,protocolTypeBytes,serviceIdBytes,actionIdByte,reserved,[]byte(msg.Content),[]byte(ln))
 	return content
 	////var protocolCtrlFirstByteArr []byte
 	////contentTypeByte := byte(contentType)
@@ -236,13 +241,12 @@ func (protocolManager *ProtocolManager)parserProtocolCtrlInfo(stream []byte)Prot
 	//mylog.Debug("parserProtocolCtrlInfo ContentType:",protocolCtrlInfo.ContentType,",ProtocolType:",protocolCtrlInfo.ProtocolType)
 	return protocolCtrlInfo
 }
-
 //将 结构体 压缩成 字符串
 func  (protocolManager *ProtocolManager)CompressContent(contentStruct interface{},UserId int32)(content []byte  ,err error){
+	//先获取该连接的通信元数据
 	protocolCtrlInfo := myNetWay.ConnManager.GetPlayerCtrlInfoById(UserId)
-	contentType := protocolCtrlInfo.ContentType
+	contentType 	:= protocolCtrlInfo.ContentType
 
-	//mylog.Debug("CompressContent contentType:",contentType)
 	if contentType == CONTENT_TYPE_JSON {
 		//这里有个问题：纯JSON格式与PROTOBUF格式在PB文件上 不兼容
 		//严格来说是GO语言与protobuf不兼容，即：PB文件的  结构体中的 JSON-TAG
@@ -252,12 +256,11 @@ func  (protocolManager *ProtocolManager)CompressContent(contentStruct interface{
 
 		//所以，先将content 字符串 由下划线转成 驼峰式
 		content, err = json.Marshal(JsonCamelCase{contentStruct})
-		//mylog.Info("CompressContent json:",string(content),err )
 	}else if  contentType == CONTENT_TYPE_PROTOBUF {
 		contentStruct := contentStruct.(proto.Message)
 		content, err = proto.Marshal(contentStruct)
 	}else{
-		err = errors.New(" switch err")
+		err = errors.New(" contentType switch err")
 	}
 	if err != nil{
 		protocolManager.Option.Log.Error("CompressContent err :"+err.Error())

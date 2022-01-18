@@ -13,11 +13,12 @@ import (
 	"time"
 	"zgoframe/model"
 )
-
-//已知：依赖
-//supervisor 依赖 python 、 xmlrpc
-//代码依赖：git
-
+/*
+自动化部署，从DB中读取出所有信息基础信息，GIT CLONE 配置super visor 监听进程
+依赖
+	supervisor 依赖 python 、 xmlrpc
+	代码依赖：git
+*/
 const (
 	DIR_SEPARATOR = "/"
 	STR_SEPARATOR = "#"

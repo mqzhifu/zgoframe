@@ -18,9 +18,9 @@ type NetWayOption struct {
 	TcpPort 			string		`json:"tcpPort"`		//监听端口号
 	UdpPort				string 		`json:"udpPort"`		//UDP端口号
 
-	//Protocol 			int32		`json:"protocol"`		//兼容协议：ws tcp udp
-	WsUri				string		`json:"wsUri"`			//接HOST的后面的URL地址
+	Protocol 			int32		`json:"protocol"`		//默认响应协议：ws tcp udp
 	ContentType 		int32		`json:"contentType"`	//默认内容格式 ：json protobuf
+	WsUri				string		`json:"wsUri"`			//接HOST的后面的URL地址
 
 	LoginAuthType		string		`json:"loginAuthType"`	//jwt
 	LoginAuthSecretKey	string		`json:"login_auth_secret_key"`//密钥
@@ -36,6 +36,7 @@ type NetWayOption struct {
 	OutCxt 				context.Context `json:"-"`			//调用方的CTX，用于所有协程的退出操作
 	CloseChan 			chan int		`json:"-"`
 	GrpcManager			*GrpcManager
+	ProtobufMap			*ProtobufMap
 	//ProtobufMap			*ProtobufMap	`json:"-"`
 
 	//HttpdRootPath 	string 		`json:"httpdRootPath"`
@@ -80,6 +81,7 @@ func NewNetWay(option NetWayOption)(*NetWay,error)  {
 	netWay.Option = option
 	netWay.Status = NETWAY_STATUS_INIT
 
+	netWay.ProtobufMap = option.ProtobufMap
 	//协议管理适配器
 	protocolManagerOption := ProtocolManagerOption{
 		Ip				: netWay.Option.ListenIp,
@@ -89,6 +91,7 @@ func NewNetWay(option NetWayOption)(*NetWay,error)  {
 		UdpPort			: netWay.Option.UdpPort,
 		OpenNewConnBack	: netWay.OpenNewConn,
 		Log				: option.Log,
+		//ProtobufMap		: option.ProtobufMap,
 	}
 	netWay.ProtocolManager =  NewProtocolManager(protocolManagerOption)
 	err := netWay.ProtocolManager.Start()
@@ -105,7 +108,7 @@ func NewNetWay(option NetWayOption)(*NetWay,error)  {
 	//}
 	//myHttpd = NewHttpd(httpdOption)
 	//ws conn 管理
-	netWay.ConnManager = NewConnManager(option.MaxClientConnNum,option.ConnTimeout,option.Log,netWay.Option.ContentType,PROTOCOL_WEBSOCKET)
+	netWay.ConnManager = NewConnManager(option.MaxClientConnNum,option.ConnTimeout,option.Log,netWay.Option.ContentType,netWay.Option.Protocol)
 	//统计模块
 	netWay.Metrics = NewMyMetrics(option.Log)
 	//netWay.Metrics.CreateCounter("total.fd.num")
@@ -133,7 +136,7 @@ func NewNetWay(option NetWayOption)(*NetWay,error)  {
 }
 //一个新客户端连接请求进入
 func(netWay *NetWay)OpenNewConn( connFD FDAdapter) {
-	netWay.Option.Log.Info("OpenNewConn:")
+	netWay.Option.Log.Info("OpenNewConn:" + connFD.RemoteAddr())
 	var loginRes pb.ResponseLoginRes
 
 	if netWay.Status == NETWAY_STATUS_CLOSE{//当前网关已经关闭了，还有新的连接进来
@@ -158,14 +161,14 @@ func(netWay *NetWay)OpenNewConn( connFD FDAdapter) {
 		netWay.CloseFD(connFD,CLOSE_SOURCE_MAX_CLIENT)
 		return
 	}
-	//创建一个连接元素，将WS FD 保存到该容器中
+	//创建一个新的连接结体体，将 FD 保存到该容器中
 	NewConn := netWay.ConnManager.CreateOneConn(connFD)
-	defer func() {
-		if err := recover(); err != nil {
-			netWay.Option.Log.Panic("OpenNewConn:")
-			netWay.CloseOneConn(NewConn, CLOSE_SOURCE_OPEN_PANIC)
-		}
-	}()
+	//defer func() {
+	//	if err := recover(); err != nil {
+	//		netWay.Option.Log.Panic("OpenNewConn:")
+	//		netWay.CloseOneConn(NewConn, CLOSE_SOURCE_OPEN_PANIC)
+	//	}
+	//}()
 	//开始-登陆验证
 	jwtData,firstMsg,err := netWay.loginPre(NewConn)
 	if err != nil{
@@ -194,7 +197,7 @@ func(netWay *NetWay)OpenNewConn( connFD FDAdapter) {
 		Uid: NewConn.UserId,
 	}
 	//告知玩家：登陆结果
-	netWay.SendMsgCompressByUid(jwtData.Payload.Uid,"loginRes",&loginRes)
+	netWay.SendMsgCompressByUid(jwtData.Payload.Uid,"ServerLogin",&loginRes)
 	//统计 当前FD 数量/历史FD数量
 	netWay.Metrics.CounterInc("create_fd_ok")
 	//初始化即登陆成功的响应均完成后，开始该连接的 消息IO 协程
@@ -268,18 +271,18 @@ func  (netWay *NetWay)Shutdown() {
 
 
 func  (netWay *NetWay)loginPreFailed(msg string ,closeSource int,conn *Conn){
+	code := 500
 	loginRes := pb.ResponseLoginRes{
 		Code : 500,
 		ErrMsg:msg,
 	}
-	netWay.SendMsgCompressByConn(conn,"loginRes",loginRes)
+	netWay.Option.Log.Error("loginPreFailed:"+strconv.Itoa(code) + " "+msg)
+	netWay.SendMsgCompressByConn(conn,"ServerLogin",&loginRes)
 	netWay.CloseOneConn(conn, closeSource)
-	netWay.Option.Log.Error(msg)
+	//netWay.Option.Log.Error(msg)
 }
 //首次建立连接，登陆验证，预处理
 func  (netWay *NetWay)loginPre(conn *Conn)(jwt JwtData,firstMsg pb.Msg,err error,){
-	//var loginRes pb.ResponseLoginRes
-
 	content,err := conn.Read()
 	if err != nil{
 		netWay.loginPreFailed(err.Error(),CLOSE_SOURCE_FD_READ_EMPTY,conn)
@@ -291,7 +294,7 @@ func  (netWay *NetWay)loginPre(conn *Conn)(jwt JwtData,firstMsg pb.Msg,err error
 		return jwt,firstMsg,err
 	}
 	//这里有个问题，连接成功后，C端立刻就得发消息，不然就异常~bug
-	if msg.Action != "login"{//进到这里，肯定是有新连接被创建且回调了公共函数
+	if msg.Action != "ClientLogin"{//进到这里，肯定是有新连接被创建且回调了公共函数
 		netWay.loginPreFailed("first msg must login api!!",CLOSE_SOURCE_FIRST_NO_LOGIN,conn)
 		return
 	}
@@ -307,6 +310,11 @@ func  (netWay *NetWay)loginPre(conn *Conn)(jwt JwtData,firstMsg pb.Msg,err error
 }
 //登陆验证token
 func(netWay *NetWay)login(requestLogin pb.RequestLogin,conn *Conn)(jwtData JwtData,err error){
+	if conn.UserId > 0 {
+		msg := " don't repeat login."+strconv.Itoa(int(conn.UserId))
+		netWay.Option.Log.Error(msg)
+		return jwtData,errors.New(msg)
+	}
 	token := ""
 	if netWay.Option.LoginAuthType == "jwt"{
 		token = requestLogin.Token

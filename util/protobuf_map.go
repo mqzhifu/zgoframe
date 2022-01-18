@@ -97,16 +97,19 @@ func (protobufMap *ProtobufMap)loadingActionMapConfigFile(fileName string)(map[i
 			return nil,errors.New("serviceName not in project list :" + serviceName)
 		}
 
+		id ,_:= strconv.Atoi(contentArr[0])
 		actionMap := ActionMap{
 			ServiceId : serviceId,
 			ServiceName: serviceName,
-			Id: funcId,
+			//Id: funcId,
+			Id:id,
 			Action: contentArr[2],
 			Request: contentArr[3],
 			Response: contentArr[4],
 			Desc: contentArr[5],
 		}
-
+		//PrintStruct(actionMap,":")
+		//ExitPrint(111)
 		am[funcId] = actionMap
 	}
 	if len(am) <= 0{
@@ -150,9 +153,10 @@ func(protobufMap *ProtobufMap)GetActionName(id int)(actionMapT ActionMap,empty b
 }
 
 func (protobufMap *ProtobufMap)GetActionId(action string )(actionMapT ActionMap,empty bool){
-	//netway.mylog.Info("GetActionId ",action , " ",category)
+	protobufMap.Log.Info("GetActionId " + action)
 	am := protobufMap.ActionMaps
 	for _,v:=range am{
+		//PrintStruct(v,":")
 		if v.Action == action {
 			return v,false
 		}

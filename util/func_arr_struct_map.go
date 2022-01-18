@@ -2,11 +2,12 @@ package util
 //公用函数：数组、集合、结构体、字节
 import (
 	"bytes"
+	"encoding/binary"
 	"encoding/json"
 	"strconv"
 	"reflect"
 )
-//一个结构体转成字符串，一般用于输出调度
+//打印：一个结构体（仅支持一维结构体）
 func PrintStruct(mystruct interface{},separator string ){
 	t := reflect.TypeOf(mystruct)
 	v := reflect.ValueOf(mystruct)
@@ -17,14 +18,14 @@ func PrintStruct(mystruct interface{},separator string ){
 		MyPrint(t.Field(k).Name,separator,v.Field(k).Interface())
 	}
 }
-
+//将一个map转换成一个数组
 func MapCovertArr( myMap map[int]int) (arr []int){
 	for _,v := range myMap {
 		arr = append(arr,v)
 	}
 	return arr
 }
-
+//数组转换成map
 func ArrCovertMap(arr []int )map[int]int{
 	mapArr := make(map[int]int)
 	for k,v := range arr {
@@ -32,14 +33,13 @@ func ArrCovertMap(arr []int )map[int]int{
 	}
 	return mapArr
 }
-
+//将一个：一给数组(string)转成成 数组(int)
 func ArrStringCoverArrInt(arr []string )(arr2 []int){
 	for i:=0;i<len(arr);i++{
 		arr2 = append(arr2, Atoi(arr[i]))
 	}
 	return arr2
 }
-
 //检查已经make过的，二维map int 类型，是否为空
 func CheckMap2IntIsEmpty(hashMap map[int]map[int]int)bool{
 	if len(hashMap) == 0{
@@ -54,7 +54,7 @@ func CheckMap2IntIsEmpty(hashMap map[int]map[int]int)bool{
 	return true
 
 }
-
+//把一维int 数组，转换成一个字符串
 func ArrCoverStr(arr []int,IdsSeparation string)string{
 	if len(arr) == 0{
 		ExitPrint("ArrCoverStr arr len = 0")
@@ -66,7 +66,7 @@ func ArrCoverStr(arr []int,IdsSeparation string)string{
 	str = str[0:len(str)-1]
 	return str
 }
-
+//结构体转map ，这里实际是借用了json类中转
 func StructCovertMap(inStruct interface{})interface{}{
 	jsonStr ,_:= json.Marshal(inStruct)
 	var mapResult map[string]interface{}
@@ -86,7 +86,16 @@ func FindMaxNumInArrFloat32(arr []float32  )float32{
 	}
 	return number
 }
-
+//在一个：一维数组中，找寻最小数
+func FindMinNumInArrFloat32(arr []float32  )float32{
+	number := arr[0]
+	for _,v := range arr{
+		if v < number{
+			number = v
+		}
+	}
+	return number
+}
 //BytesCombine 多个[]byte数组合并成一个[]byte
 func BytesCombine(pBytes ...[]byte) []byte {
 	len := len(pBytes)
@@ -97,8 +106,7 @@ func BytesCombine(pBytes ...[]byte) []byte {
 	sep := []byte("")
 	return bytes.Join(s, sep)
 }
-
-//判断一个元素，在一个数组中的位置
+//判断一个元素 int，在一个数组中的位置
 func ElementInArrIndex(arr []int ,element int )int{
 	for i:=0;i<len(arr);i++{
 		if arr[i] == element{
@@ -107,8 +115,7 @@ func ElementInArrIndex(arr []int ,element int )int{
 	}
 	return -1
 }
-
-
+//判断一个元素 string，在一个数组中的位置
 func ElementStrInArrIndex(arr []string ,element string )int{
 	for i:=0;i<len(arr);i++{
 		if arr[i] == element{
@@ -117,14 +124,17 @@ func ElementStrInArrIndex(arr []string ,element string )int{
 	}
 	return -1
 }
-
-//在一个：一维数组中，找寻最小数
-func FindMinNumInArrFloat32(arr []float32  )float32{
-	number := arr[0]
-	for _,v := range arr{
-		if v < number{
-			number = v
-		}
-	}
-	return number
+//BytesToInt32
+func BytesToInt32(bys []byte) int {
+	byteBuff := bytes.NewBuffer(bys)
+	var data int32
+	binary.Read(byteBuff, binary.BigEndian, &data)
+	return int(data)
+}
+//Int32ToBytes
+func Int32ToBytes(n int32) []byte {
+	//x := int32(n)
+	bytesBuffer := bytes.NewBuffer([]byte{})
+	binary.Write(bytesBuffer, binary.BigEndian, n)
+	return bytesBuffer.Bytes()
 }

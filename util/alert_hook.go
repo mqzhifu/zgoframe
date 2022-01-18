@@ -1,6 +1,6 @@
 package util
 
-//
+//应用程序主动向3方发送报警
 import (
 	"go.uber.org/zap"
 	"strings"

@@ -1,5 +1,5 @@
 package util
-
+//直接推送报警(非3方)
 import (
 	"bytes"
 	"encoding/json"

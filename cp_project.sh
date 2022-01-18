@@ -3,6 +3,7 @@
 set -e
 
 #./cp_project.sh /data/www/golang/src/zgoframe /data/www/golang/src/log_slave
+#./cp_project.sh /data/www/golang/src/zgoframe /data/www/golang/src/test_gateway_zgoframe
 
 ORI_PROJECT_DIR=$1
 TAR_GET_DIR=$2
@@ -31,5 +32,6 @@ ls -l
 unzip $targetZipFileFullName
 rm -rf $targetZipFileFullName
 
-cat ${ORI_PROJECT_DIR}/config.toml |sed 's/projectId = 6/projectId = 3/' > $TAR_GET_DIR/config.toml
-cat $TAR_GET_DIR/config.toml |sed 's/projectId = 6/projectId = 3/' > $TAR_GET_DIR/config.toml
+cp ${ORI_PROJECT_DIR}/config.toml ${TAR_GET_DIR}
+#cat ${ORI_PROJECT_DIR}/config.toml |sed 's/projectId = 6/projectId = 3/' > $TAR_GET_DIR/config.toml
+#cat $TAR_GET_DIR/config.toml |sed 's/projectId = 6/projectId = 3/' > $TAR_GET_DIR/config.toml

@@ -7,6 +7,8 @@ import (
 	"errors"
 )
 
+//部署项目时，触发按钮及一次部署的数据记录
+
 type CICDPublicManager struct{
 	Db *gorm.DB
 }

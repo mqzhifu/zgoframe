@@ -14,6 +14,8 @@ type FDAdapter interface {
 	ReadMessage()(messageType int, p []byte, err error)
 	//主动关闭一个FD
 	Close()error
+	//C端信息
+	RemoteAddr()string
 }
 //===========================
 
@@ -43,6 +45,11 @@ func (websocketConnImp *WebsocketConnImp)ReadMessage()(messageType int, p []byte
 	return websocketConnImp.FD.ReadMessage()
 }
 
+func (websocketConnImp *WebsocketConnImp)RemoteAddr()(info string){
+	net :=  websocketConnImp.FD.RemoteAddr()
+	return net.String() + " " + net.Network()
+}
+
 //=========================
 //实现了FDAdapter接口，用于TCP协议的内容操作
 type TcpConnImp struct {
@@ -68,4 +75,9 @@ func (tcpConnImp *TcpConnImp)Close()error{
 
 func (tcpConnImp *TcpConnImp)ReadMessage()(messageType int, p []byte, err error){
 	return tcpConnImp.FD.ReadMessage()
+}
+
+func (tcpConnImp *TcpConnImp)RemoteAddr()(info string){
+	net := tcpConnImp.FD.conn.RemoteAddr()
+	return net.String() + " " + net.Network()
 }

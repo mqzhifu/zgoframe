@@ -101,7 +101,7 @@ func GateClientWebsocket(){
 	}
 
 	contentBytes := protocolManager.PackContentMsg(msg)
-	util.MyPrint(contentBytes)
+	//util.MyPrint(contentBytes)
 	err = c.WriteMessage(websocket.BinaryMessage,contentBytes)
 	if err != nil {
 		global.V.Zap.Error("write:"+err.Error())

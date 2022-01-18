@@ -288,7 +288,7 @@ func  (netWay *NetWay)loginPre(conn *Conn)(jwt JwtData,firstMsg pb.Msg,err error
 		netWay.loginPreFailed(err.Error(),CLOSE_SOURCE_FD_READ_EMPTY,conn)
 		return jwt,firstMsg,errors.New("conn read err:"+err.Error())
 	}
-	msg,err := netWay.ProtocolManager.parserContentProtocol(content)
+	msg,err := netWay.ProtocolManager.ParserContentProtocol(content)
 	if err != nil{
 		netWay.loginPreFailed(err.Error(),CLOSE_SOURCE_FD_PARSE_CONTENT,conn)
 		return jwt,firstMsg,err

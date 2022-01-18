@@ -114,7 +114,14 @@ func GateClientWebsocket(){
 			global.V.Zap.Error("read:"+err.Error())
 			return
 		}
-		global.V.Zap.Info("recv:"+string(message))
+
+		msg ,err := protocolManager.ParserContentProtocol(string(message))
+		if err != nil{
+			global.V.Zap.Error("ParserContentProtocol:"+err.Error())
+			return
+		}
+
+		util.PrintStruct(msg,":")
 		time.Sleep(time.Second * 1)
 	}
 

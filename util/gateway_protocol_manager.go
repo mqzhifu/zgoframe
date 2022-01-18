@@ -189,7 +189,7 @@ func  (protocolManager *ProtocolManager)PackContentMsg(msg pb.Msg)[]byte{
 func  (protocolManager *ProtocolManager)GetPackHeaderLength()int{
 	return 4 + 1 + 1 + 1 + 2 + 10
 }
-func  (protocolManager *ProtocolManager)parserContentProtocol(content string)(message pb.Msg,err error){
+func  (protocolManager *ProtocolManager)ParserContentProtocol(content string)(message pb.Msg,err error){
 	headerLength := protocolManager.GetPackHeaderLength()
 	if len(content) < headerLength{
 		return message,errors.New("content < "+ strconv.Itoa(headerLength))

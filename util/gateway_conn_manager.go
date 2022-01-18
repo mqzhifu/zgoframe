@@ -257,7 +257,7 @@ func  (conn *Conn)ReadLoop(ctx context.Context){
 				//最后更新时间
 				conn.UpLastTime()
 				//解析消息内容
-				msg,err  := myNetWay.ProtocolManager.parserContentProtocol(content)
+				msg,err  := myNetWay.ProtocolManager.ParserContentProtocol(content)
 				if err !=nil{
 					conn.ConnManager.Log.Warn("parserContent err :" + err.Error())
 					continue

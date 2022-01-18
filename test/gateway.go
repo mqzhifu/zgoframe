@@ -20,6 +20,9 @@ func GetGatewayInstance(){
 }
 
 func GateServer(){
+	//a := int32(1)
+	//ab := byte(a)
+	//util.ExitPrint(ab)
 
 	netWayOption := util.NetWayOption{
 		ListenIp			: "127.0.0.1",	//程序启动时监听的IP
@@ -52,6 +55,8 @@ func GateServer(){
 	gateway := util.NewGateway(global.V.GrpcManager,global.V.Zap)
 	//global.V.Gateway = gateway
 	gateway.StartSocket(netWayOption)
+
+
 }
 
 func GateClientWebsocket(){

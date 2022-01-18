@@ -133,19 +133,20 @@ func  ByteTurnBytes(b byte)[]byte{
 //func  (protocolManager *ProtocolManager)packContentMsg(content []byte,conn *Conn ,serviceId int ,actionId int )[]byte{
 func  (protocolManager *ProtocolManager)PackContentMsg(msg pb.Msg)[]byte{
 	dataLengthBytes := Int32ToBytes( int32( len(msg.Content) ))
-
 	//protocolCtrlInfo := myNetWay.ConnManager.GetPlayerCtrlInfoById(conn.UserId)
 	//int32 -> int -> string - > bytes
 	contentTypeBytes := byte( msg.ContentType)
 	protocolTypeBytes :=  byte(msg.ProtocolType)
 
-
-	actionIdByte := []byte(strconv.Itoa(int(msg.ActionId)))
+	actionIdByte := Int32ToBytes(msg.ActionId)
+	//actionIdByte := []byte(strconv.Itoa(int(msg.ActionId)))
 	reserved := []byte( "reserved--")
 
-	serviceIdBytes := []byte(strconv.Itoa(int(msg.ServiceId)))
+	//serviceIdBytes := []byte(strconv.Itoa(int(msg.ServiceId)))
+	serviceIdBytes := Int32ToBytes(msg.ServiceId)
 	ln := "\n"
 	//合并 头 + 消息内容体
+	//content  := BytesCombine(dataLengthBytes,contentTypeBytes,protocolTypeBytes,serviceIdBytes,actionIdByte,reserved,[]byte(msg.Content),[]byte(ln))
 	content  := BytesCombine(dataLengthBytes,ByteTurnBytes(contentTypeBytes),ByteTurnBytes(protocolTypeBytes),serviceIdBytes,actionIdByte,reserved,[]byte(msg.Content),[]byte(ln))
 	return content
 	////var protocolCtrlFirstByteArr []byte
@@ -197,6 +198,7 @@ func  (protocolManager *ProtocolManager)parserContentProtocol(content string)(me
 	dataLength := BytesToInt32([]byte(content[0:4]))
 	//contentType + protocolType
 	ctrlStream := content[4:6]
+	MyPrint("ctrlStream:",ctrlStream)
 	ctrlInfo := protocolManager.parserProtocolCtrlInfo([]byte(ctrlStream))
 
 	actionId := BytesToInt32([]byte(content[6:7]))

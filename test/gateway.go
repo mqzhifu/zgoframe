@@ -88,6 +88,7 @@ func GateClientWebsocket(){
 
 	protocolManagerOption := util.ProtocolManagerOption {
 		Log: global.V.Zap,
+		ProtobufMap: global.V.ProtobufMap,
 	}
 	protocolManager := util.NewProtocolManager(protocolManagerOption)
 

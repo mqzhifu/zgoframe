@@ -73,6 +73,7 @@ func GateClientWebsocket(){
 	}
 
 	actionMap ,empty:= global.V.ProtobufMap.GetActionId(actionName)
+	util.ExitPrint(actionMap)
 	if empty{
 		global.V.Zap.Panic("GetActionId empty.")
 	}

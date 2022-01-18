@@ -68,7 +68,9 @@ func (protobufMap *ProtobufMap)initProtocolActionMap()error{
 func (protobufMap *ProtobufMap)loadingActionMapConfigFile(fileName string)(map[int]ActionMap,error) {
 	//_, _,_,dir  := getInfo(1)
 	//ExitPrint(protobufMap.ConfigFileDir,fileName)
-	fileContentArr,err := ReadLine(protobufMap.ConfigFileDir +"/"+fileName)
+	pathFile := protobufMap.ConfigFileDir +"/"+fileName
+	protobufMap.Log.Info("protobufMap loadingActionMapConfigFile:"+pathFile)
+	fileContentArr,err := ReadLine(pathFile)
 	if err != nil{
 		protobufMap.Log.Error("initActionMap ReadLine err :" + err.Error())
 		return nil,err

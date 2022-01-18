@@ -2,6 +2,7 @@ package util
 
 import (
 	"context"
+	"errors"
 	"github.com/golang/protobuf/proto"
 	"github.com/gorilla/websocket"
 	"strconv"
@@ -12,14 +13,14 @@ func(netWay *NetWay) Router(msg pb.Msg,conn *Conn)(data interface{},err error){
 	actionInfo,_ := netWay.ProtobufMap.ActionMaps[int(msg.ActionId)]
 	serviceName := actionInfo.ServiceName
 	switch serviceName {
-	case "Gateway":
-		data ,err  = netWay.RouterServiceGateway(msg,conn)
-	case "FrameSync":
-		data ,err  = netWay.RouterServiceSync(msg,conn,actionInfo)
-	default:
-
+		case "Gateway":
+			data ,err  = netWay.RouterServiceGateway(msg,conn)
+		case "FrameSync":
+			data ,err  = netWay.RouterServiceSync(msg,conn,actionInfo)
+		default:
+			netWay.Option.Log.Error("netWay Router err.")
 	}
-	return data,nil
+	return data,err
 }
 func(netWay *NetWay) RouterServiceSync(msg pb.Msg,conn *Conn,actionMap ActionMap)(data []byte,err error){
 	zgoframeClient ,err := netWay.Option.GrpcManager.GetZgoframeClient(actionMap.ServiceName,strconv.Itoa(int(conn.UserId)))
@@ -57,8 +58,8 @@ func(netWay *NetWay) RouterServiceGateway(msg pb.Msg,conn *Conn)(data interface{
 		//case "clientHeartbeat": //心跳
 		//	err = netWay.ProtocolManager.parserContentMsg(msg, &requestClientHeartbeat, conn.UserId)
 		default:
-			netWay.Option.Log.Error("Router err:")
-			return data, nil
+			netWay.Option.Log.Error("RouterServiceGateway Router err:")
+			return data, errors.New("RouterServiceGateway Router err")
 	}
 	if err != nil {
 		return data, err
@@ -66,6 +67,7 @@ func(netWay *NetWay) RouterServiceGateway(msg pb.Msg,conn *Conn)(data interface{
 	netWay.Option.Log.Info("Router " + msg.Action)
 	switch msg.Action {
 		case "ClientLogin": //
+			netWay.Option.Log.Info("requestLogin token:"+requestLogin.Token)
 			data, err = netWay.login(requestLogin, conn)
 			//return jwtData, err
 		//case "clientPong": //
@@ -75,7 +77,7 @@ func(netWay *NetWay) RouterServiceGateway(msg pb.Msg,conn *Conn)(data interface{
 		//case "clientPing": //
 		//	netWay.clientPing(requestClientPing, conn)
 	}
-	return data,nil
+	return data,err
 }
 //直接给一个FD发送消息，基本上不用，只是特殊报错的时候，直接使用
 func(netWay *NetWay)WriteMessage(TextMessage int, connFD FDAdapter,content []byte){

@@ -321,7 +321,9 @@ func(netWay *NetWay)login(requestLogin pb.RequestLogin,conn *Conn)(jwtData JwtDa
 		jwtData,err := ParseJwtToken(netWay.Option.LoginAuthSecretKey,token)
 		return jwtData,err
 	}else{
-		netWay.Option.Log.Error("LoginAuthType err")
+		errMsg := "LoginAuthType err"
+		netWay.Option.Log.Error(errMsg)
+		return jwtData,errors.New(errMsg)
 	}
 
 	return jwtData,err

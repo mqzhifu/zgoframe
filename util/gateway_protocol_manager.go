@@ -132,24 +132,26 @@ func  ByteTurnBytes(b byte)[]byte{
 
 //func  (protocolManager *ProtocolManager)packContentMsg(content []byte,conn *Conn ,serviceId int ,actionId int )[]byte{
 func  (protocolManager *ProtocolManager)PackContentMsg(msg pb.Msg)[]byte{
-	PrintStruct(msg,":")
-	
+	//PrintStruct(msg,":")
+
 	dataLengthBytes := Int32ToBytes( int32( len(msg.Content) ))
 	//protocolCtrlInfo := myNetWay.ConnManager.GetPlayerCtrlInfoById(conn.UserId)
 	//int32 -> int -> string - > bytes
 	contentTypeBytes := byte( msg.ContentType)
 	protocolTypeBytes :=  byte(msg.ProtocolType)
 
-	actionIdByte := byte(msg.ActionId)
+	actionIdByte := Int32ToBytes(msg.ActionId)
+	actionIdByte = actionIdByte[2:4]
 	//actionIdByte := []byte(strconv.Itoa(int(msg.ActionId)))
 	reserved := []byte( "reserved--")
 
 	//serviceIdBytes := []byte(strconv.Itoa(int(msg.ServiceId)))
-	serviceIdBytes := byte(msg.ServiceId)
+	//MyPrint(Int32ToBytes(msg.ServiceId))
+	serviceIdBytes := Int32ToBytes(msg.ServiceId)[3]
 	ln := "\n"
 	//合并 头 + 消息内容体
 	//content  := BytesCombine(dataLengthBytes,contentTypeBytes,protocolTypeBytes,serviceIdBytes,actionIdByte,reserved,[]byte(msg.Content),[]byte(ln))
-	content  := BytesCombine(dataLengthBytes,ByteTurnBytes(contentTypeBytes),ByteTurnBytes(protocolTypeBytes),ByteTurnBytes(serviceIdBytes),ByteTurnBytes(actionIdByte),reserved,[]byte(msg.Content),[]byte(ln))
+	content  := BytesCombine(dataLengthBytes,ByteTurnBytes(contentTypeBytes),ByteTurnBytes(protocolTypeBytes),ByteTurnBytes(serviceIdBytes),actionIdByte,reserved,[]byte(msg.Content),[]byte(ln))
 	return content
 	////var protocolCtrlFirstByteArr []byte
 	////contentTypeByte := byte(contentType)
@@ -205,7 +207,7 @@ func  (protocolManager *ProtocolManager)parserContentProtocol(content string)(me
 	//PrintStruct(ctrlInfo,":")
 
 	serviceId := int( content[6:7][0] )
-	actionId := BytesToInt32([]byte(content[7:9]))
+	actionId := BytesToInt32( BytesCombine([]byte{0,0},[]byte(content[7:9])) )
 	//保留字
 	reserved :=  content[9:19]
 	MyPrint("serviceId:",serviceId , " actionId:",actionId)
@@ -217,7 +219,7 @@ func  (protocolManager *ProtocolManager)parserContentProtocol(content string)(me
 		return message,errors.New(errMsg)
 	}
 	//提取数据
-	data := content[19:]
+	data := content[19:19 + dataLength]
 	msg := pb.Msg{
 		ActionId: int32(actionId),
 		ServiceId: int32(serviceId),

@@ -86,7 +86,7 @@ func (protobufMap *ProtobufMap)loadingActionMapConfigFile(fileName string)(map[i
 			protobufMap.Log.Error("read line len < 5")
 			continue
 		}
-		serviceIdStr := contentArr[0][0:3]
+		serviceIdStr := contentArr[0][0:2]
 		serviceId ,_ := strconv.Atoi(serviceIdStr)
 		//funcIdStr  := contentArr[0][3:]
 		//funcId :=  Atoi(funcIdStr)

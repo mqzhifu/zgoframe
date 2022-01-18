@@ -124,7 +124,11 @@ func  (protocolManager *ProtocolManager)parserContentMsg(msg pb.Msg ,out interfa
 	return nil
 }
 
-
+func  ByteTurnBytes(b byte)[]byte{
+	var a []byte
+	a = append(a,b)
+	return a
+}
 
 //func  (protocolManager *ProtocolManager)packContentMsg(content []byte,conn *Conn ,serviceId int ,actionId int )[]byte{
 func  (protocolManager *ProtocolManager)PackContentMsg(msg pb.Msg)[]byte{
@@ -132,8 +136,8 @@ func  (protocolManager *ProtocolManager)PackContentMsg(msg pb.Msg)[]byte{
 
 	//protocolCtrlInfo := myNetWay.ConnManager.GetPlayerCtrlInfoById(conn.UserId)
 	//int32 -> int -> string - > bytes
-	contentTypeBytes := []byte(strconv.Itoa(int(msg.ContentType)))
-	protocolTypeBytes :=  []byte(strconv.Itoa(int(msg.ProtocolType)))
+	contentTypeBytes := byte( msg.ContentType)
+	protocolTypeBytes :=  byte(msg.ProtocolType)
 
 
 	actionIdByte := []byte(strconv.Itoa(int(msg.ActionId)))
@@ -142,7 +146,7 @@ func  (protocolManager *ProtocolManager)PackContentMsg(msg pb.Msg)[]byte{
 	serviceIdBytes := []byte(strconv.Itoa(int(msg.ServiceId)))
 	ln := "\n"
 	//合并 头 + 消息内容体
-	content  := BytesCombine(dataLengthBytes,contentTypeBytes,protocolTypeBytes,serviceIdBytes,actionIdByte,reserved,[]byte(msg.Content),[]byte(ln))
+	content  := BytesCombine(dataLengthBytes,ByteTurnBytes(contentTypeBytes),ByteTurnBytes(protocolTypeBytes),serviceIdBytes,actionIdByte,reserved,[]byte(msg.Content),[]byte(ln))
 	return content
 	////var protocolCtrlFirstByteArr []byte
 	////contentTypeByte := byte(contentType)
@@ -190,7 +194,7 @@ func  (protocolManager *ProtocolManager)parserContentProtocol(content string)(me
 		return message,errors.New(errMsg)
 	}
 	//数据长度
-	dateLength := BytesToInt32([]byte(content[0:4]))
+	dataLength := BytesToInt32([]byte(content[0:4]))
 	//contentType + protocolType
 	ctrlStream := content[4:6]
 	ctrlInfo := protocolManager.parserProtocolCtrlInfo([]byte(ctrlStream))
@@ -200,6 +204,7 @@ func  (protocolManager *ProtocolManager)parserContentProtocol(content string)(me
 	//保留字
 	reserved :=  content[9:19]
 
+	protocolManager.Option.Log.Warn("dataLength:"+strconv.Itoa(dataLength) + " actionId:"+strconv.Itoa(actionId) +  " serviceId:"+strconv.Itoa(serviceId))
 	actionMap,empty := protocolManager.Option.ProtobufMap.GetActionName(actionId)
 	if empty{
 		errMsg := "actionId ProtocolActions.GetActionName empty!!!"
@@ -211,7 +216,7 @@ func  (protocolManager *ProtocolManager)parserContentProtocol(content string)(me
 	msg := pb.Msg{
 		ActionId: int32(actionId),
 		ServiceId: int32(serviceId),
-		DataLength: int32(dateLength),
+		DataLength: int32(dataLength),
 		Action: actionMap.Action,
 		Content:data,
 		ContentType : ctrlInfo.ContentType,

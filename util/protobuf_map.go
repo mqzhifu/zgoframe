@@ -41,6 +41,8 @@ func NewProtobufMap(log *zap.Logger,configFileDir string,MapFileName string, pro
 	protobufMap.ProjectManager = projectManager
 
 	err := protobufMap.initProtocolActionMap()
+	log.Info("protobufMap.ActionMaps len:"+strconv.Itoa(len(protobufMap.ActionMaps)))
+
 	return protobufMap,err
 }
 
@@ -86,9 +88,9 @@ func (protobufMap *ProtobufMap)loadingActionMapConfigFile(fileName string)(map[i
 		}
 		serviceIdStr := contentArr[0][0:3]
 		serviceId ,_ := strconv.Atoi(serviceIdStr)
-		funcIdStr  := contentArr[0][3:]
-		funcId :=  Atoi(funcIdStr)
-		//id :=  Atoi(contentArr[0])
+		//funcIdStr  := contentArr[0][3:]
+		//funcId :=  Atoi(funcIdStr)
+		id :=  Atoi(contentArr[0])
 		//1000|Login|RequestLogin|ResponseLoginRes|登陆
 		serviceName := contentArr[1]
 
@@ -99,7 +101,7 @@ func (protobufMap *ProtobufMap)loadingActionMapConfigFile(fileName string)(map[i
 			return nil,errors.New("serviceName not in project list :" + serviceName)
 		}
 
-		id ,_:= strconv.Atoi(contentArr[0])
+		//id ,_:= strconv.Atoi(contentArr[0])
 		actionMap := ActionMap{
 			ServiceId : serviceId,
 			ServiceName: serviceName,
@@ -112,7 +114,7 @@ func (protobufMap *ProtobufMap)loadingActionMapConfigFile(fileName string)(map[i
 		}
 		//PrintStruct(actionMap,":")
 		//ExitPrint(111)
-		am[funcId] = actionMap
+		am[id] = actionMap
 	}
 	if len(am) <= 0{
 		protobufMap.Log.Error("protocolActions len(am) <= 0")

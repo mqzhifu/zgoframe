@@ -91,7 +91,7 @@ func NewNetWay(option NetWayOption)(*NetWay,error)  {
 		UdpPort			: netWay.Option.UdpPort,
 		OpenNewConnBack	: netWay.OpenNewConn,
 		Log				: option.Log,
-		//ProtobufMap		: option.ProtobufMap,
+		ProtobufMap		: option.ProtobufMap,
 	}
 	netWay.ProtocolManager =  NewProtocolManager(protocolManagerOption)
 	err := netWay.ProtocolManager.Start()

@@ -110,7 +110,7 @@ func (connManager *ConnManager)GetPlayerCtrlInfoById(userId int32)ProtocolCtrlIn
 		ProtocolType: protocolType,
 	}
 
-	connManager.Log.Info("GetPlayerCtrlInfo uid : "+strconv.Itoa(int(userId))+" contentType"+ strconv.Itoa(int(contentType)) + " , protocolType:" + strconv.Itoa(int(protocolType)))
+	connManager.Log.Info("GetPlayerCtrlInfo uid : "+strconv.Itoa(int(userId))+" contentType:"+ strconv.Itoa(int(contentType)) + " , protocolType:" + strconv.Itoa(int(protocolType)))
 
 	return protocolCtrlInfo
 }

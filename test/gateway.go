@@ -4,6 +4,7 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/gorilla/websocket"
 	"net/url"
+	"time"
 	"zgoframe/core/global"
 	"zgoframe/protobuf/pb"
 	"zgoframe/util"
@@ -73,7 +74,6 @@ func GateClientWebsocket(){
 	}
 
 	actionMap ,empty:= global.V.ProtobufMap.GetActionId(actionName)
-	util.ExitPrint(actionMap)
 	if empty{
 		global.V.Zap.Panic("GetActionId empty.")
 	}
@@ -96,20 +96,22 @@ func GateClientWebsocket(){
 	}
 
 	contentBytes := protocolManager.PackContentMsg(msg)
-	err = c.WriteMessage(websocket.TextMessage,contentBytes)
+	util.MyPrint(contentBytes)
+	err = c.WriteMessage(websocket.BinaryMessage,contentBytes)
 	if err != nil {
 		global.V.Zap.Error("write:"+err.Error())
 		return
 	}
 
-	//for {
-	//	_, message, err := c.ReadMessage()
-	//	if err != nil {
-	//		global.V.Zap.Error("read:"+err.Error())
-	//		return
-	//	}
-	//	global.V.Zap.Info("recv:"+string(message))
-	//}
+	for {
+		_, message, err := c.ReadMessage()
+		if err != nil {
+			global.V.Zap.Error("read:"+err.Error())
+			return
+		}
+		global.V.Zap.Info("recv:"+string(message))
+		time.Sleep(time.Second * 1)
+	}
 
 }
 

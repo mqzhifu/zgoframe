@@ -15,9 +15,9 @@ import (
 )
 
 func Gateway(){
-	GateServer()
-	GateClientWebsocket()
-	GateClientTcp()
+	//GateServer()
+	//GateClientWebsocket()
+	//GateClientTcp()
 }
 
 var GateListenIp = "127.0.0.1"
@@ -56,7 +56,7 @@ func GateServer(){
 	}
 	gateway := util.NewGateway(global.V.GrpcManager,global.V.Zap)
 	gateway.StartSocket(netWayOption)
-	
+
 }
 
 func GetSendLoginMsg()[]byte{

@@ -15,7 +15,7 @@ import (
 )
 
 func Gateway(){
-	//GateServer()
+	GateServer()
 	//GateClientWebsocket()
 	//GateClientTcp()
 }
@@ -90,6 +90,7 @@ func GetSendLoginMsg()[]byte{
 	}
 
 	contentBytes := protocolManager.PackContentMsg(msg)
+	util.MyPrint("contentBytes len:",len(contentBytes))
 	//util.MyPrint(contentBytes)
 	return contentBytes
 }

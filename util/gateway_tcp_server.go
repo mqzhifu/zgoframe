@@ -170,9 +170,14 @@ func  (tcpConn *TcpConn)readLoop(CancelCtx context.Context ){
 				continue
 			}
 		}
+
+		if len(onsMessage) <= 0{
+			tcpConn.Log.Error("tcp readLoop reader empty")
+			continue
+		}
+
+		MyPrint("tcp readLoop append msg queue  msgLen:",len(onsMessage))
 		tcpConn.MsgQueue = append(tcpConn.MsgQueue,onsMessage)
-
-
 
 		if isBreak == 1{
 			break
@@ -185,7 +190,9 @@ func  (tcpConn *TcpConn)ReadMessage()(messageType int, p []byte, err error){
 		str := ""
 		return messageType,[]byte(str),nil
 	}
+	//从数组头部取出一条消息
 	data := tcpConn.MsgQueue[0]
+	//删除头部的这条消息
 	tcpConn.MsgQueue = tcpConn.MsgQueue[1:]
 	return messageType,data,nil
 }

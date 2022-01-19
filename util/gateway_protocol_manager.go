@@ -148,7 +148,7 @@ func  (protocolManager *ProtocolManager)PackContentMsg(msg pb.Msg)[]byte{
 	//serviceIdBytes := []byte(strconv.Itoa(int(msg.ServiceId)))
 	//MyPrint(Int32ToBytes(msg.ServiceId))
 	serviceIdBytes := Int32ToBytes(msg.ServiceId)[3]
-	ln := "\n"
+	ln := "\f"
 	//合并 头 + 消息内容体
 	//content  := BytesCombine(dataLengthBytes,contentTypeBytes,protocolTypeBytes,serviceIdBytes,actionIdByte,reserved,[]byte(msg.Content),[]byte(ln))
 	content  := BytesCombine(dataLengthBytes,ByteTurnBytes(contentTypeBytes),ByteTurnBytes(protocolTypeBytes),ByteTurnBytes(serviceIdBytes),actionIdByte,reserved,[]byte(msg.Content),[]byte(ln))
@@ -185,10 +185,11 @@ func  (protocolManager *ProtocolManager)PackContentMsg(msg pb.Msg)[]byte{
 //8-9字节 :函数Id
 //10-19：预留，还没想好，可以存sessionId，也可以换成UID
 //19 以后为内容体
-//结尾会添加一个字节：\n ,可用于 TCP 粘包 分隔
+//结尾会添加一个字节：\f ,可用于 TCP 粘包 分隔
 func  (protocolManager *ProtocolManager)GetPackHeaderLength()int{
 	return 4 + 1 + 1 + 1 + 2 + 10
 }
+
 func  (protocolManager *ProtocolManager)ParserContentProtocol(content string)(message pb.Msg,err error){
 	headerLength := protocolManager.GetPackHeaderLength()
 	if len(content) < headerLength{
@@ -198,6 +199,7 @@ func  (protocolManager *ProtocolManager)ParserContentProtocol(content string)(me
 		errMsg := "content = "+strconv.Itoa(headerLength)+" ,body is empty"
 		return message,errors.New(errMsg)
 	}
+	//protocolManager.Option.Log.Info("ParserContentProtocol contentLen:"+strconv.Itoa(len(content)) )
 	//数据长度
 	dataLength := BytesToInt32([]byte(content[0:4]))
 	//contentType + protocolType
@@ -210,8 +212,8 @@ func  (protocolManager *ProtocolManager)ParserContentProtocol(content string)(me
 	actionId := BytesToInt32( BytesCombine([]byte{0,0},[]byte(content[7:9])) )
 	//保留字
 	reserved :=  content[9:19]
-	MyPrint("serviceId:",serviceId , " actionId:",actionId)
-	protocolManager.Option.Log.Warn("dataLength:"+strconv.Itoa(dataLength) + " actionId:"+strconv.Itoa(actionId) +  " serviceId:"+strconv.Itoa(serviceId))
+	//MyPrint("serviceId:",serviceId , " actionId:",actionId)
+	protocolManager.Option.Log.Warn( "contentLen:"+strconv.Itoa(len(content))+" , dataLength:"+strconv.Itoa(dataLength) + " actionId:"+strconv.Itoa(actionId) +  " serviceId:"+strconv.Itoa(serviceId))
 	actionMap,empty := protocolManager.Option.ProtobufMap.GetActionName(actionId)
 	if empty{
 		errMsg := "actionId ProtocolActions.GetActionName empty!!!"

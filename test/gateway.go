@@ -1,9 +1,13 @@
 package test
 
 import (
+	"bufio"
 	"github.com/golang/protobuf/proto"
 	"github.com/gorilla/websocket"
+	"net"
 	"net/url"
+	"os"
+	"strconv"
 	"time"
 	"zgoframe/core/global"
 	"zgoframe/protobuf/pb"
@@ -12,29 +16,28 @@ import (
 
 func Gateway(){
 	GateServer()
-	//GateClientWebsocket()
+	GateClientWebsocket()
+	GateClientTcp()
 }
 
-func GetGatewayInstance(){
-
-}
-
+var GateListenIp = "127.0.0.1"
+var GateWsPort = "1111"
+var GateWsUri = "/ws"
+var GateTcpPort = "2222"
+var GateDefaultProtocol = int32(util.PROTOCOL_WEBSOCKET)
+var  GateDefaultContentType = int32(util.CONTENT_TYPE_PROTOBUF)
 func GateServer(){
-	//a := int32(1)
-	//ab := byte(a)
-	//util.ExitPrint(ab)
-
 	netWayOption := util.NetWayOption{
-		ListenIp			: "127.0.0.1",	//程序启动时监听的IP
-		OutIp				: "127.0.0.1",	//对外访问的IP
+		ListenIp			: GateListenIp,	//程序启动时监听的IP
+		OutIp				: GateListenIp,	//对外访问的IP
 
-		WsPort 				: "1111",		//监听端口号
-		TcpPort 			: "2222",		//监听端口号
-		UdpPort				: "3333",		//UDP端口号
+		WsPort 				: GateWsPort,		//监听端口号
+		TcpPort 			: GateTcpPort,		//监听端口号
+		//UdpPort				: "3333",		//UDP端口号
 
-		WsUri				: "/ws",			//接HOST的后面的URL地址
-		Protocol 			:util.PROTOCOL_WEBSOCKET,		 	//兼容协议：ws tcp udp
-		ContentType 		: util.CONTENT_TYPE_PROTOBUF,	//默认内容格式 ：json protobuf
+		WsUri				: GateWsUri,			//接HOST的后面的URL地址
+		Protocol 			: GateDefaultProtocol,		 	//兼容协议：ws tcp udp
+		ContentType 		: GateDefaultContentType,	//默认内容格式 ：json protobuf
 
 		LoginAuthType		: "/jwt",	//jwt
 		LoginAuthSecretKey	: "aaaa",	//密钥
@@ -51,23 +54,12 @@ func GateServer(){
 		//OutCxt 				context.Context `json:"-"`			//调用方的CTX，用于所有协程的退出操作
 		//CloseChan 			chan int		`json:"-"`
 	}
-
 	gateway := util.NewGateway(global.V.GrpcManager,global.V.Zap)
-	//global.V.Gateway = gateway
 	gateway.StartSocket(netWayOption)
-
-
+	
 }
 
-func GateClientWebsocket(){
-	dns := "127.0.0.1:1111"
-	u := url.URL{Scheme: "ws", Host: dns, Path: "/ws"}
-	c, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
-	if err != nil {
-		global.V.Zap.Fatal("dial:" + err.Error())
-	}
-	//defer c.Close()
-
+func GetSendLoginMsg()[]byte{
 	actionName := "ClientLogin"
 
 	requestLogin := pb.RequestLogin{
@@ -83,18 +75,14 @@ func GateClientWebsocket(){
 		global.V.Zap.Panic("GetActionId empty.")
 	}
 
-	protocol 			:= util.PROTOCOL_WEBSOCKET
-	contentType 		:= util.CONTENT_TYPE_PROTOBUF
+	protocol 			:= GateDefaultProtocol
+	contentType 		:= GateDefaultContentType
 
-	protocolManagerOption := util.ProtocolManagerOption {
-		Log: global.V.Zap,
-		ProtobufMap: global.V.ProtobufMap,
-	}
-	protocolManager := util.NewProtocolManager(protocolManagerOption)
+	protocolManager := GetProtocolManager()
 
 	msg := pb.Msg{
-		ContentType: int32(contentType),
-		ProtocolType: int32(protocol),
+		ContentType:  contentType,
+		ProtocolType:  protocol,
 		Action: actionName,
 		ActionId: int32(actionMap.Id),
 		ServiceId:int32( actionMap.ServiceId),
@@ -103,6 +91,29 @@ func GateClientWebsocket(){
 
 	contentBytes := protocolManager.PackContentMsg(msg)
 	//util.MyPrint(contentBytes)
+	return contentBytes
+}
+
+func GetProtocolManager()*util.ProtocolManager{
+	protocolManagerOption := util.ProtocolManagerOption {
+		Log: global.V.Zap,
+		ProtobufMap: global.V.ProtobufMap,
+	}
+	protocolManager := util.NewProtocolManager(protocolManagerOption)
+	return protocolManager
+}
+
+func GateClientWebsocket(){
+	dns := GateListenIp+":"+GateWsPort
+	u := url.URL{Scheme: "ws", Host: dns, Path: GateWsUri}
+	c, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
+	if err != nil {
+		global.V.Zap.Fatal("dial:" + err.Error())
+	}
+	//defer c.Close()
+	protocolManager := GetProtocolManager()
+
+	contentBytes := GetSendLoginMsg()
 	err = c.WriteMessage(websocket.BinaryMessage,contentBytes)
 	if err != nil {
 		global.V.Zap.Error("write:"+err.Error())
@@ -129,5 +140,38 @@ func GateClientWebsocket(){
 }
 
 func GateClientTcp(){
+	dns := GateListenIp+":"+GateTcpPort
+	fd , err := net.Dial("tcp", dns)
+	if err != nil{
+		global.V.Zap.Fatal("net.Listen err :"+err.Error())
+	}
 
+
+	contentBytes := GetSendLoginMsg()
+	n ,err := fd.Write(contentBytes)
+	if err != nil{
+		global.V.Zap.Fatal("fd.write err :"+err.Error())
+	}
+	global.V.Zap.Info("write n:"+strconv.Itoa(n))
+
+	input := bufio.NewReader(os.Stdin)
+	for {
+		bytes, _, err := input.ReadLine()
+		if err != nil {
+			global.V.Zap.Fatal("read line faild err:%v\n"+ err.Error())
+		}
+		str := string(bytes)
+		//if str == "Q" || str == "q" {
+		//	fmt.Println("exe quit!")
+		//	break
+		//}
+		util.MyPrint("read:",string(str))
+		//n, err := conn.Write(bytes)
+		//if err != nil {
+		//	fmt.Printf("send data faild err:%v\n", err)
+		//} else {
+		//	fmt.Printf("send data length %d\n", n)
+		//}
+		time.Sleep(time.Second * 1)
+	}
 }

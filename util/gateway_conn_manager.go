@@ -23,7 +23,7 @@ type ConnManager struct {
 type ConnManagerOption struct{
 	maxClientConnNum 	int32	//客户端最大连接数
 	connTimeout 		int32
-
+	MsgContentMax		int32
 	DefaultContentType 	int32	//每个连接的默认 内容 类型
 	DefaultProtocolType	int32	//每个连接的默认 协议 类型
 	MsgSeparator 		string	//传输消息时，每条消息的间隔符，防止 粘包
@@ -360,8 +360,9 @@ func   (conn *Conn)Write(content []byte,messageType int){
 
 	//myMetrics.fastLog("total.output.num",METRICS_OPT_INC,0)
 	//myMetrics.fastLog("total.output.size",METRICS_OPT_PLUS,len(content))
-	conn.ConnManager.Option.Metrics.CounterInc("total.output.num")
-	conn.ConnManager.Option.Metrics.GaugeAdd("total.output.size",float64(StringToFloat(strconv.Itoa(len(content)))))
+	conn.ConnManager.Option.Metrics.CounterInc("total_output_num")
+	//conn.ConnManager.Option.Metrics.GaugeAdd("total.output.size",float64(StringToFloat(strconv.Itoa(len(content)))))
+	conn.ConnManager.Option.Metrics.GaugeAdd("total_output_size",float64( len(content) ))
 
 	//pid := strconv.Itoa(int(conn.UserId))
 	//myMetrics.fastLog("player.fd.num."+pid,METRICS_OPT_INC,0)
@@ -384,8 +385,9 @@ func   (conn *Conn)Read()(content string,err error){
 		conn.ConnManager.Option.Log.Error("conn.Conn.ReadMessage err: " + err.Error())
 		return content,err
 	}
-	conn.ConnManager.Option.Metrics.CounterInc("total.input.num")
-	conn.ConnManager.Option.Metrics.GaugeAdd("total.input.size",float64(StringToFloat(strconv.Itoa(len(dataByte)))))
+	conn.ConnManager.Option.Metrics.CounterInc("total_input_num")
+	//conn.ConnManager.Option.Metrics.GaugeAdd("total.input.size",float64(StringToFloat(strconv.Itoa(len(dataByte)))))
+	conn.ConnManager.Option.Metrics.GaugeAdd("total_input_size",float64( len(dataByte) ))
 
 	//pid := strconv.Itoa(int(conn.UserId))
 	//myMetrics.fastLog("player.fd.num."+pid,METRICS_OPT_INC,0)
@@ -449,6 +451,11 @@ func  (conn *Conn)ReadLoop(ctx context.Context){
 				}
 				//最后更新时间
 				conn.UpLastTime()
+				if len(content) > int(conn.ConnManager.Option.MsgContentMax){
+					errMsg := "msg content len > max content " + strconv.Itoa(int(conn.ConnManager.Option.MsgContentMax)) + " " + strconv.Itoa(len(content))
+					conn.ConnManager.Option.Log.Error(errMsg)
+					return
+				}
 				//解析消息内容
 				msg,err  := conn.ConnManager.ParserContentProtocol(content)
 				if err !=nil{
@@ -483,11 +490,13 @@ func (conn *Conn)CloseOneConn( source int){
 	//netWay.Players.delById(Conn.PlayerId)//这个不能删除，用于玩家掉线恢复的记录
 	//先把玩家的在线状态给变更下，不然 mySync.close 里面获取房间在线人数，会有问题
 	//myPlayerManager.upPlayerStatus(conn.UserId, PLAYER_STATUS_OFFLINE)
-	err := conn.Conn.Close()
-	if err != nil{
-		conn.ConnManager.Option.Log.Error("Conn.Conn.Close err:"+err.Error())
+	if source != CLOSE_SOURCE_CLIENT{
+		//客户端主动关闭，本层属于被动通知，底层已经知道了连接断开了，不用再关闭FD了
+		err := conn.Conn.Close()
+		if err != nil{
+			conn.ConnManager.Option.Log.Error("Conn.Conn.Close err:"+err.Error())
+		}
 	}
-
 	conn.ConnManager.delConnPool(conn.UserId)
 	//处理掉-已报名的玩家
 	//myMatch.realDelOnePlayer(conn.PlayerId)
@@ -495,7 +504,12 @@ func (conn *Conn)CloseOneConn( source int){
 	//myMetrics.fastLog("total.fd.num",METRICS_OPT_DIM,0)
 	//myMetrics.fastLog("history.fd.destroy",METRICS_OPT_INC,0)
 	//netWay.Metrics.CounterDec("total.fd.num")
-	conn.ConnManager.Option.Metrics.CounterInc("close_fd_num")
+	if source == CLOSE_SOURCE_CLIENT{
+		conn.ConnManager.Option.Metrics.CounterInc("server_close_fd")
+	}else{
+		conn.ConnManager.Option.Metrics.CounterInc("client_close_fd")
+	}
+
 }
 
 //从：FD里读取的消息（缓存队列），拿出来，做分发路由，处理
@@ -595,14 +609,3 @@ func(conn *Conn)SendMsg( action string,content []byte){
 		conn.Write(contentBytes,websocket.TextMessage)
 	}
 }
-////读取二进制
-//func   (conn *Conn)ReadBinary()(content []byte,err error){
-//	messageType , dataByte  , err  := conn.Conn.ReadMessage()
-//	if err != nil{
-//		conn.ConnManager.Option.Log.Error("conn.Conn.ReadMessage err: "+err.Error())
-//		return content,err
-//	}
-//	conn.ConnManager.Option.Log.Debug("conn.ReadMessage Binary messageType:"+ strconv.Itoa(messageType) +" len :"+strconv.Itoa(len(dataByte)) +" data:"  + string(dataByte))
-//	//content = string(dataByte)
-//	return dataByte,nil
-//}

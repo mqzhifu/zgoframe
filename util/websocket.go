@@ -17,6 +17,8 @@ type WebsocketOption struct{
 	Port  			string	`json:"wsPort"`
 	ListenerIp 		string	`json:"listenerIp"`
 	OutIp 			string	`json:"outIp"`
+	IOTime 			int64
+	MsgContentMax	int32
 	OutCxt 			context.Context
 	Log				*zap.Logger
 	ProtocolManager *ProtocolManager	//给外部提供一个接口，用于将SOCKER FD 注册给外部
@@ -54,8 +56,11 @@ func (ws *Websocket )Start(){
 func (ws *Websocket )HttpHandler(w http.ResponseWriter, r *http.Request){
 	//配置ws
 	var httpUpGrader = websocket.Upgrader{
-		ReadBufferSize:  1024,
-		WriteBufferSize: 1024,
+		//HandshakeTimeout: ws.Option.IOTime,//read write 超时时间
+		//下面这两个是创建buffer大小 ，间接等于一条消息的大小，这里不做限制了，直接交给上层再做处理
+		//ReadBufferSize: int( ws.Option.MsgContentMax),
+		//WriteBufferSize: int( ws.Option.MsgContentMax),
+
 		// 允许所有的CORS 跨域请求，正式环境可以关闭
 		CheckOrigin: func(r *http.Request) bool {
 			return true
@@ -68,6 +73,7 @@ func (ws *Websocket )HttpHandler(w http.ResponseWriter, r *http.Request){
 		ws.Option.Log.Error("Upgrade websocket failed: " + err.Error())
 		return
 	}
+	myMetrics.CounterInc("ws_ok_fd")
 	//将ws fd 回调给更上层，做更多操作
 	ws.Option.ProtocolManager.websocketHandler(wsConnFD)
 }

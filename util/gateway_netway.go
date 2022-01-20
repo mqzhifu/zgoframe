@@ -10,28 +10,28 @@ import (
 )
 
 type NetWayOption struct {
-	ListenIp			string		`json:"listenIp"`			//程序启动时监听的IP
-	OutIp				string		`json:"outIp"`				//对外访问的IP
+	ListenIp			string		`json:"listenIp"`				//程序启动时监听的IP
+	OutIp				string		`json:"outIp"`					//对外访问的IP
 
-	WsPort 				string		`json:"wsPort"`				//ws监听端口号
-	TcpPort 			string		`json:"tcpPort"`			//tcp监听端口号
-	UdpPort				string 		`json:"udpPort"`			//udp端口号
+	WsPort 				string		`json:"wsPort"`					//ws监听端口号
+	TcpPort 			string		`json:"tcpPort"`				//tcp监听端口号
+	UdpPort				string 		`json:"udpPort"`				//udp端口号
 
-	WsUri				string		`json:"wsUri"`				//ws接HOST的后面的URL地址
-	DefaultProtocolType	int32		`json:"default_protocol_type"`//默认响应协议：ws tcp udp
-	DefaultContentType  int32		`json:"default_content_type"`//默认响应内容格式 ：json protobuf
+	WsUri				string		`json:"wsUri"`					//ws接HOST的后面的URL地址
+	DefaultProtocolType	int32		`json:"default_protocol_type"`	//默认响应协议：ws tcp udp
+	DefaultContentType  int32		`json:"default_content_type"`	//默认响应内容格式 ：json protobuf
 
 	LoginAuthType		string		`json:"loginAuthType"`			//jwt登陆验证
 	LoginAuthSecretKey	string		`json:"login_auth_secret_key"`	//jwt登陆验证-密钥
 
-	MaxClientConnNum	int32		`json:"maxClientConnMum"`	//客户端最大连接数
-	MsgContentMax		int32		`json:"msg_content_max"`	//一条消息内容最大值
-	IOTimeout			int64		`json:"io_timeout"`			//read write sock fd 超时时间
-	ConnTimeout 		int32		`json:"connTimeout"`		//一个FD超时时间
+	MaxClientConnNum	int32		`json:"maxClientConnMum"`		//客户端最大连接数
+	MsgContentMax		int32		`json:"msg_content_max"`		//一条消息内容最大值,byte
+	IOTimeout			int64		`json:"io_timeout"`				//read write sock fd 超时时间
+	ConnTimeout 		int32		`json:"connTimeout"`			//一个FD超时时间
 
-	GrpcManager			*GrpcManager	`json:"-"`			//外部链接,grpc反代
-	ProtobufMap			*ProtobufMap	`json:"-"`			//外部链接,协议号转换
-	Log 				*zap.Logger		`json:"-"`			//外部链接,日志
+	GrpcManager			*GrpcManager	`json:"-"`					//外部链接,grpc反代
+	ProtobufMap			*ProtobufMap	`json:"-"`					//外部链接,协议号转换
+	Log 				*zap.Logger		`json:"-"`					//外部链接,日志
 
 	//ProtobufMapPath		string		`json:"portobuf_map_path"`	//协议号对应的函数名
 
@@ -74,6 +74,9 @@ func NewNetWay(option NetWayOption)(*NetWay,error)  {
 	netWay := new(NetWay)
 
 	netWay.Option = option
+	if option.MsgContentMax > 10240{
+		option.MsgContentMax = 10240 //最大10KB
+	}
 	//设置状态为：初始化
 	netWay.Status = NETWAY_STATUS_INIT
 
@@ -85,6 +88,7 @@ func NewNetWay(option NetWayOption)(*NetWay,error)  {
 		TcpPort				: option.TcpPort,
 		WsUri				: option.WsUri,
 		UdpPort				: option.UdpPort,
+		IOTimeout			: option.IOTimeout,
 		//DefaultContentType	: option.DefaultContentType,
 		//DefaultProtocol		: option.DefaultProtocolType,
 		OpenNewConnBack		: netWay.OpenNewConn,//回调函数
@@ -111,7 +115,7 @@ func NewNetWay(option NetWayOption)(*NetWay,error)  {
 	//myHttpd = NewHttpd(httpdOption)
 	//ws conn 管理
 	connManagerOption := ConnManagerOption{
-		maxClientConnNum: option.MaxClientConnNum,
+		maxClientConnNum	: option.MaxClientConnNum,
 		connTimeout			: option.ConnTimeout,
 		Log					: option.Log,
 		DefaultProtocolType	: netWay.Option.DefaultProtocolType,
@@ -119,11 +123,15 @@ func NewNetWay(option NetWayOption)(*NetWay,error)  {
 		Metrics				: netWay.Metrics,
 		ProtobufMap			: option.ProtobufMap,
 		NetWay				: netWay,
+		MsgContentMax		: option.MsgContentMax,
 	}
 	netWay.ConnManager = NewConnManager(connManagerOption)
 	go netWay.ConnManager.CheckTimeout()
 
 	netWay.Status = NETWAY_STATUS_START
+
+	now := GetNowTimeSecondToInt64()
+	netWay.Metrics.GaugeSet("startup_time",float64(now))
 
 	option.Log.Info("netway startup finish.")
 	return netWay,nil
@@ -131,32 +139,36 @@ func NewNetWay(option NetWayOption)(*NetWay,error)  {
 func(netWay *NetWay)InitMetrics(log *zap.Logger)*MyMetrics{
 	metrics := NewMyMetrics(log)
 
-	netWay.Metrics.CreateCounter("ws_ok_fd")				//websocket 成功建立FD 数量
-	netWay.Metrics.CreateCounter("ws_server_close_fd")	//websocket 主动关闭FD 数量
-	netWay.Metrics.CreateCounter("ws_client_close_fd")	//websocket 被动关闭FD 数量
-	netWay.Metrics.CreateCounter("tcp_ok_fd")				//tcp 成功建立FD 数量
-	netWay.Metrics.CreateCounter("tcp_server_close_fd")	//tcp 主动关闭FD 数量
-	netWay.Metrics.CreateCounter("tcp_client_close_fd")	//tcp 被动关闭FD 数量
+	metrics.CreateGauge("startup_time")			//启动时间
+
+	metrics.CreateCounter("ws_ok_fd")				//websocket 成功建立FD 数量
+	metrics.CreateCounter("ws_server_close_fd")	//websocket 主动关闭FD 数量
+	metrics.CreateCounter("ws_client_close_fd")	//websocket 被动关闭FD 数量
+	metrics.CreateCounter("tcp_ok_fd")			//tcp 成功建立FD 数量
+	metrics.CreateCounter("tcp_server_close_fd")	//tcp 主动关闭FD 数量
+	metrics.CreateCounter("tcp_client_close_fd")	//tcp 被动关闭FD 数量
 	//以上均是 最底层 TCP WS  的统计信息
 
 	//以下有点偏向应用层的统计
-	netWay.Metrics.CreateCounter("new_fd")	//netway 接收来自 tcp/ws 新FD 数量
+	metrics.CreateCounter("new_fd")	//netway 接收来自 tcp/ws 新FD 数量
 
-	netWay.Metrics.CreateCounter("create_fd_ok")		//验证通过，成功创建的FD
-	netWay.Metrics.CreateCounter("create_fd_failed")	//验证失败，FD
-	netWay.Metrics.CreateCounter("server_close_fd")	//主动关闭FD
-	netWay.Metrics.CreateCounter("client_close_fd")	//被动关闭FD
+	metrics.CreateCounter("create_fd_ok")		//验证通过，成功创建的FD
+	metrics.CreateCounter("create_fd_failed")	//验证失败，FD
+	metrics.CreateCounter("server_close_fd")	//主动关闭FD
+	metrics.CreateCounter("client_close_fd")	//被动关闭FD
 
-	netWay.Metrics.CreateCounter("total_output_num")	//总发送消息 次数
-	netWay.Metrics.CreateGauge("total_output_size")	//总发送消息 大小
-	netWay.Metrics.CreateCounter("total_input_num")	//总接收消息 次数
-	netWay.Metrics.CreateGauge("total_input_size")	//总接收消息 大小
+	metrics.CreateCounter("total_output_num")	//总发送消息 次数
+	metrics.CreateGauge("total_output_size")	//总发送消息 大小
+	metrics.CreateCounter("total_input_num")	//总接收消息 次数
+	metrics.CreateGauge("total_input_size")	//总接收消息 大小
 
 	return metrics
 }
 //一个新客户端连接请求进入
 func(netWay *NetWay)OpenNewConn( connFD FDAdapter) {
+	myMetrics.CounterInc("ws_ok_fd")
 	netWay.Option.Log.Info("OpenNewConn:" + connFD.RemoteAddr())
+
 	var loginRes pb.ResponseLoginRes
 
 	if netWay.Status == NETWAY_STATUS_CLOSE{//当前网关已经关闭了，还有新的连接进来
@@ -173,7 +185,9 @@ func(netWay *NetWay)OpenNewConn( connFD FDAdapter) {
 		return
 	}
 	//是否超过了，最大可连接数
-	if int32(len(netWay.ConnManager.Pool))   > netWay.Option.MaxClientConnNum{
+	if int32(len(netWay.ConnManager.Pool)) > netWay.Option.MaxClientConnNum{
+		netWay.Metrics.CounterInc("create_fd_failed")
+
 		errMsg  := "more MaxClientConnNum"
 		netWay.Option.Log.Error(errMsg)
 		netWay.WriteMessage(int(netWay.Option.DefaultContentType),connFD,[]byte(errMsg))
@@ -265,6 +279,7 @@ func  (netWay *NetWay)loginPreFailedSendMsg(msg string ,closeSource int,conn *Co
 		Code : 500,
 		ErrMsg:msg,
 	}
+	netWay.Metrics.CounterInc("create_fd_failed")
 	netWay.Option.Log.Error("loginPreFailed:"+strconv.Itoa(code) + " "+msg)
 	conn.SendMsgCompressByConn("ServerLogin",&loginRes)
 	conn.CloseOneConn( closeSource)
@@ -320,6 +335,9 @@ func(netWay *NetWay)login(requestLogin pb.RequestLogin,conn *Conn)(jwtData JwtDa
 //直接给一个FD发送消息，基本上不用，只是特殊报错的时候，直接使用
 //transmissionType : 1字符 2二进制
 func(netWay *NetWay)WriteMessage(transmissionType int, connFD FDAdapter,content []byte){
+	myMetrics.CounterInc("total_output_num")
+	myMetrics.GaugeAdd("total_output_size",float64( len(content) ))
+
 	err := connFD.WriteMessage(transmissionType,content)
 	if err != nil{
 		netWay.Option.Log.Error( "WriteMessage err:"+err.Error() )

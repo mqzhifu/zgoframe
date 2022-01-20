@@ -25,6 +25,8 @@ type ProtocolManagerOption struct {
 	TcpPort 		string
 	UdpPort			string
 	WsUri 			string
+	IOTimeout		int64
+	MsgContentMax	int32
 	Log 			*zap.Logger
 	OpenNewConnBack	func ( connFD FDAdapter)//新FD到来时，回调函数接口
 }
@@ -53,6 +55,8 @@ func (protocolManager *ProtocolManager)Start( )error{
 		ListenerIp 		: protocolManager.Option.Ip,
 		OutIp 			: protocolManager.Option.Ip,
 		Log				: protocolManager.Option.Log,
+		IOTime			: protocolManager.Option.IOTimeout,
+		MsgContentMax 	: protocolManager.Option.MsgContentMax,
 		ProtocolManager : protocolManager,
 		//OpenNewConnBack	func ( connFD FDAdapter)	//来了新连接后，回调函数
 	}
@@ -64,6 +68,8 @@ func (protocolManager *ProtocolManager)Start( )error{
 		Ip				: protocolManager.Option.Ip,
 		Port			: protocolManager.Option.TcpPort,
 		Log 			: protocolManager.Option.Log,
+		IOTimeout		: protocolManager.Option.IOTimeout,
+		MsgContentMax 	: protocolManager.Option.MsgContentMax,
 		ProtocolManager : protocolManager,
 	}
 	myTcpServer :=  NewTcpServer(tcpServerOption)

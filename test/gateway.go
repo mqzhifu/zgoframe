@@ -20,12 +20,12 @@ func Gateway(){
 	//GateClientTcp()
 }
 
-var GateListenIp = "127.0.0.1"
-var GateWsPort = "1111"
-var GateWsUri = "/ws"
-var GateTcpPort = "2222"
-var GateDefaultProtocol = int32(util.PROTOCOL_WEBSOCKET)
-var GateDefaultContentType = int32(util.CONTENT_TYPE_PROTOBUF)
+var GateListenIp 			= "127.0.0.1"
+var GateWsPort 				= "1111"
+var GateWsUri 				= "/ws"
+var GateTcpPort 			= "2222"
+var GateDefaultProtocol 	= int32(util.PROTOCOL_WEBSOCKET)
+var GateDefaultContentType 	= int32(util.CONTENT_TYPE_PROTOBUF)
 
 func GateServer(){
 	netWayOption := util.NetWayOption{
@@ -36,17 +36,17 @@ func GateServer(){
 		TcpPort 			: GateTcpPort,		//监听端口号
 		//UdpPort				: "3333",		//UDP端口号
 
-		WsUri				: GateWsUri,			//接HOST的后面的URL地址
-		DefaultProtocolType	: GateDefaultProtocol,		 	//兼容协议：ws tcp udp
+		WsUri				: GateWsUri,				//接HOST的后面的URL地址
+		DefaultProtocolType	: GateDefaultProtocol,		//兼容协议：ws tcp udp
 		DefaultContentType	: GateDefaultContentType,	//默认内容格式 ：json protobuf
 
 		LoginAuthType		: "/jwt",	//jwt
 		LoginAuthSecretKey	: "aaaa",	//密钥
 
 		MaxClientConnNum	: 10,		//客户端最大连接数
-		MsgContentMax		: 10240,		//一条消息内容最大值
-		IOTimeout			: 1,				//read write sock fd 超时时间
-		ConnTimeout 		: 60,			//一个FD超时时间
+		MsgContentMax		: 10240,	//一条消息内容最大值
+		IOTimeout			: 1,		//read write sock fd 超时时间
+		ConnTimeout 		: 60,		//一个FD超时时间
 		GrpcManager			: global.V.GrpcManager,
 		Log 				: global.V.Zap,
 		ProtobufMap			: global.V.ProtobufMap,

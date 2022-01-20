@@ -18,6 +18,8 @@ type TcpServerOption struct{
 	Ip 				string
 	Port 			string
 	Log 			*zap.Logger
+	IOTimeout		int64
+	MsgContentMax	int32
 	MsgSeparator 	string
 	ProtocolManager *ProtocolManager	//给外部提供一个接口，用于将SOCKER FD 注册给外部
 }
@@ -77,6 +79,7 @@ func (tcpServer *TcpServer)Accept( ){
 			break
 		}
 		tcpConn := NewTcpConn(conn,tcpServer.Option.Log,tcpServer)
+		myMetrics.CounterInc("tcp_ok_fd")
 		//myTcpServer.pool = append(myTcpServer.pool,tcpConn)
 		go tcpConn.start(tcpServer )
 	}
@@ -104,6 +107,8 @@ func NewTcpConn(conn net.Conn,log *zap.Logger ,tcpServer *TcpServer)*TcpConn{
 }
 
 func  (tcpConn *TcpConn)start(tcpServer *TcpServer){
+	//tcpConn.conn.SetDeadline(tcpConn.TcpServer.Option.IOTimeout)
+
 	tcpConn.Log.Info("TcpConn.start")
 	//创建新协议：死循环 读取 C端发送过来的数据
 	go tcpConn.readLoop()
@@ -132,6 +137,7 @@ func  (tcpConn *TcpConn)ClientClose()error{
 }
 //服务端主动关闭
 func  (tcpConn *TcpConn)ServerClose( )error{
+	myMetrics.CounterInc("tcp_server_close_fd")
 	err := tcpConn.conn.Close()
 	if err!=nil{
 		tcpConn.Log.Error("tcpConn close err:"+err.Error())
@@ -162,6 +168,8 @@ func  (tcpConn *TcpConn)readLoop(){
 		if err != nil{
 			tcpConn.Log.Error("reader.ReadBytes err:"+err.Error())
 			if err == io.EOF{
+				myMetrics.CounterInc("tcp_client_close_fd")
+
 				tcpConn.Log.Warn("tcpConn readLoop close from io.EOF ")
 				//对端已主动关闭
 				tcpConn.ClientClose()

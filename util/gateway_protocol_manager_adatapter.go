@@ -30,6 +30,7 @@ func WebsocketConnImpNew(FD *websocket.Conn)*WebsocketConnImp{
 }
 
 func (websocketConnImp *WebsocketConnImp)SetCloseHandler(h func(code int, text string)error){
+	myMetrics.CounterInc("ws_client_close_fd")
 	websocketConnImp.FD.SetCloseHandler(h)
 }
 
@@ -38,6 +39,7 @@ func (websocketConnImp *WebsocketConnImp)WriteMessage(messageType int, data []by
 }
 
 func (websocketConnImp *WebsocketConnImp)Close()error{
+	myMetrics.CounterInc("ws_server_close_fd")
 	return websocketConnImp.FD.Close()
 }
 

@@ -25,7 +25,8 @@ var GateWsPort = "1111"
 var GateWsUri = "/ws"
 var GateTcpPort = "2222"
 var GateDefaultProtocol = int32(util.PROTOCOL_WEBSOCKET)
-var  GateDefaultContentType = int32(util.CONTENT_TYPE_PROTOBUF)
+var GateDefaultContentType = int32(util.CONTENT_TYPE_PROTOBUF)
+
 func GateServer(){
 	netWayOption := util.NetWayOption{
 		ListenIp			: GateListenIp,	//程序启动时监听的IP
@@ -36,8 +37,8 @@ func GateServer(){
 		//UdpPort				: "3333",		//UDP端口号
 
 		WsUri				: GateWsUri,			//接HOST的后面的URL地址
-		Protocol 			: GateDefaultProtocol,		 	//兼容协议：ws tcp udp
-		ContentType 		: GateDefaultContentType,	//默认内容格式 ：json protobuf
+		DefaultProtocolType	: GateDefaultProtocol,		 	//兼容协议：ws tcp udp
+		DefaultContentType	: GateDefaultContentType,	//默认内容格式 ：json protobuf
 
 		LoginAuthType		: "/jwt",	//jwt
 		LoginAuthSecretKey	: "aaaa",	//密钥
@@ -78,30 +79,32 @@ func GetSendLoginMsg()[]byte{
 	protocol 			:= GateDefaultProtocol
 	contentType 		:= GateDefaultContentType
 
-	protocolManager := GetProtocolManager()
+	connManager := GetConnManager()
 
 	msg := pb.Msg{
-		ContentType:  contentType,
-		ProtocolType:  protocol,
-		Action: actionName,
-		ActionId: int32(actionMap.Id),
-		ServiceId:int32( actionMap.ServiceId),
-		Content:string(requestLoginMarshal),
+		ContentType	: contentType,
+		ProtocolType: protocol,
+		Action		: actionName,
+		ActionId	: int32(actionMap.Id),
+		ServiceId	: int32( actionMap.ServiceId),
+		Content		: string(requestLoginMarshal),
 	}
 
-	contentBytes := protocolManager.PackContentMsg(msg)
+	contentBytes := connManager.PackContentMsg(msg)
 	util.MyPrint("contentBytes len:",len(contentBytes))
 	//util.MyPrint(contentBytes)
 	return contentBytes
 }
 
-func GetProtocolManager()*util.ProtocolManager{
-	protocolManagerOption := util.ProtocolManagerOption {
-		Log: global.V.Zap,
-		ProtobufMap: global.V.ProtobufMap,
+func GetConnManager()*util.ConnManager{
+	connManagerOption := util.ConnManagerOption {
+		Log			: global.V.Zap,
+		ProtobufMap	: global.V.ProtobufMap,
+		DefaultContentType: GateDefaultProtocol,
+		DefaultProtocolType: GateDefaultProtocol,
 	}
-	protocolManager := util.NewProtocolManager(protocolManagerOption)
-	return protocolManager
+	connManager := util.NewConnManager(connManagerOption)
+	return connManager
 }
 
 func GateClientWebsocket(){
@@ -112,7 +115,7 @@ func GateClientWebsocket(){
 		global.V.Zap.Fatal("dial:" + err.Error())
 	}
 	//defer c.Close()
-	protocolManager := GetProtocolManager()
+	connManager := GetConnManager()
 
 	contentBytes := GetSendLoginMsg()
 	err = c.WriteMessage(websocket.BinaryMessage,contentBytes)
@@ -128,7 +131,7 @@ func GateClientWebsocket(){
 			return
 		}
 
-		msg ,err := protocolManager.ParserContentProtocol(string(message))
+		msg ,err := connManager.ParserContentProtocol(string(message))
 		if err != nil{
 			global.V.Zap.Error("ParserContentProtocol:"+err.Error())
 			return
@@ -162,10 +165,6 @@ func GateClientTcp(){
 			global.V.Zap.Fatal("read line faild err:%v\n"+ err.Error())
 		}
 		str := string(bytes)
-		//if str == "Q" || str == "q" {
-		//	fmt.Println("exe quit!")
-		//	break
-		//}
 		util.MyPrint("read:",string(str))
 		//n, err := conn.Write(bytes)
 		//if err != nil {

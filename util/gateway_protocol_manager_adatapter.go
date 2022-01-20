@@ -70,7 +70,8 @@ func (tcpConnImp *TcpConnImp)WriteMessage(messageType int, data []byte) error{
 }
 
 func (tcpConnImp *TcpConnImp)Close()error{
-	return tcpConnImp.FD.Close()
+	tcpConnImp.FD.CloseChan <- 1
+	return tcpConnImp.FD.ServerClose()
 }
 
 func (tcpConnImp *TcpConnImp)ReadMessage()(messageType int, p []byte, err error){

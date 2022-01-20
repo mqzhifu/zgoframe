@@ -4,11 +4,10 @@ import (
 	"context"
 	"errors"
 	"github.com/golang/protobuf/proto"
-	"github.com/gorilla/websocket"
 	"strconv"
 	"zgoframe/protobuf/pb"
 )
-//这里分成了两类：gateway 自解析 和 代理后方的请求
+//总路由器，这里分成了两类：gateway 自解析 和 代理后方的请求
 func(netWay *NetWay) Router(msg pb.Msg,conn *Conn)(data interface{},err error){
 	actionInfo,_ := netWay.ProtobufMap.ActionMaps[int(msg.ActionId)]
 	serviceName := actionInfo.ServiceName
@@ -22,6 +21,7 @@ func(netWay *NetWay) Router(msg pb.Msg,conn *Conn)(data interface{},err error){
 	}
 	return data,err
 }
+//帧同步的路由
 func(netWay *NetWay) RouterServiceSync(msg pb.Msg,conn *Conn,actionMap ActionMap)(data []byte,err error){
 	zgoframeClient ,err := netWay.Option.GrpcManager.GetZgoframeClient(actionMap.ServiceName,strconv.Itoa(int(conn.UserId)))
 	ctx := context.Background()
@@ -41,7 +41,7 @@ func(netWay *NetWay) RouterServiceSync(msg pb.Msg,conn *Conn,actionMap ActionMap
 
 	return data,err
 }
-
+//网关自解析的路由
 func(netWay *NetWay) RouterServiceGateway(msg pb.Msg,conn *Conn)(data interface{},err error){
 	requestLogin := pb.RequestLogin{}
 	//requestClientPong := pb.RequestClientPong{}
@@ -79,78 +79,6 @@ func(netWay *NetWay) RouterServiceGateway(msg pb.Msg,conn *Conn)(data interface{
 	}
 	return data,err
 }
-//直接给一个FD发送消息，基本上不用，只是特殊报错的时候，直接使用
-func(netWay *NetWay)WriteMessage(TextMessage int, connFD FDAdapter,content []byte){
-	err := connFD.WriteMessage(websocket.BinaryMessage,content)
-	if err != nil{
-		netWay.Option.Log.Error( "WriteMessage err:"+err.Error() )
-	}
-}
-//发送一条消息给一个玩家，根据conn，同时将消息内容进行编码与压缩
-//大部分通信都是这个方法
-func(netWay *NetWay)SendMsgCompressByConn(conn *Conn,actionName string , contentStruct interface{}){
-	netWay.Option.Log.Info("SendMsgCompressByConn  actionName:"+actionName)
-	//conn.UserId=0 时，由函数内部做兼容，主要是用来取content type ,protocol type
-	contentByte ,err := netWay.ProtocolManager.CompressContent(contentStruct,conn.UserId)
-	if err != nil{
-		return
-	}
-	netWay.SendMsg(conn,actionName,contentByte)
-}
-//发送一条消息给一个玩家，根据UserId，同时将消息内容进行编码与压缩
-func(netWay *NetWay)SendMsgCompressByUid(UserId int32,action string , contentStruct interface{}){
-	netWay.Option.Log.Info("SendMsgCompressByUid UserId:"+strconv.Itoa(int(UserId))  +  " action:" + action)
-	contentByte ,err := netWay.ProtocolManager.CompressContent(contentStruct,UserId)
-	if err != nil{
-		return
-	}
-	netWay.SendMsgByUid(UserId,action,contentByte)
-}
-//发送一条消息给一个玩家,根据UserId,且不做压缩处理
-func(netWay *NetWay)SendMsgByUid(UserId int32,action string , content []byte){
-	conn,ok := netWay.ConnManager.getConnPoolById(UserId)
-	if !ok {
-		netWay.Option.Log.Error("conn not in pool,maybe del.")
-		return
-	}
-	netWay.SendMsg(conn,action,content)
-}
-//发送一条消息给一个玩家,根据UserId,且不做压缩处理
-func(netWay *NetWay)SendMsgByConn(conn *Conn,action string , content []byte){
-	netWay.SendMsg(conn,action,content)
-}
-
-func(netWay *NetWay)SendMsg(conn *Conn,action string,content []byte){
-	//获取协议号结构体
-	actionMap,empty := netWay.ProtobufMap.GetActionId(action)
-	if empty{
-		netWay.Option.Log.Error("GetActionId empty:"+action)
-		return
-	}
-	netWay.Option.Log.Info("SendMsg , actionId:"+ strconv.Itoa(actionMap.Id )+ " , userId:" + strconv.Itoa( int(conn.UserId))  + " , actionName:" + action)
-
-	if conn.Status == CONN_STATUS_CLOSE {
-		netWay.Option.Log.Error("Conn status =CONN_STATUS_CLOSE.")
-		return
-	}
-
-	protocolCtrlInfo := myNetWay.ConnManager.GetPlayerCtrlInfoById(conn.UserId)
-	msg := pb.Msg{
-		Content: string(content),
-		ServiceId: int32(actionMap.ServiceId),
-		ActionId: int32(actionMap.Id),
-		Action: actionMap.Action,
-		ContentType:protocolCtrlInfo.ContentType,
-		ProtocolType: protocolCtrlInfo.ProtocolType,
-	}
-	contentBytes := netWay.ProtocolManager.PackContentMsg(msg)
-
-	if protocolCtrlInfo.ContentType == CONTENT_TYPE_PROTOBUF {
-		conn.Write(contentBytes,websocket.BinaryMessage)
-	}else{
-		conn.Write(contentBytes,websocket.TextMessage)
-	}
-}
 
 func(netWay *NetWay) ClientPong(requestClientPong pb.RequestClientPong,conn *Conn){
 
@@ -164,5 +92,5 @@ func(netWay *NetWay)clientPing(pingRTT pb.RequestClientPing,conn *Conn){
 		RttTimes: pingRTT.RttTimes,
 		RttTimeout: pingRTT.RttTimeout,
 	}
-	netWay.SendMsgCompressByUid(conn.UserId,"serverPong",&responseServerPong)
+	conn.SendMsgCompressByUid(conn.UserId,"serverPong",&responseServerPong)
 }

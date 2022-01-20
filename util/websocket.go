@@ -5,7 +5,6 @@ import (
 	"github.com/gorilla/websocket"
 	"go.uber.org/zap"
 	"net/http"
-	"strings"
 )
 
 type Websocket struct {
@@ -20,15 +19,12 @@ type WebsocketOption struct{
 	OutIp 			string	`json:"outIp"`
 	OutCxt 			context.Context
 	Log				*zap.Logger
-	//OpenNewConnBack	func ( connFD FDAdapter)	//来了新连接后，回调函数
 	ProtocolManager *ProtocolManager	//给外部提供一个接口，用于将SOCKER FD 注册给外部
 }
 
 func NewWebsocket( option WebsocketOption)*Websocket{
 	websocket := new(Websocket)
 	websocket.Option = option
-	//httpGin.GET(option.WsUri,websocket.HttpHandler)
-	//ctx,cancelFunc := context.WithCancel(context.Background())
 
 	dns := option.ListenerIp + ":" + option.Port
 
@@ -39,25 +35,24 @@ func NewWebsocket( option WebsocketOption)*Websocket{
 
 	return websocket
 }
+//关闭
 func (ws *Websocket )Shutdown(){
+	//直接关闭HTTP 守护协程即可，也不需要断开连接
 	ws.httpServer.Close()
 }
-
+//启动http 监听
 func (ws *Websocket )Start(){
 	ws.Option.Log.Info("start websocket  dns:"+ws.httpServer.Addr + " uri:"+ ws.Option.WsUri)
 	http.HandleFunc(ws.Option.WsUri, ws.HttpHandler)
-	//这里开始阻塞，直到接收到停止信号
+	//这里开始阻塞，直到接收到停止信号（shutdown会触发）
 	err := ws.httpServer.ListenAndServe()
 	if err != nil {
 		ws.Option.Log.Error("ws.httpServer.ListenAndServe()")
-		if strings.Index(err.Error(),"Server closed") == -1{
-			//zlib.PanicPrint("httpd:"+err.Error())
-		}
-		//mylog.Error(" httpd ListenAndServe err:", err.Error())
 	}
 }
-
+//所有的HTTP-WS请求会回调此函数
 func (ws *Websocket )HttpHandler(w http.ResponseWriter, r *http.Request){
+	//配置ws
 	var httpUpGrader = websocket.Upgrader{
 		ReadBufferSize:  1024,
 		WriteBufferSize: 1024,
@@ -65,54 +60,14 @@ func (ws *Websocket )HttpHandler(w http.ResponseWriter, r *http.Request){
 		CheckOrigin: func(r *http.Request) bool {
 			return true
 		},
-
 	}
-	//fmt.Println("RemoteAddr:",r.RemoteAddr)
-
+	//将此HTTP请求升级到ws格式
 	wsConnFD, err := httpUpGrader.Upgrade(w,r, nil)
 	ws.Option.Log.Info("ws HttpHandler Upgrade this http req to websocket ,http remote:"+r.RemoteAddr)
 	if err != nil {
 		ws.Option.Log.Error("Upgrade websocket failed: " + err.Error())
 		return
 	}
+	//将ws fd 回调给更上层，做更多操作
 	ws.Option.ProtocolManager.websocketHandler(wsConnFD)
-	//imp := WebsocketConnImpNew(wsConnFD)
-	//ws.Option.OpenNewConnBack(imp)
 }
-
-type WsConn struct {
-	FD  *websocket.Conn
-	Ctx context.Context
-	CtxCancelFunc context.CancelFunc
-	Log				*zap.Logger
-}
-//func   (wsConn *WsConn) ConnCloseHandler( code int, text string )error{
-//	wsConn.Log.Info("ConnCloseHandler")
-//	wsConn.CtxCancelFunc()
-//	return nil
-//}
-//
-//func  (wsConn *WsConn)ReadLoop( ){
-//	wsConn.Log.Info("new ReadLoop")
-//	for{
-//		select{
-//		case <-wsConn.Ctx.Done():
-//			wsConn.Log.Warn("wsConn ReadLoop  receive signal: ctx.Done.")
-//			goto end
-//		default:
-//			//从ws 读取 数据
-//			messageType , dataByte  , err  := wsConn.FD.ReadMessage()
-//			if err != nil{
-//
-//			}
-//			content := string(dataByte)
-//			if content == ""{
-//				continue
-//			}
-//			wsConn.Log.Info("read msg:" + content + strconv.Itoa(messageType))
-//			//service.ProcessOne(dataByte)
-//		}
-//	}
-//end :
-//	wsConn.Log.Warn("wsConn ReadLoop: end.")
-//}

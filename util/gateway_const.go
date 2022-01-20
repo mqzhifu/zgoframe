@@ -60,6 +60,9 @@ const (
 	NETWAY_STATUS_INIT = 1
 	NETWAY_STATUS_START = 2
 	NETWAY_STATUS_CLOSE = 3
+
+	TRAN_MESSAGE_TYPE_CHAR 	 = 1 //网络传输数据格式：字符流
+	TRAN_MESSAGE_TYPE_BINARY = 2 //网络传输数据格式：二进制
 )
 
 

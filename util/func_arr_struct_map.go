@@ -106,6 +106,12 @@ func BytesCombine(pBytes ...[]byte) []byte {
 	sep := []byte("")
 	return bytes.Join(s, sep)
 }
+
+func  ByteTurnBytes(b byte)[]byte{
+	var a []byte
+	a = append(a,b)
+	return a
+}
 //判断一个元素 int，在一个数组中的位置
 func ElementInArrIndex(arr []int ,element int )int{
 	for i:=0;i<len(arr);i++{

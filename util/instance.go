@@ -14,7 +14,7 @@ const(
 )
 
 type Instance struct {
-	Id int
+	Id 			int
 	Name        string	`json:"name"`
 	Host 		string	`json:"host"`
 	Port        string	`json:"port"`
@@ -31,12 +31,13 @@ type Instance struct {
 //}
 
 type InstanceManager struct {
-	Pool map[int]Instance
+	Pool 	map[int]Instance
 	Gorm 	*gorm.DB
 }
-
+//3方实例管理：mysql redis etcd
 func NewInstanceManager (gorm *gorm.DB)(*InstanceManager,error) {
-	instanceManager 		:= new(InstanceManager)
+	instanceManager 	:= new(InstanceManager)
+
 	instanceManager.Pool = make(map[int]Instance)
 	instanceManager.Gorm = gorm
 

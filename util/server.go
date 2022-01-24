@@ -24,7 +24,7 @@ type Server struct {
 }
 
 type ServerManager struct {
-	Pool map[int]Server
+	Pool 	map[int]Server
 	Gorm 	*gorm.DB
 }
 

@@ -42,4 +42,6 @@ func (gateway *Gateway)StartSocket(netWayOption NetWayOption){
 	//
 	//roomId := "aabbccdd"
 	//ZgoframeClient ,err := gateway.GrpcManager.GetZgoframeClient(roomId)
+
+
 }

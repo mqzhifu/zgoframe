@@ -25,7 +25,7 @@ type NetWayOption struct {
 	LoginAuthSecretKey	string		`json:"login_auth_secret_key"`	//jwt登陆验证-密钥
 
 	MaxClientConnNum	int32		`json:"maxClientConnMum"`		//客户端最大连接数
-	MsgContentMax		int32		`json:"msg_content_max"`		//一条消息内容最大值,byte
+	MsgContentMax		int32		`json:"msg_content_max"`		//一条消息内容最大值,byte,ps:最大10KB
 	IOTimeout			int64		`json:"io_timeout"`				//read write sock fd 超时时间
 	ConnTimeout 		int32		`json:"connTimeout"`			//一个FD超时时间
 
@@ -72,6 +72,9 @@ func NewNetWay(option NetWayOption)(*NetWay,error)  {
 	option.Log.Info("New NetWay instance :")
 
 	netWay := new(NetWay)
+	//统计模块
+	netWay.Metrics = netWay.InitMetrics(option.Log)
+	myMetrics = netWay.Metrics
 
 	netWay.Option = option
 	if option.MsgContentMax > 10240{
@@ -89,8 +92,6 @@ func NewNetWay(option NetWayOption)(*NetWay,error)  {
 		WsUri				: option.WsUri,
 		UdpPort				: option.UdpPort,
 		IOTimeout			: option.IOTimeout,
-		//DefaultContentType	: option.DefaultContentType,
-		//DefaultProtocol		: option.DefaultProtocolType,
 		OpenNewConnBack		: netWay.OpenNewConn,//回调函数
 		Log					: option.Log,
 	}
@@ -99,8 +100,8 @@ func NewNetWay(option NetWayOption)(*NetWay,error)  {
 	if err != nil {
 		return nil,err
 	}
-	//统计模块
-	netWay.Metrics = netWay.InitMetrics(option.Log)
+
+
 	//player.fd.num
 	//player.fd.size
 
@@ -138,29 +139,28 @@ func NewNetWay(option NetWayOption)(*NetWay,error)  {
 }
 func(netWay *NetWay)InitMetrics(log *zap.Logger)*MyMetrics{
 	metrics := NewMyMetrics(log)
+	metrics.CreateGauge("startup_time","启动时间")			//启动时间
 
-	metrics.CreateGauge("startup_time")			//启动时间
-
-	metrics.CreateCounter("ws_ok_fd")				//websocket 成功建立FD 数量
-	metrics.CreateCounter("ws_server_close_fd")	//websocket 主动关闭FD 数量
-	metrics.CreateCounter("ws_client_close_fd")	//websocket 被动关闭FD 数量
-	metrics.CreateCounter("tcp_ok_fd")			//tcp 成功建立FD 数量
-	metrics.CreateCounter("tcp_server_close_fd")	//tcp 主动关闭FD 数量
-	metrics.CreateCounter("tcp_client_close_fd")	//tcp 被动关闭FD 数量
+	metrics.CreateCounter("ws_ok_fd","websocket 成功建立FD 数量")				//websocket 成功建立FD 数量
+	metrics.CreateCounter("ws_server_close_fd","websocket 主动关闭FD 数量")	//websocket 主动关闭FD 数量
+	metrics.CreateCounter("ws_client_close_fd","websocket 被动关闭FD 数量")	//websocket 被动关闭FD 数量
+	metrics.CreateCounter("tcp_ok_fd","tcp 成功建立FD 数量")			//tcp 成功建立FD 数量
+	metrics.CreateCounter("tcp_server_close_fd","tcp 主动关闭FD 数量")	//tcp 主动关闭FD 数量
+	metrics.CreateCounter("tcp_client_close_fd","tcp 被动关闭FD 数量")	//tcp 被动关闭FD 数量
 	//以上均是 最底层 TCP WS  的统计信息
 
 	//以下有点偏向应用层的统计
-	metrics.CreateCounter("new_fd")	//netway 接收来自 tcp/ws 新FD 数量
+	metrics.CreateCounter("new_fd","netway 接收来自 tcp/ws 新FD 数量")	//netway 接收来自 tcp/ws 新FD 数量
 
-	metrics.CreateCounter("create_fd_ok")		//验证通过，成功创建的FD
-	metrics.CreateCounter("create_fd_failed")	//验证失败，FD
-	metrics.CreateCounter("server_close_fd")	//主动关闭FD
-	metrics.CreateCounter("client_close_fd")	//被动关闭FD
+	metrics.CreateCounter("create_fd_ok","验证通过，成功创建的FD")		//验证通过，成功创建的FD
+	metrics.CreateCounter("create_fd_failed","验证失败，FD")	//验证失败，FD
+	metrics.CreateCounter("server_close_fd","主动关闭FD")	//主动关闭FD
+	metrics.CreateCounter("client_close_fd","被动关闭FD")	//被动关闭FD
 
-	metrics.CreateCounter("total_output_num")	//总发送消息 次数
-	metrics.CreateGauge("total_output_size")	//总发送消息 大小
-	metrics.CreateCounter("total_input_num")	//总接收消息 次数
-	metrics.CreateGauge("total_input_size")	//总接收消息 大小
+	metrics.CreateCounter("total_output_num","总发送消息 次数")	//总发送消息 次数
+	metrics.CreateGauge("total_output_size","总发送消息 大小")	//总发送消息 大小
+	metrics.CreateCounter("total_input_num","总接收消息 次数")	//总接收消息 次数
+	metrics.CreateGauge("total_input_size","总接收消息 大小")	//总接收消息 大小
 
 	return metrics
 }

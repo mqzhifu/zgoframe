@@ -21,14 +21,14 @@ func NewMyMetrics(log *zap.Logger)*MyMetrics{
 	return myMetrics
 }
 
-func (myMetrics *MyMetrics)Test(){
-	myMetrics.CreateCounter("paySuccess")
-	myMetrics.CounterInc("paySuccess")
-	myMetrics.CounterInc("paySuccess")
-
-	myMetrics.CreateGauge("payUser")
-	myMetrics.GaugeSet("payUser",100)
-}
+//func (myMetrics *MyMetrics)Test(){
+//	myMetrics.CreateCounter("paySuccess")
+//	myMetrics.CounterInc("paySuccess")
+//	myMetrics.CounterInc("paySuccess")
+//
+//	myMetrics.CreateGauge("payUser")
+//	myMetrics.GaugeSet("payUser",100)
+//}
 
 func (myMetrics *MyMetrics)GroupNameHasExist(name string)bool{
 	_,ok := myMetrics.Groups[name]
@@ -40,13 +40,14 @@ func (myMetrics *MyMetrics)GroupNameHasExist(name string)bool{
 	return rs
 }
 
-func (myMetrics *MyMetrics)CreateGauge(name string )error{
+func (myMetrics *MyMetrics)CreateGauge(name string,help string )error{
 	if myMetrics.GroupNameHasExist(name) {
 		return errors.New("CreateGauge GroupNameHasExist:"+name)
 	}
 	gauge := prometheus.NewGauge(prometheus.GaugeOpts{
 		Name:      name,
-		//Help:      "the temperature of CPU",
+		Namespace: "netway",
+		Help:     help,
 	})
 
 	myMetrics.Log.Info("metrics: CreateGauge "+ name)
@@ -103,13 +104,15 @@ func (myMetrics *MyMetrics)GaugeAdd(name string,value float64 )error{
 //Gauge end
 
 //Counter start
-func (myMetrics *MyMetrics)CreateCounter(name string )error{
+func (myMetrics *MyMetrics)CreateCounter(name string,help string )error{
 	if myMetrics.GroupNameHasExist(name) {
 		return errors.New("CreateCounter GroupNameHasExist:"+name)
 	}
 	var AccessCounter = prometheus.NewCounter(
 		prometheus.CounterOpts{
 			Name: name,
+			Namespace: "netway",
+			Help: help,
 		},
 	)
 

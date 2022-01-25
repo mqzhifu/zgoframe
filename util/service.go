@@ -32,7 +32,7 @@ type ServiceNode struct {
 type Service struct {
 	Id 			int				`json:"id"`
 	Name 		string			`json:"name"`
-	Key 		string			`json:"key"`
+	//Key 		string			`json:"key"`
 	DBKey 		string			`json:"db_key"`
 	Status 		int				`json:"status"`
 	Desc 		string			`json:"desc"`
@@ -176,7 +176,7 @@ func (serviceManager *ServiceManager)GetFromDb()error{
 			Status: v.Status,
 			Name: v.Name,
 			Desc: v.Desc,
-			Key: v.Key,
+			//Key: v.Key,
 			Type: v.Type,
 			SecretKey: v.SecretKey ,
 			Git:v.Git,
@@ -205,7 +205,7 @@ func (serviceManager *ServiceManager) GetByName(name string)(service Service,isE
 	}
 
 	for _,v:= range serviceManager.Pool{
-		if v.Key == name{
+		if v.Name == name{
 			return v,false
 		}
 	}

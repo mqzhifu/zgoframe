@@ -25,7 +25,8 @@ func GetNewZapLog(alert *util.AlertPush,moduleName string,FileName string,InCons
 	util.MyPrint("GetNewZapLog:",moduleName ,FileName ,InConsole )
 
 	zapInConsole = InConsole
-	if ok, _ := util.PathExists(zapDir); !ok { // 判断是否有Director文件夹
+	_,err  = util.PathExists(zapDir)
+	if err != nil { // 判断是否有Director文件夹
 		util.MyPrint("create directory:", zapDir)
 		err = os.Mkdir(zapDir, os.ModePerm)
 		if err != nil{

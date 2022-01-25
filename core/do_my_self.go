@@ -12,6 +12,7 @@ func DoMySelf(){
 		test.LogSlave()
 	}else{
 		//test.Grpc()
-		test.Gateway()
+		//test.Gateway()
+		test.Cicd()
 	}
 }

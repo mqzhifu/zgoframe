@@ -41,8 +41,9 @@ func  (process *Process)InitProcess( ){
 }
 
 func (process *Process) DelPid()(int,error){
-	if !CheckFileIsExist(process.PathFileName){
-		return 0,errors.New(process.PathFileName + " not exist~ ")
+	_,err := FileExist(process.PathFileName)
+	if err != nil{
+		return 0,errors.New(process.PathFileName + " not exist~ " + err.Error())
 	}
 
 	b, err := ioutil.ReadFile(process.PathFileName) // just pass the file name
@@ -62,8 +63,9 @@ func (process *Process) DelPid()(int,error){
 //进程PID保存到文件
 func initPid(pathFile string )(int,error){
 	pid := os.Getpid()
-	if CheckFileIsExist(pathFile){
-		return pid,errors.New(pathFile + " has exist~ ")
+	_,err := FileExist(pathFile)
+	if err != nil{
+		return pid,errors.New(pathFile + " has exist~ " + err.Error())
 	}
 
 	fd, err  := os.OpenFile(pathFile, os.O_WRONLY | os.O_CREATE | os.O_TRUNC , 0777)

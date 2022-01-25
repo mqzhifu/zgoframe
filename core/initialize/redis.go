@@ -25,7 +25,7 @@ func GetNewRedis()(*util.MyRedis,error) {
 		Port: redisCfg.Port,
 		Password: redisCfg.Password,
 		DbNumber: redisCfg.DbNumber,
-		KeyPrefix: global.V.Project.Key,
+		KeyPrefix: global.V.Project.Name,
 		KeySeparate: "_",
 		ElementPool:pool,
 		Log: global.V.Zap,

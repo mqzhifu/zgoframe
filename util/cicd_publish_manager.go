@@ -3,6 +3,7 @@ package util
 import (
 	"encoding/json"
 	"gorm.io/gorm"
+	"strconv"
 	"zgoframe/model"
 	"errors"
 )
@@ -23,7 +24,7 @@ func(CICDPublicManager *CICDPublicManager) InsertOne(service Service,server Serv
 	serviceInfo ,_ := json.Marshal(service)
 	serverInfo ,_ := json.Marshal(server)
 	data := model.CICDPublish{
-		Status: 0,
+		Status: 1,
 		ServiceId: service.Id,
 		ServerId: server.Id,
 		ServiceInfo: string(serviceInfo),
@@ -34,6 +35,7 @@ func(CICDPublicManager *CICDPublicManager) InsertOne(service Service,server Serv
 }
 
 func (CICDPublicManager *CICDPublicManager) UpStatus(m model.CICDPublish,status int){
+	MyPrint("CICDPublicManager UpStatus publishId:",m.Id , " new status:"+strconv.Itoa(status))
 	CICDPublicManager.Db.Model(&m).Update("status",status)
 	//db.Model(&Food{}).Update("price", 25)
 }

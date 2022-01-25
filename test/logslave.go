@@ -14,7 +14,7 @@ func LogSlave()  {
 	port := "7777"
 
 
-	serviceName := global.V.Project.Key
+	serviceName := global.V.Project.Name
 	project ,empty := global.V.ServiceManager.GetByName(serviceName)
 	if empty{
 		util.ExitPrint("project err:empty")
@@ -23,7 +23,7 @@ func LogSlave()  {
 
 	node := util.ServiceNode{
 		ProjectId	: project.Id,
-		ServiceName : project.Key,
+		ServiceName : project.Name,
 		Ip			: ip ,
 		ListenIp	: listenIp,
 		Port		: port ,

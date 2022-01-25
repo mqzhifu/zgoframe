@@ -1,6 +1,7 @@
 package util
 
 import (
+	"errors"
 	"github.com/abrander/go-supervisord"
 	"os"
 	"strings"
@@ -35,7 +36,7 @@ type SuperVisor struct {
 	Cli *supervisord.Client
 }
 
-func NewSuperVisor(superVisorOption SuperVisorOption )*SuperVisor{
+func NewSuperVisor(superVisorOption SuperVisorOption )(*SuperVisor,error){
 	superVisor := new(SuperVisor)
 	//superVisor.Ip 			= superVisorOption.Ip
 	//superVisor.RpcPort 		= superVisorOption.Port
@@ -48,13 +49,13 @@ func NewSuperVisor(superVisorOption SuperVisorOption )*SuperVisor{
 
 	superVisorConfTemplateFileContent ,err := ReadString(superVisorOption.ConfTemplateFile)
 	if err != nil{
-		ExitPrint("read superVisorConfTemplateFileContent err.")
+		return superVisor,errors.New("read superVisorConfTemplateFileContent err."+err.Error() + " , "+superVisorOption.ConfTemplateFile)
 	}
 
 	//superVisor.ConfTemplateFile = superVisorOption.ConfTemplateFile
 	superVisor.ConfTemplateFileContent = superVisorConfTemplateFileContent
 
-	return superVisor
+	return superVisor,nil
 }
 //通过XML Rpc 控制远程 superVisor 服务进程
 func(superVisor *SuperVisor) InitXMLRpc()error{

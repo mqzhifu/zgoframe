@@ -269,7 +269,7 @@ func InitPath(rootDir string)(rootDirName string,err error){
 	//option.RootDirName = rootDirName
 	//global.V.RootDir = option.RootDir
 	//这里要求，项目表里配置的key与项目目录名必须一致.
-	projectNameByte := util.CamelToSnake2([]byte(global.V.Project.Key ))
+	projectNameByte := util.CamelToSnake2([]byte(global.V.Project.Name ))
 	projectName := util.StrFirstToLower(string(projectNameByte))
 	if rootDirName != projectName {
 		//方便测试，先注释掉
@@ -293,7 +293,7 @@ func GetNewEtcd(env string)(myEtcd *util.MyEtcd,err error){
 	option := util.EtcdOption{
 		ProjectName		: global.V.Project.Name,
 		ProjectENV		: env,
-		ProjectKey		: global.V.Project.Key,
+		//ProjectKey		: global.V.Project.Key,
 		FindEtcdUrl : global.C.Etcd.Url,
 		Username	: global.C.Etcd.Username,
 		Password	: global.C.Etcd.Password,

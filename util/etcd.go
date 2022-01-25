@@ -27,7 +27,7 @@ type MyEtcd struct {
 
 type EtcdOption struct {
 	ProjectName string
-	ProjectKey string
+	//ProjectKey string
 	ProjectENV	string
 	FindEtcdUrl		string
 	LinkAddressList	[]string
@@ -273,7 +273,7 @@ func  (myEtcd *MyEtcd)Watch(ctx context.Context,key string) <-chan clientv3.Watc
 }
 
 func  (myEtcd *MyEtcd)getConfRootPrefix()string{
-	rootPath := "/config/"+myEtcd.option.ProjectKey + "/"+  myEtcd.option.ProjectKey + "/"
+	rootPath := "/config/"+myEtcd.option.ProjectName + "/"+  myEtcd.option.ProjectName + "/"
 	return rootPath
 }
 //初始化，一个项目下的，所有配置文件（ 路径：/项目名/环境名/）

@@ -85,8 +85,8 @@ func (serviceDiscovery *ServiceDiscovery)Init( )error{
 	for _,v :=range serviceDiscovery.option.ServiceManager.Pool{
 		emptyService  := Service{
 			Id:v.Id,
-			Name: v.Key,
-			DBKey:  serviceDiscovery.GetServiceDbKey( v.Key ),
+			Name: v.Name,
+			DBKey:  serviceDiscovery.GetServiceDbKey( v.Name ),
 			LBType: serviceDiscovery.option.AutoCreateServiceLBType,
 			Log : serviceDiscovery.option.Log,
 			CreateTime: GetNowTimeSecondToInt(),

@@ -2,9 +2,11 @@ package util
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/abrander/go-supervisord"
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 	"net/http"
 	"os"
 	"os/exec"
@@ -98,14 +100,32 @@ type CicdManagerOption struct{
 	InstanceManager *InstanceManager
 	Config 			ConfigCicd
 	PublicManager 	*CICDPublicManager
+	Log 			*zap.Logger
 }
 
-func NewCicdManager(cicdManagerOption CicdManagerOption)*CicdManager{
+func NewCicdManager(cicdManagerOption CicdManagerOption)(*CicdManager,error){
 	cicdManager := new(CicdManager)
 	cicdManager.Option = cicdManagerOption
 
-	return cicdManager
+	_,err := PathExists(cicdManagerOption.Config.System.ServiceDir)//service 根目录
+	if err != nil{
+		return cicdManager,cicdManager.MakeError("Option.Config.System.ServiceDir :"+err.Error())
+	}
+
+	//SuperVisor 模板文件
+	_,err = FileExist(cicdManager.Option.Config.SuperVisor.ConfTemplateFile)//superVisor 模板文件
+	if  err != nil{
+		return cicdManager,cicdManager.MakeError("SuperVisor.ConfTemplateFile :"+err.Error())
+	}
+	//SuperVisor 配置文件统一放置目录
+	_,err = PathExists(cicdManager.Option.Config.SuperVisor.ConfDir)//superVisor 配置文件统一放置目录
+	if  err != nil{
+		return cicdManager,cicdManager.MakeError("SuperVisor.ConfDir :"+err.Error())
+	}
+
+	return cicdManager,nil
 }
+
 func(cicdManager *CicdManager)ReplaceInstance(content string,serviceName string ,env string)string{
 	category := []string{"mysql","redis","etcd","rabbitmq","kafka","log","alert"}
 	//attr := []string{"ip","port","user","ps"}
@@ -140,16 +160,21 @@ func(cicdManager *CicdManager)ReplaceInstance(content string,serviceName string 
 type ServiceDeployConfig struct {
 	Name 				string 	//服务名称
 	BaseDir 			string	//所有service项目统一放在一个目录下，由host.toml 中配置
-	FullPath 			string 	//最终一个服务的目录名
+	FullPath 			string 	//最终一个服务的目录名,BaseDir + serviceName
 	MasterDirName 		string	//一个服务的线上使用版本-软连目录名称
+	MasterPath			string  //full path + MasterDirName
 	CICDConfFileName 	string	//一个服务自己的需要执行的cicd脚本
+	//CICDConfFileFull	string  //service dir + CICDConfFileName
 	ConfigTmpFileName 	string	//一个服务的配置文件的模板文件名
 	ConfigFileName 		string	//一个服务的配置文件名,由上面CP
 	GitCloneTmpDirName 	string	//git clone 一个服务的项目代码时，临时存在的目录名
+	ClonePath			string 	//service dir + GitCloneTmpDirName
+	CodeGitClonePath   	string  // ClonePath + service name
 	CICDShellFileName 	string	//有一一些操作需要借用于shell 执行，如：git clone . 该变量就是shell 文件名
 }
 //一次部署全部服务项目
 func(cicdManager *CicdManager)DeployAllService(){
+	cicdManager.Option.Log.Info("DeployAllService:")
 	serviceDeployConfig := ServiceDeployConfig{
 		BaseDir 			: cicdManager.Option.Config.System.ServiceDir,
 		MasterDirName 		: "master",
@@ -159,85 +184,152 @@ func(cicdManager *CicdManager)DeployAllService(){
 		GitCloneTmpDirName 	: "clone",
 		CICDShellFileName 	: "./cicd.sh",
 	}
+	PrintStruct(serviceDeployConfig , ":")
+
 	//先遍历所有服务器，然后，把所有已知服务部署到每台服务器上(每台机器都可以部署任何服务)
 	for _,server :=range cicdManager.Option.ServerList{
-		fmt.Println("for each service:" + server.OutIp + " " + server.Env)
 		//遍历所有服务
 		for _,service :=range cicdManager.Option.ServiceList{
-			cicdManager.DeployOneService(server,serviceDeployConfig,service)
+			err := cicdManager.DeployOneService(server,serviceDeployConfig,service)
+			if err != nil{
+				ExitPrint(err)
+			}
 		}
 	}
 }
+
+func(cicdManager *CicdManager)MakeError(errMsg string)error{
+	cicdManager.Option.Log.Error(errMsg)
+	return errors.New(errMsg)
+}
+
+func(cicdManager *CicdManager)DeployServiceCheck(server Server , serviceDeployConfig ServiceDeployConfig ,  service Service)(ServiceDeployConfig,error){
+	if service.Git == ""{
+		errMsg := "service.Git is empty~"+service.Name
+		return serviceDeployConfig,errors.New(errMsg)
+	}
+
+	if service.Name == ""{
+		errMsg := "service.Name is empty~"
+		return serviceDeployConfig,errors.New(errMsg)
+	}
+
+	if serviceDeployConfig.MasterDirName == ""{
+		errMsg := "MasterDirName is empty~"
+		return serviceDeployConfig,errors.New(errMsg)
+	}
+
+	if serviceDeployConfig.GitCloneTmpDirName == ""{
+		errMsg := "GitCloneTmpDirName is empty~"
+		return serviceDeployConfig,errors.New(errMsg)
+	}
+
+	//baseDir 已由 构造函数做校验了
+
+	serviceDeployConfig.Name 				= service.Name
+	serviceDeployConfig.FullPath 			= serviceDeployConfig.BaseDir + DIR_SEPARATOR + serviceDeployConfig.Name
+	serviceDeployConfig.MasterPath 			= serviceDeployConfig.FullPath + DIR_SEPARATOR + serviceDeployConfig.MasterDirName
+	serviceDeployConfig.ClonePath 			= serviceDeployConfig.FullPath + DIR_SEPARATOR + serviceDeployConfig.GitCloneTmpDirName
+	serviceDeployConfig.CodeGitClonePath 	= serviceDeployConfig.ClonePath + DIR_SEPARATOR + service.Name
+
+
+	newServiceDeployConfig := serviceDeployConfig
+	return newServiceDeployConfig,nil
+}
 //部署一个服务
-func(cicdManager *CicdManager)DeployOneService(server Server , serviceDeployConfig ServiceDeployConfig ,  service Service){
-	serviceDeployConfig.Name = service.Name
+func(cicdManager *CicdManager)DeployOneService(server Server , serviceDeployConfig ServiceDeployConfig ,  service Service)error{
+	cicdManager.Option.Log.Info("DeployOneService:" + server.OutIp + " " + server.Env + " "+service.Name)
 	//创建发布记录
 	publish := cicdManager.Option.PublicManager.InsertOne(service,server)
-	MyPrint("create publish:",publish.Id)
+	cicdManager.Option.Log.Info("create publish:"+ strconv.Itoa(publish.Id))
 
+	newServiceDeployConfig , err := cicdManager.DeployServiceCheck(server,serviceDeployConfig,service)
+	if err !=nil{
+		return cicdManager.DeployOneServiceFailed(publish,err.Error())
+	}
+
+	serviceDeployConfig = newServiceDeployConfig
 	//一个服务的根目录，大部分操作都在这个目录下，除了superVisor
-	servicePath := serviceDeployConfig.BaseDir + DIR_SEPARATOR +  service.Name
-	serviceDeployConfig.FullPath = servicePath
-	MyPrint("servicePath:",servicePath)
-	pathNotExistCreate(servicePath)
-
-	serviceMasterPath := servicePath + DIR_SEPARATOR + serviceDeployConfig.MasterDirName
-	MyPrint("serviceMasterPath:"+serviceMasterPath)
+	//servicePath := serviceDeployConfig.BaseDir + DIR_SEPARATOR +  service.Name
+	//serviceDeployConfig.FullPath = servicePath
+	cicdManager.Option.Log.Info("servicePath:" + serviceDeployConfig.FullPath)
+	pathNotExistCreate(serviceDeployConfig.FullPath)
+	//serviceMasterPath := servicePath + DIR_SEPARATOR + serviceDeployConfig.MasterDirName
+	//cicdManager.Option.Log.Info("serviceMasterPath:"+serviceMasterPath)
 
 	//git clone 目录
-	serviceGitClonePath := servicePath + DIR_SEPARATOR + serviceDeployConfig.GitCloneTmpDirName
-	pathNotExistCreate(serviceGitClonePath)
+	//serviceGitClonePath := serviceDeployConfig.FullPath + DIR_SEPARATOR + serviceDeployConfig.GitCloneTmpDirName
+	pathNotExistCreate(serviceDeployConfig.ClonePath)
 	//通过shell 执行git clone ，同时获取当前clone master 的版本号
 	//gitLastCommitId :=GitCloneAndGetLastCommitIdByShell(serviceGitClonePath,service.Name,service.Git)
 	//构建 shell 执行时所需 参数
-	shellArgc := service.Git + " " + serviceGitClonePath + " " +  service.Name
+	cicdManager.Option.Log.Info("step 1 : git clone project code and get git commit id.")
+	shellArgc := service.Git + " " + serviceDeployConfig.ClonePath + " " +  service.Name
 	//执行shell 脚本 后：service项目代码已被clone, git 版本号已知了
-	gitLastCommitId := ExecShellFile(serviceDeployConfig.CICDShellFileName,shellArgc)
+	gitLastCommitId ,err  := ExecShellFile(serviceDeployConfig.CICDShellFileName,shellArgc)
+	if err != nil {
+		return cicdManager.DeployOneServiceFailed(publish,"ExecShellFile err:"+err.Error())
+	}
 
-	MyPrint("gitLastCommitId:",gitLastCommitId)
+	cicdManager.Option.Log.Info("gitLastCommitId:" + gitLastCommitId)
 	//刚刚clone完后，项目的目录
-	serviceCodeGitClonePath := serviceGitClonePath + DIR_SEPARATOR + service.Name
+	//serviceCodeGitClonePath := serviceDeployConfig.ClonePath + DIR_SEPARATOR + service.Name
 	//新刚刚克隆好的项目目录，移动一个新目录下，新目录名：git_master_versionId + 当前时间
-	newGitCodeDir := servicePath + DIR_SEPARATOR + strconv.Itoa(GetNowTimeSecondToInt())  + "_" + gitLastCommitId
-	MyPrint("service code move :",serviceCodeGitClonePath +" to "+ newGitCodeDir)
+	newGitCodeDir := serviceDeployConfig.FullPath + DIR_SEPARATOR + strconv.Itoa(GetNowTimeSecondToInt())  + "_" + gitLastCommitId
+	cicdManager.Option.Log.Info("step 2 : service code move :" + serviceDeployConfig.CodeGitClonePath +" to "+ newGitCodeDir)
 	//执行 移动操作
-	os.Rename(serviceCodeGitClonePath,newGitCodeDir)
-
+	err = os.Rename(serviceDeployConfig.CodeGitClonePath,newGitCodeDir)
+	if err != nil{
+		return cicdManager.DeployOneServiceFailed(publish,"serviceCodeGitClonePath os.Rename err:"+err.Error() )
+	}
 	//项目自带的CICD配置文件，这里有 服务启动脚本 和 依赖的环境
 	serviceSelfCICDConf := newGitCodeDir + DIR_SEPARATOR + serviceDeployConfig.CICDConfFileName
-	MyPrint("read file:"+serviceSelfCICDConf)
+	cicdManager.Option.Log.Info("read file:"+serviceSelfCICDConf)
 	serviceCICDConfig := ConfigServiceCICD{}
 	//读取项目自己的cicd配置文件，并映射到结构体中
-	ReadConfFile(serviceSelfCICDConf,&serviceCICDConfig)
+	err = ReadConfFile(serviceSelfCICDConf,&serviceCICDConfig)
+	if err != nil{
+		return cicdManager.DeployOneServiceFailed(publish,err.Error())
+	}
 	PrintStruct(serviceCICDConfig,":")
-
 	//生成该服务的，superVisor 配置文件
 	superVisorOption := SuperVisorOption{
-		ConfTemplateFile: cicdManager.Option.Config.SuperVisor.ConfTemplateFile,
 		ServiceName		: service.Name,
+		ConfTemplateFile: cicdManager.Option.Config.SuperVisor.ConfTemplateFile,
 		ConfDir			: cicdManager.Option.Config.SuperVisor.ConfDir,
 	}
-	serviceSuperVisor := NewSuperVisor(superVisorOption)
+	serviceSuperVisor,err := NewSuperVisor(superVisorOption)
+	if err != nil{
+		return cicdManager.DeployOneServiceFailed(publish,err.Error())
+	}
 	//superVisor 配置文件中 动态的占位符，需要替换掉
 	superVisorReplace := SuperVisorReplace{
 		script_name				: service.Name,
 		startup_script_command	: serviceCICDConfig.System.Startup,
-		script_work_dir 		: serviceMasterPath,
+		script_work_dir 		: serviceDeployConfig.MasterPath,
 		stdout_logfile 			: serviceDeployConfig.BaseDir + DIR_SEPARATOR + "super_visor_stdout.log",
 		stderr_logfile 			: serviceDeployConfig.BaseDir + DIR_SEPARATOR + "super_visor_stderr.log",
 		process_name : service.Name,
 	}
+	cicdManager.Option.Log.Info("step 3 : create superVisor conf file.")
 	//替换配置文件中的动态值，并生成配置文件
 	serviceConfFileContent := serviceSuperVisor.ReplaceConfTemplate(superVisorReplace)
 	//将已替换好的文件，生成一个新的配置文件
-	serviceSuperVisor.CreateServiceConfFile(serviceConfFileContent)
+	err = serviceSuperVisor.CreateServiceConfFile(serviceConfFileContent)
+	if err != nil{
+		return cicdManager.DeployOneServiceFailed(publish,err.Error())
+	}
 	//读取该服务自己的配置文件
-	serviceSelfConfigTmpFileDir := newGitCodeDir + DIR_SEPARATOR + serviceDeployConfig.GitCloneTmpDirName
-	MyPrint("read file:"+serviceSelfConfigTmpFileDir)
+	serviceSelfConfigTmpFileDir := newGitCodeDir + DIR_SEPARATOR + serviceDeployConfig.ConfigTmpFileName
+	_ ,err  = FileExist(serviceSelfConfigTmpFileDir)
+	if err != nil{
+		return cicdManager.DeployOneServiceFailed(publish,"serviceSelfConfigTmpFileDir CheckFileIsExist err:"+err.Error() )
+	}
+	cicdManager.Option.Log.Info("read file:"+serviceSelfConfigTmpFileDir)
 	//读取模板文件内容
 	serviceSelfConfigTmpFileContent,err := ReadString(serviceSelfConfigTmpFileDir)
 	if err != nil{
-		ExitPrint("read file err ,"+err.Error())
+		return cicdManager.DeployOneServiceFailed(publish,err.Error())
 	}
 	//开始替换 服务自己配置文件中的，实例信息，如：IP PORT
 	serviceSelfConfigTmpFileContentNew := cicdManager.ReplaceInstance(serviceSelfConfigTmpFileContent,service.Name,server.Env)
@@ -260,24 +352,30 @@ func(cicdManager *CicdManager)DeployOneService(server Server , serviceDeployConf
 	//}
 
 	//将master软链 指向 上面刚刚clone下的最新代码上
-	MyPrint("os.Symlink:",newGitCodeDir , " to ",serviceMasterPath)
-	pathExist ,_ := PathExists(serviceMasterPath)
-	if pathExist{
-		MyPrint("master path exist , so need del .",serviceMasterPath)
-		err = os.Remove(serviceMasterPath)
+	cicdManager.Option.Log.Info("step 5 : master os.Symlink:" + newGitCodeDir  +  " to " + serviceDeployConfig.MasterPath)
+	_,err = PathExists(serviceDeployConfig.MasterPath)
+	if err != nil{
+		cicdManager.Option.Log.Info("master path exist , so need del ." + serviceDeployConfig.MasterPath)
+		err = os.Remove(serviceDeployConfig.MasterPath)
 		if err != nil{
-			MyPrint("os.Remove ",serviceMasterPath, " err:",err)
+			return cicdManager.DeployOneServiceFailed(publish, "os.Remove " + serviceDeployConfig.MasterPath +  " err:" +err.Error())
 		}
 	}
 
-	err = os.Symlink(newGitCodeDir, serviceMasterPath)
+	err = os.Symlink(newGitCodeDir, serviceDeployConfig.MasterPath)
 	if err != nil{
-		ExitPrint("os.Symlink err :",err)
+		return cicdManager.DeployOneServiceFailed(publish,"os.Symlink err :" + err.Error() )
 	}
 	cicdManager.Option.PublicManager.UpStatus(publish,2)
-	return
+
+	ExitPrint("finish one.")
+	return nil
 }
 
+func (cicdManager *CicdManager)DeployOneServiceFailed(publish model.CICDPublish ,errMsg string)error{
+	cicdManager.Option.PublicManager.UpStatus(publish,3)
+	return cicdManager.MakeError(errMsg)
+}
 
 func (cicdManager *CicdManager)StartHttp(staticDir string){
 	//HttpZapLog = zapLog
@@ -387,13 +485,18 @@ func (cicdManager *CicdManager)GetSuperVisorList(c *gin.Context){
 		//生成该服务的，superVisor 配置文件
 		superVisorOption := SuperVisorOption{
 			Ip:	server.OutIp,
-			Port: cicdManager.Option.Config.SuperVisor.RpcPort,
+			RpcPort: cicdManager.Option.Config.SuperVisor.RpcPort,
 			ConfTemplateFile: cicdManager.Option.Config.SuperVisor.ConfTemplateFile,
 			ServiceName : "" ,
 			ConfDir: cicdManager.Option.Config.SuperVisor.ConfDir,
 		}
-		serviceSuperVisor := NewSuperVisor(superVisorOption)
-		err := serviceSuperVisor.InitXMLRpc()
+		serviceSuperVisor ,err:= NewSuperVisor(superVisorOption)
+		if err != nil {
+			MyPrint("NewSuperVisor err:",err)
+			serverStatus[server.Id] = 4
+			continue
+		}
+		err = serviceSuperVisor.InitXMLRpc()
 		if err != nil {
 			MyPrint("serviceSuperVisor InitXMLRpc err:",err)
 			serverStatus[server.Id] = 4
@@ -444,51 +547,57 @@ func (cicdManager *CicdManager)GetSuperVisorList(c *gin.Context){
 	MyPrint("json err:",err)
 	c.String(200 , string(str) )
 }
-
-func pathNotExistCreate(path string){
-	pathExist ,_ := PathExists(path)
-	//fmt.Print(err)
-	if !pathExist {
+//如果一个路径不存在
+func pathNotExistCreate(path string)error{
+	_ , err := PathExists(path)
+	if err == nil{//目录存在
+		return nil
+	}
+	if os.IsNotExist(err) {//目录不存在
 		//创建一个目录
-		err := os.Mkdir(path, 0777)
+		err = os.Mkdir(path, 0777)
 		fmt.Println("create path:",path)
 		if err != nil {
 			fmt.Println("create path failed , err:",err)
 		}
-	}else{
-		fmt.Println("path :" + path + " exist , no need create.")
+		//return err
+	}else{//其它错误
+	//	fmt.Println("path :" + path + " exist , no need create.")
+	//	return err
 	}
+	return err
 }
 
-func ExecShellCommand(command string ,argc string)string{
-	//shellCommand := command + " " + argc
-	c := exec.Command(command, argc)
-
-	output, err := c.CombinedOutput()
-	if err != nil{
-		fmt.Println("exec.Command err:",err)
-		return ""
-	}
-	outStr := string(output)
-	outArr := strings.Split(outStr,"\n")
-
-	return outArr[1]
-}
-
-func ExecShellFile(shellFile string ,argc string)string{
+func ExecShellFile(shellFile string ,argc string)(string,error){
 	MyPrint("ExecShellFile:",shellFile , " ", argc)
 	shellCommand := shellFile + " " + argc
 	c := exec.Command("sh", "-c", shellCommand)
 
 	output, err := c.CombinedOutput()
 	if err != nil{
-		fmt.Println("exec.Command err:",err)
+		MyPrint("exec.Command err:",err)
+		return "",err
 	}
 	outStr := string(output)
 	outArr := strings.Split(outStr,"\n")
 
-	return outArr[1]
+	return outArr[1],nil
 }
+
+//func ExecShellCommand(command string ,argc string)string{
+//	//shellCommand := command + " " + argc
+//	c := exec.Command(command, argc)
+//
+//	output, err := c.CombinedOutput()
+//	if err != nil{
+//		fmt.Println("exec.Command err:",err)
+//		return ""
+//	}
+//	outStr := string(output)
+//	outArr := strings.Split(outStr,"\n")
+//
+//	return outArr[1]
+//}
 
 //func GitCloneAndGetLastCommitIdByShell(serviceGitClonePath string,serviceName string,gitCloneUrl string)string{
 //	argc := gitCloneUrl + " " + serviceGitClonePath + " " +  serviceName

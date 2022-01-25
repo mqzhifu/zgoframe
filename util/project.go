@@ -17,7 +17,7 @@ type Project struct {
 	Id 		int			`json:"id"`
 	Name	string		`json:"name"`
 	Desc 	string		`json:"desc"`
-	Key 	string		`json:"key"`
+	//Key 	string		`json:"key"`
 	Type 	int			`json:"type"`
 	SecretKey string 	`json:"secretKey"`
 	Status  int 		`json:"status"`
@@ -69,7 +69,7 @@ func (projectManager *ProjectManager)GetFromDb()error{
 			Status	: v.Status,
 			Name	: v.Name,
 			Desc	: v.Desc,
-			Key		: v.Key,
+			//Key		: v.Key,
 			Type	: v.Type,
 			Git		: v.Git,
 			SecretKey: v.SecretKey,
@@ -92,9 +92,9 @@ func (projectManager *ProjectManager) GetById(id int)(Project,bool){
 	return one,true
 }
 
-func (projectManager *ProjectManager) GetByKey(name string)(project Project,empty bool){
+func (projectManager *ProjectManager) GetByName(name string)(project Project,empty bool){
 	for _,v:= range projectManager.Pool{
-		if v.Key == name{
+		if v.Name == name{
 			return v,false
 		}
 	}

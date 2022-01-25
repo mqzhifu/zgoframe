@@ -2,6 +2,7 @@ package util
 
 import (
 	"bufio"
+	"errors"
 	"io"
 	"io/ioutil"
 	"os"
@@ -9,23 +10,40 @@ import (
 )
 
 //检查一个文件是否已存在
-func CheckFileIsExist(filename string) bool {
-	var exist = true
-	if _, err := os.Stat(filename);os.IsNotExist(err){
-		exist = false
+func FileExist(filename string) (os.FileInfo,error) {
+	if filename == ""{
+		msg := "filename empty"
+		return nil,errors.New(msg)
 	}
-	return exist
+	fd, err := os.Stat(filename)
+	if err != nil{
+		if os.IsNotExist(err){
+			return nil,errors.New(filename+":IsNotExist")
+		}
+		return nil,err
+	}
+	if fd.IsDir(){
+		return fd,errors.New(filename+":is dir")
+	}
+	return fd,nil
 }
 
-func PathExists(path string) (bool, error) {
-	_, err := os.Stat(path)
-	if err == nil {
-		return true, nil
+func PathExists(path string) (os.FileInfo, error) {
+	if path == ""{
+		msg := "path empty"
+		return nil,errors.New(msg)
 	}
-	if os.IsNotExist(err) {
-		return false, nil
+	fd, err := os.Stat(path)
+	if err != nil{
+		if os.IsNotExist(err){
+			return nil,err
+		}
+		return nil,err
 	}
-	return false, err
+	if !fd.IsDir(){
+		return fd,errors.New(path+":is not dir")
+	}
+	return fd,nil
 }
 
 //打开一个文件，并按照换行符 读取到一个数组中

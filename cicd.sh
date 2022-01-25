@@ -10,9 +10,10 @@ cd $SERVICE_GIT_CLONE_PATH
 
 rm -rf ./*
 
+#echo "clone $PROJECT_GIT_URL $SERVICE_NAME"
+git clone $PROJECT_GIT_URL $SERVICE_NAME
 
-git clone $PROJECT_GIT_URL
-
+#echo "cd $SERVICE_GIT_CLONE_PATH/$SERVICE_NAME"
 cd $SERVICE_GIT_CLONE_PATH/$SERVICE_NAME
 
 #根据git生成一个项目的目录名称

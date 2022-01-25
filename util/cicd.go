@@ -342,22 +342,37 @@ func(cicdManager *CicdManager)DeployOneService(server Server , serviceDeployConf
 	newConfig := newGitCodeDir + DIR_SEPARATOR + serviceDeployConfig.ConfigFileName
 	newConfigFile ,_:= os.Create(newConfig)
 	newConfigFile.Write([]byte(serviceSelfConfigTmpFileContentNew))
-
+	//ExitPrint(11)
 	//先执行 服务自带的 shell 预处理
-	//if serviceCICDConfig.System.Command != ""{
-	//	ExecShellCommand(serviceCICDConfig.System.Command,"")
-	//}
-	//
-	//if serviceCICDConfig.System.Build != ""{
-	//	ExecShellCommand(serviceCICDConfig.System.Build,"")
-	//}
-	//
+	cicdManager.Option.Log.Info("step 6.1 : project pre command "+serviceCICDConfig.System.Command)
+	//    /usr/local/Cellar/go/1.16.5/bin/
+	ExecShellCommandPre := "cd "+newGitCodeDir + " ; pwd ; "
+	//ExecShellCommandPre := " ls -l "
+	if serviceCICDConfig.System.Command != ""{
+		output,err := ExecShellCommand(ExecShellCommandPre + serviceCICDConfig.System.Command ,"")
+		if err != nil{
+			return cicdManager.DeployOneServiceFailed(publish, "ExecShellCommand err "  +err.Error())
+		}
+		MyPrint(output)
+	}
+	//编译项目代码
+	cicdManager.Option.Log.Info("step 6.2 : project build command "+serviceCICDConfig.System.Build)
+	if serviceCICDConfig.System.Build != ""{
+		ReplaceServiceBuildCommand  := strings.Replace(serviceCICDConfig.System.Build,"#service_name#",serviceDeployConfig.Name,-1)
+		output,err := ExecShellCommand(ExecShellCommandPre + ReplaceServiceBuildCommand,"")
+		if err != nil{
+			return cicdManager.DeployOneServiceFailed(publish, "ExecShellCommand err "  +err.Error())
+		}
+		MyPrint(output)
+	}
+	ExitPrint(33)
+	//cicdManager.Option.Log.Info("step 6.3 :  project testUnit command "+serviceCICDConfig.System.Command)
 	//if serviceCICDConfig.System.TestUnit != ""{
 	//	ExecShellCommand(serviceCICDConfig.System.TestUnit,"")
 	//}
 
 	//将master软链 指向 上面刚刚clone下的最新代码上
-	cicdManager.Option.Log.Info("step 5 : master dir softLink , os.Symlink:" + newGitCodeDir  +  " to " + serviceDeployConfig.MasterPath)
+	cicdManager.Option.Log.Info("step 6 : master dir softLink , os.Symlink:" + newGitCodeDir  +  " to " + serviceDeployConfig.MasterPath)
 	_,err = PathExists(serviceDeployConfig.MasterPath)
 	if err == nil{
 		cicdManager.Option.Log.Info("master path exist , so need del ." + serviceDeployConfig.MasterPath)
@@ -598,20 +613,21 @@ func ExecShellFile(shellFile string ,argc string)(string,error){
 	return outArr[1],nil
 }
 
-//func ExecShellCommand(command string ,argc string)string{
-//	//shellCommand := command + " " + argc
-//	c := exec.Command(command, argc)
-//
-//	output, err := c.CombinedOutput()
-//	if err != nil{
-//		fmt.Println("exec.Command err:",err)
-//		return ""
-//	}
-//	outStr := string(output)
-//	outArr := strings.Split(outStr,"\n")
-//
-//	return outArr[1]
-//}
+func ExecShellCommand(command string ,argc string)(string,error){
+	MyPrint("ExecShellCommand:",command,argc)
+	//shellCommand := command + " " + argc
+	c := exec.Command("bash","-c",command)
+
+	output, err := c.CombinedOutput()
+	if err != nil{
+		fmt.Println("exec.Command err:",err)
+		return "",err
+	}
+	outStr := string(output)
+	//outArr := strings.Split(outStr,"\n")
+	//return outArr[1],nil
+	return outStr,nil
+}
 
 //func GitCloneAndGetLastCommitIdByShell(serviceGitClonePath string,serviceName string,gitCloneUrl string)string{
 //	argc := gitCloneUrl + " " + serviceGitClonePath + " " +  serviceName

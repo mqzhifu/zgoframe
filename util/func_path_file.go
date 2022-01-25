@@ -35,7 +35,7 @@ func PathExists(path string) (os.FileInfo, error) {
 	}
 	fd, err := os.Stat(path)
 	if err != nil{
-		if os.IsNotExist(err){
+		if os.IsNotExist(err){//这个不能动，因为外层要使用os.IsNotExist 继续判断
 			return nil,err
 		}
 		return nil,err

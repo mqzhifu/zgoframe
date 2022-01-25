@@ -238,6 +238,10 @@ func(cicdManager *CicdManager)DeployServiceCheck(server Server , serviceDeployCo
 }
 //部署一个服务
 func(cicdManager *CicdManager)DeployOneService(server Server , serviceDeployConfig ServiceDeployConfig ,  service Service)error{
+	if service.Name != "Zgoframe"{
+		MyPrint("service name != Zgoframe")
+		return nil
+	}
 	cicdManager.Option.Log.Info("DeployOneService:" + server.OutIp + " " + server.Env + " "+service.Name)
 	//创建发布记录
 	publish := cicdManager.Option.PublicManager.InsertOne(service,server)
@@ -319,6 +323,7 @@ func(cicdManager *CicdManager)DeployOneService(server Server , serviceDeployConf
 	if err != nil{
 		return cicdManager.DeployOneServiceFailed(publish,err.Error())
 	}
+	cicdManager.Option.Log.Info("step 4 : create project self conf file.")
 	//读取该服务自己的配置文件
 	serviceSelfConfigTmpFileDir := newGitCodeDir + DIR_SEPARATOR + serviceDeployConfig.ConfigTmpFileName
 	_ ,err  = FileExist(serviceSelfConfigTmpFileDir)
@@ -352,9 +357,18 @@ func(cicdManager *CicdManager)DeployOneService(server Server , serviceDeployConf
 	//}
 
 	//将master软链 指向 上面刚刚clone下的最新代码上
-	cicdManager.Option.Log.Info("step 5 : master os.Symlink:" + newGitCodeDir  +  " to " + serviceDeployConfig.MasterPath)
+	cicdManager.Option.Log.Info("step 5 : master dir softLink , os.Symlink:" + newGitCodeDir  +  " to " + serviceDeployConfig.MasterPath)
 	_,err = PathExists(serviceDeployConfig.MasterPath)
-	if err != nil{
+	if err == nil{
+		cicdManager.Option.Log.Info("master path exist , so need del ." + serviceDeployConfig.MasterPath)
+		err = os.Remove(serviceDeployConfig.MasterPath)
+		if err != nil{
+			return cicdManager.DeployOneServiceFailed(publish, "os.Remove " + serviceDeployConfig.MasterPath +  " err:" +err.Error())
+		}
+	}else if  os.IsNotExist(err){
+
+	}else{
+		//return cicdManager.DeployOneServiceFailed(publish,"unkonw err:"+err.Error())
 		cicdManager.Option.Log.Info("master path exist , so need del ." + serviceDeployConfig.MasterPath)
 		err = os.Remove(serviceDeployConfig.MasterPath)
 		if err != nil{

@@ -1,6 +1,7 @@
 package util
 
 import (
+	"bytes"
 	"errors"
 	"github.com/abrander/go-supervisord"
 	"os"
@@ -89,18 +90,21 @@ func(superVisor *SuperVisor)ReplaceConfTemplate(replaceSource SuperVisorReplace)
 	key = superVisor.Option.Separator+"process_name"+superVisor.Option.ServiceNamePrefix + superVisor.Option.Separator
 	content = strings.Replace(content,key,replaceSource.process_name,-1)
 
+	//ExitPrint(content)
+
 	return content
 }
 
 func(superVisor *SuperVisor)CreateServiceConfFile(content string)error{
-	fileName := superVisor.Option.ConfDir +STR_SEPARATOR +  superVisor.Option.ServiceName + ".ini"
+	fileName := superVisor.Option.ConfDir +DIR_SEPARATOR +  superVisor.Option.ServiceName + ".ini"
 	file ,err := os.Create(fileName)
 	MyPrint("os.Create:" ,fileName)
 	if err!= nil{
 		MyPrint("os.Create :",fileName , " err:",err)
 		return err
 	}
-
-	file.Write([]byte(content))
+	contentByte := bytes.Trim([]byte(content),"\x00")//NUL
+	file.Write(contentByte)
+	file.Close()
 	return nil
 }

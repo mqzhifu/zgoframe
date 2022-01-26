@@ -6,6 +6,7 @@ import (
 	"math/rand"
 	"net"
 	"os"
+	"os/exec"
 	"reflect"
 	"strconv"
 	"time"
@@ -113,6 +114,34 @@ func GetLocalIp()(ip string,err error){
 	}
 
 	return ip,nil
+}
+
+func PingByShell(host string,timeOut string)bool{
+	cmd := exec.Command("ping", host, "-c", timeOut)
+	//fmt.Println("NetWorkStatus Start:", time.Now().Unix())
+	err := cmd.Run()
+	//fmt.Println("NetWorkStatus End  :", time.Now().Unix())
+	if err != nil {
+		fmt.Println(err.Error())
+		return false
+	} else {
+		fmt.Println("Net Status , OK")
+	}
+	return true
+
+}
+
+func CheckIpPort(ip string ,port string ,timeout int64)bool {
+	timeoutDuration := time.Duration(timeout) * time.Second
+	//t1 := time.Now()
+	_, err := net.DialTimeout("tcp", ip+":"+port, timeoutDuration)
+	//fmt.Println("waist time :", time.Now().Sub(t1))
+	if err != nil {
+		//fmt.Println("Site unreachable, error: ", err)
+		return false
+	}
+	return true
+	//fmt.Println("tcp server is ok")
 }
 
 //func MapCovertStruct(inMap map[string]interface{},outStruct interface{})interface{}{

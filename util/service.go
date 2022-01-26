@@ -41,7 +41,7 @@ type Service struct {
 	SecretKey	string			`json:"secret_key"`
 	Git 		string			`json:"git"`
 	LBType 		int				`json:"lb_type"`
-
+	Deploy 		int 			`json:"deploy"`
 	List 		[]*ServiceNode	`json:"-"`
 
 	Log			*zap.Logger		`json:"-"`

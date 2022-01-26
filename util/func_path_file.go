@@ -112,3 +112,19 @@ func GetFileListByDir(path string)[]string {
 	}
 	return fileList
 }
+
+func ForeachDir(path string)(dirList []string,err error) {
+	//var fileList []string
+	fs,err := ioutil.ReadDir(path)
+	if err != nil{
+		return dirList,errors.New("GetFileListByDir err:" + err.Error())
+		//return fileList
+	}
+	for _,file:=range fs{
+		if file.IsDir(){
+			//fmt.Println(path+file.Name())
+			dirList = append(dirList,file.Name())
+		}
+	}
+	return dirList,nil
+}

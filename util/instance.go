@@ -21,6 +21,7 @@ type Instance struct {
 	Env 		string	`json:"env"`
 	User 		string	`json:"user"`
 	Ps 			string	`json:"ps"`
+	Status		int		`json:"status"`
 }
 
 //var APP_TYPE_MAP = map[int]string{

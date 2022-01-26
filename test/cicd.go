@@ -6,7 +6,6 @@ import (
 )
 
 func Cicd(){
-
 	//path1 := "/data/www/golang/src/logslave.go"
 	//path2 := "/data/www/golang/src/metaverse-api"
 	//file_fd, err1 := os.Stat(path1)
@@ -36,6 +35,7 @@ func Cicd(){
 	publicManager := util.NewCICDPublicManager(global.V.Gorm)
 
 	op := util.CicdManagerOption{
+		HttpPort		: "1111",
 		ServerList 		: serverList,
 		Config			: cicdConfig,
 		ServiceList		: global.V.ServiceManager.Pool,

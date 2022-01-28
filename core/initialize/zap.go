@@ -1,6 +1,7 @@
 package initialize
 
 import (
+	"errors"
 	zaprotatelogs "github.com/lestrrat-go/file-rotatelogs"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -12,31 +13,43 @@ import (
 	"zgoframe/util"
 )
 
-//以下均是，zap-log 初始化
-var level zapcore.Level
-var zapDir string
-var zapFileName string
-var zapInConsole int
-func GetNewZapLog(alert *util.AlertPush,moduleName string,FileName string,InConsole int) (logger *zap.Logger,err error) {
-	zapDir = global.C.Zap.Dir + "/" + moduleName
-	zapFileName = global.C.Zap.LinkName +  "_" + FileName
+////以下均是，zap-log 初始化
+//var level zapcore.Level
+//var zapDir string
+//var zapFileName string
+//var zapInConsole int
 
 
-	util.MyPrint("GetNewZapLog:",moduleName ,FileName ,InConsole )
+func GetNewZapLog(alert *util.AlertPush , configZap global.Zap,projectId int) (logger *zap.Logger,err error) {
+	if configZap.ModuleName != ""{
+		configZap.BaseDir += "/" + configZap.ModuleName
+	}
 
-	zapInConsole = InConsole
-	_,err  = util.PathExists(zapDir)
+	if configZap.LinkName == ""{
+		return  nil,errors.New("linkName is empty")
+	}
+
+	if configZap.Level == ""{
+		return  nil,errors.New("Level is empty")
+	}
+
+	configZap.FileName = configZap.LinkName +  "_" + configZap.FileName
+
+	util.MyPrint("GetNewZapLog:",configZap.ModuleName ,configZap.FileName  ,configZap.LogInConsole )
+
+	_,err  = util.PathExists(configZap.BaseDir)
 	if err != nil { // 判断是否有Director文件夹
-		util.MyPrint("create directory:", zapDir)
-		err = os.Mkdir(zapDir, os.ModePerm)
+		util.MyPrint("create directory:", configZap.BaseDir)
+		err = os.Mkdir(configZap.BaseDir, os.ModePerm)
 		if err != nil{
 			return nil,err
 		}
 	}
 
-	util.MyPrint("zap.dir:"+zapDir + " "+zapFileName)
+	util.MyPrint("zap.dir:"+configZap.BaseDir + " "+configZap.FileName)
 
-	switch global.C.Zap.Level { // 初始化配置文件的Level
+	var level zapcore.Level
+	switch configZap.Level { // 初始化配置文件的Level
 		case "debug":
 			level = zap.DebugLevel
 		case "info":
@@ -55,63 +68,69 @@ func GetNewZapLog(alert *util.AlertPush,moduleName string,FileName string,InCons
 			level = zap.InfoLevel
 	}
 
+	configZap.LevelInt8 = int8(level)
+
+	//每次输出日志后，回调钩子，主要用来报警
 	hook := zap.Hooks(func(entry zapcore.Entry) error {
-		if !global.C.Zap.AutoAlert{
-			//alert.Push()
+		if !configZap.AutoAlert{//未开始自动报警
 			return nil
 		}
+		//以下级别日志，均要报警
 		num := zap.ErrorLevel | zap.PanicLevel |  zap.FatalLevel |  zap.DPanicLevel
 		if entry.Level & num == 0{
-			global.V.AlertPush.Push(util.AlertMsg{})
+			alert.Push(int(entry.Level),entry.Message)
 		}
 		return nil
 	})
-
-	if level == zap.DebugLevel || level == zap.ErrorLevel {
-		logger = zap.New(getEncoderCore(), zap.AddStacktrace(level),hook)
+	//如果是非正常日志，需要加入调用栈的详细信息，方便查错
+	if level == zap.InfoLevel {
+		logger = zap.New(getEncoderCore(configZap),hook)
 	} else {
-		logger = zap.New(getEncoderCore(),hook)
+		logger = zap.New(getEncoderCore(configZap), zap.AddStacktrace(level),hook)
 	}
-	if global.C.Zap.ShowLine{
+	//每行日志，都添加上：最后调用的文件，方便定位
+	if configZap.ShowLine{
 		logger = logger.WithOptions(zap.AddCaller())
 	}
-	logger = logger.With(zap.Int("appId", global.V.Project.Id))
-	//logger.With(zap.String("appId","5"))
+	//所有的日志都给加一个公共的项：projectId，方便给日志分类规档
+	logger = logger.With(zap.Int("projectId", projectId))
 	return logger,nil
 }
 
+
 // getEncoderCore 获取Encoder的zapcore.Core
-func getEncoderCore() (core zapcore.Core) {
-	writer, err := GetWriteSyncer() // 使用file-rotatelogs进行日志分割
+func getEncoderCore(configZap global.Zap) (core zapcore.Core) {
+	writer, err := GetWriteSyncer(configZap) // 使用file-rotatelogs进行日志分割
 	if err != nil {
 		util.MyPrint("Get Write Syncer Failed err:", err.Error())
 		return
 	}
-	return zapcore.NewCore(getEncoder(), writer, level)
+	return zapcore.NewCore(getEncoder(configZap), writer, zapcore.Level(configZap.LevelInt8))
 }
 
 // getEncoder 获取zapcore.Encoder
-func getEncoder() zapcore.Encoder {
+func getEncoder(configZap global.Zap) zapcore.Encoder {
 	if global.C.Zap.Format == "json" {
-		return zapcore.NewJSONEncoder(getEncoderConfig())
+		return zapcore.NewJSONEncoder(getEncoderConfig(configZap))
+	}else{
+		return zapcore.NewConsoleEncoder(getEncoderConfig(configZap))
 	}
-	return zapcore.NewConsoleEncoder(getEncoderConfig())
 }
 
-func getEncoderConfig() (config zapcore.EncoderConfig) {
+func getEncoderConfig(configZap global.Zap) (config zapcore.EncoderConfig) {
 	config = zapcore.EncoderConfig{
-		MessageKey:     "message",
-		LevelKey:       "level",
-		TimeKey:        "time",
-		NameKey:        "logger",
-		CallerKey:      "caller",
-		StacktraceKey:  global.C.Zap.StacktraceKey,
-		LineEnding:     zapcore.DefaultLineEnding,
-		EncodeLevel:    zapcore.LowercaseLevelEncoder,
-		EncodeTime:     CustomTimeEncoder,
-		EncodeDuration: zapcore.SecondsDurationEncoder,
+		MessageKey		: "message",
+		LevelKey		: "level",
+		TimeKey			: "time",
+		NameKey			: "logger",
+		CallerKey		: "caller",
+		StacktraceKey	: configZap.StacktraceKey,
+		LineEnding		: zapcore.DefaultLineEnding,
+		EncodeLevel		: zapcore.LowercaseLevelEncoder,
+		EncodeTime		: CustomTimeEncoder,
+		EncodeDuration	: zapcore.SecondsDurationEncoder,
 		//EncodeCaller:   zapcore.FullCallerEncoder,
-		EncodeCaller: diy,
+		EncodeCaller	: diy,
 		ConsoleSeparator: " | ",
 	}
 	switch {
@@ -141,18 +160,20 @@ func CustomTimeEncoder(t time.Time, enc zapcore.PrimitiveArrayEncoder) {
 	enc.AppendString(t.Format(global.C.Zap.Prefix + "2006-01-02 - 15:04:05.000"))
 }
 
-func GetWriteSyncer() (zapcore.WriteSyncer, error) {
+func GetWriteSyncer(configZap global.Zap) (zapcore.WriteSyncer, error) {
+	//创建一个：文件写入器，带翻滚功能
 	fileWriter, err := zaprotatelogs.New(
-		path.Join(zapDir, "%Y-%m-%d.log"),
-		zaprotatelogs.WithLinkName(zapFileName),
+		path.Join(configZap.BaseDir, "%Y-%m-%d.log"),
+		zaprotatelogs.WithLinkName(configZap.FileName),
 		zaprotatelogs.WithMaxAge(7*24*time.Hour),
 		zaprotatelogs.WithRotationTime(24*time.Hour),
 	)
-	if zapInConsole == 1 {
+	if configZap.LogInConsole {//日志同时输出到屏幕
 		return zapcore.NewMultiWriteSyncer(zapcore.AddSync(os.Stdout), zapcore.AddSync(fileWriter)), err
 	}else{
 		return zapcore.NewMultiWriteSyncer( zapcore.AddSync(fileWriter)), err
 	}
+
 	return zapcore.AddSync(fileWriter), err
 }
 //以上均是，zap-log 初始化

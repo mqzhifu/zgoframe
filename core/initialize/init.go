@@ -57,8 +57,8 @@ func (initialize * Initialize)Start()error{
 	global.C = config		//全局变量
 	//---config end -----
 
-	//mysql
-	//这里按说不应该先初始化MYSQL，应该最早初始化LOG类，并且不一定所有项目都用MYSQL，但是项目是基于多APP/SERVICE，强依赖app_id service_id
+	//初始化：mysql
+	//这里按说不应该先初始化MYSQL，应该最早初始化LOG类，并且不一定所有项目都用MYSQL，但是项目是基于多APP/SERVICE，强依赖 project_id
 	if global.C.Mysql.Status != global.CONFIG_STATUS_OPEN{
 		errMsg := "not open mysql db, need read app_id from db."
 		util.MyPrint(errMsg)
@@ -82,12 +82,15 @@ func (initialize * Initialize)Start()error{
 	}
 	global.V.RootDir = initialize.Option.RootDir
 	util.MyPrint("global.V.RootDir:",global.V.RootDir)
-	//预/报警->推送器，这里是推送到3方，如：prometheus,ps:这个是必须优先zap日志类优化处理，因为zap里的钩子-有用
+	//预/报警->推送器，这里是推送到3方，如：prometheus,ps:这个是必须优先zap日志类优化处理，因为zap里的<钩子>有用到
 	if global.C.Alert.Status == global.CONFIG_STATUS_OPEN{
 		global.V.AlertPush = util.NewAlertPush(global.C.Alert.Ip,global.C.Alert.Port,global.C.Alert.Uri)
 	}
 	//日志
-	global.V.Zap , err  = GetNewZapLog(global.V.AlertPush,"main","main",1)
+	configZap := global.C.Zap
+	configZap.FileName = "main"
+	configZap.ModuleName = "main"
+	global.V.Zap , err  = GetNewZapLog(global.V.AlertPush,configZap,global.V.Project.Id)
 	if err != nil{
 		util.MyPrint("GetNewZapLog err:",err)
 		return err
@@ -107,8 +110,11 @@ func (initialize * Initialize)Start()error{
 			return err
 		}
 	}
+	configZap = global.C.Zap
+	configZap.FileName = "http"
+	configZap.ModuleName = "http"
 	//Http log zap 这里单独再开个zap 实例，用于专门记录http 请求
-	HttpZap , err  := GetNewZapLog(global.V.AlertPush,"http","http",0)
+	HttpZap , err  := GetNewZapLog(global.V.AlertPush,configZap,global.V.Project.Id)
 	if err != nil{
 		util.MyPrint("GetNewZapLog err:",err)
 		return err
@@ -268,12 +274,12 @@ func InitPath(rootDir string)(rootDirName string,err error){
 	rootDirName = pwdArr[len(pwdArr)-1]//获取路径数组最后一个元素：当前路径的文件夹名
 	//option.RootDirName = rootDirName
 	//global.V.RootDir = option.RootDir
-	//这里要求，项目表里配置的key与项目目录名必须一致.
+	//这里要求，DB中项目记录里：name 与项目目录名必须一致，防止有人错用/盗用projectId
 	projectNameByte := util.CamelToSnake2([]byte(global.V.Project.Name ))
 	projectName := util.StrFirstToLower(string(projectNameByte))
 	if rootDirName != projectName {
 		//方便测试，先注释掉
-		//return rootDirName,errors.New("mainDirName != app name , "+rootDirName + " ProjectKey:"+  global.V.Project.Key + " ," + projectName)
+		return rootDirName,errors.New("mainDirName != app name , rootDirName : "+rootDirName + " , ProjectName:"+ projectName )
 	}
 
 	//if global.C.System.ProjectId > 0 {

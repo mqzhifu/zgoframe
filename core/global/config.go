@@ -72,17 +72,21 @@ type Viper struct {
 }
 
 type Zap struct {
-	Status string
-	Level string
-	Dir string
-	ShowLine bool
-	LinkName string
-	LogInConsole bool
-	Format string
-	StacktraceKey string
-	Prefix string
+	Status 		string
+	Level 		string
+	LevelInt8	int8
+	BaseDir		string
+	ShowLine 	bool
+	LinkName 	string
+	Format 		string
+
+	Prefix 		string
 	EncodeLevel string
-	AutoAlert bool
+	AutoAlert 	bool
+	StacktraceKey string
+	LogInConsole bool
+	ModuleName   string	//使用设定，不在配置文件中
+	FileName   string	//使用设定，不在配置文件中
 }
 
 type Captcha struct {

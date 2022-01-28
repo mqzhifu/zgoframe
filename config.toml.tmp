@@ -16,17 +16,18 @@ status = "open"
 watch = "open"
 
 [zap]
-status = "open"
-level = "info"
-dir = "#log_dir#"
-showLine = true
-linkName = "latest_log"
-LogInConsole = true
-format = ""
-StacktraceKey = "stacktrace"
-Prefix = ""
-encodeLevel = "LowercaseLevelEncoder"
-autoAlert = true
+status          = "open"
+level           = "info"
+baseDir         = "#log_dir#"
+showLine        = true
+softLinkFileName= "latest_log"
+LogInConsole    = true
+StacktraceKey   = "stacktrace"
+format          = ""
+moduleName      = ""
+Prefix          = ""
+encodeLevel     = "LowercaseLevelEncoder"
+autoAlert       = true
 
 [redis]
 status = "open"

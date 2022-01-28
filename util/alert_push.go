@@ -27,10 +27,12 @@ func NewAlertPush( ip string , port string, uri string)*AlertPush{
 	return alert
 }
 type AlertMsg struct {
+	Level 		int
+	Content 	string
 	Lables 		map[string]string
 	Annotations map[string]string
-	StartsAt string
-	EndsAt string
+	StartsAt 	string
+	EndsAt 		string
 	GeneratorURL string
 }
 //[
@@ -44,9 +46,13 @@ type AlertMsg struct {
 //	...
 //]
 
-func(alertPush *AlertPush) Push(alertMsg AlertMsg){
+func(alertPush *AlertPush) Push(level int ,content string){
+	alertMsg :=  AlertMsg{}
 	//MyPrint("program has error,need push alert....")
 	return
+
+	alertMsg.Level = level
+	alertMsg.Content = content
 
 	str ,err := json.Marshal(alertMsg)
 

@@ -99,6 +99,7 @@ type CicdManagerOption struct{
 	Config 			ConfigCicd
 	PublicManager 	*CICDPublicManager
 	Log 			*zap.Logger
+	OpDirName 		string
 }
 
 func NewCicdManager(cicdManagerOption CicdManagerOption)(*CicdManager,error){

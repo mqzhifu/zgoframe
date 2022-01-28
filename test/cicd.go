@@ -1,6 +1,7 @@
 package test
 
 import (
+	"os"
 	"zgoframe/core/global"
 	"zgoframe/util"
 )
@@ -17,8 +18,15 @@ func Cicd(){
 		host.toml cicd.sh
 		table:  project instance server cicd_publish
 	*/
+
+	opDirName := "operation"
+	pwd , _ := os.Getwd()//当前路径]
+	opDirFull := pwd + "/" + opDirName
+	util.MyPrint(opDirFull,opDirName)
+
 	cicdConfig := util.ConfigCicd{}
-	configFile := "host" + "." +"toml"
+	configFile := opDirFull + "/host" + "." +"toml"
+
 	//读取配置文件中的内容
 	err := util.ReadConfFile(configFile,&cicdConfig)
 	if err != nil{
@@ -42,6 +50,8 @@ func Cicd(){
 		InstanceManager : instanceManager,
 		PublicManager 	: publicManager,
 		Log				: global.V.Zap,
+		OpDirName		: opDirName,
+
 	}
 
 	cicd ,err := util.NewCicdManager(op)

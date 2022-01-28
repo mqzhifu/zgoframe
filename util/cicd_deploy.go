@@ -21,6 +21,7 @@ type ServiceDeployConfig struct {
 	MasterDirName 		string	//一个服务的线上使用版本-软连目录名称
 	MasterPath			string  //full path + MasterDirName
 	CICDConfFileName 	string	//一个服务自己的需要执行的cicd脚本
+	OpDirName			string	//存放所有：运维工具脚本的目录
 	ConfigTmpFileName 	string	//一个服务的配置文件的模板文件名
 	ConfigFileName 		string	//一个服务的配置文件名,由上面CP
 	GitCloneTmpDirName 	string	//git clone 一个服务的项目代码时，临时存在的目录名
@@ -34,6 +35,7 @@ func(cicdManager *CicdManager)DeployAllService(){
 	cicdManager.Option.Log.Info("DeployAllService:")
 	serviceDeployConfig := ServiceDeployConfig{
 		BaseDir 			: cicdManager.Option.Config.System.ServiceDir,
+		OpDirName 			: "operation",
 		MasterDirName 		: "master",
 		CICDConfFileName 	: "cicd.toml",
 		ConfigTmpFileName	: "config.toml.tmp",
@@ -73,6 +75,11 @@ func(cicdManager *CicdManager)DeployServiceCheck(server Server , serviceDeployCo
 
 	if serviceDeployConfig.GitCloneTmpDirName == ""{
 		errMsg := "GitCloneTmpDirName is empty~"
+		return serviceDeployConfig,errors.New(errMsg)
+	}
+
+	if serviceDeployConfig.OpDirName == ""{
+		errMsg := "OpDirName is empty~"
 		return serviceDeployConfig,errors.New(errMsg)
 	}
 
@@ -163,7 +170,11 @@ func (cicdManager *CicdManager)DeployOneServiceGitCode(serviceDeployConfig Servi
 
 	shellArgc := service.Git + " " + serviceDeployConfig.ClonePath + " " +  service.Name
 	//执行shell 脚本 后：service项目代码已被clone, git 版本号已知了
-	gitLastCommitId ,err  := ExecShellFile(serviceDeployConfig.CICDShellFileName,shellArgc)
+
+	pwd , _ := os.Getwd()//当前路径]
+	opDirFull := pwd + "/" + cicdManager.Option.OpDirName
+
+	gitLastCommitId ,err  := ExecShellFile(opDirFull + "/"+serviceDeployConfig.CICDShellFileName,shellArgc)
 	if err != nil {
 		return "",errors.New("ExecShellFile err:"+err.Error())
 	}
@@ -184,7 +195,7 @@ func (cicdManager *CicdManager)DeployOneServiceGitCode(serviceDeployConfig Servi
 func (cicdManager *CicdManager)DeployOneServiceCICIConfig(newGitCodeDir string,serviceDeployConfig ServiceDeployConfig,server Server)(ConfigServiceCICD,error){
 	cicdManager.Option.Log.Info("step 2:load service CICD config ")
 	//项目自带的CICD配置文件，这里有 服务启动脚本 和 依赖的环境
-	serviceSelfCICDConf := newGitCodeDir + DIR_SEPARATOR + serviceDeployConfig.CICDConfFileName
+	serviceSelfCICDConf := newGitCodeDir + DIR_SEPARATOR + serviceDeployConfig.OpDirName + DIR_SEPARATOR + serviceDeployConfig.CICDConfFileName
 	cicdManager.Option.Log.Info("read file:"+serviceSelfCICDConf)
 	serviceCICDConfig := ConfigServiceCICD{}
 	//读取项目自己的cicd配置文件，并映射到结构体中
@@ -259,9 +270,10 @@ func (cicdManager *CicdManager)DeployOneServiceProjectConfig(newGitCodeDir strin
 
 func (cicdManager *CicdManager)DeployOneServiceCommand(newGitCodeDir string,serviceDeployConfig ServiceDeployConfig,serviceCICDConfig ConfigServiceCICD)(output string ,err error){
 	cicdManager.Option.Log.Info("step 5 : DeployOneServiceCommand.")
-	cicdManager.Option.Log.Info("step 6.1 : project pre command "+serviceCICDConfig.System.Command)
+	//cicdManager.Option.Log.Info("step 6.1 : project pre command "+serviceCICDConfig.System.Command)
 	//    /usr/local/Cellar/go/1.16.5/bin/
-	ExecShellCommandPre := "cd "+newGitCodeDir + " ; pwd ; "
+	workDir := newGitCodeDir + "/" + cicdManager.Option.OpDirName
+	ExecShellCommandPre := "cd "+ workDir + "  ; pwd ; "
 	//ExecShellCommandPre := " ls -l "
 	output1 := ""
 	output2 := ""

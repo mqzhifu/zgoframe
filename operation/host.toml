@@ -1,0 +1,11 @@
+[system]
+env=["local","dev","test","pre","online"]
+
+logDir="/data/logs"
+serviceDir="/data/www/golang/testcicd"
+serviceMasterName="master"
+
+[superVisor]
+rpcPort="9001"
+confTemplateFile="/data/www/golang/src/zgoframe/operation/super_visor.ini"
+confDir="/etc/supervisord.d"

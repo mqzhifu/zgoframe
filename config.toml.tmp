@@ -1,19 +1,19 @@
 [system]
-dbType = "mysql"
-env = ""
-projectId = 1
+dbType       = "mysql"
+env          = "#env#"
+projectId    = 0
 errorMsgFile = "/data/lang.txt"
 
 [jwt]
-status = "open"
-key = "chukong"
+status      = "open"
+key         = "chukong"
 expiresTime = 360000
-bufferTime = 36000
+bufferTime  = 36000
 
 
 [viper]
-status = "open"
-watch = "open"
+status  = "open"
+watch   = "open"
 
 [zap]
 status          = "open"
@@ -30,84 +30,84 @@ encodeLevel     = "LowercaseLevelEncoder"
 autoAlert       = true
 
 [redis]
-status = "open"
-db-number = 1
-ip = "#redis_ip#"
-port = "#redis_ip#"
-password =  '#redis_port#'
+status      = "open"
+db-number   = 1
+ip          = "#redis_ip#"
+port        = "#redis_ip#"
+password    =  '#redis_port#'
 
 [captcha]
-status = "open"
+status       = "open"
 numberLength = 4
-imgWidth = 240
-imgHeight = 80
+imgWidth     = 240
+imgHeight    = 80
 
 
 [http]
-status = "close"
-ip = "127.0.0.1"
-port = "5555"
-staticPath ="/data/www/golang/src/zgoframe/static"
-reqLimitTimes= 100
+status          = "close"
+ip              = "127.0.0.1"
+port            = "5555"
+staticPath      = "/data/www/golang/src/zgoframe/static"
+reqLimitTimes   = 100
 
 [mysql]
 status = "open"
-ip = "#mysql_ip#"
-port = "#mysql_port#"
-config = "charset=utf8mb4&parseTime=True&loc=Local"
-DbName= "test"
-username = "#mysql_user#"
-password = "#mysql_ps#"
-maxIdleConns = 10
-maxOpenConns = 100
-logMode = true
-logZap = false
+ip              = "#mysql_ip#"
+port            = "#mysql_port#"
+config          = "charset=utf8mb4&parseTime=True&loc=Local"
+DbName          = "test"
+username        = "#mysql_user#"
+password        = "#mysql_ps#"
+maxIdleConns    = 10
+maxOpenConns    = 100
+logMode         = true
+logZap          = false
 
 [casbin]
-status = "open"
-modelPath = "/data/www/golang/src/zgoframe/static/data/rbac_model.conf"
+status      = "open"
+modelPath   = "/data/www/golang/src/zgoframe/static/data/rbac_model.conf"
 
 [etcd]
-status = "open"
-ip = "#etcd_ip#"
-port = "#etcd_port#"
-username = "#etcd_user#"
-password = "#etcd_ps#"
-url = ""
+status      = "open"
+ip          = "#etcd_ip#"
+port        = "#etcd_port#"
+username    = "#etcd_user#"
+password    = "#etcd_ps#"
+url         = ""
 
 [alert]
-status = "open"
-host = "#alert_ip#"
-port = "#alert_port#"
-uri = "/api/v2/alerts"
+status  = "open"
+host    = "#alert_ip#"
+port    = "#alert_port#"
+uri     = "/api/v2/alerts"
 
 [metrics]
 status = "close"
 
 [websocket]
-status = "close"
-uri = "/ws"
+status  = "close"
+uri     = "/ws"
 
 [grpc]
-status = "open"
-ip = "127.0.0.1"
-port = "6666"
-servicePackagePrefix = "pb"
+status                  = "open"
+ip                      = "127.0.0.1"
+port                    = "6666"
+servicePackagePrefix    = "pb"
 
 [protobuf]
-basePath="protobuf"
-pbServicePath="pbservice"
-protoPath="proto"
-idMapFileName="map.txt"
+basePath        ="protobuf"
+pbServicePath   ="pbservice"
+protoPath       ="proto"
+idMapFileName   ="map.txt"
 
 [serviceDiscovery]
 status = "open"
 prefix = "/service"
 
 [email]
-status = "open"
-host = "smtp.qq.com"
-port = 465
-from = "78878296@qq.com"
-ps = "mM123456"
+status  = "open"
+host    = "smtp.qq.com"
+port    = 465
+from    = "78878296@qq.com"
+ps      = "mM123456"
 

@@ -45,18 +45,17 @@ func main(){
 		panic(msg  + *env)
 	}
 
-	imUser , myErr := user.Current()
-	util.MyPrint(myErr,imUser.Name," ",imUser.Uid)
+	imUser , _ := user.Current()
+	util.MyPrint("exec script user info , name: "+imUser.Name + " uid: " + imUser.Uid  +  " , gid :"+ imUser.Gid + " ,homeDir:" +imUser.HomeDir)
 
-	util.ExitPrint(111)
 	//u2, _ := user.Lookup(imUser.Name)
 	//util.ExitPrint(u2.Name)
 
-
 	pwd, _ := os.Getwd()//当前路径
-	util.MyPrint("now pwd:"+pwd)
+	util.MyPrint("exec script pwd:"+pwd)
 	//开始初始化模块
 	//主协程的 context
+	util.MyPrint("create main :cancel context")
 	mainCxt,mainCancelFunc := context.WithCancel(context.Background())
 	//初始化模块需要的参数
 	initOption := initialize.InitOption  {

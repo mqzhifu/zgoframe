@@ -77,7 +77,7 @@ type Zap struct {
 	LevelInt8	int8
 	BaseDir		string
 	ShowLine 	bool
-	LinkName 	string
+	SoftLinkFileName 	string
 	Format 		string
 
 	Prefix 		string

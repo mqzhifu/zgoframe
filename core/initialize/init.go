@@ -45,7 +45,7 @@ func (initialize * Initialize)Start()error{
 		ENV				: initialize.Option.Env,
 	}
 
-	util.MyPrint("config option~~ ")
+	util.MyPrint("start CoreInitialize : config option~~ ")
 	util.PrintStruct(initialize.Option,":")
 
 	myViper,config,err := GetNewViper(viperOption)
@@ -53,17 +53,32 @@ func (initialize * Initialize)Start()error{
 		util.MyPrint("GetNewViper err:",err)
 		return err
 	}
+	util.MyPrint("read config info to assignment GlobalVariable , finish. ")
 	global.V.Vip = myViper	//全局变量管理者
 	global.C = config		//全局变量
 	//---config end -----
 
+	//预/报警->推送器，这里是推送到3方，如：prometheus
+	//ps:这个是必须优先zap日志类优化处理，因为zap里的<钩子>有用到,主要是日志里自动触发报警，略方便
+	if global.C.Alert.Status == global.CONFIG_STATUS_OPEN{
+		global.V.AlertPush = util.NewAlertPush(global.C.Alert.Ip,global.C.Alert.Port,global.C.Alert.Uri)
+	}
+	//创建main日志类
+	configZap := global.C.Zap
+	configZap.FileName = "main"
+	configZap.ModuleName = "main"
+	global.V.Zap , err  = GetNewZapLog(global.V.AlertPush,configZap)
+	if err != nil{
+		util.MyPrint("GetNewZapLog err:",err)
+		return err
+	}
 	//初始化：mysql
-	//这里按说不应该先初始化MYSQL，应该最早初始化LOG类，并且不一定所有项目都用MYSQL，但是项目是基于多APP/SERVICE，强依赖 project_id
+	//PS:并不一定所有项目都用MYSQL，但基于<多APP/SERVICE>，强依赖 project_id，另外，日志也需要
 	if global.C.Mysql.Status != global.CONFIG_STATUS_OPEN{
-		errMsg := "not open mysql db, need read app_id from db."
-		util.MyPrint(errMsg)
+		errMsg := "please open mysql db Module, because need project_id from read db."
 		return errors.New(errMsg)
 	}
+	util.LoggerZap = global.V.Zap
 	global.V.Gorm ,err = GetNewGorm()
 	if err != nil{
 		util.MyPrint("GetGorm err:",err)
@@ -75,6 +90,10 @@ func (initialize * Initialize)Start()error{
 	if err !=nil {
 		return err
 	}
+	//给main日志增加公共输出项：projectId
+	global.V.Zap = LoggerWithProject(global.V.Zap,global.V.Project.Id)
+
+
 	//项目目录名，必须跟APP-INFO里的key相同
 	initialize.Option.RootDirName,err = InitPath(initialize.Option.RootDir)
 	if err !=nil{
@@ -82,19 +101,8 @@ func (initialize * Initialize)Start()error{
 	}
 	global.V.RootDir = initialize.Option.RootDir
 	util.MyPrint("global.V.RootDir:",global.V.RootDir)
-	//预/报警->推送器，这里是推送到3方，如：prometheus,ps:这个是必须优先zap日志类优化处理，因为zap里的<钩子>有用到
-	if global.C.Alert.Status == global.CONFIG_STATUS_OPEN{
-		global.V.AlertPush = util.NewAlertPush(global.C.Alert.Ip,global.C.Alert.Port,global.C.Alert.Uri)
-	}
-	//日志
-	configZap := global.C.Zap
-	configZap.FileName = "main"
-	configZap.ModuleName = "main"
-	global.V.Zap , err  = GetNewZapLog(global.V.AlertPush,configZap,global.V.Project.Id)
-	if err != nil{
-		util.MyPrint("GetNewZapLog err:",err)
-		return err
-	}
+
+
 	//错误码 文案 管理
 	global.V.Err ,err  = util.NewErrMsg(global.V.Zap,  global.C.Http.StaticPath + global.C.System.ErrorMsgFile )
 	if err != nil{
@@ -110,22 +118,24 @@ func (initialize * Initialize)Start()error{
 			return err
 		}
 	}
-	configZap = global.C.Zap
-	configZap.FileName = "http"
-	configZap.ModuleName = "http"
-	//Http log zap 这里单独再开个zap 实例，用于专门记录http 请求
-	HttpZap , err  := GetNewZapLog(global.V.AlertPush,configZap,global.V.Project.Id)
-	if err != nil{
-		util.MyPrint("GetNewZapLog err:",err)
-		return err
-	}
 	//http server
 	if global.C.Http.Status == global.CONFIG_STATUS_OPEN{
+		configZap = global.C.Zap
+		configZap.FileName = "http"
+		configZap.ModuleName = "http"
+		//Http log zap 这里单独再开个zap 实例，用于专门记录http 请求
+		HttpZap , err  := GetNewZapLog(global.V.AlertPush,configZap )
+		if err != nil{
+			util.MyPrint("GetNewZapLog err:",err)
+			return err
+		}
+
 		global.V.Gin ,err = GetNewHttpGIN(HttpZap)
 		if err != nil{
 			util.MyPrint("GetNewHttpGIN err:",err)
 			return err
 		}
+		HttpZap = LoggerWithProject(HttpZap,global.V.Project.Id)
 	}
 	//etcd
 	if global.C.Etcd.Status  == global.CONFIG_STATUS_OPEN{

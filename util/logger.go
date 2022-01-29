@@ -3,6 +3,7 @@ package util
 import (
 	"context"
 	"fmt"
+	"go.uber.org/zap"
 	"gorm.io/gorm/logger"
 	"gorm.io/gorm/utils"
 	"io/ioutil"
@@ -11,6 +12,9 @@ import (
 	"time"
 )
 
+//GORM定制：标准LOG类
+
+
 type config struct {
 	SlowThreshold time.Duration
 	Colorful      bool
@@ -18,6 +22,7 @@ type config struct {
 }
 
 var (
+	LoggerZap *zap.Logger
 	Discard = New(log.New(ioutil.Discard, "", log.LstdFlags), config{})
 	Default = New(log.New(os.Stdout, "\r\n", log.LstdFlags), config{
 		SlowThreshold: 200 * time.Millisecond,
@@ -63,8 +68,12 @@ type _logger struct {
 	logger.Writer
 	infoStr, warnStr, errStr            string
 	traceStr, traceErrStr, traceWarnStr string
+	//zap 	*zap.Logger
 }
 
+//func (c *_logger)SetZap(zap *zap.Logger){
+//	c.zap = zap
+//}
 // LogMode log mode
 func (c *_logger) LogMode(level logger.LogLevel) logger.Interface {
 	newLogger := *c
@@ -128,7 +137,13 @@ func (c *_logger) Printf(message string, data ...interface{}) {
 	//if global.GVA_CONFIG.Mysql.LogZap {
 	//	global.GVA_LOG.Info(fmt.Sprintf(message, data...))
 	//} else {
-		c.Writer.Printf(message, data...)
+	//	ss := fmt.Sprintf(message, data...)
+	//	fmt.Println("ss",ss)
+
+		LoggerZap.Info(fmt.Sprintf(message, data...))
+
+		//c.Writer.Printf(message, data...)
+
 	//}
 }
 

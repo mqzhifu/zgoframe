@@ -11,7 +11,9 @@ import (
 )
 
 func GetNewGorm() (*gorm.DB,error) {
+	util.MyPrint("GetNewGorm , DBType:"+ global.C.System.DbType)
 	switch global.C.System.DbType {
+	//目前仅支持MYSQL ，后期考虑是否加入其它DB
 	case "mysql":
 		return GormMysql()
 	default:
@@ -21,27 +23,28 @@ func GetNewGorm() (*gorm.DB,error) {
 
 func GormMysql() (*gorm.DB,error) {
 	m := global.C.Mysql
-	dsn := m.Username + ":" + m.Password + "@tcp(" + m.Ip + ":" + m.Port + ")/" + m.DbName + "?" + m.Config
-	fmt.Println("GormMysql:"+dsn)
+	dns := m.Username + ":" + m.Password + "@tcp(" + m.Ip + ":" + m.Port + ")/" + m.DbName + "?" + m.Config
+	util.MyPrint(" GormMysql dns:"+ dns )
 	mysqlConfig := mysql.Config{
-		DSN:                       dsn,   // DSN data source name
+		DSN:                       dns,   // DSN data source name
 		DefaultStringSize:         191,   // string 类型字段的默认长度
 		DisableDatetimePrecision:  true,  // 禁用 datetime 精度，MySQL 5.6 之前的数据库不支持
 		DontSupportRenameIndex:    true,  // 重命名索引时采用删除并新建的方式，MySQL 5.7 之前的数据库和 MariaDB 不支持重命名索引
 		DontSupportRenameColumn:   true,  // 用 `change` 重命名列，MySQL 8 之前的数据库和 MariaDB 不支持重命名列
 		SkipInitializeWithVersion: false, // 根据版本自动配置
 	}
-	if db, err := gorm.Open(mysql.New(mysqlConfig), gormConfig(m.LogMode)); err != nil {
+	db, err := gorm.Open(mysql.New(mysqlConfig), gormConfig(m.LogMode))
+	if err != nil {
 		fmt.Println("MySQL启动异常", err.Error())
 		return nil,err
-	} else {
-		sqlDB, _ := db.DB()
-		sqlDB.SetMaxIdleConns(m.MaxIdleConns)
-		sqlDB.SetMaxOpenConns(m.MaxOpenConns)
-
-
-		return db,nil
 	}
+	//db = db.Debug()
+
+	sqlDB, _ := db.DB()
+	sqlDB.SetMaxIdleConns(m.MaxIdleConns)
+	sqlDB.SetMaxOpenConns(m.MaxOpenConns)
+
+	return db,nil
 }
 
 func GormShutdown(){
@@ -50,7 +53,10 @@ func GormShutdown(){
 }
 
 func gormConfig(mod bool) *gorm.Config {
+	//DisableForeignKeyConstraintWhenMigrating:当执行DB迁移时，禁用 外键约束
+	//NamingStrategy：表名的一些配置，禁用 表名黑夜为复杂的情况，也就是使用单数表名，这里也可以配置统一表名前缀
 	var config = &gorm.Config{DisableForeignKeyConstraintWhenMigrating: true,NamingStrategy: schema.NamingStrategy{SingularTable: true}}
+
 	config.Logger = util.Default.LogMode(logger.Info)
 	//switch global.G.Config.Mysql.LogZap {
 	//case "silent", "Silent":

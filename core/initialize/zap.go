@@ -20,12 +20,12 @@ import (
 //var zapInConsole int
 
 
-func GetNewZapLog(alert *util.AlertPush , configZap global.Zap,projectId int) (logger *zap.Logger,err error) {
+func GetNewZapLog(alert *util.AlertPush , configZap global.Zap) (logger *zap.Logger,err error) {
 	if configZap.ModuleName != ""{
 		configZap.BaseDir += "/" + configZap.ModuleName
 	}
 
-	if configZap.LinkName == ""{
+	if configZap.SoftLinkFileName == ""{
 		return  nil,errors.New("linkName is empty")
 	}
 
@@ -33,7 +33,7 @@ func GetNewZapLog(alert *util.AlertPush , configZap global.Zap,projectId int) (l
 		return  nil,errors.New("Level is empty")
 	}
 
-	configZap.FileName = configZap.LinkName +  "_" + configZap.FileName
+	configZap.FileName = configZap.SoftLinkFileName +  "_" + configZap.FileName
 
 	util.MyPrint("GetNewZapLog:",configZap.ModuleName ,configZap.FileName  ,configZap.LogInConsole )
 
@@ -92,11 +92,15 @@ func GetNewZapLog(alert *util.AlertPush , configZap global.Zap,projectId int) (l
 	if configZap.ShowLine{
 		logger = logger.WithOptions(zap.AddCaller())
 	}
-	//所有的日志都给加一个公共的项：projectId，方便给日志分类规档
-	logger = logger.With(zap.Int("projectId", projectId))
+
 	return logger,nil
 }
-
+//所有的日志都给加一个公共的项：projectId，方便给日志分类规档
+//
+func LoggerWithProject(logger *zap.Logger,projectId int )*zap.Logger{
+	logger = logger.With(zap.Int("projectId", projectId))
+	return logger
+}
 
 // getEncoderCore 获取Encoder的zapcore.Core
 func getEncoderCore(configZap global.Zap) (core zapcore.Core) {

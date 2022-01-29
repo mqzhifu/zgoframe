@@ -47,6 +47,7 @@ func (initialize * Initialize)Start()error{
 
 	util.MyPrint("start CoreInitialize : config option~~ ")
 	util.PrintStruct(initialize.Option,":")
+	util.MyPrint("-------")
 
 	myViper,config,err := GetNewViper(viperOption)
 	if err != nil{
@@ -59,7 +60,7 @@ func (initialize * Initialize)Start()error{
 	//---config end -----
 
 	//预/报警->推送器，这里是推送到3方，如：prometheus
-	//ps:这个是必须优先zap日志类优化处理，因为zap里的<钩子>有用到,主要是日志里自动触发报警，略方便
+	//ps:这个要优先zap日志类优化处理，因为zap里的<钩子>有用到,主要是日志里自动触发报警，略方便
 	if global.C.Alert.Status == global.CONFIG_STATUS_OPEN{
 		global.V.AlertPush = util.NewAlertPush(global.C.Alert.Ip,global.C.Alert.Port,global.C.Alert.Uri)
 	}
@@ -78,31 +79,31 @@ func (initialize * Initialize)Start()error{
 		errMsg := "please open mysql db Module, because need project_id from read db."
 		return errors.New(errMsg)
 	}
+	//这个变量，主要是给gorm做日志使用，也就是DB的日志，最终也交由zap来接管
 	util.LoggerZap = global.V.Zap
+	//实例化gorm db
 	global.V.Gorm ,err = GetNewGorm()
 	if err != nil{
 		util.MyPrint("GetGorm err:",err)
 		return err
 	}
+	//DB 快捷变量
 	model.Db = global.V.Gorm
 	//初始化APP信息，所有项目都需要有AppId或serviceId，因为要做验证，同时目录名也包含在里面
 	err = InitProject()
 	if err !=nil {
 		return err
 	}
-	//给main日志增加公共输出项：projectId
+	//gorm 和 project 初始化完成后，给main日志增加公共输出项：projectId
 	global.V.Zap = LoggerWithProject(global.V.Zap,global.V.Project.Id)
-
-
 	//项目目录名，必须跟APP-INFO里的key相同
 	initialize.Option.RootDirName,err = InitPath(initialize.Option.RootDir)
 	if err !=nil{
 		return err
 	}
+	//项目根目录
 	global.V.RootDir = initialize.Option.RootDir
 	util.MyPrint("global.V.RootDir:",global.V.RootDir)
-
-
 	//错误码 文案 管理
 	global.V.Err ,err  = util.NewErrMsg(global.V.Zap,  global.C.Http.StaticPath + global.C.System.ErrorMsgFile )
 	if err != nil{

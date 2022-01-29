@@ -38,7 +38,7 @@ func GetNewViper(viperOption  ViperOption )(myViper *viper.Viper,config global.C
 		myViper.SetConfigType(viperOption.ConfigFileType)
 		//myViper.SetConfigName(ConfigName + "." + ConfigType)
 		configFile := viperOption.ConfigFileName + "." + viperOption.ConfigFileType
-		//util.MyPrint(configFile)
+		util.MyPrint("viper read:"+configFile)
 		myViper.SetConfigFile(configFile)
 		myViper.AddConfigPath(".")
 		err = myViper.ReadInConfig()

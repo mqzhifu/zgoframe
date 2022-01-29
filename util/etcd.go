@@ -22,7 +22,7 @@ type ResponseMsgST struct {
 type MyEtcd struct {
 	cli         *clientv3.Client
 	option      EtcdOption
-	AppConflist map[string]string
+	ProjectConfList map[string]string
 }
 
 type EtcdOption struct {
@@ -93,7 +93,7 @@ func NewMyEtcdSdk(etcdOption EtcdOption)(myEtcd *MyEtcd,errs error){
 	myEtcd.cli = cli
 	myEtcd.option = etcdOption
 	//获取自己项目想着的配置信息
-	err := myEtcd.iniAppConf()
+	err := myEtcd.initProjectConf()
 	return myEtcd,err
 }
 func (myEtcd *MyEtcd)Shutdown(){
@@ -278,15 +278,15 @@ func  (myEtcd *MyEtcd)getConfRootPrefix()string{
 }
 //初始化，一个项目下的，所有配置文件（ 路径：/项目名/环境名/）
 //减少请求etcd次数
-func  (myEtcd *MyEtcd)iniAppConf() error {
-	myEtcd.option.Log.Info("etcd iniAppConf : ")
+func  (myEtcd *MyEtcd)initProjectConf() error {
+	myEtcd.option.Log.Info("etcd initProjectConf : ")
 	confListEtcd,err := myEtcd.GetListByPrefix(myEtcd.getConfRootPrefix())
 	if err != nil{
-		myEtcd.option.Log.Error("iniAppConf err:" + err.Error())
+		myEtcd.option.Log.Error("initProjectConf err:" + err.Error())
 		return errors.New("GetListByPrefix:" + err.Error())
 	}
 	if len(confListEtcd) == 0{
-		myEtcd.option.Log.Warn("iniAppConf confListEtcd is empty!")
+		myEtcd.option.Log.Warn("initProjectConf confListEtcd is empty!")
 		return nil
 	}
 	confList := make(map[string]string)
@@ -296,7 +296,7 @@ func  (myEtcd *MyEtcd)iniAppConf() error {
 		myEtcd.option.Log.Info("conf "  + str + v )
 		confList[str] = v
 	}
-	myEtcd.AppConflist = confList
+	myEtcd.ProjectConfList = confList
 
 	return nil
 }
@@ -315,11 +315,11 @@ func  (myEtcd *MyEtcd)GetLinkAddressList()([]string){
 }
 
 func  (myEtcd *MyEtcd)GetAppConf()(map[string]string){
-	val := myEtcd.AppConflist
+	val := myEtcd.ProjectConfList
 	return val
 }
 
 func  (myEtcd *MyEtcd)GetAppConfByKey(key string)(str string){
-	val := myEtcd.AppConflist[key]
+	val := myEtcd.ProjectConfList[key]
 	return val
 }

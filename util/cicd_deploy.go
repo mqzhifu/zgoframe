@@ -147,7 +147,7 @@ func(cicdManager *CicdManager)DeployOneService(server Server , serviceDeployConf
 	ExitPrint("finish one.")
 	return nil
 }
-
+//step 1
 func (cicdManager *CicdManager)DeployOneServiceGitCode(serviceDeployConfig ServiceDeployConfig,service Service)(string,error){
 	cicdManager.Option.Log.Info("step 1 : git clone project code and get git commit id.")
 
@@ -192,6 +192,7 @@ func (cicdManager *CicdManager)DeployOneServiceGitCode(serviceDeployConfig Servi
 	cicdManager.Option.Log.Info("step 1 finish , newGitCodeDir :  "+newGitCodeDir + " , gitLastCommitId:"+gitLastCommitId)
 	return newGitCodeDir, nil
 }
+//step 2
 func (cicdManager *CicdManager)DeployOneServiceCICIConfig(newGitCodeDir string,serviceDeployConfig ServiceDeployConfig,server Server)(ConfigServiceCICD,error){
 	cicdManager.Option.Log.Info("step 2:load service CICD config ")
 	//项目自带的CICD配置文件，这里有 服务启动脚本 和 依赖的环境
@@ -209,7 +210,7 @@ func (cicdManager *CicdManager)DeployOneServiceCICIConfig(newGitCodeDir string,s
 
 	return serviceCICDConfig,nil
 }
-//生成该服务的，superVisor 配置文件
+////step 3 生成该服务的，superVisor 配置文件
 func (cicdManager *CicdManager)DeployOneServiceSuperVisor(serviceDeployConfig ServiceDeployConfig ,configServiceCICD  ConfigServiceCICD)error{
 	cicdManager.Option.Log.Info("step 3 : create superVisor conf file.")
 	superVisorOption := SuperVisorOption{
@@ -241,8 +242,7 @@ func (cicdManager *CicdManager)DeployOneServiceSuperVisor(serviceDeployConfig Se
 
 	return nil
 }
-
-
+//step 4
 func (cicdManager *CicdManager)DeployOneServiceProjectConfig(newGitCodeDir string,server Server, serviceDeployConfig ServiceDeployConfig)error{
 	cicdManager.Option.Log.Info("step 4 : create project self conf file.")
 	//读取该服务自己的配置文件 config.toml
@@ -266,18 +266,18 @@ func (cicdManager *CicdManager)DeployOneServiceProjectConfig(newGitCodeDir strin
 
 	return nil
 }
-
-
+//step 5
 func (cicdManager *CicdManager)DeployOneServiceCommand(newGitCodeDir string,serviceDeployConfig ServiceDeployConfig,serviceCICDConfig ConfigServiceCICD)(output string ,err error){
 	cicdManager.Option.Log.Info("step 5 : DeployOneServiceCommand.")
 	//cicdManager.Option.Log.Info("step 6.1 : project pre command "+serviceCICDConfig.System.Command)
 	//    /usr/local/Cellar/go/1.16.5/bin/
-	workDir := newGitCodeDir + "/" + cicdManager.Option.OpDirName
-	ExecShellCommandPre := "cd "+ workDir + "  ; pwd ; "
+	//workDir := newGitCodeDir + "/" + cicdManager.Option.OpDirName
+	ExecShellCommandPre := "cd "+ newGitCodeDir + "  ; pwd ; "
 	//ExecShellCommandPre := " ls -l "
 	output1 := ""
 	output2 := ""
 	if serviceCICDConfig.System.Command != ""{
+		cicdManager.Option.Log.Info("step 5.1 : System.Command "+serviceCICDConfig.System.Command)
 		output1,err = ExecShellCommand(ExecShellCommandPre + serviceCICDConfig.System.Command ,"")
 		if err != nil{
 			return output,errors.New("ExecShellCommand err "  +err.Error())
@@ -285,8 +285,8 @@ func (cicdManager *CicdManager)DeployOneServiceCommand(newGitCodeDir string,serv
 		MyPrint(output)
 	}
 	//编译项目代码
-	cicdManager.Option.Log.Info("step 6.2 : project build command "+serviceCICDConfig.System.Build)
 	if serviceCICDConfig.System.Build != ""{
+		cicdManager.Option.Log.Info("step 5.2 : project build command "+serviceCICDConfig.System.Build)
 		output2,err = ExecShellCommand(ExecShellCommandPre + serviceCICDConfig.System.Build,"")
 		if err != nil{
 			return output,errors.New("ExecShellCommand err "  +err.Error())
@@ -294,13 +294,13 @@ func (cicdManager *CicdManager)DeployOneServiceCommand(newGitCodeDir string,serv
 		MyPrint(output)
 	}
 
-	return output1 + " ssss " +output2,nil
+	return output1 + " <br/> " +output2,nil
 	//cicdManager.Option.Log.Info("step 6.3 :  project testUnit command "+serviceCICDConfig.System.Command)
 	//if serviceCICDConfig.System.TestUnit != ""{
 	//	ExecShellCommand(serviceCICDConfig.System.TestUnit,"")
 	//}
 }
-
+//step 6
 func (cicdManager *CicdManager)DeployOneServiceLinkMaster(newGitCodeDir string, serviceDeployConfig ServiceDeployConfig)error{
 	cicdManager.Option.Log.Info("step 6 : master dir softLink , os.Symlink:" + newGitCodeDir  +  " to " + serviceDeployConfig.MasterPath)
 	_,err := PathExists(serviceDeployConfig.MasterPath)

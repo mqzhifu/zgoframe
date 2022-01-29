@@ -126,7 +126,7 @@ func NewCicdManager(cicdManagerOption CicdManagerOption)(*CicdManager,error){
 }
 
 func(cicdManager *CicdManager)ReplaceInstance(content string,serviceName string ,env string)string{
-	category := []string{"mysql","redis","etcd","rabbitmq","kafka","log","alert"}
+	category := []string{"mysql","redis","etcd","rabbitmq","kafka","log","alert","email","cdn","consul","sms"}
 	//attr := []string{"ip","port","user","ps"}
 	separator := STR_SEPARATOR
 	content = strings.Replace(content,separator + "env" + separator,env,-1)
@@ -135,7 +135,7 @@ func(cicdManager *CicdManager)ReplaceInstance(content string,serviceName string 
 		//for _,attrOne := range attr{
 			instance,empty :=  cicdManager.Option.InstanceManager.GetByEnvName(env,v)
 			if empty{
-				MyPrint("cicdManager.Option.InstanceManager.GetByEnvName is empty,",env,v)
+				//MyPrint("cicdManager.Option.InstanceManager.GetByEnvName is empty,",env,v)
 				continue
 			}
 			key := separator+ v  +"_" + "ip"  +separator

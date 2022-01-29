@@ -5,6 +5,7 @@ import (
 	_ "embed"
 	"flag"
 	"os"
+	"os/user"
 	"strconv"
 	"zgoframe/core"
 	"zgoframe/core/global"
@@ -21,7 +22,6 @@ var initializeVar *initialize.Initialize
 func main(){
 	//获取<环境变量>枚举值
 	envList := util.GetEnvList()
-
 	//配置读取源类型，1 文件  2 etcd
 	configSourceType 	:= flag.String("cs", global.DEFAULT_CONFIG_SOURCE_TYPE, "configSource:file or etcd")
 	//配置文件的类型
@@ -40,9 +40,18 @@ func main(){
 	flag.Parse()
 	//检测环境变量值ENV是否正常
 	if !util.CheckEnvExist(*env){
-		util.MyPrint(  "env is err , list:",envList)
-		panic("env is err : "+*env)
+		msg := "argv env , is err :"
+		util.MyPrint(  msg,envList)
+		panic(msg  + *env)
 	}
+
+	imUser , myErr := user.Current()
+	util.MyPrint(myErr,imUser.Name," ",imUser.Uid)
+
+	util.ExitPrint(111)
+	//u2, _ := user.Lookup(imUser.Name)
+	//util.ExitPrint(u2.Name)
+
 
 	pwd, _ := os.Getwd()//当前路径
 	util.MyPrint("now pwd:"+pwd)

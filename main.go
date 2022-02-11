@@ -29,11 +29,13 @@ func main(){
 	//配置文件的名称
 	configFileName 		:= flag.String("cfn", global.DEFAULT_CONFIG_FILE_NAME, "configFileName")
 	//获取etcd 配置信息的URL
-	etcdUrl 			:= flag.String("etl", "", "get etcd config url")
-	//当前环境
-	env 				:= flag.String("e", "must require", "env:local test pre dev online")
+	etcdUrl 			:= flag.String("etl", "http://127.0.0.1/getEtcdCluster/Ip/Port", "get etcd config url")
+	//当前环境,env:local test pre dev online
+	env 				:= flag.String("e", "", "must require , env:local test pre dev online")
+	//DEBUG模式
+	debug 				:= flag.Int("debug", 0, "startup debug mode level")
 	//是否为CICD模式
-	//deploy 				:= flag.String("dep", "", "deploy")//部署模式下，启动程序只是为了测试脚本正常，之后，要立刻退出
+	//deploy 				:= flag.String("dep", "", "deploy")//部署模式下，启动程序只是为了测试脚本正常，因为之后，要立刻退出
 	//开启测试模式
 	//testFlag 			:= flag.String("t", "", "testFlag:empty or 1")
 	//解析命令行参数
@@ -60,6 +62,7 @@ func main(){
 	//初始化模块需要的参数
 	initOption := initialize.InitOption  {
 		Env 				:*env,
+		Debug				:*debug,
 		ConfigType 			:*configFileType,
 		ConfigFileName 		:*configFileName,
 		ConfigSourceType 	:*configSourceType,

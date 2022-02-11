@@ -48,15 +48,21 @@ func HandleNotFound(c *gin.Context){
 }
 //GIN: 监听HTTP   中间件  文件上传
 func GetNewHttpGIN(zapLog *zap.Logger)(*gin.Engine,error) {
+	staticFSUriName := "/static"
+	swaggerUri := "/swagger/*any"
+
+	zapLog.Info("GetNewHttpGIN static config , uri: "+ staticFSUriName + " , diskPath: " + global.C.Http.StaticPath)
+	zapLog.Info("GetNewHttpGIN swagger uri:"+swaggerUri)
+
 	HttpZapLog = zapLog
 	ginRouter := gin.Default()
 	//单独的日志记录，GIN默认的日志不会持久化的
 	ginRouter.Use(ZapLog())
 	//加载静态目录
 	//	Router.Static("/form-generator", "./resource/page")
-	ginRouter.StaticFS("/static",http.Dir(global.C.Http.StaticPath))
+	ginRouter.StaticFS(staticFSUriName,http.Dir(global.C.Http.StaticPath))
 	//加载swagger api 工具
-	ginRouter.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	ginRouter.GET(swaggerUri, ginSwagger.WrapHandler(swaggerFiles.Handler))
 	//设置跨域
 	ginRouter.Use(httpmiddleware.Cors())
 	//404

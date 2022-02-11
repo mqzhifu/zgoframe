@@ -28,14 +28,16 @@ type MyEtcd struct {
 type EtcdOption struct {
 	ProjectName string
 	//ProjectKey string
+	Timeout		int
 	ProjectENV	string
-	FindEtcdUrl		string
+	FindEtcdUrl	string
+	Username 	string
+	Password 	string
+	Ip 			string
+	Port 		string
+	Log 		*zap.Logger
+	ZapConfig 	zap.Config//这个是给3方库：clientv3使用的
 	LinkAddressList	[]string
-	Username string
-	Password string
-	Ip 		string
-	Port 	string
-	Log *zap.Logger
 }
 //通过http 请求配置中心，获取返回结果
 type EtcdHttpResp struct {
@@ -47,12 +49,16 @@ type Etcdconfig struct {
 	Password	string	`json:"password"`
 	Hosts		[]string `json:"hosts"`
 }
+
 func NewMyEtcdSdk(etcdOption EtcdOption)(myEtcd *MyEtcd,errs error){
 	myEtcd = new (MyEtcd)
 	var clientv3Config  clientv3.Config
 	dns := etcdOption.Ip + ":" + etcdOption.Port
-	etcdOption.Log.Info("etcd connect:"+dns)
-	//建立连接，优先使用 FindEtcdUrl ，走网络发现，这种 扩展更好
+	etcdOption.Log.Info("NewMyEtcdSdk connect:"+dns)
+	if etcdOption.Timeout <= 0 ||  etcdOption.Timeout > 5{
+		etcdOption.Timeout = 2
+	}
+	//建立连接，优先使用 FindEtcdUrl ，走<网络发现>，这种 扩展更好
 	if etcdOption.FindEtcdUrl != ""{
 		etcdOption.Log.Info("use FindEtcdUrl node")
 		//获取etcd 服务器配置信息
@@ -65,11 +71,12 @@ func NewMyEtcdSdk(etcdOption EtcdOption)(myEtcd *MyEtcd,errs error){
 		//开启建立连接
 		clientv3Config  = clientv3.Config{
 			Endpoints:  jsonStruct.Data.Hosts,
-			DialTimeout: 5 * time.Second,
+			DialTimeout: time.Duration(etcdOption.Timeout) * time.Second,
 			Username: jsonStruct.Data.Username,
 			Password: jsonStruct.Data.Password,
 		}
 	}else{
+
 		etcdOption.Log.Info("use configFile node")
 		dns := etcdOption.Ip + ":" + etcdOption.Port
 
@@ -77,12 +84,14 @@ func NewMyEtcdSdk(etcdOption EtcdOption)(myEtcd *MyEtcd,errs error){
 
 		etcdOption.LinkAddressList = append(etcdOption.LinkAddressList,dns)
 
+
 		clientv3Config  = clientv3.Config{
 			//#http://114.116.212.202/account/dev/v1/sys/etcd
 			Endpoints:  etcdOption.LinkAddressList,
-			DialTimeout: 5 * time.Second,
+			DialTimeout:  time.Duration(etcdOption.Timeout)  * time.Second,
 			Username: etcdOption.Username,
 			Password: etcdOption.Password,
+			LogConfig: &etcdOption.ZapConfig,
 		}
 	}
 
@@ -90,10 +99,19 @@ func NewMyEtcdSdk(etcdOption EtcdOption)(myEtcd *MyEtcd,errs error){
 	if errs != nil {
 		return nil,errors.New("clientv3.New error :  " + errs.Error())
 	}
+
+	timeoutCtx, cancel := context.WithTimeout(context.Background(),  time.Duration(etcdOption.Timeout)  * time.Second)
+	defer cancel()
+	_, err := cli.Status(timeoutCtx,etcdOption.LinkAddressList[0])
+	if err != nil {
+		return nil, errors.New("error checking etcd status: " +  err.Error())
+	}
+
+
 	myEtcd.cli = cli
 	myEtcd.option = etcdOption
 	//获取自己项目想着的配置信息
-	err := myEtcd.initProjectConf()
+	err = myEtcd.initProjectConf()
 	return myEtcd,err
 }
 func (myEtcd *MyEtcd)Shutdown(){
@@ -163,14 +181,16 @@ func (myEtcd *MyEtcd)GetListByPrefix(key string)(list map[string]string,err erro
 	myEtcd.option.Log.Info(" etcd GetListByPrefix key: " + key)
 	rootContext := context.Background()
 	kvc := clientv3.NewKV(myEtcd.cli)
+
+	ctx, cancelFunc := context.WithTimeout(rootContext, time.Duration(myEtcd.option.Timeout) * time.Second)
+	//myEtcd.option.Log.Info("-------------====")
 	//获取值
-	ctx, cancelFunc := context.WithTimeout(rootContext, time.Duration(2)*time.Second)
 	response, err := kvc.Get(ctx, key,clientv3.WithPrefix())
 	defer cancelFunc()
 	//myEtcd.option.Log.Debug(" ",response, err)
 	if err != nil {
-		myEtcd.option.Log.Warn("client Get err : " + err.Error())
-		return list,errors.New("client Get err : "+err.Error())
+		myEtcd.option.Log.Warn("GetListByPrefix client Get err : " + err.Error())
+		return list,errors.New("GetListByPrefix client Get err : "+err.Error())
 	}
 
 	if response.Count == 0{
@@ -243,7 +263,7 @@ func (myEtcd *MyEtcd) PutOne(k string, v string)(putResponse *clientv3.PutRespon
 	rootContext := context.Background()
 	kvc := clientv3.NewKV(myEtcd.cli)
 	//获取值
-	ctx, cancelFunc := context.WithTimeout(rootContext, time.Duration(2)*time.Second)
+	ctx, cancelFunc := context.WithTimeout(rootContext, time.Duration( myEtcd.option.Timeout)*time.Second)
 	defer cancelFunc()
 	putResponse, errs = kvc.Put(ctx, k,v)
 

@@ -23,6 +23,7 @@ type ErrMsg struct {
 }
 
 func NewErrMsg (log *zap.Logger,langPathFile string)(*ErrMsg,error){
+	log.Info("NewErrMsg class")
 	errMsg := new (ErrMsg)
 	errMsg.Log = log
 	errMsg.LangPathFile = langPathFile

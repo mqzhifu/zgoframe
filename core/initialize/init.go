@@ -5,6 +5,8 @@ import (
 	"errors"
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 	"strings"
 	"zgoframe/core/global"
 	"zgoframe/model"
@@ -17,6 +19,7 @@ type Initialize struct {
 
 type InitOption struct {
 	Env 				string
+	Debug 				int
 	ConfigType 			string
 	ConfigFileName 		string
 	ConfigSourceType 	string
@@ -36,6 +39,7 @@ func NewInitialize(option InitOption)*Initialize{
 
 //初始化-入口
 func (initialize * Initialize)Start()error{
+	prefix := "initialize ,"
 	//初始化 : 配置信息
 	viperOption := ViperOption{
 		ConfigFileName	: initialize.Option.ConfigFileName,
@@ -45,16 +49,16 @@ func (initialize * Initialize)Start()error{
 		ENV				: initialize.Option.Env,
 	}
 
-	util.MyPrint("start CoreInitialize : config option~~ ")
+	util.MyPrint(prefix  + "start CoreInitialize : config option~~ ")
 	util.PrintStruct(initialize.Option,":")
 	util.MyPrint("-------")
 
 	myViper,config,err := GetNewViper(viperOption)
 	if err != nil{
-		util.MyPrint("GetNewViper err:",err)
+		util.MyPrint(prefix + "GetNewViper err:",err)
 		return err
 	}
-	util.MyPrint("read config info to assignment GlobalVariable , finish. ")
+	util.MyPrint(prefix + "read config info to assignment GlobalVariable , finish. ")
 	global.V.Vip = myViper	//全局变量管理者
 	global.C = config		//全局变量
 	//---config end -----
@@ -68,11 +72,12 @@ func (initialize * Initialize)Start()error{
 	configZap := global.C.Zap
 	configZap.FileName = "main"
 	configZap.ModuleName = "main"
-	global.V.Zap , err  = GetNewZapLog(global.V.AlertPush,configZap)
+	mailZap ,configZapReturn, err  := GetNewZapLog(global.V.AlertPush,configZap)
 	if err != nil{
 		util.MyPrint("GetNewZapLog err:",err)
 		return err
 	}
+	global.V.Zap = mailZap
 	//初始化：mysql
 	//PS:并不一定所有项目都用MYSQL，但基于<多APP/SERVICE>，强依赖 project_id，另外，日志也需要
 	if global.C.Mysql.Status != global.CONFIG_STATUS_OPEN{
@@ -84,7 +89,6 @@ func (initialize * Initialize)Start()error{
 	//实例化gorm db
 	global.V.Gorm ,err = GetNewGorm()
 	if err != nil{
-		util.MyPrint("GetGorm err:",err)
 		return err
 	}
 	//DB 快捷变量
@@ -92,30 +96,33 @@ func (initialize * Initialize)Start()error{
 	//初始化APP信息，所有项目都需要有AppId或serviceId，因为要做验证，同时目录名也包含在里面
 	err = InitProject()
 	if err !=nil {
+		global.V.Zap.Error(prefix + err.Error())
 		return err
 	}
-	//gorm 和 project 初始化完成后，给main日志增加公共输出项：projectId
+	//gorm 和 project 初始化(成功)完成后，给main日志增加公共输出项：projectId
 	global.V.Zap = LoggerWithProject(global.V.Zap,global.V.Project.Id)
-	//项目目录名，必须跟APP-INFO里的key相同
+	//项目目录名，必须跟PROJECT里的key相同(key由驼峰转为下划线模式)
 	initialize.Option.RootDirName,err = InitPath(initialize.Option.RootDir)
 	if err !=nil{
+		global.V.Zap.Error(prefix + err.Error())
 		return err
 	}
-	//项目根目录
+	//项目的根目录
 	global.V.RootDir = initialize.Option.RootDir
-	util.MyPrint("global.V.RootDir:",global.V.RootDir)
-	//错误码 文案 管理
+	global.V.Zap.Info("global.V.RootDir: " + global.V.RootDir)
+	//错误码 文案 管理（还未用起来，后期优化）
 	global.V.Err ,err  = util.NewErrMsg(global.V.Zap,  global.C.Http.StaticPath + global.C.System.ErrorMsgFile )
 	if err != nil{
+		global.V.Zap.Error(prefix + err.Error())
 		return err
 	}
-	//基础类：用于恢复一个挂了的协程
-	global.V.RecoverGo = util.NewRecoverGo(global.V.Zap)
+	//基础类：用于恢复一个挂了的协程,避免主进程被panic fatal 带挂了，同时有重度次数控制
+	global.V.RecoverGo = util.NewRecoverGo(global.V.Zap,3)
 	//redis
 	if global.C.Redis.Status == global.CONFIG_STATUS_OPEN{
 		global.V.Redis ,err = GetNewRedis()
 		if err != nil{
-			util.MyPrint("GetRedis err:",err)
+			global.V.Zap.Error(prefix + " GetRedis "+ err.Error())
 			return err
 		}
 	}
@@ -125,27 +132,29 @@ func (initialize * Initialize)Start()error{
 		configZap.FileName = "http"
 		configZap.ModuleName = "http"
 		//Http log zap 这里单独再开个zap 实例，用于专门记录http 请求
-		HttpZap , err  := GetNewZapLog(global.V.AlertPush,configZap )
+		HttpZap ,_, err  := GetNewZapLog(global.V.AlertPush,configZap )
 		if err != nil{
-			util.MyPrint("GetNewZapLog err:",err)
+			global.V.Zap.Error(prefix + "GetNewZapLog err:" + err.Error())
 			return err
 		}
 
 		global.V.Gin ,err = GetNewHttpGIN(HttpZap)
 		if err != nil{
-			util.MyPrint("GetNewHttpGIN err:",err)
+			global.V.Zap.Error(prefix + "GetNewHttpGIN err:" + err.Error())
 			return err
 		}
 		HttpZap = LoggerWithProject(HttpZap,global.V.Project.Id)
 	}
 	//etcd
 	if global.C.Etcd.Status  == global.CONFIG_STATUS_OPEN{
-		global.V.Etcd ,err = GetNewEtcd(initialize.Option.Env)
+		global.V.Etcd ,err = GetNewEtcd(initialize.Option.Env,configZapReturn)
 		if err != nil{
-			util.MyPrint("GetNewEtcd err:",err)
+			global.V.Zap.Error(prefix + "GetNewEtcd err:" + err.Error())
 			return err
 		}
 	}
+	//服务管理器，这里跟project manager 有点差不多，不同的只是：project是DB中所有记录,service是type=N的情况
+	//ps:之所以单独加一个模块，也是因为service有些特殊的结构变量，与project的结构变量不太一样
 	global.V.ServiceManager,_ = util.NewServiceManager(global.V.Gorm)
 	//service 服务发现，这里有个顺序，必须先实现化完成:serviceManager
 	if global.C.ServiceDiscovery.Status  == global.CONFIG_STATUS_OPEN{
@@ -190,6 +199,7 @@ func (initialize * Initialize)Start()error{
 	//	}
 	//	initSocket()
 	//}
+
 	//grpc
 	if global.C.Grpc.Status == global.CONFIG_STATUS_OPEN{
 		grpcManagerOption := util.GrpcManagerOption{
@@ -204,19 +214,20 @@ func (initialize * Initialize)Start()error{
 		}
 		global.V.GrpcManager,_ =  util.NewGrpcManager(grpcManagerOption)
 	}
-
+	//邮件模块
 	if global.C.Email.Status == global.CONFIG_STATUS_OPEN {
 		emailOption := util.EmailOption{
-			Host: global.C.Email.Host,
-			Port: global.C.Email.Port,
-			FromEmail: global.C.Email.From,
-			Password: global.C.Email.Ps,
-			Log: global.V.Zap,
+			Host		: global.C.Email.Host,
+			Port		: global.C.Email.Port,
+			FromEmail	: global.C.Email.From,
+			Password	: global.C.Email.Ps,
+			Log			: global.V.Zap,
 		}
 
 		global.V.Email = util.NewMyEmail(emailOption)
 	}
-	//预/报警,这个是真正的报警，如：邮件 SMS 等
+	//预/报警,这个是真正的直接报警，如：邮件 SMS 等，不是推送3方
+	//ps:不推荐这么用，最好都统一推送3方报警机制
 	if global.C.Alert.Status == global.CONFIG_STATUS_OPEN {
 		global.V.AlertHook = util.NewAlertHook(-1,"程序出错了：#body#","报错",util.ALERT_METHOD_SYNC,global.V.Zap)
 		global.V.AlertHook.Email = global.V.Email
@@ -230,7 +241,7 @@ func (initialize * Initialize)Start()error{
 		StartHttpGin()
 	}
 
-	autoCreateUpDbTable()
+	//autoCreateUpDbTable()//自动创建表，根据MODEL-struct
 	//_ ,cancelFunc := context.WithCancel(option.RootCtx)
 	//进程通信相关
 	ProcessPathFileName := "/tmp/"+global.V.Project.Name+".pid"
@@ -306,7 +317,24 @@ func InitPath(rootDir string)(rootDirName string,err error){
 	return rootDirName,nil
 }
 
-func GetNewEtcd(env string)(myEtcd *util.MyEtcd,err error){
+func GetNewEtcd(env string,configZapReturn  global.Zap)(myEtcd *util.MyEtcd,err error){
+	//这个是给3方库：clientv3使用的
+	//有点操蛋，我回头想想如何优化掉
+	zl :=  zap.Config{
+		Level: zap.NewAtomicLevelAt ( zapcore.Level(configZapReturn.LevelInt8) ),
+		Development: false,
+		Sampling: &zap.SamplingConfig{
+			Initial:    100,
+			Thereafter: 100,
+		},
+		Encoding:         "json",
+		EncoderConfig:    zap.NewProductionEncoderConfig(),
+		//OutputPaths:      []string{"stderr"},
+		OutputPaths:      []string{"stdout",configZapReturn.FileName},
+		ErrorOutputPaths: []string{"stderr"},
+	}
+
+
 	option := util.EtcdOption{
 		ProjectName		: global.V.Project.Name,
 		ProjectENV		: env,
@@ -317,6 +345,7 @@ func GetNewEtcd(env string)(myEtcd *util.MyEtcd,err error){
 		Ip			: global.C.Etcd.Ip,
 		Port		: global.C.Etcd.Port,
 		Log			: global.V.Zap,
+		ZapConfig: zl,
 	}
 	myEtcd,err  = util.NewMyEtcdSdk(option)
 	//util.ExitPrint(err)

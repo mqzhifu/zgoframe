@@ -30,14 +30,14 @@ func NewMyEmail (emailOption EmailOption)*MyEmail{
 
 	return myEmail
 }
-
+//同步 - 发送一封邮件
 func(myEmail *MyEmail) SendOneEmailSync(to  string,Subject string,msg string)error{
 
 	m := myEmail.GetInitSendOneEmailInfo(to,Subject,msg)
 	err := myEmail.Dialer.DialAndSend(m)
 	return err
 }
-
+//异步 - 发送一封邮件
 func(myEmail *MyEmail) SendOneEmailAsync(to  string,Subject string,msg string)error{
 	m := myEmail.GetInitSendOneEmailInfo(to,Subject,msg)
 	go  myEmail.Dialer.DialAndSend(m)

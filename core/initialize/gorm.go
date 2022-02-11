@@ -1,7 +1,6 @@
 package initialize
 
 import (
-	"fmt"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -11,7 +10,7 @@ import (
 )
 
 func GetNewGorm() (*gorm.DB,error) {
-	util.MyPrint("GetNewGorm , DBType:"+ global.C.System.DbType)
+	global.V.Zap.Info("GetNewGorm , DBType:"+ global.C.System.DbType)
 	switch global.C.System.DbType {
 	//目前仅支持MYSQL ，后期考虑是否加入其它DB
 	case "mysql":
@@ -24,7 +23,7 @@ func GetNewGorm() (*gorm.DB,error) {
 func GormMysql() (*gorm.DB,error) {
 	m := global.C.Mysql
 	dns := m.Username + ":" + m.Password + "@tcp(" + m.Ip + ":" + m.Port + ")/" + m.DbName + "?" + m.Config
-	util.MyPrint(" GormMysql dns:"+ dns )
+	global.V.Zap.Info(" GormMysql dns:"+ dns )
 	mysqlConfig := mysql.Config{
 		DSN:                       dns,   // DSN data source name
 		DefaultStringSize:         191,   // string 类型字段的默认长度
@@ -35,11 +34,10 @@ func GormMysql() (*gorm.DB,error) {
 	}
 	db, err := gorm.Open(mysql.New(mysqlConfig), gormConfig(m.LogMode))
 	if err != nil {
-		fmt.Println("MySQL启动异常", err.Error())
+		global.V.Zap.Error("MySQL启动异常:" + err.Error())
 		return nil,err
 	}
 	//db = db.Debug()
-
 	sqlDB, _ := db.DB()
 	sqlDB.SetMaxIdleConns(m.MaxIdleConns)
 	sqlDB.SetMaxOpenConns(m.MaxOpenConns)

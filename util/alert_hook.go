@@ -42,9 +42,10 @@ type AlertHook struct {
 	Title 	string
 	SendMethod int
 }
-
-
-
+//level :报警级别，  SMS EMAIL FEISHU WEIXIN DINGDING ， -1：为全部
+//template:报警发送的内容(模板)，还需要动态替换变量值
+//template:报警发送的标题
+//SendMethod:同步/异步
 func NewAlertHook(level int ,template string,Title string,SendMethod int,log *zap.Logger)*AlertHook{
 	log.Info("NewAlertHook:")
 
@@ -61,11 +62,9 @@ func NewAlertHook(level int ,template string,Title string,SendMethod int,log *za
 		alertHook.Level = level
 	}
 
-	alertHook.Template = template
-	alertHook.Title = Title
-	alertHook.SendMethod = SendMethod
-
-	//log.Info("NewAlertHook")
+	alertHook.Template 		= template
+	alertHook.Title 		= Title
+	alertHook.SendMethod 	= SendMethod
 
 	return alertHook
 }

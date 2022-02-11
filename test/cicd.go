@@ -42,6 +42,7 @@ func Cicd(){
 	//发布管理
 	publicManager := util.NewCICDPublicManager(global.V.Gorm)
 
+	util.ExitPrint(22)
 	op := util.CicdManagerOption{
 		HttpPort		: "1111",
 		ServerList 		: serverList,

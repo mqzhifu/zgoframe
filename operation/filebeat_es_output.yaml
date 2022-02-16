@@ -1,0 +1,4 @@
+    - index: "ck-local-#index#-%{+yyyy.MM.dd}"
+      when.equals:
+        fields:
+            source: "#index#"

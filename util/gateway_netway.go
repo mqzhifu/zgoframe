@@ -138,7 +138,7 @@ func NewNetWay(option NetWayOption)(*NetWay,error)  {
 	return netWay,nil
 }
 func(netWay *NetWay)InitMetrics(log *zap.Logger)*MyMetrics{
-	metrics := NewMyMetrics(log)
+	metrics := NewMyMetrics( MyMetricsOption{Log: log})
 	metrics.CreateGauge("startup_time","启动时间")			//启动时间
 
 	metrics.CreateCounter("ws_ok_fd","websocket 成功建立FD 数量")				//websocket 成功建立FD 数量
@@ -153,9 +153,9 @@ func(netWay *NetWay)InitMetrics(log *zap.Logger)*MyMetrics{
 	metrics.CreateCounter("new_fd","netway 接收来自 tcp/ws 新FD 数量")	//netway 接收来自 tcp/ws 新FD 数量
 
 	metrics.CreateCounter("create_fd_ok","验证通过，成功创建的FD")		//验证通过，成功创建的FD
-	metrics.CreateCounter("create_fd_failed","验证失败，FD")	//验证失败，FD
-	metrics.CreateCounter("server_close_fd","主动关闭FD")	//主动关闭FD
-	metrics.CreateCounter("client_close_fd","被动关闭FD")	//被动关闭FD
+	metrics.CreateCounter("create_fd_failed","验证失败，FD")			//验证失败，FD
+	metrics.CreateCounter("server_close_fd","主动关闭FD")				//主动关闭FD
+	metrics.CreateCounter("client_close_fd","被动关闭FD")				//被动关闭FD
 
 	metrics.CreateCounter("total_output_num","总发送消息 次数")	//总发送消息 次数
 	metrics.CreateGauge("total_output_size","总发送消息 大小")	//总发送消息 大小

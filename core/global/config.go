@@ -18,6 +18,7 @@ type Config struct {
 	Email 			Email
 	Protobuf 		Protobuf
 	ServiceDiscovery ServiceDiscovery
+	PushGateway 	PushGateway
 }
 
 type Protobuf struct {
@@ -48,6 +49,14 @@ type Http struct {
 	StaticPath string
 	ReqLimitTimes int
 }
+
+type PushGateway struct {
+	Status string
+	Ip string
+	Port string
+}
+
+
 
 type System struct {
 	Status string

@@ -7,13 +7,21 @@ import (
 )
 
 func Cicd(){
-	//path1 := "/data/www/golang/src/logslave.go"
-	//path2 := "/data/www/golang/src/metaverse-api"
-	//file_fd, err1 := os.Stat(path1)
-	//dir_fd, err2 := os.Stat(path2)
-	//util.MyPrint(err1,err2," ",file_fd.IsDir() , " ",dir_fd.IsDir())
-	//util.ExitPrint(33)
 
+	testPushCounterName := "testPushCounter"
+
+	global.V.Metric.CreateCounter(testPushCounterName,"im_test_counter")
+	global.V.Metric.CounterInc(testPushCounterName)
+
+	testPushGaugeName := "testPushGauge"
+
+	global.V.Metric.CreateGauge(testPushGaugeName,"im_test_gauge")
+	global.V.Metric.GaugeSet(testPushGaugeName,0.001)
+
+
+	push_err := global.V.Metric.PushMetrics()
+	util.MyPrint("test pusher err:",push_err)
+	return
 	/*依赖
 		host.toml cicd.sh
 		table:  project instance server cicd_publish
@@ -33,7 +41,7 @@ func Cicd(){
 		util.ExitPrint(err.Error())
 	}
 
-	util.PrintStruct(cicdConfig, " : ")
+	util.PrintStruct(cicdConfig , " : ")
 	//3方实例
 	instanceManager ,_:= util.NewInstanceManager(global.V.Gorm)
 	//服务器列表
@@ -42,7 +50,7 @@ func Cicd(){
 	//发布管理
 	publicManager := util.NewCICDPublicManager(global.V.Gorm)
 
-	util.ExitPrint(22)
+	//util.ExitPrint(22)
 	op := util.CicdManagerOption{
 		HttpPort		: "1111",
 		ServerList 		: serverList,
@@ -59,8 +67,11 @@ func Cicd(){
 	if err != nil{
 		util.ExitPrint(err)
 	}
+	//生成 filebeat 配置文件
+	cicd.GenerateAllFilebeat()
 	//cicd.GetSuperVisorList()
-	cicd.DeployAllService()
+	//部署所有机器上的所有服务项目
+	//cicd.DeployAllService()
 	//go cicd.StartHttp(global.C.Http.StaticPath)
 }
 

@@ -133,7 +133,8 @@ func CustomTimeEncoder(t time.Time, enc zapcore.PrimitiveArrayEncoder) {
 
 func GetWriteSyncer(configZap *global.Zap) (zapcore.WriteSyncer, error) {
 	if configZap.ModuleName != ""{
-		configZap.BaseDir += "/" + configZap.ModuleName
+		//将ModuleName单独再创建一个子文件夹子
+		//configZap.BaseDir += "/" + configZap.ModuleName
 	}
 
 	if configZap.SoftLinkFileName == ""{
@@ -153,7 +154,7 @@ func GetWriteSyncer(configZap *global.Zap) (zapcore.WriteSyncer, error) {
 	}
 	//创建一个：输出器(文件|屏幕)，带翻滚功能
 	fileWriter, err := zaprotatelogs.New(
-		path.Join(configZap.BaseDir, "%Y-%m-%d.log"),//日志文件名格式
+		path.Join(configZap.BaseDir, configZap.ModuleName + "_%Y-%m-%d.log"),//日志文件名格式
 		zaprotatelogs.WithLinkName(configZap.FileName),//文件软连接名
 		zaprotatelogs.WithMaxAge(7*24*time.Hour),//单个文件，失效时间 7天
 		zaprotatelogs.WithRotationTime(24*time.Hour),//每1天 做一次日志文件滚动处理

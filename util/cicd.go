@@ -110,7 +110,6 @@ func NewCicdManager(cicdManagerOption CicdManagerOption)(*CicdManager,error){
 	if err != nil{
 		return cicdManager,cicdManager.MakeError("Option.Config.System.ServiceDir :"+err.Error())
 	}
-
 	//SuperVisor 模板文件
 	_,err = FileExist(cicdManager.Option.Config.SuperVisor.ConfTemplateFile)//superVisor 模板文件
 	if  err != nil{
@@ -121,39 +120,13 @@ func NewCicdManager(cicdManagerOption CicdManagerOption)(*CicdManager,error){
 	if  err != nil{
 		return cicdManager,cicdManager.MakeError("SuperVisor.ConfDir :"+err.Error())
 	}
-
-	return cicdManager,nil
-}
-
-func(cicdManager *CicdManager)ReplaceInstance(content string,serviceName string ,env string)string{
-	category := []string{"mysql","redis","etcd","rabbitmq","kafka","log","alert","email","cdn","consul","sms"}
-	//attr := []string{"ip","port","user","ps"}
-	separator := STR_SEPARATOR
-	content = strings.Replace(content,separator + "env" + separator,env,-1)
-	content = strings.Replace(content,separator + "log_dir" + separator,cicdManager.Option.Config.System.LogDir,-1)
-	for _,v := range category{
-		//for _,attrOne := range attr{
-			instance,empty :=  cicdManager.Option.InstanceManager.GetByEnvName(env,v)
-			if empty{
-				//MyPrint("cicdManager.Option.InstanceManager.GetByEnvName is empty,",env,v)
-				continue
-			}
-			key := separator+ v  +"_" + "ip"  +separator
-			content = strings.Replace(content,key,instance.Host,-1)
-
-		key = separator  + v  +"_" + "port"  +separator
-			content = strings.Replace(content,key,instance.Port,-1)
-
-		key = separator  + v  +"_" + "user"  +separator
-			content = strings.Replace(content,key,instance.User,-1)
-
-		key = separator  + v  +"_" + "ps"  +separator
-			content = strings.Replace(content,key,instance.Ps,-1)
-
-		//}
+	//日志统一放置目录
+	_,err = PathExists(cicdManager.Option.Config.System.LogDir)
+	if  err != nil{
+		return cicdManager,cicdManager.MakeError("System.LogDir :"+err.Error())
 	}
 
-	return content
+	return cicdManager,nil
 }
 
 func(cicdManager *CicdManager)MakeError(errMsg string)error{
@@ -347,6 +320,55 @@ func (cicdManager *CicdManager)GetSuperVisorList(c *gin.Context){
 	str ,err := json.Marshal(myresponse)
 	MyPrint("json err:",err)
 	c.String(200 , string(str) )
+}
+
+func (cicdManager *CicdManager)GenerateAllFilebeat(){
+	pwd , _ := os.Getwd()//当前路径
+	opDirFull := pwd + "/" + cicdManager.Option.OpDirName
+
+	for _,server :=range cicdManager.Option.ServerList{
+		cicdManager.GenerateFilebeat(server,opDirFull)
+		MyPrint("finish one ...........")
+	}
+	ExitPrint(33)
+}
+func (cicdManager *CicdManager)GenerateFilebeat(server Server,opDir string){
+
+	instance,empty :=  cicdManager.Option.InstanceManager.GetByEnvName(server.Env,"es")
+	if empty {
+		ExitPrint("ProcessFilebeat GetByEnvName es empty :"+server.Env)
+	}
+
+	esDns := instance.Host + ":" + instance.Port
+	filebeatConfigFile := opDir + "/" +  "filebeat.yaml"
+	filebeatConfigFileContent ,_ := ReadString(filebeatConfigFile)
+	filebeatConfigFileContent =  strings.Replace(filebeatConfigFileContent,"#elasticsearch_output_hosts#",esDns,-1)
+
+	filebeatInput := ""
+	for _,service :=range cicdManager.Option.ServiceList{
+		filebeat_input_file := opDir + "/" +  "filebeat_input.yaml"
+		filebeat_input_content ,_ := ReadString(filebeat_input_file)
+		serviceLogDir := cicdManager.Option.Config.System.LogDir + "/" +  service.Name + "/*.log"
+		//ExitPrint(serviceLogDir)
+		filebeat_input_content =   strings.Replace(filebeat_input_content,"#paths#",serviceLogDir,-1)
+		filebeat_input_content =   strings.Replace(filebeat_input_content,"#source#", service.Name,-1)
+
+		filebeatInput += filebeat_input_content + "\n"
+	}
+	esOutput := ""
+	for _,service :=range cicdManager.Option.ServiceList{
+		esOutputFile := opDir + "/" +  "filebeat_es_output.yaml"
+		esOutputFileContent ,_ := ReadString(esOutputFile)
+		esOutputFileContent =   strings.Replace(esOutputFileContent,"#index#",service.Name,-1)
+
+		esOutput += esOutputFileContent + "\n"
+	}
+	//MyPrint(filebeatInput)
+	//MyPrint(esOutput)
+	filebeatConfigFileContent =   strings.Replace(filebeatConfigFileContent,"#filebeat_inputs#",filebeatInput,-1)
+	filebeatConfigFileContent =   strings.Replace(filebeatConfigFileContent,"#elasticsearch_output_index#",esOutput,-1)
+
+	MyPrint(filebeatConfigFileContent)
 }
 //如果一个路径不存在
 func pathNotExistCreate(path string)error{

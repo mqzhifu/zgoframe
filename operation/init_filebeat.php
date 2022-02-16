@@ -15,6 +15,7 @@ class Op {
     public $projectName = "";
     public $log_base_path = "";
 
+    //总控
     function start($log_base_path){
         $this->log_base_path = $log_base_path;
         $this->initApp();

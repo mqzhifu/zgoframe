@@ -1,34 +1,65 @@
 package util
 
+/*
+	自实现服务的exporter
+	依赖：client_golang/prometheus 库，其核心：
+	1. 收集器
+	2. 指定定义器
+	3. 推送/接收器 (http)
+
+	目前metric类型只实现两种：counter Gauge ，未实现：Histogram Summary
+	数据多维度label 未实现
+ */
+
+
 import (
 	"errors"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/push"
+	//"github.com/prometheus/client_golang/prometheus/push"
 	"go.uber.org/zap"
 )
 
-type MyMetrics struct {
-	Groups map[string]interface{}
-	Log *zap.Logger
+type PushGateway struct {
+	Status 	string
+	Ip 		string
+	Port 	string
+	JobName string
 }
 
-func NewMyMetrics(log *zap.Logger)*MyMetrics{
+type MyMetricsOption struct{
+	Log *zap.Logger
+	PushGateway PushGateway
+	NameSpace string
+	Env string
+}
+
+type MyMetrics struct {
+	Groups map[string]interface{}
+	Pusher 	*push.Pusher
+	Option MyMetricsOption
+}
+
+func NewMyMetrics(option MyMetricsOption)*MyMetrics{
 	myMetrics := new(MyMetrics)
 	myMetrics.Groups = make(map[string]interface{})
-	myMetrics.Log = log
+	//myMetrics.Log = log
+	//myMetrics.PushGateway = pushGateway
+	//myMetrics.NameSpace = nameSpace
+	myMetrics.Option = option
+	option.Log.Info("NewMyMetrics")
 
-	log.Info("NewMyMetrics")
+	if myMetrics.Option.PushGateway.Status == "open"{
+		//dns := "http://"+pushGateway.Ip + ":" + pushGateway.Port + "/metrics"
+		dns := "http://"+myMetrics.Option.PushGateway.Ip + ":" + myMetrics.Option.PushGateway.Port
+		pusher := push.New(dns,myMetrics.Option.PushGateway.JobName)
+		myMetrics.Pusher = pusher
+		//testPushGateway()
+	}
+
 
 	return myMetrics
 }
-
-//func (myMetrics *MyMetrics)Test(){
-//	myMetrics.CreateCounter("paySuccess")
-//	myMetrics.CounterInc("paySuccess")
-//	myMetrics.CounterInc("paySuccess")
-//
-//	myMetrics.CreateGauge("payUser")
-//	myMetrics.GaugeSet("payUser",100)
-//}
 
 func (myMetrics *MyMetrics)GroupNameHasExist(name string)bool{
 	_,ok := myMetrics.Groups[name]
@@ -39,20 +70,38 @@ func (myMetrics *MyMetrics)GroupNameHasExist(name string)bool{
 	//fmt.Println("GroupNameHasExist "+ name + " rs:",rs)
 	return rs
 }
+func (myMetrics *MyMetrics)PushMetrics()error{
+	if myMetrics.Option.PushGateway.Status != "open"{
+		return errors.New("PushGateway.Status != open")
+	}
 
+	myMetrics.Pusher.Grouping("instance", myMetrics.Option.PushGateway.Ip ).Grouping("env",myMetrics.Option.Env).Push()
+
+	return nil
+}
 func (myMetrics *MyMetrics)CreateGauge(name string,help string )error{
 	if myMetrics.GroupNameHasExist(name) {
 		return errors.New("CreateGauge GroupNameHasExist:"+name)
 	}
+
+	//labels :=  make(map[string]string)
+	//labels["label_create_type"] = "CreateGauge"
 	gauge := prometheus.NewGauge(prometheus.GaugeOpts{
 		Name:      name,
-		Namespace: "netway",
+		//Namespace: myMetrics.Option.NameSpace,
 		Help:     help,
+		//ConstLabels:labels,
 	})
 
-	myMetrics.Log.Info("metrics: CreateGauge "+ name)
+
+	myMetrics.Option.Log.Info("metrics: CreateGauge "+ name)
 
 	prometheus.MustRegister(gauge)
+
+	if myMetrics.Option.PushGateway.Status == "open"{
+		myMetrics.Pusher.Collector(gauge)
+	}
+
 	myMetrics.Groups[name] = gauge
 
 	return nil
@@ -111,12 +160,17 @@ func (myMetrics *MyMetrics)CreateCounter(name string,help string )error{
 	var AccessCounter = prometheus.NewCounter(
 		prometheus.CounterOpts{
 			Name: name,
-			Namespace: "netway",
+			//Namespace: myMetrics.Option.NameSpace,
 			Help: help,
 		},
 	)
 
-	myMetrics.Log.Info("metrics: CreateCounter "+name )
+	myMetrics.Option.Log.Info("metrics: CreateCounter "+name )
+
+
+	if myMetrics.Option.PushGateway.Status == "open"{
+		myMetrics.Pusher.Collector(AccessCounter)
+	}
 
 	prometheus.MustRegister(AccessCounter)
 	myMetrics.Groups[name] = AccessCounter
@@ -151,3 +205,27 @@ func (myMetrics *MyMetrics)Shutdown(){
 
 //Counter end
 
+
+//func testPushGateway(pusher *push.Pusher,dns string){
+//
+//	myTimer := time.NewTimer(time.Second * 2)
+//	MyPrint("start push metrics :"+ dns)
+//	cnt := prometheus.NewCounter(prometheus.CounterOpts{
+//		Name:      "pushName",
+//		Namespace: "testNamespace",
+//		Help:     "test golang pusher",
+//	})
+//	cnt.Inc()
+//	<-myTimer.C
+//	err := pusher.Collector(cnt).Grouping("instance", "1.1.1.1").Push()
+//	MyPrint("push metrics err :",err)
+//}
+//
+//func (myMetrics *MyMetrics)Test(){
+//	myMetrics.CreateCounter("paySuccess")
+//	myMetrics.CounterInc("paySuccess")
+//	myMetrics.CounterInc("paySuccess")
+//
+//	myMetrics.CreateGauge("payUser")
+//	myMetrics.GaugeSet("payUser",100)
+//}

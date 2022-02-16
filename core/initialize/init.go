@@ -168,7 +168,19 @@ func (initialize * Initialize)Start()error{
 	}
 	//metrics
 	if global.C.Metrics.Status == global.CONFIG_STATUS_OPEN{
-		global.V.Metric =  util.NewMyMetrics(global.V.Zap)
+		myPushGateway :=util.PushGateway{
+			Status: global.C.PushGateway.Status,
+			Ip: global.C.PushGateway.Ip,
+			Port: global.C.PushGateway.Port,
+			JobName: global.V.Project.Name,
+		}
+		myMetricsOption := util.MyMetricsOption{
+			Log: global.V.Zap,
+			NameSpace: global.V.Project.Name,
+			PushGateway:myPushGateway,
+			Env :global.C.System.ENV,
+		}
+		global.V.Metric =  util.NewMyMetrics(myMetricsOption)
 
 		if global.C.Http.Status != global.CONFIG_STATUS_OPEN{
 			return errors.New("metrics need gin open!")
@@ -333,7 +345,6 @@ func GetNewEtcd(env string,configZapReturn  global.Zap)(myEtcd *util.MyEtcd,err 
 		OutputPaths:      []string{"stdout",configZapReturn.FileName},
 		ErrorOutputPaths: []string{"stderr"},
 	}
-
 
 	option := util.EtcdOption{
 		ProjectName		: global.V.Project.Name,

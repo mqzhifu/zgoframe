@@ -45,8 +45,8 @@ imgHeight    = 80
 
 [http]
 status          = "close"
-ip              = "127.0.0.1"
-port            = "5555"
+ip              = "#http_ip#"
+port            = "#http_port#"
 staticPath      = "/data/www/golang/src/zgoframe/static"
 reqLimitTimes   = 100
 
@@ -90,8 +90,8 @@ uri     = "/ws"
 
 [grpc]
 status                  = "open"
-ip                      = "127.0.0.1"
-port                    = "6666"
+ip                      = "#grpc_ip#"
+port                    = "#grpc_port#"
 servicePackagePrefix    = "pb"
 
 [protobuf]
@@ -106,8 +106,12 @@ prefix = "/service"
 
 [email]
 status  = "open"
-host    = "smtp.qq.com"
-port    = 465
-from    = "78878296@qq.com"
-ps      = "mM123456"
+host    = "#email_stmp#"
+port    = #email_stmp_port#
+from    = "#email_from#"
+ps      = "#email_ps#"
 
+[pushGateway]
+status  = "close"
+ip      = "#push_gateway_ip#"
+port    = "#push_gateway_port#"

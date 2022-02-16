@@ -1,7 +1,7 @@
 [system]
 env=["local","dev","test","pre","online"]
 
-logDir="/data/logs"
+logDir="/data/www/golang/testcicd/logs"
 serviceDir="/data/www/golang/testcicd"
 serviceMasterName="master"
 

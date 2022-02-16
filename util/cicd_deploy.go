@@ -41,7 +41,7 @@ func(cicdManager *CicdManager)DeployAllService(){
 		ConfigTmpFileName	: "config.toml.tmp",
 		ConfigFileName 		: "config.toml",
 		GitCloneTmpDirName 	: "clone",
-		CICDShellFileName 	: "./cicd.sh",
+		CICDShellFileName 	: "cicd.sh",
 	}
 	PrintStruct(serviceDeployConfig , ":")
 
@@ -331,4 +331,41 @@ func (cicdManager *CicdManager)DeployOneServiceLinkMaster(newGitCodeDir string, 
 func (cicdManager *CicdManager)DeployOneServiceFailed(publish model.CICDPublish ,errMsg string)error{
 	cicdManager.Option.PublicManager.UpStatus(publish,3)
 	return cicdManager.MakeError(errMsg)
+}
+
+var ThirdInstance =  []string{"mysql","redis","etcd","rabbitmq","kafka","log","alert","email","cdn","consul","sms","prometheus","es","kibana","grafana","push_gateway"}
+
+func(cicdManager *CicdManager)ReplaceInstance(content string,serviceName string ,env string)string{
+	category := ThirdInstance
+	//attr := []string{"ip","port","user","ps"}
+	separator := STR_SEPARATOR
+	content = strings.Replace(content,separator + "env" + separator,env,-1)
+	projectLogDir :=cicdManager.Option.Config.System.LogDir + DIR_SEPARATOR +serviceName
+
+	pathNotExistCreate(projectLogDir)
+
+	content = strings.Replace(content,separator + "log_dir" + separator,projectLogDir,-1)
+	for _,v := range category{
+		//for _,attrOne := range attr{
+		instance,empty :=  cicdManager.Option.InstanceManager.GetByEnvName(env,v)
+		if empty{
+			//MyPrint("cicdManager.Option.InstanceManager.GetByEnvName is empty,",env,v)
+			continue
+		}
+		key := separator+ v  +"_" + "ip"  +separator
+		content = strings.Replace(content,key,instance.Host,-1)
+
+		key = separator  + v  +"_" + "port"  +separator
+		content = strings.Replace(content,key,instance.Port,-1)
+
+		key = separator  + v  +"_" + "user"  +separator
+		content = strings.Replace(content,key,instance.User,-1)
+
+		key = separator  + v  +"_" + "ps"  +separator
+		content = strings.Replace(content,key,instance.Ps,-1)
+
+		//}
+	}
+
+	return content
 }

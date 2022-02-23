@@ -66,9 +66,48 @@ func(superVisor *SuperVisor) InitXMLRpc()error{
 		MyPrint("superVisor init err:",err)
 		return err
 	}
+
+
+
 	superVisor.Cli = c
 	return nil
 }
+
+func(superVisor *SuperVisor)StartProcess(serviceName string,wait bool)error{
+	//processListInfo  ,err := superVisor.Cli.GetAllProcessInfo()
+	//if err != nil{
+	//
+	//}
+	//
+	//var serviceSuperVisorInfo supervisord.ProcessInfo
+	//hasSearch := false
+	//for _,v := range processListInfo{
+	//	if serviceName == v.Name{
+	//		serviceSuperVisorInfo = v
+	//		break
+	//	}
+	//}
+	//if !hasSearch{
+	//
+	//}
+	//
+	//if serviceSuperVisorInfo.State !=  supervisord.StateStopped && serviceSuperVisorInfo.State == supervisord.StateExited {
+	//
+	//}
+	return superVisor.Cli.StartProcess(serviceName,wait)
+
+}
+
+func(superVisor *SuperVisor)StopProcess(){
+
+}
+
+func(superVisor *SuperVisor)ReloadProcess(){
+
+}
+
+
+
 func(superVisor *SuperVisor)ReplaceConfTemplate(replaceSource SuperVisorReplace)string{
 	content := superVisor.ConfTemplateFileContent
 	key := superVisor.Option.Separator+"script_name"+superVisor.Option.Separator

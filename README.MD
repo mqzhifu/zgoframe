@@ -20,7 +20,7 @@
 
 辅助软件：
 
-filebeat  prometheus grafana alertManager metrics cicd( superVisor git ) rabbitmq kafka
+filebeat prometheus grafana alertManager metrics cicd( superVisor git ) rabbitmq kafka push_gateway
 
 
 这里最恶心的是ETCD，不兼容MOD模式。  

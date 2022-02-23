@@ -13,6 +13,7 @@ func DoMySelf(){
 	}else{
 		//test.Grpc()
 		//test.Gateway()
-		test.Cicd()
+		//test.Cicd()
+		test.Email()
 	}
 }

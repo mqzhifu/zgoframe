@@ -115,7 +115,7 @@ func CheckToken(myHeader request.Header )(parserTokenData request.ParserTokenDat
 		return parserTokenData,errors.New(err.Error())
 	}
 
-	if claims.AppId <0 || claims.Id < 0 {
+	if claims.ProjectId <0 || claims.Id < 0 {
 		return parserTokenData,errors.New("AppId or Id is null")
 	}
 
@@ -129,7 +129,7 @@ func CheckToken(myHeader request.Header )(parserTokenData request.ParserTokenDat
 		//_ = service.JsonInBlacklist(model.JwtBlacklist{Jwt: token})
 		return parserTokenData,errors.New("id not in db")
 	}
-	redisElement ,_:= global.V.Redis.GetElementByIndex("jwt",strconv.Itoa(claims.AppId),strconv.Itoa(parserTokenData.SourceType),strconv.Itoa(claims.Id))
+	redisElement ,_:= global.V.Redis.GetElementByIndex("jwt",strconv.Itoa(claims.ProjectId),strconv.Itoa(parserTokenData.SourceType),strconv.Itoa(claims.Id))
 	//redisLoginJwtKey := service.GetLoginJwtKey(parserTokenData.SourceType,claims.AppId,claims.Id)
 	global.V.Zap.Debug("user token key:"+redisElement.Key)
 	//err, jwtStr := service.GetRedisJWT(redisLoginJwtKey)

@@ -45,10 +45,10 @@ func GetNewZapLog(alert *util.AlertPush , configZap global.Zap) (logger *zap.Log
 		if !configZap.AutoAlert{//未开始自动报警
 			return nil
 		}
+
 		//以下级别日志，均要报警
-		num := zap.ErrorLevel | zap.PanicLevel |  zap.FatalLevel |  zap.DPanicLevel
-		if entry.Level & num == 0{
-			alert.Push(int(entry.Level),entry.Message)
+		if entry.Level == zap.ErrorLevel ||entry.Level ==  zap.PanicLevel ||entry.Level ==   zap.FatalLevel ||entry.Level ==   zap.DPanicLevel{
+			alert.Push(0, entry.Level.String(),entry.Message)
 		}
 		return nil
 	})

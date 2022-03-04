@@ -22,7 +22,7 @@ func tokenNext(c *gin.Context, user model.User) {
 	util.MyPrint("token next user:",user.Id , "sourceType:",request.GetMyHeader(c).SourceType)
 	j := &httpmiddleware.JWT{SigningKey: []byte(global.C.Jwt.Key)} // 唯一签名
 	claims := request.CustomClaims{
-		AppId: user.AppId,
+		ProjectId: user.ProjectId,
 		//UUID:        user.Uuid,
 		//AuthorityId: user.AuthorityId,
 		Id:          user.Id,
@@ -44,7 +44,7 @@ func tokenNext(c *gin.Context, user model.User) {
 		return
 	}
 	//从redis里再取一下：可能有，可能没有
-	redisElement ,_:= global.V.Redis.GetElementByIndex("jwt",strconv.Itoa(user.AppId),strconv.Itoa(request.GetMyHeader(c).SourceType),strconv.Itoa(user.Id))
+	redisElement ,_:= global.V.Redis.GetElementByIndex("jwt",strconv.Itoa(user.ProjectId),strconv.Itoa(request.GetMyHeader(c).SourceType),strconv.Itoa(user.Id))
 	//key := service.GetLoginJwtKey(request.GetMyHeader(c).SourceType,user.AppId,user.Id)
 	global.V.Zap.Debug("token key:"+redisElement.Key)
 	//util.MyPrint(key)
@@ -104,7 +104,7 @@ func Register(c *gin.Context) {
 		httpresponse.FailWithMessage(err.Error(), c)
 		return
 	}
-	user := &model.User{Username: R.Username, NickName: R.NickName, Password: R.Password, HeaderImg: R.HeaderImg, AuthorityId: R.AuthorityId ,AppId: R.AppId}
+	user := &model.User{Username: R.Username, NickName: R.NickName, Password: R.Password, HeaderImg: R.HeaderImg, AuthorityId: R.AuthorityId ,ProjectId: R.AppId}
 	err, userReturn := service.Register(*user,request.GetMyHeader(c))
 	if err != nil {
 		global.V.Zap.Error("注册失败", zap.Any("err", err))

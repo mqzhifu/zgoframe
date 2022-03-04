@@ -33,8 +33,8 @@ type UserCenter interface{
 }
 
 type Friend interface {
-	Apply()//申请添加好友
-	GetList()//好友列表
+	Apply(uid int , toUid int)//申请添加好友
+	GetList(uid int ,page, everyPage int,order string)//好友列表
 
 	AppliedList()//别人申请添加你的列表
 	AppliedDeny()//拒绝别人的申请

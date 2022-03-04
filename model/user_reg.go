@@ -21,11 +21,11 @@ const (
 
 type UserReg struct {
 	MODEL
-	AppId       	int   			`json:"app_id" db:"define:int;comment:appid;defaultValue:0"  `
+	ProjectId      	int   			`json:"project_id" db:"define:int;comment:project_id;defaultValue:0"  `
 	Uid        		int 			`json:"uid" db:"define:int;comment:uid;defaultValue:0"`
-	Type 			int 			`json:"type" db:"define:tinyint(1);comment:类型;defaultValue:0"  `
+	Type 			int 			`json:"type" db:"define:tinyint(1);comment:类型;defaultValue:0" `
 	ThirdType 		int				`json:"third_type" db:"define:tinyint(1);comment:三方平台用户ID;defaultValue:0"`
-	Channel 		int 			`json:"channel" db:"define:tinyint(1);comment:渠道;defaultValue:0"`
+	Channel 		int 			`json:"channel" db:"define:tinyint(1);comment:推广渠道;defaultValue:0"`
 	Ip 				string 			`json:"ip" db:"define:varchar(50);comment:请求方传输IP;defaultValue:''"`
 	AutoIp			string			`json:"auto_ip" db:"define:varchar(50);comment:程序自己计算的IP;defaultValue:''"`
 	AppVersion 		string			`json:"app_version" db:"define:varchar(50);comment:APP版本;defaultValue:''"`
@@ -38,6 +38,7 @@ type UserReg struct {
 	Lon 			string			`json:"lon" db:"define:varchar(50);comment:经度;defaultValue:''"`
 	DeviceId 		string		`json:"device_id" db:"define:varchar(50);comment:设备ID;defaultValue:''"`
 	Dpi 			string		`json:"dpi" db:"define:varchar(50);comment:分辨率;defaultValue:''"`
+	Referer 		string		`json:"referer" db:"define:varchar(255);comment:页面来源;defaultValue:''"`
 
 }
 

@@ -99,7 +99,7 @@ func Login(c *gin.Context) {
 
 	//if store.Verify(L.CaptchaId, L.Captcha, true) {
 		//先从DB中做比对
-		U := &model.User{Username: L.Username, Password: L.Password,AppId: L.AppId}
+		U := &model.User{Username: L.Username, Password: L.Password,ProjectId: L.AppId}
 		err, user := service.Login(U)
 		if  err != nil {
 			global.V.Zap.Error("登陆失败! 用户名不存在或者密码错误", zap.Any("err", err))

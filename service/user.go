@@ -19,7 +19,7 @@ import (
 //@return: err error, userInter model.User
 func Register(u model.User,h request.Header) (err error, userInter model.User) {
 	var user model.User
-	if !errors.Is(global.V.Gorm.Where("username = ? and app_id = ?", u.Username,u.AppId).First(&user).Error, gorm.ErrRecordNotFound) { // 判断用户名是否注册
+	if !errors.Is(global.V.Gorm.Where("username = ? and project_id = ?", u.Username,u.ProjectId).First(&user).Error, gorm.ErrRecordNotFound) { // 判断用户名是否注册
 		return errors.New("用户名已注册"), userInter
 	}
 	isEmail := util.CheckEmailRule(u.Username)
@@ -39,7 +39,7 @@ func Register(u model.User,h request.Header) (err error, userInter model.User) {
 
 	if err == nil{
 		userReg := model.UserReg{
-			AppId: u.AppId,
+			ProjectId: u.ProjectId,
 			Uid: u.Id,
 			Type: userRegType,
 			Ip: h.Ip,
@@ -76,7 +76,7 @@ func Register(u model.User,h request.Header) (err error, userInter model.User) {
 func Login(u *model.User) (err error, userInter *model.User) {
 	var user model.User
 	u.Password = util.MD5V([]byte(u.Password))
-	err = global.V.Gorm.Where("username = ? AND password = ? AND app_id = ? ", u.Username, u.Password,u.AppId).Preload("Authority").First(&user).Error
+	err = global.V.Gorm.Where("username = ? AND password = ? AND app_id = ? ", u.Username, u.Password,u.ProjectId).Preload("Authority").First(&user).Error
 	return err, &user
 }
 

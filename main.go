@@ -50,9 +50,6 @@ func main(){
 	imUser , _ := user.Current()
 	util.MyPrint("exec script user info , name: "+imUser.Name + " uid: " + imUser.Uid  +  " , gid :"+ imUser.Gid + " ,homeDir:" +imUser.HomeDir)
 
-	//u2, _ := user.Lookup(imUser.Name)
-	//util.ExitPrint(u2.Name)
-
 	pwd, _ := os.Getwd()//当前路径
 	util.MyPrint("exec script pwd:"+pwd)
 	//开始初始化模块
@@ -80,6 +77,7 @@ func main(){
 		panic("initialize.Init err:"+err.Error())
 		return
 	}
+	//执行用户自己的一些功能
 	go core.DoMySelf()
 	//监听外部进程信号
 	go global.V.Process.DemonSignal()

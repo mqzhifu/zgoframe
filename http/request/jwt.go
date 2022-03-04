@@ -8,7 +8,7 @@ import (
 type CustomClaims struct {
 	//AuthorityId string
 	//UUID        uuid.UUID
-	AppId 		int		`json:"app_id"`
+	ProjectId 		int		`json:"project_id"`
 	SourceType 	int		`json:"source_type"`
 	Id          int		`json:"id"`
 	Username    string	`json:"username"`

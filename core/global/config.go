@@ -138,7 +138,7 @@ type Metrics struct {
 
 type Alert struct {
 	Status string
-	Ip string
+	Host string
 	Port string
 	Uri string
 }

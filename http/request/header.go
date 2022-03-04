@@ -16,7 +16,7 @@ type ParserTokenData struct {
 }
 
 type Header struct {
-	Access     string  `json:"access"`	//使用网关时，不允许随意访问，得有key
+	Access     		string  `json:"access"`	//使用网关时，不允许随意访问，得有key
 	RequestId 		string	`json:"request_id"`
 	TraceId 		string	`json:"trace_id"`
 	SourceType 		int		`json:"source_type"`	//pc h5 ios android vr spider unknow
@@ -24,7 +24,7 @@ type Header struct {
 	Token 			string	`json:"token"`
 	AppVersion 		string	`json:"app_version"`	//app版本/前端版本
 	OS 				int		`json:"os"`				//win mac android ios
-	OSVersion 		string	`json:"os_version"`		//win7 win9 mac10
+	OSVersion 		string	`json:"os_version"`		//win7 win9 mac10 android9
 	Device			string	`json:"device"`			// ipad iphone huawei mi
 	DeviceVersion 	string	`json:"device_version"`
 	Lat 			string	`json:"lat"`			//纬度
@@ -33,6 +33,7 @@ type Header struct {
 	DPI 			string	`json:"dpi"`			//分辨率
 	Ip 				string	`json:"ip"`
 	AutoIp 			string	`json:"auto_ip"`		//获取不到请求方IP时，系统自动生成
+	Referer 		string	`json:"referer"`		//页面来源
 }
 
 const  (
@@ -94,7 +95,7 @@ func GetAppId(c *gin.Context) (int,error) {
 		return 0,errors.New("从Gin的Context中获取从jwt解析出来的user_appID失败, 请检查路由是否使用jwt中间件")
 	}
 
-	return CustomClaims.AppId,nil
+	return CustomClaims.ProjectId,nil
 }
 
 func GetUser(c *gin.Context)(user *model.User,err error){

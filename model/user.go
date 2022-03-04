@@ -29,11 +29,12 @@ import (
 type User struct {
 	MODEL
 	Uuid        uuid.UUID    	`json:"uuid" db:"define:varchar(50);comment:uuid;unique:uuid;index:uuid;defaultValue:''"`
-	AppId       int   			`json:"app_id" db:"define:tinyint(1);comment:app_id;defaultValue:0"`
+	ProjectId   int   			`json:"project_id" db:"define:tinyint(1);comment:project_id;defaultValue:0"`
 	Sex       	int   			`json:"sex" db:"define:tinyint(1);comment:性别1男2女;defaultValue:0"`
 	Birthday    int   			`json:"birthday" db:"define:int;comment:出生日期;defaultValue:0"`
 	Username    string       	`json:"username" db:"define:varchar(50);comment:用户登录名;defaultValue:''"`
 	Password    string       	`json:"-" db:"define:varchar(50);comment:用户登录密码;defaultValue:''"`
+	PayPs       string       	`json:"-" db:"define:varchar(50);comment:用户支付密码;defaultValue:''"`
 	NickName    string       	`json:"nick_name" db:"define:varchar(50);comment:用户昵称;defaultValue:''" `
 	AuthorityId string       	`json:"authority_id" db:"define:varchar(50);comment:用户角色ID;defaultValue:''"`
 	Mobile 		string 			`json:"mobile" db:"define:varchar(50);comment:手机号;defaultValue:''"`

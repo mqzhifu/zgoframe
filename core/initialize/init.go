@@ -66,7 +66,7 @@ func (initialize * Initialize)Start()error{
 	//预/报警->推送器，这里是推送到3方，如：prometheus
 	//ps:这个要优先zap日志类优化处理，因为zap里的<钩子>有用到,主要是日志里自动触发报警，略方便
 	if global.C.Alert.Status == global.CONFIG_STATUS_OPEN{
-		global.V.AlertPush = util.NewAlertPush(global.C.Alert.Ip,global.C.Alert.Port,global.C.Alert.Uri)
+		global.V.AlertPush = util.NewAlertPush(global.C.Alert.Host,global.C.Alert.Port,global.C.Alert.Uri)
 	}
 	//创建main日志类
 	configZap := global.C.Zap

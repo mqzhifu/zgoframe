@@ -35,10 +35,16 @@ func  (gateway *Gateway)HttpCallGrpc(serviceName string,funcName string,balanceF
 
 
 func (gateway *Gateway)StartSocket(netWayOption NetWayOption){
-	NewNetWay(netWayOption)
-	for  {
-		time.Sleep(1)
+	netWay ,err := NewNetWay(netWayOption)
+	if err != nil{
+		errMsg := "NewNetWay err:"+err.Error()
+		ExitPrint(errMsg)
 	}
+
+	for  {
+		time.Sleep(time.Second * 1)
+	}
+	netWay.Shutdown()
 	//
 	//roomId := "aabbccdd"
 	//ZgoframeClient ,err := gateway.GrpcManager.GetZgoframeClient(roomId)

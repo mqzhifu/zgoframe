@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"strconv"
+	"time"
 )
 
 type AlertPush struct {
@@ -32,8 +33,8 @@ type AlertMsg struct {
 
 	Labels 			AlertMsgLabels 		`json:"labels"`
 	Annotations 	AlertMsgAnnotations	`json:"annotations"`
-	//StartsAt 		string				`json:"startsAt"`
-	//EndsAt 			string				`json:"endsAt"`
+	StartsAt 		string				`json:"startsAt"`
+	EndsAt 			string				`json:"endsAt"`
 	GeneratorURL 	string				`json:"generatorURL"`
 }
 
@@ -71,30 +72,29 @@ func(alertPush *AlertPush) Push(projectId int ,levelString string ,content strin
 	}
 	//RFC3339     = "2006-01-02T15:04:05Z07:00"
 	//RFC3339Nano = "2006-01-02T15:04:05.999999999Z07:00"
-
-	//now := time.Now()
+	now := time.Now()
 	//nowString := now.Format("2006-01-02T15:04:05Z07:00")
+	nowString := now.Format(time.RFC3339Nano)
 
+	endTimeNow := now.Add(time.Second * 10)
+	endTimeNowStr := endTimeNow.Format(time.RFC3339Nano)
 	alertMsg :=  AlertMsg{
 		Annotations: alertMsgAnnotations,
 		Labels: alertMsgLabels,
-		//StartsAt: nowString,
-		//EndsAt: nowString,
+		StartsAt: nowString,
+		EndsAt: endTimeNowStr,
 		GeneratorURL: "http://127.0.0.1/service/diy",
 	}
 
 	alertMsgArr := []AlertMsg{alertMsg}
-
 	str ,err := json.Marshal(alertMsgArr)
-
-
 
 	req, err := http.NewRequest("POST", alertPush.Url, bytes.NewReader(str))
 	// req.Header.Set("X-Custom-Header", "myvalue")
 
 
-	//MyPrint("alert push ,url:", alertPush.Url)
-	//MyPrint("alert push ,content:",string(str))
+	MyPrint("alert push ,url:", alertPush.Url)
+	MyPrint("alert push ,content:",string(str))
 	//MyPrint("json err:",err , " http request err:",err)
 
 	req.Header.Set("Content-Type", "application/json;charset=UTF-8")

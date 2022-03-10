@@ -59,10 +59,10 @@ type NetWay struct {
 
 	Status 				int
 
-	ProtocolManager 	*ProtocolManager
-	ConnManager			*ConnManager
-	Metrics 			*MyMetrics
-	ProtobufMap			*ProtobufMap
+	ProtocolManager 	*ProtocolManager	//协议管理器
+	ConnManager			*ConnManager		//连接管理 器
+	Metrics 			*MyMetrics			//metric管理 器
+	ProtobufMap			*ProtobufMap		//protoBuf 管理器
 
 	Option          	NetWayOption
 }
@@ -75,7 +75,7 @@ func NewNetWay(option NetWayOption)(*NetWay,error)  {
 	//统计模块
 	netWay.Metrics = netWay.InitMetrics(option.Log)
 	myMetrics = netWay.Metrics
-
+	//单条消息最大值
 	netWay.Option = option
 	if option.MsgContentMax > 10240{
 		option.MsgContentMax = 10240 //最大10KB
@@ -114,7 +114,8 @@ func NewNetWay(option NetWayOption)(*NetWay,error)  {
 	//	ParentCtx 	: option.OutCxt,
 	//}
 	//myHttpd = NewHttpd(httpdOption)
-	//ws conn 管理
+
+	//conn FD 管理
 	connManagerOption := ConnManagerOption{
 		maxClientConnNum	: option.MaxClientConnNum,
 		connTimeout			: option.ConnTimeout,
@@ -255,8 +256,8 @@ func(netWay *NetWay)CloseFD(connFD FDAdapter,source int){
 //MAIN 接收到了中断信号，并执行了：context-cancel()，然后，startup函数的守护监听到，调用些方法
 func  (netWay *NetWay)Shutdown() {
 	netWay.Option.Log.Warn("netWay.Shutdown")
-	if netWay.Status == NETWAY_STATUS_CLOSE{
-		netWay.Option.Log.Error("Quit err :netWay.Status ==  NETWAY_STATUS_CLOSE")
+	if netWay.Status != NETWAY_STATUS_START{
+		netWay.Option.Log.Error("Quit err :netWay.Status !=  NETWAY_STATUS_START")
 		return
 	}
 	netWay.Status = NETWAY_STATUS_CLOSE//更新状态为：关闭

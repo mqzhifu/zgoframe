@@ -58,7 +58,7 @@ func InitGatewayRouter(Router *gin.RouterGroup) {
 	GatewayRouter := Router.Group("service")
 	{
 		GatewayRouter.POST(":name/:func",v1.GatewayService)
-		//GatewayRouter.GET("aaa",v1.GatewayService)
+		GatewayRouter.GET("getConfig",v1.GatewayService)
 	}
 }
 
@@ -66,11 +66,7 @@ func InitGatewayRouter(Router *gin.RouterGroup) {
 func InitLogslaveRouter(Router *gin.RouterGroup) {
 	LogsalveRouter := Router.Group("logslave")
 	{
-		LogsalveRouter.POST("receive", v1.Receive)
-		//ws 连接信息
-		LogsalveRouter.GET("getWsServer", v1.GetWsServer)
-		//
-		LogsalveRouter.GET("getApiList", v1.GetApiList)
+		LogsalveRouter.POST("push", v1.Push)
 	}
 }
 

@@ -57,7 +57,7 @@ func   (tcpServer *TcpServer)Shutdown( ){
 	tcpServer.Option.Log.Info("Shutdown tcpServer ")
 	err := tcpServer.listener.Close()
 	if err != nil{
-		//mylog.Error("tcpServer.listener.Close err :",err)
+		tcpServer.Option.Log.Error("tcpServer.listener.Close err :" + err.Error())
 	}
 }
 //接收新连接

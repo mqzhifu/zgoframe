@@ -1,130 +1,128 @@
 package global
 
 type Config struct {
-	Mysql   		ConfigMysql
-	Jwt     		Jwt
-	Zap     		Zap
-	Captcha 		Captcha
-	Redis   		Redis
-	System  		System
-	Http     		Http
-	Casbin  		Casbin
-	Viper 			Viper
-	Etcd 			Etcd
-	Alert 			Alert
-	Metrics 		Metrics
-	Websocket 		Websocket
-	Grpc 			Grpc
-	Email 			Email
-	Protobuf 		Protobuf
+	Mysql            ConfigMysql
+	Jwt              Jwt
+	Zap              Zap
+	Captcha          Captcha
+	Redis            Redis
+	System           System
+	Http             Http
+	Casbin           Casbin
+	Viper            Viper
+	Etcd             Etcd
+	Alert            Alert
+	Metrics          Metrics
+	Websocket        Websocket
+	Grpc             Grpc
+	Email            Email
+	Protobuf         Protobuf
 	ServiceDiscovery ServiceDiscovery
-	PushGateway 	PushGateway
+	PushGateway      PushGateway
 }
 
 type Protobuf struct {
-	BasePath 		string
-	PbServicePath 	string
-	ProtoPath 		string
-	IdMapFileName 	string
+	BasePath      string
+	PbServicePath string
+	ProtoPath     string
+	IdMapFileName string
 }
 
 type ConfigMysql struct {
-	Status string
-	Ip				string
-	Port	string
-	Config string
-	DbName string
-	Username string
-	Password string
+	Status       string
+	Ip           string
+	Port         string
+	Config       string
+	DbName       string
+	Username     string
+	Password     string
 	MaxIdleConns int
 	MaxOpenConns int
-	LogMode  bool
-	LogZap bool
+	LogMode      bool
+	LogZap       bool
 }
 
 type Http struct {
-	Status string
-	Ip string
-	Port string
-	StaticPath string
+	Status        string
+	Ip            string
+	Port          string
+	StaticPath    string
 	ReqLimitTimes int
 }
 
 type PushGateway struct {
 	Status string
-	Ip string
-	Port string
+	Ip     string
+	Port   string
 }
 
-
-
 type System struct {
-	Status string
+	Status    string
 	ProjectId int
 	//AppId int
 	//ServiceId int
-	DbType string
-	ENV string
+	DbType       string
+	ENV          string
 	ErrorMsgFile string
 }
 
 type Jwt struct {
-	Status string
-	Key string
-	ExpiresTime	int64
-	BufferTime int64
+	Status      string
+	Key         string
+	ExpiresTime int64
+	BufferTime  int64
 }
 
 type Viper struct {
 	Status string
-	Watch string
+	Watch  string
 }
 
 type Zap struct {
-	Status 		string
-	Level 		string
-	LevelInt8	int8
-	BaseDir		string
-	ShowLine 	bool
-	SoftLinkFileName 	string
-	Format 		string
+	Status           string
+	Level            string
+	LevelInt8        int8
+	BaseDir          string
+	ShowLine         bool
+	SoftLinkFileName string
+	Format           string
 
-	Prefix 		string
-	EncodeLevel string
-	AutoAlert 	bool
+	Prefix        string
+	EncodeLevel   string
+	AutoAlert     bool
 	StacktraceKey string
-	LogInConsole bool
-	ModuleName   string	//使用设定，不在配置文件中
-	FileName   string	//使用设定，不在配置文件中
+	LogInConsole  bool
+	ModuleName    string //使用设定，不在配置文件中
+	FileName      string //使用设定，不在配置文件中
 }
 
 type Captcha struct {
-	Status string
-	NumberLength	int
-	ImgWidth		int
-	ImgHeight		int
+	Status       string
+	NumberLength int
+	ImgWidth     int
+	ImgHeight    int
 }
 
 type Redis struct {
-	Status string
-	Ip 		string
-	Port 	string
+	Status   string
+	Ip       string
+	Port     string
 	DbNumber int
 	Password string
 }
 
 type Casbin struct {
-	Status string
+	Status    string
 	ModelPath string
 }
 
-type Etcd struct{
-	Status string
-	Ip string
-	Port string
+type Etcd struct {
+	Status   string
+	Ip       string
+	Port     string
 	Username string
 	Password string
-	Url string
+	Url      string
 }
 
 type ServiceDiscovery struct {
@@ -138,28 +136,27 @@ type Metrics struct {
 
 type Alert struct {
 	Status string
-	Host string
-	Port string
-	Uri string
+	Host   string
+	Port   string
+	Uri    string
 }
 
 type Websocket struct {
 	Status string
-	Uri string
+	Uri    string
 }
 
 type Grpc struct {
-	Status string
-	Ip string
-	Port string
+	Status               string
+	Ip                   string
+	Port                 string
 	ServicePackagePrefix string
 }
 
 type Email struct {
 	Status string
-	Host string
-	Ps string
-	Port int
-	From string
+	Host   string
+	Ps     string
+	Port   string
+	From   string
 }
-

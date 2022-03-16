@@ -34,7 +34,7 @@ status      = "open"
 db-number   = 1
 ip          = "#redis_ip#"
 port        = "#redis_ip#"
-password    =  '#redis_port#'
+password    =  "#redis_ps#"
 
 [captcha]
 status       = "open"
@@ -107,7 +107,7 @@ prefix = "/service"
 [email]
 status  = "open"
 host    = "#email_stmp#"
-port    = #email_stmp_port#
+port    = "#email_stmp_port#"
 from    = "#email_from#"
 ps      = "#email_ps#"
 

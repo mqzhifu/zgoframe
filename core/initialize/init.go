@@ -1,3 +1,4 @@
+//全局初始化
 package initialize
 
 import (

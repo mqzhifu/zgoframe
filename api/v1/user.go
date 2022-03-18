@@ -16,20 +16,19 @@ import (
 	"zgoframe/util"
 )
 
-
 // 登录-DB比对成功后，签发jwt
 func tokenNext(c *gin.Context, user model.User) {
-	util.MyPrint("token next user:",user.Id , "sourceType:",request.GetMyHeader(c).SourceType)
+	util.MyPrint("token next user:", user.Id, "sourceType:", request.GetMyHeader(c).SourceType)
 	j := &httpmiddleware.JWT{SigningKey: []byte(global.C.Jwt.Key)} // 唯一签名
 	claims := request.CustomClaims{
 		ProjectId: user.ProjectId,
 		//UUID:        user.Uuid,
 		//AuthorityId: user.AuthorityId,
-		Id:          user.Id,
-		NickName:    user.NickName,
-		Username:    user.Username,
+		Id:         user.Id,
+		NickName:   user.NickName,
+		Username:   user.Username,
 		SourceType: request.GetMyHeader(c).SourceType,
-		BufferTime:  global.C.Jwt.BufferTime, // 缓冲时间1天 缓冲时间内会获得新的token刷新令牌 此时一个用户会存在两个有效令牌 但是前端只留一个 另一个会丢失
+		BufferTime: global.C.Jwt.BufferTime, // 缓冲时间1天 缓冲时间内会获得新的token刷新令牌 此时一个用户会存在两个有效令牌 但是前端只留一个 另一个会丢失
 		StandardClaims: jwt.StandardClaims{
 			NotBefore: time.Now().Unix() - 1000,                     // 签名生效时间
 			ExpiresAt: time.Now().Unix() + global.C.Jwt.ExpiresTime, // 过期时间 7天  配置文件
@@ -44,17 +43,17 @@ func tokenNext(c *gin.Context, user model.User) {
 		return
 	}
 	//从redis里再取一下：可能有，可能没有
-	redisElement ,_:= global.V.Redis.GetElementByIndex("jwt",strconv.Itoa(user.ProjectId),strconv.Itoa(request.GetMyHeader(c).SourceType),strconv.Itoa(user.Id))
+	redisElement, _ := global.V.Redis.GetElementByIndex("jwt", strconv.Itoa(user.ProjectId), strconv.Itoa(request.GetMyHeader(c).SourceType), strconv.Itoa(user.Id))
 	//key := service.GetLoginJwtKey(request.GetMyHeader(c).SourceType,user.AppId,user.Id)
-	global.V.Zap.Debug("token key:"+redisElement.Key)
+	global.V.Zap.Debug("token key:" + redisElement.Key)
 	//util.MyPrint(key)
-	jwtStr , err   := global.V.Redis.Get(redisElement)
-	util.MyPrint("jwtStr:",jwtStr)
+	jwtStr, err := global.V.Redis.Get(redisElement)
+	util.MyPrint("jwtStr:", jwtStr)
 
-	if  err == redis.Nil {//redis里不存在，要么之前没登陆过，要么失效了...
-		_ , err := global.V.Redis.SetEX(redisElement,token,int( global.C.Jwt.ExpiresTime))
-		if  err != nil {
-		//if err := service.SetRedisJWT(token, key); err != nil {
+	if err == redis.Nil { //redis里不存在，要么之前没登陆过，要么失效了...
+		_, err := global.V.Redis.SetEX(redisElement, token, int(global.C.Jwt.ExpiresTime))
+		if err != nil {
+			//if err := service.SetRedisJWT(token, key); err != nil {
 			global.V.Zap.Error("设置登录状态失败", zap.Any("err", err))
 			httpresponse.FailWithMessage("设置登录状态失败", c)
 			return
@@ -67,7 +66,7 @@ func tokenNext(c *gin.Context, user model.User) {
 	} else if err != nil {
 		global.V.Zap.Error("设置登录状态失败", zap.Any("err", err))
 		httpresponse.FailWithMessage("设置登录状态失败", c)
-	} else {//redis 里已经存在
+	} else { //redis 里已经存在
 
 		//var blackJWT model.JwtBlacklist
 		//blackJWT.Jwt = jwtStr
@@ -77,9 +76,9 @@ func tokenNext(c *gin.Context, user model.User) {
 		//}
 
 		//写入token到redis,覆盖旧的token
-		_ , err := global.V.Redis.SetEX(redisElement,token,int( global.C.Jwt.ExpiresTime))
-		if  err != nil {
-		//if err := service.SetRedisJWT(token, key); err != nil {
+		_, err := global.V.Redis.SetEX(redisElement, token, int(global.C.Jwt.ExpiresTime))
+		if err != nil {
+			//if err := service.SetRedisJWT(token, key); err != nil {
 			httpresponse.FailWithMessage("设置登录状态失败", c)
 			return
 		}
@@ -91,7 +90,7 @@ func tokenNext(c *gin.Context, user model.User) {
 	}
 }
 
-// @Tags User
+// @Tags Base
 // @Summary 用户注册账号
 // @Produce  application/json
 // @Param data body model.User true "用户名, 昵称, 密码, 角色ID ,AppId"
@@ -104,8 +103,8 @@ func Register(c *gin.Context) {
 		httpresponse.FailWithMessage(err.Error(), c)
 		return
 	}
-	user := &model.User{Username: R.Username, NickName: R.NickName, Password: R.Password, HeaderImg: R.HeaderImg, AuthorityId: R.AuthorityId ,ProjectId: R.AppId}
-	err, userReturn := service.Register(*user,request.GetMyHeader(c))
+	user := &model.User{Username: R.Username, NickName: R.NickName, Password: R.Password, HeaderImg: R.HeaderImg, AuthorityId: R.AuthorityId, ProjectId: R.AppId}
+	err, userReturn := service.Register(*user, request.GetMyHeader(c))
 	if err != nil {
 		global.V.Zap.Error("注册失败", zap.Any("err", err))
 		httpresponse.FailWithDetailed(httpresponse.SysUserResponse{User: userReturn}, "注册失败", c)
@@ -122,16 +121,15 @@ func Register(c *gin.Context) {
 // @Success 200 {string} string "{"success":true,"data":{},"msg":"退出成功"}"
 // @Router /user/logout [post]
 func Logout(c *gin.Context) {
-	appId ,_ := request.GetAppId(c)
-	uid ,_ := request.GetUid(c)
+	appId, _ := request.GetAppId(c)
+	uid, _ := request.GetUid(c)
 
-	redisElement ,_:= global.V.Redis.GetElementByIndex("jwt",strconv.Itoa(appId),strconv.Itoa(request.GetMyHeader(c).SourceType),strconv.Itoa(uid))
+	redisElement, _ := global.V.Redis.GetElementByIndex("jwt", strconv.Itoa(appId), strconv.Itoa(request.GetMyHeader(c).SourceType), strconv.Itoa(uid))
 	global.V.Redis.Del(redisElement)
 
 	//key := service.GetLoginJwtKey(request.GetMyHeader(c).SourceType,appId,uid)
 	//service.DelRedisJWT(key)
 }
-
 
 // @Tags User
 // @Summary 用户修改密码
@@ -206,6 +204,7 @@ func SetUserInfo(c *gin.Context) {
 		httpresponse.OkWithDetailed(gin.H{"userInfo": ReqUser}, "设置成功", c)
 	}
 }
+
 // @Tags User
 // @Summary 删除用户
 // @Security ApiKeyAuth

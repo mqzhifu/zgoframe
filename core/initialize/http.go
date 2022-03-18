@@ -15,8 +15,8 @@ import (
 	"zgoframe/util"
 )
 
-func StartHttpGin(){
-	dns := global.C.Http.Ip + ":"+ global.C.Http.Port
+func StartHttpGin() {
+	dns := global.C.Http.Ip + ":" + global.C.Http.Port
 	server := &http.Server{
 		Addr:           dns,
 		Handler:        global.V.Gin,
@@ -25,34 +25,35 @@ func StartHttpGin(){
 		MaxHeaderBytes: 1 << 20,
 	}
 
-	global.V.Zap.Warn("StartHttpGin : "+dns)
+	global.V.Zap.Warn("StartHttpGin : " + dns)
 
 	global.V.HttpServer = server
-	go func (){
+	go func() {
 		err := server.ListenAndServe()
-		util.MyPrint("server.ListenAndServe() err:",err)
+		util.MyPrint("server.ListenAndServe() err:", err)
 	}()
 }
 
-func HttpServerShutdown(){
-	cancelCtx , cancel := context.WithTimeout(context.Background(),time.Second * 3)
+func HttpServerShutdown() {
+	cancelCtx, cancel := context.WithTimeout(context.Background(), time.Second*3)
 	global.V.HttpServer.Shutdown(cancelCtx)
 	cancel()
 }
 
-func HandleNotFound(c *gin.Context){
+func HandleNotFound(c *gin.Context) {
 	handleErr := "404 not found."
 	//handleErr.Request = c.Request.Method + " " + c.Request.URL.String()
-	c.JSON(404,handleErr)
+	c.JSON(404, handleErr)
 	return
 }
+
 //GIN: 监听HTTP   中间件  文件上传
-func GetNewHttpGIN(zapLog *zap.Logger)(*gin.Engine,error) {
+func GetNewHttpGIN(zapLog *zap.Logger) (*gin.Engine, error) {
 	staticFSUriName := "/static"
 	swaggerUri := "/swagger/*any"
 
-	zapLog.Info("GetNewHttpGIN static config , uri: "+ staticFSUriName + " , diskPath: " + global.C.Http.StaticPath)
-	zapLog.Info("GetNewHttpGIN swagger uri:"+swaggerUri)
+	zapLog.Info("GetNewHttpGIN static config , uri: " + staticFSUriName + " , diskPath: " + global.C.Http.StaticPath)
+	zapLog.Info("GetNewHttpGIN swagger uri:" + swaggerUri)
 
 	HttpZapLog = zapLog
 	ginRouter := gin.Default()
@@ -60,7 +61,7 @@ func GetNewHttpGIN(zapLog *zap.Logger)(*gin.Engine,error) {
 	ginRouter.Use(ZapLog())
 	//加载静态目录
 	//	Router.Static("/form-generator", "./resource/page")
-	ginRouter.StaticFS(staticFSUriName,http.Dir(global.C.Http.StaticPath))
+	ginRouter.StaticFS(staticFSUriName, http.Dir(global.C.Http.StaticPath))
 	//加载swagger api 工具
 	ginRouter.GET(swaggerUri, ginSwagger.WrapHandler(swaggerFiles.Handler))
 	//设置跨域
@@ -68,42 +69,38 @@ func GetNewHttpGIN(zapLog *zap.Logger)(*gin.Engine,error) {
 	//404
 	ginRouter.NoMethod(HandleNotFound)
 
-	return ginRouter,nil
-
+	return ginRouter, nil
 
 }
 
-func RegGinHttpRoute(){
-	//设置非登陆可访问API
+func RegGinHttpRoute() {
+	//设置非登陆可访问API，但是头里要加基础认证的信息
 	PublicGroup := global.V.Gin.Group("")
-	PublicGroup.Use(httpmiddleware.OperationRecord()).Use(httpmiddleware.RateMiddleware()).Use(httpmiddleware.ProcessHeader())
+	PublicGroup.Use(httpmiddleware.RateMiddleware()).Use(httpmiddleware.ProcessHeader()).Use(httpmiddleware.BasicAuthHeader())
 	{
 		router.InitBaseRouter(PublicGroup)
 	}
-	//加载限流中间件
-	PrivateGroup :=  global.V.Gin.Group("")
+	PrivateGroup := global.V.Gin.Group("")
 	//设置正常API（需要验证）
 	//httpmiddleware.CasbinHandler()
-	PrivateGroup.Use(httpmiddleware.OperationRecord()).Use(httpmiddleware.RateMiddleware()).Use(httpmiddleware.ProcessHeader(),httpmiddleware.JWTAuth())
+	PrivateGroup.Use(httpmiddleware.OperationRecord()).Use(httpmiddleware.RateMiddleware()).Use(httpmiddleware.ProcessHeader(), httpmiddleware.JWTAuth())
 	{
 		router.InitUserRouter(PrivateGroup)
 		router.InitLogslaveRouter(PrivateGroup)
 		router.InitSysRouter(PrivateGroup)
 	}
 
-	GatewayGroup :=  global.V.Gin.Group("")
+	GatewayGroup := global.V.Gin.Group("")
 	GatewayGroup.Use(httpmiddleware.OperationRecord()).Use(httpmiddleware.RateMiddleware()).Use(httpmiddleware.ProcessHeader())
 	{
 		router.InitGatewayRouter(GatewayGroup)
 	}
 
-
-
 }
 
-
 var HttpZapLog *zap.Logger
-func ZapLog()gin.HandlerFunc {
+
+func ZapLog() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		//start := time.Now()
 		path := c.Request.URL.Path
@@ -118,7 +115,7 @@ func ZapLog()gin.HandlerFunc {
 		//	zap.String("errors", c.Errors.ByType(gin.ErrorTypePrivate).String()),
 		//	zap.Duration("cost", cost),
 		s := " "
-		context :=  strconv.Itoa(c.Writer.Status()) + s + c.Request.Method + s + path + s + query + c.ClientIP()
+		context := strconv.Itoa(c.Writer.Status()) + s + c.Request.Method + s + path + s + query + c.ClientIP()
 		// + s + c.Request.UserAgent() + c.Errors.ByType(gin.ErrorTypePrivate).String()
 
 		HttpZapLog.Info(context)

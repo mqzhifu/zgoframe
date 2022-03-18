@@ -12,11 +12,15 @@ var store = base64Captcha.DefaultMemStore
 
 // @Tags Base
 // @Summary 生成图片验证码
+// @Description 防止有人恶意攻击，尝试破解密码
 // @Security ApiKeyAuth
 // @accept application/json
+// @Param X-Source-Type header string true "来源" default(1)
+// @Param X-Project-Id header string true "项目ID"  default(6)
+// @Param X-Access header string true "访问KEY"
 // @Produce application/json
-// @Success 200 {string} string "{"success":true,"data":{},"msg":"验证码获取成功"}"
-// @Router /base/captcha [post]
+// @Success 200 {object} httpresponse.Response
+// @Router /base/captcha [get]
 func Captcha(c *gin.Context) {
 	//字符,公式,验证码配置
 	// 生成默认数字的driver
@@ -32,3 +36,5 @@ func Captcha(c *gin.Context) {
 		}, "验证码获取成功", c)
 	}
 }
+
+// @Success 200 {string} string "{"success":true,"data":{},"msg":"验证码获取成功"}"

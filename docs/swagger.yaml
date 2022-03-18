@@ -1,4 +1,46 @@
 definitions:
+  gorm.DeletedAt:
+    properties:
+      time:
+        type: string
+      valid:
+        description: Valid is true if Time is not NULL
+        type: boolean
+    type: object
+  httpresponse.Response:
+    properties:
+      code:
+        type: integer
+      data: {}
+      msg:
+        type: string
+    type: object
+  model.Project:
+    properties:
+      access:
+        type: string
+      created_at:
+        type: integer
+      deleted_at:
+        $ref: '#/definitions/gorm.DeletedAt'
+      desc:
+        type: string
+      git:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      secret_key:
+        description: "Key        \tstring    \t`json:\"key\" form:\"key\" db:\"define:varchar(50);comment:key;defaultValue:''\"`"
+        type: string
+      status:
+        type: integer
+      type:
+        type: integer
+      updated_at:
+        type: integer
+    type: object
   model.SysAuthority:
     properties:
       authorityId:
@@ -40,10 +82,12 @@ definitions:
         type: array
       component:
         type: string
-      createdAt:
+      created_at:
         type: integer
       defaultMenu:
         type: boolean
+      deleted_at:
+        $ref: '#/definitions/gorm.DeletedAt'
       hidden:
         type: boolean
       icon:
@@ -66,13 +110,15 @@ definitions:
         type: integer
       title:
         type: string
-      updatedAt:
+      updated_at:
         type: integer
     type: object
   model.SysBaseMenuParameter:
     properties:
-      createdAt:
+      created_at:
         type: integer
+      deleted_at:
+        $ref: '#/definitions/gorm.DeletedAt'
       id:
         type: integer
       key:
@@ -81,23 +127,23 @@ definitions:
         type: integer
       type:
         type: string
-      updatedAt:
+      updated_at:
         type: integer
       value:
         type: string
     type: object
   model.User:
     properties:
-      app_id:
-        type: integer
       authority:
         $ref: '#/definitions/model.SysAuthority'
-      authorityId:
+      authority_id:
         type: string
       birthday:
         type: integer
-      createdAt:
+      created_at:
         type: integer
+      deleted_at:
+        $ref: '#/definitions/gorm.DeletedAt'
       email:
         type: string
       headerImg:
@@ -106,17 +152,19 @@ definitions:
         type: integer
       mobile:
         type: string
-      nickName:
+      nick_name:
         type: string
+      project_id:
+        type: integer
       robot:
         type: integer
       sex:
         type: integer
       status:
         type: integer
-      updatedAt:
+      updated_at:
         type: integer
-      userName:
+      username:
         type: string
       uuid:
         type: string
@@ -134,6 +182,63 @@ definitions:
     properties:
       id:
         type: number
+    type: object
+  request.Header:
+    properties:
+      access:
+        description: 使用网关时，不允许随意访问，得有key
+        type: string
+      app_version:
+        description: app/前端/服务/项目 版本号
+        type: string
+      auto_ip:
+        description: 获取不到请求方IP时，系统自动获取生成
+        type: string
+      device:
+        description: ipad iphone huawei mi chrome firefox ie
+        type: string
+      device_id:
+        description: 设备ID
+        type: string
+      device_version:
+        description: mi8 hongmi7 ios8 ios9 ie8 ie9
+        type: string
+      dpi:
+        description: 分辨率
+        type: string
+      ip:
+        description: 请求方的IP
+        type: string
+      lat:
+        description: 纬度
+        type: string
+      lon:
+        description: 经度
+        type: string
+      os:
+        description: win mac android ios
+        type: integer
+      os_version:
+        description: win7 win9 mac10 android9
+        type: string
+      project_id:
+        description: 项目ID，所有的服务/项目/前端/App，均要先向管理员申请一个账号，才能用于日常请求
+        type: integer
+      referer:
+        description: 页面来源
+        type: string
+      request_id:
+        description: 每次请求的唯一标识，响应时也会返回，如果请求方没有，后端会默认生成一个
+        type: string
+      source_type:
+        description: pc h5 ios android vr spider unknow
+        type: integer
+      token:
+        description: JWT用户登陆令牌
+        type: string
+      trace_id:
+        description: 追踪ID，主要用于链路追踪，如果请求方没有，后端会默认生成一个，跟request略像，但给后端使用
+        type: string
     type: object
   request.Login:
     properties:
@@ -166,54 +271,85 @@ definitions:
       rule_id:
         type: integer
     type: object
-  v1.LogData:
+  v1.ParserTokenReq:
     properties:
-      app_id:
-        type: integer
-      level:
-        type: integer
-      msg:
+      token:
         type: string
-      uid:
-        type: integer
     type: object
 info:
   contact: {}
-  description: 拼装一个GO的基础框架方便日常使用
+  description: restful api 工具，模拟客户端请求，方便调试/测试<br/>注：这只是一个工具，不是万能的，像：动态枚举类型、公共请求header、动态常量等<br/>详细的请去
+    <a href="http://127.0.0.1:6060" target="_black">godoc</a> 里去查看
   title: z golang 框架
-  version: "0.1"
+  version: 0.1 测试版
 paths:
   /base/captcha:
-    post:
+    get:
       consumes:
       - application/json
+      description: 防止有人恶意攻击，尝试破解密码
+      parameters:
+      - default: "1"
+        description: 来源
+        in: header
+        name: X-Source-Type
+        required: true
+        type: string
+      - default: "6"
+        description: 项目ID
+        in: header
+        name: X-Project-Id
+        required: true
+        type: string
+      - description: 访问KEY
+        in: header
+        name: X-Access
+        required: true
+        type: string
       produces:
       - application/json
       responses:
         "200":
-          description: '{"success":true,"data":{},"msg":"验证码获取成功"}'
+          description: OK
           schema:
-            type: string
+            $ref: '#/definitions/httpresponse.Response'
       security:
       - ApiKeyAuth: []
       summary: 生成图片验证码
       tags:
       - Base
-  /base/checktoken:
-    post:
-      description: checktoken
+  /base/headerStruct:
+    get:
+      description: 日常header里放一诸如验证类的东西，统一公示出来，方便使用
+      parameters:
+      - default: "1"
+        description: 来源
+        in: header
+        name: X-Source-Type
+        required: true
+        type: string
+      - default: "6"
+        description: 项目ID
+        in: header
+        name: X-Project-Id
+        required: true
+        type: string
+      - default: imzgoframe
+        description: 访问KEY
+        in: header
+        name: X-Access
+        required: true
+        type: string
       produces:
       - application/json
       responses:
         "200":
-          description: '{"success":true,"data":{},"msg":"登陆成功"}'
+          description: OK
           schema:
-            type: string
-      security:
-      - ApiKeyAuth: []
-      summary: checktoken
+            $ref: '#/definitions/request.Header'
+      summary: header头结构体
       tags:
-      - User
+      - Base
   /base/login:
     post:
       description: 用户登陆，验证，生成token
@@ -236,7 +372,64 @@ paths:
       - Base
   /base/parserToken:
     post:
-      description: ParserToken
+      description: 应用接到token后，要到后端再统计认证一下，确保准确
+      parameters:
+      - description: 需要验证的token值
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/v1.ParserTokenReq'
+      - default: "1"
+        description: 来源
+        in: header
+        name: X-Source-Type
+        required: true
+        type: string
+      - default: "6"
+        description: 项目ID
+        in: header
+        name: X-Project-Id
+        required: true
+        type: string
+      - default: imzgoframe
+        description: 访问KEY
+        in: header
+        name: X-Access
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/httpresponse.Response'
+      summary: 解析一个TOKEN
+      tags:
+      - Base
+  /base/platformList:
+    get:
+      description: 因为所有请求的hedaer 里必须得，所以动态获取
+      parameters:
+      - default: "1"
+        description: 来源
+        in: header
+        name: X-Source-Type
+        required: true
+        type: string
+      - default: "6"
+        description: 项目ID
+        in: header
+        name: X-Project-Id
+        required: true
+        type: string
+      - default: imzgoframe
+        description: 访问KEY
+        in: header
+        name: X-Access
+        required: true
+        type: string
       produces:
       - application/json
       responses:
@@ -246,7 +439,80 @@ paths:
             type: string
       security:
       - ApiKeyAuth: []
-      summary: ParserToken
+      summary: 获取平台类型列表
+      tags:
+      - Base
+  /base/projectList:
+    post:
+      description: 每个项目的详细信息
+      parameters:
+      - default: "1"
+        description: 来源
+        in: header
+        name: X-Source-Type
+        required: true
+        type: string
+      - default: "6"
+        description: 项目ID
+        in: header
+        name: X-Project-Id
+        required: true
+        type: string
+      - default: imzgoframe
+        description: 访问KEY
+        in: header
+        name: X-Access
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Project'
+      security:
+      - ApiKeyAuth: []
+      summary: 项目列表
+      tags:
+      - Base
+  /base/projectTypeList:
+    get:
+      description: 项目的类型
+      parameters:
+      - default: "1"
+        description: 来源
+        in: header
+        name: X-Source-Type
+        required: true
+        type: string
+      - default: "6"
+        description: 项目ID
+        enum:
+        - "1"
+        - "2"
+        - "3"
+        - "4"
+        in: header
+        name: X-Project-Id
+        required: true
+        type: string
+      - default: imzgoframe
+        description: 访问KEY
+        in: header
+        name: X-Access
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"success":true,"data":{},"msg":"登陆成功"}'
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: 项目的类型
       tags:
       - Base
   /base/register:
@@ -267,7 +533,7 @@ paths:
             type: string
       summary: 用户注册账号
       tags:
-      - User
+      - Base
   /base/sendSMS:
     post:
       description: 登陆、注册、通知等发送短信
@@ -288,35 +554,6 @@ paths:
       summary: 发送验证码
       tags:
       - Base
-  /logslave/getWsServer:
-    get:
-      description: 获取长连接API映射表
-      produces:
-      - application/json
-      security:
-      - ApiKeyAuth: []
-      summary: 获取长连接API映射表
-      tags:
-      - Logslave
-  /logslave/receive:
-    post:
-      parameters:
-      - description: level,msg
-        in: body
-        name: data
-        required: true
-        schema:
-          $ref: '#/definitions/v1.LogData'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: '{"success":true,"data":{},"msg":"已收录"}'
-          schema:
-            type: string
-      summary: 接收日志
-      tags:
-      - Logslave
   /sys/config:
     post:
       description: Config
@@ -452,4 +689,9 @@ paths:
       summary: 设置用户信息
       tags:
       - User
+securityDefinitions:
+  ApiKeyAuth:
+    in: header
+    name: token
+    type: apiKey
 swagger: "2.0"

@@ -18,9 +18,14 @@ var initializeVar *initialize.Initialize
 
 // @title z golang 框架
 // @version 0.1 测试版
-// @description 拼装一个GO的基础框架方便日常使用，主要是想把经常用的类统一化，像：log 链路追踪 etcd等，保证项目高可用
+// @description restful api 工具，模拟客户端请求，方便调试/测试<br/>注：这只是一个工具，不是万能的，像：动态枚举类型、公共请求header、动态常量等<br/>详细的请去 <a href="http://127.0.0.1:6060" target="_black">godoc</a> 里去查看
+// @securityDefinitions.apikey ApiKeyAuth
+// @name xa
+// @name token
+// @in header
 
 func main() {
+
 	//获取<环境变量>枚举值
 	envList := util.GetEnvList()
 	//配置读取源类型，1 文件  2 etcd

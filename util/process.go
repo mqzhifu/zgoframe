@@ -15,12 +15,12 @@ import (
 
 type Process struct {
 	PathFileName string
-	CancelFunc context.CancelFunc
+	CancelFunc   context.CancelFunc
 	RootQuitFunc func(source int)
-	Log *zap.Logger
+	Log          *zap.Logger
 }
 
-func NewProcess (ProcessPathFileName string,cancelFunc context.CancelFunc,log *zap.Logger,RootQuitFunc func(source int))*Process{
+func NewProcess(ProcessPathFileName string, cancelFunc context.CancelFunc, log *zap.Logger, RootQuitFunc func(source int)) *Process {
 	process := new(Process)
 	process.PathFileName = ProcessPathFileName
 	process.CancelFunc = cancelFunc
@@ -29,80 +29,81 @@ func NewProcess (ProcessPathFileName string,cancelFunc context.CancelFunc,log *z
 	return process
 }
 
-func  (process *Process)InitProcess( ){
+func (process *Process) InitProcess() {
 	//主进程的ID号，存储文件
-	pid ,err := initPid(process.PathFileName)
+	pid, err := initPid(process.PathFileName)
 	if err != nil {
 		process.Log.Error("initPid,err:" + err.Error())
 		return
 	}
 
-	process.Log.Warn("mainPid:"+strconv.Itoa(pid))
+	process.Log.Warn("mainPid:" + strconv.Itoa(pid))
 }
 
-func (process *Process) DelPid()(int,error){
-	_,err := FileExist(process.PathFileName)
-	if err != nil{
-		return 0,errors.New(process.PathFileName + " not exist~ " + err.Error())
+func (process *Process) DelPid() (int, error) {
+	_, err := FileExist(process.PathFileName)
+	if err != nil {
+		return 0, errors.New(process.PathFileName + " not exist~ " + err.Error())
 	}
 
 	b, err := ioutil.ReadFile(process.PathFileName) // just pass the file name
 	if err != nil {
-		return 0,err
+		return 0, err
 	}
 
 	str := string(b)
-	pid ,_ := strconv.Atoi(str)
+	pid, _ := strconv.Atoi(str)
 
 	err = os.Remove(process.PathFileName)
 
-	MyPrint("del pid finish ",pid,err)
+	MyPrint("del pid finish ", pid, err)
 
-	return pid,err
+	return pid, err
 }
+
 //进程PID保存到文件
-func initPid(pathFile string )(int,error){
+func initPid(pathFile string) (int, error) {
 	pid := os.Getpid()
-	_,err := FileExist(pathFile)
-	if err != nil{
-		return pid,errors.New(pathFile + " has exist~ " + err.Error())
+	checkFd, err := FileExist(pathFile)
+	if err != nil && checkFd != nil {
+		return pid, errors.New(pathFile + " has exist~ " + err.Error())
 	}
 
-	fd, err  := os.OpenFile(pathFile, os.O_WRONLY | os.O_CREATE | os.O_TRUNC , 0777)
+	fd, err := os.OpenFile(pathFile, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0777)
 	defer fd.Close()
-	if err != nil{
-		return pid,errors.New(pathFile + " " + err.Error())
+	if err != nil {
+		return pid, errors.New(pathFile + " " + err.Error())
 	}
 
 	_, err = io.WriteString(fd, strconv.Itoa(pid))
-	if err != nil{
-		return pid,errors.New(pathFile + " " + err.Error())
+	if err != nil {
+		return pid, errors.New(pathFile + " " + err.Error())
 	}
 
-	return pid,err
+	return pid, err
 }
 
 //信号 处理
-func (process *Process)DemonSignal(){
+func (process *Process) DemonSignal() {
 	process.Log.Warn("SIGNAL init : ")
 	c := make(chan os.Signal)
 	//syscall.SIGHUP :ssh 挂断会造成这个信号被捕获，先注释掉吧
 	signal.Notify(c, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT, syscall.SIGUSR1, syscall.SIGUSR2)
 	prefix := "SIGNAL-DEMON :"
-	for{
-		sign := <- c
+	for {
+		sign := <-c
 		process.Log.Warn(prefix)
 		switch sign {
 		case syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT:
-			process.Log.Warn(prefix+"SIGINT | SIGTERM | SIGQUIT  , exit!!!")
+			process.Log.Warn(prefix + "SIGINT | SIGTERM | SIGQUIT  , exit!!!")
 			process.CancelFunc()
 			goto end
 		case syscall.SIGUSR1:
-			process.Log.Warn(prefix+" usr1!!!")
+			process.Log.Warn(prefix + " usr1!!!")
 		case syscall.SIGUSR2:
-			process.Log.Warn(prefix+" usr2!!!")
+			process.Log.Warn(prefix + " usr2!!!")
 		default:
-			process.Log.Warn(prefix+" unknow!!!")
+			process.Log.Warn(prefix + " unknow!!!")
 		}
 		time.Sleep(time.Second * 1)
 	}

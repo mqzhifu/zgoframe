@@ -96,6 +96,25 @@ pkg.go.com 上的包是:v3.3.25+incompatible
 go get -u github.com/golang/protobuf/protoc-gen-go@v1.2.0
 go get github.com/golang/protobuf/protoc-gen-go@v1.3.2
 
+启动:
+>go run main.go -e local
+
+指令行参数：
+>go run main.go -h
+```
+  -cfn string
+    	configFileName (default "config")
+  -cs string
+    	configSource:file or etcd (default "file")
+  -ct string
+    	configFileType (default "toml")
+  -debug int
+    	startup debug mode level
+  -e string
+    	must require , env:local test pre dev online
+  -etl string
+    	get etcd config url (default "http://127.0.0.1/getEtcdCluster/Ip/Port")
+```
 
 必须开启组件/类库：
 配置类->viper

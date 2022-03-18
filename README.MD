@@ -1,6 +1,7 @@
-拼装一个GO的基础框架方便日常使用，主要是想把经常用的类统一化，像：log 链路追踪 etcd等，保证项目高可用
+拼装一个GO的基础框架，主要是想把经常用的类/包 统一化/SDK化，统一管理，节省重复造轮子。  
+像：log 链路追踪 etcd等，保证项目高可用
 
-主要包说明 ：
+主要package说明 ：
 
 | 类库                       | 说明         | 版本  |
 |--------------------------|------------|-----|
@@ -73,17 +74,16 @@ godoc -http=:6060
 go get -u github.com/swaggo/swag/cmd/swag@v1.7.9
 ~/go/bin/swag init --parseDependency --parseInternal --parseDepth 1
 ```
+访问地址：
+>http://127.0.0.1:1111/swagger/index.html
 
-http://127.0.0.1:1111/swagger/index.html
 
-
-注意：
-这里最恶心的是ETCD，不兼容MOD模式。  
+包管理 注意：  
+这里最恶心的是ETCD，它不是完全兼容MOD模式。官方的版本比较高，给MOD的是略低些的版本，有些新的功能不可以用，同时：连带着GRPC也不能用高版本  
 pkg.go.com 上的包是:v3.3.25+incompatible  
-而官方是：3.4.7  
-而不使用mod ,直接 go get go.etcd.io/etc/client 是可以的.  
 
-现在都是MOD模式，只能用3.3.25，而下载过程中就是一堆的BUG...  
+官方：3.4.7  
+MOD：3.3.25
 
 1. bbolt包已经换了位置 ，代码中还是使用旧的地址
 >replace github.com/coreos/bbolt v1.3.4 => go.etcd.io/bbolt v1.3.4
@@ -93,8 +93,12 @@ pkg.go.com 上的包是:v3.3.25+incompatible
 
 这个是最恶心的，导致如果你项目中使用grpc 也得跟着降级protoc 的版本
 
+如果使用protobuf，需要先下载工具包
+```azure
 go get -u github.com/golang/protobuf/protoc-gen-go@v1.2.0
 go get github.com/golang/protobuf/protoc-gen-go@v1.3.2
+```
+
 
 启动:
 >go run main.go -e local
@@ -117,6 +121,15 @@ go get github.com/golang/protobuf/protoc-gen-go@v1.3.2
 ```
 
 必须开启组件/类库：
-配置类->viper
-APP->所有项目必须得有APPID ，统计管理
-日志->zap
+
+| key   | desc                   |
+|-------|------------------------|
+| viper | 读取配置文件                 |
+| mysql | projectInfo目前是存在MYSQL中 |
+| zap   | 日志                     |
+| redis | http限流使用               |
+
+配置文件说明：  
+目前仅使用了toml格式，也可以兼容yaml 等，自行研究    
+每个模块里都有status: open  | close ，自行设置  
+基本上大部分模块，从配置中分析一下，也能知道个大概  

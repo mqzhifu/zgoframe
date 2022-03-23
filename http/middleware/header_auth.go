@@ -1,14 +1,14 @@
 package httpmiddleware
 
 import (
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"zgoframe/core/global"
 	"zgoframe/http/request"
 	httpresponse "zgoframe/http/response"
 )
 
-func BasicAuthHeader() gin.HandlerFunc {
+//非JWT的接口，公共接口，也是允许访问，但是得从HEADER里提取信用，做基础验证
+func HeaderAuth() gin.HandlerFunc {
 	res := httpresponse.Response{}
 	return func(c *gin.Context) {
 		header := request.GetMyHeader(c)
@@ -42,7 +42,7 @@ func BasicAuthHeader() gin.HandlerFunc {
 			c.AbortWithStatusJSON(500, res)
 			return
 		}
-		fmt.Println(project.Access, " - ", header.Access)
+		//fmt.Println(project.Access, " - ", header.Access)
 		if project.Access != header.Access {
 			res.Code = 505
 			res.Msg = "ACCESS  error"

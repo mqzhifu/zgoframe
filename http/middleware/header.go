@@ -1,6 +1,8 @@
 package httpmiddleware
 
 import (
+	"encoding/json"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	uuid "github.com/satori/go.uuid"
 	"reflect"
@@ -10,12 +12,13 @@ import (
 )
 
 //预处理header：每个HTTP-API请求，都得加上对应的header，解析出来
-func ProcessHeader() gin.HandlerFunc {
+func Header() gin.HandlerFunc {
 
 	return func(c *gin.Context) {
+		//fmt.Println("ProcessHeader pre")
+
 		//string header map 映射到 request.Header 结构体中
 		header := HttpHeaderSureMapCovertSureStruct(c.Request.Header)
-		util.MyPrint("haeder:", header)
 
 		header.AutoIp = c.Request.RemoteAddr
 
@@ -27,8 +30,13 @@ func ProcessHeader() gin.HandlerFunc {
 			header.TraceId = CreateOneTraceId()
 		}
 
+		formatHeader := fmt.Sprintf("%+v", header)
+		util.MyPrint("haeder:", formatHeader)
+
 		c.Set("myheader", header)
 		c.Next()
+
+		//fmt.Println("ProcessHeader after")
 	}
 }
 
@@ -82,10 +90,20 @@ func HttpHeaderSureMapCovertSureStruct(inMap map[string][]string) request.Header
 			ValueOfOutStruct.Elem().Field(i).SetInt(fieldValue)
 		} else if fieldType.String() == "string" {
 			ValueOfOutStruct.Elem().Field(i).SetString(headerOneVal)
+		} else if fieldType.String() == "request.HeaderBaseInfo" {
+			hbi := request.HeaderBaseInfo{}
+			err := json.Unmarshal([]byte(headerOneVal), &hbi)
+			if err == nil {
+				ValueOfOutStruct.Elem().Field(i).Set(reflect.ValueOf(hbi))
+			}
+			//util.ExitPrint("err:", err, " hbi:", hbi)
+			//util.ExitPrint()
 		} else {
-			util.MyPrint("HttpHeaderSureMapCovertSureStruct err:type err ")
+
+			util.MyPrint("HttpHeaderSureMapCovertSureStruct err:type err ", fieldType.String())
 		}
 	}
+	//util.ExitPrint(outStruct)
 	//util.PrintStruct(outStruct,":")
 	return outStruct
 }

@@ -70,7 +70,7 @@ type Jwt struct {
 	Status      string
 	Key         string
 	ExpiresTime int64
-	BufferTime  int64
+	//BufferTime  int64
 }
 
 type Viper struct {

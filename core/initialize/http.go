@@ -76,14 +76,14 @@ func GetNewHttpGIN(zapLog *zap.Logger) (*gin.Engine, error) {
 func RegGinHttpRoute() {
 	//设置非登陆可访问API，但是头里要加基础认证的信息
 	PublicGroup := global.V.Gin.Group("")
-	PublicGroup.Use(httpmiddleware.RateMiddleware()).Use(httpmiddleware.ProcessHeader()).Use(httpmiddleware.BasicAuthHeader())
+	PublicGroup.Use(httpmiddleware.Limiter()).Use(httpmiddleware.Record()).Use(httpmiddleware.Header()).Use(httpmiddleware.HeaderAuth())
 	{
 		router.InitBaseRouter(PublicGroup)
 	}
 	PrivateGroup := global.V.Gin.Group("")
 	//设置正常API（需要验证）
 	//httpmiddleware.CasbinHandler()
-	PrivateGroup.Use(httpmiddleware.OperationRecord()).Use(httpmiddleware.RateMiddleware()).Use(httpmiddleware.ProcessHeader(), httpmiddleware.JWTAuth())
+	PrivateGroup.Use(httpmiddleware.Limiter()).Use(httpmiddleware.Record()).Use(httpmiddleware.Header(), httpmiddleware.JWTAuth())
 	{
 		router.InitUserRouter(PrivateGroup)
 		router.InitLogslaveRouter(PrivateGroup)
@@ -91,7 +91,7 @@ func RegGinHttpRoute() {
 	}
 
 	GatewayGroup := global.V.Gin.Group("")
-	GatewayGroup.Use(httpmiddleware.OperationRecord()).Use(httpmiddleware.RateMiddleware()).Use(httpmiddleware.ProcessHeader())
+	GatewayGroup.Use(httpmiddleware.Limiter()).Use(httpmiddleware.Record()).Use(httpmiddleware.Header())
 	{
 		router.InitGatewayRouter(GatewayGroup)
 	}

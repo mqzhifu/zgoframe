@@ -2,6 +2,7 @@ package httpmiddleware
 
 import (
 	"bytes"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 	"io/ioutil"
@@ -11,11 +12,12 @@ import (
 	"zgoframe/http/request"
 	"zgoframe/model"
 	"zgoframe/util"
-	"zgoframe/service"
 )
 
-func OperationRecord() gin.HandlerFunc {
+func Record() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		//fmt.Println("OperationRecord pre")
+
 		var body []byte
 		var userId int
 		if c.Request.Method != http.MethodGet {
@@ -44,7 +46,7 @@ func OperationRecord() gin.HandlerFunc {
 			Path:   c.Request.URL.Path,
 			Agent:  c.Request.UserAgent(),
 			Body:   string(body),
-			UserID: userId,
+			Uid:    userId,
 		}
 		// 存在某些未知错误 TODO
 		//values := c.Request.Header.Values("content-type")
@@ -60,15 +62,18 @@ func OperationRecord() gin.HandlerFunc {
 
 		c.Next()
 
+		//fmt.Println("OperationRecord after")
+
 		latency := util.GetNowTimeSecondToInt() - startTime
 		record.ErrorMessage = c.Errors.ByType(gin.ErrorTypePrivate).String()
 		record.Status = c.Writer.Status()
 		record.Latency = latency
 		record.Resp = writer.body.String()
 
-		if err := service.CreateSysOperationRecord(record); err != nil {
-			global.V.Zap.Error("create operation record error:", zap.Any("err", err))
-		}
+		fmt.Println("opt final record:", record)
+		//if err := service.CreateSysOperationRecord(record); err != nil {
+		//	global.V.Zap.Error("create operation record error:", zap.Any("err", err))
+		//}
 	}
 }
 

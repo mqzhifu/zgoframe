@@ -32,7 +32,6 @@ definitions:
       name:
         type: string
       secret_key:
-        description: "Key        \tstring    \t`json:\"key\" form:\"key\" db:\"define:varchar(50);comment:key;defaultValue:''\"`"
         type: string
       status:
         type: integer
@@ -41,103 +40,8 @@ definitions:
       updated_at:
         type: integer
     type: object
-  model.SysAuthority:
-    properties:
-      authorityId:
-        type: string
-      authorityName:
-        type: string
-      children:
-        items:
-          $ref: '#/definitions/model.SysAuthority'
-        type: array
-      createdAt:
-        type: string
-      dataAuthorityId:
-        items:
-          $ref: '#/definitions/model.SysAuthority'
-        type: array
-      defaultRouter:
-        type: string
-      deletedAt:
-        type: string
-      menus:
-        items:
-          $ref: '#/definitions/model.SysBaseMenu'
-        type: array
-      parentId:
-        type: string
-      updatedAt:
-        type: string
-    type: object
-  model.SysBaseMenu:
-    properties:
-      authoritys:
-        items:
-          $ref: '#/definitions/model.SysAuthority'
-        type: array
-      children:
-        items:
-          $ref: '#/definitions/model.SysBaseMenu'
-        type: array
-      component:
-        type: string
-      created_at:
-        type: integer
-      defaultMenu:
-        type: boolean
-      deleted_at:
-        $ref: '#/definitions/gorm.DeletedAt'
-      hidden:
-        type: boolean
-      icon:
-        type: string
-      id:
-        type: integer
-      keepAlive:
-        type: boolean
-      name:
-        type: string
-      parameters:
-        items:
-          $ref: '#/definitions/model.SysBaseMenuParameter'
-        type: array
-      parentId:
-        type: string
-      path:
-        type: string
-      sort:
-        type: integer
-      title:
-        type: string
-      updated_at:
-        type: integer
-    type: object
-  model.SysBaseMenuParameter:
-    properties:
-      created_at:
-        type: integer
-      deleted_at:
-        $ref: '#/definitions/gorm.DeletedAt'
-      id:
-        type: integer
-      key:
-        type: string
-      sysBaseMenuID:
-        type: integer
-      type:
-        type: string
-      updated_at:
-        type: integer
-      value:
-        type: string
-    type: object
   model.User:
     properties:
-      authority:
-        $ref: '#/definitions/model.SysAuthority'
-      authority_id:
-        type: string
       birthday:
         type: integer
       created_at:
@@ -156,11 +60,17 @@ definitions:
         type: string
       project_id:
         type: integer
+      recommend:
+        type: string
       robot:
         type: integer
       sex:
         type: integer
       status:
+        type: integer
+      third_id:
+        type: string
+      type:
         type: integer
       updated_at:
         type: integer
@@ -188,11 +98,32 @@ definitions:
       access:
         description: 使用网关时，不允许随意访问，得有key
         type: string
-      app_version:
-        description: app/前端/服务/项目 版本号
-        type: string
       auto_ip:
         description: 获取不到请求方IP时，系统自动获取生成
+        type: string
+      base_info:
+        $ref: '#/definitions/request.HeaderBaseInfo'
+        description: 收集客户端的一些基础信息，json
+      project_id:
+        description: 项目ID，所有的服务/项目/前端/App，均要先向管理员申请一个账号，才能用于日常请求
+        type: integer
+      request_id:
+        description: 每次请求的唯一标识，响应时也会返回，如果请求方没有，后端会默认生成一个
+        type: string
+      source_type:
+        description: pc h5 ios android vr spider unknow
+        type: integer
+      token:
+        description: JWT用户登陆令牌(HS256 对称算法，共享一个密钥)
+        type: string
+      trace_id:
+        description: 追踪ID，主要用于链路追踪，如果请求方没有，后端会默认生成一个，跟request略像，但给后端使用
+        type: string
+    type: object
+  request.HeaderBaseInfo:
+    properties:
+      app_version:
+        description: app/前端/服务/项目 版本号
         type: string
       device:
         description: ipad iphone huawei mi chrome firefox ie
@@ -221,36 +152,34 @@ definitions:
       os_version:
         description: win7 win9 mac10 android9
         type: string
-      project_id:
-        description: 项目ID，所有的服务/项目/前端/App，均要先向管理员申请一个账号，才能用于日常请求
-        type: integer
       referer:
         description: 页面来源
-        type: string
-      request_id:
-        description: 每次请求的唯一标识，响应时也会返回，如果请求方没有，后端会默认生成一个
-        type: string
-      source_type:
-        description: pc h5 ios android vr spider unknow
-        type: integer
-      token:
-        description: JWT用户登陆令牌
-        type: string
-      trace_id:
-        description: 追踪ID，主要用于链路追踪，如果请求方没有，后端会默认生成一个，跟request略像，但给后端使用
         type: string
     type: object
   request.Login:
     properties:
-      app_id:
-        type: integer
+      captcha:
+        description: 验证码
+        type: string
+      captchaId:
+        description: 验证码-ID
+        type: string
+      password:
+        description: 密码
+        type: string
+      username:
+        description: 用户名：普通字符串、手机号、邮箱
+        type: string
+    type: object
+  request.LoginThird:
+    properties:
+      Code:
+        type: string
       captcha:
         type: string
       captchaId:
         type: string
-      password:
-        type: string
-      username:
+      platform:
         type: string
     type: object
   request.PageInfo:
@@ -259,6 +188,48 @@ definitions:
         type: integer
       pageSize:
         type: integer
+    type: object
+  request.Register:
+    properties:
+      birthday:
+        description: 生日
+        type: integer
+      channel:
+        description: 来源渠道
+        type: integer
+      ext_diy:
+        description: 自定义用户属性，暂未实现
+        type: string
+      guest:
+        description: 类型,1普通2游客
+        type: integer
+      headerImg:
+        description: 头像地址
+        type: string
+      nickName:
+        description: 昵称
+        type: string
+      passWord:
+        description: 登陆密码 转md5存储
+        type: string
+      project_id:
+        description: 项目Id
+        type: integer
+      recommend:
+        description: 推荐人
+        type: string
+      sex:
+        description: 性别
+        type: integer
+      third_id:
+        description: 三方平台ID
+        type: string
+      third_type:
+        description: 三方平台类型
+        type: integer
+      userName:
+        description: 用户名
+        type: string
     type: object
   request.SendSMS:
     properties:
@@ -280,6 +251,10 @@ info:
   contact: {}
   description: restful api 工具，模拟客户端请求，方便调试/测试<br/>注：这只是一个工具，不是万能的，像：动态枚举类型、公共请求header、动态常量等<br/>详细的请去
     <a href="http://127.0.0.1:6060" target="_black">godoc</a> 里去查看
+  license:
+    name: '{   "app_version": "v1.1.1",   "device": "iphone",   "device_id": "aaaaaaaa",   "device_version":
+      "12",   "dpi": "390x844",   "ip": "127.0.0.1",   "lat": "21.1111",   "lon":
+      "32.4444",   "os": 1,   "os_version": "11",   "referer": "" }'
   title: z golang 框架
   version: 0.1 测试版
 paths:
@@ -318,10 +293,53 @@ paths:
       summary: 生成图片验证码
       tags:
       - Base
+  /base/constList:
+    get:
+      description: 常量列表
+      parameters:
+      - default: "1"
+        description: 来源
+        in: header
+        name: X-Source-Type
+        required: true
+        type: string
+      - default: "6"
+        description: 项目ID
+        enum:
+        - "1"
+        - "2"
+        - "3"
+        - "4"
+        in: header
+        name: X-Project-Id
+        required: true
+        type: string
+      - default: imzgoframe
+        description: 访问KEY
+        in: header
+        name: X-Access
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"success":true,"data":{},"msg":"登陆成功"}'
+          schema:
+            type: string
+      summary: 所有常量列表
+      tags:
+      - Base
   /base/headerStruct:
     get:
       description: 日常header里放一诸如验证类的东西，统一公示出来，方便使用
       parameters:
+      - description: 客户端基础信息
+        in: body
+        name: X-HeaderBaseInfo
+        required: true
+        schema:
+          $ref: '#/definitions/request.HeaderBaseInfo'
       - default: "1"
         description: 来源
         in: header
@@ -360,14 +378,70 @@ paths:
         required: true
         schema:
           $ref: '#/definitions/request.Login'
+      - default: "11"
+        description: 来源
+        in: header
+        name: X-Source-Type
+        required: true
+        type: string
+      - default: "6"
+        description: 项目ID
+        in: header
+        name: X-Project-Id
+        required: true
+        type: string
+      - default: imzgoframe
+        description: 访问KEY
+        in: header
+        name: X-Access
+        required: true
+        type: string
       produces:
       - application/json
       responses:
         "200":
           description: '{"success":true,"data":{},"msg":"登陆成功"}'
           schema:
-            type: string
+            $ref: '#/definitions/request.Login'
       summary: 用户登陆
+      tags:
+      - Base
+  /base/loginThird:
+    post:
+      description: 用户登陆，验证，生成token
+      parameters:
+      - description: 用户名, 密码, 验证码
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/request.Login'
+      - default: "1"
+        description: 来源
+        in: header
+        name: X-Source-Type
+        required: true
+        type: string
+      - default: "6"
+        description: 项目ID
+        in: header
+        name: X-Project-Id
+        required: true
+        type: string
+      - default: imzgoframe
+        description: 访问KEY
+        in: header
+        name: X-Access
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"success":true,"data":{},"msg":"登陆成功"}'
+          schema:
+            $ref: '#/definitions/request.LoginThird'
+      summary: 用户登陆三方
       tags:
       - Base
   /base/parserToken:
@@ -408,40 +482,6 @@ paths:
       summary: 解析一个TOKEN
       tags:
       - Base
-  /base/platformList:
-    get:
-      description: 因为所有请求的hedaer 里必须得，所以动态获取
-      parameters:
-      - default: "1"
-        description: 来源
-        in: header
-        name: X-Source-Type
-        required: true
-        type: string
-      - default: "6"
-        description: 项目ID
-        in: header
-        name: X-Project-Id
-        required: true
-        type: string
-      - default: imzgoframe
-        description: 访问KEY
-        in: header
-        name: X-Access
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: '{"success":true,"data":{},"msg":"登陆成功"}'
-          schema:
-            type: string
-      security:
-      - ApiKeyAuth: []
-      summary: 获取平台类型列表
-      tags:
-      - Base
   /base/projectList:
     post:
       description: 每个项目的详细信息
@@ -476,9 +516,8 @@ paths:
       summary: 项目列表
       tags:
       - Base
-  /base/projectTypeList:
-    get:
-      description: 项目的类型
+  /base/register:
+    post:
       parameters:
       - default: "1"
         description: 来源
@@ -488,11 +527,6 @@ paths:
         type: string
       - default: "6"
         description: 项目ID
-        enum:
-        - "1"
-        - "2"
-        - "3"
-        - "4"
         in: header
         name: X-Project-Id
         required: true
@@ -503,27 +537,16 @@ paths:
         name: X-Access
         required: true
         type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: '{"success":true,"data":{},"msg":"登陆成功"}'
-          schema:
-            type: string
-      security:
-      - ApiKeyAuth: []
-      summary: 项目的类型
-      tags:
-      - Base
-  /base/register:
-    post:
-      parameters:
-      - description: 用户名, 昵称, 密码, 角色ID ,AppId
+      - description: 客户端基础信息(json格式,参考request.HeaderBaseInfo)
+        in: header
+        name: X-Base-Info
+        type: string
+      - description: 用户信息
         in: body
         name: data
         required: true
         schema:
-          $ref: '#/definitions/model.User'
+          $ref: '#/definitions/request.Register'
       produces:
       - application/json
       responses:
@@ -568,7 +591,7 @@ paths:
       - ApiKeyAuth: []
       summary: Config
       tags:
-      - User
+      - System
   /sys/quit:
     post:
       description: Quit
@@ -583,7 +606,7 @@ paths:
       - ApiKeyAuth: []
       summary: Quit
       tags:
-      - User
+      - System
   /user/changePassword:
     put:
       parameters:
@@ -692,6 +715,6 @@ paths:
 securityDefinitions:
   ApiKeyAuth:
     in: header
-    name: token
+    name: X-Token
     type: apiKey
 swagger: "2.0"

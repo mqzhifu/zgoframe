@@ -1,68 +1,65 @@
 package model
 
-import (
-	"github.com/satori/go.uuid"
-)
-
-//type User struct {
-//	global.MODEL
-//	UUID        uuid.UUID    	`json:"uuid" 		gorm:"comment:UUID"	db:"comment:uuid"`
-//	AppId       int   			`json:"app_id" 		gorm:"comment:app_id"`
-//	Sex       	int   			`json:"sex" 		gorm:"comment:性别1男2女"`
-//	Birthday    int   			`json:"birthday" 	gorm:"comment:出生日期"`
-//	Username    string       	`json:"userName" 	gorm:"comment:用户登录名"`
-//	Password    string       	`json:"-"  			gorm:"comment:用户登录密码"`
-//	NickName    string       	`json:"nickName" 	gorm:"comment:用户昵称" `
-//	AuthorityId string       	`json:"authorityId" gorm:"comment:用户角色ID"`
-//	Mobile 		string 			`json:"mobile" 		gorm:"comment:手机号"`
-//	Email 		string 			`json:"email" 		gorm:"comment:邮箱"`
-//	Type 		int 			`json:"reg_type" 	gorm:"comment:类型,1普通2游客"`
-//	Robot 		int				`json:"robot" 		gorm:"comment:机器人"`
-//	Status 		int				`json:"status" 		gorm:"comment:状态"`
-//
-//	HeaderImg   string       	`json:"headerImg" 	gorm:"default:http://qmplusimg.henrongyi.top/head.png;comment:用户头像"`
-//	Authority   SysAuthority 	`json:"authority" 	gorm:"foreignKey:AuthorityId;references:AuthorityId;comment:用户角色"`
-//}
-
-
-
 type User struct {
 	MODEL
-	Uuid        uuid.UUID    	`json:"uuid" db:"define:varchar(50);comment:uuid;unique:uuid;index:uuid;defaultValue:''"`
-	ProjectId   int   			`json:"project_id" db:"define:tinyint(1);comment:project_id;defaultValue:0"`
-	Sex       	int   			`json:"sex" db:"define:tinyint(1);comment:性别1男2女;defaultValue:0"`
-	Birthday    int   			`json:"birthday" db:"define:int;comment:出生日期;defaultValue:0"`
-	Username    string       	`json:"username" db:"define:varchar(50);comment:用户登录名;defaultValue:''"`
-	Password    string       	`json:"-" db:"define:varchar(50);comment:用户登录密码;defaultValue:''"`
-	PayPs       string       	`json:"-" db:"define:varchar(50);comment:用户支付密码;defaultValue:''"`
-	NickName    string       	`json:"nick_name" db:"define:varchar(50);comment:用户昵称;defaultValue:''" `
-	AuthorityId string       	`json:"authority_id" db:"define:varchar(50);comment:用户角色ID;defaultValue:''"`
-	Mobile 		string 			`json:"mobile" db:"define:varchar(50);comment:手机号;defaultValue:''"`
-	Email 		string 			`json:"email" db:"define:varchar(50);comment:邮箱;defaultValue:''"`
-	Robot 		int				`json:"robot" db:"define:tinyint(1);comment:机器人;defaultValue:0"`
-	Status 		int				`json:"status" db:"define:tinyint(1);comment:状态;defaultValue:0"`
-
-	HeaderImg   string       	`json:"headerImg" gorm:"" db:"define:varchar(50);comment:用户头像;defaultValue:''"`
-	Authority   SysAuthority 	`json:"authority" gorm:"foreignKey:AuthorityId;references:AuthorityId;" db:"define:varchar(50);comment:用户角色;defaultValue:''"`
-
-	//Type 		int 			`json:"reg_type" db:"define:tinyint(1);comment:类型,1普通2游客;defaultValue:0"`
+	Uuid      string `json:"uuid" db:"define:varchar(50);comment:UID字条串化;unique:uuid;index:uuid;defaultValue:''"`
+	ProjectId int    `json:"project_id" db:"define:tinyint(1);comment:项目ID;defaultValue:0"`
+	Sex       int    `json:"sex" db:"define:tinyint(1);comment:性别1男2女;defaultValue:0"`
+	Birthday  int    `json:"birthday" db:"define:int;comment:出生日期;defaultValue:0"`
+	Username  string `json:"username" db:"define:varchar(50);comment:用户登录名;defaultValue:''"`
+	Password  string `json:"-" db:"define:varchar(50);comment:用户登录密码;defaultValue:''"`
+	PayPs     string `json:"-" db:"define:varchar(50);comment:用户支付密码;defaultValue:''"`
+	NickName  string `json:"nick_name" db:"define:varchar(50);comment:用户昵称;defaultValue:''" `
+	ThirdId   string `json:"third_id" db:"define:varchar(50);comment:三方平台(登陆)用户ID;defaultValue:''"`
+	Mobile    string `json:"mobile" db:"define:varchar(50);comment:手机号;defaultValue:''"`
+	Email     string `json:"email" db:"define:varchar(50);comment:邮箱;defaultValue:''"`
+	Robot     int    `json:"robot" db:"define:tinyint(1);comment:机器人;defaultValue:0"`
+	Status    int    `json:"status" db:"define:tinyint(1);comment:状态1正常2禁用;defaultValue:0"`
+	Guest     int    `json:"type" db:"define:tinyint(1);comment:是否游客,1是2否;defaultValue:0"`
+	Recommend string `json:"recommend" db:"define:varchar(50);comment:推荐人;defaultValue:''"`
+	HeaderImg string `json:"headerImg" gorm:"" db:"define:varchar(50);comment:用户头像;defaultValue:''"`
+	//AuthorityId string       `json:"authority_id" db:"define:varchar(50);comment:用户角色ID(后台使用);defaultValue:''"`
+	//Authority   SysAuthority `json:"authority" gorm:"foreignKey:AuthorityId;references:AuthorityId;" db:"define:varchar(50);comment:用户角色(后台使用);defaultValue:''"`
 }
 
-func(user *User)Db(){
+const (
+	SEX_MALE   = 1
+	SEX_FEMALE = 2
+
+	USER_STATUS_NOMAL = 1
+	USER_STATUS_DENY  = 2
+
+	USER_GUEST_TRUE  = 1
+	USER_GUEST_FALSE = 2
+
+	USER_ROBOT_TRUE  = 1
+	USER_ROBOT_FALSE = 2
+)
+
+func GetUserSexList() []int {
+	UserThirdType := []int{SEX_MALE, SEX_FEMALE}
+	return UserThirdType
+}
+
+func GetUserStatusList() []int {
+	UserThirdType := []int{USER_STATUS_NOMAL, USER_STATUS_DENY}
+	return UserThirdType
+}
+
+func (user *User) Db() {
 
 }
 
-func(user *User) TableOptions()map[string]string{
+func (user *User) TableOptions() map[string]string {
 	m := make(map[string]string)
 	m["comment"] = "用户表"
 
 	return m
 }
-func(user *User)Count(){
+
+func (user *User) Count() {
 
 }
-
-
 
 ////
 ////根据主键ID查找一条记录

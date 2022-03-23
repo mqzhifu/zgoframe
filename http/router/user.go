@@ -24,6 +24,7 @@ func InitBaseRouter(Router *gin.RouterGroup) {
 		BaseRouter.POST("parserToken", v1.ParserToken)
 		//登陆
 		BaseRouter.POST("login", v1.Login)
+		BaseRouter.POST("loginThird", v1.LoginThird)
 		//BaseRouter.POST("login/sms", v1.Login)
 		//BaseRouter.POST("login/third", v1.Login)
 		//验证码
@@ -38,10 +39,10 @@ func InitBaseRouter(Router *gin.RouterGroup) {
 		//获取APP 列表
 		BaseRouter.POST("projectList", v1.ProjectList)
 		//获取APP TYPE 常量值
-		BaseRouter.GET("projectTypeList", v1.ProjectTypeList)
+		//BaseRouter.GET("projectTypeList", v1.ProjectTypeList)
 		//获取APP TYPE 常量值
-		BaseRouter.GET("platformList", v1.PlatformList)
-
+		//BaseRouter.GET("platformList", v1.PlatformList)
+		BaseRouter.GET("constList", v1.ConstList)
 	}
 }
 

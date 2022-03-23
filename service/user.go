@@ -2,66 +2,126 @@ package service
 
 import (
 	"errors"
+	"fmt"
 	uuid "github.com/satori/go.uuid"
 	"gorm.io/gorm"
-	"strconv"
 	"zgoframe/core/global"
 	"zgoframe/http/request"
 	"zgoframe/model"
 	"zgoframe/util"
 )
 
-
 //@author: [piexlmax](https://github.com/piexlmax)
 //@function: Register
 //@description: 用户注册-仅限：邮件、用户名、手机
 //@param: u model.User
 //@return: err error, userInter model.User
-func Register(u model.User,h request.Header) (err error, userInter model.User) {
+func Register(R request.Register, h request.Header) (err error, userInter model.User) {
 	var user model.User
-	if !errors.Is(global.V.Gorm.Where("username = ? and project_id = ?", u.Username,u.ProjectId).First(&user).Error, gorm.ErrRecordNotFound) { // 判断用户名是否注册
-		return errors.New("用户名已注册"), userInter
+	var userRegType int
+
+	u := model.User{
+		Username:  R.Username,
+		NickName:  R.NickName,
+		Password:  R.Password,
+		HeaderImg: R.HeaderImg,
+		ProjectId: R.ProjectId,
+		Sex:       R.Sex,
+		Recommend: R.Recommend,
+		Guest:     R.Guest,
+		ThirdId:   R.ThirdId,
+		Robot:     model.USER_ROBOT_FALSE,
+		Status:    model.USER_STATUS_NOMAL,
 	}
-	isEmail := util.CheckEmailRule(u.Username)
-	isMobile := util.CheckMobileRule(u.Username)
-	userRegType := model.USER_REG_TYPE_NAME
-	if isEmail{
-		userRegType = model.USER_REG_TYPE_EMAIL
-	}else if isMobile{
-		userRegType = model.USER_REG_TYPE_MOBILE
+
+	if u.Guest != model.USER_GUEST_TRUE && u.Guest != model.USER_GUEST_FALSE {
+		return errors.New("Guest value err."), userInter
 	}
-	// 否则 附加uuid 密码md5简单加密 注册
-	u.Password = util.MD5V([]byte(u.Password))
-	u.Uuid = uuid.NewV4()
+
+	if u.Guest == model.USER_REG_TYPE_GUEST {
+		//deviceId = username
+		if u.Username == "" {
+			u.Username = MakeGuestUsername()
+		}
+
+		if !errors.Is(global.V.Gorm.Where("username = ? ", u.Username).First(&user).Error, gorm.ErrRecordNotFound) { // 判断用户名是否注册
+			return errors.New("用户名已注册"), userInter
+		}
+		userRegType = model.USER_REG_TYPE_NAME
+	} else if R.ThirdType > 0 && R.ThirdId != "" {
+		userRegType = model.USER_REG_TYPE_THIRD
+
+		if !errors.Is(global.V.Gorm.Where("third_id = ?  ", u.ThirdId).First(&user).Error, gorm.ErrRecordNotFound) { // 判断用户名是否注册
+			return errors.New("用户名已注册"), userInter
+		}
+	} else {
+		userRegType = TurnRegByUsername(u.Username)
+		if userRegType == model.USER_REG_TYPE_MOBILE {
+			if !errors.Is(global.V.Gorm.Where("username = ? ", u.Username).First(&user).Error, gorm.ErrRecordNotFound) { // 判断用户名是否注册
+				return errors.New("mobile 已注册"), userInter
+			}
+		} else if userRegType == model.USER_REG_TYPE_EMAIL {
+			if !errors.Is(global.V.Gorm.Where("email = ? ", u.Username).First(&user).Error, gorm.ErrRecordNotFound) { // 判断用户名是否注册
+				return errors.New("email 已注册"), userInter
+			}
+		} else {
+			if !errors.Is(global.V.Gorm.Where("username = ? ", u.Username).First(&user).Error, gorm.ErrRecordNotFound) { // 判断用户名是否注册
+				return errors.New("用户名已注册"), userInter
+			}
+		}
+
+		userRegType = TurnRegByUsername(u.Username)
+	}
+
+	if u.NickName == "" {
+		u.NickName = MakeNickname()
+	}
+
+	if u.Password != "" {
+		u.Password = util.MD5V([]byte(u.Password))
+	}
+
+	u.Uuid = uuid.NewV4().String()
+
+	formatHeader := fmt.Sprintf("%+v", u)
+	util.MyPrint("create user Info", formatHeader)
+
 	err = global.V.Gorm.Create(&u).Error
-
+	if err != nil {
+		return err, userInter
+	}
 	//util.MyPrint("u.id:",u.Id)
-
-	if err == nil{
+	channel := model.CHANNEL_DEFAULT
+	if R.Channel > 0 {
+		channel = R.Channel
+	}
+	if err == nil {
 		userReg := model.UserReg{
 			ProjectId: u.ProjectId,
-			Uid: u.Id,
-			Type: userRegType,
-			Ip: h.Ip,
-			AutoIp: h.AutoIp,
-			AppVersion: h.AppVersion,
-			SourceType: h.SourceType,
-			Os: h.OS,
-			OsVersion: h.OSVersion,
-			Device: h.Device,
-			DeviceVersion: h.DeviceVersion,
-			Lat: h.Lat,
-			Lon: h.Lon,
-			DeviceId: h.DeviceId,
-			Dpi: h.DPI,
-			Channel: model.CHANNEL_DEFAULT,
+			Uid:       u.Id,
+			ThirdType: R.ThirdType,
+			Type:      userRegType,
+			Channel:   channel,
+			AutoIp:    h.AutoIp,
+
+			Ip:            h.BaseInfo.Ip,
+			AppVersion:    h.BaseInfo.AppVersion,
+			SourceType:    h.SourceType,
+			Os:            h.BaseInfo.OS,
+			OsVersion:     h.BaseInfo.OSVersion,
+			Device:        h.BaseInfo.Device,
+			DeviceVersion: h.BaseInfo.DeviceVersion,
+			Lat:           h.BaseInfo.Lat,
+			Lon:           h.BaseInfo.Lon,
+			DeviceId:      h.BaseInfo.DeviceId,
+			Dpi:           h.BaseInfo.DPI,
 		}
-		util.PrintStruct(userReg,":")
+		util.PrintStruct(userReg, ":")
 		//fmt.Sprintf("aaaaf:%+v", &userReg)
 		//util.MyPrint("userReg:",userReg)
 		err = global.V.Gorm.Create(&userReg).Error
-		if err != nil{
-			global.V.Zap.Error("create user_Reg err:"+err.Error())
+		if err != nil {
+			return errors.New("create user_Reg err:" + err.Error()), userInter
 		}
 	}
 	return err, u
@@ -75,9 +135,58 @@ func Register(u model.User,h request.Header) (err error, userInter model.User) {
 
 func Login(u *model.User) (err error, userInter *model.User) {
 	var user model.User
+	if u.Username == "" {
+		return errors.New("username empty"), userInter
+	}
+
+	if u.Password == "" {
+		return errors.New("password empty"), userInter
+	}
+
 	u.Password = util.MD5V([]byte(u.Password))
-	err = global.V.Gorm.Where("username = ? AND password = ? AND app_id = ? ", u.Username, u.Password,u.ProjectId).Preload("Authority").First(&user).Error
+	regType := TurnRegByUsername(u.Username)
+	if regType == model.USER_REG_TYPE_MOBILE {
+		err = global.V.Gorm.Where("mobile = ? AND password = ?   ", u.Mobile, u.Password).First(&user).Error
+	} else if regType == model.USER_REG_TYPE_EMAIL {
+		err = global.V.Gorm.Where("email = ? AND password = ?   ", u.Email, u.Password).First(&user).Error
+	} else {
+		err = global.V.Gorm.Where("username = ? AND password = ?   ", u.Username, u.Password).First(&user).Error
+	}
+
+	if err == nil {
+		if user.Status != model.USER_STATUS_NOMAL {
+			return errors.New("status err"), &user
+		}
+	}
+
 	return err, &user
+}
+
+func LoginThird(user *model.User) (err error, userInter *model.User) {
+	if errors.Is(global.V.Gorm.Where("third_id = ?  ", user.ThirdId).First(&user).Error, gorm.ErrRecordNotFound) { // 判断用户名是否注册
+		return errors.New("用户名已注册"), userInter
+	}
+	return nil, user
+}
+
+func MakeGuestUsername() string {
+	return uuid.NewV4().String()
+}
+
+func MakeNickname() string {
+	return uuid.NewV4().String()
+}
+
+func TurnRegByUsername(username string) int {
+	isEmail := util.CheckEmailRule(username)
+	isMobile := util.CheckMobileRule(username)
+	userRegType := model.USER_REG_TYPE_NAME
+	if isEmail {
+		userRegType = model.USER_REG_TYPE_EMAIL
+	} else if isMobile {
+		userRegType = model.USER_REG_TYPE_MOBILE
+	}
+	return userRegType
 }
 
 //@author: [piexlmax](https://github.com/piexlmax)
@@ -163,27 +272,26 @@ func FindUserById(id int) (err error, user *model.User) {
 
 func FindUserByUuid(uuid string) (err error, user *model.User) {
 	var u model.User
-	if err = global.V.Gorm.Where("`uuid` = ?", uuid).First(&u).Error; err != nil{
+	if err = global.V.Gorm.Where("`uuid` = ?", uuid).First(&u).Error; err != nil {
 		return errors.New("用户不存在"), &u
 	}
 	return nil, &u
 }
 
-func CheckUserIsCpByUserId(userId int)(res bool){
-	_,user := FindUserById(userId)
-	auid,_ := strconv.Atoi(user.AuthorityId)
-	if auid == 9528 {
-		return true
-	}
-	return false
-}
-
-
-func CheckIsSuperAdmin(userId int)(res bool){
-	_,user := FindUserById(userId)
-	auid,_ := strconv.Atoi(user.AuthorityId)
-	if auid == 888 {
-		return true
-	}
-	return false
-}
+//func CheckUserIsCpByUserId(userId int) (res bool) {
+//	_, user := FindUserById(userId)
+//	auid, _ := strconv.Atoi(user.AuthorityId)
+//	if auid == 9528 {
+//		return true
+//	}
+//	return false
+//}
+//
+//func CheckIsSuperAdmin(userId int) (res bool) {
+//	_, user := FindUserById(userId)
+//	auid, _ := strconv.Atoi(user.AuthorityId)
+//	if auid == 888 {
+//		return true
+//	}
+//	return false
+//}

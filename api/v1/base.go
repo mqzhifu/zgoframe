@@ -2,6 +2,7 @@ package v1
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/mojocn/base64Captcha"
 	"go.uber.org/zap"
 	"zgoframe/core/global"
 	httpmiddleware "zgoframe/http/middleware"
@@ -34,7 +35,7 @@ func ParserToken(c *gin.Context) {
 	//	httpresponse.FailWithMessage(err.Error(), c)
 	//	return
 	//}
-	j := httpmiddleware.NewJWT()
+	j := httpmiddleware.JWT{}
 	claims, err := j.ParseToken(p.Token)
 	if err != nil {
 		httpresponse.FailWithMessage(err.Error(), c)
@@ -55,6 +56,7 @@ func ParserToken(c *gin.Context) {
 // @Tags Base
 // @Summary header头结构体
 // @Description 日常header里放一诸如验证类的东西，统一公示出来，方便使用
+// @Param X-HeaderBaseInfo body request.HeaderBaseInfo true "客户端基础信息"
 // @Param X-Source-Type header string true "来源" default(1)
 // @Param X-Project-Id header string true "项目ID"  default(6)
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
@@ -86,10 +88,52 @@ func SendSMS(c *gin.Context) {
 // @Tags Base
 // @Produce  application/json
 // @Param data body request.Login true "用户名, 密码, 验证码"
-// @Success 200 {string} string "{"success":true,"data":{},"msg":"登陆成功"}"
+// @Param X-Source-Type header string true "来源" default(11)
+// @Param X-Project-Id header string true "项目ID"  default(6)
+// @Param X-Access header string true "访问KEY" default(imzgoframe)
+// @Success 200 {object} request.Login "{"success":true,"data":{},"msg":"登陆成功"}"
 // @Router /base/login [post]
 func Login(c *gin.Context) {
 	var L request.Login
+	c.ShouldBind(&L)
+	if err := util.Verify(L, util.LoginVerify); err != nil {
+		httpresponse.FailWithMessage(err.Error(), c)
+		return
+	}
+
+	//if !request.CheckPlatformExist(request.GetMyHeader(c).SourceType) {
+	//	httpresponse.FailWithMessage("Header.SourceType unknow", c)
+	//	return
+	//}
+
+	//if store.Verify(L.CaptchaId, L.Captcha, true) {
+	//先从DB中做比对
+	U := &model.User{Username: L.Username, Password: L.Password}
+	err, user := service.Login(U)
+	if err != nil {
+		//global.V.Zap.Error("登陆失败! 用户名不存在或者密码错误", zap.Any("err", err))
+		httpresponse.FailWithMessage("用户名不存在或者密码错误", c)
+	} else {
+		//DB比较OK，开始做JWT处理
+		tokenNext(c, *user)
+	}
+	//} else {
+	//	httpresponse.FailWithMessage("验证码错误", c)
+	//}
+}
+
+// @Summary 用户登陆三方
+// @Description 用户登陆，验证，生成token
+// @Tags Base
+// @Produce  application/json
+// @Param data body request.Login true "用户名, 密码, 验证码"
+// @Param X-Source-Type header string true "来源" default(1)
+// @Param X-Project-Id header string true "项目ID"  default(6)
+// @Param X-Access header string true "访问KEY" default(imzgoframe)
+// @Success 200 {object} request.LoginThird  "{"success":true,"data":{},"msg":"登陆成功"}"
+// @Router /base/loginThird [post]
+func LoginThird(c *gin.Context) {
+	var L request.LoginThird
 	c.ShouldBind(&L)
 	if err := util.Verify(L, util.LoginVerify); err != nil {
 		httpresponse.FailWithMessage(err.Error(), c)
@@ -103,8 +147,8 @@ func Login(c *gin.Context) {
 
 	//if store.Verify(L.CaptchaId, L.Captcha, true) {
 	//先从DB中做比对
-	U := &model.User{Username: L.Username, Password: L.Password, ProjectId: L.AppId}
-	err, user := service.Login(U)
+	U := &model.User{ThirdId: L.Code}
+	err, user := service.LoginThird(U)
 	if err != nil {
 		global.V.Zap.Error("登陆失败! 用户名不存在或者密码错误", zap.Any("err", err))
 		httpresponse.FailWithMessage("用户名不存在或者密码错误", c)
@@ -136,33 +180,57 @@ func ProjectList(c *gin.Context) {
 	httpresponse.OkWithDetailed(rs, "成功", c)
 }
 
-// @Summary 项目的类型
-// @Description 项目的类型
-// @Security ApiKeyAuth
+// @Summary 所有常量列表
+// @Description 常量列表
 // @Tags Base
 // @Param X-Source-Type header string true "来源" default(1)
 // @Param X-Project-Id header string true "项目ID" Enums(1,2,3,4) default(6)
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
 // @Produce  application/json
 // @Success 200 {string} string "{"success":true,"data":{},"msg":"登陆成功"}"
-// @Router /base/projectTypeList [get]
-func ProjectTypeList(c *gin.Context) {
+// @Router /base/constList [get]
+func ConstList(c *gin.Context) {
 	var a model.Project
 	c.ShouldBind(&a)
 
-	httpresponse.OkWithDetailed(util.PROJECT_TYPE_MAP, "成功", c)
+	list := make(map[string]interface{})
+
+	list["PROJECT_TYPE_MAP"] = util.PROJECT_TYPE_MAP
+	list["PlatformList"] = request.GetPlatformList()
+	list["ThirdTypeList"] = model.GetUserThirdTypeList()
+	list["UserRegTypeList"] = model.GetUserRegTypeList()
+	list["UserRegTypeList"] = model.GetUserSexList()
+	list["UserStatusList"] = model.GetUserStatusList()
+
+	httpresponse.OkWithDetailed(list, "成功", c)
+
 }
 
-// @Summary 获取平台类型列表
-// @Description 因为所有请求的hedaer 里必须得，所以动态获取
-// @Security ApiKeyAuth
+var store = base64Captcha.DefaultMemStore
+
 // @Tags Base
+// @Summary 生成图片验证码
+// @Description 防止有人恶意攻击，尝试破解密码
+// @Security ApiKeyAuth
+// @accept application/json
 // @Param X-Source-Type header string true "来源" default(1)
 // @Param X-Project-Id header string true "项目ID"  default(6)
-// @Param X-Access header string true "访问KEY" default(imzgoframe)
-// @Produce  application/json
-// @Success 200 {string} string "{"success":true,"data":{},"msg":"登陆成功"}"
-// @Router /base/platformList [get]
-func PlatformList(c *gin.Context) {
-	httpresponse.OkWithDetailed(request.GetPlatformList(), "成功", c)
+// @Param X-Access header string true "访问KEY"
+// @Produce application/json
+// @Success 200 {object} httpresponse.Response
+// @Router /base/captcha [get]
+func Captcha(c *gin.Context) {
+	//字符,公式,验证码配置
+	// 生成默认数字的driver
+	driver := base64Captcha.NewDriverDigit(global.C.Captcha.ImgHeight, global.C.Captcha.ImgWidth, global.C.Captcha.NumberLength, 0.7, 80)
+	cp := base64Captcha.NewCaptcha(driver, store)
+	if id, b64s, err := cp.Generate(); err != nil {
+		global.V.Zap.Error("验证码获取失败!", zap.Any("err", err))
+		httpresponse.FailWithMessage("验证码获取失败", c)
+	} else {
+		httpresponse.OkWithDetailed(httpresponse.SysCaptchaResponse{
+			CaptchaId: id,
+			PicPath:   b64s,
+		}, "验证码获取成功", c)
+	}
 }

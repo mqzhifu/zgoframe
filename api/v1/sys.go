@@ -10,11 +10,11 @@ import (
 // @Summary Quit
 // @Description Quit
 // @Security ApiKeyAuth
-// @Tags User
+// @Tags System
 // @Produce  application/json
 // @Success 200 {string} string "{"success":true,"data":{},"msg":"登陆成功"}"
 // @Router /sys/quit [POST]
-func Quit(c *gin.Context ) {
+func Quit(c *gin.Context) {
 	SysCheck()
 	global.V.Process.RootQuitFunc(2)
 	//httpresponse.OkWithDetailed("", "结束中...", c)
@@ -26,16 +26,17 @@ func Quit(c *gin.Context ) {
 // @Summary Config
 // @Description Config
 // @Security ApiKeyAuth
-// @Tags User
+// @Tags System
 // @Produce  application/json
 // @Success 200 {string} string "{"success":true,"data":{},"msg":"登陆成功"}"
 // @Router /sys/config [POST]
-func Config(c *gin.Context ) {
+func Config(c *gin.Context) {
+	util.MyPrint("im in sys.config")
 	SysCheck()
 	//str,_ := json.Marshal(global.C)
 	httpresponse.OkWithDetailed(global.C, "结束中...", c)
 }
 
-func SysCheck(){
+func SysCheck() {
 
 }

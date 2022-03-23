@@ -8,8 +8,6 @@ errorMsgFile = "/data/lang.txt"
 status      = "open"
 key         = "chukong"
 expiresTime = 360000
-bufferTime  = 36000
-
 
 [viper]
 status  = "open"

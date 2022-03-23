@@ -3,7 +3,9 @@ package httpresponse
 
 import (
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 	"net/http"
+	"zgoframe/core/global"
 	"zgoframe/http/request"
 )
 
@@ -70,9 +72,11 @@ func Fail(c *gin.Context) {
 
 //快速响应-失败，有些简单的输出信息
 func FailWithMessage(message string, c *gin.Context) {
+	global.V.Zap.Error("失败", zap.Any("err", message))
 	Result(ERROR, map[string]interface{}{}, message, c)
 }
 
 func FailWithDetailed(data interface{}, message string, c *gin.Context) {
+	global.V.Zap.Error("失败", zap.Any("err", message))
 	Result(ERROR, data, message, c)
 }

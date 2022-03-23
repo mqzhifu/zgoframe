@@ -17,7 +17,7 @@ func GetNewRedis() (*util.MyRedis, error) {
 	pool["lock"] = util.RedisElement{KeyTemplate: "lock_{0}", Expire: 10, Index: "lock", Desc: "公共锁"}
 	pool["inc"] = util.RedisElement{KeyTemplate: "inc_{0}", Expire: 10, Index: "inc", Desc: "公共记数器(自增)"}
 	pool["limiter"] = util.RedisElement{KeyTemplate: "limiter_{0}", Expire: 10, Index: "limiter", Desc: "http 每秒限流"}
-	pool["jwt"] = util.RedisElement{KeyTemplate: "jwt_{0}_{1}_{2}", Expire: 10, Index: "jwt", Desc: "jwt_{appId}_{sourceType}_{uid}，用户登陆凭证"}
+	pool["jwt"] = util.RedisElement{KeyTemplate: "jwt_{0}_{1}", Expire: 10, Index: "jwt", Desc: "jwt_{sourceType}_{uid}，用户登陆凭证"}
 
 	myRedisKeyOption := util.MyRedisOption{
 		Ip:          redisCfg.Ip,

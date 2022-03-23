@@ -253,7 +253,7 @@ func (initialize *Initialize) Start() error {
 		StartHttpGin()
 	}
 
-	//autoCreateUpDbTable()//自动创建表，根据MODEL-struct
+	//autoCreateUpDbTable() //自动创建表，根据MODEL- struct
 	//_ ,cancelFunc := context.WithCancel(option.RootCtx)
 	//进程通信相关
 	ProcessPathFileName := "/tmp/" + global.V.Project.Name + ".pid"
@@ -264,9 +264,9 @@ func (initialize *Initialize) Start() error {
 }
 
 func autoCreateUpDbTable() {
-	//mydb := util.NewDbTool(global.V.Gorm)
-	//mydb.CreateTable(&model.User{},&model.SmsLog{},&model.SmsRule{},&model.App{},&model.UserReg{} , &model.OperationRecord{})
-	//util.ExitPrint("init done.")
+	mydb := util.NewDbTool(global.V.Gorm)
+	mydb.CreateTable(&model.User{}, &model.SmsLog{}, &model.SmsRule{}, &model.Project{}, &model.UserReg{}, &model.OperationRecord{}, &model.CicdPublish{}, &model.Server{}, &model.Instance{})
+	util.ExitPrint("init done.")
 }
 
 func (initialize *Initialize) Quit() {

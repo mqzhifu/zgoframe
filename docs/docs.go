@@ -11,6 +11,9 @@ const docTemplate_swagger = `{
         "description": "{{escape .Description}}",
         "title": "{{.Title}}",
         "contact": {},
+        "license": {
+            "name": "{   \"app_version\": \"v1.1.1\",   \"device\": \"iphone\",   \"device_id\": \"aaaaaaaa\",   \"device_version\": \"12\",   \"dpi\": \"390x844\",   \"ip\": \"127.0.0.1\",   \"lat\": \"21.1111\",   \"lon\": \"32.4444\",   \"os\": 1,   \"os_version\": \"11\",   \"referer\": \"\" }"
+        },
         "version": "{{.Version}}"
     },
     "host": "{{.Host}}",
@@ -69,6 +72,58 @@ const docTemplate_swagger = `{
                 }
             }
         },
+        "/base/constList": {
+            "get": {
+                "description": "常量列表",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Base"
+                ],
+                "summary": "所有常量列表",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "default": "1",
+                        "description": "来源",
+                        "name": "X-Source-Type",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "enum": [
+                            "1",
+                            "2",
+                            "3",
+                            "4"
+                        ],
+                        "type": "string",
+                        "default": "6",
+                        "description": "项目ID",
+                        "name": "X-Project-Id",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "imzgoframe",
+                        "description": "访问KEY",
+                        "name": "X-Access",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"success\":true,\"data\":{},\"msg\":\"登陆成功\"}",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/base/headerStruct": {
             "get": {
                 "description": "日常header里放一诸如验证类的东西，统一公示出来，方便使用",
@@ -80,6 +135,15 @@ const docTemplate_swagger = `{
                 ],
                 "summary": "header头结构体",
                 "parameters": [
+                    {
+                        "description": "客户端基础信息",
+                        "name": "X-HeaderBaseInfo",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.HeaderBaseInfo"
+                        }
+                    },
                     {
                         "type": "string",
                         "default": "1",
@@ -134,13 +198,92 @@ const docTemplate_swagger = `{
                         "schema": {
                             "$ref": "#/definitions/request.Login"
                         }
+                    },
+                    {
+                        "type": "string",
+                        "default": "11",
+                        "description": "来源",
+                        "name": "X-Source-Type",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "6",
+                        "description": "项目ID",
+                        "name": "X-Project-Id",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "imzgoframe",
+                        "description": "访问KEY",
+                        "name": "X-Access",
+                        "in": "header",
+                        "required": true
                     }
                 ],
                 "responses": {
                     "200": {
                         "description": "{\"success\":true,\"data\":{},\"msg\":\"登陆成功\"}",
                         "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/request.Login"
+                        }
+                    }
+                }
+            }
+        },
+        "/base/loginThird": {
+            "post": {
+                "description": "用户登陆，验证，生成token",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Base"
+                ],
+                "summary": "用户登陆三方",
+                "parameters": [
+                    {
+                        "description": "用户名, 密码, 验证码",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.Login"
+                        }
+                    },
+                    {
+                        "type": "string",
+                        "default": "1",
+                        "description": "来源",
+                        "name": "X-Source-Type",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "6",
+                        "description": "项目ID",
+                        "name": "X-Project-Id",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "imzgoframe",
+                        "description": "访问KEY",
+                        "name": "X-Access",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"success\":true,\"data\":{},\"msg\":\"登陆成功\"}",
+                        "schema": {
+                            "$ref": "#/definitions/request.LoginThird"
                         }
                     }
                 }
@@ -201,57 +344,6 @@ const docTemplate_swagger = `{
                 }
             }
         },
-        "/base/platformList": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "因为所有请求的hedaer 里必须得，所以动态获取",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Base"
-                ],
-                "summary": "获取平台类型列表",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "default": "1",
-                        "description": "来源",
-                        "name": "X-Source-Type",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "default": "6",
-                        "description": "项目ID",
-                        "name": "X-Project-Id",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "default": "imzgoframe",
-                        "description": "访问KEY",
-                        "name": "X-Access",
-                        "in": "header",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "{\"success\":true,\"data\":{},\"msg\":\"登陆成功\"}",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
         "/base/projectList": {
             "post": {
                 "security": [
@@ -303,21 +395,15 @@ const docTemplate_swagger = `{
                 }
             }
         },
-        "/base/projectTypeList": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "项目的类型",
+        "/base/register": {
+            "post": {
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "Base"
                 ],
-                "summary": "项目的类型",
+                "summary": "用户注册账号",
                 "parameters": [
                     {
                         "type": "string",
@@ -328,12 +414,6 @@ const docTemplate_swagger = `{
                         "required": true
                     },
                     {
-                        "enum": [
-                            "1",
-                            "2",
-                            "3",
-                            "4"
-                        ],
                         "type": "string",
                         "default": "6",
                         "description": "项目ID",
@@ -348,35 +428,20 @@ const docTemplate_swagger = `{
                         "name": "X-Access",
                         "in": "header",
                         "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "{\"success\":true,\"data\":{},\"msg\":\"登陆成功\"}",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/base/register": {
-            "post": {
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Base"
-                ],
-                "summary": "用户注册账号",
-                "parameters": [
+                    },
                     {
-                        "description": "用户名, 昵称, 密码, 角色ID ,AppId",
+                        "type": "string",
+                        "description": "客户端基础信息(json格式,参考request.HeaderBaseInfo)",
+                        "name": "X-Base-Info",
+                        "in": "header"
+                    },
+                    {
+                        "description": "用户信息",
                         "name": "data",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.User"
+                            "$ref": "#/definitions/request.Register"
                         }
                     }
                 ],
@@ -433,7 +498,7 @@ const docTemplate_swagger = `{
                     "application/json"
                 ],
                 "tags": [
-                    "User"
+                    "System"
                 ],
                 "summary": "Config",
                 "responses": {
@@ -458,7 +523,7 @@ const docTemplate_swagger = `{
                     "application/json"
                 ],
                 "tags": [
-                    "User"
+                    "System"
                 ],
                 "summary": "Quit",
                 "responses": {
@@ -696,7 +761,6 @@ const docTemplate_swagger = `{
                     "type": "string"
                 },
                 "secret_key": {
-                    "description": "Key        \tstring    \t` + "`" + `json:\"key\" form:\"key\" db:\"define:varchar(50);comment:key;defaultValue:''\"` + "`" + `",
                     "type": "string"
                 },
                 "status": {
@@ -710,153 +774,9 @@ const docTemplate_swagger = `{
                 }
             }
         },
-        "model.SysAuthority": {
-            "type": "object",
-            "properties": {
-                "authorityId": {
-                    "type": "string"
-                },
-                "authorityName": {
-                    "type": "string"
-                },
-                "children": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/model.SysAuthority"
-                    }
-                },
-                "createdAt": {
-                    "type": "string"
-                },
-                "dataAuthorityId": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/model.SysAuthority"
-                    }
-                },
-                "defaultRouter": {
-                    "type": "string"
-                },
-                "deletedAt": {
-                    "type": "string"
-                },
-                "menus": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/model.SysBaseMenu"
-                    }
-                },
-                "parentId": {
-                    "type": "string"
-                },
-                "updatedAt": {
-                    "type": "string"
-                }
-            }
-        },
-        "model.SysBaseMenu": {
-            "type": "object",
-            "properties": {
-                "authoritys": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/model.SysAuthority"
-                    }
-                },
-                "children": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/model.SysBaseMenu"
-                    }
-                },
-                "component": {
-                    "type": "string"
-                },
-                "created_at": {
-                    "type": "integer"
-                },
-                "defaultMenu": {
-                    "type": "boolean"
-                },
-                "deleted_at": {
-                    "$ref": "#/definitions/gorm.DeletedAt"
-                },
-                "hidden": {
-                    "type": "boolean"
-                },
-                "icon": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "keepAlive": {
-                    "type": "boolean"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "parameters": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/model.SysBaseMenuParameter"
-                    }
-                },
-                "parentId": {
-                    "type": "string"
-                },
-                "path": {
-                    "type": "string"
-                },
-                "sort": {
-                    "type": "integer"
-                },
-                "title": {
-                    "type": "string"
-                },
-                "updated_at": {
-                    "type": "integer"
-                }
-            }
-        },
-        "model.SysBaseMenuParameter": {
-            "type": "object",
-            "properties": {
-                "created_at": {
-                    "type": "integer"
-                },
-                "deleted_at": {
-                    "$ref": "#/definitions/gorm.DeletedAt"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "key": {
-                    "type": "string"
-                },
-                "sysBaseMenuID": {
-                    "type": "integer"
-                },
-                "type": {
-                    "type": "string"
-                },
-                "updated_at": {
-                    "type": "integer"
-                },
-                "value": {
-                    "type": "string"
-                }
-            }
-        },
         "model.User": {
             "type": "object",
             "properties": {
-                "authority": {
-                    "$ref": "#/definitions/model.SysAuthority"
-                },
-                "authority_id": {
-                    "type": "string"
-                },
                 "birthday": {
                     "type": "integer"
                 },
@@ -884,6 +804,9 @@ const docTemplate_swagger = `{
                 "project_id": {
                     "type": "integer"
                 },
+                "recommend": {
+                    "type": "string"
+                },
                 "robot": {
                     "type": "integer"
                 },
@@ -891,6 +814,12 @@ const docTemplate_swagger = `{
                     "type": "integer"
                 },
                 "status": {
+                    "type": "integer"
+                },
+                "third_id": {
+                    "type": "string"
+                },
+                "type": {
                     "type": "integer"
                 },
                 "updated_at": {
@@ -933,12 +862,41 @@ const docTemplate_swagger = `{
                     "description": "使用网关时，不允许随意访问，得有key",
                     "type": "string"
                 },
-                "app_version": {
-                    "description": "app/前端/服务/项目 版本号",
-                    "type": "string"
-                },
                 "auto_ip": {
                     "description": "获取不到请求方IP时，系统自动获取生成",
+                    "type": "string"
+                },
+                "base_info": {
+                    "description": "收集客户端的一些基础信息，json",
+                    "$ref": "#/definitions/request.HeaderBaseInfo"
+                },
+                "project_id": {
+                    "description": "项目ID，所有的服务/项目/前端/App，均要先向管理员申请一个账号，才能用于日常请求",
+                    "type": "integer"
+                },
+                "request_id": {
+                    "description": "每次请求的唯一标识，响应时也会返回，如果请求方没有，后端会默认生成一个",
+                    "type": "string"
+                },
+                "source_type": {
+                    "description": "pc h5 ios android vr spider unknow",
+                    "type": "integer"
+                },
+                "token": {
+                    "description": "JWT用户登陆令牌(HS256 对称算法，共享一个密钥)",
+                    "type": "string"
+                },
+                "trace_id": {
+                    "description": "追踪ID，主要用于链路追踪，如果请求方没有，后端会默认生成一个，跟request略像，但给后端使用",
+                    "type": "string"
+                }
+            }
+        },
+        "request.HeaderBaseInfo": {
+            "type": "object",
+            "properties": {
+                "app_version": {
+                    "description": "app/前端/服务/项目 版本号",
                     "type": "string"
                 },
                 "device": {
@@ -977,28 +935,8 @@ const docTemplate_swagger = `{
                     "description": "win7 win9 mac10 android9",
                     "type": "string"
                 },
-                "project_id": {
-                    "description": "项目ID，所有的服务/项目/前端/App，均要先向管理员申请一个账号，才能用于日常请求",
-                    "type": "integer"
-                },
                 "referer": {
                     "description": "页面来源",
-                    "type": "string"
-                },
-                "request_id": {
-                    "description": "每次请求的唯一标识，响应时也会返回，如果请求方没有，后端会默认生成一个",
-                    "type": "string"
-                },
-                "source_type": {
-                    "description": "pc h5 ios android vr spider unknow",
-                    "type": "integer"
-                },
-                "token": {
-                    "description": "JWT用户登陆令牌",
-                    "type": "string"
-                },
-                "trace_id": {
-                    "description": "追踪ID，主要用于链路追踪，如果请求方没有，后端会默认生成一个，跟request略像，但给后端使用",
                     "type": "string"
                 }
             }
@@ -1006,8 +944,29 @@ const docTemplate_swagger = `{
         "request.Login": {
             "type": "object",
             "properties": {
-                "app_id": {
-                    "type": "integer"
+                "captcha": {
+                    "description": "验证码",
+                    "type": "string"
+                },
+                "captchaId": {
+                    "description": "验证码-ID",
+                    "type": "string"
+                },
+                "password": {
+                    "description": "密码",
+                    "type": "string"
+                },
+                "username": {
+                    "description": "用户名：普通字符串、手机号、邮箱",
+                    "type": "string"
+                }
+            }
+        },
+        "request.LoginThird": {
+            "type": "object",
+            "properties": {
+                "Code": {
+                    "type": "string"
                 },
                 "captcha": {
                     "type": "string"
@@ -1015,10 +974,7 @@ const docTemplate_swagger = `{
                 "captchaId": {
                     "type": "string"
                 },
-                "password": {
-                    "type": "string"
-                },
-                "username": {
+                "platform": {
                     "type": "string"
                 }
             }
@@ -1031,6 +987,63 @@ const docTemplate_swagger = `{
                 },
                 "pageSize": {
                     "type": "integer"
+                }
+            }
+        },
+        "request.Register": {
+            "type": "object",
+            "properties": {
+                "birthday": {
+                    "description": "生日",
+                    "type": "integer"
+                },
+                "channel": {
+                    "description": "来源渠道",
+                    "type": "integer"
+                },
+                "ext_diy": {
+                    "description": "自定义用户属性，暂未实现",
+                    "type": "string"
+                },
+                "guest": {
+                    "description": "类型,1普通2游客",
+                    "type": "integer"
+                },
+                "headerImg": {
+                    "description": "头像地址",
+                    "type": "string"
+                },
+                "nickName": {
+                    "description": "昵称",
+                    "type": "string"
+                },
+                "passWord": {
+                    "description": "登陆密码 转md5存储",
+                    "type": "string"
+                },
+                "project_id": {
+                    "description": "项目Id",
+                    "type": "integer"
+                },
+                "recommend": {
+                    "description": "推荐人",
+                    "type": "string"
+                },
+                "sex": {
+                    "description": "性别",
+                    "type": "integer"
+                },
+                "third_id": {
+                    "description": "三方平台ID",
+                    "type": "string"
+                },
+                "third_type": {
+                    "description": "三方平台类型",
+                    "type": "integer"
+                },
+                "userName": {
+                    "description": "用户名",
+                    "type": "string"
                 }
             }
         },
@@ -1063,7 +1076,7 @@ const docTemplate_swagger = `{
     "securityDefinitions": {
         "ApiKeyAuth": {
             "type": "apiKey",
-            "name": "token",
+            "name": "X-Token",
             "in": "header"
         }
     }

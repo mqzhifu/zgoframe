@@ -3,7 +3,7 @@ package v1
 import (
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
-	"github.com/go-redis/redis"
+	"github.com/go-redis/redis/v8"
 	"go.uber.org/zap"
 	"strconv"
 	"time"
@@ -17,45 +17,50 @@ import (
 )
 
 // 登录-DB比对成功后，签发jwt
+// 这里分成2个部分，1是JWT字符串2redis，加REDIS是防止恶意攻击
 func tokenNext(c *gin.Context, user model.User) {
 	util.MyPrint("token next user:", user.Id, "sourceType:", request.GetMyHeader(c).SourceType)
-	j := &httpmiddleware.JWT{SigningKey: []byte(global.C.Jwt.Key)} // 唯一签名
+	//j := &httpmiddleware.JWT{SigningKey: []byte(global.C.Jwt.Key)} // 唯一签名
+	j := httpmiddleware.NewJWT()
 	claims := request.CustomClaims{
-		ProjectId: user.ProjectId,
 		//UUID:        user.Uuid,
 		//AuthorityId: user.AuthorityId,
 		Id:         user.Id,
+		ProjectId:  user.ProjectId,
 		NickName:   user.NickName,
 		Username:   user.Username,
 		SourceType: request.GetMyHeader(c).SourceType,
-		BufferTime: global.C.Jwt.BufferTime, // 缓冲时间1天 缓冲时间内会获得新的token刷新令牌 此时一个用户会存在两个有效令牌 但是前端只留一个 另一个会丢失
+		//BufferTime: global.C.Jwt.BufferTime, // 缓冲时间1天 缓冲时间内会获得新的token刷新令牌 此时一个用户会存在两个有效令牌 但是前端只留一个 另一个会丢失
 		StandardClaims: jwt.StandardClaims{
-			NotBefore: time.Now().Unix() - 1000,                     // 签名生效时间
+			NotBefore: time.Now().Unix() - 10,                       // 签名生效时间，这里提前10秒，用于容错
 			ExpiresAt: time.Now().Unix() + global.C.Jwt.ExpiresTime, // 过期时间 7天  配置文件
 			Issuer:    "cocos",                                      // 签名的发行者
 		},
 	}
-	//生成token 串
+	//生成token 字符串
 	token, err := j.CreateToken(claims)
 	if err != nil {
-		global.V.Zap.Error("获取token失败", zap.Any("err", err))
-		httpresponse.FailWithMessage("获取token失败", c)
+		httpresponse.FailWithMessage("创建token失败", c)
 		return
 	}
-	//从redis里再取一下：可能有，可能没有
-	redisElement, _ := global.V.Redis.GetElementByIndex("jwt", strconv.Itoa(user.ProjectId), strconv.Itoa(request.GetMyHeader(c).SourceType), strconv.Itoa(user.Id))
+
+	//j.ParseToken(token)
+
+	//从redis里再取一下：可能有，可能没有(redis key=sourceType+uid ，因为可能多端同时登陆，所以得有 sourceType)
+	redisElement, _ := global.V.Redis.GetElementByIndex("jwt", strconv.Itoa(request.GetMyHeader(c).SourceType), strconv.Itoa(user.Id))
 	//key := service.GetLoginJwtKey(request.GetMyHeader(c).SourceType,user.AppId,user.Id)
 	global.V.Zap.Debug("token key:" + redisElement.Key)
-	//util.MyPrint(key)
 	jwtStr, err := global.V.Redis.Get(redisElement)
-	util.MyPrint("jwtStr:", jwtStr)
+	util.MyPrint("jwtStr:", jwtStr, " err:", err, " ")
 
+	//util.ExitPrint(err)
 	if err == redis.Nil { //redis里不存在，要么之前没登陆过，要么失效了...
-		_, err := global.V.Redis.SetEX(redisElement, token, int(global.C.Jwt.ExpiresTime))
+		util.MyPrint("im in 1")
+		//token 写入redis 并设置失效时间
+		_, err = global.V.Redis.SetEX(redisElement, token, int(global.C.Jwt.ExpiresTime))
 		if err != nil {
 			//if err := service.SetRedisJWT(token, key); err != nil {
-			global.V.Zap.Error("设置登录状态失败", zap.Any("err", err))
-			httpresponse.FailWithMessage("设置登录状态失败", c)
+			httpresponse.FailWithMessage("redis 设置登录状态失败 1"+err.Error(), c)
 			return
 		}
 		httpresponse.OkWithDetailed(httpresponse.LoginResponse{
@@ -64,9 +69,10 @@ func tokenNext(c *gin.Context, user model.User) {
 			ExpiresAt: claims.StandardClaims.ExpiresAt * 1000,
 		}, "登录成功", c)
 	} else if err != nil {
-		global.V.Zap.Error("设置登录状态失败", zap.Any("err", err))
-		httpresponse.FailWithMessage("设置登录状态失败", c)
+		util.MyPrint("im in 2")
+		httpresponse.FailWithMessage("redis 设置登录状态失败 2"+err.Error(), c)
 	} else { //redis 里已经存在
+		//出现这种情况，就是重复登陆，按说一但登陆后，不应该再重复登陆了，但为了兼容性，重新再写入一次
 
 		//var blackJWT model.JwtBlacklist
 		//blackJWT.Jwt = jwtStr
@@ -74,12 +80,12 @@ func tokenNext(c *gin.Context, user model.User) {
 		//	httpresponse.FailWithMessage("jwt作废失败", c)
 		//	return
 		//}
-
-		//写入token到redis,覆盖旧的token
+		//
+		//重新写入token到redis
 		_, err := global.V.Redis.SetEX(redisElement, token, int(global.C.Jwt.ExpiresTime))
 		if err != nil {
 			//if err := service.SetRedisJWT(token, key); err != nil {
-			httpresponse.FailWithMessage("设置登录状态失败", c)
+			httpresponse.FailWithMessage("redis 设置登录状态失败 3", c)
 			return
 		}
 		httpresponse.OkWithDetailed(httpresponse.LoginResponse{
@@ -93,7 +99,11 @@ func tokenNext(c *gin.Context, user model.User) {
 // @Tags Base
 // @Summary 用户注册账号
 // @Produce  application/json
-// @Param data body model.User true "用户名, 昵称, 密码, 角色ID ,AppId"
+// @Param X-Source-Type header string true "来源" default(11)
+// @Param X-Project-Id header string true "项目ID"  default(6)
+// @Param X-Access header string true "访问KEY" default(imzgoframe)
+// @Param X-Base-Info header string false "客户端基础信息(json格式,参考request.HeaderBaseInfo)"
+// @Param data body request.Register true "用户信息"
 // @Success 200 {string} string "{"success":true,"data":{},"msg":"注册成功"}"
 // @Router /base/register [post]
 func Register(c *gin.Context) {
@@ -103,11 +113,17 @@ func Register(c *gin.Context) {
 		httpresponse.FailWithMessage(err.Error(), c)
 		return
 	}
-	user := &model.User{Username: R.Username, NickName: R.NickName, Password: R.Password, HeaderImg: R.HeaderImg, AuthorityId: R.AuthorityId, ProjectId: R.AppId}
-	err, userReturn := service.Register(*user, request.GetMyHeader(c))
+
+	//Channel   int    `json:"channel"`                      //来源渠道
+	//Recommend string `json:"recommend" form:"varchar(50)"` //推荐人
+	//Type      int    `json:"type"  `                       //类型,1普通2游客
+	//ThirdType int    `json:"third_type" `                  //三方平台类型
+	//ThirdId   string `json:"third_id"`                     //三方平台ID
+
+	err, userReturn := service.Register(R, request.GetMyHeader(c))
 	if err != nil {
-		global.V.Zap.Error("注册失败", zap.Any("err", err))
-		httpresponse.FailWithDetailed(httpresponse.SysUserResponse{User: userReturn}, "注册失败", c)
+		//global.V.Zap.Error("注册失败", zap.Any("err", err))
+		httpresponse.FailWithDetailed(httpresponse.SysUserResponse{User: userReturn}, "注册失败:"+err.Error(), c)
 	} else {
 		httpresponse.OkWithDetailed(httpresponse.SysUserResponse{User: userReturn}, "注册成功", c)
 	}

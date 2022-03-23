@@ -9,11 +9,12 @@ func InitUserRouter(Router *gin.RouterGroup) {
 	UserRouter := Router.Group("user")
 	{
 		//UserRouter.POST("changePassword", v1.ChangePassword)     // 修改密码
-		//UserRouter.POST("getUserList", v1.GetUserList)           // 分页获取用户列表
+		//UserRouter.POST("getUserList", v1.GetUserInfoList) // 分页获取用户列表
 		//UserRouter.POST("setUserAuthority", v1.SetUserAuthority) // 设置用户权限
 		//UserRouter.DELETE("deleteUser", v1.DeleteUser)           // 删除用户
-		//UserRouter.PUT("setUserInfo", v1.SetUserInfo)            // 设置用户信息
-		UserRouter.PUT("logout", v1.Logout) // 退出
+		UserRouter.PUT("setUserInfo", v1.SetUserInfo) // 设置用户信息
+		UserRouter.PUT("logout", v1.Logout)           // 退出
+		UserRouter.GET("getUserInfo", v1.GetUserInfo)
 	}
 }
 
@@ -38,10 +39,6 @@ func InitBaseRouter(Router *gin.RouterGroup) {
 
 		//获取APP 列表
 		BaseRouter.POST("projectList", v1.ProjectList)
-		//获取APP TYPE 常量值
-		//BaseRouter.GET("projectTypeList", v1.ProjectTypeList)
-		//获取APP TYPE 常量值
-		//BaseRouter.GET("platformList", v1.PlatformList)
 		BaseRouter.GET("constList", v1.ConstList)
 	}
 }

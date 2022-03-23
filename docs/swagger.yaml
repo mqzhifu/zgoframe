@@ -7,12 +7,37 @@ definitions:
         description: Valid is true if Time is not NULL
         type: boolean
     type: object
+  httpresponse.LoginResponse:
+    properties:
+      expiresAt:
+        description: token失效时间
+        type: integer
+      is_new:
+        description: 重复登陆也可以成功，但返回的是旧的TOKEN，非新生成token
+        type: boolean
+      is_new_reg:
+        description: 3方登陆时，为了简化操作，如果没注册将自动注册
+        type: boolean
+      token:
+        description: 生成的token
+        type: string
+      user:
+        $ref: '#/definitions/model.User'
+        description: 用户基础信息
+    type: object
   httpresponse.Response:
     properties:
       code:
         type: integer
       data: {}
       msg:
+        type: string
+    type: object
+  httpresponse.SysCaptchaResponse:
+    properties:
+      captchaId:
+        type: string
+      picPath:
         type: string
     type: object
   model.Project:
@@ -55,6 +80,7 @@ definitions:
       id:
         type: integer
       mobile:
+        description: ThirdId   string `json:"third_id" db:"define:varchar(50);comment:三方平台(登陆)用户ID;defaultValue:''"`
         type: string
       nick_name:
         type: string
@@ -68,8 +94,6 @@ definitions:
         type: integer
       status:
         type: integer
-      third_id:
-        type: string
       type:
         type: integer
       updated_at:
@@ -84,6 +108,36 @@ definitions:
       newPassword:
         type: string
       password:
+        type: string
+      username:
+        type: string
+    type: object
+  request.CustomClaims:
+    properties:
+      aud:
+        type: string
+      exp:
+        type: integer
+      iat:
+        type: integer
+      id:
+        type: integer
+      iss:
+        type: string
+      jti:
+        type: string
+      nbf:
+        type: integer
+      nick_name:
+        type: string
+      project_id:
+        description: |-
+          AuthorityId string
+          UUID        uuid.UUID
+        type: integer
+      source_type:
+        type: integer
+      sub:
         type: string
       username:
         type: string
@@ -111,7 +165,7 @@ definitions:
         description: 每次请求的唯一标识，响应时也会返回，如果请求方没有，后端会默认生成一个
         type: string
       source_type:
-        description: pc h5 ios android vr spider unknow
+        description: 请求方来源类型(pc h5 ios android vr spider unknow)，不同类型，不同JWT，原因：1手机端登陆后，PC端再登陆，互踢，无法共存。2越权，有些接口不允许互相访问
         type: integer
       token:
         description: JWT用户登陆令牌(HS256 对称算法，共享一个密钥)
@@ -171,23 +225,58 @@ definitions:
         description: 用户名：普通字符串、手机号、邮箱
         type: string
     type: object
-  request.LoginThird:
-    properties:
-      Code:
-        type: string
-      captcha:
-        type: string
-      captchaId:
-        type: string
-      platform:
-        type: string
-    type: object
   request.PageInfo:
     properties:
       page:
         type: integer
       pageSize:
         type: integer
+    type: object
+  request.RLoginThird:
+    properties:
+      birthday:
+        description: 生日
+        type: integer
+      channel:
+        description: 来源渠道
+        type: integer
+      ext_diy:
+        description: 自定义用户属性，暂未实现
+        type: string
+      guest:
+        description: 类型,1普通2游客
+        type: integer
+      headerImg:
+        description: 头像地址
+        type: string
+      nickName:
+        description: 昵称
+        type: string
+      passWord:
+        description: 登陆密码 转md5存储
+        type: string
+      platformType:
+        type: integer
+      project_id:
+        description: 项目Id
+        type: integer
+      recommend:
+        description: 推荐人
+        type: string
+      sex:
+        description: 性别
+        type: integer
+      third_id:
+        description: 三方平台ID
+        type: string
+      third_type:
+        description: 三方平台类型
+        type: integer
+      thirdId:
+        type: string
+      userName:
+        description: 用户名
+        type: string
     type: object
   request.Register:
     properties:
@@ -231,16 +320,27 @@ definitions:
         description: 用户名
         type: string
     type: object
-  request.SendSMS:
+  request.SetUserInfo:
     properties:
-      app_id:
-        type: string
-      code:
-        type: string
-      mobile:
-        type: string
-      rule_id:
+      birthday:
+        description: 生日
         type: integer
+      headerImg:
+        description: 头像地址
+        type: string
+      nickName:
+        description: 昵称
+        type: string
+      sex:
+        description: 性别
+        type: integer
+    type: object
+  request.SystemConfig:
+    properties:
+      password:
+        type: string
+      username:
+        type: string
     type: object
   v1.ParserTokenReq:
     properties:
@@ -264,7 +364,7 @@ paths:
       - application/json
       description: 防止有人恶意攻击，尝试破解密码
       parameters:
-      - default: "1"
+      - default: "11"
         description: 来源
         in: header
         name: X-Source-Type
@@ -276,7 +376,8 @@ paths:
         name: X-Project-Id
         required: true
         type: string
-      - description: 访问KEY
+      - default: imzgoframe
+        description: 访问KEY
         in: header
         name: X-Access
         required: true
@@ -287,7 +388,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/httpresponse.Response'
+            $ref: '#/definitions/httpresponse.SysCaptchaResponse'
       security:
       - ApiKeyAuth: []
       summary: 生成图片验证码
@@ -297,7 +398,7 @@ paths:
     get:
       description: 常量列表
       parameters:
-      - default: "1"
+      - default: "11"
         description: 来源
         in: header
         name: X-Source-Type
@@ -324,9 +425,9 @@ paths:
       - application/json
       responses:
         "200":
-          description: '{"success":true,"data":{},"msg":"登陆成功"}'
+          description: OK
           schema:
-            type: string
+            $ref: '#/definitions/httpresponse.Response'
       summary: 所有常量列表
       tags:
       - Base
@@ -340,7 +441,7 @@ paths:
         required: true
         schema:
           $ref: '#/definitions/request.HeaderBaseInfo'
-      - default: "1"
+      - default: "11"
         description: 来源
         in: header
         name: X-Source-Type
@@ -348,6 +449,11 @@ paths:
         type: string
       - default: "6"
         description: 项目ID
+        enum:
+        - "1"
+        - "2"
+        - "3"
+        - "4"
         in: header
         name: X-Project-Id
         required: true
@@ -372,12 +478,6 @@ paths:
     post:
       description: 用户登陆，验证，生成token
       parameters:
-      - description: 用户名, 密码, 验证码
-        in: body
-        name: data
-        required: true
-        schema:
-          $ref: '#/definitions/request.Login'
       - default: "11"
         description: 来源
         in: header
@@ -386,6 +486,11 @@ paths:
         type: string
       - default: "6"
         description: 项目ID
+        enum:
+        - "1"
+        - "2"
+        - "3"
+        - "4"
         in: header
         name: X-Project-Id
         required: true
@@ -396,13 +501,19 @@ paths:
         name: X-Access
         required: true
         type: string
+      - description: 用户名, 密码, 验证码
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/request.Login'
       produces:
       - application/json
       responses:
         "200":
-          description: '{"success":true,"data":{},"msg":"登陆成功"}'
+          description: OK
           schema:
-            $ref: '#/definitions/request.Login'
+            $ref: '#/definitions/httpresponse.LoginResponse'
       summary: 用户登陆
       tags:
       - Base
@@ -410,13 +521,7 @@ paths:
     post:
       description: 用户登陆，验证，生成token
       parameters:
-      - description: 用户名, 密码, 验证码
-        in: body
-        name: data
-        required: true
-        schema:
-          $ref: '#/definitions/request.Login'
-      - default: "1"
+      - default: "11"
         description: 来源
         in: header
         name: X-Source-Type
@@ -424,6 +529,11 @@ paths:
         type: string
       - default: "6"
         description: 项目ID
+        enum:
+        - "1"
+        - "2"
+        - "3"
+        - "4"
         in: header
         name: X-Project-Id
         required: true
@@ -434,13 +544,19 @@ paths:
         name: X-Access
         required: true
         type: string
+      - description: 用户名, 密码, 验证码
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/request.RLoginThird'
       produces:
       - application/json
       responses:
         "200":
-          description: '{"success":true,"data":{},"msg":"登陆成功"}'
+          description: OK
           schema:
-            $ref: '#/definitions/request.LoginThird'
+            $ref: '#/definitions/httpresponse.LoginResponse'
       summary: 用户登陆三方
       tags:
       - Base
@@ -454,7 +570,7 @@ paths:
         required: true
         schema:
           $ref: '#/definitions/v1.ParserTokenReq'
-      - default: "1"
+      - default: "11"
         description: 来源
         in: header
         name: X-Source-Type
@@ -462,6 +578,11 @@ paths:
         type: string
       - default: "6"
         description: 项目ID
+        enum:
+        - "1"
+        - "2"
+        - "3"
+        - "4"
         in: header
         name: X-Project-Id
         required: true
@@ -478,7 +599,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/httpresponse.Response'
+            $ref: '#/definitions/request.CustomClaims'
       summary: 解析一个TOKEN
       tags:
       - Base
@@ -486,7 +607,7 @@ paths:
     post:
       description: 每个项目的详细信息
       parameters:
-      - default: "1"
+      - default: "11"
         description: 来源
         in: header
         name: X-Source-Type
@@ -494,6 +615,11 @@ paths:
         type: string
       - default: "6"
         description: 项目ID
+        enum:
+        - "1"
+        - "2"
+        - "3"
+        - "4"
         in: header
         name: X-Project-Id
         required: true
@@ -519,7 +645,7 @@ paths:
   /base/register:
     post:
       parameters:
-      - default: "1"
+      - default: "11"
         description: 来源
         in: header
         name: X-Source-Type
@@ -551,9 +677,9 @@ paths:
       - application/json
       responses:
         "200":
-          description: '{"success":true,"data":{},"msg":"注册成功"}'
+          description: OK
           schema:
-            type: string
+            $ref: '#/definitions/model.User'
       summary: 用户注册账号
       tags:
       - Base
@@ -561,12 +687,29 @@ paths:
     post:
       description: 登陆、注册、通知等发送短信
       parameters:
-      - description: 手机号, 规则ID
-        in: body
-        name: data
+      - default: "11"
+        description: 来源
+        in: header
+        name: X-Source-Type
         required: true
-        schema:
-          $ref: '#/definitions/request.SendSMS'
+        type: string
+      - default: "6"
+        description: 项目ID
+        enum:
+        - "1"
+        - "2"
+        - "3"
+        - "4"
+        in: header
+        name: X-Project-Id
+        required: true
+        type: string
+      - default: imzgoframe
+        description: 访问KEY
+        in: header
+        name: X-Access
+        required: true
+        type: string
       produces:
       - application/json
       responses:
@@ -580,6 +723,13 @@ paths:
   /sys/config:
     post:
       description: Config
+      parameters:
+      - description: 用户名/密码
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/request.SystemConfig'
       produces:
       - application/json
       responses:
@@ -594,7 +744,14 @@ paths:
       - System
   /sys/quit:
     post:
-      description: Quit
+      description: 关闭该服务进程
+      parameters:
+      - description: 用户名/密码
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/request.SystemConfig'
       produces:
       - application/json
       responses:
@@ -651,6 +808,20 @@ paths:
       summary: 删除用户
       tags:
       - User
+  /user/getUserInfo:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"success":true,"data":{},"msg":"修改成功"}'
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: 获取当前登陆用户的基础信息
+      tags:
+      - User
   /user/getUserList:
     post:
       consumes:
@@ -699,7 +870,7 @@ paths:
         name: data
         required: true
         schema:
-          $ref: '#/definitions/model.User'
+          $ref: '#/definitions/request.SetUserInfo'
       produces:
       - application/json
       responses:

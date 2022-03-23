@@ -7,6 +7,7 @@ import (
 	uuid "github.com/satori/go.uuid"
 	"reflect"
 	"strconv"
+	"zgoframe/core/global"
 	"zgoframe/http/request"
 	"zgoframe/util"
 )
@@ -15,7 +16,7 @@ import (
 func Header() gin.HandlerFunc {
 
 	return func(c *gin.Context) {
-		//fmt.Println("ProcessHeader pre")
+		global.V.Zap.Debug("middle Header start:")
 
 		//string header map 映射到 request.Header 结构体中
 		header := HttpHeaderSureMapCovertSureStruct(c.Request.Header)
@@ -31,9 +32,12 @@ func Header() gin.HandlerFunc {
 		}
 
 		formatHeader := fmt.Sprintf("%+v", header)
-		util.MyPrint("haeder:", formatHeader)
+		util.MyPrint("parser haeder:", formatHeader)
 
 		c.Set("myheader", header)
+
+		global.V.Zap.Debug("middle Header finish.")
+
 		c.Next()
 
 		//fmt.Println("ProcessHeader after")

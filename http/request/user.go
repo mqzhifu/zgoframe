@@ -20,6 +20,13 @@ type Register struct {
 	ExtDiy string `json:"ext_diy"` //自定义用户属性，暂未实现
 }
 
+type SetUserInfo struct {
+	NickName  string `json:"nickName" form:"nick_name" `   //昵称
+	HeaderImg string `json:"headerImg" form:"header_img" ` //头像地址
+	Sex       int    `json:"sex" form:"sex"`               //性别
+	Birthday  int    `json:"birthday" form:"birthday"`     //生日
+}
+
 // 正常登陆，需要用户名密码
 type Login struct {
 	Username  string `json:"username" form:"username"`   //用户名：普通字符串、手机号、邮箱

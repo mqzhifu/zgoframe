@@ -2,7 +2,6 @@ package httpmiddleware
 
 import (
 	"bytes"
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 	"io/ioutil"
@@ -16,7 +15,7 @@ import (
 
 func Record() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		//fmt.Println("OperationRecord pre")
+		global.V.Zap.Debug("middle Record start:")
 
 		var body []byte
 		var userId int
@@ -70,7 +69,9 @@ func Record() gin.HandlerFunc {
 		record.Latency = latency
 		record.Resp = writer.body.String()
 
-		fmt.Println("opt final record:", record)
+		global.V.Zap.Debug("middle Record finish.")
+
+		//fmt.Println("opt final record:", record)
 		//if err := service.CreateSysOperationRecord(record); err != nil {
 		//	global.V.Zap.Error("create operation record error:", zap.Any("err", err))
 		//}

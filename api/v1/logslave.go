@@ -24,7 +24,7 @@ func Push(c *gin.Context) {
 		return
 	}
 	L.Uid, _ = request.GetUid(c)
-	L.ProjectId, _ = request.GetAppId(c)
+	L.ProjectId, _ = request.GetProjectId(c)
 
 	str, _ := json.Marshal(L)
 	global.V.Zap.Info(string(str))

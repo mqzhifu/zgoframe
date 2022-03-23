@@ -13,6 +13,7 @@ import (
 //对API的访问次数、频繁，做限制,防止恶意DDos
 func Limiter() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		global.V.Zap.Debug("middle Limiter start:")
 		//fmt.Println("RateMiddleware pref")
 		// 如果ip请求连接数在10秒内超过N次，返回429并抛出error
 		maxTimes := global.C.Http.ReqLimitTimes
@@ -26,7 +27,7 @@ func Limiter() gin.HandlerFunc {
 				return
 			}
 		}
-
+		global.V.Zap.Debug("middle Limiter finish.")
 		c.Next()
 		//fmt.Println("RateMiddleware after")
 	}
@@ -36,14 +37,19 @@ func Limiter() gin.HandlerFunc {
 func LimiterAllow(ip string, maxTimes int, second int) bool {
 	element, _ := global.V.Redis.GetElementByIndex("limiter", ip)
 	nowTimes, err := global.V.Redis.Get(element)
-	if err != nil && err == redis.Nil {
+
+	if err == redis.Nil {
 		global.V.Redis.SetEX(element, strconv.Itoa(1), second)
+		return true
+	} else if err != nil {
+		return false
 	} else {
 		t, _ := strconv.Atoi(nowTimes)
 		if t >= maxTimes {
 			return false
 		}
 		global.V.Redis.Incr(element)
+		return true
 	}
 
 	//if v := global.V.Redis.(key).Val(); v == 0 {
@@ -56,5 +62,4 @@ func LimiterAllow(ip string, maxTimes int, second int) bool {
 	//	global.V.Redis.RPushX(key, key)
 	//}
 
-	return true
 }

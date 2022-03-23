@@ -9,7 +9,9 @@ type SysUserResponse struct {
 }
 
 type LoginResponse struct {
-	User      model.User `json:"user"`
-	Token     string        `json:"token"`
-	ExpiresAt int64         `json:"expiresAt"`
+	User       model.User `json:"user"`       //用户基础信息
+	Token      string     `json:"token"`      //生成的token
+	ExpiresAt  int64      `json:"expires_at"` //token失效时间
+	IsNewToken bool       `json:"is_new"`     //重复登陆也可以成功，但返回的是旧的TOKEN，非新生成token
+	IsNewReg   bool       `json:"is_new_reg"` //3方登陆时，为了简化操作，如果没注册将自动注册
 }

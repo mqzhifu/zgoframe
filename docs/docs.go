@@ -40,7 +40,7 @@ const docTemplate_swagger = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "default": "1",
+                        "default": "11",
                         "description": "来源",
                         "name": "X-Source-Type",
                         "in": "header",
@@ -56,6 +56,7 @@ const docTemplate_swagger = `{
                     },
                     {
                         "type": "string",
+                        "default": "imzgoframe",
                         "description": "访问KEY",
                         "name": "X-Access",
                         "in": "header",
@@ -66,7 +67,7 @@ const docTemplate_swagger = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/httpresponse.Response"
+                            "$ref": "#/definitions/httpresponse.SysCaptchaResponse"
                         }
                     }
                 }
@@ -85,7 +86,7 @@ const docTemplate_swagger = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "default": "1",
+                        "default": "11",
                         "description": "来源",
                         "name": "X-Source-Type",
                         "in": "header",
@@ -116,9 +117,9 @@ const docTemplate_swagger = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "{\"success\":true,\"data\":{},\"msg\":\"登陆成功\"}",
+                        "description": "OK",
                         "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/httpresponse.Response"
                         }
                     }
                 }
@@ -146,13 +147,19 @@ const docTemplate_swagger = `{
                     },
                     {
                         "type": "string",
-                        "default": "1",
+                        "default": "11",
                         "description": "来源",
                         "name": "X-Source-Type",
                         "in": "header",
                         "required": true
                     },
                     {
+                        "enum": [
+                            "1",
+                            "2",
+                            "3",
+                            "4"
+                        ],
                         "type": "string",
                         "default": "6",
                         "description": "项目ID",
@@ -191,15 +198,6 @@ const docTemplate_swagger = `{
                 "summary": "用户登陆",
                 "parameters": [
                     {
-                        "description": "用户名, 密码, 验证码",
-                        "name": "data",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/request.Login"
-                        }
-                    },
-                    {
                         "type": "string",
                         "default": "11",
                         "description": "来源",
@@ -208,6 +206,12 @@ const docTemplate_swagger = `{
                         "required": true
                     },
                     {
+                        "enum": [
+                            "1",
+                            "2",
+                            "3",
+                            "4"
+                        ],
                         "type": "string",
                         "default": "6",
                         "description": "项目ID",
@@ -222,13 +226,22 @@ const docTemplate_swagger = `{
                         "name": "X-Access",
                         "in": "header",
                         "required": true
+                    },
+                    {
+                        "description": "用户名, 密码, 验证码",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.Login"
+                        }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "{\"success\":true,\"data\":{},\"msg\":\"登陆成功\"}",
+                        "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/request.Login"
+                            "$ref": "#/definitions/httpresponse.LoginResponse"
                         }
                     }
                 }
@@ -246,23 +259,20 @@ const docTemplate_swagger = `{
                 "summary": "用户登陆三方",
                 "parameters": [
                     {
-                        "description": "用户名, 密码, 验证码",
-                        "name": "data",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/request.Login"
-                        }
-                    },
-                    {
                         "type": "string",
-                        "default": "1",
+                        "default": "11",
                         "description": "来源",
                         "name": "X-Source-Type",
                         "in": "header",
                         "required": true
                     },
                     {
+                        "enum": [
+                            "1",
+                            "2",
+                            "3",
+                            "4"
+                        ],
                         "type": "string",
                         "default": "6",
                         "description": "项目ID",
@@ -277,13 +287,22 @@ const docTemplate_swagger = `{
                         "name": "X-Access",
                         "in": "header",
                         "required": true
+                    },
+                    {
+                        "description": "用户名, 密码, 验证码",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.RLoginThird"
+                        }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "{\"success\":true,\"data\":{},\"msg\":\"登陆成功\"}",
+                        "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/request.LoginThird"
+                            "$ref": "#/definitions/httpresponse.LoginResponse"
                         }
                     }
                 }
@@ -311,13 +330,19 @@ const docTemplate_swagger = `{
                     },
                     {
                         "type": "string",
-                        "default": "1",
+                        "default": "11",
                         "description": "来源",
                         "name": "X-Source-Type",
                         "in": "header",
                         "required": true
                     },
                     {
+                        "enum": [
+                            "1",
+                            "2",
+                            "3",
+                            "4"
+                        ],
                         "type": "string",
                         "default": "6",
                         "description": "项目ID",
@@ -338,7 +363,7 @@ const docTemplate_swagger = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/httpresponse.Response"
+                            "$ref": "#/definitions/request.CustomClaims"
                         }
                     }
                 }
@@ -362,13 +387,19 @@ const docTemplate_swagger = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "default": "1",
+                        "default": "11",
                         "description": "来源",
                         "name": "X-Source-Type",
                         "in": "header",
                         "required": true
                     },
                     {
+                        "enum": [
+                            "1",
+                            "2",
+                            "3",
+                            "4"
+                        ],
                         "type": "string",
                         "default": "6",
                         "description": "项目ID",
@@ -407,7 +438,7 @@ const docTemplate_swagger = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "default": "1",
+                        "default": "11",
                         "description": "来源",
                         "name": "X-Source-Type",
                         "in": "header",
@@ -447,9 +478,9 @@ const docTemplate_swagger = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "{\"success\":true,\"data\":{},\"msg\":\"注册成功\"}",
+                        "description": "OK",
                         "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/model.User"
                         }
                     }
                 }
@@ -467,13 +498,34 @@ const docTemplate_swagger = `{
                 "summary": "发送验证码",
                 "parameters": [
                     {
-                        "description": "手机号, 规则ID",
-                        "name": "data",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/request.SendSMS"
-                        }
+                        "type": "string",
+                        "default": "11",
+                        "description": "来源",
+                        "name": "X-Source-Type",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "enum": [
+                            "1",
+                            "2",
+                            "3",
+                            "4"
+                        ],
+                        "type": "string",
+                        "default": "6",
+                        "description": "项目ID",
+                        "name": "X-Project-Id",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "imzgoframe",
+                        "description": "访问KEY",
+                        "name": "X-Access",
+                        "in": "header",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -501,6 +553,17 @@ const docTemplate_swagger = `{
                     "System"
                 ],
                 "summary": "Config",
+                "parameters": [
+                    {
+                        "description": "用户名/密码",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.SystemConfig"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "{\"success\":true,\"data\":{},\"msg\":\"登陆成功\"}",
@@ -518,7 +581,7 @@ const docTemplate_swagger = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Quit",
+                "description": "关闭该服务进程",
                 "produces": [
                     "application/json"
                 ],
@@ -526,6 +589,17 @@ const docTemplate_swagger = `{
                     "System"
                 ],
                 "summary": "Quit",
+                "parameters": [
+                    {
+                        "description": "用户名/密码",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.SystemConfig"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "{\"success\":true,\"data\":{},\"msg\":\"登陆成功\"}",
@@ -602,6 +676,30 @@ const docTemplate_swagger = `{
                 "responses": {
                     "200": {
                         "description": "{\"success\":true,\"data\":{},\"msg\":\"删除成功\"}",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/user/getUserInfo": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User"
+                ],
+                "summary": "获取当前登陆用户的基础信息",
+                "responses": {
+                    "200": {
+                        "description": "{\"success\":true,\"data\":{},\"msg\":\"修改成功\"}",
                         "schema": {
                             "type": "string"
                         }
@@ -696,7 +794,7 @@ const docTemplate_swagger = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/model.User"
+                            "$ref": "#/definitions/request.SetUserInfo"
                         }
                     }
                 ],
@@ -724,6 +822,31 @@ const docTemplate_swagger = `{
                 }
             }
         },
+        "httpresponse.LoginResponse": {
+            "type": "object",
+            "properties": {
+                "expiresAt": {
+                    "description": "token失效时间",
+                    "type": "integer"
+                },
+                "is_new": {
+                    "description": "重复登陆也可以成功，但返回的是旧的TOKEN，非新生成token",
+                    "type": "boolean"
+                },
+                "is_new_reg": {
+                    "description": "3方登陆时，为了简化操作，如果没注册将自动注册",
+                    "type": "boolean"
+                },
+                "token": {
+                    "description": "生成的token",
+                    "type": "string"
+                },
+                "user": {
+                    "description": "用户基础信息",
+                    "$ref": "#/definitions/model.User"
+                }
+            }
+        },
         "httpresponse.Response": {
             "type": "object",
             "properties": {
@@ -732,6 +855,17 @@ const docTemplate_swagger = `{
                 },
                 "data": {},
                 "msg": {
+                    "type": "string"
+                }
+            }
+        },
+        "httpresponse.SysCaptchaResponse": {
+            "type": "object",
+            "properties": {
+                "captchaId": {
+                    "type": "string"
+                },
+                "picPath": {
                     "type": "string"
                 }
             }
@@ -796,6 +930,7 @@ const docTemplate_swagger = `{
                     "type": "integer"
                 },
                 "mobile": {
+                    "description": "ThirdId   string ` + "`" + `json:\"third_id\" db:\"define:varchar(50);comment:三方平台(登陆)用户ID;defaultValue:''\"` + "`" + `",
                     "type": "string"
                 },
                 "nick_name": {
@@ -815,9 +950,6 @@ const docTemplate_swagger = `{
                 },
                 "status": {
                     "type": "integer"
-                },
-                "third_id": {
-                    "type": "string"
                 },
                 "type": {
                     "type": "integer"
@@ -840,6 +972,48 @@ const docTemplate_swagger = `{
                     "type": "string"
                 },
                 "password": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "request.CustomClaims": {
+            "type": "object",
+            "properties": {
+                "aud": {
+                    "type": "string"
+                },
+                "exp": {
+                    "type": "integer"
+                },
+                "iat": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "iss": {
+                    "type": "string"
+                },
+                "jti": {
+                    "type": "string"
+                },
+                "nbf": {
+                    "type": "integer"
+                },
+                "nick_name": {
+                    "type": "string"
+                },
+                "project_id": {
+                    "description": "AuthorityId string\nUUID        uuid.UUID",
+                    "type": "integer"
+                },
+                "source_type": {
+                    "type": "integer"
+                },
+                "sub": {
                     "type": "string"
                 },
                 "username": {
@@ -879,7 +1053,7 @@ const docTemplate_swagger = `{
                     "type": "string"
                 },
                 "source_type": {
-                    "description": "pc h5 ios android vr spider unknow",
+                    "description": "请求方来源类型(pc h5 ios android vr spider unknow)，不同类型，不同JWT，原因：1手机端登陆后，PC端再登陆，互踢，无法共存。2越权，有些接口不允许互相访问",
                     "type": "integer"
                 },
                 "token": {
@@ -962,23 +1136,6 @@ const docTemplate_swagger = `{
                 }
             }
         },
-        "request.LoginThird": {
-            "type": "object",
-            "properties": {
-                "Code": {
-                    "type": "string"
-                },
-                "captcha": {
-                    "type": "string"
-                },
-                "captchaId": {
-                    "type": "string"
-                },
-                "platform": {
-                    "type": "string"
-                }
-            }
-        },
         "request.PageInfo": {
             "type": "object",
             "properties": {
@@ -987,6 +1144,69 @@ const docTemplate_swagger = `{
                 },
                 "pageSize": {
                     "type": "integer"
+                }
+            }
+        },
+        "request.RLoginThird": {
+            "type": "object",
+            "properties": {
+                "birthday": {
+                    "description": "生日",
+                    "type": "integer"
+                },
+                "channel": {
+                    "description": "来源渠道",
+                    "type": "integer"
+                },
+                "ext_diy": {
+                    "description": "自定义用户属性，暂未实现",
+                    "type": "string"
+                },
+                "guest": {
+                    "description": "类型,1普通2游客",
+                    "type": "integer"
+                },
+                "headerImg": {
+                    "description": "头像地址",
+                    "type": "string"
+                },
+                "nickName": {
+                    "description": "昵称",
+                    "type": "string"
+                },
+                "passWord": {
+                    "description": "登陆密码 转md5存储",
+                    "type": "string"
+                },
+                "platformType": {
+                    "type": "integer"
+                },
+                "project_id": {
+                    "description": "项目Id",
+                    "type": "integer"
+                },
+                "recommend": {
+                    "description": "推荐人",
+                    "type": "string"
+                },
+                "sex": {
+                    "description": "性别",
+                    "type": "integer"
+                },
+                "thirdId": {
+                    "type": "string"
+                },
+                "third_id": {
+                    "description": "三方平台ID",
+                    "type": "string"
+                },
+                "third_type": {
+                    "description": "三方平台类型",
+                    "type": "integer"
+                },
+                "userName": {
+                    "description": "用户名",
+                    "type": "string"
                 }
             }
         },
@@ -1047,20 +1267,35 @@ const docTemplate_swagger = `{
                 }
             }
         },
-        "request.SendSMS": {
+        "request.SetUserInfo": {
             "type": "object",
             "properties": {
-                "app_id": {
-                    "type": "string"
-                },
-                "code": {
-                    "type": "string"
-                },
-                "mobile": {
-                    "type": "string"
-                },
-                "rule_id": {
+                "birthday": {
+                    "description": "生日",
                     "type": "integer"
+                },
+                "headerImg": {
+                    "description": "头像地址",
+                    "type": "string"
+                },
+                "nickName": {
+                    "description": "昵称",
+                    "type": "string"
+                },
+                "sex": {
+                    "description": "性别",
+                    "type": "integer"
+                }
+            }
+        },
+        "request.SystemConfig": {
+            "type": "object",
+            "properties": {
+                "password": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
                 }
             }
         },

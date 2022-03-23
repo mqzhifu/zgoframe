@@ -21,13 +21,14 @@ type ParserTokenReq struct {
 // @Summary 解析一个TOKEN
 // @Description 应用接到token后，要到后端再统计认证一下，确保准确
 // @Param data body ParserTokenReq true "需要验证的token值"
-// @Param X-Source-Type header string true "来源" default(1)
-// @Param X-Project-Id header string true "项目ID"  default(6)
+// @Param X-Source-Type header string true "来源" default(11)
+// @Param X-Project-Id header string true "项目ID" Enums(1,2,3,4) default(6)
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
 // @Produce  application/json
-// @Success 200 {object} httpresponse.Response
+// @Success 200 {object} request.CustomClaims
 // @Router /base/parserToken [post]
 func ParserToken(c *gin.Context) {
+	//util.MyPrint("im in parserToken")
 	var p ParserTokenReq
 	c.ShouldBind(&p)
 
@@ -35,30 +36,32 @@ func ParserToken(c *gin.Context) {
 	//	httpresponse.FailWithMessage(err.Error(), c)
 	//	return
 	//}
-	j := httpmiddleware.JWT{}
+	j := httpmiddleware.NewJWT()
 	claims, err := j.ParseToken(p.Token)
 	if err != nil {
-		httpresponse.FailWithMessage(err.Error(), c)
+		httpresponse.FailWithMessage("解析失败:"+err.Error(), c)
 		return
+	} else {
+		httpresponse.OkWithDetailed(claims, "解析成功", c)
 	}
-	util.MyPrint("claims sourceType:", claims.SourceType)
-	if err != nil {
-		if err == httpmiddleware.TokenExpired {
-			httpresponse.FailWithMessage("授权已过期", c)
-			return
-		}
-		httpresponse.FailWithMessage(err.Error(), c)
-		return
-	}
-	httpresponse.OkWithDetailed(claims, "解析成功", c)
+	//util.MyPrint("claims sourceType:", claims.SourceType)
+	//if err != nil {
+	//	if err == httpmiddleware.TokenExpired {
+	//		httpresponse.FailWithMessage("授权已过期", c)
+	//		return
+	//	}
+	//	httpresponse.FailWithMessage(err.Error(), c)
+	//	return
+	//}
+
 }
 
 // @Tags Base
 // @Summary header头结构体
 // @Description 日常header里放一诸如验证类的东西，统一公示出来，方便使用
 // @Param X-HeaderBaseInfo body request.HeaderBaseInfo true "客户端基础信息"
-// @Param X-Source-Type header string true "来源" default(1)
-// @Param X-Project-Id header string true "项目ID"  default(6)
+// @Param X-Source-Type header string true "来源" default(11)
+// @Param X-Project-Id header string true "项目ID" Enums(1,2,3,4) default(6)
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
 // @Produce  application/json
 // @Success 200 {object} request.Header
@@ -70,8 +73,10 @@ func RequestHeaderStruct(c *gin.Context) {
 // @Summary 发送验证码
 // @Description 登陆、注册、通知等发送短信
 // @Tags Base
+// @Param X-Source-Type header string true "来源" default(11)
+// @Param X-Project-Id header string true "项目ID" Enums(1,2,3,4) default(6)
+// @Param X-Access header string true "访问KEY" default(imzgoframe)
 // @Produce  application/json
-// @Param data body request.SendSMS true "手机号, 规则ID"
 // @Success 200 {string} string "{"success":true,"data":{},"msg":"发送成功"}"
 // @Router /base/sendSMS [post]
 func SendSMS(c *gin.Context) {
@@ -87,11 +92,11 @@ func SendSMS(c *gin.Context) {
 // @Description 用户登陆，验证，生成token
 // @Tags Base
 // @Produce  application/json
-// @Param data body request.Login true "用户名, 密码, 验证码"
 // @Param X-Source-Type header string true "来源" default(11)
-// @Param X-Project-Id header string true "项目ID"  default(6)
+// @Param X-Project-Id header string true "项目ID" Enums(1,2,3,4) default(6)
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
-// @Success 200 {object} request.Login "{"success":true,"data":{},"msg":"登陆成功"}"
+// @Param data body request.Login true "用户名, 密码, 验证码"
+// @Success 200 {object} httpresponse.LoginResponse
 // @Router /base/login [post]
 func Login(c *gin.Context) {
 	var L request.Login
@@ -100,22 +105,21 @@ func Login(c *gin.Context) {
 		httpresponse.FailWithMessage(err.Error(), c)
 		return
 	}
-
-	//if !request.CheckPlatformExist(request.GetMyHeader(c).SourceType) {
-	//	httpresponse.FailWithMessage("Header.SourceType unknow", c)
-	//	return
-	//}
-
 	//if store.Verify(L.CaptchaId, L.Captcha, true) {
 	//先从DB中做比对
 	U := &model.User{Username: L.Username, Password: L.Password}
 	err, user := service.Login(U)
 	if err != nil {
-		//global.V.Zap.Error("登陆失败! 用户名不存在或者密码错误", zap.Any("err", err))
 		httpresponse.FailWithMessage("用户名不存在或者密码错误", c)
 	} else {
 		//DB比较OK，开始做JWT处理
-		tokenNext(c, *user)
+		loginResponse, err := tokenNext(c, user)
+		if err != nil {
+			httpresponse.FailWithMessage(err.Error(), c)
+		} else {
+			loginResponse.User = user
+			httpresponse.OkWithDetailed(loginResponse, "登录成功", c)
+		}
 	}
 	//} else {
 	//	httpresponse.FailWithMessage("验证码错误", c)
@@ -126,35 +130,41 @@ func Login(c *gin.Context) {
 // @Description 用户登陆，验证，生成token
 // @Tags Base
 // @Produce  application/json
-// @Param data body request.Login true "用户名, 密码, 验证码"
-// @Param X-Source-Type header string true "来源" default(1)
-// @Param X-Project-Id header string true "项目ID"  default(6)
+// @Param X-Source-Type header string true "来源" default(11)
+// @Param X-Project-Id header string true "项目ID" Enums(1,2,3,4) default(6)
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
-// @Success 200 {object} request.LoginThird  "{"success":true,"data":{},"msg":"登陆成功"}"
+// @Param data body request.RLoginThird true "用户名, 密码, 验证码"
+// @Success 200 {object} httpresponse.LoginResponse
 // @Router /base/loginThird [post]
 func LoginThird(c *gin.Context) {
-	var L request.LoginThird
+	var L request.RLoginThird
 	c.ShouldBind(&L)
-	if err := util.Verify(L, util.LoginVerify); err != nil {
-		httpresponse.FailWithMessage(err.Error(), c)
-		return
-	}
+	//if err := util.Verify(L, util.LoginVerify); err != nil {
+	//	httpresponse.FailWithMessage(err.Error(), c)
+	//	return
+	//}
 
-	if !request.CheckPlatformExist(request.GetMyHeader(c).SourceType) {
-		httpresponse.FailWithMessage("Header.SourceType unknow", c)
-		return
-	}
+	//if !request.CheckPlatformExist(request.GetMyHeader(c).SourceType) {
+	//	httpresponse.FailWithMessage("Header.SourceType unknow", c)
+	//	return
+	//}
 
 	//if store.Verify(L.CaptchaId, L.Captcha, true) {
 	//先从DB中做比对
-	U := &model.User{ThirdId: L.Code}
-	err, user := service.LoginThird(U)
+	//U := &model.User{ThirdId: L.Code}
+	user, newReg, err := service.LoginThird(L, request.GetMyHeader(c))
 	if err != nil {
-		global.V.Zap.Error("登陆失败! 用户名不存在或者密码错误", zap.Any("err", err))
-		httpresponse.FailWithMessage("用户名不存在或者密码错误", c)
+		httpresponse.FailWithMessage("用户名不存在或者密码错误 ,err:"+err.Error(), c)
 	} else {
 		//DB比较OK，开始做JWT处理
-		tokenNext(c, *user)
+		loginResponse, err := tokenNext(c, user)
+		loginResponse.IsNewReg = newReg
+		if err != nil {
+			httpresponse.FailWithMessage(err.Error(), c)
+		} else {
+			loginResponse.User = user
+			httpresponse.OkWithDetailed(loginResponse, "登录成功", c)
+		}
 	}
 	//} else {
 	//	httpresponse.FailWithMessage("验证码错误", c)
@@ -165,8 +175,8 @@ func LoginThird(c *gin.Context) {
 // @Description 每个项目的详细信息
 // @Security ApiKeyAuth
 // @Tags Base
-// @Param X-Source-Type header string true "来源" default(1)
-// @Param X-Project-Id header string true "项目ID"  default(6)
+// @Param X-Source-Type header string true "来源" default(11)
+// @Param X-Project-Id header string true "项目ID" Enums(1,2,3,4) default(6)
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
 // @Produce  application/json
 // @Success 200 {object} model.Project
@@ -183,11 +193,11 @@ func ProjectList(c *gin.Context) {
 // @Summary 所有常量列表
 // @Description 常量列表
 // @Tags Base
-// @Param X-Source-Type header string true "来源" default(1)
+// @Param X-Source-Type header string true "来源" default(11)
 // @Param X-Project-Id header string true "项目ID" Enums(1,2,3,4) default(6)
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
 // @Produce  application/json
-// @Success 200 {string} string "{"success":true,"data":{},"msg":"登陆成功"}"
+// @Success 200 {object} httpresponse.Response
 // @Router /base/constList [get]
 func ConstList(c *gin.Context) {
 	var a model.Project
@@ -213,11 +223,11 @@ var store = base64Captcha.DefaultMemStore
 // @Description 防止有人恶意攻击，尝试破解密码
 // @Security ApiKeyAuth
 // @accept application/json
-// @Param X-Source-Type header string true "来源" default(1)
+// @Param X-Source-Type header string true "来源" default(11)
 // @Param X-Project-Id header string true "项目ID"  default(6)
-// @Param X-Access header string true "访问KEY"
+// @Param X-Access header string true "访问KEY" default(imzgoframe)
 // @Produce application/json
-// @Success 200 {object} httpresponse.Response
+// @Success 200 {object} httpresponse.SysCaptchaResponse
 // @Router /base/captcha [get]
 func Captcha(c *gin.Context) {
 	//字符,公式,验证码配置

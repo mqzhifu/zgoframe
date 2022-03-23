@@ -7,13 +7,13 @@ import (
 	"zgoframe/model"
 )
 
-type ParserTokenData struct {
-	Claims     *CustomClaims //解析后的token里面的值
-	User       *model.User   //解析后的token，再反查userinfo
-	Token      string        //需要解析的TOKEN
-	SourceType int           //需要解析的来源类型
-	NewToken   string        //失效了，但在缓存期内，重新生成了一个新的token
-}
+//type ParserTokenData struct {
+//	Claims CustomClaims //解析后的token里面的值
+//	User   model.User    //解析后的token，再反查userinfo
+//	Token  string        //需要解析的TOKEN
+//SourceType int           //需要解析的来源类型
+//NewToken   string        //失效了，但在缓存期内，重新生成了一个新的token
+//}
 
 type Header struct {
 	Access     string         `json:"access"`      //使用网关时，不允许随意访问，得有key
@@ -80,16 +80,18 @@ func GetMyHeader(c *gin.Context) Header {
 	return myHeader
 }
 
-func GetParserTokenData(c *gin.Context) (parserTokenData ParserTokenData, err error) {
-	parserTokenDataInter, exists := c.Get("parserTokenData")
-	if !exists {
-		global.V.Zap.Error("parserTokenData empty")
-		return parserTokenData, errors.New("parserTokenData empty")
-	}
-	parserTokenData = parserTokenDataInter.(ParserTokenData)
-	return parserTokenData, nil
-}
+//func GetParserTokenData(c *gin.Context) (parserTokenData ParserTokenData, err error) {
+//	parserTokenDataInter, exists := c.Get("parserTokenData")
+//	if !exists {
+//		global.V.Zap.Error("parserTokenData empty")
+//		return parserTokenData, errors.New("parserTokenData empty")
+//	}
+//	parserTokenData = parserTokenDataInter.(ParserTokenData)
+//	return parserTokenData, nil
+//}
 
+//1. 从token中解出来的值里获取
+//2. 从DB中获取
 func GetUid(c *gin.Context) (int, error) {
 	user, err := GetUser(c)
 	if err != nil {
@@ -102,28 +104,38 @@ func GetUid(c *gin.Context) (int, error) {
 //1. 从token解出来的结构体内获取
 //2. 从token解出来的结构体内，再从DB中获取
 //3. header中也可以取这个值
-//4. 请求方的body中直接附加此值
-func GetAppId(c *gin.Context) (int, error) {
-	CustomClaims, err := GetClaims(c)
+func GetProjectId(c *gin.Context) (int, error) {
+	customClaims, err := GetClaims(c)
 	if err != nil {
-		return 0, errors.New("从Gin的Context中获取从jwt解析出来的user_appID失败, 请检查路由是否使用jwt中间件")
+		return 0, errors.New("Claims key not exist")
 	}
 
-	return CustomClaims.ProjectId, nil
+	return customClaims.ProjectId, nil
 }
 
-func GetUser(c *gin.Context) (user *model.User, err error) {
-	parserTokenData, err := GetParserTokenData(c)
+func GetSourceType(c *gin.Context) (int, error) {
+	customClaims, err := GetClaims(c)
 	if err != nil {
-		return user, err
+		return 0, errors.New("Claims key not exist")
 	}
-	return parserTokenData.User, nil
+
+	return customClaims.SourceType, nil
 }
 
-func GetClaims(c *gin.Context) (customClaims *CustomClaims, err error) {
-	parserTokenData, err := GetParserTokenData(c)
-	if err != nil {
-		return customClaims, err
+func GetUser(c *gin.Context) (user model.User, err error) {
+	u, exist := c.Get("user")
+	if !exist {
+		return user, errors.New("not exist")
 	}
-	return parserTokenData.Claims, nil
+	user = u.(model.User)
+	return user, nil
+}
+
+func GetClaims(c *gin.Context) (customClaims CustomClaims, err error) {
+	cc, exist := c.Get("customClaims")
+	if !exist {
+		return customClaims, errors.New("not exist")
+	}
+	customClaims = cc.(CustomClaims)
+	return customClaims, nil
 }

@@ -3,11 +3,9 @@ package util
 import (
 	"context"
 	"errors"
-	"fmt"
 	"github.com/go-redis/redis/v8"
 	uuid "github.com/satori/go.uuid"
 	"go.uber.org/zap"
-	"reflect"
 	"strconv"
 	"strings"
 	"time"
@@ -132,7 +130,7 @@ func (myRedis *MyRedis) SetEX(element RedisElement, value string, expireSecond i
 
 func (myRedis *MyRedis) Get(element RedisElement) (string, error) {
 	s, e := myRedis.Redis.Get(myRedis.GetContext(), element.Key).Result()
-	fmt.Println(reflect.ValueOf(e), reflect.ValueOf(e).Kind(), reflect.TypeOf(e))
+	//fmt.Println(reflect.ValueOf(e), reflect.ValueOf(e).Kind(), reflect.TypeOf(e))
 	//if e == redis.Nil {
 	//	MyPrint("1 hit hit")
 	//} else {

@@ -11,6 +11,7 @@ import (
 func HeaderAuth() gin.HandlerFunc {
 	res := httpresponse.Response{}
 	return func(c *gin.Context) {
+		global.V.Zap.Debug("middle HeaderAuth start:")
 		header := request.GetMyHeader(c)
 		//验证SourceType
 		if !request.CheckPlatformExist(header.SourceType) {
@@ -49,5 +50,6 @@ func HeaderAuth() gin.HandlerFunc {
 			c.AbortWithStatusJSON(500, res)
 			return
 		}
+		global.V.Zap.Debug("middle HeaderAuth finish.")
 	}
 }

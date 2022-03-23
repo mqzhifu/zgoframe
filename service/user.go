@@ -29,7 +29,6 @@ func Register(R request.Register, h request.Header) (err error, userInter model.
 		Sex:       R.Sex,
 		Recommend: R.Recommend,
 		Guest:     R.Guest,
-		ThirdId:   R.ThirdId,
 		Robot:     model.USER_ROBOT_FALSE,
 		Status:    model.USER_STATUS_NOMAL,
 	}
@@ -50,9 +49,9 @@ func Register(R request.Register, h request.Header) (err error, userInter model.
 		userRegType = model.USER_REG_TYPE_NAME
 	} else if R.ThirdType > 0 && R.ThirdId != "" {
 		userRegType = model.USER_REG_TYPE_THIRD
-
-		if !errors.Is(global.V.Gorm.Where("third_id = ?  ", u.ThirdId).First(&user).Error, gorm.ErrRecordNotFound) { // 判断用户名是否注册
-			return errors.New("用户名已注册"), userInter
+		var userThird model.UserThird
+		if !errors.Is(global.V.Gorm.Where("third_id = ? and platform_type = ?  ", R.ThirdId, R.ThirdType).First(&userThird).Error, gorm.ErrRecordNotFound) { // 判断用户名是否注册
+			return errors.New("third_id 已注册"), userInter
 		}
 	} else {
 		userRegType = TurnRegByUsername(u.Username)
@@ -95,36 +94,49 @@ func Register(R request.Register, h request.Header) (err error, userInter model.
 	if R.Channel > 0 {
 		channel = R.Channel
 	}
-	if err == nil {
-		userReg := model.UserReg{
-			ProjectId: u.ProjectId,
-			Uid:       u.Id,
-			ThirdType: R.ThirdType,
-			Type:      userRegType,
-			Channel:   channel,
-			AutoIp:    h.AutoIp,
 
-			Ip:            h.BaseInfo.Ip,
-			AppVersion:    h.BaseInfo.AppVersion,
-			SourceType:    h.SourceType,
-			Os:            h.BaseInfo.OS,
-			OsVersion:     h.BaseInfo.OSVersion,
-			Device:        h.BaseInfo.Device,
-			DeviceVersion: h.BaseInfo.DeviceVersion,
-			Lat:           h.BaseInfo.Lat,
-			Lon:           h.BaseInfo.Lon,
-			DeviceId:      h.BaseInfo.DeviceId,
-			Dpi:           h.BaseInfo.DPI,
+	userReg := model.UserReg{
+		ProjectId: u.ProjectId,
+		Uid:       u.Id,
+		ThirdType: R.ThirdType,
+		Type:      userRegType,
+		Channel:   channel,
+		AutoIp:    h.AutoIp,
+
+		Ip:            h.BaseInfo.Ip,
+		AppVersion:    h.BaseInfo.AppVersion,
+		SourceType:    h.SourceType,
+		Os:            h.BaseInfo.OS,
+		OsVersion:     h.BaseInfo.OSVersion,
+		Device:        h.BaseInfo.Device,
+		DeviceVersion: h.BaseInfo.DeviceVersion,
+		Lat:           h.BaseInfo.Lat,
+		Lon:           h.BaseInfo.Lon,
+		DeviceId:      h.BaseInfo.DeviceId,
+		Dpi:           h.BaseInfo.DPI,
+	}
+	util.PrintStruct(userReg, ":")
+	//fmt.Sprintf("aaaaf:%+v", &userReg)
+	//util.MyPrint("userReg:",userReg)
+	err = global.V.Gorm.Create(&userReg).Error
+	if err != nil {
+		return errors.New("create user_Reg err:" + err.Error()), userInter
+	}
+
+	if userRegType == model.USER_REG_TYPE_THIRD {
+		userThird := model.UserThird{
+			Uid:          u.Id,
+			ThirdId:      R.ThirdId,
+			PlatformType: R.ThirdType,
 		}
-		util.PrintStruct(userReg, ":")
-		//fmt.Sprintf("aaaaf:%+v", &userReg)
-		//util.MyPrint("userReg:",userReg)
-		err = global.V.Gorm.Create(&userReg).Error
+
+		err = global.V.Gorm.Create(&userThird).Error
 		if err != nil {
-			return errors.New("create user_Reg err:" + err.Error()), userInter
+			return errors.New("create user_third err:" + err.Error()), userInter
 		}
 	}
-	return err, u
+
+	return nil, u
 }
 
 //@author: [piexlmax](https://github.com/piexlmax)
@@ -133,7 +145,7 @@ func Register(R request.Register, h request.Header) (err error, userInter model.
 //@param: u *model.User
 //@return: err error, userInter *model.User
 
-func Login(u *model.User) (err error, userInter *model.User) {
+func Login(u *model.User) (err error, userInter model.User) {
 	var user model.User
 	if u.Username == "" {
 		return errors.New("username empty"), userInter
@@ -155,18 +167,27 @@ func Login(u *model.User) (err error, userInter *model.User) {
 
 	if err == nil {
 		if user.Status != model.USER_STATUS_NOMAL {
-			return errors.New("status err"), &user
+			return errors.New("status err"), user
 		}
 	}
 
-	return err, &user
+	return err, user
 }
 
-func LoginThird(user *model.User) (err error, userInter *model.User) {
-	if errors.Is(global.V.Gorm.Where("third_id = ?  ", user.ThirdId).First(&user).Error, gorm.ErrRecordNotFound) { // 判断用户名是否注册
-		return errors.New("用户名已注册"), userInter
+func LoginThird(rLoginThird request.RLoginThird, h request.Header) (userInter model.User, isNewReg bool, err error) {
+	var userThird model.UserThird
+	var user model.User
+	if errors.Is(global.V.Gorm.Where("third_id = ? and platform_type = ?  ", rLoginThird.ThirdId, rLoginThird.PlatformType).First(&userThird).Error, gorm.ErrRecordNotFound) {
+		rLoginThird.Guest = model.USER_GUEST_FALSE
+		err, user = Register(rLoginThird.Register, h)
+		if err != nil {
+			return user, false, err
+		}
+		return user, true, nil
+	} else {
+		err = global.V.Gorm.Where("id = ?   ", userThird.Uid).First(&user).Error
+		return user, false, err
 	}
-	return nil, user
 }
 
 func MakeGuestUsername() string {

@@ -10,7 +10,7 @@ type User struct {
 	Password  string `json:"-" db:"define:varchar(50);comment:用户登录密码;defaultValue:''"`
 	PayPs     string `json:"-" db:"define:varchar(50);comment:用户支付密码;defaultValue:''"`
 	NickName  string `json:"nick_name" db:"define:varchar(50);comment:用户昵称;defaultValue:''" `
-	ThirdId   string `json:"third_id" db:"define:varchar(50);comment:三方平台(登陆)用户ID;defaultValue:''"`
+	//ThirdId   string `json:"third_id" db:"define:varchar(50);comment:三方平台(登陆)用户ID;defaultValue:''"`
 	Mobile    string `json:"mobile" db:"define:varchar(50);comment:手机号;defaultValue:''"`
 	Email     string `json:"email" db:"define:varchar(50);comment:邮箱;defaultValue:''"`
 	Robot     int    `json:"robot" db:"define:tinyint(1);comment:机器人;defaultValue:0"`

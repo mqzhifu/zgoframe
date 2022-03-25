@@ -56,6 +56,10 @@ type SystemConfig struct {
 	Password string `json:"password" form:"password"` //密码
 }
 
+type NiukeQuestionSearch struct {
+	Title string `json:"title"`
+}
+
 //@description 3方登陆
 type RLoginThird struct {
 	Register

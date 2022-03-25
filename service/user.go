@@ -337,7 +337,7 @@ func (user *User) BindMobile(uid int, mobile string) (err error) {
 	userInfo.Id = uid
 	userInfo.Mobile = mobile
 	userInfo.Guest = model.USER_GUEST_FALSE
-	
+
 	err = user.Gorm.Updates(&userInfo).Error
 	return err
 }

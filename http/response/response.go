@@ -66,6 +66,11 @@ func OkWithDetailed(data interface{}, message string, c *gin.Context) {
 	Result(SUCCESS, data, message, c)
 }
 
+//快速响应-即有简单数据，也有复杂数据
+func NiuKeOkWithDetailed(data interface{}, message string, c *gin.Context) {
+	Result(0, data, message, c)
+}
+
 //快速响应-失败，无任何输出信息
 func Fail(c *gin.Context) {
 	Result(ERROR, map[string]interface{}{}, "操作失败", c)

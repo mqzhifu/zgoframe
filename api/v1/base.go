@@ -20,7 +20,7 @@ import (
 // @Param X-Project-Id header string true "项目ID" Enums(1,2,3,4) default(6)
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
 // @Success 200 {object} request.Header
-// @Router /base/headerStruct [get]
+// @Router /base/header/struct [get]
 func HeaderStruct(c *gin.Context) {
 	myheader := request.Header{}
 	httpresponse.OkWithDetailed(myheader, "成功lalalalala", c)
@@ -30,7 +30,7 @@ var store = base64Captcha.DefaultMemStore
 
 // @Tags Base
 // @Summary 生成图片验证码
-// @Description 防止有人恶意攻击，尝试破解密码
+// @Description BASE64图片内容，防止有人恶意攻击，如：短信轰炸、暴力破解密码等
 // @Security ApiKeyAuth
 // @accept application/json
 // @Param X-Source-Type header string true "来源" default(11)
@@ -62,8 +62,8 @@ func Captcha(c *gin.Context) {
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
 // @Param data body request.SendSMS true "用户信息"
 // @Produce  application/json
-// @Success 200 {string} string "{"success":true,"data":{},"msg":"发送成功"}"
-// @Router /base/sendSms [post]
+// @Success 200 {bool} bool "true:成功 false:否"
+// @Router /base/send/sms [post]
 func SendSms(c *gin.Context) {
 	var sendSMSForm request.SendSMS
 	c.ShouldBind(&sendSMSForm)
@@ -84,7 +84,46 @@ func SendSms(c *gin.Context) {
 }
 
 // @Tags Base
+// @Summary 重置密码 - 通过短信
+// @Description 忘记密码后，可发送短信通知，重置密码
+// @Param X-Source-Type header string true "来源" default(11)
+// @Param X-Project-Id header string true "项目ID" Enums(1,2,3,4) default(6)
+// @Param X-Access header string true "访问KEY" default(imzgoframe)
+// @Param data body request.RestPasswordSms true "用户名, 原密码, 新密码"
+// @Success 200 {bool} bool "true:成功 false:否"
+// @Router /base/sms/reset/password [post]
+func ResetPasswordSms(c *gin.Context) {
+	var form request.RestPasswordSms
+	_ = c.ShouldBindJSON(&form)
+
+	if form.NewPassword == "" || form.NewPasswordConfirm == "" {
+		httpresponse.OkWithMessage("NewPassword |NewPasswordConfirm empty", c)
+		return
+	}
+
+	if form.NewPassword != form.NewPasswordConfirm {
+		httpresponse.OkWithMessage("密码与确认密码不一致", c)
+		return
+	}
+
+	err := global.V.MyService.SendSms.Verify(form.SmsRuleId, form.Mobile, form.SmsAuthCode)
+	if err != nil {
+		httpresponse.FailWithMessage(err.Error(), c)
+		return
+	}
+
+	uid, _ := request.GetUid(c)
+	err = global.V.MyService.User.ChangePassword(uid, form.NewPassword)
+	if err != nil {
+		httpresponse.FailWithMessage("修改失败:"+err.Error(), c)
+	} else {
+		httpresponse.OkWithMessage("修改成功", c)
+	}
+}
+
+// @Tags Base
 // @Summary 用户注册账号
+// @Description 普通注册，需要有：用户名 密码
 // @Produce  application/json
 // @Param X-Source-Type header string true "来源" default(11)
 // @Param X-Project-Id header string true "项目ID"  default(6)
@@ -106,12 +145,12 @@ func Register(c *gin.Context) {
 		return
 	}
 
-	err, userReturn := global.V.MyService.User.RegisterByUsername(R, request.GetMyHeader(c))
+	err, userInfo := global.V.MyService.User.RegisterByUsername(R, request.GetMyHeader(c))
 	if err != nil {
 		//global.V.Zap.Error("注册失败", zap.Any("err", err))
-		httpresponse.FailWithDetailed(httpresponse.SysUserResponse{User: userReturn}, "注册失败:"+err.Error(), c)
+		httpresponse.FailWithDetailed(userInfo, "注册失败:"+err.Error(), c)
 	} else {
-		httpresponse.OkWithDetailed(httpresponse.SysUserResponse{User: userReturn}, "注册成功", c)
+		httpresponse.OkWithDetailed(userInfo, "注册成功", c)
 	}
 }
 
@@ -124,7 +163,7 @@ func Register(c *gin.Context) {
 // @Param X-Base-Info header string false "客户端基础信息(json格式,参考request.HeaderBaseInfo)"
 // @Param data body request.RegisterSms true "用户信息"
 // @Success 200 {object} model.User
-// @Router /base/registerSms [post]
+// @Router /base/register/sms [post]
 func RegisterSms(c *gin.Context) {
 	var registerSmsForm request.RegisterSms
 	_ = c.ShouldBind(&registerSmsForm)
@@ -141,19 +180,19 @@ func RegisterSms(c *gin.Context) {
 		return
 	}
 
-	err, userReturn := global.V.MyService.User.Register(user, request.GetMyHeader(c), service.UserRegInfo{})
+	err, userInfo := global.V.MyService.User.Register(user, request.GetMyHeader(c), service.UserRegInfo{})
 	if err != nil {
 		//global.V.Zap.Error("注册失败", zap.Any("err", err))
-		httpresponse.FailWithDetailed(httpresponse.SysUserResponse{User: userReturn}, "注册失败:"+err.Error(), c)
+		httpresponse.FailWithDetailed(userInfo, "注册失败:"+err.Error(), c)
 		return
 	}
 
-	httpresponse.OkWithDetailed(httpresponse.SysUserResponse{User: userReturn}, "注册成功", c)
+	httpresponse.OkWithDetailed(userInfo, "注册成功", c)
 
 }
 
 // @Tags Base
-// @Summary 测试是否已存在
+// @Summary 测试手机号：是否已存在，注册/绑定时会使用
 // @Produce  application/json
 // @Param X-Source-Type header string true "来源" default(11)
 // @Param data body request.CheckMobileExist true "用户信息"
@@ -161,7 +200,7 @@ func RegisterSms(c *gin.Context) {
 // @Param X-Project-Id header string true "项目ID"  default(6)
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
 // @Success 200 {bool} bool "true:存在 false:不存在"
-// @Router /base/checkMobileExist [post]
+// @Router /base/check/mobile [post]
 func CheckMobileExist(c *gin.Context) {
 	var form request.CheckMobileExist
 	_ = c.ShouldBind(&form)
@@ -190,6 +229,42 @@ func CheckMobileExist(c *gin.Context) {
 }
 
 // @Tags Base
+// @Summary 测试邮件：是否已存在，注册/绑定时会使用
+// @Produce  application/json
+// @Param X-Source-Type header string true "来源" default(11)
+// @Param X-Project-Id header string true "项目ID"  default(6)
+// @Param X-Access header string true "访问KEY" default(imzgoframe)
+// @Param data body request.CheckEmailExist true "用户信息"
+// @Success 200 {bool} bool "true:存在 false:不存在"
+// @Router /base/check/mobile [post]
+func CheckEmailExist(c *gin.Context) {
+	var form request.CheckMobileExist
+	_ = c.ShouldBind(&form)
+
+	if form.Mobile == "" || form.Purpose <= 0 {
+		httpresponse.FailWithMessage("form.Mobile == '' || form.Purpose <= 0", c)
+		return
+	}
+
+	if !util.CheckEmailRule(form.Mobile) {
+		httpresponse.FailWithMessage("email 格式 错误 ", c)
+		return
+	}
+
+	_, empty, err := global.V.MyService.User.FindUserByEmail(form.Mobile)
+	if err != nil {
+		httpresponse.FailWithMessage("服务器错误，请等待或重试", c)
+	} else {
+		if !empty {
+			httpresponse.FailWithDetailed(true, "成功", c)
+		} else {
+			httpresponse.FailWithDetailed(false, "成功", c)
+		}
+	}
+
+}
+
+// @Tags Base
 // @Summary 解析一个TOKEN
 // @Description 应用接到token后，要到后端再统计认证一下，确保准确
 // @Param data body request.ParserToken true "需要验证的token值"
@@ -198,7 +273,7 @@ func CheckMobileExist(c *gin.Context) {
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
 // @Produce  application/json
 // @Success 200 {object} request.CustomClaims
-// @Router /base/parserToken [post]
+// @Router /base/parser/token [post]
 func ParserToken(c *gin.Context) {
 	//util.MyPrint("im in parserToken")
 	var p request.ParserToken
@@ -232,29 +307,13 @@ func ParserToken(c *gin.Context) {
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
 // @Param data body request.SendEmail true "基础信息"
 // @Produce  application/json
-// @Success 200 {string} string "{"success":true,"data":{},"msg":"发送成功"}"
-// @Router /base/sendEmail [post]
+// @Success 200 {bool} bool "true:成功 false:否"
+// @Router /base/send/email [post]
 func SendEmail(c *gin.Context) {
-	//var sendEmailInfo request.SendEmail
-	//c.ShouldBind(&sendEmailInfo)
-	//
-	//if sendEmailInfo.SendIp == "" {
-	//	sendEmailInfo.SendIp = c.Request.RemoteAddr
-	//}
-	//
-	//projectId, _ := request.GetProjectId(c)
-	//err := service.SendEmail(projectId, sendEmailInfo)
-	//if err != nil {
-	//
-	//}
-	////if err := util.Verify(sendSMS, util.SendSMSVerify); err != nil {
-	////	httpresponse.FailWithMessage(err.Error(), c)
-	////	return
-	////}
 }
 
 // @Summary 用户登陆
-// @Description 用户登陆，验证，生成token
+// @Description 用户名(手机邮箱)/密码登陆，验证成功后，生成token
 // @Tags Base
 // @Produce  application/json
 // @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
@@ -292,7 +351,7 @@ func Login(c *gin.Context) {
 }
 
 // @Summary 短信登陆
-// @Description 用户登陆，验证，生成token
+// @Description 短信通知登陆，验证成功后，生成token
 // @Tags Base
 // @Produce  application/json
 // @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
@@ -300,7 +359,7 @@ func Login(c *gin.Context) {
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
 // @Param data body request.RLoginThird true "用户名, 密码, 验证码"
 // @Success 200 {object} httpresponse.LoginResponse
-// @Router /base/loginSms [post]
+// @Router /base/login/sms [post]
 func LoginSms(c *gin.Context) {
 	var L request.LoginSMS
 	c.ShouldBind(&L)
@@ -329,7 +388,7 @@ func LoginSms(c *gin.Context) {
 }
 
 // @Summary 用户登陆三方
-// @Description 用户登陆，验证，生成token
+// @Description 3方平台登陆，验证成功后，生成token
 // @Tags Base
 // @Produce  application/json
 // @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
@@ -337,7 +396,7 @@ func LoginSms(c *gin.Context) {
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
 // @Param data body request.RLoginThird true "用户名, 密码, 验证码"
 // @Success 200 {object} httpresponse.LoginResponse
-// @Router /base/loginThird [post]
+// @Router /base/login/third [post]
 func LoginThird(c *gin.Context) {
 	var L request.RLoginThird
 	c.ShouldBind(&L)
@@ -382,7 +441,7 @@ func LoginThird(c *gin.Context) {
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
 // @Produce  application/json
 // @Success 200 {object} model.Project
-// @Router /base/projectList [post]
+// @Router /base/project/list [post]
 func ProjectList(c *gin.Context) {
 	var a model.Project
 	c.ShouldBind(&a)
@@ -400,7 +459,7 @@ func ProjectList(c *gin.Context) {
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
 // @Produce  application/json
 // @Success 200 {object} httpresponse.Response
-// @Router /base/constList [get]
+// @Router /base/const/list [get]
 func ConstList(c *gin.Context) {
 	var a model.Project
 	c.ShouldBind(&a)

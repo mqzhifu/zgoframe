@@ -252,6 +252,7 @@ func SetUserInfo(c *gin.Context) {
 
 // @Tags User
 // @Summary 删除用户
+// @Description 欧美国家要求比较严，必须得有这功能，国内现在也有但不多，主要是用来删除测试的（危险甚用）
 // @Security ApiKeyAuth
 // @accept application/json
 // @Produce application/json

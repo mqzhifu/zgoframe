@@ -1,7 +1,5 @@
 package request
 
-import uuid "github.com/satori/go.uuid"
-
 //@description 注册信息
 type Register struct {
 	ProjectId int    `json:"project_id" form:"project_id"` //项目Id
@@ -99,13 +97,28 @@ type ChangePasswordStruct struct {
 	NewPasswordConfirm string `json:"new_password_confirm"` //新密码确认
 }
 
-// Modify  user's auth structure
-type SetUserAuth struct {
-	UUID        uuid.UUID `json:"uuid"`
-	AuthorityId string    `json:"authorityId"`
+//@description 修改密码
+type RestPasswordSms struct {
+	Mobile             string `json:"mobile"`               //手机号
+	SmsAuthCode        string `json:"sms_auth_code"`        //短信验证码
+	SmsRuleId          int    `json:"sms_rule_id"`          //短信类型，登陆/注册
+	Password           string `json:"password"`             //旧密码
+	NewPassword        string `json:"newPassword"`          //新密码
+	NewPasswordConfirm string `json:"new_password_confirm"` //新密码确认
 }
+
+//// Modify  user's auth structure
+//type SetUserAuth struct {
+//	UUID        uuid.UUID `json:"uuid"`
+//	AuthorityId string    `json:"authorityId"`
+//}
 
 type CheckMobileExist struct {
 	Mobile  string `json:"mobile"`  //手机号
+	Purpose int    `json:"purpose"` //用途,1注册2找回密码3修改密码4修改邮箱5
+}
+
+type CheckEmailExist struct {
+	Email   string `json:"mobile"`  //邮箱
 	Purpose int    `json:"purpose"` //用途,1注册2找回密码3修改密码4修改邮箱5
 }

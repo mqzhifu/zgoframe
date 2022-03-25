@@ -26,7 +26,7 @@ const docTemplate_swagger = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "防止有人恶意攻击，尝试破解密码",
+                "description": "BASE64图片内容，防止有人恶意攻击，如：短信轰炸、暴力破解密码等",
                 "consumes": [
                     "application/json"
                 ],
@@ -73,7 +73,7 @@ const docTemplate_swagger = `{
                 }
             }
         },
-        "/base/checkMobileExist": {
+        "/base/check/mobile": {
             "post": {
                 "produces": [
                     "application/json"
@@ -81,7 +81,7 @@ const docTemplate_swagger = `{
                 "tags": [
                     "Base"
                 ],
-                "summary": "测试是否已存在",
+                "summary": "测试邮件：是否已存在，注册/绑定时会使用",
                 "parameters": [
                     {
                         "type": "string",
@@ -90,15 +90,6 @@ const docTemplate_swagger = `{
                         "name": "X-Source-Type",
                         "in": "header",
                         "required": true
-                    },
-                    {
-                        "description": "用户信息",
-                        "name": "data",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/request.CheckMobileExist"
-                        }
                     },
                     {
                         "type": "string",
@@ -115,6 +106,15 @@ const docTemplate_swagger = `{
                         "name": "X-Access",
                         "in": "header",
                         "required": true
+                    },
+                    {
+                        "description": "用户信息",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.CheckEmailExist"
+                        }
                     }
                 ],
                 "responses": {
@@ -127,7 +127,7 @@ const docTemplate_swagger = `{
                 }
             }
         },
-        "/base/constList": {
+        "/base/const/list": {
             "get": {
                 "description": "所有常量列表，方便调用与调试",
                 "produces": [
@@ -178,7 +178,7 @@ const docTemplate_swagger = `{
                 }
             }
         },
-        "/base/headerStruct": {
+        "/base/header/struct": {
             "get": {
                 "description": "日常header里放一诸如验证类的东西，统一公示出来，仅是说明，方便测试，不是真实API，方便使用",
                 "tags": [
@@ -229,7 +229,7 @@ const docTemplate_swagger = `{
         },
         "/base/login": {
             "post": {
-                "description": "用户登陆，验证，生成token",
+                "description": "用户名(手机邮箱)/密码登陆，验证成功后，生成token",
                 "produces": [
                     "application/json"
                 ],
@@ -287,9 +287,9 @@ const docTemplate_swagger = `{
                 }
             }
         },
-        "/base/loginSms": {
+        "/base/login/sms": {
             "post": {
-                "description": "用户登陆，验证，生成token",
+                "description": "短信通知登陆，验证成功后，生成token",
                 "produces": [
                     "application/json"
                 ],
@@ -347,9 +347,9 @@ const docTemplate_swagger = `{
                 }
             }
         },
-        "/base/loginThird": {
+        "/base/login/third": {
             "post": {
-                "description": "用户登陆，验证，生成token",
+                "description": "3方平台登陆，验证成功后，生成token",
                 "produces": [
                     "application/json"
                 ],
@@ -407,7 +407,50 @@ const docTemplate_swagger = `{
                 }
             }
         },
-        "/base/parserToken": {
+        "/base/niuke/question/dir/list": {
+            "get": {
+                "description": "某人题库资料目录结构",
+                "tags": [
+                    "Base"
+                ],
+                "summary": "牛博网- 某人题库资料目录结构",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "default": "11",
+                        "description": "来源",
+                        "name": "X-Source-Type",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "6",
+                        "description": "项目ID",
+                        "name": "X-Project-Id",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "imzgoframe",
+                        "description": "访问KEY",
+                        "name": "X-Access",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "true:成功 false:否",
+                        "schema": {
+                            "type": "bool"
+                        }
+                    }
+                }
+            }
+        },
+        "/base/parser/token": {
             "post": {
                 "description": "应用接到token后，要到后端再统计认证一下，确保准确",
                 "produces": [
@@ -467,7 +510,7 @@ const docTemplate_swagger = `{
                 }
             }
         },
-        "/base/projectList": {
+        "/base/project/list": {
             "post": {
                 "security": [
                     {
@@ -525,6 +568,7 @@ const docTemplate_swagger = `{
         },
         "/base/register": {
             "post": {
+                "description": "普通注册，需要有：用户名 密码",
                 "produces": [
                     "application/json"
                 ],
@@ -583,7 +627,7 @@ const docTemplate_swagger = `{
                 }
             }
         },
-        "/base/registerSms": {
+        "/base/register/sms": {
             "post": {
                 "produces": [
                     "application/json"
@@ -643,7 +687,7 @@ const docTemplate_swagger = `{
                 }
             }
         },
-        "/base/sendEmail": {
+        "/base/send/email": {
             "post": {
                 "description": "登陆、注册、通知等发送",
                 "produces": [
@@ -695,15 +739,15 @@ const docTemplate_swagger = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "{\"success\":true,\"data\":{},\"msg\":\"发送成功\"}",
+                        "description": "true:成功 false:否",
                         "schema": {
-                            "type": "string"
+                            "type": "bool"
                         }
                     }
                 }
             }
         },
-        "/base/sendSms": {
+        "/base/send/sms": {
             "post": {
                 "description": "登陆/注册/找回密码",
                 "produces": [
@@ -755,9 +799,67 @@ const docTemplate_swagger = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "{\"success\":true,\"data\":{},\"msg\":\"发送成功\"}",
+                        "description": "true:成功 false:否",
                         "schema": {
-                            "type": "string"
+                            "type": "bool"
+                        }
+                    }
+                }
+            }
+        },
+        "/base/sms/reset/password": {
+            "post": {
+                "description": "忘记密码后，可发送短信通知，重置密码",
+                "tags": [
+                    "Base"
+                ],
+                "summary": "重置密码 - 通过短信",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "default": "11",
+                        "description": "来源",
+                        "name": "X-Source-Type",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "enum": [
+                            "1",
+                            "2",
+                            "3",
+                            "4"
+                        ],
+                        "type": "string",
+                        "default": "6",
+                        "description": "项目ID",
+                        "name": "X-Project-Id",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "imzgoframe",
+                        "description": "访问KEY",
+                        "name": "X-Access",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "用户名, 原密码, 新密码",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.RestPasswordSms"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "true:成功 false:否",
+                        "schema": {
+                            "type": "bool"
                         }
                     }
                 }
@@ -835,6 +937,44 @@ const docTemplate_swagger = `{
                 }
             }
         },
+        "/user/bindMobile": {
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User"
+                ],
+                "summary": "绑定手机号",
+                "parameters": [
+                    {
+                        "description": " ",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.BindMobile"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"success\":true,\"data\":{},\"msg\":\"设置成功\"}",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/user/changePassword": {
             "put": {
                 "security": [
@@ -877,6 +1017,7 @@ const docTemplate_swagger = `{
                         "ApiKeyAuth": []
                     }
                 ],
+                "description": "欧美国家要求比较严，必须得有这功能，国内现在也有但不多，主要是用来删除测试的（危险甚用）",
                 "consumes": [
                     "application/json"
                 ],
@@ -1220,18 +1361,55 @@ const docTemplate_swagger = `{
                 }
             }
         },
+        "request.BindMobile": {
+            "type": "object",
+            "properties": {
+                "mobile": {
+                    "description": "手机号",
+                    "type": "string"
+                },
+                "project_id": {
+                    "description": "项目Id",
+                    "type": "integer"
+                },
+                "sms_auth_code": {
+                    "description": "短信验证码",
+                    "type": "string"
+                },
+                "sms_rule_id": {
+                    "description": "短信类型，登陆/注册",
+                    "type": "integer"
+                }
+            }
+        },
         "request.ChangePasswordStruct": {
             "description": "修改密码",
             "type": "object",
             "properties": {
                 "newPassword": {
+                    "description": "新密码",
+                    "type": "string"
+                },
+                "new_password_confirm": {
+                    "description": "新密码确认",
                     "type": "string"
                 },
                 "password": {
+                    "description": "旧密码",
+                    "type": "string"
+                }
+            }
+        },
+        "request.CheckEmailExist": {
+            "type": "object",
+            "properties": {
+                "mobile": {
+                    "description": "邮箱",
                     "type": "string"
                 },
-                "username": {
-                    "type": "string"
+                "purpose": {
+                    "description": "用途,1注册2找回密码3修改密码4修改邮箱5",
+                    "type": "integer"
                 }
             }
         },
@@ -1419,6 +1597,10 @@ const docTemplate_swagger = `{
                     "description": "来源渠道",
                     "type": "integer"
                 },
+                "confirm_ps": {
+                    "description": "确认密码",
+                    "type": "string"
+                },
                 "ext_diy": {
                     "description": "自定义用户属性，暂未实现",
                     "type": "string"
@@ -1485,6 +1667,10 @@ const docTemplate_swagger = `{
                     "description": "来源渠道",
                     "type": "integer"
                 },
+                "confirm_ps": {
+                    "description": "确认密码",
+                    "type": "string"
+                },
                 "ext_diy": {
                     "description": "自定义用户属性，暂未实现",
                     "type": "string"
@@ -1542,6 +1728,36 @@ const docTemplate_swagger = `{
                 "project_id": {
                     "description": "项目Id",
                     "type": "integer"
+                },
+                "sms_auth_code": {
+                    "description": "短信验证码",
+                    "type": "string"
+                },
+                "sms_rule_id": {
+                    "description": "短信类型，登陆/注册",
+                    "type": "integer"
+                }
+            }
+        },
+        "request.RestPasswordSms": {
+            "description": "修改密码",
+            "type": "object",
+            "properties": {
+                "mobile": {
+                    "description": "手机号",
+                    "type": "string"
+                },
+                "newPassword": {
+                    "description": "新密码",
+                    "type": "string"
+                },
+                "new_password_confirm": {
+                    "description": "新密码确认",
+                    "type": "string"
+                },
+                "password": {
+                    "description": "旧密码",
+                    "type": "string"
                 },
                 "sms_auth_code": {
                     "description": "短信验证码",
@@ -1670,6 +1886,10 @@ const docTemplate_swagger = `{
         {
             "description": "用户相关操作(需要登陆，头里加X-Token = jwt)",
             "name": "User"
+        },
+        {
+            "description": "系统管理(需要二次认证)",
+            "name": "sys"
         }
     ]
 }`

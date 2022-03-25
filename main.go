@@ -26,6 +26,8 @@ var initializeVar *initialize.Initialize
 // @tag.description 不需要登陆，但是会验证头信息 , X-SourceType X-Access X-Project 等，(注：header 中的每个key X开头)
 // @tag.name User
 // @tag.description 用户相关操作(需要登陆，头里加X-Token = jwt)
+// @tag.name sys
+// @tag.description 系统管理(需要二次认证)
 // @securityDefinitions.apikey ApiKeyAuth
 // @name xa
 // @name X-Token

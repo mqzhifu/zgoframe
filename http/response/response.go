@@ -9,11 +9,11 @@ import (
 	"zgoframe/http/request"
 )
 
-//公共HTTP响应结构体
+//@description 公共HTTP响应结构体
 type Response struct {
-	Code int         `json:"code"`
-	Data interface{} `json:"data"`
-	Msg  string      `json:"msg"`
+	Code int         `json:"code"` //状态码，200是OK，4代表有发生错误
+	Data interface{} `json:"data"` //请求时有数据返回，会在此字段中
+	Msg  string      `json:"msg"`  //如果有错误会写在此，如果有些提示信息也会放在这里
 }
 
 const (
@@ -28,9 +28,10 @@ type PageResult struct {
 	PageSize int         `json:"pageSize"`
 }
 
+// @Description 获取图片验证码
 type SysCaptchaResponse struct {
-	CaptchaId string `json:"captchaId"`
-	PicPath   string `json:"picPath"`
+	Id         string `json:"id"`
+	PicContent string `json:"pic_content"` //图片内容,base64
 }
 
 func Result(code int, data interface{}, msg string, c *gin.Context) {

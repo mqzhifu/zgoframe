@@ -1,23 +1,25 @@
 package model
 
+// @description 用户基础信息
 type User struct {
 	MODEL
-	Uuid      string `json:"uuid" db:"define:varchar(50);comment:UID字条串化;unique:uuid;index:uuid;defaultValue:''"`
-	ProjectId int    `json:"project_id" db:"define:tinyint(1);comment:项目ID;defaultValue:0"`
-	Sex       int    `json:"sex" db:"define:tinyint(1);comment:性别1男2女;defaultValue:0"`
-	Birthday  int    `json:"birthday" db:"define:int;comment:出生日期;defaultValue:0"`
-	Username  string `json:"username" db:"define:varchar(50);comment:用户登录名;defaultValue:''"`
-	Password  string `json:"-" db:"define:varchar(50);comment:用户登录密码;defaultValue:''"`
-	PayPs     string `json:"-" db:"define:varchar(50);comment:用户支付密码;defaultValue:''"`
-	NickName  string `json:"nick_name" db:"define:varchar(50);comment:用户昵称;defaultValue:''" `
+	Uuid      string `json:"uuid" db:"define:varchar(50);comment:UID字条串化;unique:uuid;index:uuid;defaultValue:''"` //UID字条串化
+	ProjectId int    `json:"project_id" db:"define:tinyint(1);comment:项目ID;defaultValue:0"`                       //项目ID
+	Sex       int    `json:"sex" db:"define:tinyint(1);comment:性别1男2女;defaultValue:0"`                            //性别1男2女
+	Birthday  int    `json:"birthday" db:"define:int;comment:出生日期,unix时间戳;defaultValue:0"`                        //出生日期,unix时间戳
+	Username  string `json:"username" db:"define:varchar(50);comment:用户登录名;defaultValue:''"`                      //用户登录名
+	Password  string `json:"-" db:"define:varchar(50);comment:用户登录密码;defaultValue:''"`                            //登陆密码
+	PayPs     string `json:"-" db:"define:varchar(50);comment:用户支付密码;defaultValue:''"`                            //支付密码
+	NickName  string `json:"nick_name" db:"define:varchar(50);comment:用户昵称;defaultValue:''" `                     //昵称
+	Mobile    string `json:"mobile" db:"define:varchar(50);comment:手机号;defaultValue:''"`                          //手机号
+	Email     string `json:"email" db:"define:varchar(50);comment:邮箱;defaultValue:''"`                            //邮箱
+	Robot     int    `json:"robot" db:"define:tinyint(1);comment:机器人;defaultValue:0"`                             //机器人
+	Status    int    `json:"status" db:"define:tinyint(1);comment:状态1正常2禁用;defaultValue:0"`                       //状态1正常2禁用
+	Guest     int    `json:"type" db:"define:tinyint(1);comment:是否游客,1是2否;defaultValue:0"`                        //是否游客,1是2否
+	Test      int    `json:"test" db:"define:tinyint(1);comment:是否测试,1是2否;defaultValue:0"`                        //是否测试,1是2否
+	Recommend string `json:"recommend" db:"define:varchar(50);comment:推荐人;defaultValue:''"`                       //推荐人
+	HeaderImg string `json:"headerImg" gorm:"" db:"define:varchar(50);comment:头像url地址;defaultValue:''"`           //头像url地址
 	//ThirdId   string `json:"third_id" db:"define:varchar(50);comment:三方平台(登陆)用户ID;defaultValue:''"`
-	Mobile    string `json:"mobile" db:"define:varchar(50);comment:手机号;defaultValue:''"`
-	Email     string `json:"email" db:"define:varchar(50);comment:邮箱;defaultValue:''"`
-	Robot     int    `json:"robot" db:"define:tinyint(1);comment:机器人;defaultValue:0"`
-	Status    int    `json:"status" db:"define:tinyint(1);comment:状态1正常2禁用;defaultValue:0"`
-	Guest     int    `json:"type" db:"define:tinyint(1);comment:是否游客,1是2否;defaultValue:0"`
-	Recommend string `json:"recommend" db:"define:varchar(50);comment:推荐人;defaultValue:''"`
-	HeaderImg string `json:"headerImg" gorm:"" db:"define:varchar(50);comment:用户头像;defaultValue:''"`
 	//AuthorityId string       `json:"authority_id" db:"define:varchar(50);comment:用户角色ID(后台使用);defaultValue:''"`
 	//Authority   SysAuthority `json:"authority" gorm:"foreignKey:AuthorityId;references:AuthorityId;" db:"define:varchar(50);comment:用户角色(后台使用);defaultValue:''"`
 }

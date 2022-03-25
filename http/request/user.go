@@ -2,7 +2,7 @@ package request
 
 import uuid "github.com/satori/go.uuid"
 
-// 用户注册
+//@description 注册信息
 type Register struct {
 	ProjectId int    `json:"project_id" form:"project_id"` //项目Id
 	Username  string `json:"userName" form:"username"`     //用户名
@@ -16,10 +16,28 @@ type Register struct {
 	Guest     int    `json:"guest"  `                      //类型,1普通2游客
 	ThirdType int    `json:"third_type" `                  //三方平台类型
 	ThirdId   string `json:"third_id"`                     //三方平台ID
+	ConfirmPs string `json:"confirm_ps"`                   //确认密码
 
 	ExtDiy string `json:"ext_diy"` //自定义用户属性，暂未实现
 }
 
+//@description 注册信息 - 通过手机号
+type RegisterSms struct {
+	ProjectId   int    `json:"project_id"`    //项目Id
+	Mobile      string `json:"mobile"`        //手机号
+	SmsAuthCode string `json:"sms_auth_code"` //短信验证码
+	SmsRuleId   int    `json:"sms_rule_id"`   //短信类型，登陆/注册
+}
+
+//@descriptionw 绑定手机号
+type BindMobile struct {
+	ProjectId   int    `json:"project_id"`    //项目Id
+	Mobile      string `json:"mobile"`        //手机号
+	SmsAuthCode string `json:"sms_auth_code"` //短信验证码
+	SmsRuleId   int    `json:"sms_rule_id"`   //短信类型，登陆/注册
+}
+
+//@description 修改用户基础信息
 type SetUserInfo struct {
 	NickName  string `json:"nickName" form:"nick_name" `   //昵称
 	HeaderImg string `json:"headerImg" form:"header_img" ` //头像地址
@@ -27,7 +45,7 @@ type SetUserInfo struct {
 	Birthday  int    `json:"birthday" form:"birthday"`     //生日
 }
 
-// 正常登陆，需要用户名密码
+//@description 正常登陆，需要用户名密码
 type Login struct {
 	Username  string `json:"username" form:"username"`   //用户名：普通字符串、手机号、邮箱
 	Password  string `json:"password" form:"password"`   //密码
@@ -35,14 +53,17 @@ type Login struct {
 	CaptchaId string `json:"captchaId" form:"captchaId"` //验证码-ID
 }
 
-//短信登陆
+//@description 短信登陆
 type LoginSMS struct {
-	Code      string `json:"code"`
-	Captcha   string `json:"captcha"`
-	CaptchaId string `json:"captchaId"`
+	Code        string `json:"code"`
+	Captcha     string `json:"captcha"`
+	CaptchaId   string `json:"captchaId"`
+	Mobile      string `json:"mobile"`
+	SmsAuthCode string `json:"sms_auth_code"`
+	SmsRuleId   int    `json:"sms_rule_id"` //短信类型，登陆/注册
 }
 
-//3方平台登陆
+//@description  3方平台登陆
 type LoginThird struct {
 	Code      string `json:"Code"`
 	Platform  string `json:"platform"`
@@ -50,23 +71,41 @@ type LoginThird struct {
 	CaptchaId string `json:"captchaId"`
 }
 
-// 发送验证码
+//@description 发送验证码
 type SendSMS struct {
-	AppId  string `json:"app_id"`
-	Code   string `json:"code"`
-	Mobile string `json:"mobile"`
-	RuleId int    `json:"rule_id"`
+	RuleId     int               `json:"rule_id"`     //配置规则的ID
+	ReplaceVar map[string]string `json:"replace_var"` //邮件内容模块中变量替换
+	Receiver   string            `json:"receiver"`    //接收者，email格式
+	SendUid    int               `json:"send_uid"`    //发送者ID，管理员是9999，未知8888
+	SendIp     string            `json:"send_ip"`     //发送者IP，如为空系统默认取：请求方的IP,最好给真实的，一但被刷，会使用此值
+	//Captcha    string            `json:"captcha"`     //验证码
+	//CaptchaId  string            `json:"captchaId"`   //获取验证码时拿到的Id
 }
 
-// 修改密码
+//@description 发送邮件
+type SendEmail struct {
+	RuleId     int               `json:"rule_id"`     //配置规则的ID
+	ReplaceVar map[string]string `json:"replaceVar"`  //邮件内容模块中变量替换
+	Receiver   string            `json:"receiver"`    //接收者，email格式
+	CarbonCopy []string          `json:"carbon_copy"` //抄送，，email格式
+	SendUid    int               `json:"send_uid"`    //发送者ID，管理员是9999，未知8888
+	SendIp     string            `json:"send_ip"`     //发送者IP，如为空系统默认取：请求方的IP,最好给真实的，一但被刷，会使用此值
+}
+
+//@description 修改密码
 type ChangePasswordStruct struct {
-	Username    string `json:"username"`
-	Password    string `json:"password"`
-	NewPassword string `json:"newPassword"`
+	Password           string `json:"password"`             //旧密码
+	NewPassword        string `json:"newPassword"`          //新密码
+	NewPasswordConfirm string `json:"new_password_confirm"` //新密码确认
 }
 
 // Modify  user's auth structure
 type SetUserAuth struct {
 	UUID        uuid.UUID `json:"uuid"`
 	AuthorityId string    `json:"authorityId"`
+}
+
+type CheckMobileExist struct {
+	Mobile  string `json:"mobile"`  //手机号
+	Purpose int    `json:"purpose"` //用途,1注册2找回密码3修改密码4修改邮箱5
 }

@@ -5,10 +5,12 @@ import (
 )
 
 type SysUserResponse struct {
-	User model.User `json:"user"`
+	User model.User `json:"user"` //用户基础信息
 }
 
+//@description 登陆成功返回结果
 type LoginResponse struct {
+	//登陆成功结果响应
 	User       model.User `json:"user"`       //用户基础信息
 	Token      string     `json:"token"`      //生成的token
 	ExpiresAt  int64      `json:"expires_at"` //token失效时间

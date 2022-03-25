@@ -13,7 +13,6 @@ import (
 	"zgoframe/http/request"
 	httpresponse "zgoframe/http/response"
 	"zgoframe/model"
-	"zgoframe/service"
 	"zgoframe/util"
 )
 
@@ -94,33 +93,6 @@ func tokenNext(c *gin.Context, user model.User) (loginResponse httpresponse.Logi
 	}
 }
 
-// @Tags Base
-// @Summary 用户注册账号
-// @Produce  application/json
-// @Param X-Source-Type header string true "来源" default(11)
-// @Param X-Project-Id header string true "项目ID"  default(6)
-// @Param X-Access header string true "访问KEY" default(imzgoframe)
-// @Param X-Base-Info header string false "客户端基础信息(json格式,参考request.HeaderBaseInfo)"
-// @Param data body request.Register true "用户信息"
-// @Success 200 {object} model.User
-// @Router /base/register [post]
-func Register(c *gin.Context) {
-	var R request.Register
-	_ = c.ShouldBind(&R)
-	if err := util.Verify(R, util.RegisterVerify); err != nil {
-		httpresponse.FailWithMessage(err.Error(), c)
-		return
-	}
-
-	err, userReturn := service.Register(R, request.GetMyHeader(c))
-	if err != nil {
-		//global.V.Zap.Error("注册失败", zap.Any("err", err))
-		httpresponse.FailWithDetailed(httpresponse.SysUserResponse{User: userReturn}, "注册失败:"+err.Error(), c)
-	} else {
-		httpresponse.OkWithDetailed(httpresponse.SysUserResponse{User: userReturn}, "注册成功", c)
-	}
-}
-
 // @Summary 用户退出
 // @Description 用户退出
 // @Tags User
@@ -140,6 +112,35 @@ func Logout(c *gin.Context) {
 }
 
 // @Tags User
+// @Summary 用户修改密码
+// @Security ApiKeyAuth
+// @Produce  application/json
+// @Param data body request.ChangePasswordStruct true "用户名, 原密码, 新密码"
+// @Success 200 {string} string "{"success":true,"data":{},"msg":"修改成功"}"
+// @Router /user/changePassword [put]
+func ChangePassword(c *gin.Context) {
+	var form request.ChangePasswordStruct
+	_ = c.ShouldBindJSON(&form)
+
+	if form.NewPassword == "" || form.NewPasswordConfirm == "" {
+		httpresponse.OkWithMessage("NewPassword |NewPasswordConfirm empty", c)
+		return
+	}
+
+	if form.NewPassword != form.NewPasswordConfirm {
+		httpresponse.OkWithMessage("密码与确认密码不一致", c)
+		return
+	}
+	uid, _ := request.GetUid(c)
+	err := global.V.MyService.User.ChangePassword(uid, form.NewPassword)
+	if err != nil {
+		httpresponse.FailWithMessage("修改失败:"+err.Error(), c)
+	} else {
+		httpresponse.OkWithMessage("修改成功", c)
+	}
+}
+
+// @Tags User
 // @Summary 获取当前登陆用户的基础信息
 // @Security ApiKeyAuth
 // @Produce  application/json
@@ -151,29 +152,6 @@ func GetUserInfo(c *gin.Context) {
 }
 
 // @Tags User
-// @Summary 用户修改密码
-// @Security ApiKeyAuth
-// @Produce  application/json
-// @Param data body request.ChangePasswordStruct true "用户名, 原密码, 新密码"
-// @Success 200 {string} string "{"success":true,"data":{},"msg":"修改成功"}"
-// @Router /user/changePassword [put]
-func ChangePassword(c *gin.Context) {
-	var user request.ChangePasswordStruct
-	_ = c.ShouldBindJSON(&user)
-	if err := util.Verify(user, util.ChangePasswordVerify); err != nil {
-		httpresponse.FailWithMessage(err.Error(), c)
-		return
-	}
-	U := &model.User{Username: user.Username, Password: user.Password}
-	if err, _ := service.ChangePassword(U, user.NewPassword); err != nil {
-		global.V.Zap.Error("修改失败", zap.Any("err", err))
-		httpresponse.FailWithMessage("修改失败，原密码与当前账户不符", c)
-	} else {
-		httpresponse.OkWithMessage("修改成功", c)
-	}
-}
-
-// @Tags User
 // @Summary 分页获取用户列表
 // @Security ApiKeyAuth
 // @accept application/json
@@ -182,23 +160,60 @@ func ChangePassword(c *gin.Context) {
 // @Success 200 {string} string "{"success":true,"data":{},"msg":"获取成功"}"
 // @Router /user/getUserList [post]
 func GetUserInfoList(c *gin.Context) {
-	var pageInfo request.PageInfo
-	_ = c.ShouldBindJSON(&pageInfo)
-	if err := util.Verify(pageInfo, util.PageInfoVerify); err != nil {
+	//var pageInfo request.PageInfo
+	//_ = c.ShouldBindJSON(&pageInfo)
+	//if err := util.Verify(pageInfo, util.PageInfoVerify); err != nil {
+	//	httpresponse.FailWithMessage(err.Error(), c)
+	//	return
+	//}
+	//if err, list, total := service.GetUserInfoList(pageInfo); err != nil {
+	//	global.V.Zap.Error("获取失败", zap.Any("err", err))
+	//	httpresponse.FailWithMessage("获取失败", c)
+	//} else {
+	//	httpresponse.OkWithDetailed(httpresponse.PageResult{
+	//		List:     list,
+	//		Total:    total,
+	//		Page:     pageInfo.Page,
+	//		PageSize: pageInfo.PageSize,
+	//	}, "获取成功", c)
+	//}
+}
+
+// @Tags User
+// @Summary 绑定手机号
+// @Security ApiKeyAuth
+// @accept application/json
+// @Produce application/json
+// @Param data body request.BindMobile true " "
+// @Success 200 {string} string "{"success":true,"data":{},"msg":"设置成功"}"
+// @Router /user/bindMobile [put]
+func BindMobile(c *gin.Context) {
+	var form request.BindMobile
+	_ = c.ShouldBind(&form)
+	if err := util.Verify(form, util.RegisterVerify); err != nil {
 		httpresponse.FailWithMessage(err.Error(), c)
 		return
 	}
-	if err, list, total := service.GetUserInfoList(pageInfo); err != nil {
-		global.V.Zap.Error("获取失败", zap.Any("err", err))
-		httpresponse.FailWithMessage("获取失败", c)
-	} else {
-		httpresponse.OkWithDetailed(httpresponse.PageResult{
-			List:     list,
-			Total:    total,
-			Page:     pageInfo.Page,
-			PageSize: pageInfo.PageSize,
-		}, "获取成功", c)
+
+	_, exist, err := global.V.MyService.User.FindUserByMobile(form.Mobile)
+	if exist {
+		httpresponse.FailWithMessage("手机号已绑定过了，请不要重复操作", c)
+		return
 	}
+
+	if err != nil {
+		httpresponse.FailWithMessage("db err:"+err.Error(), c)
+		return
+	}
+
+	uid, _ := request.GetUid(c)
+	err = global.V.MyService.User.BindMobile(uid, form.Mobile)
+	if err != nil {
+		httpresponse.FailWithMessage("db err:"+err.Error(), c)
+		return
+	}
+	httpresponse.OkWithMessage("绑定成功", c)
+
 }
 
 // @Tags User
@@ -227,7 +242,7 @@ func SetUserInfo(c *gin.Context) {
 	}
 	user.Id = uid
 
-	if err, ReqUser := service.SetUserInfo(user); err != nil {
+	if err, ReqUser := global.V.MyService.User.SetUserInfo(user); err != nil {
 		global.V.Zap.Error("设置失败", zap.Any("err", err))
 		httpresponse.FailWithMessage("设置失败", c)
 	} else {
@@ -240,7 +255,6 @@ func SetUserInfo(c *gin.Context) {
 // @Security ApiKeyAuth
 // @accept application/json
 // @Produce application/json
-// @Param data body request.GetById true "用户ID"
 // @Success 200 {string} string "{"success":true,"data":{},"msg":"删除成功"}"
 // @Router /user/deleteUser [delete]
 func DeleteUser(c *gin.Context) {
@@ -274,27 +288,5 @@ func DeleteUser(c *gin.Context) {
 //	} else {
 //		waitUse := claims.(*request.CustomClaims)
 //		return waitUse.Id
-//	}
-//}
-
-// 从Gin的Context中获取从jwt解析出来的用户UUID
-//func getUserUuid(c *gin.Context) string {
-//	if claims, exists := c.Get("claims"); !exists {
-//		global.V.Zap.Error("从Gin的Context中获取从jwt解析出来的用户UUID失败, 请检查路由是否使用jwt中间件")
-//		return ""
-//	} else {
-//		waitUse := claims.(*request.CustomClaims)
-//		return waitUse.UUID.String()
-//	}
-//}
-
-// 从Gin的Context中获取从jwt解析出来的用户角色id
-//func getUserAuthorityId(c *gin.Context) string {
-//	if claims, exists := c.Get("claims"); !exists {
-//		global.V.Zap.Error("从Gin的Context中获取从jwt解析出来的用户UUID失败, 请检查路由是否使用jwt中间件")
-//		return ""
-//	} else {
-//		waitUse := claims.(*request.CustomClaims)
-//		return waitUse.AuthorityId
 //	}
 //}

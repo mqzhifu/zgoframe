@@ -8,8 +8,9 @@ definitions:
         type: boolean
     type: object
   httpresponse.LoginResponse:
+    description: 登陆成功返回结果
     properties:
-      expiresAt:
+      expires_at:
         description: token失效时间
         type: integer
       is_new:
@@ -23,87 +24,126 @@ definitions:
         type: string
       user:
         $ref: '#/definitions/model.User'
-        description: 用户基础信息
+        description: 登陆成功结果响应
     type: object
   httpresponse.Response:
+    description: 公共HTTP响应结构体
     properties:
       code:
+        description: 状态码，200是OK，4代表有发生错误
         type: integer
-      data: {}
+      data:
+        description: 请求时有数据返回，会在此字段中
       msg:
+        description: 如果有错误会写在此，如果有些提示信息也会放在这里
         type: string
     type: object
   httpresponse.SysCaptchaResponse:
+    description: 获取图片验证码
     properties:
-      captchaId:
+      id:
         type: string
-      picPath:
+      pic_content:
+        description: 图片内容,base64
         type: string
     type: object
   model.Project:
+    description: 项目详情
     properties:
       access:
+        description: 简单baseAuth 认证KEY
         type: string
       created_at:
+        description: 创建时间
         type: integer
       deleted_at:
         $ref: '#/definitions/gorm.DeletedAt'
+        description: 是否删除
       desc:
+        description: 描述
         type: string
       git:
+        description: GIT代码仓URL地址
         type: string
       id:
+        description: 自增ID
         type: integer
       name:
+        description: 项目名称
         type: string
       secret_key:
+        description: 密钥
         type: string
       status:
+        description: 状态
         type: integer
       type:
+        description: 类型
         type: integer
       updated_at:
+        description: 最后更新时间
         type: integer
     type: object
   model.User:
+    description: 用户基础信息
     properties:
       birthday:
+        description: 出生日期,unix时间戳
         type: integer
       created_at:
+        description: 创建时间
         type: integer
       deleted_at:
         $ref: '#/definitions/gorm.DeletedAt'
+        description: 是否删除
       email:
+        description: 邮箱
         type: string
       headerImg:
+        description: 头像url地址
         type: string
       id:
+        description: 自增ID
         type: integer
       mobile:
-        description: ThirdId   string `json:"third_id" db:"define:varchar(50);comment:三方平台(登陆)用户ID;defaultValue:''"`
+        description: 手机号
         type: string
       nick_name:
+        description: 昵称
         type: string
       project_id:
+        description: 项目ID
         type: integer
       recommend:
+        description: 推荐人
         type: string
       robot:
+        description: 机器人
         type: integer
       sex:
+        description: 性别1男2女
         type: integer
       status:
+        description: 状态1正常2禁用
+        type: integer
+      test:
+        description: 是否测试,1是2否
         type: integer
       type:
+        description: 是否游客,1是2否
         type: integer
       updated_at:
+        description: 最后更新时间
         type: integer
       username:
+        description: 用户登录名
         type: string
       uuid:
+        description: UID字条串化
         type: string
     type: object
   request.ChangePasswordStruct:
+    description: 修改密码
     properties:
       newPassword:
         type: string
@@ -112,42 +152,36 @@ definitions:
       username:
         type: string
     type: object
-  request.CustomClaims:
+  request.CheckMobileExist:
     properties:
-      aud:
+      mobile:
+        description: 手机号
         type: string
-      exp:
+      purpose:
+        description: 用途,1注册2找回密码3修改密码4修改邮箱5
         type: integer
-      iat:
-        type: integer
+    type: object
+  request.CustomClaims:
+    description: jwt 容器内容
+    properties:
       id:
-        type: integer
-      iss:
-        type: string
-      jti:
-        type: string
-      nbf:
+        description: 用户ID
         type: integer
       nick_name:
+        description: 用户昵称
         type: string
       project_id:
-        description: |-
-          AuthorityId string
-          UUID        uuid.UUID
+        description: 项目ID
         type: integer
       source_type:
+        description: 来源
         type: integer
-      sub:
-        type: string
       username:
+        description: 用户名
         type: string
-    type: object
-  request.GetById:
-    properties:
-      id:
-        type: number
     type: object
   request.Header:
+    description: http客户端请求头
     properties:
       access:
         description: 使用网关时，不允许随意访问，得有key
@@ -175,6 +209,7 @@ definitions:
         type: string
     type: object
   request.HeaderBaseInfo:
+    description: http客户端请求头-基础信息
     properties:
       app_version:
         description: app/前端/服务/项目 版本号
@@ -211,6 +246,7 @@ definitions:
         type: string
     type: object
   request.Login:
+    description: 正常登陆，需要用户名密码
     properties:
       captcha:
         description: 验证码
@@ -226,13 +262,23 @@ definitions:
         type: string
     type: object
   request.PageInfo:
+    description: 分页
     properties:
       page:
+        description: 当前页数
         type: integer
       pageSize:
+        description: 每页多少条记录
         type: integer
     type: object
+  request.ParserToken:
+    description: 解析token
+    properties:
+      token:
+        type: string
+    type: object
   request.RLoginThird:
+    description: 3方登陆
     properties:
       birthday:
         description: 生日
@@ -256,6 +302,7 @@ definitions:
         description: 登陆密码 转md5存储
         type: string
       platformType:
+        description: 3方平台类型
         type: integer
       project_id:
         description: 项目Id
@@ -273,12 +320,14 @@ definitions:
         description: 三方平台类型
         type: integer
       thirdId:
+        description: 3方平台用户ID
         type: string
       userName:
         description: 用户名
         type: string
     type: object
   request.Register:
+    description: 注册信息
     properties:
       birthday:
         description: 生日
@@ -320,7 +369,71 @@ definitions:
         description: 用户名
         type: string
     type: object
+  request.RegisterSms:
+    description: 注册信息 - 通过手机号
+    properties:
+      mobile:
+        description: 手机号
+        type: string
+      project_id:
+        description: 项目Id
+        type: integer
+      sms_auth_code:
+        description: 短信验证码
+        type: string
+      sms_rule_id:
+        description: 短信类型，登陆/注册
+        type: integer
+    type: object
+  request.SendEmail:
+    description: 发送邮件
+    properties:
+      carbon_copy:
+        description: 抄送，，email格式
+        items:
+          type: string
+        type: array
+      receiver:
+        description: 接收者，email格式
+        type: string
+      replaceVar:
+        additionalProperties:
+          type: string
+        description: 邮件内容模块中变量替换
+        type: object
+      rule_id:
+        description: 配置规则的ID
+        type: integer
+      send_ip:
+        description: 发送者IP，如为空系统默认取：请求方的IP,最好给真实的，一但被刷，会使用此值
+        type: string
+      send_uid:
+        description: 发送者ID，管理员是9999，未知8888
+        type: integer
+    type: object
+  request.SendSMS:
+    description: 发送验证码
+    properties:
+      receiver:
+        description: 接收者，email格式
+        type: string
+      replace_var:
+        additionalProperties:
+          type: string
+        description: 邮件内容模块中变量替换
+        type: object
+      rule_id:
+        description: 配置规则的ID
+        type: integer
+      send_ip:
+        description: 发送者IP，如为空系统默认取：请求方的IP,最好给真实的，一但被刷，会使用此值
+        type: string
+      send_uid:
+        description: 发送者ID，管理员是9999，未知8888
+        type: integer
+    type: object
   request.SetUserInfo:
+    description: 修改用户基础信息
     properties:
       birthday:
         description: 生日
@@ -336,25 +449,26 @@ definitions:
         type: integer
     type: object
   request.SystemConfig:
+    description: 系统管理员操作，需要2次验证
     properties:
       password:
+        description: 密码
         type: string
       username:
-        type: string
-    type: object
-  v1.ParserTokenReq:
-    properties:
-      token:
+        description: 用户名
         type: string
     type: object
 info:
   contact: {}
-  description: restful api 工具，模拟客户端请求，方便调试/测试<br/>注：这只是一个工具，不是万能的，像：动态枚举类型、公共请求header、动态常量等<br/>详细的请去
-    <a href="http://127.0.0.1:6060" target="_black">godoc</a> 里去查看
+  description: |-
+    restful api 工具，模拟客户端请求，方便调试/测试
+    注：这只是一个工具，不是万能的，像：动态枚举类型、公共请求header、动态常量等
+    详细的请去 <a href="http://127.0.0.1:6060" target="_black">godoc</a> 里去查看
   license:
-    name: '{   "app_version": "v1.1.1",   "device": "iphone",   "device_id": "aaaaaaaa",   "device_version":
-      "12",   "dpi": "390x844",   "ip": "127.0.0.1",   "lat": "21.1111",   "lon":
-      "32.4444",   "os": 1,   "os_version": "11",   "referer": "" }'
+    name: 'header.BaseInfo-demo:{   "app_version": "v1.1.1",   "device": "iphone",   "device_id":
+      "aaaaaaaa",   "device_version": "12",   "dpi": "390x844",   "ip": "127.0.0.1",   "lat":
+      "21.1111",   "lon": "32.4444",   "os": 1,   "os_version": "11",   "referer":
+      "" }'
   title: z golang 框架
   version: 0.1 测试版
 paths:
@@ -394,9 +508,8 @@ paths:
       summary: 生成图片验证码
       tags:
       - Base
-  /base/constList:
-    get:
-      description: 常量列表
+  /base/checkMobileExist:
+    post:
       parameters:
       - default: "11"
         description: 来源
@@ -404,13 +517,50 @@ paths:
         name: X-Source-Type
         required: true
         type: string
+      - description: 用户信息
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/request.CheckMobileExist'
       - default: "6"
         description: 项目ID
+        in: header
+        name: X-Project-Id
+        required: true
+        type: string
+      - default: imzgoframe
+        description: 访问KEY
+        in: header
+        name: X-Access
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: true:存在 false:不存在
+          schema:
+            type: bool
+      summary: 测试是否已存在
+      tags:
+      - Base
+  /base/constList:
+    get:
+      description: 所有常量列表，方便调用与调试
+      parameters:
+      - description: 来源
         enum:
-        - "1"
-        - "2"
-        - "3"
-        - "4"
+        - "11"
+        - "12"
+        - "21"
+        - "22"
+        in: header
+        name: X-Source-Type
+        required: true
+        type: string
+      - default: "6"
+        description: 项目ID
         in: header
         name: X-Project-Id
         required: true
@@ -433,14 +583,8 @@ paths:
       - Base
   /base/headerStruct:
     get:
-      description: 日常header里放一诸如验证类的东西，统一公示出来，方便使用
+      description: 日常header里放一诸如验证类的东西，统一公示出来，仅是说明，方便测试，不是真实API，方便使用
       parameters:
-      - description: 客户端基础信息
-        in: body
-        name: X-HeaderBaseInfo
-        required: true
-        schema:
-          $ref: '#/definitions/request.HeaderBaseInfo'
       - default: "11"
         description: 来源
         in: header
@@ -464,8 +608,6 @@ paths:
         name: X-Access
         required: true
         type: string
-      produces:
-      - application/json
       responses:
         "200":
           description: OK
@@ -478,19 +620,18 @@ paths:
     post:
       description: 用户登陆，验证，生成token
       parameters:
-      - default: "11"
-        description: 来源
+      - description: 来源
+        enum:
+        - "11"
+        - "12"
+        - "21"
+        - "22"
         in: header
         name: X-Source-Type
         required: true
         type: string
       - default: "6"
         description: 项目ID
-        enum:
-        - "1"
-        - "2"
-        - "3"
-        - "4"
         in: header
         name: X-Project-Id
         required: true
@@ -517,23 +658,64 @@ paths:
       summary: 用户登陆
       tags:
       - Base
-  /base/loginThird:
+  /base/loginSms:
     post:
       description: 用户登陆，验证，生成token
       parameters:
-      - default: "11"
-        description: 来源
+      - description: 来源
+        enum:
+        - "11"
+        - "12"
+        - "21"
+        - "22"
         in: header
         name: X-Source-Type
         required: true
         type: string
       - default: "6"
         description: 项目ID
+        in: header
+        name: X-Project-Id
+        required: true
+        type: string
+      - default: imzgoframe
+        description: 访问KEY
+        in: header
+        name: X-Access
+        required: true
+        type: string
+      - description: 用户名, 密码, 验证码
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/request.RLoginThird'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/httpresponse.LoginResponse'
+      summary: 短信登陆
+      tags:
+      - Base
+  /base/loginThird:
+    post:
+      description: 用户登陆，验证，生成token
+      parameters:
+      - description: 来源
         enum:
-        - "1"
-        - "2"
-        - "3"
-        - "4"
+        - "11"
+        - "12"
+        - "21"
+        - "22"
+        in: header
+        name: X-Source-Type
+        required: true
+        type: string
+      - default: "6"
+        description: 项目ID
         in: header
         name: X-Project-Id
         required: true
@@ -569,20 +751,19 @@ paths:
         name: data
         required: true
         schema:
-          $ref: '#/definitions/v1.ParserTokenReq'
-      - default: "11"
-        description: 来源
+          $ref: '#/definitions/request.ParserToken'
+      - description: 来源
+        enum:
+        - "11"
+        - "12"
+        - "21"
+        - "22"
         in: header
         name: X-Source-Type
         required: true
         type: string
       - default: "6"
         description: 项目ID
-        enum:
-        - "1"
-        - "2"
-        - "3"
-        - "4"
         in: header
         name: X-Project-Id
         required: true
@@ -607,19 +788,18 @@ paths:
     post:
       description: 每个项目的详细信息
       parameters:
-      - default: "11"
-        description: 来源
+      - description: 来源
+        enum:
+        - "11"
+        - "12"
+        - "21"
+        - "22"
         in: header
         name: X-Source-Type
         required: true
         type: string
       - default: "6"
         description: 项目ID
-        enum:
-        - "1"
-        - "2"
-        - "3"
-        - "4"
         in: header
         name: X-Project-Id
         required: true
@@ -683,9 +863,8 @@ paths:
       summary: 用户注册账号
       tags:
       - Base
-  /base/sendSMS:
+  /base/registerSms:
     post:
-      description: 登陆、注册、通知等发送短信
       parameters:
       - default: "11"
         description: 来源
@@ -695,11 +874,6 @@ paths:
         type: string
       - default: "6"
         description: 项目ID
-        enum:
-        - "1"
-        - "2"
-        - "3"
-        - "4"
         in: header
         name: X-Project-Id
         required: true
@@ -710,6 +884,58 @@ paths:
         name: X-Access
         required: true
         type: string
+      - description: 客户端基础信息(json格式,参考request.HeaderBaseInfo)
+        in: header
+        name: X-Base-Info
+        type: string
+      - description: 用户信息
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/request.RegisterSms'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.User'
+      summary: 用户注册账号-通过手机验证码
+      tags:
+      - Base
+  /base/sendEmail:
+    post:
+      description: 登陆、注册、通知等发送
+      parameters:
+      - description: 来源
+        enum:
+        - "11"
+        - "12"
+        - "21"
+        - "22"
+        in: header
+        name: X-Source-Type
+        required: true
+        type: string
+      - default: "6"
+        description: 项目ID
+        in: header
+        name: X-Project-Id
+        required: true
+        type: string
+      - default: imzgoframe
+        description: 访问KEY
+        in: header
+        name: X-Access
+        required: true
+        type: string
+      - description: 基础信息
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/request.SendEmail'
       produces:
       - application/json
       responses:
@@ -717,7 +943,49 @@ paths:
           description: '{"success":true,"data":{},"msg":"发送成功"}'
           schema:
             type: string
-      summary: 发送验证码
+      summary: 发送邮件
+      tags:
+      - Base
+  /base/sendSms:
+    post:
+      description: 登陆/注册/找回密码
+      parameters:
+      - description: 来源
+        enum:
+        - "11"
+        - "12"
+        - "21"
+        - "22"
+        in: header
+        name: X-Source-Type
+        required: true
+        type: string
+      - default: "6"
+        description: 项目ID
+        in: header
+        name: X-Project-Id
+        required: true
+        type: string
+      - default: imzgoframe
+        description: 访问KEY
+        in: header
+        name: X-Access
+        required: true
+        type: string
+      - description: 用户信息
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/request.SendSMS'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"success":true,"data":{},"msg":"发送成功"}'
+          schema:
+            type: string
+      summary: 发送短信
       tags:
       - Base
   /sys/config:
@@ -789,13 +1057,6 @@ paths:
     delete:
       consumes:
       - application/json
-      parameters:
-      - description: 用户ID
-        in: body
-        name: data
-        required: true
-        schema:
-          $ref: '#/definitions/request.GetById'
       produces:
       - application/json
       responses:
@@ -889,3 +1150,9 @@ securityDefinitions:
     name: X-Token
     type: apiKey
 swagger: "2.0"
+tags:
+- description: 不需要登陆，但是会验证头信息 , X-SourceType X-Access X-Project 等，(注：header 中的每个key
+    X开头)
+  name: Base
+- description: 用户相关操作(需要登陆，头里加X-Token = jwt)
+  name: User

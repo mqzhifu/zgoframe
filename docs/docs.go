@@ -12,7 +12,7 @@ const docTemplate_swagger = `{
         "title": "{{.Title}}",
         "contact": {},
         "license": {
-            "name": "{   \"app_version\": \"v1.1.1\",   \"device\": \"iphone\",   \"device_id\": \"aaaaaaaa\",   \"device_version\": \"12\",   \"dpi\": \"390x844\",   \"ip\": \"127.0.0.1\",   \"lat\": \"21.1111\",   \"lon\": \"32.4444\",   \"os\": 1,   \"os_version\": \"11\",   \"referer\": \"\" }"
+            "name": "header.BaseInfo-demo:{   \"app_version\": \"v1.1.1\",   \"device\": \"iphone\",   \"device_id\": \"aaaaaaaa\",   \"device_version\": \"12\",   \"dpi\": \"390x844\",   \"ip\": \"127.0.0.1\",   \"lat\": \"21.1111\",   \"lon\": \"32.4444\",   \"os\": 1,   \"os_version\": \"11\",   \"referer\": \"\" }"
         },
         "version": "{{.Version}}"
     },
@@ -73,16 +73,15 @@ const docTemplate_swagger = `{
                 }
             }
         },
-        "/base/constList": {
-            "get": {
-                "description": "常量列表",
+        "/base/checkMobileExist": {
+            "post": {
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "Base"
                 ],
-                "summary": "所有常量列表",
+                "summary": "测试是否已存在",
                 "parameters": [
                     {
                         "type": "string",
@@ -93,12 +92,66 @@ const docTemplate_swagger = `{
                         "required": true
                     },
                     {
+                        "description": "用户信息",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.CheckMobileExist"
+                        }
+                    },
+                    {
+                        "type": "string",
+                        "default": "6",
+                        "description": "项目ID",
+                        "name": "X-Project-Id",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "imzgoframe",
+                        "description": "访问KEY",
+                        "name": "X-Access",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "true:存在 false:不存在",
+                        "schema": {
+                            "type": "bool"
+                        }
+                    }
+                }
+            }
+        },
+        "/base/constList": {
+            "get": {
+                "description": "所有常量列表，方便调用与调试",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Base"
+                ],
+                "summary": "所有常量列表",
+                "parameters": [
+                    {
                         "enum": [
-                            "1",
-                            "2",
-                            "3",
-                            "4"
+                            "11",
+                            "12",
+                            "21",
+                            "22"
                         ],
+                        "type": "string",
+                        "description": "来源",
+                        "name": "X-Source-Type",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
                         "type": "string",
                         "default": "6",
                         "description": "项目ID",
@@ -127,24 +180,12 @@ const docTemplate_swagger = `{
         },
         "/base/headerStruct": {
             "get": {
-                "description": "日常header里放一诸如验证类的东西，统一公示出来，方便使用",
-                "produces": [
-                    "application/json"
-                ],
+                "description": "日常header里放一诸如验证类的东西，统一公示出来，仅是说明，方便测试，不是真实API，方便使用",
                 "tags": [
                     "Base"
                 ],
                 "summary": "header头结构体",
                 "parameters": [
-                    {
-                        "description": "客户端基础信息",
-                        "name": "X-HeaderBaseInfo",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/request.HeaderBaseInfo"
-                        }
-                    },
                     {
                         "type": "string",
                         "default": "11",
@@ -198,20 +239,19 @@ const docTemplate_swagger = `{
                 "summary": "用户登陆",
                 "parameters": [
                     {
+                        "enum": [
+                            "11",
+                            "12",
+                            "21",
+                            "22"
+                        ],
                         "type": "string",
-                        "default": "11",
                         "description": "来源",
                         "name": "X-Source-Type",
                         "in": "header",
                         "required": true
                     },
                     {
-                        "enum": [
-                            "1",
-                            "2",
-                            "3",
-                            "4"
-                        ],
                         "type": "string",
                         "default": "6",
                         "description": "项目ID",
@@ -247,6 +287,66 @@ const docTemplate_swagger = `{
                 }
             }
         },
+        "/base/loginSms": {
+            "post": {
+                "description": "用户登陆，验证，生成token",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Base"
+                ],
+                "summary": "短信登陆",
+                "parameters": [
+                    {
+                        "enum": [
+                            "11",
+                            "12",
+                            "21",
+                            "22"
+                        ],
+                        "type": "string",
+                        "description": "来源",
+                        "name": "X-Source-Type",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "6",
+                        "description": "项目ID",
+                        "name": "X-Project-Id",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "imzgoframe",
+                        "description": "访问KEY",
+                        "name": "X-Access",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "用户名, 密码, 验证码",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.RLoginThird"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/httpresponse.LoginResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/base/loginThird": {
             "post": {
                 "description": "用户登陆，验证，生成token",
@@ -259,20 +359,19 @@ const docTemplate_swagger = `{
                 "summary": "用户登陆三方",
                 "parameters": [
                     {
+                        "enum": [
+                            "11",
+                            "12",
+                            "21",
+                            "22"
+                        ],
                         "type": "string",
-                        "default": "11",
                         "description": "来源",
                         "name": "X-Source-Type",
                         "in": "header",
                         "required": true
                     },
                     {
-                        "enum": [
-                            "1",
-                            "2",
-                            "3",
-                            "4"
-                        ],
                         "type": "string",
                         "default": "6",
                         "description": "项目ID",
@@ -325,24 +424,23 @@ const docTemplate_swagger = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/v1.ParserTokenReq"
+                            "$ref": "#/definitions/request.ParserToken"
                         }
                     },
                     {
+                        "enum": [
+                            "11",
+                            "12",
+                            "21",
+                            "22"
+                        ],
                         "type": "string",
-                        "default": "11",
                         "description": "来源",
                         "name": "X-Source-Type",
                         "in": "header",
                         "required": true
                     },
                     {
-                        "enum": [
-                            "1",
-                            "2",
-                            "3",
-                            "4"
-                        ],
                         "type": "string",
                         "default": "6",
                         "description": "项目ID",
@@ -386,20 +484,19 @@ const docTemplate_swagger = `{
                 "summary": "项目列表",
                 "parameters": [
                     {
+                        "enum": [
+                            "11",
+                            "12",
+                            "21",
+                            "22"
+                        ],
                         "type": "string",
-                        "default": "11",
                         "description": "来源",
                         "name": "X-Source-Type",
                         "in": "header",
                         "required": true
                     },
                     {
-                        "enum": [
-                            "1",
-                            "2",
-                            "3",
-                            "4"
-                        ],
                         "type": "string",
                         "default": "6",
                         "description": "项目ID",
@@ -486,16 +583,15 @@ const docTemplate_swagger = `{
                 }
             }
         },
-        "/base/sendSMS": {
+        "/base/registerSms": {
             "post": {
-                "description": "登陆、注册、通知等发送短信",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "Base"
                 ],
-                "summary": "发送验证码",
+                "summary": "用户注册账号-通过手机验证码",
                 "parameters": [
                     {
                         "type": "string",
@@ -506,12 +602,6 @@ const docTemplate_swagger = `{
                         "required": true
                     },
                     {
-                        "enum": [
-                            "1",
-                            "2",
-                            "3",
-                            "4"
-                        ],
                         "type": "string",
                         "default": "6",
                         "description": "项目ID",
@@ -526,6 +616,141 @@ const docTemplate_swagger = `{
                         "name": "X-Access",
                         "in": "header",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "客户端基础信息(json格式,参考request.HeaderBaseInfo)",
+                        "name": "X-Base-Info",
+                        "in": "header"
+                    },
+                    {
+                        "description": "用户信息",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.RegisterSms"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.User"
+                        }
+                    }
+                }
+            }
+        },
+        "/base/sendEmail": {
+            "post": {
+                "description": "登陆、注册、通知等发送",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Base"
+                ],
+                "summary": "发送邮件",
+                "parameters": [
+                    {
+                        "enum": [
+                            "11",
+                            "12",
+                            "21",
+                            "22"
+                        ],
+                        "type": "string",
+                        "description": "来源",
+                        "name": "X-Source-Type",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "6",
+                        "description": "项目ID",
+                        "name": "X-Project-Id",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "imzgoframe",
+                        "description": "访问KEY",
+                        "name": "X-Access",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "基础信息",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.SendEmail"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"success\":true,\"data\":{},\"msg\":\"发送成功\"}",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/base/sendSms": {
+            "post": {
+                "description": "登陆/注册/找回密码",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Base"
+                ],
+                "summary": "发送短信",
+                "parameters": [
+                    {
+                        "enum": [
+                            "11",
+                            "12",
+                            "21",
+                            "22"
+                        ],
+                        "type": "string",
+                        "description": "来源",
+                        "name": "X-Source-Type",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "6",
+                        "description": "项目ID",
+                        "name": "X-Project-Id",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "imzgoframe",
+                        "description": "访问KEY",
+                        "name": "X-Access",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "用户信息",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.SendSMS"
+                        }
                     }
                 ],
                 "responses": {
@@ -662,17 +887,6 @@ const docTemplate_swagger = `{
                     "User"
                 ],
                 "summary": "删除用户",
-                "parameters": [
-                    {
-                        "description": "用户ID",
-                        "name": "data",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/request.GetById"
-                        }
-                    }
-                ],
                 "responses": {
                     "200": {
                         "description": "{\"success\":true,\"data\":{},\"msg\":\"删除成功\"}",
@@ -823,9 +1037,10 @@ const docTemplate_swagger = `{
             }
         },
         "httpresponse.LoginResponse": {
+            "description": "登陆成功返回结果",
             "type": "object",
             "properties": {
-                "expiresAt": {
+                "expires_at": {
                     "description": "token失效时间",
                     "type": "integer"
                 },
@@ -842,130 +1057,171 @@ const docTemplate_swagger = `{
                     "type": "string"
                 },
                 "user": {
-                    "description": "用户基础信息",
+                    "description": "登陆成功结果响应",
                     "$ref": "#/definitions/model.User"
                 }
             }
         },
         "httpresponse.Response": {
+            "description": "公共HTTP响应结构体",
             "type": "object",
             "properties": {
                 "code": {
+                    "description": "状态码，200是OK，4代表有发生错误",
                     "type": "integer"
                 },
-                "data": {},
+                "data": {
+                    "description": "请求时有数据返回，会在此字段中"
+                },
                 "msg": {
+                    "description": "如果有错误会写在此，如果有些提示信息也会放在这里",
                     "type": "string"
                 }
             }
         },
         "httpresponse.SysCaptchaResponse": {
+            "description": "获取图片验证码",
             "type": "object",
             "properties": {
-                "captchaId": {
+                "id": {
                     "type": "string"
                 },
-                "picPath": {
+                "pic_content": {
+                    "description": "图片内容,base64",
                     "type": "string"
                 }
             }
         },
         "model.Project": {
+            "description": "项目详情",
             "type": "object",
             "properties": {
                 "access": {
+                    "description": "简单baseAuth 认证KEY",
                     "type": "string"
                 },
                 "created_at": {
+                    "description": "创建时间",
                     "type": "integer"
                 },
                 "deleted_at": {
+                    "description": "是否删除",
                     "$ref": "#/definitions/gorm.DeletedAt"
                 },
                 "desc": {
+                    "description": "描述",
                     "type": "string"
                 },
                 "git": {
+                    "description": "GIT代码仓URL地址",
                     "type": "string"
                 },
                 "id": {
+                    "description": "自增ID",
                     "type": "integer"
                 },
                 "name": {
+                    "description": "项目名称",
                     "type": "string"
                 },
                 "secret_key": {
+                    "description": "密钥",
                     "type": "string"
                 },
                 "status": {
+                    "description": "状态",
                     "type": "integer"
                 },
                 "type": {
+                    "description": "类型",
                     "type": "integer"
                 },
                 "updated_at": {
+                    "description": "最后更新时间",
                     "type": "integer"
                 }
             }
         },
         "model.User": {
+            "description": "用户基础信息",
             "type": "object",
             "properties": {
                 "birthday": {
+                    "description": "出生日期,unix时间戳",
                     "type": "integer"
                 },
                 "created_at": {
+                    "description": "创建时间",
                     "type": "integer"
                 },
                 "deleted_at": {
+                    "description": "是否删除",
                     "$ref": "#/definitions/gorm.DeletedAt"
                 },
                 "email": {
+                    "description": "邮箱",
                     "type": "string"
                 },
                 "headerImg": {
+                    "description": "头像url地址",
                     "type": "string"
                 },
                 "id": {
+                    "description": "自增ID",
                     "type": "integer"
                 },
                 "mobile": {
-                    "description": "ThirdId   string ` + "`" + `json:\"third_id\" db:\"define:varchar(50);comment:三方平台(登陆)用户ID;defaultValue:''\"` + "`" + `",
+                    "description": "手机号",
                     "type": "string"
                 },
                 "nick_name": {
+                    "description": "昵称",
                     "type": "string"
                 },
                 "project_id": {
+                    "description": "项目ID",
                     "type": "integer"
                 },
                 "recommend": {
+                    "description": "推荐人",
                     "type": "string"
                 },
                 "robot": {
+                    "description": "机器人",
                     "type": "integer"
                 },
                 "sex": {
+                    "description": "性别1男2女",
                     "type": "integer"
                 },
                 "status": {
+                    "description": "状态1正常2禁用",
+                    "type": "integer"
+                },
+                "test": {
+                    "description": "是否测试,1是2否",
                     "type": "integer"
                 },
                 "type": {
+                    "description": "是否游客,1是2否",
                     "type": "integer"
                 },
                 "updated_at": {
+                    "description": "最后更新时间",
                     "type": "integer"
                 },
                 "username": {
+                    "description": "用户登录名",
                     "type": "string"
                 },
                 "uuid": {
+                    "description": "UID字条串化",
                     "type": "string"
                 }
             }
         },
         "request.ChangePasswordStruct": {
+            "description": "修改密码",
             "type": "object",
             "properties": {
                 "newPassword": {
@@ -979,57 +1235,47 @@ const docTemplate_swagger = `{
                 }
             }
         },
-        "request.CustomClaims": {
+        "request.CheckMobileExist": {
             "type": "object",
             "properties": {
-                "aud": {
+                "mobile": {
+                    "description": "手机号",
                     "type": "string"
                 },
-                "exp": {
+                "purpose": {
+                    "description": "用途,1注册2找回密码3修改密码4修改邮箱5",
                     "type": "integer"
-                },
-                "iat": {
-                    "type": "integer"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "iss": {
-                    "type": "string"
-                },
-                "jti": {
-                    "type": "string"
-                },
-                "nbf": {
-                    "type": "integer"
-                },
-                "nick_name": {
-                    "type": "string"
-                },
-                "project_id": {
-                    "description": "AuthorityId string\nUUID        uuid.UUID",
-                    "type": "integer"
-                },
-                "source_type": {
-                    "type": "integer"
-                },
-                "sub": {
-                    "type": "string"
-                },
-                "username": {
-                    "type": "string"
                 }
             }
         },
-        "request.GetById": {
+        "request.CustomClaims": {
+            "description": "jwt 容器内容",
             "type": "object",
             "properties": {
                 "id": {
-                    "type": "number"
+                    "description": "用户ID",
+                    "type": "integer"
+                },
+                "nick_name": {
+                    "description": "用户昵称",
+                    "type": "string"
+                },
+                "project_id": {
+                    "description": "项目ID",
+                    "type": "integer"
+                },
+                "source_type": {
+                    "description": "来源",
+                    "type": "integer"
+                },
+                "username": {
+                    "description": "用户名",
+                    "type": "string"
                 }
             }
         },
         "request.Header": {
+            "description": "http客户端请求头",
             "type": "object",
             "properties": {
                 "access": {
@@ -1067,6 +1313,7 @@ const docTemplate_swagger = `{
             }
         },
         "request.HeaderBaseInfo": {
+            "description": "http客户端请求头-基础信息",
             "type": "object",
             "properties": {
                 "app_version": {
@@ -1116,6 +1363,7 @@ const docTemplate_swagger = `{
             }
         },
         "request.Login": {
+            "description": "正常登陆，需要用户名密码",
             "type": "object",
             "properties": {
                 "captcha": {
@@ -1137,17 +1385,30 @@ const docTemplate_swagger = `{
             }
         },
         "request.PageInfo": {
+            "description": "分页",
             "type": "object",
             "properties": {
                 "page": {
+                    "description": "当前页数",
                     "type": "integer"
                 },
                 "pageSize": {
+                    "description": "每页多少条记录",
                     "type": "integer"
                 }
             }
         },
+        "request.ParserToken": {
+            "description": "解析token",
+            "type": "object",
+            "properties": {
+                "token": {
+                    "type": "string"
+                }
+            }
+        },
         "request.RLoginThird": {
+            "description": "3方登陆",
             "type": "object",
             "properties": {
                 "birthday": {
@@ -1179,6 +1440,7 @@ const docTemplate_swagger = `{
                     "type": "string"
                 },
                 "platformType": {
+                    "description": "3方平台类型",
                     "type": "integer"
                 },
                 "project_id": {
@@ -1194,6 +1456,7 @@ const docTemplate_swagger = `{
                     "type": "integer"
                 },
                 "thirdId": {
+                    "description": "3方平台用户ID",
                     "type": "string"
                 },
                 "third_id": {
@@ -1211,6 +1474,7 @@ const docTemplate_swagger = `{
             }
         },
         "request.Register": {
+            "description": "注册信息",
             "type": "object",
             "properties": {
                 "birthday": {
@@ -1267,7 +1531,95 @@ const docTemplate_swagger = `{
                 }
             }
         },
+        "request.RegisterSms": {
+            "description": "注册信息 - 通过手机号",
+            "type": "object",
+            "properties": {
+                "mobile": {
+                    "description": "手机号",
+                    "type": "string"
+                },
+                "project_id": {
+                    "description": "项目Id",
+                    "type": "integer"
+                },
+                "sms_auth_code": {
+                    "description": "短信验证码",
+                    "type": "string"
+                },
+                "sms_rule_id": {
+                    "description": "短信类型，登陆/注册",
+                    "type": "integer"
+                }
+            }
+        },
+        "request.SendEmail": {
+            "description": "发送邮件",
+            "type": "object",
+            "properties": {
+                "carbon_copy": {
+                    "description": "抄送，，email格式",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "receiver": {
+                    "description": "接收者，email格式",
+                    "type": "string"
+                },
+                "replaceVar": {
+                    "description": "邮件内容模块中变量替换",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "rule_id": {
+                    "description": "配置规则的ID",
+                    "type": "integer"
+                },
+                "send_ip": {
+                    "description": "发送者IP，如为空系统默认取：请求方的IP,最好给真实的，一但被刷，会使用此值",
+                    "type": "string"
+                },
+                "send_uid": {
+                    "description": "发送者ID，管理员是9999，未知8888",
+                    "type": "integer"
+                }
+            }
+        },
+        "request.SendSMS": {
+            "description": "发送验证码",
+            "type": "object",
+            "properties": {
+                "receiver": {
+                    "description": "接收者，email格式",
+                    "type": "string"
+                },
+                "replace_var": {
+                    "description": "邮件内容模块中变量替换",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "rule_id": {
+                    "description": "配置规则的ID",
+                    "type": "integer"
+                },
+                "send_ip": {
+                    "description": "发送者IP，如为空系统默认取：请求方的IP,最好给真实的，一但被刷，会使用此值",
+                    "type": "string"
+                },
+                "send_uid": {
+                    "description": "发送者ID，管理员是9999，未知8888",
+                    "type": "integer"
+                }
+            }
+        },
         "request.SetUserInfo": {
+            "description": "修改用户基础信息",
             "type": "object",
             "properties": {
                 "birthday": {
@@ -1289,20 +1641,15 @@ const docTemplate_swagger = `{
             }
         },
         "request.SystemConfig": {
+            "description": "系统管理员操作，需要2次验证",
             "type": "object",
             "properties": {
                 "password": {
+                    "description": "密码",
                     "type": "string"
                 },
                 "username": {
-                    "type": "string"
-                }
-            }
-        },
-        "v1.ParserTokenReq": {
-            "type": "object",
-            "properties": {
-                "token": {
+                    "description": "用户名",
                     "type": "string"
                 }
             }
@@ -1314,7 +1661,17 @@ const docTemplate_swagger = `{
             "name": "X-Token",
             "in": "header"
         }
-    }
+    },
+    "tags": [
+        {
+            "description": "不需要登陆，但是会验证头信息 , X-SourceType X-Access X-Project 等，(注：header 中的每个key X开头)",
+            "name": "Base"
+        },
+        {
+            "description": "用户相关操作(需要登陆，头里加X-Token = jwt)",
+            "name": "User"
+        }
+    ]
 }`
 
 // SwaggerInfo_swagger holds exported Swagger Info so clients can modify it
@@ -1324,7 +1681,7 @@ var SwaggerInfo_swagger = &swag.Spec{
 	BasePath:         "",
 	Schemes:          []string{},
 	Title:            "z golang 框架",
-	Description:      "restful api 工具，模拟客户端请求，方便调试/测试<br/>注：这只是一个工具，不是万能的，像：动态枚举类型、公共请求header、动态常量等<br/>详细的请去 <a href=\"http://127.0.0.1:6060\" target=\"_black\">godoc</a> 里去查看",
+	Description:      "restful api 工具，模拟客户端请求，方便调试/测试\n注：这只是一个工具，不是万能的，像：动态枚举类型、公共请求header、动态常量等\n详细的请去 <a href=\"http://127.0.0.1:6060\" target=\"_black\">godoc</a> 里去查看",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate_swagger,
 }

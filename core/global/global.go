@@ -7,20 +7,21 @@ import (
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 	"net/http"
+	"zgoframe/service"
 	"zgoframe/util"
 )
 
 type Global struct {
 	//App        util.App
 	//AppMng		*util.AppManager
-	RootDir string
-	Vip     *viper.Viper
-	Zap     *zap.Logger
-	Redis   *util.MyRedis
-	Gin     *gin.Engine
-	Gorm    *gorm.DB
-	Service util.Service
-
+	RootDir          string
+	Vip              *viper.Viper
+	Zap              *zap.Logger
+	Redis            *util.MyRedis
+	Gin              *gin.Engine
+	Gorm             *gorm.DB
+	Service          util.Service
+	MyService        *service.Service
 	Project          util.Project
 	ProjectMng       *util.ProjectManager
 	Etcd             *util.MyEtcd

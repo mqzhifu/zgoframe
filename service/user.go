@@ -5,21 +5,29 @@ import (
 	"fmt"
 	uuid "github.com/satori/go.uuid"
 	"gorm.io/gorm"
-	"zgoframe/core/global"
 	"zgoframe/http/request"
 	"zgoframe/model"
 	"zgoframe/util"
 )
 
-//@author: [piexlmax](https://github.com/piexlmax)
-//@function: Register
-//@description: 用户注册-仅限：邮件、用户名、手机
-//@param: u model.User
-//@return: err error, userInter model.User
-func Register(R request.Register, h request.Header) (err error, userInter model.User) {
-	var user model.User
-	var userRegType int
+type UserRegInfo struct {
+	Channel   int    `json:"channel"`     //来源渠道
+	ThirdType int    `json:"third_type" ` //三方平台类型
+	ThirdId   string `json:"third_id"`    //三方平台ID
+}
 
+type User struct {
+	Gorm *gorm.DB
+}
+
+func NewUser(gorm *gorm.DB) *User {
+	user := new(User)
+	user.Gorm = gorm
+	return user
+}
+
+//注册，用户名/密码
+func (user *User) RegisterByUsername(R request.Register, h request.Header) (err error, userInter model.User) {
 	u := model.User{
 		Username:  R.Username,
 		NickName:  R.NickName,
@@ -30,75 +38,95 @@ func Register(R request.Register, h request.Header) (err error, userInter model.
 		Recommend: R.Recommend,
 		Guest:     R.Guest,
 		Robot:     model.USER_ROBOT_FALSE,
-		Status:    model.USER_STATUS_NOMAL,
 	}
 
 	if u.Guest != model.USER_GUEST_TRUE && u.Guest != model.USER_GUEST_FALSE {
 		return errors.New("Guest value err."), userInter
 	}
 
-	if u.Guest == model.USER_REG_TYPE_GUEST {
-		//deviceId = username
-		if u.Username == "" {
-			u.Username = MakeGuestUsername()
-		}
+	userRegInfo := UserRegInfo{
+		ThirdType: R.ThirdType,
+		ThirdId:   R.ThirdId,
+		Channel:   R.Channel,
+	}
 
-		if !errors.Is(global.V.Gorm.Where("username = ? ", u.Username).First(&user).Error, gorm.ErrRecordNotFound) { // 判断用户名是否注册
-			return errors.New("用户名已注册"), userInter
+	return user.Register(u, h, userRegInfo)
+}
+
+//最终 - 注册
+func (user *User) Register(formUser model.User, h request.Header, userRegInfo UserRegInfo) (err error, userInter model.User) {
+	var userRegType int
+
+	formUser.Status = model.USER_STATUS_NOMAL
+
+	if formUser.Guest == model.USER_REG_TYPE_GUEST {
+		util.MyPrint("reg in GUEST")
+		//deviceId = username
+		if formUser.Username == "" {
+			formUser.Username = MakeGuestUsername()
+		}
+		_, exist, _ := user.FindUserByUsername(formUser.Username)
+		if exist {
+			return errors.New("username 已注册:" + formUser.Username), userInter
 		}
 		userRegType = model.USER_REG_TYPE_NAME
-	} else if R.ThirdType > 0 && R.ThirdId != "" {
+	} else if userRegInfo.ThirdType > 0 && userRegInfo.ThirdId != "" {
+		util.MyPrint("reg in Third")
 		userRegType = model.USER_REG_TYPE_THIRD
 		var userThird model.UserThird
-		if !errors.Is(global.V.Gorm.Where("third_id = ? and platform_type = ?  ", R.ThirdId, R.ThirdType).First(&userThird).Error, gorm.ErrRecordNotFound) { // 判断用户名是否注册
+		if !errors.Is(user.Gorm.Where("third_id = ? and platform_type = ?  ", userRegInfo.ThirdId, userRegInfo.ThirdType).First(&userThird).Error, gorm.ErrRecordNotFound) { // 判断用户名是否注册
 			return errors.New("third_id 已注册"), userInter
 		}
 	} else {
-		userRegType = TurnRegByUsername(u.Username)
+		userRegType = user.TurnRegByUsername(formUser.Username)
+		util.MyPrint("reg in USERNAME , type:", userRegType)
 		if userRegType == model.USER_REG_TYPE_MOBILE {
-			if !errors.Is(global.V.Gorm.Where("username = ? ", u.Username).First(&user).Error, gorm.ErrRecordNotFound) { // 判断用户名是否注册
-				return errors.New("mobile 已注册"), userInter
+			_, exist, _ := user.FindUserByMobile(formUser.Mobile)
+			if exist {
+				return errors.New("mobile 已注册:" + formUser.Username), userInter
 			}
 		} else if userRegType == model.USER_REG_TYPE_EMAIL {
-			if !errors.Is(global.V.Gorm.Where("email = ? ", u.Username).First(&user).Error, gorm.ErrRecordNotFound) { // 判断用户名是否注册
-				return errors.New("email 已注册"), userInter
+			_, exist, _ := user.FindUserByEmail(formUser.Username)
+			if exist {
+				return errors.New("email 已注册:" + formUser.Username), userInter
 			}
 		} else {
-			if !errors.Is(global.V.Gorm.Where("username = ? ", u.Username).First(&user).Error, gorm.ErrRecordNotFound) { // 判断用户名是否注册
-				return errors.New("用户名已注册"), userInter
+			_, exist, _ := user.FindUserByUsername(formUser.Username)
+			if exist {
+				return errors.New("username 已注册:" + formUser.Username), userInter
 			}
 		}
 
-		userRegType = TurnRegByUsername(u.Username)
+		userRegType = user.TurnRegByUsername(formUser.Username)
 	}
 
-	if u.NickName == "" {
-		u.NickName = MakeNickname()
+	if formUser.NickName == "" {
+		formUser.NickName = MakeNickname()
 	}
 
-	if u.Password != "" {
-		u.Password = util.MD5V([]byte(u.Password))
+	if formUser.Password != "" {
+		formUser.Password = util.MD5V([]byte(formUser.Password))
 	}
 
-	u.Uuid = uuid.NewV4().String()
+	formUser.Uuid = uuid.NewV4().String()
 
-	formatHeader := fmt.Sprintf("%+v", u)
+	formatHeader := fmt.Sprintf("%+v", formUser)
 	util.MyPrint("create user Info", formatHeader)
 
-	err = global.V.Gorm.Create(&u).Error
+	err = user.Gorm.Create(&formUser).Error
 	if err != nil {
 		return err, userInter
 	}
 	//util.MyPrint("u.id:",u.Id)
 	channel := model.CHANNEL_DEFAULT
-	if R.Channel > 0 {
-		channel = R.Channel
+	if userRegInfo.Channel > 0 {
+		channel = userRegInfo.Channel
 	}
 
 	userReg := model.UserReg{
-		ProjectId: u.ProjectId,
-		Uid:       u.Id,
-		ThirdType: R.ThirdType,
+		ProjectId: formUser.ProjectId,
+		Uid:       formUser.Id,
+		ThirdType: userRegInfo.ThirdType,
 		Type:      userRegType,
 		Channel:   channel,
 		AutoIp:    h.AutoIp,
@@ -118,87 +146,101 @@ func Register(R request.Register, h request.Header) (err error, userInter model.
 	util.PrintStruct(userReg, ":")
 	//fmt.Sprintf("aaaaf:%+v", &userReg)
 	//util.MyPrint("userReg:",userReg)
-	err = global.V.Gorm.Create(&userReg).Error
+	err = user.Gorm.Create(&userReg).Error
 	if err != nil {
 		return errors.New("create user_Reg err:" + err.Error()), userInter
 	}
 
 	if userRegType == model.USER_REG_TYPE_THIRD {
 		userThird := model.UserThird{
-			Uid:          u.Id,
-			ThirdId:      R.ThirdId,
-			PlatformType: R.ThirdType,
+			Uid:          formUser.Id,
+			ThirdId:      userRegInfo.ThirdId,
+			PlatformType: userRegInfo.ThirdType,
 		}
 
-		err = global.V.Gorm.Create(&userThird).Error
+		err = user.Gorm.Create(&userThird).Error
 		if err != nil {
 			return errors.New("create user_third err:" + err.Error()), userInter
 		}
 	}
 
-	return nil, u
+	return nil, formUser
 }
 
-//@author: [piexlmax](https://github.com/piexlmax)
-//@function: Login
-//@description: 用户登录
-//@param: u *model.User
-//@return: err error, userInter *model.User
-
-func Login(u *model.User) (err error, userInter model.User) {
-	var user model.User
-	if u.Username == "" {
-		return errors.New("username empty"), userInter
+//手机号登陆 - 上一步需要 ： 短信验证没问题
+func (user *User) LoginSms(mobile string) (userInter model.User, err error) {
+	userInter, exist, _ := user.FindUserByMobile(mobile)
+	if exist {
+		return userInter, nil
 	}
 
-	if u.Password == "" {
-		return errors.New("password empty"), userInter
+	return userInter, errors.New("手机号不存在DB")
+}
+
+//用户名/密码 登陆
+func (user *User) Login(u *model.User) (err error, userInter model.User) {
+	var userInfo model.User
+	if u.Username == "" || u.Password == "" {
+		return errors.New("username || Password empty"), userInter
 	}
 
 	u.Password = util.MD5V([]byte(u.Password))
-	regType := TurnRegByUsername(u.Username)
+	regType := user.TurnRegByUsername(u.Username)
 	if regType == model.USER_REG_TYPE_MOBILE {
-		err = global.V.Gorm.Where("mobile = ? AND password = ?   ", u.Mobile, u.Password).First(&user).Error
+		err = user.Gorm.Where("mobile = ? AND password = ?   ", u.Mobile, u.Password).First(&userInfo).Error
 	} else if regType == model.USER_REG_TYPE_EMAIL {
-		err = global.V.Gorm.Where("email = ? AND password = ?   ", u.Email, u.Password).First(&user).Error
+		err = user.Gorm.Where("email = ? AND password = ?   ", u.Email, u.Password).First(&userInfo).Error
 	} else {
-		err = global.V.Gorm.Where("username = ? AND password = ?   ", u.Username, u.Password).First(&user).Error
+		err = user.Gorm.Where("username = ? AND password = ?   ", u.Username, u.Password).First(&userInfo).Error
 	}
 
 	if err == nil {
-		if user.Status != model.USER_STATUS_NOMAL {
-			return errors.New("status err"), user
+		if userInfo.Status != model.USER_STATUS_NOMAL {
+			return errors.New("status err"), userInfo
 		}
 	}
 
-	return err, user
+	return err, userInfo
 }
 
-func LoginThird(rLoginThird request.RLoginThird, h request.Header) (userInter model.User, isNewReg bool, err error) {
+//3方平台登陆 - 不需要密码
+func (user *User) LoginThird(rLoginThird request.RLoginThird, h request.Header) (userInfo model.User, isNewReg bool, err error) {
 	var userThird model.UserThird
-	var user model.User
-	if errors.Is(global.V.Gorm.Where("third_id = ? and platform_type = ?  ", rLoginThird.ThirdId, rLoginThird.PlatformType).First(&userThird).Error, gorm.ErrRecordNotFound) {
+	//var userInfo model.User
+	if errors.Is(user.Gorm.Where("third_id = ? and platform_type = ?  ", rLoginThird.ThirdId, rLoginThird.PlatformType).First(&userThird).Error, gorm.ErrRecordNotFound) {
 		rLoginThird.Guest = model.USER_GUEST_FALSE
-		err, user = Register(rLoginThird.Register, h)
-		if err != nil {
-			return user, false, err
+
+		regUserInfo := model.User{
+			ProjectId: rLoginThird.ProjectId,
+			Username:  rLoginThird.Username,
+			NickName:  rLoginThird.NickName,
+
+			HeaderImg: rLoginThird.NickName,
+			Sex:       rLoginThird.Sex,
+			Birthday:  rLoginThird.Birthday,
+			Recommend: rLoginThird.Recommend,
+			Guest:     model.USER_GUEST_FALSE,
+			Robot:     model.USER_ROBOT_FALSE,
 		}
-		return user, true, nil
+
+		userRegInfo := UserRegInfo{
+			ThirdType: rLoginThird.ThirdType,
+			ThirdId:   rLoginThird.ThirdId,
+		}
+
+		err, userInfo = user.Register(regUserInfo, h, userRegInfo)
+		if err != nil {
+			return userInfo, false, err
+		}
+		return userInfo, true, nil
 	} else {
-		err = global.V.Gorm.Where("id = ?   ", userThird.Uid).First(&user).Error
-		return user, false, err
+		err = user.Gorm.Where("id = ?   ", userThird.Uid).First(&userInfo).Error
+		return userInfo, false, err
 	}
 }
 
-func MakeGuestUsername() string {
-	return uuid.NewV4().String()
-}
-
-func MakeNickname() string {
-	return uuid.NewV4().String()
-}
-
-func TurnRegByUsername(username string) int {
+//根据用户名 判断  ：手机号 用户名 邮箱
+func (user *User) TurnRegByUsername(username string) int {
 	isEmail := util.CheckEmailRule(username)
 	isMobile := util.CheckMobileRule(username)
 	userRegType := model.USER_REG_TYPE_NAME
@@ -210,95 +252,114 @@ func TurnRegByUsername(username string) int {
 	return userRegType
 }
 
-//@author: [piexlmax](https://github.com/piexlmax)
-//@function: ChangePassword
-//@description: 修改用户密码
-//@param: u *model.User, newPassword string
-//@return: err error, userInter *model.User
-
-func ChangePassword(u *model.User, newPassword string) (err error, userInter *model.User) {
-	var user model.User
-	u.Password = util.MD5V([]byte(u.Password))
-	err = global.V.Gorm.Where("username = ? AND password = ?", u.Username, u.Password).First(&user).Update("password", util.MD5V([]byte(newPassword))).Error
-	return err, u
-}
-
-//@author: [piexlmax](https://github.com/piexlmax)
-//@function: GetUserInfoList
-//@description: 分页获取数据
-//@param: info request.PageInfo
-//@return: err error, list interface{}, total int64
-
-func GetUserInfoList(info request.PageInfo) (err error, list interface{}, total int64) {
-	limit := info.PageSize
-	offset := info.PageSize * (info.Page - 1)
-	db := global.V.Gorm.Model(&model.User{})
-	var userList []model.User
-	err = db.Count(&total).Error
-	err = db.Limit(limit).Offset(offset).Preload("Authority").Find(&userList).Error
-	return err, userList, total
-}
-
-//@author: [piexlmax](https://github.com/piexlmax)
-//@function: SetUserAuthority
-//@description: 设置一个用户的权限
-//@param: uuid uuid.UUID, authorityId string
-//@return: err error
-
-func SetUserAuthority(uuid uuid.UUID, authorityId string) (err error) {
-	err = global.V.Gorm.Where("uuid = ?", uuid).First(&model.User{}).Update("authority_id", authorityId).Error
-	return err
-}
-
-//@author: [piexlmax](https://github.com/piexlmax)
-//@function: DeleteUser
-//@description: 删除用户
-//@param: id float64
-//@return: err error
-
-func DeleteUser(id float64) (err error) {
-	var user model.User
-	err = global.V.Gorm.Where("id = ?", id).Delete(&user).Error
-	return err
-}
-
-//@author: [piexlmax](https://github.com/piexlmax)
-//@function: SetUserInfo
-//@description: 设置用户信息
-//@param: reqUser model.User
-//@return: err error, user model.User
-
-func SetUserInfo(reqUser model.User) (err error, user model.User) {
-	err = global.V.Gorm.Updates(&reqUser).Error
+//编辑用户基础信息
+func (user *User) SetUserInfo(reqUser model.User) (err error, userInfo model.User) {
+	err = user.Gorm.Updates(&reqUser).Error
 	return err, reqUser
 }
 
-//@author: [SliverHorn](https://github.com/SliverHorn)
-//@function: FindUserById
-//@description: 通过id获取用户信息
-//@param: id int
-//@return: err error, user *model.User
-
-func FindUserById(id int) (err error, user *model.User) {
+//根据ID查找一个用户信息
+func (user *User) FindUserById(id int) (err error, userInfo *model.User) {
 	var u model.User
-	err = global.V.Gorm.Where("`id` = ?", id).First(&u).Error
+	err = user.Gorm.Where("`id` = ?", id).First(&u).Error
 	return err, &u
 }
 
-//@author: [SliverHorn](https://github.com/SliverHorn)
-//@function: FindUserByUuid
-//@description: 通过uuid获取用户信息
-//@param: uuid string
-//@return: err error, user *model.User
-
-func FindUserByUuid(uuid string) (err error, user *model.User) {
-	var u model.User
-	if err = global.V.Gorm.Where("`uuid` = ?", uuid).First(&u).Error; err != nil {
-		return errors.New("用户不存在"), &u
+func (user *User) FindUserByUsername(username string) (userInfo model.User, empty bool, err error) {
+	err = user.Gorm.Where("username = ? ", username).First(&userInfo).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return userInfo, false, nil
 	}
-	return nil, &u
+	if err != nil {
+		return userInfo, false, err
+	}
+	return userInfo, true, nil
 }
 
+func (user *User) FindUserByEmail(email string) (userInfo model.User, empty bool, err error) {
+	err = user.Gorm.Where("email = ? ", email).First(&userInfo).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return userInfo, false, nil
+	}
+	if err != nil {
+		return userInfo, false, err
+	}
+	return userInfo, true, nil
+}
+
+func (user *User) FindUserByMobile(mobile string) (userInfo model.User, empty bool, err error) {
+	err = user.Gorm.Where("mobile = ? ", mobile).First(&userInfo).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return userInfo, false, nil
+	}
+	if err != nil {
+		return userInfo, false, err
+	}
+	return userInfo, true, nil
+}
+
+//根据uuid查找一个用户信息
+func (user *User) FindUserByUuid(uuid string) (err error, userInfo *model.User) {
+	if err = user.Gorm.Where("`uuid` = ?", uuid).First(&userInfo).Error; err != nil {
+		return errors.New("用户不存在"), userInfo
+	}
+	return nil, userInfo
+}
+
+func (user *User) DeleteUser(id float64) (err error) {
+	var userInfo model.User
+	err = user.Gorm.Where("id = ?", id).Delete(&userInfo).Error
+	return err
+}
+
+//随机生成一个用户 - 游客
+func MakeGuestUsername() string {
+	return uuid.NewV4().String()
+}
+
+//随机生成一个昵称 - 游客
+func MakeNickname() string {
+	return uuid.NewV4().String()
+}
+
+//修改密码
+func (user *User) ChangePassword(uid int, newPassword string) (err error) {
+	var userInfo model.User
+	userInfo.Id = uid
+	userInfo.Password = util.MD5V([]byte(newPassword))
+	err = user.Gorm.Updates(&userInfo).Error
+	return err
+}
+
+//绑定手机号
+func (user *User) BindMobile(uid int, mobile string) (err error) {
+	var userInfo model.User
+	userInfo.Id = uid
+	userInfo.Mobile = mobile
+	userInfo.Guest = model.USER_GUEST_FALSE
+	
+	err = user.Gorm.Updates(&userInfo).Error
+	return err
+}
+
+//
+////批量获取用户信息
+//func GetUserInfoList(info request.PageInfo) (err error, list interface{}, total int64) {
+//	limit := info.PageSize
+//	offset := info.PageSize * (info.Page - 1)
+//	db := user.Gorm.Model(&model.User{})
+//	var userList []model.User
+//	err = db.Count(&total).Error
+//	err = db.Limit(limit).Offset(offset).Preload("Authority").Find(&userList).Error
+//	return err, userList, total
+//}
+
+////后台使用，权限控制
+//func SetUserAuthority(uuid uuid.UUID, authorityId string) (err error) {
+//	err = user.Gorm.Where("uuid = ?", uuid).First(&model.User{}).Update("authority_id", authorityId).Error
+//	return err
+//}
+//
 //func CheckUserIsCpByUserId(userId int) (res bool) {
 //	_, user := FindUserById(userId)
 //	auid, _ := strconv.Atoi(user.AuthorityId)

@@ -11,6 +11,7 @@ import (
 	"strings"
 	"zgoframe/core/global"
 	"zgoframe/model"
+	"zgoframe/service"
 	"zgoframe/util"
 )
 
@@ -205,6 +206,7 @@ func (initialize *Initialize) Start() error {
 		util.MyPrint("GetNewViper err:", err)
 		return err
 	}
+	global.V.MyService = service.NewService(global.V.Gorm, global.V.Zap)
 	//websocket
 	//if global.C.Websocket.Status == global.CONFIG_STATUS_OPEN{
 	//	if global.C.Http.Status != global.CONFIG_STATUS_OPEN{
@@ -265,7 +267,9 @@ func (initialize *Initialize) Start() error {
 
 func autoCreateUpDbTable() {
 	mydb := util.NewDbTool(global.V.Gorm)
-	mydb.CreateTable(&model.User{}, &model.SmsLog{}, &model.SmsRule{}, &model.Project{}, &model.UserReg{}, &model.OperationRecord{}, &model.CicdPublish{}, &model.Server{}, &model.Instance{})
+	mydb.CreateTable(&model.User{}, &model.SmsLog{}, &model.SmsRule{}, &model.Project{}, &model.UserReg{}, &model.OperationRecord{},
+		&model.CicdPublish{}, &model.Server{}, &model.Instance{}, &model.SmsRule{}, &model.SmsLog{}, &model.EmailRule{}, &model.EmailLog{})
+
 	util.ExitPrint("init done.")
 }
 

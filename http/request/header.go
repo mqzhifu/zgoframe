@@ -6,37 +6,6 @@ import (
 	"zgoframe/model"
 )
 
-const (
-	PLATFORM_MAC_PC_BROWSER = 11
-	PLATFORM_MAC_APP        = 12
-
-	PLATFORM_WIN_PC_BROWSER = 22
-	PLATFORM_WIN_APP        = 23
-
-	PLATFORM_ANDROID_H5_BROWSER = 31
-	PLATFORM_ANDROID_APP        = 32
-
-	PLATFORM_IOS_H5_BROWSER = 41
-	PLATFORM_IOS_APP        = 42
-
-	PLATFORM_UNKNOW = 99
-)
-
-func GetPlatformList() []int {
-	list := []int{PLATFORM_MAC_PC_BROWSER, PLATFORM_WIN_PC_BROWSER, PLATFORM_ANDROID_H5_BROWSER, PLATFORM_IOS_H5_BROWSER, PLATFORM_ANDROID_APP, PLATFORM_IOS_APP, PLATFORM_MAC_APP, PLATFORM_WIN_APP, PLATFORM_UNKNOW}
-	return list
-}
-
-func CheckPlatformExist(env int) bool {
-	list := GetPlatformList()
-	for _, v := range list {
-		if v == env {
-			return true
-		}
-	}
-	return false
-}
-
 func GetMyHeader(c *gin.Context) HeaderRequest {
 	myHeaderInterface, exists := c.Get("myheader")
 	if !exists {

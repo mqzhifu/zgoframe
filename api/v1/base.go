@@ -18,7 +18,7 @@ var store = base64Captcha.DefaultMemStore
 
 // @Tags Base
 // @Summary 生成图片验证码
-// @Description BASE64图片内容，防止有人恶意攻击，如：短信轰炸、暴力破解密码等
+// @Description BASE64图片内容，防止有人恶意攻击，如：短信轰炸、暴力破解密码等,<img src="data:image/jpg;base64,内容"/>
 // @Security ApiKeyAuth
 // @accept application/json
 // @Param X-Source-Type header string true "来源" default(11)
@@ -44,7 +44,7 @@ func Captcha(c *gin.Context) {
 
 // @Tags Base
 // @Summary 发送短信
-// @Description 登陆/注册/找回密码
+// @Description 登陆、注册、找回密码
 // @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
 // @Param X-Project-Id header string true "项目ID" default(6)
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
@@ -70,7 +70,7 @@ func SendSms(c *gin.Context) {
 
 // @Tags Base
 // @Summary 发送邮件
-// @Description 登陆、注册、通知等发送
+// @Description 登陆、注册、找回密码
 // @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
 // @Param X-Project-Id header string true "项目ID" default(6)
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
@@ -242,6 +242,45 @@ func CheckMobileExist(c *gin.Context) {
 }
 
 // @Tags Base
+// @Summary 检测手机号：用户名 是否已存在
+// @Description 登陆 使用
+// @Produce  application/json
+// @Param X-Source-Type header string true "来源" default(11)
+// @Param data body request.CheckUsernameExist true "用户信息"
+// @Success 200 {string} string "{"success":true,"data":{},"msg":"发送成功"}"
+// @Param X-Project-Id header string true "项目ID"  default(6)
+// @Param X-Access header string true "访问KEY" default(imzgoframe)
+// @Success 200 {bool} bool "true:存在 false:不存在"
+// @Router /base/check/username [post]
+func CheckUsernameExist(c *gin.Context) {
+	var form request.CheckUsernameExist
+	_ = c.ShouldBind(&form)
+
+	if form.Username == "" || form.Purpose <= 0 {
+		httpresponse.FailWithMessage("form.Username == '' || form.Purpose <= 0", c)
+		return
+	}
+
+	if !util.CheckNameRule(form.Username) {
+		httpresponse.FailWithMessage("username 格式 错误 ", c)
+		return
+	}
+
+	_, empty, err := global.V.MyService.User.FindUserByUsername(form.Username)
+	util.MyPrint("CheckMobileExist empty:", empty)
+	if err != nil {
+		httpresponse.FailWithMessage("服务器错误，请等待或重试", c)
+	} else {
+		if !empty {
+			httpresponse.FailWithDetailed(true, "成功", c)
+		} else {
+			httpresponse.FailWithDetailed(false, "成功", c)
+		}
+	}
+
+}
+
+// @Tags Base
 // @Summary 检测邮件：是否已存在
 // @Description 注册/找加密码 使用
 // @Produce  application/json
@@ -262,6 +301,11 @@ func CheckEmailExist(c *gin.Context) {
 
 	if !util.CheckEmailRule(form.Email) {
 		httpresponse.FailWithMessage("email 格式 错误 ", c)
+		return
+	}
+
+	if model.CheckConstInList(model.GetConstListPurpose(), form.Purpose) {
+		httpresponse.FailWithMessage("form.Purpose err ", c)
 		return
 	}
 
@@ -369,7 +413,7 @@ func LoginSms(c *gin.Context) {
 	}
 
 	//DB比较OK，开始做JWT处理
-	loginResponse, err := tokenNext(c, user, model.LOGIN_TYPE_SMS)
+	loginResponse, err := tokenNext(c, user, model.USER_REG_TYPE_MOBILE)
 	if err != nil {
 		httpresponse.FailWithMessage(err.Error()+",(短信已使用，请重新发送一条)", c)
 	} else {

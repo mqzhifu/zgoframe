@@ -27,9 +27,9 @@ func InitSysRouter(Router *gin.RouterGroup) {
 		//
 		SysRouter.POST("quit", v1.Quit)
 		//
-		SysRouter.GET("config", v1.Config)
+		SysRouter.POST("config", v1.Config)
 		//
-		SysRouter.GET("metrics", v1.Metrics)
+		SysRouter.POST("metrics", v1.Metrics)
 
 	}
 }

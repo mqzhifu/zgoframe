@@ -15,4 +15,7 @@ func DoMySelf() {
 	//test.Cicd()
 	//test.Email()
 	//}
+	//u := 22345678901
+	//rs := util.CheckUnixStampSecondRule(u)
+	//util.ExitPrint(u, rs)
 }

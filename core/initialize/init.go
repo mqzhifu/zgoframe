@@ -187,7 +187,7 @@ func (initialize *Initialize) Start() error {
 		if global.C.Http.Status != global.CONFIG_STATUS_OPEN {
 			return errors.New("metrics need gin open!")
 		}
-		global.V.Gin.GET("/metrics", gin.WrapH(promhttp.Handler()))
+		global.V.Gin.POST("/metrics", gin.WrapH(promhttp.Handler()))
 		//测试
 		//global.V.Gin.GET("/metrics/count", func(c *gin.Context) {
 		//	global.V.Metric.CounterInc("paySuccess")

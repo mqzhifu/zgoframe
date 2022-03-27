@@ -24,30 +24,6 @@ type User struct {
 	//Authority   SysAuthority `json:"authority" gorm:"foreignKey:AuthorityId;references:AuthorityId;" db:"define:varchar(50);comment:用户角色(后台使用);defaultValue:''"`
 }
 
-const (
-	SEX_MALE   = 1
-	SEX_FEMALE = 2
-
-	USER_STATUS_NOMAL = 1
-	USER_STATUS_DENY  = 2
-
-	USER_GUEST_TRUE  = 1
-	USER_GUEST_FALSE = 2
-
-	USER_ROBOT_TRUE  = 1
-	USER_ROBOT_FALSE = 2
-)
-
-func GetUserSexList() []int {
-	UserThirdType := []int{SEX_MALE, SEX_FEMALE}
-	return UserThirdType
-}
-
-func GetUserStatusList() []int {
-	UserThirdType := []int{USER_STATUS_NOMAL, USER_STATUS_DENY}
-	return UserThirdType
-}
-
 func (user *User) Db() {
 
 }

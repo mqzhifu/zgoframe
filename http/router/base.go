@@ -30,6 +30,8 @@ func InitBaseRouter(Router *gin.RouterGroup) {
 		BaseRouter.POST("check/mobile", v1.CheckMobileExist)
 		//检查邮件是否存在 登陆/注册/找回密码
 		BaseRouter.POST("check/email", v1.CheckEmailExist)
+		//检查用户名是否存在 登陆 使用
+		BaseRouter.POST("check/username", v1.CheckUsernameExist)
 		//检查token正确性
 		BaseRouter.POST("parser/token", v1.ParserToken)
 
@@ -37,7 +39,7 @@ func InitBaseRouter(Router *gin.RouterGroup) {
 }
 
 func InitToolsRouter(Router *gin.RouterGroup) {
-	ToolsRouter := Router.Group("base")
+	ToolsRouter := Router.Group("tools")
 	{
 		//牛课网
 		ToolsRouter.GET("niuke/question/dir/list", v1.NiukeQuestionDirList)

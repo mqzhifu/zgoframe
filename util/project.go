@@ -6,23 +6,32 @@ import (
 	"zgoframe/model"
 )
 
-const(
+const (
 	PROJECT_TYPE_SERVICE = 1
-	PROJECT_TYPE_FE = 2
-	PROJECT_TYPE_APP = 3
-	PROJECT_TYPE_BE = 4
+	PROJECT_TYPE_FE      = 2
+	PROJECT_TYPE_APP     = 3
+	PROJECT_TYPE_BE      = 4
 )
 
 type Project struct {
-	Id 		int			`json:"id"`
-	Name	string		`json:"name"`
-	Desc 	string		`json:"desc"`
+	Id   int    `json:"id"`
+	Name string `json:"name"`
+	Desc string `json:"desc"`
 	//Key 	string		`json:"key"`
-	Type 	int			`json:"type"`
-	SecretKey string 	`json:"secretKey"`
-	Status  int 		`json:"status"`
-	Git 	string 		`json:"git"`
-	Access 	string		`json:"access"`
+	Type      int    `json:"type"`
+	SecretKey string `json:"secretKey"`
+	Status    int    `json:"status"`
+	Git       string `json:"git"`
+	Access    string `json:"access"`
+}
+
+func GetConstListProjectType() map[string]int {
+	list := make(map[string]int)
+	list["PROJECT_TYPE_SERVICE"] = PROJECT_TYPE_SERVICE
+	list["PROJECT_TYPE_FE"] = PROJECT_TYPE_FE
+	list["PROJECT_TYPE_APP"] = PROJECT_TYPE_APP
+	list["PROJECT_TYPE_BE"] = PROJECT_TYPE_BE
+	return list
 }
 
 var PROJECT_TYPE_MAP = map[int]string{
@@ -33,81 +42,80 @@ var PROJECT_TYPE_MAP = map[int]string{
 }
 
 type ProjectManager struct {
-	Pool 	map[int]Project
-	Gorm 	*gorm.DB
+	Pool map[int]Project
+	Gorm *gorm.DB
 }
 
-func NewProjectManager (gorm *gorm.DB)(*ProjectManager,error) {
-	projectManager 		:= new(ProjectManager)
+func NewProjectManager(gorm *gorm.DB) (*ProjectManager, error) {
+	projectManager := new(ProjectManager)
 	projectManager.Pool = make(map[int]Project)
 	projectManager.Gorm = gorm
 
 	err := projectManager.initAppPool()
 
-	return projectManager,err
+	return projectManager, err
 }
 
-func (projectManager *ProjectManager)initAppPool()error{
+func (projectManager *ProjectManager) initAppPool() error {
 	//appManager.GetTestData()
 	return projectManager.GetFromDb()
 }
 
-func (projectManager *ProjectManager)GetFromDb()error{
+func (projectManager *ProjectManager) GetFromDb() error {
 	db := projectManager.Gorm.Model(&model.Project{})
 	var appList []model.Project
 	err := db.Where(" status = ? ", 1).Find(&appList).Error
-	if err != nil{
+	if err != nil {
 		return err
 	}
-	if len(appList) == 0{
+	if len(appList) == 0 {
 		return errors.New("app list empty!!!")
 	}
 
-	for _,v:=range appList{
+	for _, v := range appList {
 		n := Project{
-			Id 		: v.Id,
-			Status	: v.Status,
-			Name	: v.Name,
-			Desc	: v.Desc,
+			Id:     v.Id,
+			Status: v.Status,
+			Name:   v.Name,
+			Desc:   v.Desc,
 			//Key		: v.Key,
-			Type	: v.Type,
-			Git		: v.Git,
+			Type:      v.Type,
+			Git:       v.Git,
 			SecretKey: v.SecretKey,
-			Access: v.Access,
+			Access:    v.Access,
 		}
 		projectManager.AddOne(n)
 	}
 	return nil
 }
 
-func (projectManager *ProjectManager) AddOne(project Project){
+func (projectManager *ProjectManager) AddOne(project Project) {
 	projectManager.Pool[project.Id] = project
 }
 
-func (projectManager *ProjectManager) GetById(id int)(Project,bool){
-	one ,ok := projectManager.Pool[id]
+func (projectManager *ProjectManager) GetById(id int) (Project, bool) {
+	one, ok := projectManager.Pool[id]
 	if ok {
-		return one,false
+		return one, false
 	}
-	return one,true
+	return one, true
 }
 
-func (projectManager *ProjectManager) GetByName(name string)(project Project,empty bool){
-	for _,v:= range projectManager.Pool{
-		if v.Name == name{
-			return v,false
+func (projectManager *ProjectManager) GetByName(name string) (project Project, empty bool) {
+	for _, v := range projectManager.Pool {
+		if v.Name == name {
+			return v, false
 		}
 	}
-	return project,true
+	return project, true
 }
 
-
-func  (projectManager *ProjectManager)GetTypeName(typeValue int)string{
-	v ,_ := PROJECT_TYPE_MAP[typeValue]
-		return v
+func (projectManager *ProjectManager) GetTypeName(typeValue int) string {
+	v, _ := PROJECT_TYPE_MAP[typeValue]
+	return v
 }
 
-func BasePathPlusTypeStr(basePath string,typeStr string)string{
+func BasePathPlusTypeStr(basePath string, typeStr string) string {
 	return basePath + "/" + typeStr + "/"
 }
 

@@ -1,35 +1,5 @@
 package model
 
-const (
-	USER_REG_TYPE_EMAIL  = 1
-	USER_REG_TYPE_NAME   = 2
-	USER_REG_TYPE_MOBILE = 3
-	USER_REG_TYPE_THIRD  = 4
-	USER_REG_TYPE_GUEST  = 5
-
-	USER_TYPE_THIRD_WEIBO    = 1
-	USER_TYPE_THIRD_WECHAT   = 2
-	USER_TYPE_THIRD_FACEBOOK = 3
-	USER_TYPE_THIRD_GOOGLE   = 4
-	USER_TYPE_THIRD_TWITTER  = 5
-	USER_TYPE_THIRD_YOUTOBE  = 6
-	USER_TYPE_THIRD_QQ       = 7
-
-	LOGIN_TYPE_SMS = 11
-
-	CHANNEL_DEFAULT = 1
-)
-
-func GetUserThirdTypeList() []int {
-	UserThirdType := []int{USER_TYPE_THIRD_WEIBO, USER_TYPE_THIRD_WECHAT, USER_TYPE_THIRD_FACEBOOK, USER_TYPE_THIRD_GOOGLE, USER_TYPE_THIRD_TWITTER, USER_TYPE_THIRD_YOUTOBE, USER_TYPE_THIRD_QQ}
-	return UserThirdType
-}
-
-func GetUserRegTypeList() []int {
-	UserThirdType := []int{USER_REG_TYPE_EMAIL, USER_REG_TYPE_NAME, USER_REG_TYPE_MOBILE, USER_REG_TYPE_THIRD, USER_REG_TYPE_THIRD}
-	return UserThirdType
-}
-
 type UserReg struct {
 	MODEL
 	ProjectId     int    `json:"project_id" db:"define:int;comment:project_id;defaultValue:0"  `
@@ -40,6 +10,11 @@ type UserReg struct {
 	Channel       int    `json:"channel" db:"define:tinyint(1);comment:推广渠道1平台自己;defaultValue:0"`
 	Ip            string `json:"ip" db:"define:varchar(50);comment:请求方传输IP;defaultValue:''"`
 	AutoIp        string `json:"auto_ip" db:"define:varchar(50);comment:程序自己计算的IP;defaultValue:''"`
+	Province      int    `json:"province" db:"define:int;comment:project_id;defaultValue:0"`
+	City          int    `json:"city" db:"define:int;comment:project_id;defaultValue:0"`
+	County        int    `json:"county" db:"define:int;comment:project_id;defaultValue:0"`
+	Town          int    `json:"town" db:"define:int;comment:project_id;defaultValue:0"`
+	AreaDetail    string `json:"area_detail"  db:"define:varchar(255);comment:页面来源;defaultValue:"`
 	AppVersion    string `json:"app_version" db:"define:varchar(50);comment:APP版本;defaultValue:''"`
 	Os            int    `json:"os" db:"define:tinyint(1);comment:操作系统;defaultValue:0"`
 	OsVersion     string `json:"os_version"  db:"define:varchar(50);comment:操作系统版本;defaultValue:''"`

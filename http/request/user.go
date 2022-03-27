@@ -115,34 +115,14 @@ type RestPasswordSms struct {
 	NewPasswordConfirm string `json:"new_password_confirm"` //新密码确认
 }
 
-const (
-	PURPOSE_REGISTER            = 1
-	PURPOSE_FIND_BACK_PASSWORD  = 2
-	PURPOSE_CHANGE_PASSWORD     = 3
-	PURPOSE_LOGIN               = 4
-	PURPOSE_BIND                = 5
-	PURPOSE_MODIFY              = 6
-	PURPOSE_SET_PAY_PASSWORD    = 7
-	PURPOSE_MODIFY_PAY_PASSWORD = 8
-)
-
-func GetPurposeConstList() map[string]int {
-	list := make(map[string]int)
-	list["PURPOSE_REGISTER"] = PURPOSE_REGISTER
-	list["PURPOSE_FIND_PASSWORD"] = PURPOSE_FIND_BACK_PASSWORD
-	list["PURPOSE_CHANGE_PASSWORD"] = PURPOSE_CHANGE_PASSWORD
-	list["PURPOSE_LOGIN"] = PURPOSE_LOGIN
-	list["PURPOSE_BIND"] = PURPOSE_BIND
-	list["PURPOSE_MODIFY"] = PURPOSE_MODIFY
-	list["PURPOSE_SET_PAY_PASSWORD"] = PURPOSE_SET_PAY_PASSWORD
-	list["PURPOSE_MODIFY_PAY_PASSWORD"] = PURPOSE_MODIFY_PAY_PASSWORD
-
-	return list
-}
-
 type CheckMobileExist struct {
 	Mobile  string `json:"mobile"`  //手机号
 	Purpose int    `json:"purpose"` //用途,1注册2找回密码3修改密码4登陆
+}
+
+type CheckUsernameExist struct {
+	Username string `json:"username"` //用户名
+	Purpose  int    `json:"purpose"`  //用途,1注册2找回密码3修改密码4登陆
 }
 
 type CheckEmailExist struct {

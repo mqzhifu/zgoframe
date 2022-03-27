@@ -61,12 +61,21 @@ func ConstList(c *gin.Context) {
 
 	list := make(map[string]interface{})
 
-	list["PROJECT_TYPE_MAP"] = util.PROJECT_TYPE_MAP
-	list["PlatformList"] = request.GetPlatformList()
-	list["ThirdTypeList"] = model.GetUserThirdTypeList()
-	list["UserRegTypeList"] = model.GetUserRegTypeList()
-	list["UserRegTypeList"] = model.GetUserSexList()
-	list["UserStatusList"] = model.GetUserStatusList()
+	list["PROJECT_TYPE_MAP"] = util.GetConstListProjectType()
+	list["PLATFORM"] = model.GetConstListPlatform()
+	list["USER_TYPE_THIRD"] = model.GetConstListUserTypeThird()
+	list["USER_REG_TYPE"] = model.GetConstListUserRegType()
+	list["USER_SEX"] = model.GetConstListUserSex()
+	list["USER_STATUS"] = model.GetConstListUserStatus()
+	list["PURPOSE"] = model.GetConstListPurpose()
+	list["AUTH_CODE"] = model.GetConstListAuthCode()
+	list["GUEST"] = model.GetConstListUserGuest()
+	list["THIRD_CN"] = model.GetConstListUserTypeThirdCN()
+	list["THIRD_NOT_CN"] = model.GetConstListUserTypeThirdNotCN()
+	list["USER_ROBOT"] = model.GetConstListUserRobot()
+	list["USER_TEST"] = model.GetConstListUserTest()
+	list["RULE_TYPE"] = model.GetConstListRuleType()
+	list["SMS_CHANNEL"] = model.GetConstListSmsChannel()
 
 	httpresponse.OkWithDetailed(list, "成功", c)
 

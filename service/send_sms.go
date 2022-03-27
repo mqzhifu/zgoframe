@@ -21,23 +21,6 @@ func NewSendSms(gorm *gorm.DB) *SendSms {
 	return sendSms
 }
 
-const (
-	RULE_PERIORD_MIN = 30
-
-	AUTH_CODE_STATUS_NORMAL = 1
-	AUTH_CODE_STATUS_EXPIRE = 3
-	AUTH_CODE_STATUS_OK     = 2
-)
-
-func GetConstAuthStatus() map[string]int {
-	list := make(map[string]int)
-	list["AUTH_CODE_STATUS_NORMAL"] = AUTH_CODE_STATUS_NORMAL
-	list["AUTH_CODE_STATUS_EXPIRE"] = AUTH_CODE_STATUS_EXPIRE
-	list["AUTH_CODE_STATUS_OK"] = AUTH_CODE_STATUS_OK
-
-	return list
-}
-
 func (SendSms *SendSms) Send(projectId int, info request.SendSMS) (recordNewId int, err error) {
 	util.MyPrint("im in sendsms.send , formInfo:", info)
 	if info.RuleId <= 0 || info.Receiver == "" || info.SendIp == "" || info.SendUid <= 0 {
@@ -80,7 +63,7 @@ func (SendSms *SendSms) Send(projectId int, info request.SendSMS) (recordNewId i
 		SendUid:   info.SendUid,
 	}
 	//如果是验证码类型，要SERVER端生成CODE，并替换到模板中
-	if rule.Type == model.EMAIL_TYPE_AUTHCODE {
+	if rule.Type == model.RULE_TYHP_AUTH_CODE {
 		//验证码必须得有失效时间
 		if rule.ExpireTime <= 0 {
 			return 0, errors.New("rule.ExpireTime <= 0 ，验证码类型短信，必须得有失效时间")
@@ -91,7 +74,7 @@ func (SendSms *SendSms) Send(projectId int, info request.SendSMS) (recordNewId i
 		code := util.GetRandIntNum(9999)
 		smsLog.AuthCode = strconv.Itoa(code)
 		//状态
-		smsLog.AuthStatus = AUTH_CODE_STATUS_NORMAL
+		smsLog.AuthStatus = model.AUTH_CODE_STATUS_NORMAL
 		//把刚刚生成的code替换到内容中
 		content = strings.Replace(smsLog.Content, "{auth_code}", smsLog.AuthCode, -1)
 		content = strings.Replace(content, "{auth_expire_time}", strconv.Itoa(rule.ExpireTime), -1)
@@ -114,7 +97,7 @@ func (SendSms *SendSms) Send(projectId int, info request.SendSMS) (recordNewId i
 func (SendSms *SendSms) CheckExpireAndUpStatus() {
 	var smsLog model.SmsLog
 	now := util.GetNowTimeSecondToInt()
-	upRsObj := SendSms.Gorm.Model(&smsLog).Where("expire_time > 0  and expire_time <=  ? and status = ?  ", now, AUTH_CODE_STATUS_NORMAL).Update("status", AUTH_CODE_STATUS_EXPIRE)
+	upRsObj := SendSms.Gorm.Model(&smsLog).Where("expire_time > 0  and expire_time <=  ? and status = ?  ", now, model.AUTH_CODE_STATUS_NORMAL).Update("status", model.AUTH_CODE_STATUS_EXPIRE)
 	if upRsObj.Error != nil {
 		//if upRsObj.Error == gorm.ErrRecordNotFound {
 		//	util.MyPrint("CheckExpireAndUpStatus not record.")
@@ -138,8 +121,8 @@ func (SendSms *SendSms) ReplaceContentTemplate(content string, replaceVar map[st
 }
 
 func (SendSms *SendSms) CheckRule(rule model.SmsRule) error {
-	if rule.Period < RULE_PERIORD_MIN {
-		return errors.New("rule err : 最小频率周期-时间(秒):" + strconv.Itoa(RULE_PERIORD_MIN))
+	if rule.Period < model.RULE_PERIORD_MIN {
+		return errors.New("rule err : 最小频率周期-时间(秒):" + strconv.Itoa(model.RULE_PERIORD_MIN))
 	}
 
 	if rule.DayTimes <= 0 {
@@ -222,7 +205,7 @@ func (SendSms *SendSms) Verify(ruleId int, mobile string, authCode string) error
 
 	//err := SendSms.Gorm.Where("receiver = ? and rule_id = ? and  auth_status = ？", mobile, ruleId, AUTH_CODE_STATUS_NORMAL).First(&smsLog).Error
 	//err := SendSms.Gorm.First(&smsLog, "receiver = ? and rule_id = ? and  auth_status = ？", mobile, ruleId, 1).Error
-	err = SendSms.Gorm.Where("receiver = ?  and rule_id = ? and auth_status = ? ", mobile, ruleId, AUTH_CODE_STATUS_NORMAL).First(&smsLog).Error
+	err = SendSms.Gorm.Where("receiver = ?  and rule_id = ? and auth_status = ? ", mobile, ruleId, model.AUTH_CODE_STATUS_NORMAL).First(&smsLog).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return errors.New("未检查出发送过短信...")
@@ -238,7 +221,7 @@ func (SendSms *SendSms) Verify(ruleId int, mobile string, authCode string) error
 	if smsLog.ExpireTime < now {
 		var editSmsLog model.SmsLog
 		editSmsLog.Id = smsLog.Id
-		editSmsLog.AuthStatus = AUTH_CODE_STATUS_EXPIRE
+		editSmsLog.AuthStatus = model.AUTH_CODE_STATUS_EXPIRE
 		SendSms.Gorm.Updates(editSmsLog)
 
 		return errors.New("已失效...(记录已变更状态:已失效)")
@@ -246,7 +229,7 @@ func (SendSms *SendSms) Verify(ruleId int, mobile string, authCode string) error
 
 	var smsLogEdit model.SmsLog
 	smsLogEdit.Id = smsLog.Id
-	smsLogEdit.AuthStatus = AUTH_CODE_STATUS_OK
+	smsLogEdit.AuthStatus = model.AUTH_CODE_STATUS_OK
 	upRsObj := SendSms.Gorm.Updates(smsLogEdit)
 	if upRsObj.Error != nil {
 		//if !errors.Is(upRsObj.Error, gorm.ErrRecordNotFound) {

@@ -17,10 +17,6 @@ type EmailLog struct {
 	CarbonCopy string `json:"carbon_copy" db:"define:varchar(255);comment:抄送邮件地址;defaultValue:''"`
 }
 
-const (
-	EMAIL_TYPE_AUTHCODE = 1
-)
-
 func (emailLog *EmailLog) TableOptions() map[string]string {
 	m := make(map[string]string)
 	m["comment"] = "邮件发送规则配置"

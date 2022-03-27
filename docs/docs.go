@@ -26,7 +26,7 @@ const docTemplate_swagger = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "BASE64图片内容，防止有人恶意攻击，如：短信轰炸、暴力破解密码等",
+                "description": "BASE64图片内容，防止有人恶意攻击，如：短信轰炸、暴力破解密码等,\u003cimg src=\"data:image/jpg;base64,内容\"/\u003e",
                 "consumes": [
                     "application/json"
                 ],
@@ -154,6 +154,61 @@ const docTemplate_swagger = `{
                         "required": true,
                         "schema": {
                             "$ref": "#/definitions/request.CheckMobileExist"
+                        }
+                    },
+                    {
+                        "type": "string",
+                        "default": "6",
+                        "description": "项目ID",
+                        "name": "X-Project-Id",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "imzgoframe",
+                        "description": "访问KEY",
+                        "name": "X-Access",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "true:存在 false:不存在",
+                        "schema": {
+                            "type": "bool"
+                        }
+                    }
+                }
+            }
+        },
+        "/base/check/username": {
+            "post": {
+                "description": "登陆 使用",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Base"
+                ],
+                "summary": "检测手机号：用户名 是否已存在",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "default": "11",
+                        "description": "来源",
+                        "name": "X-Source-Type",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "用户信息",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.CheckUsernameExist"
                         }
                     },
                     {
@@ -546,7 +601,7 @@ const docTemplate_swagger = `{
         },
         "/base/send/email": {
             "post": {
-                "description": "登陆、注册、通知等发送",
+                "description": "登陆、注册、找回密码",
                 "produces": [
                     "application/json"
                 ],
@@ -606,7 +661,7 @@ const docTemplate_swagger = `{
         },
         "/base/send/sms": {
             "post": {
-                "description": "登陆/注册/找回密码",
+                "description": "登陆、注册、找回密码",
                 "produces": [
                     "application/json"
                 ],
@@ -821,21 +876,21 @@ const docTemplate_swagger = `{
                 }
             }
         },
-        "/sys/config": {
-            "get": {
+        "/metrics": {
+            "post": {
                 "security": [
                     {
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "服务进程 - 配置信息",
+                "description": "标量- 实时统计信息",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "System"
                 ],
-                "summary": "服务进程 - 配置信息",
+                "summary": "标量- 实时统计信息 ,未实现",
                 "parameters": [
                     {
                         "description": "用户名/密码",
@@ -857,21 +912,21 @@ const docTemplate_swagger = `{
                 }
             }
         },
-        "/sys/metrics": {
-            "get": {
+        "/sys/config": {
+            "post": {
                 "security": [
                     {
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "标量- 实时统计信息",
+                "description": "服务进程 - 配置信息",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "System"
                 ],
-                "summary": "标量- 实时统计信息 ,未实现",
+                "summary": "服务进程 - 配置信息",
                 "parameters": [
                     {
                         "description": "用户名/密码",
@@ -1286,7 +1341,7 @@ const docTemplate_swagger = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "用户退出",
+                "description": "也算是：删除 jwt，不过是删除一端的JWT",
                 "produces": [
                     "application/json"
                 ],
@@ -1718,6 +1773,19 @@ const docTemplate_swagger = `{
                 "purpose": {
                     "description": "用途,1注册2找回密码3修改密码4登陆",
                     "type": "integer"
+                }
+            }
+        },
+        "request.CheckUsernameExist": {
+            "type": "object",
+            "properties": {
+                "purpose": {
+                    "description": "用途,1注册2找回密码3修改密码4登陆",
+                    "type": "integer"
+                },
+                "username": {
+                    "description": "用户名",
+                    "type": "string"
                 }
             }
         },

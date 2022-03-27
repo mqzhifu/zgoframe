@@ -190,6 +190,15 @@ definitions:
         description: 用途,1注册2找回密码3修改密码4登陆
         type: integer
     type: object
+  request.CheckUsernameExist:
+    properties:
+      purpose:
+        description: 用途,1注册2找回密码3修改密码4登陆
+        type: integer
+      username:
+        description: 用户名
+        type: string
+    type: object
   request.CustomClaims:
     description: jwt 容器内容
     properties:
@@ -656,7 +665,7 @@ paths:
     get:
       consumes:
       - application/json
-      description: BASE64图片内容，防止有人恶意攻击，如：短信轰炸、暴力破解密码等
+      description: BASE64图片内容，防止有人恶意攻击，如：短信轰炸、暴力破解密码等,<img src="data:image/jpg;base64,内容"/>
       parameters:
       - default: "11"
         description: 来源
@@ -762,6 +771,44 @@ paths:
           schema:
             type: bool
       summary: 检测手机号：是否已存在
+      tags:
+      - Base
+  /base/check/username:
+    post:
+      description: 登陆 使用
+      parameters:
+      - default: "11"
+        description: 来源
+        in: header
+        name: X-Source-Type
+        required: true
+        type: string
+      - description: 用户信息
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/request.CheckUsernameExist'
+      - default: "6"
+        description: 项目ID
+        in: header
+        name: X-Project-Id
+        required: true
+        type: string
+      - default: imzgoframe
+        description: 访问KEY
+        in: header
+        name: X-Access
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: true:存在 false:不存在
+          schema:
+            type: bool
+      summary: 检测手机号：用户名 是否已存在
       tags:
       - Base
   /base/login:
@@ -1017,7 +1064,7 @@ paths:
       - Base
   /base/send/email:
     post:
-      description: 登陆、注册、通知等发送
+      description: 登陆、注册、找回密码
       parameters:
       - description: 来源
         enum:
@@ -1059,7 +1106,7 @@ paths:
       - Base
   /base/send/sms:
     post:
-      description: 登陆/注册/找回密码
+      description: 登陆、注册、找回密码
       parameters:
       - description: 来源
         enum:
@@ -1201,30 +1248,8 @@ paths:
       summary: 网关 - 长连接 websocket
       tags:
       - Gateway
-  /sys/config:
-    get:
-      description: 服务进程 - 配置信息
-      parameters:
-      - description: 用户名/密码
-        in: body
-        name: data
-        required: true
-        schema:
-          $ref: '#/definitions/request.SystemConfig'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: '{"success":true,"data":{},"msg":"登陆成功"}'
-          schema:
-            type: string
-      security:
-      - ApiKeyAuth: []
-      summary: 服务进程 - 配置信息
-      tags:
-      - System
-  /sys/metrics:
-    get:
+  /metrics:
+    post:
       description: 标量- 实时统计信息
       parameters:
       - description: 用户名/密码
@@ -1243,6 +1268,28 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: 标量- 实时统计信息 ,未实现
+      tags:
+      - System
+  /sys/config:
+    post:
+      description: 服务进程 - 配置信息
+      parameters:
+      - description: 用户名/密码
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/request.SystemConfig'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"success":true,"data":{},"msg":"登陆成功"}'
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: 服务进程 - 配置信息
       tags:
       - System
   /sys/quit:
@@ -1507,7 +1554,7 @@ paths:
       - User
   /user/logout:
     post:
-      description: 用户退出
+      description: 也算是：删除 jwt，不过是删除一端的JWT
       produces:
       - application/json
       responses:

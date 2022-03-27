@@ -1,7 +1,5 @@
 package core
 
-import "zgoframe/test"
-
 func DoMySelf() {
 
 	//global.V.AlertPush.Push(1,"error","test push alert info.")
@@ -13,7 +11,7 @@ func DoMySelf() {
 	//	test.LogSlave()
 	//} else {
 	//test.Grpc()
-	go test.Gateway()
+	//go test.Gateway()
 	//test.Cicd()
 	//test.Email()
 	//}

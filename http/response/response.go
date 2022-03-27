@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"zgoframe/core/global"
 	"zgoframe/http/request"
+	"zgoframe/util"
 )
 
 //@description 公共HTTP响应结构体
@@ -38,7 +39,22 @@ func Result(code int, data interface{}, msg string, c *gin.Context) {
 	// 开始时间
 	myHeader := request.GetMyHeader(c)
 	//rid := c.GetHeader("request_id")
-	c.Header("X-Request-Id", myHeader.RequestId)
+	headerResponse := request.HeaderResponse{}
+
+	headerResponse.ProjectId = myHeader.ProjectId
+	headerResponse.SourceType = myHeader.SourceType
+	headerResponse.RequestId = myHeader.RequestId
+	headerResponse.TraceId = myHeader.TraceId
+	headerResponse.AutoIp = myHeader.AutoIp
+	headerResponse.ClientReqTime = myHeader.ClientReqTime
+	headerResponse.ReceiveTime = myHeader.ServerReceiveTime
+	headerResponse.ResponseTime = util.GetNowTimeSecondToInt()
+
+	httpResponse := util.HttpHeaderSureStructCovertSureMap(headerResponse)
+	for k, v := range httpResponse {
+		c.Header(k, v)
+	}
+
 	c.JSON(http.StatusOK, Response{
 		code,
 		data,

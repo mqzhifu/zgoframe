@@ -101,7 +101,7 @@ func RealJWTAuth(c *gin.Context) {
 
 }
 
-func CheckToken(myHeader request.Header) (u model.User, customClaims request.CustomClaims, err error) {
+func CheckToken(myHeader request.HeaderRequest) (u model.User, customClaims request.CustomClaims, err error) {
 	//parserTokenData.Token = myHeader.Token
 	//parserTokenData.SourceType = myHeader.SourceType
 	//

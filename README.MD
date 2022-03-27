@@ -69,11 +69,14 @@ go get golang.org/x/tools/cmd/godoc
 godoc -http=:6060
 ```
 
-生成swagger
+安装swag指令行工具
 ```
 go get -u github.com/swaggo/swag/cmd/swag@v1.7.9
-~/go/bin/swag init --parseDependency --parseInternal --parseDepth 1
 ```
+生成swagger 文档，这里得参数，因为有些结构体用的3方库
+``
+~/go/bin/swag init --parseDependency --parseInternal --parseDepth 1
+``
 访问地址：
 >http://127.0.0.1:1111/swagger/index.html
 

@@ -18,7 +18,7 @@ import (
 
 // 登录-DB比对成功后，签发jwt
 // 这里分成2个部分，1是JWT字符串2redis，加REDIS是防止恶意攻击
-func tokenNext(c *gin.Context, user model.User) (loginResponse httpresponse.LoginResponse, err error) {
+func tokenNext(c *gin.Context, user model.User, loginType int) (loginResponse httpresponse.LoginResponse, err error) {
 	global.V.Zap.Debug("tokenNext id:" + strconv.Itoa(user.Id) + " sourceType:" + strconv.Itoa(request.GetMyHeader(c).SourceType))
 	j := httpmiddleware.NewJWT()
 	claims := request.CustomClaims{
@@ -54,6 +54,7 @@ func tokenNext(c *gin.Context, user model.User) (loginResponse httpresponse.Logi
 		if err != nil {
 			return loginResponse, errors.New("redis 设置登录状态失败 1" + err.Error())
 		}
+		LoginRecord(c, user.Id, loginType)
 		//httpresponse.OkWithDetailed(httpresponse.LoginResponse{
 		//	User:      user,
 		//	Token:     token,
@@ -82,6 +83,7 @@ func tokenNext(c *gin.Context, user model.User) (loginResponse httpresponse.Logi
 		oldClaims, _ := j.ParseToken(jwtStr)
 		loginResponse.ExpiresAt = oldClaims.ExpiresAt
 
+		LoginRecord(c, user.Id, loginType)
 		//var blackJWT model.JwtBlacklist
 		//blackJWT.Jwt = jwtStr
 		//if err := service.JsonInBlacklist(blackJWT); err != nil {
@@ -93,8 +95,38 @@ func tokenNext(c *gin.Context, user model.User) (loginResponse httpresponse.Logi
 	}
 }
 
+//用户每次登陆后，日志
+//1. 日志，供查询分析
+//2. 减少请求方每次头里加上一些重复的统计信息，有session的功能，但不推荐这么用
+//3. 长连接不可能每次请求都带头信息的
+func LoginRecord(c *gin.Context, uid int, loginType int) {
+	header := request.GetMyHeader(c)
+
+	userLogin := model.UserLogin{
+		ProjectId:  header.ProjectId,
+		SourceType: header.SourceType,
+		Uid:        uid,
+		Type:       loginType,
+		AutoIp:     header.AutoIp,
+		Ip:         header.BaseInfo.Ip,
+
+		AppVersion:    header.BaseInfo.AppVersion,
+		Os:            header.BaseInfo.OS,
+		OsVersion:     header.BaseInfo.OSVersion,
+		Device:        header.BaseInfo.Device,
+		DeviceVersion: header.BaseInfo.DeviceVersion,
+		Lat:           header.BaseInfo.Lat,
+		Lon:           header.BaseInfo.Lon,
+		DeviceId:      header.BaseInfo.DeviceId,
+		Dpi:           header.BaseInfo.DPI,
+	}
+
+	global.V.Gorm.Create(&userLogin)
+	util.MyPrint("model.UserLogin new Id:", userLogin.Id)
+}
+
 // @Summary 用户退出
-// @Description 用户退出
+// @Description 也算是：删除 jwt，不过是删除一端的JWT
 // @Tags User
 // @Security ApiKeyAuth
 // @Produce  application/json
@@ -112,14 +144,15 @@ func Logout(c *gin.Context) {
 }
 
 // @Tags User
-// @Summary 用户修改密码
+// @Summary 设置/修改 密码
+// @Description 首次设置 与 修改两个动作可以合成一个，因为没有唯一性验证
 // @Security ApiKeyAuth
 // @Produce  application/json
-// @Param data body request.ChangePasswordStruct true "用户名, 原密码, 新密码"
+// @Param data body request.SetPassword true "用户名, 原密码, 新密码"
 // @Success 200 {string} string "{"success":true,"data":{},"msg":"修改成功"}"
-// @Router /user/changePassword [put]
-func ChangePassword(c *gin.Context) {
-	var form request.ChangePasswordStruct
+// @Router /user/set/password [put]
+func SetPassword(c *gin.Context) {
+	var form request.SetPassword
 	_ = c.ShouldBindJSON(&form)
 
 	if form.NewPassword == "" || form.NewPasswordConfirm == "" {
@@ -145,7 +178,7 @@ func ChangePassword(c *gin.Context) {
 // @Security ApiKeyAuth
 // @Produce  application/json
 // @Success 200 {string} string "{"success":true,"data":{},"msg":"修改成功"}"
-// @Router /user/getUserInfo [get]
+// @Router /user/info [get]
 func GetUserInfo(c *gin.Context) {
 	user, _ := request.GetUser(c)
 	httpresponse.OkWithDetailed(user, "ok", c)
@@ -180,50 +213,80 @@ func GetUserInfoList(c *gin.Context) {
 }
 
 // @Tags User
-// @Summary 绑定手机号
+// @Summary 设定|修改 - 手机号
 // @Security ApiKeyAuth
 // @accept application/json
 // @Produce application/json
 // @Param data body request.BindMobile true " "
 // @Success 200 {string} string "{"success":true,"data":{},"msg":"设置成功"}"
-// @Router /user/bindMobile [put]
-func BindMobile(c *gin.Context) {
+// @Router /user/set/mobile [put]
+func SetMobile(c *gin.Context) {
 	var form request.BindMobile
 	_ = c.ShouldBind(&form)
-	if err := util.Verify(form, util.RegisterVerify); err != nil {
-		httpresponse.FailWithMessage(err.Error(), c)
+
+	if form.Mobile == "" || form.SmsAuthCode == "" || form.RuleId <= 0 {
+		httpresponse.FailWithMessage("Mobile || SmsAuthCode || SmsRuleId is empty", c)
 		return
 	}
-
-	_, exist, err := global.V.MyService.User.FindUserByMobile(form.Mobile)
-	if exist {
-		httpresponse.FailWithMessage("手机号已绑定过了，请不要重复操作", c)
-		return
-	}
-
+	err := global.V.MyService.SendSms.Verify(form.RuleId, form.Mobile, form.SmsAuthCode)
 	if err != nil {
-		httpresponse.FailWithMessage("db err:"+err.Error(), c)
+		httpresponse.FailWithMessage("SendSms.Verify err:"+err.Error(), c)
 		return
 	}
 
 	uid, _ := request.GetUid(c)
 	err = global.V.MyService.User.BindMobile(uid, form.Mobile)
 	if err != nil {
-		httpresponse.FailWithMessage("db err:"+err.Error(), c)
+		httpresponse.FailWithMessage("User.BindMobile err:"+err.Error(), c)
 		return
 	}
+
 	httpresponse.OkWithMessage("绑定成功", c)
 
 }
 
 // @Tags User
-// @Summary 设置用户信息
+// @Summary 设定|修改 - 邮箱
+// @Security ApiKeyAuth
+// @accept application/json
+// @Produce application/json
+// @Param data body request.BindEmail true " "
+// @Success 200 {string} string "{"success":true,"data":{},"msg":"设置成功"}"
+// @Router /user/set/email [put]
+func SetEmail(c *gin.Context) {
+	var form request.BindEmail
+	_ = c.ShouldBind(&form)
+
+	if form.Email == "" || form.SmsAuthCode == "" || form.RuleId <= 0 {
+		httpresponse.FailWithMessage("email || SmsAuthCode || SmsRuleId is empty", c)
+		return
+	}
+	err := global.V.MyService.SendEmail.Verify(form.RuleId, form.Email, form.SmsAuthCode)
+	if err != nil {
+		httpresponse.FailWithMessage("SendSms.Verify err:"+err.Error(), c)
+		return
+	}
+
+	uid, _ := request.GetUid(c)
+	err = global.V.MyService.User.BindMobile(uid, form.Email)
+	if err != nil {
+		httpresponse.FailWithMessage("User.BindMobile err:"+err.Error(), c)
+		return
+	}
+
+	httpresponse.OkWithMessage("绑定成功", c)
+
+}
+
+// @Tags User
+// @Summary 设置/修改 用户基础信息
+// @Description 首次设置 与 修改两个动作可以合成一个，因为没有唯一性验证
 // @Security ApiKeyAuth
 // @accept application/json
 // @Produce application/json
 // @Param data body request.SetUserInfo true "ID, 用户名, 昵称, 头像链接"
 // @Success 200 {string} string "{"success":true,"data":{},"msg":"设置成功"}"
-// @Router /user/setUserInfo [put]
+// @Router /user/set/info [post]
 func SetUserInfo(c *gin.Context) {
 	var editInfoData request.SetUserInfo
 	_ = c.ShouldBindJSON(&editInfoData)
@@ -252,12 +315,12 @@ func SetUserInfo(c *gin.Context) {
 
 // @Tags User
 // @Summary 删除用户
-// @Description 欧美国家要求比较严，必须得有这功能，国内现在也有但不多，主要是用来删除测试的（危险甚用）
+// @Description 欧美国家要求比较严，必须得有这功能，国内现在也有但不多，目前是用来测试的，像脚本做自动化测试生成的用户，以及测试员线上测试时产生的用户数据（危险甚用）
 // @Security ApiKeyAuth
 // @accept application/json
 // @Produce application/json
 // @Success 200 {string} string "{"success":true,"data":{},"msg":"删除成功"}"
-// @Router /user/deleteUser [delete]
+// @Router /user/delete [delete]
 func DeleteUser(c *gin.Context) {
 	httpresponse.OkWithMessage("用户怎么能随便删除呢？不想要鸡腿了？", c)
 	return

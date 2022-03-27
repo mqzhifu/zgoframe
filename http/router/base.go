@@ -8,12 +8,6 @@ import (
 func InitBaseRouter(Router *gin.RouterGroup) {
 	BaseRouter := Router.Group("base")
 	{
-		//header头结构体 - 用于测试
-		BaseRouter.GET("niuke/question/dir/list", v1.NiukeQuestionDirList)
-		//header头结构体 - 用于测试
-		BaseRouter.GET("header/struct", v1.HeaderStruct)
-		//所有常量列表
-		BaseRouter.GET("const/list", v1.ConstList)
 		//图形 - 验证码
 		BaseRouter.GET("captcha", v1.Captcha)
 		//发送短信 登陆/注册/找回密码
@@ -36,10 +30,24 @@ func InitBaseRouter(Router *gin.RouterGroup) {
 		BaseRouter.POST("check/mobile", v1.CheckMobileExist)
 		//检查邮件是否存在 登陆/注册/找回密码
 		BaseRouter.POST("check/email", v1.CheckEmailExist)
-		//获取APP 列表
-		BaseRouter.POST("project/list", v1.ProjectList)
 		//检查token正确性
 		BaseRouter.POST("parser/token", v1.ParserToken)
 
+	}
+}
+
+func InitToolsRouter(Router *gin.RouterGroup) {
+	ToolsRouter := Router.Group("base")
+	{
+		//牛课网
+		ToolsRouter.GET("niuke/question/dir/list", v1.NiukeQuestionDirList)
+		//header头结构体 - 用于测试
+		ToolsRouter.GET("header/struct", v1.HeaderStruct)
+		//所有常量列表
+		ToolsRouter.GET("const/list", v1.ConstList)
+		//获取APP 列表
+		ToolsRouter.POST("project/list", v1.ProjectList)
+		//获取APP 列表
+		ToolsRouter.POST("project/info/{id}", v1.ProjectOneInfo)
 	}
 }

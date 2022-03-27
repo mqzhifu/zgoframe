@@ -8,10 +8,10 @@ import (
 	"zgoframe/util"
 )
 
-// @Summary Quit
-// @Description 关闭该服务进程
-// @Security ApiKeyAuth
 // @Tags System
+// @Summary 关闭 - 该服务进程
+// @Description 关闭 - 该服务进程
+// @Security ApiKeyAuth
 // @Param data body request.SystemConfig true "用户名/密码"
 // @Produce  application/json
 // @Success 200 {string} string "{"success":true,"data":{},"msg":"登陆成功"}"
@@ -30,14 +30,14 @@ func Quit(c *gin.Context) {
 
 }
 
-// @Summary Config
-// @Description Config
+// @Summary 服务进程 - 配置信息
+// @Description 服务进程 - 配置信息
 // @Tags System
 // @Security ApiKeyAuth
 // @Param data body request.SystemConfig true "用户名/密码"
 // @Produce  application/json
 // @Success 200 {string} string "{"success":true,"data":{},"msg":"登陆成功"}"
-// @Router /sys/config [POST]
+// @Router /sys/config [get]
 func Config(c *gin.Context) {
 	util.MyPrint("im in sys.config")
 
@@ -51,5 +51,17 @@ func Config(c *gin.Context) {
 		httpresponse.FailWithMessage("验证失败", c)
 	}
 	//str,_ := json.Marshal(global.C)
+
+}
+
+// @Summary 标量- 实时统计信息 ,未实现
+// @Description 标量- 实时统计信息
+// @Tags System
+// @Security ApiKeyAuth
+// @Param data body request.SystemConfig true "用户名/密码"
+// @Produce  application/json
+// @Success 200 {string} string "{"success":true,"data":{},"msg":"登陆成功"}"
+// @Router /sys/metrics [get]
+func Metrics(c *gin.Context) {
 
 }

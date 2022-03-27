@@ -19,6 +19,7 @@ type Config struct {
 	Protobuf         Protobuf
 	ServiceDiscovery ServiceDiscovery
 	PushGateway      PushGateway
+	Gateway          Gateway
 }
 
 type Protobuf struct {
@@ -159,4 +160,13 @@ type Email struct {
 	Ps     string
 	Port   string
 	From   string
+}
+
+type Gateway struct {
+	Status   string
+	ListenIp string
+	OutIp    string
+	WsPort   string
+	TcpPort  string
+	WsUri    string
 }

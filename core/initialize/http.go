@@ -96,6 +96,12 @@ func RegGinHttpRoute() {
 		router.InitGatewayRouter(GatewayGroup)
 	}
 
+	PublicToolsGroup := global.V.Gin.Group("")
+	PublicToolsGroup.Use(httpmiddleware.Limiter()).Use(httpmiddleware.Record()).Use(httpmiddleware.Header()).Use(httpmiddleware.HeaderAuth())
+	{
+		router.InitToolsRouter(PublicToolsGroup)
+	}
+
 }
 
 var HttpZapLog *zap.Logger

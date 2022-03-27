@@ -49,6 +49,10 @@ func (db *DbTool) CreateTable(tableStruct ...interface{}) {
 	ExitPrint(111)
 }
 
+func (db *DbTool) AddField(tableStruct ...interface{}) {
+	//ALTER TABLE `sms_rule` ADD `purpose` TINYINT(1) NOT NULL DEFAULT '0' COMMENT '用途,1注册2找回密码3修改密码4登陆' AFTER `third_callback_info`;
+}
+
 func (db *DbTool) processOneTable(tableStruct interface{}) {
 	MyPrint("processOneTable:", tableStruct)
 
@@ -73,11 +77,6 @@ func (db *DbTool) processOneTable(tableStruct interface{}) {
 
 	TypeOfOneTableStruct := reflect.TypeOf(tableStruct)
 	db.GetField(TypeOfOneTableStruct.Elem(), columnsOption)
-
-	//type TableColumnOption struct {
-	//	Unique string
-	//	Index string
-	//}
 
 	sqlMid := ""
 	primarykey := false

@@ -7,17 +7,34 @@ import "github.com/dgrijalva/jwt-go"
 type ParserToken struct {
 	Token string `json:"token" form:"token"`
 }
+type TestHeader struct {
+	HeaderRequest  HeaderRequest  `json:"header_request"`
+	HeaderResponse HeaderResponse `json:"header_response"`
+}
 
 //@description http客户端请求头
-type Header struct {
-	Access     string         `json:"access"`      //使用网关时，不允许随意访问，得有key
-	RequestId  string         `json:"request_id"`  //每次请求的唯一标识，响应时也会返回，如果请求方没有，后端会默认生成一个
-	TraceId    string         `json:"trace_id"`    //追踪ID，主要用于链路追踪，如果请求方没有，后端会默认生成一个，跟request略像，但给后端使用
-	SourceType int            `json:"source_type"` //请求方来源类型(pc h5 ios android vr spider unknow)，不同类型，不同JWT，原因：1手机端登陆后，PC端再登陆，互踢，无法共存。2越权，有些接口不允许互相访问
-	ProjectId  int            `json:"project_id"`  //项目ID，所有的服务/项目/前端/App，均要先向管理员申请一个账号，才能用于日常请求
-	Token      string         `json:"token"`       //JWT用户登陆令牌(HS256 对称算法，共享一个密钥)
-	AutoIp     string         `json:"auto_ip"`     //获取不到请求方IP时，系统自动获取生成
-	BaseInfo   HeaderBaseInfo `json:"base_info"`   //收集客户端的一些基础信息，json
+type HeaderRequest struct {
+	Access            string         `json:"access"`              //使用网关时，不允许随意访问，得有key
+	RequestId         string         `json:"request_id"`          //每次请求的唯一标识，响应时也会返回，如果请求方没有，后端会默认生成一个
+	TraceId           string         `json:"trace_id"`            //追踪ID，主要用于链路追踪，如果请求方没有，后端会默认生成一个，跟request略像，但给后端使用
+	SourceType        int            `json:"source_type"`         //请求方来源类型(pc h5 ios android vr spider unknow)，不同类型，不同JWT，原因：1手机端登陆后，PC端再登陆，互踢，无法共存。2越权，有些接口不允许互相访问
+	ProjectId         int            `json:"project_id"`          //项目ID，所有的服务/项目/前端/App，均要先向管理员申请一个账号，才能用于日常请求
+	Token             string         `json:"token"`               //JWT用户登陆令牌(HS256 对称算法，共享一个密钥)
+	AutoIp            string         `json:"auto_ip"`             //获取不到请求方IP时，系统自动获取生成,供业务层使用
+	ClientReqTime     int            `json:"client_req_time"`     //客户端请求时间  unixtime
+	ServerReceiveTime int            `json:"server_receive_time"` //服务端接收到请求的时间 unixtime
+	BaseInfo          HeaderBaseInfo `json:"base_info"`           //收集客户端的一些基础信息，json
+}
+
+type HeaderResponse struct {
+	RequestId     string `json:"request_id"`           //每次请求的唯一标识，响应时也会返回，如果请求方没有，后端会默认生成一个
+	TraceId       string `json:"trace_id"`             //追踪ID，主要用于链路追踪，如果请求方没有，后端会默认生成一个，跟request略像，但给后端使用
+	SourceType    int    `json:"source_type"`          //请求方来源类型(pc h5 ios android vr spider unknow)，不同类型，不同JWT，原因：1手机端登陆后，PC端再登陆，互踢，无法共存。2越权，有些接口不允许互相访问
+	ProjectId     int    `json:"project_id"`           //项目ID，所有的服务/项目/前端/App，均要先向管理员申请一个账号，才能用于日常请求
+	AutoIp        string `json:"auto_ip"`              //获取不到请求方IP时，系统自动获取生成
+	ClientReqTime int    `json:"client_req_time"`      //客户端请求时间  unixtime
+	ReceiveTime   int    `json:"server_receive_time"`  //服务端接收到请求的时间 unixtime
+	ResponseTime  int    `json:"server_response_time"` //服务端最后响应的时间 unixtime
 }
 
 //@description http客户端请求头-基础信息
@@ -73,19 +90,7 @@ type PageInfo struct {
 	PageSize int `json:"pageSize" form:"pageSize"` //每页多少条记录
 }
 
-//type GetById struct {
-//	Id float64 `json:"id" form:"id"`
-//}
-//
-//type IdsReq struct {
-//	Ids []int `json:"ids" form:"ids"`
-//}
-//
-//// Get role by id structure
-//type GetAuthorityId struct {
-//	AuthorityId string
-//}
-
+//空结构体，1给网关，请求参数泛类型 2给protobuf用 3给swag api工具使用
 type Empty struct{}
 
 // Casbin info structure

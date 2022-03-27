@@ -32,7 +32,15 @@ type BindMobile struct {
 	ProjectId   int    `json:"project_id"`    //项目Id
 	Mobile      string `json:"mobile"`        //手机号
 	SmsAuthCode string `json:"sms_auth_code"` //短信验证码
-	SmsRuleId   int    `json:"sms_rule_id"`   //短信类型，登陆/注册
+	RuleId      int    `json:"rule_id"`       //短信类型，登陆/注册
+}
+
+//@descriptionw 绑定邮箱
+type BindEmail struct {
+	ProjectId   int    `json:"project_id"`    //项目Id
+	Email       string `json:"email"`         //邮箱号
+	SmsAuthCode string `json:"sms_auth_code"` //短信验证码
+	RuleId      int    `json:"rule_id"`       //短信类型，登陆/注册
 }
 
 //@description 修改用户基础信息
@@ -76,8 +84,8 @@ type SendSMS struct {
 	Receiver   string            `json:"receiver"`    //接收者，email格式
 	SendUid    int               `json:"send_uid"`    //发送者ID，管理员是9999，未知8888
 	SendIp     string            `json:"send_ip"`     //发送者IP，如为空系统默认取：请求方的IP,最好给真实的，一但被刷，会使用此值
-	//Captcha    string            `json:"captcha"`     //验证码
-	//CaptchaId  string            `json:"captchaId"`   //获取验证码时拿到的Id
+	Captcha    string            `json:"captcha"`     //验证码
+	CaptchaId  string            `json:"captchaId"`   //获取验证码时拿到的Id
 }
 
 //@description 发送邮件
@@ -90,8 +98,8 @@ type SendEmail struct {
 	SendIp     string            `json:"send_ip"`     //发送者IP，如为空系统默认取：请求方的IP,最好给真实的，一但被刷，会使用此值
 }
 
-//@description 修改密码
-type ChangePasswordStruct struct {
+//@description 设置/修改密码
+type SetPassword struct {
 	Password           string `json:"password"`             //旧密码
 	NewPassword        string `json:"newPassword"`          //新密码
 	NewPasswordConfirm string `json:"new_password_confirm"` //新密码确认
@@ -107,18 +115,37 @@ type RestPasswordSms struct {
 	NewPasswordConfirm string `json:"new_password_confirm"` //新密码确认
 }
 
-//// Modify  user's auth structure
-//type SetUserAuth struct {
-//	UUID        uuid.UUID `json:"uuid"`
-//	AuthorityId string    `json:"authorityId"`
-//}
+const (
+	PURPOSE_REGISTER            = 1
+	PURPOSE_FIND_BACK_PASSWORD  = 2
+	PURPOSE_CHANGE_PASSWORD     = 3
+	PURPOSE_LOGIN               = 4
+	PURPOSE_BIND                = 5
+	PURPOSE_MODIFY              = 6
+	PURPOSE_SET_PAY_PASSWORD    = 7
+	PURPOSE_MODIFY_PAY_PASSWORD = 8
+)
+
+func GetPurposeConstList() map[string]int {
+	list := make(map[string]int)
+	list["PURPOSE_REGISTER"] = PURPOSE_REGISTER
+	list["PURPOSE_FIND_PASSWORD"] = PURPOSE_FIND_BACK_PASSWORD
+	list["PURPOSE_CHANGE_PASSWORD"] = PURPOSE_CHANGE_PASSWORD
+	list["PURPOSE_LOGIN"] = PURPOSE_LOGIN
+	list["PURPOSE_BIND"] = PURPOSE_BIND
+	list["PURPOSE_MODIFY"] = PURPOSE_MODIFY
+	list["PURPOSE_SET_PAY_PASSWORD"] = PURPOSE_SET_PAY_PASSWORD
+	list["PURPOSE_MODIFY_PAY_PASSWORD"] = PURPOSE_MODIFY_PAY_PASSWORD
+
+	return list
+}
 
 type CheckMobileExist struct {
 	Mobile  string `json:"mobile"`  //手机号
-	Purpose int    `json:"purpose"` //用途,1注册2找回密码3修改密码4修改邮箱5
+	Purpose int    `json:"purpose"` //用途,1注册2找回密码3修改密码4登陆
 }
 
 type CheckEmailExist struct {
-	Email   string `json:"mobile"`  //邮箱
-	Purpose int    `json:"purpose"` //用途,1注册2找回密码3修改密码4修改邮箱5
+	Email   string `json:"email"`   //邮箱
+	Purpose int    `json:"purpose"` //用途,1注册2找回密码3修改密码4登陆
 }

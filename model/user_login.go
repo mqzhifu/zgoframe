@@ -1,43 +1,12 @@
 package model
 
-const (
-	USER_REG_TYPE_EMAIL  = 1
-	USER_REG_TYPE_NAME   = 2
-	USER_REG_TYPE_MOBILE = 3
-	USER_REG_TYPE_THIRD  = 4
-	USER_REG_TYPE_GUEST  = 5
-
-	USER_TYPE_THIRD_WEIBO    = 1
-	USER_TYPE_THIRD_WECHAT   = 2
-	USER_TYPE_THIRD_FACEBOOK = 3
-	USER_TYPE_THIRD_GOOGLE   = 4
-	USER_TYPE_THIRD_TWITTER  = 5
-	USER_TYPE_THIRD_YOUTOBE  = 6
-	USER_TYPE_THIRD_QQ       = 7
-
-	LOGIN_TYPE_SMS = 11
-
-	CHANNEL_DEFAULT = 1
-)
-
-func GetUserThirdTypeList() []int {
-	UserThirdType := []int{USER_TYPE_THIRD_WEIBO, USER_TYPE_THIRD_WECHAT, USER_TYPE_THIRD_FACEBOOK, USER_TYPE_THIRD_GOOGLE, USER_TYPE_THIRD_TWITTER, USER_TYPE_THIRD_YOUTOBE, USER_TYPE_THIRD_QQ}
-	return UserThirdType
-}
-
-func GetUserRegTypeList() []int {
-	UserThirdType := []int{USER_REG_TYPE_EMAIL, USER_REG_TYPE_NAME, USER_REG_TYPE_MOBILE, USER_REG_TYPE_THIRD, USER_REG_TYPE_THIRD}
-	return UserThirdType
-}
-
-type UserReg struct {
+type UserLogin struct {
 	MODEL
 	ProjectId     int    `json:"project_id" db:"define:int;comment:project_id;defaultValue:0"  `
-	SourceType    int    `json:"source_type" db:"define:tinyint(1);comment:来源类型;defaultValue:0"`
+	SourceType    int    `json:"source_type" db:"define:tinyint(1);comment:来源类型;defaultValue:0"` //pc h5 ios android vr unknow
 	Uid           int    `json:"uid" db:"define:int;comment:uid;defaultValue:0"`
 	Type          int    `json:"type" db:"define:tinyint(1);comment:类型 1email2name3mobile3third4guest;defaultValue:0" `
 	ThirdType     int    `json:"third_type" db:"define:varchar(50);comment:三方平台类型,参数常量USER_TYPE_THIRD;defaultValue:''"`
-	Channel       int    `json:"channel" db:"define:tinyint(1);comment:推广渠道1平台自己;defaultValue:0"`
 	Ip            string `json:"ip" db:"define:varchar(50);comment:请求方传输IP;defaultValue:''"`
 	AutoIp        string `json:"auto_ip" db:"define:varchar(50);comment:程序自己计算的IP;defaultValue:''"`
 	AppVersion    string `json:"app_version" db:"define:varchar(50);comment:APP版本;defaultValue:''"`
@@ -50,11 +19,12 @@ type UserReg struct {
 	DeviceId      string `json:"device_id" db:"define:varchar(50);comment:设备ID;defaultValue:''"`
 	Dpi           string `json:"dpi" db:"define:varchar(50);comment:分辨率;defaultValue:''"`
 	Referer       string `json:"referer" db:"define:varchar(255);comment:页面来源;defaultValue:''"`
+	Jwt           string `json:"jwt" db:"define:text;comment:登陆成功后的jwt;defaultValue:"`
 }
 
-func (userReg *UserReg) TableOptions() map[string]string {
+func (UserLogin *UserLogin) TableOptions() map[string]string {
 	m := make(map[string]string)
-	m["comment"] = "用户注册信息"
+	m["comment"] = "用户登陆记录"
 
 	return m
 }

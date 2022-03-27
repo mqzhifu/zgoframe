@@ -13,11 +13,11 @@ definitions:
       expires_at:
         description: token失效时间
         type: integer
-      is_new:
-        description: 重复登陆也可以成功，但返回的是旧的TOKEN，非新生成token
-        type: boolean
       is_new_reg:
         description: 3方登陆时，为了简化操作，如果没注册将自动注册
+        type: boolean
+      is_new_token:
+        description: 重复登陆也可以成功，但返回的是旧的TOKEN，非新生成token
         type: boolean
       token:
         description: 生成的token
@@ -142,6 +142,21 @@ definitions:
         description: UID字条串化
         type: string
     type: object
+  request.BindEmail:
+    properties:
+      email:
+        description: 邮箱号
+        type: string
+      project_id:
+        description: 项目Id
+        type: integer
+      rule_id:
+        description: 短信类型，登陆/注册
+        type: integer
+      sms_auth_code:
+        description: 短信验证码
+        type: string
+    type: object
   request.BindMobile:
     properties:
       mobile:
@@ -150,33 +165,20 @@ definitions:
       project_id:
         description: 项目Id
         type: integer
-      sms_auth_code:
-        description: 短信验证码
-        type: string
-      sms_rule_id:
+      rule_id:
         description: 短信类型，登陆/注册
         type: integer
-    type: object
-  request.ChangePasswordStruct:
-    description: 修改密码
-    properties:
-      new_password_confirm:
-        description: 新密码确认
-        type: string
-      newPassword:
-        description: 新密码
-        type: string
-      password:
-        description: 旧密码
+      sms_auth_code:
+        description: 短信验证码
         type: string
     type: object
   request.CheckEmailExist:
     properties:
-      mobile:
+      email:
         description: 邮箱
         type: string
       purpose:
-        description: 用途,1注册2找回密码3修改密码4修改邮箱5
+        description: 用途,1注册2找回密码3修改密码4登陆
         type: integer
     type: object
   request.CheckMobileExist:
@@ -185,7 +187,7 @@ definitions:
         description: 手机号
         type: string
       purpose:
-        description: 用途,1注册2找回密码3修改密码4修改邮箱5
+        description: 用途,1注册2找回密码3修改密码4登陆
         type: integer
     type: object
   request.CustomClaims:
@@ -207,33 +209,7 @@ definitions:
         description: 用户名
         type: string
     type: object
-  request.Header:
-    description: http客户端请求头
-    properties:
-      access:
-        description: 使用网关时，不允许随意访问，得有key
-        type: string
-      auto_ip:
-        description: 获取不到请求方IP时，系统自动获取生成
-        type: string
-      base_info:
-        $ref: '#/definitions/request.HeaderBaseInfo'
-        description: 收集客户端的一些基础信息，json
-      project_id:
-        description: 项目ID，所有的服务/项目/前端/App，均要先向管理员申请一个账号，才能用于日常请求
-        type: integer
-      request_id:
-        description: 每次请求的唯一标识，响应时也会返回，如果请求方没有，后端会默认生成一个
-        type: string
-      source_type:
-        description: 请求方来源类型(pc h5 ios android vr spider unknow)，不同类型，不同JWT，原因：1手机端登陆后，PC端再登陆，互踢，无法共存。2越权，有些接口不允许互相访问
-        type: integer
-      token:
-        description: JWT用户登陆令牌(HS256 对称算法，共享一个密钥)
-        type: string
-      trace_id:
-        description: 追踪ID，主要用于链路追踪，如果请求方没有，后端会默认生成一个，跟request略像，但给后端使用
-        type: string
+  request.Empty:
     type: object
   request.HeaderBaseInfo:
     description: http客户端请求头-基础信息
@@ -272,6 +248,67 @@ definitions:
         description: 页面来源
         type: string
     type: object
+  request.HeaderRequest:
+    description: http客户端请求头
+    properties:
+      access:
+        description: 使用网关时，不允许随意访问，得有key
+        type: string
+      auto_ip:
+        description: 获取不到请求方IP时，系统自动获取生成,供业务层使用
+        type: string
+      base_info:
+        $ref: '#/definitions/request.HeaderBaseInfo'
+        description: 收集客户端的一些基础信息，json
+      client_req_time:
+        description: 客户端请求时间  unixtime
+        type: integer
+      project_id:
+        description: 项目ID，所有的服务/项目/前端/App，均要先向管理员申请一个账号，才能用于日常请求
+        type: integer
+      request_id:
+        description: 每次请求的唯一标识，响应时也会返回，如果请求方没有，后端会默认生成一个
+        type: string
+      server_receive_time:
+        description: 服务端接收到请求的时间 unixtime
+        type: integer
+      source_type:
+        description: 请求方来源类型(pc h5 ios android vr spider unknow)，不同类型，不同JWT，原因：1手机端登陆后，PC端再登陆，互踢，无法共存。2越权，有些接口不允许互相访问
+        type: integer
+      token:
+        description: JWT用户登陆令牌(HS256 对称算法，共享一个密钥)
+        type: string
+      trace_id:
+        description: 追踪ID，主要用于链路追踪，如果请求方没有，后端会默认生成一个，跟request略像，但给后端使用
+        type: string
+    type: object
+  request.HeaderResponse:
+    properties:
+      auto_ip:
+        description: 获取不到请求方IP时，系统自动获取生成
+        type: string
+      client_req_time:
+        description: 客户端请求时间  unixtime
+        type: integer
+      project_id:
+        description: 项目ID，所有的服务/项目/前端/App，均要先向管理员申请一个账号，才能用于日常请求
+        type: integer
+      request_id:
+        description: 每次请求的唯一标识，响应时也会返回，如果请求方没有，后端会默认生成一个
+        type: string
+      server_receive_time:
+        description: 服务端接收到请求的时间 unixtime
+        type: integer
+      server_response_time:
+        description: 服务端最后响应的时间 unixtime
+        type: integer
+      source_type:
+        description: 请求方来源类型(pc h5 ios android vr spider unknow)，不同类型，不同JWT，原因：1手机端登陆后，PC端再登陆，互踢，无法共存。2越权，有些接口不允许互相访问
+        type: integer
+      trace_id:
+        description: 追踪ID，主要用于链路追踪，如果请求方没有，后端会默认生成一个，跟request略像，但给后端使用
+        type: string
+    type: object
   request.Login:
     description: 正常登陆，需要用户名密码
     properties:
@@ -287,6 +324,23 @@ definitions:
       username:
         description: 用户名：普通字符串、手机号、邮箱
         type: string
+    type: object
+  request.LoginSMS:
+    description: 短信登陆
+    properties:
+      captcha:
+        type: string
+      captchaId:
+        type: string
+      code:
+        type: string
+      mobile:
+        type: string
+      sms_auth_code:
+        type: string
+      sms_rule_id:
+        description: 短信类型，登陆/注册
+        type: integer
     type: object
   request.PageInfo:
     description: 分页
@@ -469,6 +523,12 @@ definitions:
   request.SendSMS:
     description: 发送验证码
     properties:
+      captcha:
+        description: 验证码
+        type: string
+      captchaId:
+        description: 获取验证码时拿到的Id
+        type: string
       receiver:
         description: 接收者，email格式
         type: string
@@ -486,6 +546,19 @@ definitions:
       send_uid:
         description: 发送者ID，管理员是9999，未知8888
         type: integer
+    type: object
+  request.SetPassword:
+    description: 设置/修改密码
+    properties:
+      new_password_confirm:
+        description: 新密码确认
+        type: string
+      newPassword:
+        description: 新密码
+        type: string
+      password:
+        description: 旧密码
+        type: string
     type: object
   request.SetUserInfo:
     description: 修改用户基础信息
@@ -511,6 +584,58 @@ definitions:
         type: string
       username:
         description: 用户名
+        type: string
+    type: object
+  request.TestHeader:
+    properties:
+      header_request:
+        $ref: '#/definitions/request.HeaderRequest'
+      header_response:
+        $ref: '#/definitions/request.HeaderResponse'
+    type: object
+  util.NetWayOption:
+    properties:
+      connTimeout:
+        description: 一个FD超时时间
+        type: integer
+      default_content_type:
+        description: 默认响应内容格式 ：json protobuf
+        type: integer
+      default_protocol_type:
+        description: 默认响应协议：ws tcp udp
+        type: integer
+      io_timeout:
+        description: read write sock fd 超时时间
+        type: integer
+      listenIp:
+        description: 程序启动时监听的IP
+        type: string
+      login_auth_secret_key:
+        description: jwt登陆验证-密钥
+        type: string
+      loginAuthType:
+        description: jwt登陆验证
+        type: string
+      maxClientConnMum:
+        description: 客户端最大连接数
+        type: integer
+      msg_content_max:
+        description: 一条消息内容最大值,byte,ps:最大10KB
+        type: integer
+      outIp:
+        description: 对外访问的IP
+        type: string
+      tcpPort:
+        description: tcp监听端口号
+        type: string
+      udpPort:
+        description: udp端口号
+        type: string
+      wsPort:
+        description: ws监听端口号
+        type: string
+      wsUri:
+        description: ws接HOST的后面的URL地址
         type: string
     type: object
 info:
@@ -563,8 +688,9 @@ paths:
       summary: 生成图片验证码
       tags:
       - Base
-  /base/check/mobile:
+  /base/check/email:
     post:
+      description: 注册/找加密码 使用
       parameters:
       - default: "11"
         description: 来源
@@ -597,23 +723,25 @@ paths:
           description: true:存在 false:不存在
           schema:
             type: bool
-      summary: 测试邮件：是否已存在，注册/绑定时会使用
+      summary: 检测邮件：是否已存在
       tags:
       - Base
-  /base/const/list:
-    get:
-      description: 所有常量列表，方便调用与调试
+  /base/check/mobile:
+    post:
+      description: 注册/找加密码/登陆 使用
       parameters:
-      - description: 来源
-        enum:
-        - "11"
-        - "12"
-        - "21"
-        - "22"
+      - default: "11"
+        description: 来源
         in: header
         name: X-Source-Type
         required: true
         type: string
+      - description: 用户信息
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/request.CheckMobileExist'
       - default: "6"
         description: 项目ID
         in: header
@@ -630,45 +758,10 @@ paths:
       - application/json
       responses:
         "200":
-          description: OK
+          description: true:存在 false:不存在
           schema:
-            $ref: '#/definitions/httpresponse.Response'
-      summary: 所有常量列表
-      tags:
-      - Base
-  /base/header/struct:
-    get:
-      description: 日常header里放一诸如验证类的东西，统一公示出来，仅是说明，方便测试，不是真实API，方便使用
-      parameters:
-      - default: "11"
-        description: 来源
-        in: header
-        name: X-Source-Type
-        required: true
-        type: string
-      - default: "6"
-        description: 项目ID
-        enum:
-        - "1"
-        - "2"
-        - "3"
-        - "4"
-        in: header
-        name: X-Project-Id
-        required: true
-        type: string
-      - default: imzgoframe
-        description: 访问KEY
-        in: header
-        name: X-Access
-        required: true
-        type: string
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/request.Header'
-      summary: header头结构体
+            type: bool
+      summary: 检测手机号：是否已存在
       tags:
       - Base
   /base/login:
@@ -710,7 +803,7 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/httpresponse.LoginResponse'
-      summary: 用户登陆
+      summary: 普通登陆
       tags:
       - Base
   /base/login/sms:
@@ -744,7 +837,7 @@ paths:
         name: data
         required: true
         schema:
-          $ref: '#/definitions/request.RLoginThird'
+          $ref: '#/definitions/request.LoginSMS'
       produces:
       - application/json
       responses:
@@ -797,36 +890,6 @@ paths:
       summary: 用户登陆三方
       tags:
       - Base
-  /base/niuke/question/dir/list:
-    get:
-      description: 某人题库资料目录结构
-      parameters:
-      - default: "11"
-        description: 来源
-        in: header
-        name: X-Source-Type
-        required: true
-        type: string
-      - default: "6"
-        description: 项目ID
-        in: header
-        name: X-Project-Id
-        required: true
-        type: string
-      - default: imzgoframe
-        description: 访问KEY
-        in: header
-        name: X-Access
-        required: true
-        type: string
-      responses:
-        "200":
-          description: true:成功 false:否
-          schema:
-            type: bool
-      summary: 牛博网- 某人题库资料目录结构
-      tags:
-      - Base
   /base/parser/token:
     post:
       description: 应用接到token后，要到后端再统计认证一下，确保准确
@@ -867,44 +930,6 @@ paths:
           schema:
             $ref: '#/definitions/request.CustomClaims'
       summary: 解析一个TOKEN
-      tags:
-      - Base
-  /base/project/list:
-    post:
-      description: 每个项目的详细信息
-      parameters:
-      - description: 来源
-        enum:
-        - "11"
-        - "12"
-        - "21"
-        - "22"
-        in: header
-        name: X-Source-Type
-        required: true
-        type: string
-      - default: "6"
-        description: 项目ID
-        in: header
-        name: X-Project-Id
-        required: true
-        type: string
-      - default: imzgoframe
-        description: 访问KEY
-        in: header
-        name: X-Access
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/model.Project'
-      security:
-      - ApiKeyAuth: []
-      summary: 项目列表
       tags:
       - Base
   /base/register:
@@ -1115,9 +1140,70 @@ paths:
       summary: 重置密码 - 通过短信
       tags:
       - Base
-  /sys/config:
+  /gateway/config:
+    get:
+      description: 主要是长连接的配置(端口|协议)
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/util.NetWayOption'
+      security:
+      - ApiKeyAuth: []
+      summary: 获取网关配置信息
+      tags:
+      - Gateway
+  /gateway/proto:
+    get:
+      description: proto接口及GRPC微服务函数的信息等
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: 获取所有服务的.proto 配置文件
+      tags:
+      - Gateway
+  /gateway/service/{service_name}/{func_name}:
     post:
-      description: Config
+      description: 通过网关调取后端服务(grpc)
+      parameters:
+      - description: 服务名
+        in: path
+        name: service_name
+        required: true
+        type: string
+      - description: 函数名
+        in: path
+        name: func_name
+        required: true
+        type: string
+      - description: 任意，请参考.proto
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/request.Empty'
+      responses:
+        "200":
+          description: true:成功 false:否
+          schema:
+            type: bool
+      security:
+      - ApiKeyAuth: []
+      summary: 网关 - 短连接
+      tags:
+      - Gateway
+  /gateway/service/ws:
+    get:
+      description: 通过网关调取后端服务(ws)
+      responses: {}
+      security:
+      - ApiKeyAuth: []
+      summary: 网关 - 长连接 websocket
+      tags:
+      - Gateway
+  /sys/config:
+    get:
+      description: 服务进程 - 配置信息
       parameters:
       - description: 用户名/密码
         in: body
@@ -1134,12 +1220,34 @@ paths:
             type: string
       security:
       - ApiKeyAuth: []
-      summary: Config
+      summary: 服务进程 - 配置信息
+      tags:
+      - System
+  /sys/metrics:
+    get:
+      description: 标量- 实时统计信息
+      parameters:
+      - description: 用户名/密码
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/request.SystemConfig'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"success":true,"data":{},"msg":"登陆成功"}'
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: 标量- 实时统计信息 ,未实现
       tags:
       - System
   /sys/quit:
     post:
-      description: 关闭该服务进程
+      description: 关闭 - 该服务进程
       parameters:
       - description: 用户名/密码
         in: body
@@ -1156,58 +1264,198 @@ paths:
             type: string
       security:
       - ApiKeyAuth: []
-      summary: Quit
+      summary: 关闭 - 该服务进程
       tags:
       - System
-  /user/bindMobile:
-    put:
-      consumes:
-      - application/json
+  /tools/const/list:
+    get:
+      description: 所有常量列表，方便调用与调试
       parameters:
-      - description: ' '
-        in: body
-        name: data
+      - description: 来源
+        enum:
+        - "11"
+        - "12"
+        - "21"
+        - "22"
+        in: header
+        name: X-Source-Type
         required: true
-        schema:
-          $ref: '#/definitions/request.BindMobile'
+        type: string
+      - default: "6"
+        description: 项目ID
+        in: header
+        name: X-Project-Id
+        required: true
+        type: string
+      - default: imzgoframe
+        description: 访问KEY
+        in: header
+        name: X-Access
+        required: true
+        type: string
       produces:
       - application/json
       responses:
         "200":
-          description: '{"success":true,"data":{},"msg":"设置成功"}'
+          description: OK
           schema:
-            type: string
-      security:
-      - ApiKeyAuth: []
-      summary: 绑定手机号
+            $ref: '#/definitions/httpresponse.Response'
+      summary: 所有常量列表
       tags:
-      - User
-  /user/changePassword:
-    put:
+      - Tools
+  /tools/header/struct:
+    get:
+      description: 日常header里放一诸如验证类的东西，统一公示出来，仅是说明，方便测试，不是真实API，方便使用
       parameters:
-      - description: 用户名, 原密码, 新密码
-        in: body
-        name: data
+      - default: "11"
+        description: 来源
+        in: header
+        name: X-Source-Type
         required: true
-        schema:
-          $ref: '#/definitions/request.ChangePasswordStruct'
+        type: string
+      - default: "6"
+        description: 项目ID
+        enum:
+        - "1"
+        - "2"
+        - "3"
+        - "4"
+        in: header
+        name: X-Project-Id
+        required: true
+        type: string
+      - default: imzgoframe
+        description: 访问KEY
+        in: header
+        name: X-Access
+        required: true
+        type: string
+      - default: "1648277052"
+        description: 客户端请求时间unix
+        in: header
+        name: X-Client-Req-Time
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/request.TestHeader'
+      summary: header头结构体
+      tags:
+      - Tools
+  /tools/niuke/question/dir/list:
+    get:
+      description: 某人题库资料目录结构
+      parameters:
+      - default: "11"
+        description: 来源
+        in: header
+        name: X-Source-Type
+        required: true
+        type: string
+      - default: "6"
+        description: 项目ID
+        in: header
+        name: X-Project-Id
+        required: true
+        type: string
+      - default: imzgoframe
+        description: 访问KEY
+        in: header
+        name: X-Access
+        required: true
+        type: string
+      responses:
+        "200":
+          description: true:成功 false:否
+          schema:
+            type: bool
+      summary: 牛客网- 某人题库资料目录结构
+      tags:
+      - Tools
+  /tools/project/info/{id}:
+    get:
+      description: 用于开发工具测试
+      parameters:
+      - description: 来源
+        enum:
+        - "11"
+        - "12"
+        - "21"
+        - "22"
+        in: header
+        name: X-Source-Type
+        required: true
+        type: string
+      - default: "6"
+        description: 项目ID
+        in: header
+        name: X-Project-Id
+        required: true
+        type: string
+      - default: imzgoframe
+        description: 访问KEY
+        in: header
+        name: X-Access
+        required: true
+        type: string
+      - description: 项目ID
+        in: path
+        name: id
+        required: true
+        type: integer
       produces:
       - application/json
       responses:
         "200":
-          description: '{"success":true,"data":{},"msg":"修改成功"}'
+          description: OK
           schema:
-            type: string
-      security:
-      - ApiKeyAuth: []
-      summary: 用户修改密码
+            $ref: '#/definitions/model.Project'
+      summary: 一个项目的详细信息
       tags:
-      - User
-  /user/deleteUser:
+      - Tools
+  /tools/project/list:
+    post:
+      description: 每个项目的详细信息
+      parameters:
+      - description: 来源
+        enum:
+        - "11"
+        - "12"
+        - "21"
+        - "22"
+        in: header
+        name: X-Source-Type
+        required: true
+        type: string
+      - default: "6"
+        description: 项目ID
+        in: header
+        name: X-Project-Id
+        required: true
+        type: string
+      - default: imzgoframe
+        description: 访问KEY
+        in: header
+        name: X-Access
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Project'
+      summary: 项目列表
+      tags:
+      - Tools
+  /user/delete:
     delete:
       consumes:
       - application/json
-      description: 欧美国家要求比较严，必须得有这功能，国内现在也有但不多，主要是用来删除测试的（危险甚用）
+      description: 欧美国家要求比较严，必须得有这功能，国内现在也有但不多，目前是用来测试的，像脚本做自动化测试生成的用户，以及测试员线上测试时产生的用户数据（危险甚用）
       produces:
       - application/json
       responses:
@@ -1218,20 +1466,6 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: 删除用户
-      tags:
-      - User
-  /user/getUserInfo:
-    get:
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: '{"success":true,"data":{},"msg":"修改成功"}'
-          schema:
-            type: string
-      security:
-      - ApiKeyAuth: []
-      summary: 获取当前登陆用户的基础信息
       tags:
       - User
   /user/getUserList:
@@ -1257,6 +1491,20 @@ paths:
       summary: 分页获取用户列表
       tags:
       - User
+  /user/info:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"success":true,"data":{},"msg":"修改成功"}'
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: 获取当前登陆用户的基础信息
+      tags:
+      - User
   /user/logout:
     post:
       description: 用户退出
@@ -1272,10 +1520,34 @@ paths:
       summary: 用户退出
       tags:
       - User
-  /user/setUserInfo:
+  /user/set/email:
     put:
       consumes:
       - application/json
+      parameters:
+      - description: ' '
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/request.BindEmail'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"success":true,"data":{},"msg":"设置成功"}'
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: 设定|修改 - 邮箱
+      tags:
+      - User
+  /user/set/info:
+    post:
+      consumes:
+      - application/json
+      description: 首次设置 与 修改两个动作可以合成一个，因为没有唯一性验证
       parameters:
       - description: ID, 用户名, 昵称, 头像链接
         in: body
@@ -1292,7 +1564,52 @@ paths:
             type: string
       security:
       - ApiKeyAuth: []
-      summary: 设置用户信息
+      summary: 设置/修改 用户基础信息
+      tags:
+      - User
+  /user/set/mobile:
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: ' '
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/request.BindMobile'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"success":true,"data":{},"msg":"设置成功"}'
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: 设定|修改 - 手机号
+      tags:
+      - User
+  /user/set/password:
+    put:
+      description: 首次设置 与 修改两个动作可以合成一个，因为没有唯一性验证
+      parameters:
+      - description: 用户名, 原密码, 新密码
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/request.SetPassword'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"success":true,"data":{},"msg":"修改成功"}'
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: 设置/修改 密码
       tags:
       - User
 securityDefinitions:
@@ -1308,4 +1625,4 @@ tags:
 - description: 用户相关操作(需要登陆，头里加X-Token = jwt)
   name: User
 - description: 系统管理(需要二次认证)
-  name: sys
+  name: System

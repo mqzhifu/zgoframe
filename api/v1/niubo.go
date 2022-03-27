@@ -6,14 +6,14 @@ import (
 	httpresponse "zgoframe/http/response"
 )
 
-// @Tags Base
-// @Summary 牛博网- 某人题库资料目录结构
+// @Tags Tools
+// @Summary 牛客网- 某人题库资料目录结构
 // @Description 某人题库资料目录结构
 // @Param X-Source-Type header string true "来源" default(11)
 // @Param X-Project-Id header string true "项目ID"  default(6)
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
 // @Success 200 {bool} bool "true:成功 false:否"
-// @Router /base/niuke/question/dir/list [get]
+// @Router /tools/niuke/question/dir/list [get]
 func NiukeQuestionDirList(c *gin.Context) {
 
 	catalogList := InitCata()

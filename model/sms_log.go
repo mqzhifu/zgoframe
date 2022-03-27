@@ -10,8 +10,8 @@ type SmsLog struct {
 	ExpireTime int    `json:"expire_time" db:"define:int;comment:失效时间;defaultValue:0"` //失效时间
 	AuthCode   string `json:"auth_code" db:"define:varchar(50);comment:验证码;defaultValue:''"`
 	AuthStatus int    `json:"auth_status" db:"define:tinyint(1);comment:1未使用2已使用3已超时;defaultValue:0"`
-	SendUid    int    `json:"send_uid" db:"define:int;comment:发送者,可以UID,email地址;defaultValue:0"` //发送者ID，管理员是9999，未知8888
-	SendIp     string `json:"send_ip" db:"define:varchar(50);comment:发送者的IP;defaultValue:''"`    //发送者IP，如为空系统默认取：请求方的IP,最好给真实的，一但被刷，会使用此值
+	SendUid    int    `json:"send_uid" db:"define:int;comment:发送者UID，管理员是9999，未知8888;defaultValue:0"` //发送者UID，管理员是9999，未知8888
+	SendIp     string `json:"send_ip" db:"define:varchar(50);comment:发送者的IP;defaultValue:''"`         //发送者IP，如为空系统默认取：请求方的IP,最好给真实的，一但被刷，会使用此值
 	Status     int    `json:"status" db:"define:tinyint(1);comment:1成功2失败3发送中4等待发送;defaultValue:0"`
 
 	OutNo               string `json:"out_no" db:"define:varchar(50);comment:3方ID;defaultValue:''"`

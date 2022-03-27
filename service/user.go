@@ -27,7 +27,7 @@ func NewUser(gorm *gorm.DB) *User {
 }
 
 //注册，用户名/密码
-func (user *User) RegisterByUsername(R request.Register, h request.Header) (err error, userInter model.User) {
+func (user *User) RegisterByUsername(R request.Register, h request.HeaderRequest) (err error, userInter model.User) {
 	u := model.User{
 		Username:  R.Username,
 		NickName:  R.NickName,
@@ -54,7 +54,7 @@ func (user *User) RegisterByUsername(R request.Register, h request.Header) (err 
 }
 
 //最终 - 注册
-func (user *User) Register(formUser model.User, h request.Header, userRegInfo UserRegInfo) (err error, userInter model.User) {
+func (user *User) Register(formUser model.User, h request.HeaderRequest, userRegInfo UserRegInfo) (err error, userInter model.User) {
 	var userRegType int
 
 	formUser.Status = model.USER_STATUS_NOMAL
@@ -81,18 +81,18 @@ func (user *User) Register(formUser model.User, h request.Header, userRegInfo Us
 		userRegType = user.TurnRegByUsername(formUser.Username)
 		util.MyPrint("reg in USERNAME , type:", userRegType)
 		if userRegType == model.USER_REG_TYPE_MOBILE {
-			_, exist, _ := user.FindUserByMobile(formUser.Mobile)
-			if exist {
+			_, empty, _ := user.FindUserByMobile(formUser.Mobile)
+			if !empty {
 				return errors.New("mobile 已注册:" + formUser.Username), userInter
 			}
 		} else if userRegType == model.USER_REG_TYPE_EMAIL {
-			_, exist, _ := user.FindUserByEmail(formUser.Username)
-			if exist {
+			_, empty, _ := user.FindUserByEmail(formUser.Username)
+			if !empty {
 				return errors.New("email 已注册:" + formUser.Username), userInter
 			}
 		} else {
-			_, exist, _ := user.FindUserByUsername(formUser.Username)
-			if exist {
+			_, empty, _ := user.FindUserByUsername(formUser.Username)
+			if !empty {
 				return errors.New("username 已注册:" + formUser.Username), userInter
 			}
 		}
@@ -169,8 +169,8 @@ func (user *User) Register(formUser model.User, h request.Header, userRegInfo Us
 
 //手机号登陆 - 上一步需要 ： 短信验证没问题
 func (user *User) LoginSms(mobile string) (userInter model.User, err error) {
-	userInter, exist, _ := user.FindUserByMobile(mobile)
-	if exist {
+	userInter, empty, _ := user.FindUserByMobile(mobile)
+	if !empty {
 		return userInter, nil
 	}
 
@@ -204,7 +204,7 @@ func (user *User) Login(u *model.User) (err error, userInter model.User) {
 }
 
 //3方平台登陆 - 不需要密码
-func (user *User) LoginThird(rLoginThird request.RLoginThird, h request.Header) (userInfo model.User, isNewReg bool, err error) {
+func (user *User) LoginThird(rLoginThird request.RLoginThird, h request.HeaderRequest) (userInfo model.User, isNewReg bool, err error) {
 	var userThird model.UserThird
 	//var userInfo model.User
 	if errors.Is(user.Gorm.Where("third_id = ? and platform_type = ?  ", rLoginThird.ThirdId, rLoginThird.PlatformType).First(&userThird).Error, gorm.ErrRecordNotFound) {
@@ -268,34 +268,34 @@ func (user *User) FindUserById(id int) (err error, userInfo *model.User) {
 func (user *User) FindUserByUsername(username string) (userInfo model.User, empty bool, err error) {
 	err = user.Gorm.Where("username = ? ", username).First(&userInfo).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return userInfo, false, nil
+		return userInfo, true, nil
 	}
 	if err != nil {
 		return userInfo, false, err
 	}
-	return userInfo, true, nil
+	return userInfo, false, nil
 }
 
 func (user *User) FindUserByEmail(email string) (userInfo model.User, empty bool, err error) {
 	err = user.Gorm.Where("email = ? ", email).First(&userInfo).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return userInfo, false, nil
+		return userInfo, true, nil
 	}
 	if err != nil {
 		return userInfo, false, err
 	}
-	return userInfo, true, nil
+	return userInfo, false, nil
 }
 
 func (user *User) FindUserByMobile(mobile string) (userInfo model.User, empty bool, err error) {
 	err = user.Gorm.Where("mobile = ? ", mobile).First(&userInfo).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return userInfo, false, nil
+		return userInfo, true, nil
 	}
 	if err != nil {
 		return userInfo, false, err
 	}
-	return userInfo, true, nil
+	return userInfo, false, nil
 }
 
 //根据uuid查找一个用户信息
@@ -333,12 +333,53 @@ func (user *User) ChangePassword(uid int, newPassword string) (err error) {
 
 //绑定手机号
 func (user *User) BindMobile(uid int, mobile string) (err error) {
-	var userInfo model.User
-	userInfo.Id = uid
-	userInfo.Mobile = mobile
-	userInfo.Guest = model.USER_GUEST_FALSE
 
-	err = user.Gorm.Updates(&userInfo).Error
+	_, empty, err := user.FindUserByMobile(mobile)
+	if !empty {
+		return errors.New("手机号已绑定过了，请不要重复操作")
+	}
+
+	//err, _ = user.FindUserById(uid)
+	//if err != nil {
+	//	return errors.New("uid err:" + err.Error())
+	//}
+	//
+	//if userInfo.Mobile != "" {
+	//	return errors.New("该用户已经绑定过手机号，请不要重复操作:" + mobile)
+	//}
+
+	var userInfoEdit model.User
+	userInfoEdit.Id = uid
+	userInfoEdit.Mobile = mobile
+	userInfoEdit.Guest = model.USER_GUEST_FALSE
+
+	err = user.Gorm.Updates(&userInfoEdit).Error
+	return err
+}
+
+//绑定邮箱
+func (user *User) BindEmail(uid int, email string) (err error) {
+
+	_, empty, err := user.FindUserByEmail(email)
+	if !empty {
+		return errors.New("邮箱已绑定过了，请不要重复操作")
+	}
+
+	//err, _ = user.FindUserById(uid)
+	//if err != nil {
+	//	return errors.New("uid err:" + err.Error())
+	//}
+	//
+	//if userInfo.Email != "" {
+	//	return errors.New("该用户已经绑定过邮箱，请不要重复操作:" + email)
+	//}
+
+	var userInfoEdit model.User
+	userInfoEdit.Id = uid
+	userInfoEdit.Email = email
+	userInfoEdit.Guest = model.USER_GUEST_FALSE
+
+	err = user.Gorm.Updates(&userInfoEdit).Error
 	return err
 }
 

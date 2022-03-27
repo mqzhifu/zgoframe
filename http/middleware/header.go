@@ -23,6 +23,7 @@ func Header() gin.HandlerFunc {
 
 		header.AutoIp = c.Request.RemoteAddr
 
+		header.ServerReceiveTime = util.GetNowTimeSecondToInt()
 		if header.RequestId == "" {
 			header.RequestId = CreateOneRequestId()
 		}
@@ -59,8 +60,8 @@ func CreateOneTraceId() string {
 	2并不是真正的struct 转 map ， 还需要struct 元素中定义tag
 	3map里的key 是http header 模式，也就是X-XXX 开头这种
 */
-func HttpHeaderSureMapCovertSureStruct(inMap map[string][]string) request.Header {
-	outStruct := request.Header{}
+func HttpHeaderSureMapCovertSureStruct(inMap map[string][]string) request.HeaderRequest {
+	outStruct := request.HeaderRequest{}
 	ValueOfOutStruct := reflect.ValueOf(&outStruct)
 	//先读取 输出的 struct 反射信息
 	typeOfOutStructArgs := reflect.TypeOf(outStruct)

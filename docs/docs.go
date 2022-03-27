@@ -73,15 +73,16 @@ const docTemplate_swagger = `{
                 }
             }
         },
-        "/base/check/mobile": {
+        "/base/check/email": {
             "post": {
+                "description": "注册/找加密码 使用",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "Base"
                 ],
-                "summary": "测试邮件：是否已存在，注册/绑定时会使用",
+                "summary": "检测邮件：是否已存在",
                 "parameters": [
                     {
                         "type": "string",
@@ -127,64 +128,16 @@ const docTemplate_swagger = `{
                 }
             }
         },
-        "/base/const/list": {
-            "get": {
-                "description": "所有常量列表，方便调用与调试",
+        "/base/check/mobile": {
+            "post": {
+                "description": "注册/找加密码/登陆 使用",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "Base"
                 ],
-                "summary": "所有常量列表",
-                "parameters": [
-                    {
-                        "enum": [
-                            "11",
-                            "12",
-                            "21",
-                            "22"
-                        ],
-                        "type": "string",
-                        "description": "来源",
-                        "name": "X-Source-Type",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "default": "6",
-                        "description": "项目ID",
-                        "name": "X-Project-Id",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "default": "imzgoframe",
-                        "description": "访问KEY",
-                        "name": "X-Access",
-                        "in": "header",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/httpresponse.Response"
-                        }
-                    }
-                }
-            }
-        },
-        "/base/header/struct": {
-            "get": {
-                "description": "日常header里放一诸如验证类的东西，统一公示出来，仅是说明，方便测试，不是真实API，方便使用",
-                "tags": [
-                    "Base"
-                ],
-                "summary": "header头结构体",
+                "summary": "检测手机号：是否已存在",
                 "parameters": [
                     {
                         "type": "string",
@@ -195,12 +148,15 @@ const docTemplate_swagger = `{
                         "required": true
                     },
                     {
-                        "enum": [
-                            "1",
-                            "2",
-                            "3",
-                            "4"
-                        ],
+                        "description": "用户信息",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.CheckMobileExist"
+                        }
+                    },
+                    {
                         "type": "string",
                         "default": "6",
                         "description": "项目ID",
@@ -219,9 +175,9 @@ const docTemplate_swagger = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "true:存在 false:不存在",
                         "schema": {
-                            "$ref": "#/definitions/request.Header"
+                            "type": "bool"
                         }
                     }
                 }
@@ -236,7 +192,7 @@ const docTemplate_swagger = `{
                 "tags": [
                     "Base"
                 ],
-                "summary": "用户登陆",
+                "summary": "普通登陆",
                 "parameters": [
                     {
                         "enum": [
@@ -333,7 +289,7 @@ const docTemplate_swagger = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/request.RLoginThird"
+                            "$ref": "#/definitions/request.LoginSMS"
                         }
                     }
                 ],
@@ -407,49 +363,6 @@ const docTemplate_swagger = `{
                 }
             }
         },
-        "/base/niuke/question/dir/list": {
-            "get": {
-                "description": "某人题库资料目录结构",
-                "tags": [
-                    "Base"
-                ],
-                "summary": "牛博网- 某人题库资料目录结构",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "default": "11",
-                        "description": "来源",
-                        "name": "X-Source-Type",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "default": "6",
-                        "description": "项目ID",
-                        "name": "X-Project-Id",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "default": "imzgoframe",
-                        "description": "访问KEY",
-                        "name": "X-Access",
-                        "in": "header",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "true:成功 false:否",
-                        "schema": {
-                            "type": "bool"
-                        }
-                    }
-                }
-            }
-        },
         "/base/parser/token": {
             "post": {
                 "description": "应用接到token后，要到后端再统计认证一下，确保准确",
@@ -505,62 +418,6 @@ const docTemplate_swagger = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/request.CustomClaims"
-                        }
-                    }
-                }
-            }
-        },
-        "/base/project/list": {
-            "post": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "每个项目的详细信息",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Base"
-                ],
-                "summary": "项目列表",
-                "parameters": [
-                    {
-                        "enum": [
-                            "11",
-                            "12",
-                            "21",
-                            "22"
-                        ],
-                        "type": "string",
-                        "description": "来源",
-                        "name": "X-Source-Type",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "default": "6",
-                        "description": "项目ID",
-                        "name": "X-Project-Id",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "default": "imzgoframe",
-                        "description": "访问KEY",
-                        "name": "X-Access",
-                        "in": "header",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/model.Project"
                         }
                     }
                 }
@@ -865,21 +722,156 @@ const docTemplate_swagger = `{
                 }
             }
         },
-        "/sys/config": {
+        "/gateway/config": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "主要是长连接的配置(端口|协议)",
+                "tags": [
+                    "Gateway"
+                ],
+                "summary": "获取网关配置信息",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/util.NetWayOption"
+                        }
+                    }
+                }
+            }
+        },
+        "/gateway/proto": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "proto接口及GRPC微服务函数的信息等",
+                "tags": [
+                    "Gateway"
+                ],
+                "summary": "获取所有服务的.proto 配置文件",
+                "responses": {}
+            }
+        },
+        "/gateway/service/ws": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "通过网关调取后端服务(ws)",
+                "tags": [
+                    "Gateway"
+                ],
+                "summary": "网关 - 长连接 websocket",
+                "responses": {}
+            }
+        },
+        "/gateway/service/{service_name}/{func_name}": {
             "post": {
                 "security": [
                     {
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Config",
+                "description": "通过网关调取后端服务(grpc)",
+                "tags": [
+                    "Gateway"
+                ],
+                "summary": "网关 - 短连接",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "服务名",
+                        "name": "service_name",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "函数名",
+                        "name": "func_name",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "任意，请参考.proto",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.Empty"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "true:成功 false:否",
+                        "schema": {
+                            "type": "bool"
+                        }
+                    }
+                }
+            }
+        },
+        "/sys/config": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "服务进程 - 配置信息",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "System"
                 ],
-                "summary": "Config",
+                "summary": "服务进程 - 配置信息",
+                "parameters": [
+                    {
+                        "description": "用户名/密码",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.SystemConfig"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"success\":true,\"data\":{},\"msg\":\"登陆成功\"}",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/sys/metrics": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "标量- 实时统计信息",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "System"
+                ],
+                "summary": "标量- 实时统计信息 ,未实现",
                 "parameters": [
                     {
                         "description": "用户名/密码",
@@ -908,14 +900,14 @@ const docTemplate_swagger = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "关闭该服务进程",
+                "description": "关闭 - 该服务进程",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "System"
                 ],
-                "summary": "Quit",
+                "summary": "关闭 - 该服务进程",
                 "parameters": [
                     {
                         "description": "用户名/密码",
@@ -937,87 +929,274 @@ const docTemplate_swagger = `{
                 }
             }
         },
-        "/user/bindMobile": {
-            "put": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "consumes": [
-                    "application/json"
-                ],
+        "/tools/const/list": {
+            "get": {
+                "description": "所有常量列表，方便调用与调试",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "User"
+                    "Tools"
                 ],
-                "summary": "绑定手机号",
+                "summary": "所有常量列表",
                 "parameters": [
                     {
-                        "description": " ",
-                        "name": "data",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/request.BindMobile"
-                        }
+                        "enum": [
+                            "11",
+                            "12",
+                            "21",
+                            "22"
+                        ],
+                        "type": "string",
+                        "description": "来源",
+                        "name": "X-Source-Type",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "6",
+                        "description": "项目ID",
+                        "name": "X-Project-Id",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "imzgoframe",
+                        "description": "访问KEY",
+                        "name": "X-Access",
+                        "in": "header",
+                        "required": true
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "{\"success\":true,\"data\":{},\"msg\":\"设置成功\"}",
+                        "description": "OK",
                         "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/httpresponse.Response"
                         }
                     }
                 }
             }
         },
-        "/user/changePassword": {
-            "put": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "produces": [
-                    "application/json"
-                ],
+        "/tools/header/struct": {
+            "get": {
+                "description": "日常header里放一诸如验证类的东西，统一公示出来，仅是说明，方便测试，不是真实API，方便使用",
                 "tags": [
-                    "User"
+                    "Tools"
                 ],
-                "summary": "用户修改密码",
+                "summary": "header头结构体",
                 "parameters": [
                     {
-                        "description": "用户名, 原密码, 新密码",
-                        "name": "data",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/request.ChangePasswordStruct"
-                        }
+                        "type": "string",
+                        "default": "11",
+                        "description": "来源",
+                        "name": "X-Source-Type",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "enum": [
+                            "1",
+                            "2",
+                            "3",
+                            "4"
+                        ],
+                        "type": "string",
+                        "default": "6",
+                        "description": "项目ID",
+                        "name": "X-Project-Id",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "imzgoframe",
+                        "description": "访问KEY",
+                        "name": "X-Access",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "1648277052",
+                        "description": "客户端请求时间unix",
+                        "name": "X-Client-Req-Time",
+                        "in": "header",
+                        "required": true
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "{\"success\":true,\"data\":{},\"msg\":\"修改成功\"}",
+                        "description": "OK",
                         "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/request.TestHeader"
                         }
                     }
                 }
             }
         },
-        "/user/deleteUser": {
+        "/tools/niuke/question/dir/list": {
+            "get": {
+                "description": "某人题库资料目录结构",
+                "tags": [
+                    "Tools"
+                ],
+                "summary": "牛客网- 某人题库资料目录结构",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "default": "11",
+                        "description": "来源",
+                        "name": "X-Source-Type",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "6",
+                        "description": "项目ID",
+                        "name": "X-Project-Id",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "imzgoframe",
+                        "description": "访问KEY",
+                        "name": "X-Access",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "true:成功 false:否",
+                        "schema": {
+                            "type": "bool"
+                        }
+                    }
+                }
+            }
+        },
+        "/tools/project/info/{id}": {
+            "get": {
+                "description": "用于开发工具测试",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Tools"
+                ],
+                "summary": "一个项目的详细信息",
+                "parameters": [
+                    {
+                        "enum": [
+                            "11",
+                            "12",
+                            "21",
+                            "22"
+                        ],
+                        "type": "string",
+                        "description": "来源",
+                        "name": "X-Source-Type",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "6",
+                        "description": "项目ID",
+                        "name": "X-Project-Id",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "imzgoframe",
+                        "description": "访问KEY",
+                        "name": "X-Access",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "项目ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.Project"
+                        }
+                    }
+                }
+            }
+        },
+        "/tools/project/list": {
+            "post": {
+                "description": "每个项目的详细信息",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Tools"
+                ],
+                "summary": "项目列表",
+                "parameters": [
+                    {
+                        "enum": [
+                            "11",
+                            "12",
+                            "21",
+                            "22"
+                        ],
+                        "type": "string",
+                        "description": "来源",
+                        "name": "X-Source-Type",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "6",
+                        "description": "项目ID",
+                        "name": "X-Project-Id",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "imzgoframe",
+                        "description": "访问KEY",
+                        "name": "X-Access",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.Project"
+                        }
+                    }
+                }
+            }
+        },
+        "/user/delete": {
             "delete": {
                 "security": [
                     {
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "欧美国家要求比较严，必须得有这功能，国内现在也有但不多，主要是用来删除测试的（危险甚用）",
+                "description": "欧美国家要求比较严，必须得有这功能，国内现在也有但不多，目前是用来测试的，像脚本做自动化测试生成的用户，以及测试员线上测试时产生的用户数据（危险甚用）",
                 "consumes": [
                     "application/json"
                 ],
@@ -1031,30 +1210,6 @@ const docTemplate_swagger = `{
                 "responses": {
                     "200": {
                         "description": "{\"success\":true,\"data\":{},\"msg\":\"删除成功\"}",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/user/getUserInfo": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "User"
-                ],
-                "summary": "获取当前登陆用户的基础信息",
-                "responses": {
-                    "200": {
-                        "description": "{\"success\":true,\"data\":{},\"msg\":\"修改成功\"}",
                         "schema": {
                             "type": "string"
                         }
@@ -1100,6 +1255,30 @@ const docTemplate_swagger = `{
                 }
             }
         },
+        "/user/info": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User"
+                ],
+                "summary": "获取当前登陆用户的基础信息",
+                "responses": {
+                    "200": {
+                        "description": "{\"success\":true,\"data\":{},\"msg\":\"修改成功\"}",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/user/logout": {
             "post": {
                 "security": [
@@ -1125,7 +1304,7 @@ const docTemplate_swagger = `{
                 }
             }
         },
-        "/user/setUserInfo": {
+        "/user/set/email": {
             "put": {
                 "security": [
                     {
@@ -1141,7 +1320,46 @@ const docTemplate_swagger = `{
                 "tags": [
                     "User"
                 ],
-                "summary": "设置用户信息",
+                "summary": "设定|修改 - 邮箱",
+                "parameters": [
+                    {
+                        "description": " ",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.BindEmail"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"success\":true,\"data\":{},\"msg\":\"设置成功\"}",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/user/set/info": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "首次设置 与 修改两个动作可以合成一个，因为没有唯一性验证",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User"
+                ],
+                "summary": "设置/修改 用户基础信息",
                 "parameters": [
                     {
                         "description": "ID, 用户名, 昵称, 头像链接",
@@ -1156,6 +1374,80 @@ const docTemplate_swagger = `{
                 "responses": {
                     "200": {
                         "description": "{\"success\":true,\"data\":{},\"msg\":\"设置成功\"}",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/user/set/mobile": {
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User"
+                ],
+                "summary": "设定|修改 - 手机号",
+                "parameters": [
+                    {
+                        "description": " ",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.BindMobile"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"success\":true,\"data\":{},\"msg\":\"设置成功\"}",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/user/set/password": {
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "首次设置 与 修改两个动作可以合成一个，因为没有唯一性验证",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User"
+                ],
+                "summary": "设置/修改 密码",
+                "parameters": [
+                    {
+                        "description": "用户名, 原密码, 新密码",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.SetPassword"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"success\":true,\"data\":{},\"msg\":\"修改成功\"}",
                         "schema": {
                             "type": "string"
                         }
@@ -1185,12 +1477,12 @@ const docTemplate_swagger = `{
                     "description": "token失效时间",
                     "type": "integer"
                 },
-                "is_new": {
-                    "description": "重复登陆也可以成功，但返回的是旧的TOKEN，非新生成token",
-                    "type": "boolean"
-                },
                 "is_new_reg": {
                     "description": "3方登陆时，为了简化操作，如果没注册将自动注册",
+                    "type": "boolean"
+                },
+                "is_new_token": {
+                    "description": "重复登陆也可以成功，但返回的是旧的TOKEN，非新生成token",
                     "type": "boolean"
                 },
                 "token": {
@@ -1361,6 +1653,27 @@ const docTemplate_swagger = `{
                 }
             }
         },
+        "request.BindEmail": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "description": "邮箱号",
+                    "type": "string"
+                },
+                "project_id": {
+                    "description": "项目Id",
+                    "type": "integer"
+                },
+                "rule_id": {
+                    "description": "短信类型，登陆/注册",
+                    "type": "integer"
+                },
+                "sms_auth_code": {
+                    "description": "短信验证码",
+                    "type": "string"
+                }
+            }
+        },
         "request.BindMobile": {
             "type": "object",
             "properties": {
@@ -1372,30 +1685,12 @@ const docTemplate_swagger = `{
                     "description": "项目Id",
                     "type": "integer"
                 },
-                "sms_auth_code": {
-                    "description": "短信验证码",
-                    "type": "string"
-                },
-                "sms_rule_id": {
+                "rule_id": {
                     "description": "短信类型，登陆/注册",
                     "type": "integer"
-                }
-            }
-        },
-        "request.ChangePasswordStruct": {
-            "description": "修改密码",
-            "type": "object",
-            "properties": {
-                "newPassword": {
-                    "description": "新密码",
-                    "type": "string"
                 },
-                "new_password_confirm": {
-                    "description": "新密码确认",
-                    "type": "string"
-                },
-                "password": {
-                    "description": "旧密码",
+                "sms_auth_code": {
+                    "description": "短信验证码",
                     "type": "string"
                 }
             }
@@ -1403,12 +1698,12 @@ const docTemplate_swagger = `{
         "request.CheckEmailExist": {
             "type": "object",
             "properties": {
-                "mobile": {
+                "email": {
                     "description": "邮箱",
                     "type": "string"
                 },
                 "purpose": {
-                    "description": "用途,1注册2找回密码3修改密码4修改邮箱5",
+                    "description": "用途,1注册2找回密码3修改密码4登陆",
                     "type": "integer"
                 }
             }
@@ -1421,7 +1716,7 @@ const docTemplate_swagger = `{
                     "type": "string"
                 },
                 "purpose": {
-                    "description": "用途,1注册2找回密码3修改密码4修改邮箱5",
+                    "description": "用途,1注册2找回密码3修改密码4登陆",
                     "type": "integer"
                 }
             }
@@ -1452,43 +1747,8 @@ const docTemplate_swagger = `{
                 }
             }
         },
-        "request.Header": {
-            "description": "http客户端请求头",
-            "type": "object",
-            "properties": {
-                "access": {
-                    "description": "使用网关时，不允许随意访问，得有key",
-                    "type": "string"
-                },
-                "auto_ip": {
-                    "description": "获取不到请求方IP时，系统自动获取生成",
-                    "type": "string"
-                },
-                "base_info": {
-                    "description": "收集客户端的一些基础信息，json",
-                    "$ref": "#/definitions/request.HeaderBaseInfo"
-                },
-                "project_id": {
-                    "description": "项目ID，所有的服务/项目/前端/App，均要先向管理员申请一个账号，才能用于日常请求",
-                    "type": "integer"
-                },
-                "request_id": {
-                    "description": "每次请求的唯一标识，响应时也会返回，如果请求方没有，后端会默认生成一个",
-                    "type": "string"
-                },
-                "source_type": {
-                    "description": "请求方来源类型(pc h5 ios android vr spider unknow)，不同类型，不同JWT，原因：1手机端登陆后，PC端再登陆，互踢，无法共存。2越权，有些接口不允许互相访问",
-                    "type": "integer"
-                },
-                "token": {
-                    "description": "JWT用户登陆令牌(HS256 对称算法，共享一个密钥)",
-                    "type": "string"
-                },
-                "trace_id": {
-                    "description": "追踪ID，主要用于链路追踪，如果请求方没有，后端会默认生成一个，跟request略像，但给后端使用",
-                    "type": "string"
-                }
-            }
+        "request.Empty": {
+            "type": "object"
         },
         "request.HeaderBaseInfo": {
             "description": "http客户端请求头-基础信息",
@@ -1540,6 +1800,89 @@ const docTemplate_swagger = `{
                 }
             }
         },
+        "request.HeaderRequest": {
+            "description": "http客户端请求头",
+            "type": "object",
+            "properties": {
+                "access": {
+                    "description": "使用网关时，不允许随意访问，得有key",
+                    "type": "string"
+                },
+                "auto_ip": {
+                    "description": "获取不到请求方IP时，系统自动获取生成,供业务层使用",
+                    "type": "string"
+                },
+                "base_info": {
+                    "description": "收集客户端的一些基础信息，json",
+                    "$ref": "#/definitions/request.HeaderBaseInfo"
+                },
+                "client_req_time": {
+                    "description": "客户端请求时间  unixtime",
+                    "type": "integer"
+                },
+                "project_id": {
+                    "description": "项目ID，所有的服务/项目/前端/App，均要先向管理员申请一个账号，才能用于日常请求",
+                    "type": "integer"
+                },
+                "request_id": {
+                    "description": "每次请求的唯一标识，响应时也会返回，如果请求方没有，后端会默认生成一个",
+                    "type": "string"
+                },
+                "server_receive_time": {
+                    "description": "服务端接收到请求的时间 unixtime",
+                    "type": "integer"
+                },
+                "source_type": {
+                    "description": "请求方来源类型(pc h5 ios android vr spider unknow)，不同类型，不同JWT，原因：1手机端登陆后，PC端再登陆，互踢，无法共存。2越权，有些接口不允许互相访问",
+                    "type": "integer"
+                },
+                "token": {
+                    "description": "JWT用户登陆令牌(HS256 对称算法，共享一个密钥)",
+                    "type": "string"
+                },
+                "trace_id": {
+                    "description": "追踪ID，主要用于链路追踪，如果请求方没有，后端会默认生成一个，跟request略像，但给后端使用",
+                    "type": "string"
+                }
+            }
+        },
+        "request.HeaderResponse": {
+            "type": "object",
+            "properties": {
+                "auto_ip": {
+                    "description": "获取不到请求方IP时，系统自动获取生成",
+                    "type": "string"
+                },
+                "client_req_time": {
+                    "description": "客户端请求时间  unixtime",
+                    "type": "integer"
+                },
+                "project_id": {
+                    "description": "项目ID，所有的服务/项目/前端/App，均要先向管理员申请一个账号，才能用于日常请求",
+                    "type": "integer"
+                },
+                "request_id": {
+                    "description": "每次请求的唯一标识，响应时也会返回，如果请求方没有，后端会默认生成一个",
+                    "type": "string"
+                },
+                "server_receive_time": {
+                    "description": "服务端接收到请求的时间 unixtime",
+                    "type": "integer"
+                },
+                "server_response_time": {
+                    "description": "服务端最后响应的时间 unixtime",
+                    "type": "integer"
+                },
+                "source_type": {
+                    "description": "请求方来源类型(pc h5 ios android vr spider unknow)，不同类型，不同JWT，原因：1手机端登陆后，PC端再登陆，互踢，无法共存。2越权，有些接口不允许互相访问",
+                    "type": "integer"
+                },
+                "trace_id": {
+                    "description": "追踪ID，主要用于链路追踪，如果请求方没有，后端会默认生成一个，跟request略像，但给后端使用",
+                    "type": "string"
+                }
+            }
+        },
         "request.Login": {
             "description": "正常登陆，需要用户名密码",
             "type": "object",
@@ -1559,6 +1902,31 @@ const docTemplate_swagger = `{
                 "username": {
                     "description": "用户名：普通字符串、手机号、邮箱",
                     "type": "string"
+                }
+            }
+        },
+        "request.LoginSMS": {
+            "description": "短信登陆",
+            "type": "object",
+            "properties": {
+                "captcha": {
+                    "type": "string"
+                },
+                "captchaId": {
+                    "type": "string"
+                },
+                "code": {
+                    "type": "string"
+                },
+                "mobile": {
+                    "type": "string"
+                },
+                "sms_auth_code": {
+                    "type": "string"
+                },
+                "sms_rule_id": {
+                    "description": "短信类型，登陆/注册",
+                    "type": "integer"
                 }
             }
         },
@@ -1809,6 +2177,14 @@ const docTemplate_swagger = `{
             "description": "发送验证码",
             "type": "object",
             "properties": {
+                "captcha": {
+                    "description": "验证码",
+                    "type": "string"
+                },
+                "captchaId": {
+                    "description": "获取验证码时拿到的Id",
+                    "type": "string"
+                },
                 "receiver": {
                     "description": "接收者，email格式",
                     "type": "string"
@@ -1831,6 +2207,24 @@ const docTemplate_swagger = `{
                 "send_uid": {
                     "description": "发送者ID，管理员是9999，未知8888",
                     "type": "integer"
+                }
+            }
+        },
+        "request.SetPassword": {
+            "description": "设置/修改密码",
+            "type": "object",
+            "properties": {
+                "newPassword": {
+                    "description": "新密码",
+                    "type": "string"
+                },
+                "new_password_confirm": {
+                    "description": "新密码确认",
+                    "type": "string"
+                },
+                "password": {
+                    "description": "旧密码",
+                    "type": "string"
                 }
             }
         },
@@ -1869,6 +2263,78 @@ const docTemplate_swagger = `{
                     "type": "string"
                 }
             }
+        },
+        "request.TestHeader": {
+            "type": "object",
+            "properties": {
+                "header_request": {
+                    "$ref": "#/definitions/request.HeaderRequest"
+                },
+                "header_response": {
+                    "$ref": "#/definitions/request.HeaderResponse"
+                }
+            }
+        },
+        "util.NetWayOption": {
+            "type": "object",
+            "properties": {
+                "connTimeout": {
+                    "description": "一个FD超时时间",
+                    "type": "integer"
+                },
+                "default_content_type": {
+                    "description": "默认响应内容格式 ：json protobuf",
+                    "type": "integer"
+                },
+                "default_protocol_type": {
+                    "description": "默认响应协议：ws tcp udp",
+                    "type": "integer"
+                },
+                "io_timeout": {
+                    "description": "read write sock fd 超时时间",
+                    "type": "integer"
+                },
+                "listenIp": {
+                    "description": "程序启动时监听的IP",
+                    "type": "string"
+                },
+                "loginAuthType": {
+                    "description": "jwt登陆验证",
+                    "type": "string"
+                },
+                "login_auth_secret_key": {
+                    "description": "jwt登陆验证-密钥",
+                    "type": "string"
+                },
+                "maxClientConnMum": {
+                    "description": "客户端最大连接数",
+                    "type": "integer"
+                },
+                "msg_content_max": {
+                    "description": "一条消息内容最大值,byte,ps:最大10KB",
+                    "type": "integer"
+                },
+                "outIp": {
+                    "description": "对外访问的IP",
+                    "type": "string"
+                },
+                "tcpPort": {
+                    "description": "tcp监听端口号",
+                    "type": "string"
+                },
+                "udpPort": {
+                    "description": "udp端口号",
+                    "type": "string"
+                },
+                "wsPort": {
+                    "description": "ws监听端口号",
+                    "type": "string"
+                },
+                "wsUri": {
+                    "description": "ws接HOST的后面的URL地址",
+                    "type": "string"
+                }
+            }
         }
     },
     "securityDefinitions": {
@@ -1889,7 +2355,7 @@ const docTemplate_swagger = `{
         },
         {
             "description": "系统管理(需要二次认证)",
-            "name": "sys"
+            "name": "System"
         }
     ]
 }`

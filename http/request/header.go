@@ -37,12 +37,12 @@ func CheckPlatformExist(env int) bool {
 	return false
 }
 
-func GetMyHeader(c *gin.Context) Header {
+func GetMyHeader(c *gin.Context) HeaderRequest {
 	myHeaderInterface, exists := c.Get("myheader")
 	if !exists {
 		//global.V.Zap.Error("myheader empty")
 	}
-	myHeader := myHeaderInterface.(Header)
+	myHeader := myHeaderInterface.(HeaderRequest)
 	return myHeader
 }
 

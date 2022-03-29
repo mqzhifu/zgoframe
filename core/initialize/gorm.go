@@ -9,21 +9,21 @@ import (
 	"zgoframe/util"
 )
 
-func GetNewGorm() (*gorm.DB,error) {
-	global.V.Zap.Info("GetNewGorm , DBType:"+ global.C.System.DbType)
+func GetNewGorm(printPrefix string) (*gorm.DB, error) {
+	//global.V.Zap.Info(printPrefix + "GetNewGorm , DBType:" + global.C.System.DbType)
 	switch global.C.System.DbType {
 	//目前仅支持MYSQL ，后期考虑是否加入其它DB
 	case "mysql":
-		return GormMysql()
+		return GormMysql(printPrefix)
 	default:
-		return GormMysql()
+		return GormMysql(printPrefix)
 	}
 }
 
-func GormMysql() (*gorm.DB,error) {
+func GormMysql(printPrefix string) (*gorm.DB, error) {
 	m := global.C.Mysql
 	dns := m.Username + ":" + m.Password + "@tcp(" + m.Ip + ":" + m.Port + ")/" + m.DbName + "?" + m.Config
-	global.V.Zap.Info(" GormMysql dns:"+ dns )
+	global.V.Zap.Info(printPrefix + " gorm mysql ," + m.Username + ":" + "****" + "@tcp(" + m.Ip + ":" + m.Port + ")/" + m.DbName + "?" + m.Config)
 	mysqlConfig := mysql.Config{
 		DSN:                       dns,   // DSN data source name
 		DefaultStringSize:         191,   // string 类型字段的默认长度
@@ -35,25 +35,25 @@ func GormMysql() (*gorm.DB,error) {
 	db, err := gorm.Open(mysql.New(mysqlConfig), gormConfig(m.LogMode))
 	if err != nil {
 		global.V.Zap.Error("MySQL启动异常:" + err.Error())
-		return nil,err
+		return nil, err
 	}
 	//db = db.Debug()
 	sqlDB, _ := db.DB()
 	sqlDB.SetMaxIdleConns(m.MaxIdleConns)
 	sqlDB.SetMaxOpenConns(m.MaxOpenConns)
 
-	return db,nil
+	return db, nil
 }
 
-func GormShutdown(){
-	db , _ := global.V.Gorm.DB()
+func GormShutdown() {
+	db, _ := global.V.Gorm.DB()
 	db.Close()
 }
 
 func gormConfig(mod bool) *gorm.Config {
 	//DisableForeignKeyConstraintWhenMigrating:当执行DB迁移时，禁用 外键约束
 	//NamingStrategy：表名的一些配置，禁用 表名黑夜为复杂的情况，也就是使用单数表名，这里也可以配置统一表名前缀
-	var config = &gorm.Config{DisableForeignKeyConstraintWhenMigrating: true,NamingStrategy: schema.NamingStrategy{SingularTable: true}}
+	var config = &gorm.Config{DisableForeignKeyConstraintWhenMigrating: true, NamingStrategy: schema.NamingStrategy{SingularTable: true}}
 
 	config.Logger = util.Default.LogMode(logger.Info)
 	//switch global.G.Config.Mysql.LogZap {

@@ -1,5 +1,5 @@
 syntax = "proto3";
-import "proto/common.proto";
+import "common.proto";
 
 package pb;
 option go_package ="./;pb";

@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-import "proto/common.proto";
+import "common.proto";
 
 package pb;
 option go_package ="./;pb";
@@ -8,25 +8,27 @@ option go_package ="./;pb";
 
 service Gateway {
 
-    rpc ClientLogin             (RequestLogin)              returns (ResponseLoginRes) {}//登陆
-    rpc ClientPing              (RequestClientPing)         returns (ResponseServerPong) {}//客户端PING服务端
-    rpc ClientPong              (RequestClientPong)         returns (ResponseServerPong) {}//C端响应S端PIN
-    rpc ClientHeartbeat         (RequestClientHeartbeat)    returns (Empty) {}//心跳
+    rpc CS_Login             (Login)        returns (LoginRes) {}//登陆
+    rpc CS_Ping              (Ping)         returns (Pong) {}//客户端PING服务端
+    rpc CS_Pong              (Pong)         returns (Pong) {}//C端响应S端PIN
+    rpc CS_Heartbeat         (Heartbeat)    returns (Empty) {}//心跳
 
-    rpc ServerPing              (ResponseServerPing)        returns (RequestClientPong) {}//S端测试RTT
-    rpc ServerPong              (ResponseServerPong)        returns (Empty) {}//S端测试RTT
-    rpc ServerHeartbeat         (RequestClientHeartbeat)    returns (Empty) {}//心跳
-    rpc ServerLogin             (ResponseLoginRes)          returns (Empty) {}//登陆
+    rpc SC_Login             (LoginRes)     returns (Empty) {}//登陆
+    rpc SC_Ping              (Ping)         returns (Pong) {}//S端测试RTT
+    rpc SC_Pong              (Pong)         returns (Pong) {}//S端测试RTT
+    rpc SC_Heartbeat         (Heartbeat)    returns (Empty) {}//心跳
+    rpc SC_KickOff           (KickOff)      returns (Empty) {}//该玩家在其它地方登陆，踢掉了当前连接
 
-    rpc KickOff                 (ResponseKickOff)           returns (Empty) {}//该玩家在其它地方登陆，踢掉了当前连接
-
-    rpc ProjectPush             (RequestProjectPush)        returns (ResponseProjectPush) {}//service通知网关，给某些用户推送消息
-
+    rpc SC_ProjectPush       (ProjectPush)  returns (ProjectPush) {}//service通知网关，给某些用户推送消息
 
 }
 
 
-message RequestProjectPush{
+message Heartbeat{
+    int64 time = 1;
+}
+
+message ProjectPush{
     string  project_id  = 1;
     string  msg         = 2;
     string  target_uids = 3;
@@ -34,24 +36,19 @@ message RequestProjectPush{
     string  service_id  = 5;
 }
 
-message ResponseProjectPush{
-    int32   code        = 1;
-    string  msg         = 2;
-}
-
-message RequestLogin{
+message Login{
     string token = 1;
 }
 
-message RequestClientPong{
+message Pong{
     int64 add_time              = 1;
     int64 client_receive_time   = 2;
-    int64 server_response_time  = 3;
+    int64 server_response_time   = 3;
     int64 rtt_timeout           = 4;
     int32 rtt_times             = 5;
 }
 
-message RequestClientPing{
+message Ping{
     int64 add_time                = 1;
     int64 client_receive_time     = 2;
     int64 server_response_time    = 3;
@@ -59,35 +56,34 @@ message RequestClientPing{
     int32 rtt_times               = 5;
 }
 
-message RequestClientHeartbeat{
+
+message LoginRes{
+    int32   code        = 1;
+    string  errMsg      = 2;
+    int32   uid         = 3;
+}
+
+message KickOff{
     int64 time = 1;
 }
 
-message ResponseLoginRes{
-    int32   code          = 1;
-    string  errMsg       = 2;
-    int32   uid       = 3;
+
+message Msg{
+    int32   data_length      = 1;
+    int32   content_type     = 2;
+    int32   protocol_type    = 3;
+
+    int32   action_id        = 4;
+    int32   service_id       = 5;
+
+    string  action           = 6;
+    string  content          = 7;
+
+    string  reserved         = 8;
 }
 
-message ResponseKickOff{
-    int64 time = 1;
-}
 
-message ResponseServerPing{
-    int64 add_time                = 1;
-    int64 client_receive_time     = 2;
-    int64 server_response_time    = 3;
-    int64 rtt_timeout             = 4;
-    int32 rtt_times               = 5;
-}
 
-message ResponseServerPong{
-    int64 add_time              = 1;
-    int64 client_receive_time   = 2;
-    int64 server_response_time  = 3;
-    int64 rtt_timeout           = 4;
-    int32 rtt_times             = 5;
-}
 
 
 
@@ -132,19 +128,5 @@ message CfgActions{
     string action   = 2;
     string desc     = 3;
     string demo     = 4;
-}
-
-message Msg{
-    int32   data_length      = 1;
-    int32   content_type     = 2;
-    int32   protocol_type    = 3;
-
-    int32   action_id        = 4;
-    int32   service_id       = 5;
-
-    string  action           = 6;
-    string  content          = 7;
-
-    string  reserved         = 8;
 }
 

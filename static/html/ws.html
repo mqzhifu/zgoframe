@@ -19,9 +19,15 @@ S端配置信息
 
 </table>
 
-<script src="jquery.min.js" type="text/javascript"></script>
-<script src="../js/sync.js" type="text/javascript"></script>
-<script src="api_web_pb.js" type="text/javascript"></script>
+<script src="/static/js/jquery.min.js" type="text/javascript"></script>
+<!--每个玩家的长连接操作-->
+<script src="/static/js/sync.js?r=3" type="text/javascript"></script>
+<!--强依赖，proto 文件，因为它已经定义好对象结构了，直接复用-->
+<!--<script src="/static/js/pb/common_pb.js?r=2" type="text/javascript"></script>-->
+<script src="/static/js/pb/gateway_pb.js" type="text/javascript"></script>
+<script src="/static/js/pb/frame_sync_pb.js?r=1" type="text/javascript"></script>
+
+
 
 <!--玩家列表 开始-->
 <div id="p1" style="float: left;border:1px solid #cad9ea;"></div>
@@ -42,18 +48,29 @@ S端配置信息
 </script>
 
 <script type="text/javascript">
-    var domain = window.location.host;
-    var serverHostUri = "http://"+domain + "/logslave/getWsServer";//S端配置信息
-    var actionMapHostUri = "http://"+domain + "/www/apilist";//通讯协议的协议号
-
-    var player1 = {"id":1,"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVaWQiOjEsIkV4cGlyZSI6MTYxNzMyOTk2MywiQVRpbWUiOjE2MTcyNDM1NjMsIkFwcElkIjoxfQ.XxbHWdSZx4WvXklXHfCWjSpJAIZo2aVv4aUuD3SNsIE"};
-    // var player2 = {"id":2,"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVaWQiOjEsIkV4cGlyZSI6MTYxNzMyOTk2MywiQVRpbWUiOjE2MTcyNDM1NjMsIkFwcElkIjoxfQ.XxbHWdSZx4WvXklXHfCWjSpJAIZo2aVv4aUuD3SNsIE"};
-    var player2 = {"id":2,"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVaWQiOjIsIkV4cGlyZSI6MTYxNzc5NzUyMSwiQVRpbWUiOjE2MTc3MTExMjEsIkFwcElkIjoxfQ.vKWg0rKfanCZEWBoR4WfuHBAPj5-cH_AxY21YO_RUlk"};
-    var player3 = {"id":3,"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVaWQiOjMsIkV4cGlyZSI6MTYxODQ1ODI1NywiQVRpbWUiOjE2MTgzNzE4NTcsIkFwcElkIjoxfQ.cUQcIdUGsExH4nrzQ49QPvxvPwZJ1N30OP9Sn9KX300"};
-    var player4 = {"id":4,"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVaWQiOjQsIkV4cGlyZSI6MTYxODQ1ODI5NSwiQVRpbWUiOjE2MTgzNzE4OTUsIkFwcElkIjoxfQ.5pgyy2Pn13q9nwTbP4_CGBNxUnDHUCNDwFHOdwDt1ck"};
+    var header_X_Source_Type = "11";
+    var header_X_Project_Id = "6";
+    var header_X_Access = "imzgoframe";
 
     var contentTypeDesc = {1:"json",2:"protobuf"};
     var protocolTypeDesc = {1:"tcp",2:"websocket",3:"udp"};
+
+
+    var domain = window.location.host;
+    var serverHostUri = "http://"+domain + "/gateway/config";//S端配置信息,IP 端口 协议类型
+    var actionMapHostUri = "http://"+domain + "/gateway/action/map";//通讯协议的协议号
+    var loginUrl = "http://"+domain + "/base/login"
+
+    var playerNamePrefix = "frame_sync_"
+
+    var playerMax = 4;
+
+    var playerList ={
+        "frame_sync_1":{id:1,"username":"frame_sync_1","pawword":"123456","info":{},"token":""},
+        "frame_sync_2":{id:2,"username":"frame_sync_2","pawword":"123456","info":{},"token":""},
+        "frame_sync_3":{id:3,"username":"frame_sync_3","pawword":"123456","info":{},"token":""},
+        "frame_sync_4":{id:4,"username":"frame_sync_4","pawword":"123456","info":{},"token":""},
+    }
 
     var contentType = 1;
     var protocolType = 2;
@@ -70,78 +87,110 @@ S端配置信息
         "moveDown":"moveDown_",
     };
 
-    $.ajax({
-        type: "GET",
-        url:serverHostUri,
-        success: function(data){
-            initActionMap(data);
-        }
-    });
+    function GetPlayerNameByIndex(index){
+        return playerNamePrefix + index;
+    }
 
-    function initActionMap(data){
+    function playerLogin(){
+        for (var i=1;i<=playerMax;i++){
+            ajaxLogin(i)
+        }
+    }
+
+    function ajaxLogin(player_index){
+        var username = GetPlayerNameByIndex(player_index);
         $.ajax({
-            type: "GET",
-            url:actionMapHostUri,
-            success: function(dataActionMap){
-                data.actionMap = dataActionMap;
-                init(data);
+            headers: {
+                "X-Source-Type": header_X_Source_Type,
+                "X-Project-Id": header_X_Project_Id,
+                "X-Access": header_X_Access,
+            },
+            type: "POST",
+            data : {"username":username,"password":"123456"},
+            url:loginUrl,
+            dataType: "json",
+            success: function(data){
+                if (data.code != 200){
+                    return alert("login server back err:"+data.msg);
+                }
+
+                var username = data.data.user.username;
+                playerList[username].info = data.data.user;
+                playerList[username].token = data.data.token;
+
             }
         });
     }
 
-    function init(data){
-        // var host = "ws://"+data.outIp + ":"+ data.port;
-        // var hostUri = data.wsUri;
-        // var matchGroupPeople = data.roomPeople;
-        // var tableMax = data.mapSize;
-        // var offLineWaitTime = data.offLineWaitTime;
-        //
-        // var html = "";
-        // // html += "<tr><td>hostUri</td><td>"+hostUri+"</td></tr>";
-        // // html += "<tr><td>tableMax</td><td>"+tableMax+"</td></tr>";
-        // html += "<tr><td>hostUri</td><td>"+host + hostUri+"</td></tr>";
-        // html += "<tr><td>OffLineWaitTime</td><td>"+offLineWaitTime+"</td></tr>";
-        // html += "<tr><td>matchGroupPeople</td><td>"+matchGroupPeople+"</td></tr>";
-        // html += "<tr><td>FPS</td><td>"+ data.fps+"</td></tr>";
-        // html += "<tr><td>FPS-MS</td><td>"+ 1000 /  data.fps+"</td></tr>";
-        // html += "<tr><td>ready-timeout</td><td>"+ data.roomReadyTimeout+"</td></tr>";
-        // html += "<tr><td>ConnTimeout</td><td>"+ data.connTimeout+"</td></tr>";
 
-        // if (contentType == 1){
-        //     data.contentTypeStr = "json";
-        // }else{
-        //     data.contentTypeStr = "protobuf";
-        // }
 
-        // if (protocolType == 1){
-        //     data.protocolTypeStr = "tcp";
-        // }else if (protocolType == 2){
-        //     data.protocolTypeStr = "websocket";
-        // }else{
-        //     return alert("protocolType err");
-        // }
+    // var player1 = {"id":1,"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVaWQiOjEsIkV4cGlyZSI6MTYxNzMyOTk2MywiQVRpbWUiOjE2MTcyNDM1NjMsIkFwcElkIjoxfQ.XxbHWdSZx4WvXklXHfCWjSpJAIZo2aVv4aUuD3SNsIE"};
+    // // var player2 = {"id":2,"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVaWQiOjEsIkV4cGlyZSI6MTYxNzMyOTk2MywiQVRpbWUiOjE2MTcyNDM1NjMsIkFwcElkIjoxfQ.XxbHWdSZx4WvXklXHfCWjSpJAIZo2aVv4aUuD3SNsIE"};
+    // var player2 = {"id":2,"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVaWQiOjIsIkV4cGlyZSI6MTYxNzc5NzUyMSwiQVRpbWUiOjE2MTc3MTExMjEsIkFwcElkIjoxfQ.vKWg0rKfanCZEWBoR4WfuHBAPj5-cH_AxY21YO_RUlk"};
+    // var player3 = {"id":3,"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVaWQiOjMsIkV4cGlyZSI6MTYxODQ1ODI1NywiQVRpbWUiOjE2MTgzNzE4NTcsIkFwcElkIjoxfQ.cUQcIdUGsExH4nrzQ49QPvxvPwZJ1N30OP9Sn9KX300"};
+    // var player4 = {"id":4,"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVaWQiOjQsIkV4cGlyZSI6MTYxODQ1ODI5NSwiQVRpbWUiOjE2MTgzNzE4OTUsIkFwcElkIjoxfQ.5pgyy2Pn13q9nwTbP4_CGBNxUnDHUCNDwFHOdwDt1ck"};
+    //
+    var ServerConfig = {};
+    function initServerConfig(){
+        $.ajax({
+            type: "GET",
+            headers: {
+                "X-Token":playerList[GetPlayerNameByIndex(1)].token,
+            },
+            url:serverHostUri,
+            success: function(data){
+                // alert(data.code);
+                processHtml(data.data);
+                ServerConfig = data.data;
 
-        var showServerCfg = ["outIp","hostUri","wsPort","offLineWaitTime","matchGroupPeople","fps","roomReadyTimeout","connTimeout"]
-        var html = "";
-        for(let key  in data){
-            for(var i=0;i<showServerCfg.length;i++){
-                if (key == showServerCfg[i]){
-                    html += "<tr><td>"+key+"</td><td>"+data[key]+"</td>";
+                initActionMap()
+            }
+        });
+
+        function processHtml (data){``
+
+            var showServerCfg = ["outIp","wsUri","wsPort","offLineWaitTime","matchGroupPeople","fps","roomReadyTimeout","connTimeout"]
+            var html = "";
+            for(let key  in data){
+                for(var i=0;i<showServerCfg.length;i++){
+                    if (key == showServerCfg[i]){
+                        html += "<tr><td>"+key+"</td><td>"+data[key]+"</td>";
+                    }
                 }
             }
+
+            html += "<tr><td>contentType</td><td>"+ contentTypeDesc[contentType] +"</td></tr>";
+            html += "<tr><td>protocolType</td><td>"+ protocolTypeDesc[protocolType]+"</td></tr>";
+
+            var serverConfigTable = $("#server_config_table");
+            serverConfigTable.html(html);
         }
-
-        html += "<tr><td>contentType</td><td>"+ contentTypeDesc[contentType] +"</td></tr>";
-        html += "<tr><td>protocolType</td><td>"+ protocolTypeDesc[protocolType]+"</td></tr>";
-
-        var serverConfigTable = $("#server_config_table");
-        serverConfigTable.html(html);
-
-        initPlayer(player1,"p1",data);
-        initPlayer(player2,"p2",data);
-        initPlayer(player3,"p3",data);
-        initPlayer(player4,"p4",data);
     }
+
+
+    function initActionMap(){
+        $.ajax({
+            type: "GET",
+            headers: {
+                "X-Token":playerList[GetPlayerNameByIndex(1)].token,
+            },
+            url:actionMapHostUri,
+            success: function(dataActionMap){
+                ServerConfig.actionMap = dataActionMap.data;
+
+                for (var i=1;i<=playerMax;i++){
+                    var playerInfo = playerList[GetPlayerNameByIndex(i)];
+                    initPlayer(playerInfo,"p"+i,ServerConfig);
+                }
+            }
+        });
+    }
+
+    function init(){
+        playerLogin();
+        initServerConfig();
+    }
+
 
     function initPlayer(player,divId,data){
         //创建一个玩家相关的所有DIV的ID，主要是ID 是由前缀+PID 动态生成 的
@@ -162,7 +211,6 @@ S端配置信息
 
         wsObj.getMap("mapId_"+player.id);
     }
-
 
     function getPlayerDomIdPreObj(pid){
         var rrVV = {
@@ -249,6 +297,8 @@ S端配置信息
         }
         return c;
     }
+
+    init();
 
 </script>
 

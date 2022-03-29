@@ -28,6 +28,7 @@ type ViperOption struct {
 	ConfigFileName string
 	EtcdUrl        string
 	ENV            string
+	PrintPrefix    string
 }
 
 //读取配置文件：目前权支持文件，ETCD只写了一半
@@ -39,7 +40,7 @@ func GetNewViper(viperOption ViperOption) (myViper *viper.Viper, config global.C
 		myViper.SetConfigType(viperOption.ConfigFileType)
 		//myViper.SetConfigName(ConfigName + "." + ConfigType)
 		configFile := viperOption.ConfigFileName + "." + viperOption.ConfigFileType
-		util.MyPrint("viper read:" + configFile)
+		util.MyPrint(viperOption.PrintPrefix + "viper read:" + configFile)
 		myViper.SetConfigFile(configFile)
 		myViper.AddConfigPath(".")
 		err = myViper.ReadInConfig()
@@ -92,7 +93,7 @@ func GetNewViper(viperOption ViperOption) (myViper *viper.Viper, config global.C
 	//监听 配置文件 变化
 	//有点鸡肋，如果是单独的字符串变更还好，重新再加载一下全局变量，而如果像IP PORT 这些变了，当前已经建立的TCP连接必须得断掉，那跟重启没啥区分了...
 	if config.Viper.Watch == global.CONFIG_STATUS_OPEN {
-		util.MyPrint("viper watch startup")
+		util.MyPrint(viperOption.PrintPrefix + "viper watch startup")
 		myViper.WatchConfig()
 		handleFunc := func(in fsnotify.Event) {
 			util.MyPrint("myViper.WatchConfig onChange:", in.Name, in.String())

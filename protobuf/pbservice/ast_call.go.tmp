@@ -75,153 +75,153 @@ func (grpcManager *GrpcManager) CallServiceFuncFrameSync(funcName string,balance
 
     ctx := context.Background()
     switch funcName {
-    case "PlayerOperations":
-        request := pb.RequestPlayerOperations{}
+    case "CS_PlayerOperations":
+        request := pb.LogicFrame{}
         err := json.Unmarshal(postData,&request)
         if err != nil{
             return data,err
         }
-        data ,err = grpcClient.PlayerOperations(ctx,&request)
-    case "PlayerResumeGame":
-        request := pb.RequestPlayerResumeGame{}
+        data ,err = grpcClient.CS_PlayerOperations(ctx,&request)
+    case "CS_PlayerResumeGame":
+        request := pb.PlayerResumeGame{}
         err := json.Unmarshal(postData,&request)
         if err != nil{
             return data,err
         }
-        data ,err = grpcClient.PlayerResumeGame(ctx,&request)
-    case "PlayerReady":
-        request := pb.RequestPlayerReady{}
+        data ,err = grpcClient.CS_PlayerResumeGame(ctx,&request)
+    case "CS_PlayerReady":
+        request := pb.PlayerReady{}
         err := json.Unmarshal(postData,&request)
         if err != nil{
             return data,err
         }
-        data ,err = grpcClient.PlayerReady(ctx,&request)
-    case "PlayerOver":
-        request := pb.RequestPlayerOver{}
+        data ,err = grpcClient.CS_PlayerReady(ctx,&request)
+    case "CS_PlayerOver":
+        request := pb.PlayerOver{}
         err := json.Unmarshal(postData,&request)
         if err != nil{
             return data,err
         }
-        data ,err = grpcClient.PlayerOver(ctx,&request)
-    case "RoomHistory":
-        request := pb.RequestRoomHistory{}
+        data ,err = grpcClient.CS_PlayerOver(ctx,&request)
+    case "CS_RoomHistory":
+        request := pb.RoomHistory{}
         err := json.Unmarshal(postData,&request)
         if err != nil{
             return data,err
         }
-        data ,err = grpcClient.RoomHistory(ctx,&request)
-    case "GetRoom":
-        request := pb.RequestGetRoom{}
+        data ,err = grpcClient.CS_RoomHistory(ctx,&request)
+    case "CS_RoomBaseInfo":
+        request := pb.RoomBaseInfo{}
         err := json.Unmarshal(postData,&request)
         if err != nil{
             return data,err
         }
-        data ,err = grpcClient.GetRoom(ctx,&request)
-    case "PlayerMatchSign":
-        request := pb.RequestPlayerMatchSign{}
+        data ,err = grpcClient.CS_RoomBaseInfo(ctx,&request)
+    case "CS_PlayerMatchSign":
+        request := pb.PlayerMatchSign{}
         err := json.Unmarshal(postData,&request)
         if err != nil{
             return data,err
         }
-        data ,err = grpcClient.PlayerMatchSign(ctx,&request)
-    case "PlayerMatchSignCancel":
-        request := pb.RequestPlayerMatchSignCancel{}
+        data ,err = grpcClient.CS_PlayerMatchSign(ctx,&request)
+    case "CS_PlayerMatchSignCancel":
+        request := pb.PlayerMatchSignCancel{}
         err := json.Unmarshal(postData,&request)
         if err != nil{
             return data,err
         }
-        data ,err = grpcClient.PlayerMatchSignCancel(ctx,&request)
-    case "EnterBattle":
-        request := pb.ResponseEnterBattle{}
+        data ,err = grpcClient.CS_PlayerMatchSignCancel(ctx,&request)
+    case "SC_PlayerMatchSignFailed":
+        request := pb.PlayerMatchSignFailed{}
         err := json.Unmarshal(postData,&request)
         if err != nil{
             return data,err
         }
-        data ,err = grpcClient.EnterBattle(ctx,&request)
-    case "PushLogicFrame":
-        request := pb.ResponsePushLogicFrame{}
+        data ,err = grpcClient.SC_PlayerMatchSignFailed(ctx,&request)
+    case "SC_PlayerMatchingFailed":
+        request := pb.PlayerMatchingFailed{}
         err := json.Unmarshal(postData,&request)
         if err != nil{
             return data,err
         }
-        data ,err = grpcClient.PushLogicFrame(ctx,&request)
-    case "OtherPlayerOffline":
-        request := pb.ResponseOtherPlayerOffline{}
+        data ,err = grpcClient.SC_PlayerMatchingFailed(ctx,&request)
+    case "SC_EnterBattle":
+        request := pb.EnterBattle{}
         err := json.Unmarshal(postData,&request)
         if err != nil{
             return data,err
         }
-        data ,err = grpcClient.OtherPlayerOffline(ctx,&request)
-    case "ReadyTimeout":
-        request := pb.ResponseReadyTimeout{}
+        data ,err = grpcClient.SC_EnterBattle(ctx,&request)
+    case "SC_LogicFrame":
+        request := pb.LogicFrame{}
         err := json.Unmarshal(postData,&request)
         if err != nil{
             return data,err
         }
-        data ,err = grpcClient.ReadyTimeout(ctx,&request)
-    case "PushRoomHistory":
-        request := pb.ResponsePushRoomHistory{}
+        data ,err = grpcClient.SC_LogicFrame(ctx,&request)
+    case "SC_RoomHistory":
+        request := pb.RoomHistory{}
         err := json.Unmarshal(postData,&request)
         if err != nil{
             return data,err
         }
-        data ,err = grpcClient.PushRoomHistory(ctx,&request)
-    case "GameOver":
-        request := pb.ResponseGameOver{}
+        data ,err = grpcClient.SC_RoomHistory(ctx,&request)
+    case "SC_RoomBaseInfo":
+        request := pb.RoomBaseInfo{}
         err := json.Unmarshal(postData,&request)
         if err != nil{
             return data,err
         }
-        data ,err = grpcClient.GameOver(ctx,&request)
-    case "PushRoomInfo":
-        request := pb.ResponsePushRoomInfo{}
+        data ,err = grpcClient.SC_RoomBaseInfo(ctx,&request)
+    case "SC_OtherPlayerOffline":
+        request := pb.OtherPlayerOffline{}
         err := json.Unmarshal(postData,&request)
         if err != nil{
             return data,err
         }
-        data ,err = grpcClient.PushRoomInfo(ctx,&request)
-    case "StartBattle":
-        request := pb.ResponseStartBattle{}
+        data ,err = grpcClient.SC_OtherPlayerOffline(ctx,&request)
+    case "SC_OtherPlayerOver":
+        request := pb.PlayerOver{}
         err := json.Unmarshal(postData,&request)
         if err != nil{
             return data,err
         }
-        data ,err = grpcClient.StartBattle(ctx,&request)
-    case "OtherPlayerOver":
-        request := pb.ResponseOtherPlayerOver{}
+        data ,err = grpcClient.SC_OtherPlayerOver(ctx,&request)
+    case "SC_OtherPlayerResumeGame":
+        request := pb.PlayerResumeGame{}
         err := json.Unmarshal(postData,&request)
         if err != nil{
             return data,err
         }
-        data ,err = grpcClient.OtherPlayerOver(ctx,&request)
-    case "RestartGame":
-        request := pb.ResponseRestartGame{}
+        data ,err = grpcClient.SC_OtherPlayerResumeGame(ctx,&request)
+    case "SC_ReadyTimeout":
+        request := pb.ReadyTimeout{}
         err := json.Unmarshal(postData,&request)
         if err != nil{
             return data,err
         }
-        data ,err = grpcClient.RestartGame(ctx,&request)
-    case "PlayerMatchSignFailed":
-        request := pb.ResponsePlayerMatchSignFailed{}
+        data ,err = grpcClient.SC_ReadyTimeout(ctx,&request)
+    case "SC_StartBattle":
+        request := pb.StartBattle{}
         err := json.Unmarshal(postData,&request)
         if err != nil{
             return data,err
         }
-        data ,err = grpcClient.PlayerMatchSignFailed(ctx,&request)
-    case "PlayerMatchingFailed":
-        request := pb.ResponsePlayerMatchingFailed{}
+        data ,err = grpcClient.SC_StartBattle(ctx,&request)
+    case "SC_RestartGame":
+        request := pb.RestartGame{}
         err := json.Unmarshal(postData,&request)
         if err != nil{
             return data,err
         }
-        data ,err = grpcClient.PlayerMatchingFailed(ctx,&request)
-    case "OtherPlayerResumeGame":
-        request := pb.ResponseOtherPlayerResumeGame{}
+        data ,err = grpcClient.SC_RestartGame(ctx,&request)
+    case "SC_GameOver":
+        request := pb.GameOver{}
         err := json.Unmarshal(postData,&request)
         if err != nil{
             return data,err
         }
-        data ,err = grpcClient.OtherPlayerResumeGame(ctx,&request)
+        data ,err = grpcClient.SC_GameOver(ctx,&request)
 
     default:
             return data,errors.New("func name router failed.")
@@ -238,76 +238,76 @@ func (grpcManager *GrpcManager) CallServiceFuncGateway(funcName string,balanceFa
 
     ctx := context.Background()
     switch funcName {
-    case "ClientLogin":
-        request := pb.RequestLogin{}
+    case "CS_Login":
+        request := pb.Login{}
         err := json.Unmarshal(postData,&request)
         if err != nil{
             return data,err
         }
-        data ,err = grpcClient.ClientLogin(ctx,&request)
-    case "ClientPing":
-        request := pb.RequestClientPing{}
+        data ,err = grpcClient.CS_Login(ctx,&request)
+    case "CS_Ping":
+        request := pb.Ping{}
         err := json.Unmarshal(postData,&request)
         if err != nil{
             return data,err
         }
-        data ,err = grpcClient.ClientPing(ctx,&request)
-    case "ClientPong":
-        request := pb.RequestClientPong{}
+        data ,err = grpcClient.CS_Ping(ctx,&request)
+    case "CS_Pong":
+        request := pb.Pong{}
         err := json.Unmarshal(postData,&request)
         if err != nil{
             return data,err
         }
-        data ,err = grpcClient.ClientPong(ctx,&request)
-    case "ClientHeartbeat":
-        request := pb.RequestClientHeartbeat{}
+        data ,err = grpcClient.CS_Pong(ctx,&request)
+    case "CS_Heartbeat":
+        request := pb.Heartbeat{}
         err := json.Unmarshal(postData,&request)
         if err != nil{
             return data,err
         }
-        data ,err = grpcClient.ClientHeartbeat(ctx,&request)
-    case "ServerPing":
-        request := pb.ResponseServerPing{}
+        data ,err = grpcClient.CS_Heartbeat(ctx,&request)
+    case "SC_Login":
+        request := pb.LoginRes{}
         err := json.Unmarshal(postData,&request)
         if err != nil{
             return data,err
         }
-        data ,err = grpcClient.ServerPing(ctx,&request)
-    case "ServerPong":
-        request := pb.ResponseServerPong{}
+        data ,err = grpcClient.SC_Login(ctx,&request)
+    case "SC_Ping":
+        request := pb.Ping{}
         err := json.Unmarshal(postData,&request)
         if err != nil{
             return data,err
         }
-        data ,err = grpcClient.ServerPong(ctx,&request)
-    case "ServerHeartbeat":
-        request := pb.RequestClientHeartbeat{}
+        data ,err = grpcClient.SC_Ping(ctx,&request)
+    case "SC_Pong":
+        request := pb.Pong{}
         err := json.Unmarshal(postData,&request)
         if err != nil{
             return data,err
         }
-        data ,err = grpcClient.ServerHeartbeat(ctx,&request)
-    case "ServerLogin":
-        request := pb.ResponseLoginRes{}
+        data ,err = grpcClient.SC_Pong(ctx,&request)
+    case "SC_Heartbeat":
+        request := pb.Heartbeat{}
         err := json.Unmarshal(postData,&request)
         if err != nil{
             return data,err
         }
-        data ,err = grpcClient.ServerLogin(ctx,&request)
-    case "KickOff":
-        request := pb.ResponseKickOff{}
+        data ,err = grpcClient.SC_Heartbeat(ctx,&request)
+    case "SC_KickOff":
+        request := pb.KickOff{}
         err := json.Unmarshal(postData,&request)
         if err != nil{
             return data,err
         }
-        data ,err = grpcClient.KickOff(ctx,&request)
-    case "ProjectPush":
-        request := pb.RequestProjectPush{}
+        data ,err = grpcClient.SC_KickOff(ctx,&request)
+    case "SC_ProjectPush":
+        request := pb.ProjectPush{}
         err := json.Unmarshal(postData,&request)
         if err != nil{
             return data,err
         }
-        data ,err = grpcClient.ProjectPush(ctx,&request)
+        data ,err = grpcClient.SC_ProjectPush(ctx,&request)
 
     default:
             return data,errors.New("func name router failed.")

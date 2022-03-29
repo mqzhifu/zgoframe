@@ -7,9 +7,9 @@ import (
 	"zgoframe/util"
 )
 
-func GetNewRedis() (*util.MyRedis, error) {
+func GetNewRedis(prefix string) (*util.MyRedis, error) {
 	redisCfg := global.C.Redis
-	global.V.Zap.Info("redis conn:" + redisCfg.Ip + ":" + redisCfg.Port + " ps:" + redisCfg.Password)
+	global.V.Zap.Info(prefix + "redis conn:" + redisCfg.Ip + ":" + redisCfg.Port + " ps:****")
 
 	pool := make(map[string]util.RedisElement)
 	//pool["userInfo"] 	= util.RedisElement{KeyTemplate: "user_info_{0}",Expire: -1,Index: "userInfo"}

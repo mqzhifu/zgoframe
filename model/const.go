@@ -10,13 +10,13 @@ func CheckConstInList(list map[string]int, value int) bool {
 }
 
 const (
-	PURPOSE_REGISTER           = 1
-	PURPOSE_FIND_BACK_PASSWORD = 2
-	PURPOSE_SET_PASSWORD       = 3
-	PURPOSE_LOGIN              = 4
-	PURPOSE_SET_MOBILE         = 5
-	PURPOSE_SET_EMAIL          = 6
-	PURPOSE_SET_PAY_PASSWORD   = 7
+	PURPOSE_REGISTER           = 11
+	PURPOSE_LOGIN              = 12
+	PURPOSE_FIND_BACK_PASSWORD = 13
+	PURPOSE_SET_PASSWORD       = 21
+	PURPOSE_SET_MOBILE         = 22
+	PURPOSE_SET_EMAIL          = 23
+	PURPOSE_SET_PAY_PASSWORD   = 24
 )
 
 func GetConstListPurpose() map[string]int {

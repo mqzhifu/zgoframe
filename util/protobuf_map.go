@@ -1,4 +1,5 @@
 package util
+
 import (
 	"errors"
 	"fmt"
@@ -11,28 +12,27 @@ import (
 
 type ProtobufMap struct {
 	//并发安全的，因为无写操作
-	ActionMaps 		map[int]ActionMap
-	ServiceAction 	map[int][]*ActionMap
-	Log 			*zap.Logger
-	ConfigFileDir 	string
-	MapFileName 	string 	`json:"map_file_name"`
+	ActionMaps     map[int]ActionMap
+	ServiceAction  map[int][]*ActionMap
+	Log            *zap.Logger
+	ConfigFileDir  string
+	MapFileName    string `json:"map_file_name"`
 	ProjectManager *ProjectManager
 }
 
 type ActionMap struct {
-	ServiceName string 	`json:"service_name"`
-	ServiceId 	int		`json:"service_id"`
-	Id 			int		`json:"id"`
-	Action		string	`json:"action"`
-	Desc 		string	`json:"desc"`
-	Request		string	`json:"demo"`
-	Response 	string 	`json:"response"`
-
+	ServiceName string `json:"service_name"`
+	ServiceId   int    `json:"service_id"`
+	Id          int    `json:"id"`
+	Action      string `json:"action"`
+	Desc        string `json:"desc"`
+	Request     string `json:"demo"`
+	Response    string `json:"response"`
 }
 
 //var actionMap  	map[string]map[int]ActionMap
-func NewProtobufMap(log *zap.Logger,configFileDir string,MapFileName string, projectManager *ProjectManager)(*ProtobufMap,error) {
-	log.Info("NewProtobufMap:"+configFileDir)
+func NewProtobufMap(log *zap.Logger, configFileDir string, MapFileName string, projectManager *ProjectManager) (*ProtobufMap, error) {
+	log.Info("NewProtobufMap:" + configFileDir)
 
 	protobufMap := new(ProtobufMap)
 	protobufMap.Log = log
@@ -41,24 +41,24 @@ func NewProtobufMap(log *zap.Logger,configFileDir string,MapFileName string, pro
 	protobufMap.ProjectManager = projectManager
 
 	err := protobufMap.initProtocolActionMap()
-	log.Info("protobufMap.ActionMaps len:"+strconv.Itoa(len(protobufMap.ActionMaps)))
+	log.Info("protobufMap.ActionMaps len:" + strconv.Itoa(len(protobufMap.ActionMaps)))
 
-	return protobufMap,err
+	return protobufMap, err
 }
 
-func (protobufMap *ProtobufMap)initProtocolActionMap()error{
+func (protobufMap *ProtobufMap) initProtocolActionMap() error {
 	//netway.mylog.Info("initActionMap")
-	protobufMap.ActionMaps = make( 	map[int]ActionMap)
-	mapList ,err := protobufMap.loadingActionMapConfigFile(protobufMap.MapFileName)
-	if err != nil{
+	protobufMap.ActionMaps = make(map[int]ActionMap)
+	mapList, err := protobufMap.loadingActionMapConfigFile(protobufMap.MapFileName)
+	if err != nil {
 		return err
 	}
-	protobufMap.ServiceAction =  make( 	map[int][]*ActionMap)
-	for _,v:=range mapList{
-		_,ok := protobufMap.ServiceAction[v.ServiceId]
+	protobufMap.ServiceAction = make(map[int][]*ActionMap)
+	for _, v := range mapList {
+		_, ok := protobufMap.ServiceAction[v.ServiceId]
 		if ok {
-			protobufMap.ServiceAction[v.ServiceId] = append(protobufMap.ServiceAction[v.ServiceId] , &v)
-		}else{
+			protobufMap.ServiceAction[v.ServiceId] = append(protobufMap.ServiceAction[v.ServiceId], &v)
+		} else {
 			protobufMap.ServiceAction[v.ServiceId] = []*ActionMap{&v}
 		}
 	}
@@ -67,63 +67,64 @@ func (protobufMap *ProtobufMap)initProtocolActionMap()error{
 
 	return err
 }
-func (protobufMap *ProtobufMap)loadingActionMapConfigFile(fileName string)(map[int]ActionMap,error) {
+func (protobufMap *ProtobufMap) loadingActionMapConfigFile(fileName string) (map[int]ActionMap, error) {
 	//_, _,_,dir  := getInfo(1)
 	//ExitPrint(protobufMap.ConfigFileDir,fileName)
-	pathFile := protobufMap.ConfigFileDir +"/"+fileName
-	protobufMap.Log.Info("protobufMap loadingActionMapConfigFile:"+pathFile)
-	fileContentArr,err := ReadLine(pathFile)
-	if err != nil{
+	pathFile := protobufMap.ConfigFileDir + "/" + fileName
+	protobufMap.Log.Info("protobufMap loadingActionMapConfigFile:" + pathFile)
+	fileContentArr, err := ReadLine(pathFile)
+	if err != nil {
 		protobufMap.Log.Error("initActionMap ReadLine err :" + err.Error())
-		return nil,err
+		return nil, err
 		//protobufMap.Log.Panic("initActionMap ReadLine err :" + err.Error())
 	}
 	am := make(map[int]ActionMap)
-	for _,v:= range fileContentArr{
-		contentArr := strings.Split(v,"|")
+	for _, v := range fileContentArr {
+		contentArr := strings.Split(v, "|")
 		//MyPrint(contentArr[0],contentArr[1])
-		if len(contentArr)  <  5{
+		if len(contentArr) < 5 {
 			protobufMap.Log.Error("read line len < 5")
 			continue
 		}
 		serviceIdStr := contentArr[0][0:2]
-		serviceId ,_ := strconv.Atoi(serviceIdStr)
+		serviceId, _ := strconv.Atoi(serviceIdStr)
 		//funcIdStr  := contentArr[0][3:]
 		//funcId :=  Atoi(funcIdStr)
-		id :=  Atoi(contentArr[0])
+		id := Atoi(contentArr[0])
 		//1000|Login|RequestLogin|ResponseLoginRes|登陆
 		serviceName := contentArr[1]
 
 		//map txt 里都是首字节大写，这里转成小写
 		//lowServiceName :=StrFirstToLower(serviceName)
 		_, empty := protobufMap.ProjectManager.GetByName(serviceName)
-		if empty{
-			return nil,errors.New("serviceName not in project list :" + serviceName)
+		if empty {
+			return nil, errors.New("serviceName not in project list :" + serviceName)
 		}
 
 		//id ,_:= strconv.Atoi(contentArr[0])
 		actionMap := ActionMap{
-			ServiceId : serviceId,
+			ServiceId:   serviceId,
 			ServiceName: serviceName,
 			//Id: funcId,
-			Id:id,
-			Action: contentArr[2],
-			Request: contentArr[3],
+			Id:       id,
+			Action:   contentArr[2],
+			Request:  contentArr[3],
 			Response: contentArr[4],
-			Desc: contentArr[5],
+			Desc:     contentArr[5],
 		}
 		//PrintStruct(actionMap,":")
 		//ExitPrint(111)
 		am[id] = actionMap
 	}
-	if len(am) <= 0{
+	if len(am) <= 0 {
 		protobufMap.Log.Error("protocolActions len(am) <= 0")
 		panic("protocolActions len(am) <= 0")
 	}
-	return am,nil
+	return am, nil
 }
+
 //获取上层调用者的文件位置
-func getInfo(depth int) (funcName, fileName string, lineNo int ,dir string) {
+func getInfo(depth int) (funcName, fileName string, lineNo int, dir string) {
 	pc, file, lineNo, ok := runtime.Caller(depth)
 	if !ok {
 		fmt.Println("runtime.Caller() failed")
@@ -143,27 +144,27 @@ func getInfo(depth int) (funcName, fileName string, lineNo int ,dir string) {
 	return
 }
 
-func(protobufMap *ProtobufMap)GetActionMap() map[int]ActionMap {
+func (protobufMap *ProtobufMap) GetActionMap() map[int]ActionMap {
 	return protobufMap.ActionMaps
 }
 
-func(protobufMap *ProtobufMap)GetActionName(id int)(actionMapT ActionMap,empty bool){
-	am , ok := protobufMap.ActionMaps[id]
+func (protobufMap *ProtobufMap) GetActionName(id int) (actionMapT ActionMap, empty bool) {
+	am, ok := protobufMap.ActionMaps[id]
 	if ok {
-		return am,false
-	}else{
-		return am,true
+		return am, false
+	} else {
+		return am, true
 	}
 }
 
-func (protobufMap *ProtobufMap)GetActionId(action string )(actionMapT ActionMap,empty bool){
+func (protobufMap *ProtobufMap) GetActionId(action string) (actionMapT ActionMap, empty bool) {
 	protobufMap.Log.Info("GetActionId " + action)
 	am := protobufMap.ActionMaps
-	for _,v:=range am{
+	for _, v := range am {
 		//PrintStruct(v,":")
 		if v.Action == action {
-			return v,false
+			return v, false
 		}
 	}
-	return  actionMapT,true
+	return actionMapT, true
 }

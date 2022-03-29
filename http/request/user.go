@@ -15,8 +15,8 @@ type Register struct {
 	ThirdType int    `json:"third_type" `                  //三方平台类型
 	ThirdId   string `json:"third_id"`                     //三方平台ID
 	ConfirmPs string `json:"confirm_ps"`                   //确认密码
-
-	ExtDiy string `json:"ext_diy"` //自定义用户属性，暂未实现
+	Test      int    `json:"test"`                         //是否为测试用户1是2否
+	ExtDiy    string `json:"ext_diy"`                      //自定义用户属性，暂未实现
 }
 
 //@description 注册信息 - 通过手机号

@@ -79,8 +79,9 @@ function Sync (playerId,token,data,DomIdPreObj,contentType,protocolType){
     this.wsOpen = function(){
         console.log("onOpen : ws connect server : Success  ");
         this.upStatus(2);
-
-        var requestLoginObj = new proto.myproto.RequestLogin();
+        //强依赖，proto 文件
+        // var requestLoginObj = new proto.pb.RequestLogin();
+        var requestLoginObj = new proto.pb.Login();
         requestLoginObj.setToken(self.token) ;
         this.sendMsg("login",requestLoginObj);
     };

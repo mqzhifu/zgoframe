@@ -16,7 +16,7 @@ type AlertPush struct {
 	Url  string
 }
 
-func NewAlertPush(ip string, port string, uri string) *AlertPush {
+func NewAlertPush(ip string, port string, uri string, printfPrefix string) *AlertPush {
 	alert := new(AlertPush)
 	alert.Ip = ip
 	alert.Port = port
@@ -24,7 +24,7 @@ func NewAlertPush(ip string, port string, uri string) *AlertPush {
 	url := "http://" + ip + ":" + port + "/" + uri
 	alert.Url = url
 
-	MyPrint("NewAlertPush:" + alert.Url)
+	MyPrint(printfPrefix + "NewAlertPush:" + alert.Url)
 
 	return alert
 }

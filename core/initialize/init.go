@@ -49,6 +49,7 @@ func (initialize *Initialize) Start() error {
 		SourceType:     initialize.Option.ConfigSourceType,
 		EtcdUrl:        initialize.Option.EtcdConfigFindUrl,
 		ENV:            initialize.Option.Env,
+		PrintPrefix:    prefix,
 	}
 
 	util.MyPrint(prefix + "start CoreInitialize : config option~~ ")
@@ -60,7 +61,7 @@ func (initialize *Initialize) Start() error {
 		util.MyPrint(prefix+"GetNewViper err:", err)
 		return err
 	}
-	util.MyPrint(prefix + "read config info to assignment GlobalVariable , finish. ")
+	//util.MyPrint(prefix + "read config info to assignment GlobalVariable , finish. ")
 	global.V.Vip = myViper //全局变量管理者
 	global.C = config      //全局变量
 	//---config end -----
@@ -68,7 +69,7 @@ func (initialize *Initialize) Start() error {
 	//预/报警->推送器，这里是推送到3方，如：prometheus
 	//ps:这个要优先zap日志类优化处理，因为zap里的<钩子>有用到,主要是日志里自动触发报警，略方便
 	if global.C.Alert.Status == global.CONFIG_STATUS_OPEN {
-		global.V.AlertPush = util.NewAlertPush(global.C.Alert.Host, global.C.Alert.Port, global.C.Alert.Uri)
+		global.V.AlertPush = util.NewAlertPush(global.C.Alert.Host, global.C.Alert.Port, global.C.Alert.Uri, prefix)
 	}
 	//创建main日志类
 	configZap := global.C.Zap
@@ -89,14 +90,14 @@ func (initialize *Initialize) Start() error {
 	//这个变量，主要是给gorm做日志使用，也就是DB的日志，最终也交由zap来接管
 	util.LoggerZap = global.V.Zap
 	//实例化gorm db
-	global.V.Gorm, err = GetNewGorm()
+	global.V.Gorm, err = GetNewGorm(prefix)
 	if err != nil {
 		return err
 	}
 	//DB 快捷变量
 	model.Db = global.V.Gorm
 	//初始化APP信息，所有项目都需要有AppId或serviceId，因为要做验证，同时目录名也包含在里面
-	err = InitProject()
+	err = InitProject(prefix)
 	if err != nil {
 		global.V.Zap.Error(prefix + err.Error())
 		return err
@@ -111,7 +112,7 @@ func (initialize *Initialize) Start() error {
 	}
 	//项目的根目录
 	global.V.RootDir = initialize.Option.RootDir
-	global.V.Zap.Info("global.V.RootDir: " + global.V.RootDir)
+	global.V.Zap.Info(prefix + "global.V.RootDir: " + global.V.RootDir)
 	//错误码 文案 管理（还未用起来，后期优化）
 	global.V.Err, err = util.NewErrMsg(global.V.Zap, global.C.Http.StaticPath+global.C.System.ErrorMsgFile)
 	if err != nil {
@@ -122,7 +123,7 @@ func (initialize *Initialize) Start() error {
 	global.V.RecoverGo = util.NewRecoverGo(global.V.Zap, 3)
 	//redis
 	if global.C.Redis.Status == global.CONFIG_STATUS_OPEN {
-		global.V.Redis, err = GetNewRedis()
+		global.V.Redis, err = GetNewRedis(prefix)
 		if err != nil {
 			global.V.Zap.Error(prefix + " GetRedis " + err.Error())
 			return err
@@ -140,7 +141,7 @@ func (initialize *Initialize) Start() error {
 			return err
 		}
 
-		global.V.Gin, err = GetNewHttpGIN(HttpZap)
+		global.V.Gin, err = GetNewHttpGIN(HttpZap, prefix)
 		if err != nil {
 			global.V.Zap.Error(prefix + "GetNewHttpGIN err:" + err.Error())
 			return err
@@ -149,7 +150,7 @@ func (initialize *Initialize) Start() error {
 	}
 	//etcd
 	if global.C.Etcd.Status == global.CONFIG_STATUS_OPEN {
-		global.V.Etcd, err = GetNewEtcd(initialize.Option.Env, configZapReturn)
+		global.V.Etcd, err = GetNewEtcd(initialize.Option.Env, configZapReturn, prefix)
 		if err != nil {
 			global.V.Zap.Error(prefix + "GetNewEtcd err:" + err.Error())
 			return err
@@ -206,7 +207,7 @@ func (initialize *Initialize) Start() error {
 		util.MyPrint("GetNewViper err:", err)
 		return err
 	}
-	global.V.MyService = service.NewService(global.V.Gorm, global.V.Zap, global.V.Email)
+	global.V.MyService = service.NewService(global.V.Gorm, global.V.Zap, global.V.Email, global.V.Redis)
 
 	//websocket
 	//if global.C.Websocket.Status == global.CONFIG_STATUS_OPEN{
@@ -249,8 +250,13 @@ func (initialize *Initialize) Start() error {
 		//global.V.AlertHook.Alert("Aaaa")
 		//util.ExitPrint(123123123)
 	}
+
 	if global.C.Gateway.Status == global.CONFIG_STATUS_OPEN {
-		global.V.Gateway = InitGateway()
+		global.V.Gateway, err = InitGateway()
+		if err != nil {
+			global.V.Zap.Error(prefix + "InitGateway err:" + err.Error())
+			return err
+		}
 	}
 
 	global.C.System.ENV = initialize.Option.Env
@@ -336,7 +342,7 @@ func InitPath(rootDir string) (rootDirName string, err error) {
 	return rootDirName, nil
 }
 
-func GetNewEtcd(env string, configZapReturn global.Zap) (myEtcd *util.MyEtcd, err error) {
+func GetNewEtcd(env string, configZapReturn global.Zap, prefix string) (myEtcd *util.MyEtcd, err error) {
 	//这个是给3方库：clientv3使用的
 	//有点操蛋，我回头想想如何优化掉
 	zl := zap.Config{
@@ -364,6 +370,7 @@ func GetNewEtcd(env string, configZapReturn global.Zap) (myEtcd *util.MyEtcd, er
 		Port:        global.C.Etcd.Port,
 		Log:         global.V.Zap,
 		ZapConfig:   zl,
+		PrintPrefix: prefix,
 	}
 	myEtcd, err = util.NewMyEtcdSdk(option)
 	//util.ExitPrint(err)

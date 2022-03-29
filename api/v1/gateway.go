@@ -59,7 +59,38 @@ func GatewayConfig(c *gin.Context) {
 // @Security ApiKeyAuth
 // @Router /gateway/proto [get]
 func GatewayProto(c *gin.Context) {
+	url := "http:/127.0.0.1:" + global.C.Http.Port + "/" + global.C.Http.Status + "/proto"
+	msg := "去 <a target='_blakn' href='" + url + "'" + "点我</a>"
+	httpresponse.OkWithMessage(msg, c)
+}
 
+// @Tags Gateway
+// @Summary php解析:.proto文件，生成.txt , 再通过GO读取出来
+// @Description 后期考虑替换掉PHP解析过程，直接用GO
+// @Success 200 {object} util.ActionMap
+// @Security ApiKeyAuth
+// @Router /gateway/action/map [get]
+func ActionMap(c *gin.Context) {
+	list := global.V.ProtobufMap.GetActionMap()
+	//格式化数据，方便前端使用
+	rsList := make(map[string]map[int]util.ActionMap)
+	clientList := make(map[int]util.ActionMap)
+	serverList := make(map[int]util.ActionMap)
+	for _, v := range list {
+		cate := string([]byte(v.Action)[:2])
+		if cate == "CS" {
+			clientList[v.Id] = v
+		} else if cate == "SC" {
+			serverList[v.Id] = v
+		}
+	}
+	rsList["client"] = clientList
+	rsList["server"] = serverList
+
+	//client
+	//server
+
+	httpresponse.OkWithDetailed(rsList, "ok", c)
 }
 
 // @Tags Gateway

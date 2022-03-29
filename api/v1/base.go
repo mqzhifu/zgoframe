@@ -183,6 +183,7 @@ func RegisterSms(c *gin.Context) {
 		Username: registerSmsForm.Mobile,
 		Mobile:   registerSmsForm.Mobile,
 		Guest:    model.USER_GUEST_FALSE,
+		Test:     model.USER_TEST_FALSE,
 	}
 
 	err := global.V.MyService.SendSms.Verify(registerSmsForm.SmsRuleId, registerSmsForm.Mobile, registerSmsForm.SmsAuthCode)

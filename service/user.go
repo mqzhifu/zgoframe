@@ -5,6 +5,7 @@ import (
 	"fmt"
 	uuid "github.com/satori/go.uuid"
 	"gorm.io/gorm"
+	"strconv"
 	"zgoframe/http/request"
 	"zgoframe/model"
 	"zgoframe/util"
@@ -17,12 +18,14 @@ type UserRegInfo struct {
 }
 
 type User struct {
-	Gorm *gorm.DB
+	Gorm  *gorm.DB
+	Redis *util.MyRedis
 }
 
-func NewUser(gorm *gorm.DB) *User {
+func NewUser(gorm *gorm.DB, redis *util.MyRedis) *User {
 	user := new(User)
 	user.Gorm = gorm
+	user.Redis = redis
 	return user
 }
 
@@ -53,11 +56,55 @@ func (user *User) RegisterByUsername(R request.Register, h request.HeaderRequest
 	return user.Register(u, h, userRegInfo)
 }
 
+func (user *User) Delete(uid int) (map[string]int, error) {
+	rsMap := make(map[string]int)
+	err, userInfo := user.FindUserById(uid)
+	if err != nil {
+		return rsMap, err
+	}
+	if userInfo.Mobile != "" {
+		var smsLog model.SmsLog
+		obj := user.Gorm.Unscoped().Where("Receiver = ?", userInfo.Mobile).Delete(&smsLog)
+		rsMap["SmsLog"] = int(obj.RowsAffected)
+	}
+
+	if userInfo.Email != "" {
+		var emailLog model.EmailLog
+		obj := user.Gorm.Unscoped().Where("Receiver = ?", userInfo.Email).Delete(&emailLog)
+		rsMap["EmailLog"] = int(obj.RowsAffected)
+	}
+	var userLogin model.UserLogin
+	obj := user.Gorm.Unscoped().Where("uid = ?", uid).Delete(&userLogin)
+	rsMap["UserLogin"] = int(obj.RowsAffected)
+
+	listPlatform := model.GetConstListPlatform()
+	for _, v := range listPlatform {
+		redisElement, _ := user.Redis.GetElementByIndex("jwt", strconv.Itoa(v), strconv.Itoa(uid))
+		user.Redis.Del(redisElement)
+	}
+
+	var userReg model.UserReg
+	obj = user.Gorm.Unscoped().Where("uid = ?", uid).Delete(&userReg)
+	rsMap["UserReg"] = int(obj.RowsAffected)
+
+	var u model.User
+	user.Gorm.Unscoped().Delete(&u, uid)
+	rsMap["User"] = int(obj.RowsAffected)
+
+	util.MyPrint(rsMap)
+	
+	return rsMap, nil
+}
+
 //最终 - 注册
 func (user *User) Register(formUser model.User, h request.HeaderRequest, userRegInfo UserRegInfo) (err error, userInter model.User) {
 	var userRegType int
 
 	formUser.Status = model.USER_STATUS_NOMAL
+
+	if formUser.Test <= 0 {
+		formUser.Test = model.USER_TEST_FALSE
+	}
 
 	if formUser.Guest == model.USER_REG_TYPE_GUEST {
 		util.MyPrint("reg in GUEST")
@@ -304,12 +351,6 @@ func (user *User) FindUserByUuid(uuid string) (err error, userInfo *model.User) 
 		return errors.New("用户不存在"), userInfo
 	}
 	return nil, userInfo
-}
-
-func (user *User) DeleteUser(id float64) (err error) {
-	var userInfo model.User
-	err = user.Gorm.Where("id = ?", id).Delete(&userInfo).Error
-	return err
 }
 
 //随机生成一个用户 - 游客

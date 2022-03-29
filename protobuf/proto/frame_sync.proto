@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-import "proto/common.proto";
+import "common.proto";
 
 package pb;
 option go_package ="./;pb";
@@ -8,147 +8,30 @@ option go_package ="./;pb";
 
 service FrameSync {
 
-    rpc PlayerOperations        (RequestPlayerOperations)       returns (Empty) {}//玩家推送操作记录
-    rpc PlayerResumeGame        (RequestPlayerResumeGame)       returns (Empty) {}//掉线恢复游戏
-    rpc PlayerReady             (RequestPlayerReady)            returns (Empty) {}//玩家报名/准备
-    rpc PlayerOver              (RequestPlayerOver)             returns (Empty) {}//玩家死亡
-    rpc RoomHistory             (RequestRoomHistory)            returns (Empty) {}//其它玩家恢复了游戏
-    rpc GetRoom                 (RequestGetRoom)                returns (Empty) {}//获取一个房间的信息
-    rpc PlayerMatchSign         (RequestPlayerMatchSign)        returns (Empty) {}//玩家匹配报名
-    rpc PlayerMatchSignCancel   (RequestPlayerMatchSignCancel)  returns (Empty) {}//玩家匹配取消报名
+    rpc CS_PlayerOperations        ( LogicFrame )           returns (Empty) {}//玩家推送操作记录
+    rpc CS_PlayerResumeGame        ( PlayerResumeGame)       returns (Empty) {}//掉线恢复游戏
+    rpc CS_PlayerReady             ( PlayerReady)            returns (Empty) {}//玩家报名/准备
+    rpc CS_PlayerOver              ( PlayerOver)             returns (Empty) {}//玩家死亡
+    rpc CS_RoomHistory             ( RoomHistory)            returns (Empty) {}//房间历史记录，如：玩家操作信息
+    rpc CS_RoomBaseInfo            ( RoomBaseInfo)           returns (Empty) {}//获取一个房间的基础信息
+    rpc CS_PlayerMatchSign         ( PlayerMatchSign)        returns (Empty) {}//玩家匹配报名
+    rpc CS_PlayerMatchSignCancel   ( PlayerMatchSignCancel)  returns (Empty) {}//玩家匹配取消报名
 
-    rpc EnterBattle             (ResponseEnterBattle)           returns (Empty) {}//开始游戏前初始化
-    rpc PushLogicFrame          (ResponsePushLogicFrame)        returns (Empty) {}//推送逻辑帧
-    rpc OtherPlayerOffline      (ResponseOtherPlayerOffline)    returns (Empty) {}//其它玩家掉线
-    rpc ReadyTimeout            (ResponseReadyTimeout)          returns (Empty) {}//准备超时
-    rpc PushRoomHistory         (ResponsePushRoomHistory)       returns (Empty) {}//推送逻辑帧
-    rpc GameOver                (ResponseGameOver)              returns (Empty) {}//一局游戏结束
-    rpc PushRoomInfo            (ResponsePushRoomInfo)          returns (Empty) {}//房间信息
-    rpc StartBattle             (ResponseStartBattle)           returns (Empty) {}//开始战斗
-    rpc OtherPlayerOver         (ResponseOtherPlayerOver)       returns (Empty) {}//其它玩家已死亡
-    rpc RestartGame             (ResponseRestartGame)           returns (Empty) {}//玩家均已在线，重新开始游戏
-    rpc PlayerMatchSignFailed   (ResponsePlayerMatchSignFailed) returns (Empty) {}//玩家匹配报名失败
-    rpc PlayerMatchingFailed    (ResponsePlayerMatchingFailed)  returns (Empty) {}//玩家匹配失败
-    rpc OtherPlayerResumeGame   (ResponseOtherPlayerResumeGame) returns (Empty) {}//通知其它玩家，有玩家断线后已恢复
+    rpc SC_PlayerMatchSignFailed   ( PlayerMatchSignFailed) returns (Empty) {}//玩家报名(匹配)失败
+    rpc SC_PlayerMatchingFailed    ( PlayerMatchingFailed)  returns (Empty) {}//玩家匹配失败(可能超时，可能人不够组团)
+    rpc SC_EnterBattle             ( EnterBattle)           returns (Empty) {}//开始游戏前初始化
+    rpc SC_LogicFrame              ( LogicFrame)            returns (Empty) {}//推送逻辑帧
+    rpc SC_RoomHistory             ( RoomHistory)           returns (Empty) {}//推送逻辑帧
+    rpc SC_RoomBaseInfo            ( RoomBaseInfo)          returns (Empty) {}//房间信息
+    rpc SC_OtherPlayerOffline      ( OtherPlayerOffline)    returns (Empty) {}//其它玩家掉线
+    rpc SC_OtherPlayerOver         ( PlayerOver)            returns (Empty) {}//其它玩家已死亡
+    rpc SC_OtherPlayerResumeGame   ( PlayerResumeGame)      returns (Empty) {}//通知其它玩家，有玩家断线后已恢复
+    rpc SC_ReadyTimeout            ( ReadyTimeout)          returns (Empty) {}//准备超时
+    rpc SC_StartBattle             ( StartBattle)           returns (Empty) {}//开始战斗
+    rpc SC_RestartGame             ( RestartGame)           returns (Empty) {}//玩家均已在线，重新开始游戏
+    rpc SC_GameOver                ( GameOver)              returns (Empty) {}//一局游戏结束
 }
-
-
-
-
-message RequestPlayerOperations{
-	int32 id 	                    = 1;
-	string room_id 		            = 2;
-	int32 sequence_number           = 3;
-	repeated Operation operations   = 4;
-}
-
-
-message Operation{
-	int32   id 	        = 1;
-	string  event 	    = 2;
-	string  value 	    = 3;
-	int32   player_id 	= 4;
-}
-
-
-message RequestPlayerResumeGame{
-    int32 player_id         = 1;
-    string room_id          = 2;
-    int32 sequence_number   = 3;
-}
-
-message RequestPlayerMatchSign{
-    int32 player_id = 1;
-}
-
-message RequestPlayerReady{
-    int32 player_id     = 1;
-    string room_id      = 2;
-}
-
-message RequestGetRoom{
-    int32 player_id  = 1;
-    string room_id = 2;
-}
-
-message RequestRoomHistory{
-    int32 player_id             = 1;
-    string room_id              = 2;
-    int32 sequence_numberStart  = 3;
-    int32 sequence_numberEnd    = 4;
-}
-
-message RequestPlayerMatchSignCancel{
-    int32 player_id = 1;
-}
-
-message RequestGameOver{
-    int32 player_id         = 1;
-    string room_id          = 2;
-    int32 sequence_number   = 3;
-    string result           = 4;
-}
-
-message RequestPlayerOver{
-    int32 player_id = 1;
-    int32 sequence_number   = 2;
-}
-
-message ResponsePlayerStatus{
-    int32 id            = 1;
-    string nickname     = 2;
-    int32 status        = 3;
-    string room_id      = 4;
-    int32 add_time      = 5;
-    int32 up_time       = 6;
-}
-
-message ResponseOtherPlayerOffline{
-    int32 player_id = 1;
-}
-
-message ResponseStartBattle{
-    int32 sequence_number_start = 1;
-}
-
-message ResponseEnterBattle{
-    int32   rand_seek           = 1;
-    string  room_id             = 2;
-    int32   sequence_number     = 3;
-    int32   status              = 4;
-    int32   add_time            = 5;
-    int64   time                = 6;
-
-    repeated Player player_list = 7;
-
-    string  udp_port            = 8;
-}
-
-message ResponsePushLogicFrame{
-	int32 id 	                    = 1;
-	string room_id 		            = 2;
-	int32 sequence_number           = 3;
-	repeated Operation operations   = 4;
-}
-
-
-message ResponseOtherPlayerOver{
-    int32 player_id = 1;
-    int32 sequence_number = 2;
-}
-
-message ResponseGameOver{
-    int32 player_id          = 1;
-    string room_id           = 2;
-    int32 sequence_number    = 3;
-    string result            = 4;
-}
-
-message ResponseReadyTimeout{
-    string room_id      = 1;
-}
-
-message ResponsePushRoomInfo{
+message RoomBaseInfo{
     string  id 	                = 1;
     int32   add_time            = 2;
     int32   status              = 3;
@@ -161,25 +44,91 @@ message ResponsePushRoomInfo{
     int32   end_time 	        =10;
 }
 
-message ResponsePushRoomHistory{
-    repeated ResponseRoomHistory list = 1;
-}
-
-message ResponseRoomHistory{
-	int32  id      = 1;
-	string action  = 2;
-	string content = 3;
-}
-
-message ResponseOtherPlayerResumeGame{
+message PlayerResumeGame{
     int32 player_id         = 1;
     string room_id          = 2;
     int32 sequence_number   = 3;
 }
 
+message PlayerMatchSign{
+    int32 player_id = 1;
+}
+
+
+message PlayerReady{
+    int32 player_id     = 1;
+    string room_id      = 2;
+}
+
+message RoomHistory{
+    int32 player_id             = 1;
+    string room_id              = 2;
+    int32 sequence_numberStart  = 3;
+    int32 sequence_numberEnd    = 4;
+}
+
+//message RoomHistory{
+//	int32  id      = 1;
+//	string action  = 2;
+//	string content = 3;
+//}
+
+message PlayerMatchSignCancel{
+    int32 player_id = 1;
+}
+
+message GameOver{
+    int32 player_id         = 1;
+    string room_id          = 2;
+    int32 sequence_number   = 3;
+    string result           = 4;
+}
+
+message PlayerOver{
+    int32 player_id = 1;
+    int32 sequence_number   = 2;
+}
+
+message OtherPlayerOffline{
+    int32 player_id = 1;
+}
+
+message StartBattle{
+    int32 sequence_number_start = 1;
+}
+
+message EnterBattle{
+    int32   rand_seek           = 1;
+    string  room_id             = 2;
+    int32   sequence_number     = 3;
+    int32   status              = 4;
+    int32   add_time            = 5;
+    int64   time                = 6;
+
+    repeated Player player_list = 7;
+
+    string  udp_port            = 8;
+}
+
+message LogicFrame{
+	int32 id 	                    = 1;
+	string room_id 		            = 2;
+	int32 sequence_number           = 3;
+	repeated LogicFrame operations   = 4;
+}
+
+
+
+
+message ReadyTimeout{
+    string room_id      = 1;
+}
+
+
+
 message Player{
     int32   id            = 1;
-    int32   role_id       = 2;
+    string  username      = 2;
     string  nickname      = 3;
     int32   status        = 4;
     int32   add_time      = 5;
@@ -191,18 +140,27 @@ message Player{
     int32   protocol_type = 11;
 }
 
-message ResponseRestartGame{
+message PlayerStatus{
+    int32   id            = 1;
+    string  nickname      = 2;
+    int32   status        = 3;
+    string  room_id       = 4;
+    int32   add_time      = 5;
+    int32   up_time       = 6;
+}
+
+message RestartGame{
     string      room_id             = 1;
     repeated    int32 player_ids    = 2;
 }
 
-message ResponsePlayerMatchSignFailed{
+message PlayerMatchSignFailed{
     int32   player_id   = 1;
     string  msg         = 2;
     int32   code        = 3;
 }
 
-message ResponsePlayerMatchingFailed{
+message PlayerMatchingFailed{
     int32   player_id   = 1;
     string  msg         = 2;
     string  roomId      = 3;

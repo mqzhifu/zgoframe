@@ -12,7 +12,7 @@ import (
 var GateDefaultProtocol = int32(util.PROTOCOL_WEBSOCKET)
 var GateDefaultContentType = int32(util.CONTENT_TYPE_PROTOBUF)
 
-func InitGateway() *util.Gateway {
+func InitGateway() (*util.Gateway, error) {
 	netWayOption := util.NetWayOption{
 		ListenIp: global.C.Gateway.ListenIp, //程序启动时监听的IP
 		OutIp:    global.C.Gateway.OutIp,    //对外访问的IP
@@ -39,8 +39,9 @@ func InitGateway() *util.Gateway {
 		//两种快速关闭方式，也可以直接调用shutdown函数
 		//OutCxt 				context.Context `json:"-"`			//调用方的CTX，用于所有协程的退出操作
 		//CloseChan 			chan int		`json:"-"`
+		FPS: 10,
 	}
 	gateway := util.NewGateway(global.V.GrpcManager, global.V.Zap)
-	go gateway.StartSocket(netWayOption)
-	return gateway
+	_, err := gateway.StartSocket(netWayOption)
+	return gateway, err
 }

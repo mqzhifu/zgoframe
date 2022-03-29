@@ -7,87 +7,87 @@ import (
 type FrameSync struct{}
 
 
-func (frameSync *FrameSync)PlayerOperations(ctx context.Context,requestPlayerOperations *pb.RequestPlayerOperations) (*pb.Empty,error){
+func (frameSync *FrameSync)CS_PlayerOperations(ctx context.Context,logicFrame *pb.LogicFrame) (*pb.Empty,error){
     empty := &pb.Empty{}
     return empty,nil
 }
-func (frameSync *FrameSync)PlayerResumeGame(ctx context.Context,requestPlayerResumeGame *pb.RequestPlayerResumeGame) (*pb.Empty,error){
+func (frameSync *FrameSync)CS_PlayerResumeGame(ctx context.Context,playerResumeGame *pb.PlayerResumeGame) (*pb.Empty,error){
     empty := &pb.Empty{}
     return empty,nil
 }
-func (frameSync *FrameSync)PlayerReady(ctx context.Context,requestPlayerReady *pb.RequestPlayerReady) (*pb.Empty,error){
+func (frameSync *FrameSync)CS_PlayerReady(ctx context.Context,playerReady *pb.PlayerReady) (*pb.Empty,error){
     empty := &pb.Empty{}
     return empty,nil
 }
-func (frameSync *FrameSync)PlayerOver(ctx context.Context,requestPlayerOver *pb.RequestPlayerOver) (*pb.Empty,error){
+func (frameSync *FrameSync)CS_PlayerOver(ctx context.Context,playerOver *pb.PlayerOver) (*pb.Empty,error){
     empty := &pb.Empty{}
     return empty,nil
 }
-func (frameSync *FrameSync)RoomHistory(ctx context.Context,requestRoomHistory *pb.RequestRoomHistory) (*pb.Empty,error){
+func (frameSync *FrameSync)CS_RoomHistory(ctx context.Context,roomHistory *pb.RoomHistory) (*pb.Empty,error){
     empty := &pb.Empty{}
     return empty,nil
 }
-func (frameSync *FrameSync)GetRoom(ctx context.Context,requestGetRoom *pb.RequestGetRoom) (*pb.Empty,error){
+func (frameSync *FrameSync)CS_RoomBaseInfo(ctx context.Context,roomBaseInfo *pb.RoomBaseInfo) (*pb.Empty,error){
     empty := &pb.Empty{}
     return empty,nil
 }
-func (frameSync *FrameSync)PlayerMatchSign(ctx context.Context,requestPlayerMatchSign *pb.RequestPlayerMatchSign) (*pb.Empty,error){
+func (frameSync *FrameSync)CS_PlayerMatchSign(ctx context.Context,playerMatchSign *pb.PlayerMatchSign) (*pb.Empty,error){
     empty := &pb.Empty{}
     return empty,nil
 }
-func (frameSync *FrameSync)PlayerMatchSignCancel(ctx context.Context,requestPlayerMatchSignCancel *pb.RequestPlayerMatchSignCancel) (*pb.Empty,error){
+func (frameSync *FrameSync)CS_PlayerMatchSignCancel(ctx context.Context,playerMatchSignCancel *pb.PlayerMatchSignCancel) (*pb.Empty,error){
     empty := &pb.Empty{}
     return empty,nil
 }
-func (frameSync *FrameSync)EnterBattle(ctx context.Context,responseEnterBattle *pb.ResponseEnterBattle) (*pb.Empty,error){
+func (frameSync *FrameSync)SC_PlayerMatchSignFailed(ctx context.Context,playerMatchSignFailed *pb.PlayerMatchSignFailed) (*pb.Empty,error){
     empty := &pb.Empty{}
     return empty,nil
 }
-func (frameSync *FrameSync)PushLogicFrame(ctx context.Context,responsePushLogicFrame *pb.ResponsePushLogicFrame) (*pb.Empty,error){
+func (frameSync *FrameSync)SC_PlayerMatchingFailed(ctx context.Context,playerMatchingFailed *pb.PlayerMatchingFailed) (*pb.Empty,error){
     empty := &pb.Empty{}
     return empty,nil
 }
-func (frameSync *FrameSync)OtherPlayerOffline(ctx context.Context,responseOtherPlayerOffline *pb.ResponseOtherPlayerOffline) (*pb.Empty,error){
+func (frameSync *FrameSync)SC_EnterBattle(ctx context.Context,enterBattle *pb.EnterBattle) (*pb.Empty,error){
     empty := &pb.Empty{}
     return empty,nil
 }
-func (frameSync *FrameSync)ReadyTimeout(ctx context.Context,responseReadyTimeout *pb.ResponseReadyTimeout) (*pb.Empty,error){
+func (frameSync *FrameSync)SC_LogicFrame(ctx context.Context,logicFrame *pb.LogicFrame) (*pb.Empty,error){
     empty := &pb.Empty{}
     return empty,nil
 }
-func (frameSync *FrameSync)PushRoomHistory(ctx context.Context,responsePushRoomHistory *pb.ResponsePushRoomHistory) (*pb.Empty,error){
+func (frameSync *FrameSync)SC_RoomHistory(ctx context.Context,roomHistory *pb.RoomHistory) (*pb.Empty,error){
     empty := &pb.Empty{}
     return empty,nil
 }
-func (frameSync *FrameSync)GameOver(ctx context.Context,responseGameOver *pb.ResponseGameOver) (*pb.Empty,error){
+func (frameSync *FrameSync)SC_RoomBaseInfo(ctx context.Context,roomBaseInfo *pb.RoomBaseInfo) (*pb.Empty,error){
     empty := &pb.Empty{}
     return empty,nil
 }
-func (frameSync *FrameSync)PushRoomInfo(ctx context.Context,responsePushRoomInfo *pb.ResponsePushRoomInfo) (*pb.Empty,error){
+func (frameSync *FrameSync)SC_OtherPlayerOffline(ctx context.Context,otherPlayerOffline *pb.OtherPlayerOffline) (*pb.Empty,error){
     empty := &pb.Empty{}
     return empty,nil
 }
-func (frameSync *FrameSync)StartBattle(ctx context.Context,responseStartBattle *pb.ResponseStartBattle) (*pb.Empty,error){
+func (frameSync *FrameSync)SC_OtherPlayerOver(ctx context.Context,playerOver *pb.PlayerOver) (*pb.Empty,error){
     empty := &pb.Empty{}
     return empty,nil
 }
-func (frameSync *FrameSync)OtherPlayerOver(ctx context.Context,responseOtherPlayerOver *pb.ResponseOtherPlayerOver) (*pb.Empty,error){
+func (frameSync *FrameSync)SC_OtherPlayerResumeGame(ctx context.Context,playerResumeGame *pb.PlayerResumeGame) (*pb.Empty,error){
     empty := &pb.Empty{}
     return empty,nil
 }
-func (frameSync *FrameSync)RestartGame(ctx context.Context,responseRestartGame *pb.ResponseRestartGame) (*pb.Empty,error){
+func (frameSync *FrameSync)SC_ReadyTimeout(ctx context.Context,readyTimeout *pb.ReadyTimeout) (*pb.Empty,error){
     empty := &pb.Empty{}
     return empty,nil
 }
-func (frameSync *FrameSync)PlayerMatchSignFailed(ctx context.Context,responsePlayerMatchSignFailed *pb.ResponsePlayerMatchSignFailed) (*pb.Empty,error){
+func (frameSync *FrameSync)SC_StartBattle(ctx context.Context,startBattle *pb.StartBattle) (*pb.Empty,error){
     empty := &pb.Empty{}
     return empty,nil
 }
-func (frameSync *FrameSync)PlayerMatchingFailed(ctx context.Context,responsePlayerMatchingFailed *pb.ResponsePlayerMatchingFailed) (*pb.Empty,error){
+func (frameSync *FrameSync)SC_RestartGame(ctx context.Context,restartGame *pb.RestartGame) (*pb.Empty,error){
     empty := &pb.Empty{}
     return empty,nil
 }
-func (frameSync *FrameSync)OtherPlayerResumeGame(ctx context.Context,responseOtherPlayerResumeGame *pb.ResponseOtherPlayerResumeGame) (*pb.Empty,error){
+func (frameSync *FrameSync)SC_GameOver(ctx context.Context,gameOver *pb.GameOver) (*pb.Empty,error){
     empty := &pb.Empty{}
     return empty,nil
 }

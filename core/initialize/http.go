@@ -41,21 +41,22 @@ func HttpServerShutdown() {
 }
 
 func HandleNotFound(c *gin.Context) {
-	handleErr := "404 not found."
+	handleErr := "404 not found......"
 	//handleErr.Request = c.Request.Method + " " + c.Request.URL.String()
 	c.JSON(404, handleErr)
 	return
 }
 
 //GIN: 监听HTTP   中间件  文件上传
-func GetNewHttpGIN(zapLog *zap.Logger) (*gin.Engine, error) {
+func GetNewHttpGIN(zapLog *zap.Logger, prefix string) (*gin.Engine, error) {
 	staticFSUriName := "/static"
 	swaggerUri := "/swagger/*any"
 
-	zapLog.Info("GetNewHttpGIN static config , uri: " + staticFSUriName + " , diskPath: " + global.C.Http.StaticPath)
-	zapLog.Info("GetNewHttpGIN swagger uri:" + swaggerUri)
-
+	zapLog.Info(prefix + "GetNewHttpGIN static config , uri: " + staticFSUriName + " , diskPath: " + global.C.Http.StaticPath)
+	zapLog.Info(prefix + "GetNewHttpGIN swagger uri:" + swaggerUri)
+	//这里用到了两个log ，一个是gin 自己的LOG，它不会持久化，只输出到屏幕，另一个是zap自建的LOG，用于持久化，但不输出到屏幕
 	HttpZapLog = zapLog
+	gin.SetMode(gin.ReleaseMode)
 	ginRouter := gin.Default()
 	//单独的日志记录，GIN默认的日志不会持久化的
 	ginRouter.Use(ZapLog())

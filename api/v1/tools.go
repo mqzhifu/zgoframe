@@ -10,6 +10,20 @@ import (
 )
 
 // @Tags Tools
+// @Summary 帧同步 - js
+// @Description demo
+// @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
+// @Param X-Project-Id header string true "项目ID" default(6)
+// @Param X-Access header string true "访问KEY" default(imzgoframe)
+// @Param id path int true "项目ID"
+// @Produce  application/json
+// @Success 200 {object} model.Project
+// @Router /tools/frame/sync/js/demo [get]
+func FrameSyncJsDemo(c *gin.Context) {
+	httpresponse.OkWithDetailed("aaaa", "成功", c)
+}
+
+// @Tags Tools
 // @Summary 一个项目的详细信息
 // @Description 用于开发工具测试
 // @Param X-Source-Type header string true "来源" Enums(11,12,21,22)

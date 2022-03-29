@@ -34,7 +34,7 @@ var initializeVar *initialize.Initialize
 // @in header
 
 func main() {
-
+	prefix := "main "
 	//获取<环境变量>枚举值
 	envList := util.GetEnvList()
 	//配置读取源类型，1 文件  2 etcd
@@ -57,19 +57,19 @@ func main() {
 	flag.Parse()
 	//检测环境变量值ENV是否正常
 	if !util.CheckEnvExist(*env) {
-		msg := "argv env , is err :"
+		msg := prefix + " argv env , is err :"
 		util.MyPrint(msg, envList)
 		panic(msg + *env)
 	}
 
 	imUser, _ := user.Current()
-	util.MyPrint("exec script user info , name: " + imUser.Name + " uid: " + imUser.Uid + " , gid :" + imUser.Gid + " ,homeDir:" + imUser.HomeDir)
+	util.MyPrint(prefix + "exec script user info , name: " + imUser.Name + " uid: " + imUser.Uid + " , gid :" + imUser.Gid + " ,homeDir:" + imUser.HomeDir)
 
 	pwd, _ := os.Getwd() //当前路径
-	util.MyPrint("exec script pwd:" + pwd)
+	util.MyPrint(prefix + "exec script pwd:" + pwd)
 	//开始初始化模块
 	//主协程的 context
-	util.MyPrint("create main :cancel context")
+	util.MyPrint(prefix + "create cancel context")
 	mainCxt, mainCancelFunc := context.WithCancel(context.Background())
 	//初始化模块需要的参数
 	initOption := initialize.InitOption{
@@ -88,21 +88,21 @@ func main() {
 	initializeVar = initialize.NewInitialize(initOption)
 	err := initializeVar.Start()
 	if err != nil {
-		util.MyPrint("initialize.Init err:", err)
-		panic("initialize.Init err:" + err.Error())
+		util.MyPrint(prefix+"initialize.Init err:", err)
+		panic(prefix + "initialize.Init err:" + err.Error())
 		return
 	}
 	//执行用户自己的一些功能
 	go core.DoMySelf()
 	//监听外部进程信号
 	go global.V.Process.DemonSignal()
-	util.MyPrint("wait mainCxt.done...")
+	util.MyPrint(prefix + "wait mainCxt.done...")
 	select {
 	case <-mainCxt.Done():
 		QuitAll(1)
 	}
 
-	util.MyPrint("main end.")
+	util.MyPrint(prefix + "end.")
 }
 
 func QuitAll(source int) {
@@ -113,5 +113,5 @@ func QuitAll(source int) {
 	global.V.Zap.Warn("main quit , source : " + strconv.Itoa(source))
 	initializeVar.Quit()
 
-	util.MyPrint("QuitAll finish.")
+	util.MyPrint("main QuitAll finish.")
 }

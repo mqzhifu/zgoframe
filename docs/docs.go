@@ -777,6 +777,28 @@ const docTemplate_swagger = `{
                 }
             }
         },
+        "/gateway/action/map": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "demo",
+                "tags": [
+                    "Gateway"
+                ],
+                "summary": "php解析.proto文件，再通过GO读取出来",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/util.ActionMap"
+                        }
+                    }
+                }
+            }
+        },
         "/gateway/config": {
             "get": {
                 "security": [
@@ -1035,6 +1057,64 @@ const docTemplate_swagger = `{
                 }
             }
         },
+        "/tools/frame/sync/js/demo": {
+            "get": {
+                "description": "demo",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Tools"
+                ],
+                "summary": "帧同步 - js",
+                "parameters": [
+                    {
+                        "enum": [
+                            "11",
+                            "12",
+                            "21",
+                            "22"
+                        ],
+                        "type": "string",
+                        "description": "来源",
+                        "name": "X-Source-Type",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "6",
+                        "description": "项目ID",
+                        "name": "X-Project-Id",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "imzgoframe",
+                        "description": "访问KEY",
+                        "name": "X-Access",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "项目ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.Project"
+                        }
+                    }
+                }
+            }
+        },
         "/tools/header/struct": {
             "get": {
                 "description": "日常header里放一诸如验证类的东西，统一公示出来，仅是说明，方便测试，不是真实API，方便使用",
@@ -1253,7 +1333,7 @@ const docTemplate_swagger = `{
                 ],
                 "description": "欧美国家要求比较严，必须得有这功能，国内现在也有但不多，目前是用来测试的，像脚本做自动化测试生成的用户，以及测试员线上测试时产生的用户数据（危险甚用）",
                 "consumes": [
-                    "application/json"
+                    "multipart/form-data"
                 ],
                 "produces": [
                     "application/json"
@@ -1262,6 +1342,15 @@ const docTemplate_swagger = `{
                     "User"
                 ],
                 "summary": "删除用户",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "用户IDs",
+                        "name": "uids",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "{\"success\":true,\"data\":{},\"msg\":\"删除成功\"}",
@@ -2073,6 +2162,10 @@ const docTemplate_swagger = `{
                     "description": "性别",
                     "type": "integer"
                 },
+                "test": {
+                    "description": "是否为测试用户1是2否",
+                    "type": "integer"
+                },
                 "thirdId": {
                     "description": "3方平台用户ID",
                     "type": "string"
@@ -2137,6 +2230,10 @@ const docTemplate_swagger = `{
                 },
                 "sex": {
                     "description": "性别",
+                    "type": "integer"
+                },
+                "test": {
+                    "description": "是否为测试用户1是2否",
                     "type": "integer"
                 },
                 "third_id": {
@@ -2340,6 +2437,32 @@ const docTemplate_swagger = `{
                 },
                 "header_response": {
                     "$ref": "#/definitions/request.HeaderResponse"
+                }
+            }
+        },
+        "util.ActionMap": {
+            "type": "object",
+            "properties": {
+                "action": {
+                    "type": "string"
+                },
+                "demo": {
+                    "type": "string"
+                },
+                "desc": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "response": {
+                    "type": "string"
+                },
+                "service_id": {
+                    "type": "integer"
+                },
+                "service_name": {
+                    "type": "string"
                 }
             }
         },

@@ -7,44 +7,44 @@ import (
 type Gateway struct{}
 
 
-func (gateway *Gateway)ClientLogin(ctx context.Context,requestLogin *pb.RequestLogin) (*pb.ResponseLoginRes,error){
-    responseLoginRes := &pb.ResponseLoginRes{}
-    return responseLoginRes,nil
+func (gateway *Gateway)CS_Login(ctx context.Context,login *pb.Login) (*pb.LoginRes,error){
+    loginRes := &pb.LoginRes{}
+    return loginRes,nil
 }
-func (gateway *Gateway)ClientPing(ctx context.Context,requestClientPing *pb.RequestClientPing) (*pb.ResponseServerPong,error){
-    responseServerPong := &pb.ResponseServerPong{}
-    return responseServerPong,nil
+func (gateway *Gateway)CS_Ping(ctx context.Context,ping *pb.Ping) (*pb.Pong,error){
+    pong := &pb.Pong{}
+    return pong,nil
 }
-func (gateway *Gateway)ClientPong(ctx context.Context,requestClientPong *pb.RequestClientPong) (*pb.ResponseServerPong,error){
-    responseServerPong := &pb.ResponseServerPong{}
-    return responseServerPong,nil
+func (gateway *Gateway)CS_Pong(ctx context.Context,pong *pb.Pong) (*pb.Pong,error){
+    pong := &pb.Pong{}
+    return pong,nil
 }
-func (gateway *Gateway)ClientHeartbeat(ctx context.Context,requestClientHeartbeat *pb.RequestClientHeartbeat) (*pb.Empty,error){
+func (gateway *Gateway)CS_Heartbeat(ctx context.Context,heartbeat *pb.Heartbeat) (*pb.Empty,error){
     empty := &pb.Empty{}
     return empty,nil
 }
-func (gateway *Gateway)ServerPing(ctx context.Context,responseServerPing *pb.ResponseServerPing) (*pb.RequestClientPong,error){
-    requestClientPong := &pb.RequestClientPong{}
-    return requestClientPong,nil
-}
-func (gateway *Gateway)ServerPong(ctx context.Context,responseServerPong *pb.ResponseServerPong) (*pb.Empty,error){
+func (gateway *Gateway)SC_Login(ctx context.Context,loginRes *pb.LoginRes) (*pb.Empty,error){
     empty := &pb.Empty{}
     return empty,nil
 }
-func (gateway *Gateway)ServerHeartbeat(ctx context.Context,requestClientHeartbeat *pb.RequestClientHeartbeat) (*pb.Empty,error){
+func (gateway *Gateway)SC_Ping(ctx context.Context,ping *pb.Ping) (*pb.Pong,error){
+    pong := &pb.Pong{}
+    return pong,nil
+}
+func (gateway *Gateway)SC_Pong(ctx context.Context,pong *pb.Pong) (*pb.Pong,error){
+    pong := &pb.Pong{}
+    return pong,nil
+}
+func (gateway *Gateway)SC_Heartbeat(ctx context.Context,heartbeat *pb.Heartbeat) (*pb.Empty,error){
     empty := &pb.Empty{}
     return empty,nil
 }
-func (gateway *Gateway)ServerLogin(ctx context.Context,responseLoginRes *pb.ResponseLoginRes) (*pb.Empty,error){
+func (gateway *Gateway)SC_KickOff(ctx context.Context,kickOff *pb.KickOff) (*pb.Empty,error){
     empty := &pb.Empty{}
     return empty,nil
 }
-func (gateway *Gateway)KickOff(ctx context.Context,responseKickOff *pb.ResponseKickOff) (*pb.Empty,error){
-    empty := &pb.Empty{}
-    return empty,nil
-}
-func (gateway *Gateway)ProjectPush(ctx context.Context,requestProjectPush *pb.RequestProjectPush) (*pb.ResponseProjectPush,error){
-    responseProjectPush := &pb.ResponseProjectPush{}
-    return responseProjectPush,nil
+func (gateway *Gateway)SC_ProjectPush(ctx context.Context,projectPush *pb.ProjectPush) (*pb.ProjectPush,error){
+    projectPush := &pb.ProjectPush{}
+    return projectPush,nil
 }
 

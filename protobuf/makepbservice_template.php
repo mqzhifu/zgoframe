@@ -162,7 +162,7 @@ EOF;
 
 class DB{
     function getConn(){
-        $host = "localhost";
+        $host = "8.142.177.235";
         $username = "root";
         $ps = "mqzhifu";
         $db = "test";
@@ -187,4 +187,26 @@ class DB{
     }
 }
 
+function CurlGetProjectListInfo(){
+//     curl -X POST "http://127.0.0.1:1111/tools/project/list" -H "accept: application/json" -H "X-Source-Type: 11" -H "X-Project-Id: 6" -H "X-Access: imzgoframe"
+    $url = "http://127.0.0.1:1111/tools/project/list";
+    $header = array("X-Source-Type:11","X-Project-Id:6","X-Access:imzgoframe");
+// var_dump($header);
 
+    $ch = curl_init($url);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, FALSE);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, FALSE);
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, $header);
+//     curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+//     curl_setopt($ch, CURLINFO_HEADER_OUT, true);
+
+    $output = curl_exec($ch);
+    curl_close($ch);
+
+    $jsonData  = json_decode($output);
+    return $jsonData["data"];
+
+
+}

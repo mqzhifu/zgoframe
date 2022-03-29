@@ -41,14 +41,15 @@ type NetWayOption struct {
 	//http 查看状态
 	//HttpdRootPath 	string 		`json:"httpdRootPath"`
 	//HttpPort 			string 		`json:"httpPort"`		//短连接端口号
+
 	//以下都是帧同步的配置信息：
 	//MapSize			int32		`json:"mapSize"`		//地址大小，给前端初始化使用
 	//RoomPeople		int32		`json:"roomPeople"`		//一局游戏包含几个玩家
 	//RoomTimeout 		int32 		`json:"roomTimeout"`	//一个房间超时时间
-	//OffLineWaitTime	int32		`json:"offLineWaitTime"`//lockStep 玩家掉线后，其它玩家等待最长时间
+	OffLineWaitTime int32 `json:"offLineWaitTime"` //lockStep 玩家掉线后，其它玩家等待最长时间
 	//LockMode  		int32 		`json:"lockMode"`		//锁模式，乐观|悲观
-	//FPS 				int32 		`json:"fps"`			//frame pre second
-	//RoomReadyTimeout	int32		`json:"roomReadyTimeout"`//一个房间的，玩家的准备，超时时间
+	FPS              int32 `json:"fps"`              //frame pre second
+	RoomReadyTimeout int32 `json:"roomReadyTimeout"` //一个房间的，玩家的准备，超时时间
 	//Store 			int32 		`json:"store"`			//持久化：players room
 }
 
@@ -172,7 +173,7 @@ func (netWay *NetWay) OpenNewConn(connFD FDAdapter) {
 	myMetrics.CounterInc("ws_ok_fd")
 	netWay.Option.Log.Info("OpenNewConn:" + connFD.RemoteAddr())
 
-	var loginRes pb.ResponseLoginRes
+	var loginRes pb.LoginRes
 
 	if netWay.Status == NETWAY_STATUS_CLOSE { //当前网关已经关闭了，还有新的连接进来
 		//记录：创建FD失败次数
@@ -227,7 +228,7 @@ func (netWay *NetWay) OpenNewConn(connFD FDAdapter) {
 	//更新当前连接的属性值
 	NewConn.ProtocolType = firstMsg.ProtocolType
 	NewConn.ContentType = firstMsg.ContentType
-	loginRes = pb.ResponseLoginRes{
+	loginRes = pb.LoginRes{
 		Code:   200,
 		ErrMsg: "",
 		Uid:    NewConn.UserId,
@@ -243,7 +244,7 @@ func (netWay *NetWay) OpenNewConn(connFD FDAdapter) {
 
 }
 
-func (netWay *NetWay) heartbeat(requestClientHeartbeat pb.RequestClientHeartbeat, conn *Conn) {
+func (netWay *NetWay) heartbeat(requestClientHeartbeat pb.Heartbeat, conn *Conn) {
 	now := GetNowTimeSecondToInt()
 	conn.UpTime = int32(now)
 }
@@ -279,7 +280,7 @@ func (netWay *NetWay) Shutdown() {
 
 func (netWay *NetWay) loginPreFailedSendMsg(msg string, closeSource int, conn *Conn) {
 	code := 500
-	loginRes := pb.ResponseLoginRes{
+	loginRes := pb.LoginRes{
 		Code:   500,
 		ErrMsg: msg,
 	}
@@ -319,7 +320,7 @@ func (netWay *NetWay) loginPre(conn *Conn) (jwt JwtData, firstMsg pb.Msg, err er
 }
 
 //登陆验证token
-func (netWay *NetWay) login(requestLogin pb.RequestLogin, conn *Conn) (jwtData JwtData, err error) {
+func (netWay *NetWay) login(requestLogin pb.Login, conn *Conn) (jwtData JwtData, err error) {
 	if conn.UserId > 0 {
 		msg := " don't repeat login." + strconv.Itoa(int(conn.UserId))
 		netWay.Option.Log.Error(msg)

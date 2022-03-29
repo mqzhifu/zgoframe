@@ -12,43 +12,45 @@ import (
 	"time"
 	"zgoframe/protobuf/pb"
 )
+
 //管理 CONN 的容器
 type ConnManager struct {
-	Pool 				map[int32]*Conn // map[userId]*Conn FD 连接池
-	PoolRWLock 			*sync.RWMutex
-	CloseCheckTimeout 				chan int
-	Option 				ConnManagerOption
+	Pool              map[int32]*Conn // map[userId]*Conn FD 连接池
+	PoolRWLock        *sync.RWMutex
+	CloseCheckTimeout chan int
+	Option            ConnManagerOption
 }
 
-type ConnManagerOption struct{
-	maxClientConnNum 	int32	//客户端最大连接数
-	connTimeout 		int32
-	MsgContentMax		int32
-	DefaultContentType 	int32	//每个连接的默认 内容 类型
-	DefaultProtocolType	int32	//每个连接的默认 协议 类型
-	MsgSeparator 		string	//传输消息时，每条消息的间隔符，防止 粘包
+type ConnManagerOption struct {
+	maxClientConnNum    int32 //客户端最大连接数
+	connTimeout         int32
+	MsgContentMax       int32
+	DefaultContentType  int32  //每个连接的默认 内容 类型
+	DefaultProtocolType int32  //每个连接的默认 协议 类型
+	MsgSeparator        string //传输消息时，每条消息的间隔符，防止 粘包
 
-	Log 				*zap.Logger
-	Metrics				*MyMetrics
-	ProtobufMap			*ProtobufMap	//协议ID管理器
-	NetWay				*NetWay
+	Log         *zap.Logger
+	Metrics     *MyMetrics
+	ProtobufMap *ProtobufMap //协议ID管理器
+	NetWay      *NetWay
 }
 
 type ProtocolCtrlInfo struct {
-	ContentType int32
+	ContentType  int32
 	ProtocolType int32
 }
+
 //实例化
-func NewConnManager(connManagerOption ConnManagerOption)*ConnManager {
+func NewConnManager(connManagerOption ConnManagerOption) *ConnManager {
 	connManagerOption.Log.Info("NewConnManager instance:")
 
-	connManager :=  new(ConnManager)
+	connManager := new(ConnManager)
 
-	connManager.Pool 				= make(map[int32]*Conn)
-	connManager.CloseCheckTimeout 	= make(chan int)//连接超时 关闭信号
-	connManager.PoolRWLock 			= &sync.RWMutex{}
+	connManager.Pool = make(map[int32]*Conn)
+	connManager.CloseCheckTimeout = make(chan int) //连接超时 关闭信号
+	connManager.PoolRWLock = &sync.RWMutex{}
 
-	if connManagerOption.MsgSeparator == ""{
+	if connManagerOption.MsgSeparator == "" {
 		//消息分隔符，主要是给TCP使用，一个字符，且最好不要用：\n，因为会与protobuf 冲突
 		connManagerOption.MsgSeparator = "\f"
 	}
@@ -57,8 +59,9 @@ func NewConnManager(connManagerOption ConnManagerOption)*ConnManager {
 
 	return connManager
 }
+
 //启动容器，监听 连接超时处理
-func (connManager *ConnManager)CheckTimeout(){
+func (connManager *ConnManager) CheckTimeout() {
 	//defer func(ctx context.Context ) {
 	//	if err := recover(); err != nil {
 	//		myNetWay.RecoverGoRoutine(connManager.Start,ctx,err)
@@ -66,17 +69,17 @@ func (connManager *ConnManager)CheckTimeout(){
 	//}(ctx)
 
 	connManager.Option.Log.Warn("checkConnPoolTimeout start:")
-	for{
+	for {
 		select {
-		case   <-connManager.CloseCheckTimeout:
+		case <-connManager.CloseCheckTimeout:
 			goto end
 		default:
 			pool := connManager.getPoolAll()
-			for _,v := range pool{
-				now := int32 (GetNowTimeSecondToInt())
+			for _, v := range pool {
+				now := int32(GetNowTimeSecondToInt())
 				x := v.UpTime + connManager.Option.connTimeout
-				if now  > x {
-					v.CloseOneConn( CLOSE_SOURCE_TIMEOUT)
+				if now > x {
+					v.CloseOneConn(CLOSE_SOURCE_TIMEOUT)
 				}
 			}
 			time.Sleep(time.Second * 1)
@@ -84,41 +87,43 @@ func (connManager *ConnManager)CheckTimeout(){
 		}
 	}
 end:
-	connManager.Option.Log.Warn(CTX_DONE_PRE+"checkConnPoolTimeout close")
+	connManager.Option.Log.Warn(CTX_DONE_PRE + "checkConnPoolTimeout close")
 }
+
 //关闭容器，回收处理
-func (connManager *ConnManager)Shutdown(){
+func (connManager *ConnManager) Shutdown() {
 	connManager.Option.Log.Warn("shutdown connManager")
 	connManager.CloseCheckTimeout <- 1
-	if len(connManager.Pool) <= 0{
+	if len(connManager.Pool) <= 0 {
 		return
 	}
-	pool := connManager.getPoolAll( )
-	for _,conn :=range pool{
+	pool := connManager.getPoolAll()
+	for _, conn := range pool {
 		conn.CloseOneConn(CLOSE_SOURCE_CONN_SHUTDOWN)
 	}
 }
+
 //创建一个新的连接结构体
-func (connManager *ConnManager)CreateOneConn(connFd FDAdapter)(myConn *Conn  ){
+func (connManager *ConnManager) CreateOneConn(connFd FDAdapter) (myConn *Conn) {
 	connManager.PoolRWLock.RLock()
 	defer connManager.PoolRWLock.RUnlock()
 
 	connManager.Option.Log.Info("Create one Conn  client struct")
 
-	now := int32( GetNowTimeSecondToInt())
+	now := int32(GetNowTimeSecondToInt())
 
 	myConn = &Conn{
-		Conn		: connFd,
-		UserId		: 0,
-		AddTime		: now,
-		UpTime		: now,
-		Status		: CONN_STATUS_INIT,
-		ConnManager	: connManager,
-		RTT			: 0,
-		SessionId	: "",
-		ContentType	: connManager.Option.DefaultContentType,
+		Conn:         connFd,
+		UserId:       0,
+		AddTime:      now,
+		UpTime:       now,
+		Status:       CONN_STATUS_INIT,
+		ConnManager:  connManager,
+		RTT:          0,
+		SessionId:    "",
+		ContentType:  connManager.Option.DefaultContentType,
 		ProtocolType: connManager.Option.DefaultProtocolType,
-		MsgInChan  	: make(chan pb.Msg,5000),//从底层FD中读出消息后，存储此处，等待其它协程接收
+		MsgInChan:    make(chan pb.Msg, 5000), //从底层FD中读出消息后，存储此处，等待其它协程接收
 		//CloseChan 		chan int
 	}
 
@@ -126,29 +131,31 @@ func (connManager *ConnManager)CreateOneConn(connFd FDAdapter)(myConn *Conn  ){
 
 	return myConn
 }
+
 //
-func (connManager *ConnManager)getConnPoolById(userId int32)(*Conn,bool){
+func (connManager *ConnManager) getConnPoolById(userId int32) (*Conn, bool) {
 	connManager.PoolRWLock.RLock()
 	defer connManager.PoolRWLock.RUnlock()
 
-	conn,ok := connManager.Pool[userId]
-	return conn,ok
+	conn, ok := connManager.Pool[userId]
+	return conn, ok
 }
+
 //往POOL里添加一个新的连接
-func  (connManager *ConnManager)addConnPool( NewConn *Conn)error{
-	if NewConn.UserId <= 0{
+func (connManager *ConnManager) addConnPool(NewConn *Conn) error {
+	if NewConn.UserId <= 0 {
 		connManager.Option.Log.Error("addConnPool NewConn.UserId <= 0 ")
 	}
-	oldConn ,exist := connManager.getConnPoolById(NewConn.UserId)
-	if exist{//该UID已经创建了连接，可能是在别处登陆，直接踢掉旧的连接
-		msg := strconv.Itoa(int(NewConn.UserId)) + " kickOff old pid :"+strconv.Itoa(int(oldConn.UserId))
+	oldConn, exist := connManager.getConnPoolById(NewConn.UserId)
+	if exist { //该UID已经创建了连接，可能是在别处登陆，直接踢掉旧的连接
+		msg := strconv.Itoa(int(NewConn.UserId)) + " kickOff old pid :" + strconv.Itoa(int(oldConn.UserId))
 		connManager.Option.Log.Warn(msg)
 		//err := errors.New(msg)
-		responseKickOff := pb.ResponseKickOff{
+		responseKickOff := pb.KickOff{
 			Time: GetNowMillisecond(),
 		}
 		//给旧连接发送消息通知
-		oldConn.SendMsgCompressByConn("kickOff",&responseKickOff)
+		oldConn.SendMsgCompressByConn("kickOff", &responseKickOff)
 		time.Sleep(time.Millisecond * 200)
 		oldConn.CloseOneConn(CLOSE_SOURCE_OVERRIDE)
 	}
@@ -159,59 +166,62 @@ func  (connManager *ConnManager)addConnPool( NewConn *Conn)error{
 
 	return nil
 }
+
 //删除一个FD
-func  (connManager *ConnManager)delConnPool(uid int32  ){
-	connManager.Option.Log.Warn("delConnPool uid :"+strconv.Itoa(int(uid)))
+func (connManager *ConnManager) delConnPool(uid int32) {
+	connManager.Option.Log.Warn("delConnPool uid :" + strconv.Itoa(int(uid)))
 	connManager.PoolRWLock.Lock()
 	defer connManager.PoolRWLock.Unlock()
 
-	delete(connManager.Pool,uid)
+	delete(connManager.Pool, uid)
 }
+
 //
-func (connManager *ConnManager)getPoolAll()map[int32]*Conn{
+func (connManager *ConnManager) getPoolAll() map[int32]*Conn {
 	connManager.PoolRWLock.RLock()
 	defer connManager.PoolRWLock.RUnlock()
 
 	pool := make(map[int32]*Conn)
-	for k,v := range connManager.Pool{
+	for k, v := range connManager.Pool {
 		pool[k] = v
 	}
 	return pool
 }
 
-func (connManager *ConnManager)GetPlayerCtrlInfoById(userId int32)ProtocolCtrlInfo{
-	var contentType  int32
+func (connManager *ConnManager) GetPlayerCtrlInfoById(userId int32) ProtocolCtrlInfo {
+	var contentType int32
 	var protocolType int32
-	if userId == 0{
+	if userId == 0 {
 		contentType = connManager.Option.DefaultContentType
 		protocolType = connManager.Option.DefaultProtocolType
-	}else{
-		conn ,empty := connManager.getConnPoolById(userId)
+	} else {
+		conn, empty := connManager.getConnPoolById(userId)
 		//mylog.Debug("GetContentTypeById player",player)
-		if empty{
+		if empty {
 			contentType = connManager.Option.DefaultContentType
 			protocolType = connManager.Option.DefaultProtocolType
-		}else{
+		} else {
 			contentType = conn.ContentType
 			protocolType = conn.ProtocolType
 		}
 	}
 
 	protocolCtrlInfo := ProtocolCtrlInfo{
-		ContentType: contentType,
+		ContentType:  contentType,
 		ProtocolType: protocolType,
 	}
 
-	connManager.Option.Log.Info("GetPlayerCtrlInfo uid : "+strconv.Itoa(int(userId))+" contentType:"+ strconv.Itoa(int(contentType)) + " , protocolType:" + strconv.Itoa(int(protocolType)))
+	connManager.Option.Log.Info("GetPlayerCtrlInfo uid : " + strconv.Itoa(int(userId)) + " contentType:" + strconv.Itoa(int(contentType)) + " , protocolType:" + strconv.Itoa(int(protocolType)))
 
 	return protocolCtrlInfo
 }
+
 //==========================================================
 //将 结构体 压缩成 字符串
-func  (connManager *ConnManager)CompressContent(contentStruct interface{},UserId int32)(content []byte  ,err error){
+func (connManager *ConnManager) CompressContent(contentStruct interface{}, UserId int32) (content []byte, err error) {
 	//先获取该连接的通信元数据
 	protocolCtrlInfo := connManager.GetPlayerCtrlInfoById(UserId)
-	contentType 	:= protocolCtrlInfo.ContentType
+	contentType := protocolCtrlInfo.ContentType
 
 	if contentType == CONTENT_TYPE_JSON {
 		//这里有个问题：纯JSON格式与PROTOBUF格式在PB文件上 不兼容
@@ -222,16 +232,16 @@ func  (connManager *ConnManager)CompressContent(contentStruct interface{},UserId
 
 		//所以，先将content 字符串 由下划线转成 驼峰式
 		content, err = json.Marshal(JsonCamelCase{contentStruct})
-	}else if  contentType == CONTENT_TYPE_PROTOBUF {
+	} else if contentType == CONTENT_TYPE_PROTOBUF {
 		contentStruct := contentStruct.(proto.Message)
 		content, err = proto.Marshal(contentStruct)
-	}else{
+	} else {
 		err = errors.New(" contentType switch err")
 	}
-	if err != nil{
-		connManager.Option.Log.Error("CompressContent err :"+err.Error())
+	if err != nil {
+		connManager.Option.Log.Error("CompressContent err :" + err.Error())
 	}
-	return content,err
+	return content, err
 }
 
 //解析C端发送的数据，这一层，对于用户层的content数据不做处理
@@ -243,53 +253,54 @@ func  (connManager *ConnManager)CompressContent(contentStruct interface{},UserId
 //10-19：预留，还没想好，可以存sessionId，也可以换成UID
 //19 以后为内容体
 //结尾会添加一个字节：\f ,可用于 TCP 粘包 分隔
-func  (connManager *ConnManager)GetPackHeaderLength()int{
+func (connManager *ConnManager) GetPackHeaderLength() int {
 	return 4 + 1 + 1 + 1 + 2 + 10
 }
+
 //解析二进制流 -> msg结构体
-func  (connManager *ConnManager)ParserContentProtocol(content string)(message pb.Msg,err error){
+func (connManager *ConnManager) ParserContentProtocol(content string) (message pb.Msg, err error) {
 	headerLength := connManager.GetPackHeaderLength()
-	if len(content) < headerLength{
-		return message,errors.New("content len "+ strconv.Itoa(headerLength) + "  < "+ " header len" +strconv.Itoa(headerLength))
+	if len(content) < headerLength {
+		return message, errors.New("content len " + strconv.Itoa(headerLength) + "  < " + " header len" + strconv.Itoa(headerLength))
 	}
-	if len(content) == headerLength{
-		errMsg := "content = "+strconv.Itoa(headerLength)+" ,body is empty"
-		return message,errors.New(errMsg)
+	if len(content) == headerLength {
+		errMsg := "content = " + strconv.Itoa(headerLength) + " ,body is empty"
+		return message, errors.New(errMsg)
 	}
 	//数据长度
 	dataLength := BytesToInt32([]byte(content[0:4]))
 	if dataLength <= 0 {
 		errMsg := "dataLength <= 0"
-		return message,errors.New(errMsg)
+		return message, errors.New(errMsg)
 	}
 	//contentType + protocolType
 	ctrlStream := content[4:6]
-	ContentType,ProtocolType := connManager.parserProtocolCtrlInfo([]byte(ctrlStream))
-	serviceId := int( content[6:7][0] )
-	actionId := BytesToInt32( BytesCombine([]byte{0,0},[]byte(content[7:9])) )
+	ContentType, ProtocolType := connManager.parserProtocolCtrlInfo([]byte(ctrlStream))
+	serviceId := int(content[6:7][0])
+	actionId := BytesToInt32(BytesCombine([]byte{0, 0}, []byte(content[7:9])))
 	//保留字
-	reserved :=  content[9:19]
-	connManager.Option.Log.Warn( "contentLen:"+strconv.Itoa(len(content))+" , dataLength:"+strconv.Itoa(dataLength) + " actionId:"+strconv.Itoa(actionId) +  " serviceId:"+strconv.Itoa(serviceId))
-	actionMap,empty := connManager.Option.ProtobufMap.GetActionName(actionId)
-	if empty{
+	reserved := content[9:19]
+	connManager.Option.Log.Warn("contentLen:" + strconv.Itoa(len(content)) + " , dataLength:" + strconv.Itoa(dataLength) + " actionId:" + strconv.Itoa(actionId) + " serviceId:" + strconv.Itoa(serviceId))
+	actionMap, empty := connManager.Option.ProtobufMap.GetActionName(actionId)
+	if empty {
 		errMsg := "actionId ProtocolActions.GetActionName empty!!!"
 		//protocolManager.Option.Log.Error(errMsg,actionId)
-		return message,errors.New(errMsg)
+		return message, errors.New(errMsg)
 	}
 	//提取数据,ps: tcp 会自动删除末尾分隔符，而ws会有分隔符的
-	data := content[19:19 + dataLength]
+	data := content[19 : 19+dataLength]
 	msg := pb.Msg{
-		ActionId	: int32(actionId),
-		ServiceId	: int32(serviceId),
-		DataLength	: int32(dataLength),
-		Action		: actionMap.Action,
-		Content		: data,
-		ContentType : ContentType,
+		ActionId:     int32(actionId),
+		ServiceId:    int32(serviceId),
+		DataLength:   int32(dataLength),
+		Action:       actionMap.Action,
+		Content:      data,
+		ContentType:  ContentType,
 		ProtocolType: ProtocolType,
-		Reserved	: reserved,
+		Reserved:     reserved,
 	}
 	//protocolManager.Option.Log.Debug("parserContentProtocol msg:",msg)
-	return msg,nil
+	return msg, nil
 }
 
 ////这里是做个 容错处理，content type 跟 protocol type 不能为空，一但出现为空的情况，得给一个默认值
@@ -308,49 +319,50 @@ func  (connManager *ConnManager)ParserContentProtocol(content string)(message pb
 //	return protocolCtrlInfo
 //}
 //字节 转换 协议控制信息
-func (connManager *ConnManager) parserProtocolCtrlInfo(stream []byte)(int32 ,int32){
+func (connManager *ConnManager) parserProtocolCtrlInfo(stream []byte) (int32, int32) {
 	//firstByteHighThreeBit := (firstByte >> 5 ) & 7
 	//firstByteLowThreeBit := ((firstByte << 5 ) >> 5 )  & 7
 	//protocolCtrlInfo := connManager.GetCtrlInfo(int32(stream[0]),int32(stream[1]))
 	//mylog.Debug("parserProtocolCtrlInfo ContentType:",protocolCtrlInfo.ContentType,",ProtocolType:",protocolCtrlInfo.ProtocolType)
-	return int32(stream[0]),int32(stream[1])
+	return int32(stream[0]), int32(stream[1])
 }
+
 //将消息 压缩成二进制
 //func  (protocolManager *ProtocolManager)packContentMsg(content []byte,conn *Conn ,serviceId int ,actionId int )[]byte{
-func   (connManager *ConnManager) PackContentMsg(msg pb.Msg)[]byte{
-	dataLengthBytes 	:= Int32ToBytes( int32( len(msg.Content) ))
-	contentTypeBytes 	:= byte( msg.ContentType)
-	protocolTypeBytes 	:=  byte(msg.ProtocolType)
-	actionIdByte 		:= Int32ToBytes(msg.ActionId)
-	actionIdByte 		 = actionIdByte[2:4]
-	reserved 			:= []byte( "reserved--")
-	serviceIdBytes 		:= Int32ToBytes(msg.ServiceId)[3]
-	ln 					:= connManager.Option.MsgSeparator
+func (connManager *ConnManager) PackContentMsg(msg pb.Msg) []byte {
+	dataLengthBytes := Int32ToBytes(int32(len(msg.Content)))
+	contentTypeBytes := byte(msg.ContentType)
+	protocolTypeBytes := byte(msg.ProtocolType)
+	actionIdByte := Int32ToBytes(msg.ActionId)
+	actionIdByte = actionIdByte[2:4]
+	reserved := []byte("reserved--")
+	serviceIdBytes := Int32ToBytes(msg.ServiceId)[3]
+	ln := connManager.Option.MsgSeparator
 	//合并: 头 + 消息内容体 + 分隔符
-	content  := BytesCombine(dataLengthBytes,ByteTurnBytes(contentTypeBytes),ByteTurnBytes(protocolTypeBytes),ByteTurnBytes(serviceIdBytes),actionIdByte,reserved,[]byte(msg.Content),[]byte(ln))
+	content := BytesCombine(dataLengthBytes, ByteTurnBytes(contentTypeBytes), ByteTurnBytes(protocolTypeBytes), ByteTurnBytes(serviceIdBytes), actionIdByte, reserved, []byte(msg.Content), []byte(ln))
 	return content
 }
 
 //==============================
 //一个连接
 type Conn struct {
-	AddTime			int32
-	UpTime 			int32
-	UserId			int32
-	Status  		int
-	Conn 			FDAdapter //TCP/WS Conn FD
-	CloseChan 		chan int
-	RTT 			int64
-	SessionId 		string
-	ConnManager		*ConnManager	//父类
-	MsgInChan		chan pb.Msg
-	ContentType		int32	//传输数据的内容类型	此值由第一次通信时确定，直到断开连接前，不会变更
-	ProtocolType	int32	//传输数据的类型		此值由第一次通信时确定，直到断开连接前，不会变更
+	AddTime      int32
+	UpTime       int32
+	UserId       int32
+	Status       int
+	Conn         FDAdapter //TCP/WS Conn FD
+	CloseChan    chan int
+	RTT          int64
+	SessionId    string
+	ConnManager  *ConnManager //父类
+	MsgInChan    chan pb.Msg
+	ContentType  int32 //传输数据的内容类型	此值由第一次通信时确定，直到断开连接前，不会变更
+	ProtocolType int32 //传输数据的类型		此值由第一次通信时确定，直到断开连接前，不会变更
 	//RTTCancelChan chan int
 	//UdpConn 		bool
 }
 
-func   (conn *Conn)Write(content []byte,messageType int){
+func (conn *Conn) Write(content []byte, messageType int) {
 	//defer func() {
 	//	if err := recover(); err != nil {
 	//		conn.ConnManager.Option.Log.Error("conn.Conn.WriteMessage failed:")
@@ -362,7 +374,7 @@ func   (conn *Conn)Write(content []byte,messageType int){
 	//myMetrics.fastLog("total.output.size",METRICS_OPT_PLUS,len(content))
 	conn.ConnManager.Option.Metrics.CounterInc("total_output_num")
 	//conn.ConnManager.Option.Metrics.GaugeAdd("total.output.size",float64(StringToFloat(strconv.Itoa(len(content)))))
-	conn.ConnManager.Option.Metrics.GaugeAdd("total_output_size",float64( len(content) ))
+	conn.ConnManager.Option.Metrics.GaugeAdd("total_output_size", float64(len(content)))
 
 	//pid := strconv.Itoa(int(conn.UserId))
 	//myMetrics.fastLog("player.fd.num."+pid,METRICS_OPT_INC,0)
@@ -370,113 +382,117 @@ func   (conn *Conn)Write(content []byte,messageType int){
 
 	conn.Conn.WriteMessage(messageType, content)
 }
+
 //最后更新时间
-func   (conn *Conn)UpLastTime(){
-	conn.UpTime = int32( GetNowTimeSecondToInt() )
+func (conn *Conn) UpLastTime() {
+	conn.UpTime = int32(GetNowTimeSecondToInt())
 }
+
 //直接从FD中读取一条原始消息(未做解析)
-func   (conn *Conn)Read()(content string,err error){
+func (conn *Conn) Read() (content string, err error) {
 	// 设置消息的最大长度 - 暂无
 	//conn.Conn.SetReadDeadline(time.Now().Add(time.Second * time.Duration(mynetWay.Option.IOTimeout)))
-	messageType , dataByte  , err  := conn.Conn.ReadMessage()
+	messageType, dataByte, err := conn.Conn.ReadMessage()
 	//_ , dataByte  , err  := conn.Conn.ReadMessage()
-	if err != nil{
+	if err != nil {
 		//myMetrics.fastLog("total.input.err.num",METRICS_OPT_INC,0)
 		conn.ConnManager.Option.Log.Error("conn.Conn.ReadMessage err: " + err.Error())
-		return content,err
+		return content, err
 	}
 	conn.ConnManager.Option.Metrics.CounterInc("total_input_num")
 	//conn.ConnManager.Option.Metrics.GaugeAdd("total.input.size",float64(StringToFloat(strconv.Itoa(len(dataByte)))))
-	conn.ConnManager.Option.Metrics.GaugeAdd("total_input_size",float64( len(dataByte) ))
+	conn.ConnManager.Option.Metrics.GaugeAdd("total_input_size", float64(len(dataByte)))
 
 	//pid := strconv.Itoa(int(conn.UserId))
 	//myMetrics.fastLog("player.fd.num."+pid,METRICS_OPT_INC,0)
 	//myMetrics.fastLog("player.fd.size."+pid,METRICS_OPT_PLUS,len(content))
 
-	conn.ConnManager.Option.Log.Info("conn.ReadMessage messageType:" + strconv.Itoa(messageType) +" len :"+strconv.Itoa(len(dataByte)) + " data:" +string(dataByte))
+	conn.ConnManager.Option.Log.Info("conn.ReadMessage messageType:" + strconv.Itoa(messageType) + " len :" + strconv.Itoa(len(dataByte)) + " data:" + string(dataByte))
 	content = string(dataByte)
-	return content,nil
+	return content, nil
 }
 
-func  (conn *Conn)IOLoop(){
+func (conn *Conn) IOLoop() {
 	conn.ConnManager.Option.Log.Info("conn IOLoop:")
-	conn.ConnManager.Option.Log.Info("set conn status :"+strconv.Itoa(CONN_STATUS_EXECING)+ " make close chan")
+	conn.ConnManager.Option.Log.Info("set conn status :" + strconv.Itoa(CONN_STATUS_EXECING) + " make close chan")
 	conn.Status = CONN_STATUS_EXECING
 	conn.CloseChan = make(chan int)
-	ctx,cancel := context.WithCancel(context.Background())
-	go conn.ReadLoop(ctx)//读取消息，拆包，然后投入到队列中
-	go conn.ProcessMsgLoop(ctx)//从队列中取出已拆包的值，做下一步处理：router
+	ctx, cancel := context.WithCancel(context.Background())
+	go conn.ReadLoop(ctx)       //读取消息，拆包，然后投入到队列中
+	go conn.ProcessMsgLoop(ctx) //从队列中取出已拆包的值，做下一步处理：router
 	//进入阻塞，监听外部<取消>操作
-	<- conn.CloseChan
+	<-conn.CloseChan
 	cancel()
 	conn.ConnManager.Option.Log.Warn("IOLoop receive chan quit~~~")
 	conn.Conn.Close()
 	//取消上面两个协程
 
 }
+
 ////一个协程挂了，再给拉起来
 //func  (conn *Conn) RecoverReadLoop(ctx context.Context){
 //	conn.ConnManager.Option.Log.Warn("recover ReadLoop:")
 //	go conn.ReadLoop(ctx)
 //}
 //死循环，从底层已读取出的消息中，再读取消息
-func  (conn *Conn)ReadLoop(ctx context.Context){
+func (conn *Conn) ReadLoop(ctx context.Context) {
 	//defer func(ctx context.Context) {
 	//	if err := recover(); err != nil {
 	//		conn.ConnManager.Option.Log.Panic("conn.ReadLoop panic defer :")
 	//		conn.RecoverReadLoop(ctx)
 	//	}
 	//}(ctx)
-	for{
-		select{
-			case <-ctx.Done():
-				conn.ConnManager.Option.Log.Warn("connReadLoop receive signal: ctx.Done.")
-				goto end
-			default:
-				//从ws 读取 数据
-				content,err :=  conn.Read()
-				if err != nil{
-					IsUnexpectedCloseError := websocket.IsUnexpectedCloseError(err)
-					conn.ConnManager.Option.Log.Warn("connReadLoop connRead err:"+err.Error()+"IsUnexpectedCloseError:")
-					if IsUnexpectedCloseError{
-						conn.CloseOneConn( CLOSE_SOURCE_CLIENT_WS_FD_GONE)
-						goto end
-					}else{
-						continue
-					}
+	for {
+		select {
+		case <-ctx.Done():
+			conn.ConnManager.Option.Log.Warn("connReadLoop receive signal: ctx.Done.")
+			goto end
+		default:
+			//从ws 读取 数据
+			content, err := conn.Read()
+			if err != nil {
+				IsUnexpectedCloseError := websocket.IsUnexpectedCloseError(err)
+				conn.ConnManager.Option.Log.Warn("connReadLoop connRead err:" + err.Error() + "IsUnexpectedCloseError:")
+				if IsUnexpectedCloseError {
+					conn.CloseOneConn(CLOSE_SOURCE_CLIENT_WS_FD_GONE)
+					goto end
+				} else {
+					continue
 				}
+			}
 
-				if content == ""{
-					continue
-				}
-				//最后更新时间
-				conn.UpLastTime()
-				if len(content) > int(conn.ConnManager.Option.MsgContentMax){
-					errMsg := "msg content len > max content " + strconv.Itoa(int(conn.ConnManager.Option.MsgContentMax)) + " " + strconv.Itoa(len(content))
-					conn.ConnManager.Option.Log.Error(errMsg)
-					return
-				}
-				//解析消息内容
-				msg,err  := conn.ConnManager.ParserContentProtocol(content)
-				if err !=nil{
-					conn.ConnManager.Option.Log.Warn("parserContent err :" + err.Error())
-					continue
-				}
-				//写入队列，等待其它协程处理，继续死循环
-				conn.MsgInChan <- msg
+			if content == "" {
+				continue
+			}
+			//最后更新时间
+			conn.UpLastTime()
+			if len(content) > int(conn.ConnManager.Option.MsgContentMax) {
+				errMsg := "msg content len > max content " + strconv.Itoa(int(conn.ConnManager.Option.MsgContentMax)) + " " + strconv.Itoa(len(content))
+				conn.ConnManager.Option.Log.Error(errMsg)
+				return
+			}
+			//解析消息内容
+			msg, err := conn.ConnManager.ParserContentProtocol(content)
+			if err != nil {
+				conn.ConnManager.Option.Log.Warn("parserContent err :" + err.Error())
+				continue
+			}
+			//写入队列，等待其它协程处理，继续死循环
+			conn.MsgInChan <- msg
 		}
 	}
-end :
+end:
 	conn.ConnManager.Option.Log.Warn("connReadLoop receive signal: done.")
 }
+
 //func  (conn *Conn) RecoverProcessMsgLoop(ctx context.Context){
 //	conn.ConnManager.Option.Log.Warn("recover ReadLoop:")
 //	go conn.ProcessMsgLoop(ctx)
 //}
 
 //关闭一个已登陆成功的FD,之所以放在最外层，是方便统一管理
-func (conn *Conn)CloseOneConn( source int){
-	conn.ConnManager.Option.Log.Info("Conn close ,source : "+strconv.Itoa(source) + " , " + strconv.Itoa(int(conn.UserId)))
+func (conn *Conn) CloseOneConn(source int) {
+	conn.ConnManager.Option.Log.Info("Conn close ,source : " + strconv.Itoa(source) + " , " + strconv.Itoa(int(conn.UserId)))
 	if conn.Status == CONN_STATUS_CLOSE {
 		conn.ConnManager.Option.Log.Error("CloseOneConn error :Conn.Status == CLOSE")
 	}
@@ -490,11 +506,11 @@ func (conn *Conn)CloseOneConn( source int){
 	//netWay.Players.delById(Conn.PlayerId)//这个不能删除，用于玩家掉线恢复的记录
 	//先把玩家的在线状态给变更下，不然 mySync.close 里面获取房间在线人数，会有问题
 	//myPlayerManager.upPlayerStatus(conn.UserId, PLAYER_STATUS_OFFLINE)
-	if source != CLOSE_SOURCE_CLIENT{
+	if source != CLOSE_SOURCE_CLIENT {
 		//客户端主动关闭，本层属于被动通知，底层已经知道了连接断开了，不用再关闭FD了
 		err := conn.Conn.Close()
-		if err != nil{
-			conn.ConnManager.Option.Log.Error("Conn.Conn.Close err:"+err.Error())
+		if err != nil {
+			conn.ConnManager.Option.Log.Error("Conn.Conn.Close err:" + err.Error())
 		}
 	}
 	conn.ConnManager.delConnPool(conn.UserId)
@@ -504,16 +520,16 @@ func (conn *Conn)CloseOneConn( source int){
 	//myMetrics.fastLog("total.fd.num",METRICS_OPT_DIM,0)
 	//myMetrics.fastLog("history.fd.destroy",METRICS_OPT_INC,0)
 	//netWay.Metrics.CounterDec("total.fd.num")
-	if source == CLOSE_SOURCE_CLIENT{
+	if source == CLOSE_SOURCE_CLIENT {
 		conn.ConnManager.Option.Metrics.CounterInc("server_close_fd")
-	}else{
+	} else {
 		conn.ConnManager.Option.Metrics.CounterInc("client_close_fd")
 	}
 
 }
 
 //从：FD里读取的消息（缓存队列），拿出来，做分发路由，处理
-func  (conn *Conn)ProcessMsgLoop(ctx context.Context){
+func (conn *Conn) ProcessMsgLoop(ctx context.Context) {
 	//defer func(ctx context.Context) {
 	//	if err := recover(); err != nil {
 	//		conn.ConnManager.Option.Log.Panic("conn.ProcessMsgLoop panic defer :")
@@ -521,71 +537,75 @@ func  (conn *Conn)ProcessMsgLoop(ctx context.Context){
 	//	}
 	//}(ctx)
 
-	for{
+	for {
 		ctxHasDone := 0
-		select{
-			case <-ctx.Done():
-				ctxHasDone = 1
-			case msg := <-conn.MsgInChan:
-				conn.ConnManager.Option.Log.Info("ProcessMsgLoop receive msg" + msg.Action)
-				conn.ConnManager.Option.NetWay.Router(msg,conn)
+		select {
+		case <-ctx.Done():
+			ctxHasDone = 1
+		case msg := <-conn.MsgInChan:
+			conn.ConnManager.Option.Log.Info("ProcessMsgLoop receive msg" + msg.Action)
+			conn.ConnManager.Option.NetWay.Router(msg, conn)
 		}
-		if ctxHasDone == 1{
+		if ctxHasDone == 1 {
 			goto end
 		}
 	}
-end :
+end:
 	conn.ConnManager.Option.Log.Warn("ProcessMsgLoop receive signal: done.")
 }
+
 //监听到某个FD被关闭后，回调函数
-func  (conn *Conn)CloseHandler(code int, text string) error{
-	conn.CloseOneConn( CLOSE_SOURCE_CLIENT)
+func (conn *Conn) CloseHandler(code int, text string) error {
+	conn.CloseOneConn(CLOSE_SOURCE_CLIENT)
 	return nil
 }
 
 //===================================================================
 //发送一条消息给一个玩家，根据conn，同时将消息内容进行编码与压缩
 //大部分通信都是这个方法
-func(conn *Conn)SendMsgCompressByConn( actionName string , contentStruct interface{}){
-	conn.ConnManager.Option.Log.Info("SendMsgCompressByConn  actionName:"+actionName)
+func (conn *Conn) SendMsgCompressByConn(actionName string, contentStruct interface{}) {
+	conn.ConnManager.Option.Log.Info("SendMsgCompressByConn  actionName:" + actionName)
 	//conn.UserId=0 时，由函数内部做兼容，主要是用来取content type ,protocol type
-	contentByte ,err := conn.ConnManager.CompressContent(contentStruct,conn.UserId)
-	if err != nil{
+	contentByte, err := conn.ConnManager.CompressContent(contentStruct, conn.UserId)
+	if err != nil {
 		return
 	}
-	conn.SendMsg(actionName,contentByte)
+	conn.SendMsg(actionName, contentByte)
 }
+
 //发送一条消息给一个玩家，根据UserId，同时将消息内容进行编码与压缩
-func(conn *Conn)SendMsgCompressByUid(UserId int32,action string , contentStruct interface{}){
-	conn.ConnManager.Option.Log.Info("SendMsgCompressByUid UserId:"+strconv.Itoa(int(UserId))  +  " action:" + action)
-	contentByte ,err := conn.ConnManager.CompressContent(contentStruct,UserId)
-	if err != nil{
+func (conn *Conn) SendMsgCompressByUid(UserId int32, action string, contentStruct interface{}) {
+	conn.ConnManager.Option.Log.Info("SendMsgCompressByUid UserId:" + strconv.Itoa(int(UserId)) + " action:" + action)
+	contentByte, err := conn.ConnManager.CompressContent(contentStruct, UserId)
+	if err != nil {
 		return
 	}
-	conn.SendMsgByUid(UserId,action,contentByte)
+	conn.SendMsgByUid(UserId, action, contentByte)
 }
+
 //发送一条消息给一个玩家,根据UserId,且不做压缩处理
-func(conn *Conn)SendMsgByUid(UserId int32,action string , content []byte){
-	conn,ok := conn.ConnManager.getConnPoolById(UserId)
+func (conn *Conn) SendMsgByUid(UserId int32, action string, content []byte) {
+	conn, ok := conn.ConnManager.getConnPoolById(UserId)
 	if !ok {
 		conn.ConnManager.Option.Log.Error("conn not in pool,maybe del.")
 		return
 	}
-	conn.SendMsg(action,content)
-}
-//发送一条消息给一个玩家,根据UserId,且不做压缩处理
-func(conn *Conn)SendMsgByConn( action string , content []byte){
-	conn.SendMsg(action,content)
+	conn.SendMsg(action, content)
 }
 
-func(conn *Conn)SendMsg( action string,content []byte){
+//发送一条消息给一个玩家,根据UserId,且不做压缩处理
+func (conn *Conn) SendMsgByConn(action string, content []byte) {
+	conn.SendMsg(action, content)
+}
+
+func (conn *Conn) SendMsg(action string, content []byte) {
 	//获取协议号结构体
-	actionMap,empty := conn.ConnManager.Option.ProtobufMap.GetActionId(action)
-	if empty{
-		conn.ConnManager.Option.Log.Error("GetActionId empty:"+action)
+	actionMap, empty := conn.ConnManager.Option.ProtobufMap.GetActionId(action)
+	if empty {
+		conn.ConnManager.Option.Log.Error("GetActionId empty:" + action)
 		return
 	}
-	conn.ConnManager.Option.Log.Info("SendMsg , actionId:"+ strconv.Itoa(actionMap.Id )+ " , userId:" + strconv.Itoa( int(conn.UserId))  + " , actionName:" + action)
+	conn.ConnManager.Option.Log.Info("SendMsg , actionId:" + strconv.Itoa(actionMap.Id) + " , userId:" + strconv.Itoa(int(conn.UserId)) + " , actionName:" + action)
 
 	if conn.Status == CONN_STATUS_CLOSE {
 		conn.ConnManager.Option.Log.Error("Conn status =CONN_STATUS_CLOSE.")
@@ -594,18 +614,18 @@ func(conn *Conn)SendMsg( action string,content []byte){
 
 	protocolCtrlInfo := conn.ConnManager.GetPlayerCtrlInfoById(conn.UserId)
 	msg := pb.Msg{
-		Content		: string(content),
-		ServiceId	: int32(actionMap.ServiceId),
-		ActionId	: int32(actionMap.Id),
-		Action		: actionMap.Action,
-		ContentType	: protocolCtrlInfo.ContentType,
+		Content:      string(content),
+		ServiceId:    int32(actionMap.ServiceId),
+		ActionId:     int32(actionMap.Id),
+		Action:       actionMap.Action,
+		ContentType:  protocolCtrlInfo.ContentType,
 		ProtocolType: protocolCtrlInfo.ProtocolType,
 	}
 	contentBytes := conn.ConnManager.PackContentMsg(msg)
 
 	if protocolCtrlInfo.ContentType == CONTENT_TYPE_PROTOBUF {
-		conn.Write(contentBytes,websocket.BinaryMessage)
-	}else{
-		conn.Write(contentBytes,websocket.TextMessage)
+		conn.Write(contentBytes, websocket.BinaryMessage)
+	} else {
+		conn.Write(contentBytes, websocket.TextMessage)
 	}
 }

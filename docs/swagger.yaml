@@ -406,6 +406,9 @@ definitions:
       sex:
         description: 性别
         type: integer
+      test:
+        description: 是否为测试用户1是2否
+        type: integer
       third_id:
         description: 三方平台ID
         type: string
@@ -454,6 +457,9 @@ definitions:
         type: string
       sex:
         description: 性别
+        type: integer
+      test:
+        description: 是否为测试用户1是2否
         type: integer
       third_id:
         description: 三方平台ID
@@ -601,6 +607,23 @@ definitions:
         $ref: '#/definitions/request.HeaderRequest'
       header_response:
         $ref: '#/definitions/request.HeaderResponse'
+    type: object
+  util.ActionMap:
+    properties:
+      action:
+        type: string
+      demo:
+        type: string
+      desc:
+        type: string
+      id:
+        type: integer
+      response:
+        type: string
+      service_id:
+        type: integer
+      service_name:
+        type: string
     type: object
   util.NetWayOption:
     properties:
@@ -1187,6 +1210,19 @@ paths:
       summary: 重置密码 - 通过短信
       tags:
       - Base
+  /gateway/action/map:
+    get:
+      description: demo
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/util.ActionMap'
+      security:
+      - ApiKeyAuth: []
+      summary: php解析.proto文件，再通过GO读取出来
+      tags:
+      - Gateway
   /gateway/config:
     get:
       description: 主要是长连接的配置(端口|协议)
@@ -1350,6 +1386,47 @@ paths:
       summary: 所有常量列表
       tags:
       - Tools
+  /tools/frame/sync/js/demo:
+    get:
+      description: demo
+      parameters:
+      - description: 来源
+        enum:
+        - "11"
+        - "12"
+        - "21"
+        - "22"
+        in: header
+        name: X-Source-Type
+        required: true
+        type: string
+      - default: "6"
+        description: 项目ID
+        in: header
+        name: X-Project-Id
+        required: true
+        type: string
+      - default: imzgoframe
+        description: 访问KEY
+        in: header
+        name: X-Access
+        required: true
+        type: string
+      - description: 项目ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Project'
+      summary: 帧同步 - js
+      tags:
+      - Tools
   /tools/header/struct:
     get:
       description: 日常header里放一诸如验证类的东西，统一公示出来，仅是说明，方便测试，不是真实API，方便使用
@@ -1501,8 +1578,14 @@ paths:
   /user/delete:
     delete:
       consumes:
-      - application/json
+      - multipart/form-data
       description: 欧美国家要求比较严，必须得有这功能，国内现在也有但不多，目前是用来测试的，像脚本做自动化测试生成的用户，以及测试员线上测试时产生的用户数据（危险甚用）
+      parameters:
+      - description: 用户IDs
+        in: formData
+        name: uids
+        required: true
+        type: string
       produces:
       - application/json
       responses:

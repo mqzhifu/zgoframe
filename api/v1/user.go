@@ -7,6 +7,7 @@ import (
 	"github.com/go-redis/redis/v8"
 	"go.uber.org/zap"
 	"strconv"
+	"strings"
 	"time"
 	"zgoframe/core/global"
 	httpmiddleware "zgoframe/http/middleware"
@@ -317,31 +318,30 @@ func SetUserInfo(c *gin.Context) {
 // @Summary 删除用户
 // @Description 欧美国家要求比较严，必须得有这功能，国内现在也有但不多，目前是用来测试的，像脚本做自动化测试生成的用户，以及测试员线上测试时产生的用户数据（危险甚用）
 // @Security ApiKeyAuth
-// @accept application/json
+// @Accept multipart/form-data
+// @Param uids formData string true "用户IDs"
 // @Produce application/json
 // @Success 200 {string} string "{"success":true,"data":{},"msg":"删除成功"}"
 // @Router /user/delete [delete]
 func DeleteUser(c *gin.Context) {
-	httpresponse.OkWithMessage("用户怎么能随便删除呢？不想要鸡腿了？", c)
-	return
+	uids := c.PostForm("uids")
+	if uids == "" {
+		httpresponse.FailWithMessage("uids empty", c)
+		return
+	}
 
-	//var reqId request.GetById
-	//_ = c.ShouldBindJSON(&reqId)
-	//if err := util.Verify(reqId, util.IdVerify); err != nil {
-	//	httpresponse.FailWithMessage(err.Error(), c)
-	//	return
-	//}
-	//jwtId := getUserID(c)
-	//if jwtId == int(reqId.Id) {
-	//	httpresponse.FailWithMessage("删除失败, 自杀失败", c)
-	//	return
-	//}
-	//if err := service.DeleteUser(reqId.Id); err != nil {
-	//	global.V.Zap.Error("删除失败!", zap.Any("err", err))
-	//	httpresponse.FailWithMessage("删除失败", c)
-	//} else {
-	//	httpresponse.OkWithMessage("删除成功", c)
-	//}
+	uidsArr := strings.Split(uids, ",")
+	for _, v := range uidsArr {
+		if v == "" {
+			continue
+		}
+		uid, _ := strconv.Atoi(v)
+		global.V.MyService.User.Delete(uid)
+	}
+	//httpresponse.OkWithMessage("用户怎么能随便删除呢？不想要鸡腿了？", c)
+
+	httpresponse.OkWithMessage("ok", c)
+
 }
 
 //// 从Gin的Context中获取从jwt解析出来的用户ID

@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"go.uber.org/zap"
-	"time"
 )
 
 type Gateway struct {
@@ -13,6 +12,9 @@ type Gateway struct {
 	NetWayOption NetWayOption
 }
 
+//网关，目前主要是分为2部分
+//1. http 代理 grpc
+//2. 长连接代理，这里才是重点
 func NewGateway(grpcManager *GrpcManager, log *zap.Logger) *Gateway {
 	gateway := new(Gateway)
 	gateway.GrpcManager = grpcManager
@@ -35,18 +37,18 @@ func (gateway *Gateway) HttpCallGrpc(serviceName string, funcName string, balanc
 	//return resJsonStr,err
 }
 
-func (gateway *Gateway) StartSocket(netWayOption NetWayOption) {
+func (gateway *Gateway) StartSocket(netWayOption NetWayOption) (*NetWay, error) {
 	gateway.NetWayOption = netWayOption
 	netWay, err := NewNetWay(netWayOption)
-	if err != nil {
-		errMsg := "NewNetWay err:" + err.Error()
-		ExitPrint(errMsg)
-	}
-
-	for {
-		time.Sleep(time.Second * 1)
-	}
-	netWay.Shutdown()
+	return netWay, err
+	//if err != nil {
+	//	//errMsg := "NewNetWay err:" + err.Error()
+	//	return netWay, err
+	//}
+	//for {
+	//	time.Sleep(time.Second * 1)
+	//}
+	//netWay.Shutdown()
 	//
 	//roomId := "aabbccdd"
 	//ZgoframeClient ,err := gateway.GrpcManager.GetZgoframeClient(roomId)

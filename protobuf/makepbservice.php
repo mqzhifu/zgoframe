@@ -44,7 +44,7 @@ $callServiceFuncTotalStr = "";
 
 
 //编译proto 生成 PB 文件的SHELL脚本
-$compileCommand = "export PATH=\$PATH:/var/root/go/bin; cd /data/www/golang/src/zgoframe/protobuf; protoc --go_out=plugins=grpc:./pb ./proto/#proto_file_name#";
+$compileCommand = "export PATH=\$PATH:/Users/mayanyan/go/bin; cd /Users/mayanyan/data/www/golang/src/zgoframe/protobuf; protoc --go_out=plugins=grpc:./pb ./proto/#proto_file_name#";
 
 pp("packageName:$packageName , protoFilePath:$protoFilePath , outPath:$outPath");
 pp("compileCommand:$compileCommand");
@@ -70,7 +70,7 @@ foreach ($protoPathFileList as $k=>$fileName){
         exit("file exit name must = .proto");
     }
     //编译proto生成pb 文件
-    compileProtoFile($compileCommand,$fileName);
+    #compileProtoFile($compileCommand,$fileName);
     //开始具体处理一个文件里的内容，做:编译、分析等处理，注：一个文件里可能包括多个服务
     $serviceList = oneService($outPath,$protoFilePath,$fileArr[0],$packageName);
     if (!$serviceList || count($serviceList) <= 0){
@@ -156,7 +156,7 @@ function mapFunctionId($serviceName,$serviceFuncListInfo,$mapIdSeparate){
 //    var_dump($projectList);exit;
     $searchProject = null;
     foreach ($projectList as $k=>$v){
-        if ($v['key'] == $serviceName){
+        if ($v['name'] == $serviceName){
             $searchProject = $v;
         }
     }
@@ -312,4 +312,3 @@ function pp($info){
         var_dump($info);
     }
 }
-

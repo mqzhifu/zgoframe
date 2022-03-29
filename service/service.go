@@ -12,9 +12,9 @@ type Service struct {
 	SendEmail *SendEmail
 }
 
-func NewService(gorm *gorm.DB, zap *zap.Logger, myEmail *util.MyEmail) *Service {
+func NewService(gorm *gorm.DB, zap *zap.Logger, myEmail *util.MyEmail, myRedis *util.MyRedis) *Service {
 	service := new(Service)
-	service.User = NewUser(gorm)
+	service.User = NewUser(gorm, myRedis)
 	service.SendSms = NewSendSms(gorm)
 	service.SendEmail = NewSendEmail(gorm, myEmail)
 

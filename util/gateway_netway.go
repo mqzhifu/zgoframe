@@ -30,7 +30,7 @@ type NetWayOption struct {
 	ConnTimeout      int32 `json:"connTimeout"`      //一个FD超时时间
 
 	GrpcManager *GrpcManager `json:"-"` //外部链接,grpc反代
-	ProtobufMap *ProtobufMap `json:"-"` //外部链接,协议号转换
+	ProtoMap    *ProtoMap    `json:"-"` //外部链接,协议号转换
 	Log         *zap.Logger  `json:"-"` //外部链接,日志
 
 	//ProtobufMapPath		string		`json:"portobuf_map_path"`	//协议号对应的函数名
@@ -65,7 +65,7 @@ type NetWay struct {
 	ProtocolManager *ProtocolManager //协议管理器
 	ConnManager     *ConnManager     //连接管理 器
 	Metrics         *MyMetrics       //metric管理 器
-	ProtobufMap     *ProtobufMap     //protoBuf 管理器
+	ProtoMap        *ProtoMap        //protoBuf 管理器
 
 	Option NetWayOption
 }
@@ -86,7 +86,7 @@ func NewNetWay(option NetWayOption) (*NetWay, error) {
 	//设置状态为：初始化
 	netWay.Status = NETWAY_STATUS_INIT
 
-	netWay.ProtobufMap = option.ProtobufMap
+	netWay.ProtoMap = option.ProtoMap
 	//协议管理适配器
 	protocolManagerOption := ProtocolManagerOption{
 		Ip:              option.ListenIp,
@@ -125,7 +125,7 @@ func NewNetWay(option NetWayOption) (*NetWay, error) {
 		DefaultProtocolType: netWay.Option.DefaultProtocolType,
 		DefaultContentType:  netWay.Option.DefaultContentType,
 		Metrics:             netWay.Metrics,
-		ProtobufMap:         option.ProtobufMap,
+		ProtoMap:            option.ProtoMap,
 		NetWay:              netWay,
 		MsgContentMax:       option.MsgContentMax,
 	}
@@ -286,7 +286,9 @@ func (netWay *NetWay) loginPreFailedSendMsg(msg string, closeSource int, conn *C
 	}
 	netWay.Metrics.CounterInc("create_fd_failed")
 	netWay.Option.Log.Error("loginPreFailed:" + strconv.Itoa(code) + " " + msg)
-	conn.SendMsgCompressByConn("ServerLogin", &loginRes)
+	conn.SendMsgCompressByConn("SC_Login", &loginRes)
+	netWay.Option.Log.Info("sleep Millisecond * 500 wait msg sending...")
+	time.Sleep(time.Millisecond * 500) //这里休息半秒，保证普通消息先发出去，且前端正常收到，不然可能：<fd关闭>消息早于消息到达前端
 	conn.CloseOneConn(closeSource)
 	//netWay.Option.Log.Error(msg)
 }
@@ -304,12 +306,17 @@ func (netWay *NetWay) loginPre(conn *Conn) (jwt JwtData, firstMsg pb.Msg, err er
 		return jwt, firstMsg, err
 	}
 	//这里可能有个极端问题，连接成功后，C端立刻就得发消息，FD 读取消息可能会出现延迟，因为READ是异步，可能第一时间没有读到C端发来的数据
-	if msg.Action != "ClientLogin" { //进到这里，肯定是有新连接被创建且回调了公共函数
-		netWay.loginPreFailedSendMsg("first msg must login api!!", CLOSE_SOURCE_FIRST_NO_LOGIN, conn)
+	protoServiceFunc, _ := netWay.Option.ProtoMap.GetServiceFuncById(int(msg.SidFid))
+	if protoServiceFunc.FuncName != "CS_Login" { //进到这里，肯定是有新连接被创建且回调了公共函数
+		netWay.loginPreFailedSendMsg("first msg must : action=CS_Login api!!", CLOSE_SOURCE_FIRST_NO_LOGIN, conn)
 		return
 	}
 	//开始：登陆/验证 过程
 	jwtDataInterface, err := netWay.Router(msg, conn)
+	if err != nil {
+		netWay.loginPreFailedSendMsg(err.Error(), CLOSE_SOURCE_CONN_LOGIN_ROUTER_ERR, conn)
+		return
+	}
 	jwt = jwtDataInterface.(JwtData)
 	if err != nil {
 		netWay.loginPreFailedSendMsg(err.Error(), CLOSE_SOURCE_AUTH_FAILED, conn)

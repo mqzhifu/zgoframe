@@ -29,10 +29,10 @@ type ConnManagerOption struct {
 	DefaultProtocolType int32  //每个连接的默认 协议 类型
 	MsgSeparator        string //传输消息时，每条消息的间隔符，防止 粘包
 
-	Log         *zap.Logger
-	Metrics     *MyMetrics
-	ProtobufMap *ProtobufMap //协议ID管理器
-	NetWay      *NetWay
+	Log      *zap.Logger
+	Metrics  *MyMetrics
+	ProtoMap *ProtoMap //协议ID管理器
+	NetWay   *NetWay
 }
 
 type ProtocolCtrlInfo struct {
@@ -280,8 +280,12 @@ func (connManager *ConnManager) ParserContentProtocol(content string) (message p
 	actionId := BytesToInt32(BytesCombine([]byte{0, 0}, []byte(content[7:9])))
 	//保留字
 	reserved := content[9:19]
-	connManager.Option.Log.Warn("contentLen:" + strconv.Itoa(len(content)) + " , dataLength:" + strconv.Itoa(dataLength) + " actionId:" + strconv.Itoa(actionId) + " serviceId:" + strconv.Itoa(serviceId))
-	actionMap, empty := connManager.Option.ProtobufMap.GetActionName(actionId)
+	serviceActionId, _ := strconv.Atoi(strconv.Itoa(serviceId) + strconv.Itoa(actionId))
+
+	connManager.Option.Log.Warn(
+		"contentLen:" + strconv.Itoa(len(content)) + " ,ContentType:" + strconv.Itoa(int(ContentType)) + " ,ProtocolType:" + strconv.Itoa(int(ProtocolType)) +
+			" , dataLength:" + strconv.Itoa(dataLength) + " actionId:" + strconv.Itoa(actionId) + " serviceId:" + strconv.Itoa(serviceId) + " session:" + reserved)
+	_, empty := connManager.Option.ProtoMap.GetServiceFuncById(serviceActionId) //这里只是提前检测一下service funcId 是否正确
 	if empty {
 		errMsg := "actionId ProtocolActions.GetActionName empty!!!"
 		//protocolManager.Option.Log.Error(errMsg,actionId)
@@ -290,10 +294,11 @@ func (connManager *ConnManager) ParserContentProtocol(content string) (message p
 	//提取数据,ps: tcp 会自动删除末尾分隔符，而ws会有分隔符的
 	data := content[19 : 19+dataLength]
 	msg := pb.Msg{
+		Id:           0,
+		SidFid:       int32(serviceActionId),
 		ActionId:     int32(actionId),
 		ServiceId:    int32(serviceId),
 		DataLength:   int32(dataLength),
-		Action:       actionMap.Action,
 		Content:      data,
 		ContentType:  ContentType,
 		ProtocolType: ProtocolType,
@@ -333,11 +338,14 @@ func (connManager *ConnManager) PackContentMsg(msg pb.Msg) []byte {
 	dataLengthBytes := Int32ToBytes(int32(len(msg.Content)))
 	contentTypeBytes := byte(msg.ContentType)
 	protocolTypeBytes := byte(msg.ProtocolType)
-	actionIdByte := Int32ToBytes(msg.ActionId)
-	actionIdByte = actionIdByte[2:4]
+	//actionIdByte := Int32ToBytes(msg.ActionId)
+	//actionIdByte = actionIdByte[2:4]
+	funcId, _ := strconv.Atoi(strconv.Itoa(int(msg.ActionId))[2:])
+	actionIdByte := Int32ToBytes(int32(funcId))[2:]
 	reserved := []byte("reserved--")
 	serviceIdBytes := Int32ToBytes(msg.ServiceId)[3]
 	ln := connManager.Option.MsgSeparator
+	connManager.Option.Log.Info("PackContentMsg dataLengthBytes:" + strconv.Itoa(len(msg.Content)))
 	//合并: 头 + 消息内容体 + 分隔符
 	content := BytesCombine(dataLengthBytes, ByteTurnBytes(contentTypeBytes), ByteTurnBytes(protocolTypeBytes), ByteTurnBytes(serviceIdBytes), actionIdByte, reserved, []byte(msg.Content), []byte(ln))
 	return content
@@ -543,7 +551,7 @@ func (conn *Conn) ProcessMsgLoop(ctx context.Context) {
 		case <-ctx.Done():
 			ctxHasDone = 1
 		case msg := <-conn.MsgInChan:
-			conn.ConnManager.Option.Log.Info("ProcessMsgLoop receive msg" + msg.Action)
+			conn.ConnManager.Option.Log.Info("ProcessMsgLoop receive msg" + strconv.Itoa(int(msg.SidFid)))
 			conn.ConnManager.Option.NetWay.Router(msg, conn)
 		}
 		if ctxHasDone == 1 {
@@ -600,12 +608,11 @@ func (conn *Conn) SendMsgByConn(action string, content []byte) {
 
 func (conn *Conn) SendMsg(action string, content []byte) {
 	//获取协议号结构体
-	actionMap, empty := conn.ConnManager.Option.ProtobufMap.GetActionId(action)
+	actionMap, empty := conn.ConnManager.Option.ProtoMap.GetServiceFuncByFuncName(action)
 	if empty {
 		conn.ConnManager.Option.Log.Error("GetActionId empty:" + action)
 		return
 	}
-	conn.ConnManager.Option.Log.Info("SendMsg , actionId:" + strconv.Itoa(actionMap.Id) + " , userId:" + strconv.Itoa(int(conn.UserId)) + " , actionName:" + action)
 
 	if conn.Status == CONN_STATUS_CLOSE {
 		conn.ConnManager.Option.Log.Error("Conn status =CONN_STATUS_CLOSE.")
@@ -617,15 +624,18 @@ func (conn *Conn) SendMsg(action string, content []byte) {
 		Content:      string(content),
 		ServiceId:    int32(actionMap.ServiceId),
 		ActionId:     int32(actionMap.Id),
-		Action:       actionMap.Action,
 		ContentType:  protocolCtrlInfo.ContentType,
 		ProtocolType: protocolCtrlInfo.ProtocolType,
 	}
+	conn.ConnManager.Option.Log.Info("SendMsg , ContentType:" + strconv.Itoa(int(protocolCtrlInfo.ContentType)) + " ProtocolType: " + strconv.Itoa(int(protocolCtrlInfo.ProtocolType)))
+	conn.ConnManager.Option.Log.Info("SendMsg , actionId:" + strconv.Itoa(actionMap.Id) + " , userId:" + strconv.Itoa(int(conn.UserId)) + " , actionName:" + action)
+
 	contentBytes := conn.ConnManager.PackContentMsg(msg)
 
-	if protocolCtrlInfo.ContentType == CONTENT_TYPE_PROTOBUF {
-		conn.Write(contentBytes, websocket.BinaryMessage)
-	} else {
-		conn.Write(contentBytes, websocket.TextMessage)
-	}
+	//这里先注释掉，发现WS协议，传输内容必须统一：要么全是字符，要么就是二进制，而我的协议中 头消息是二进制的，内容如果是json那就是字符，貌似WS不行
+	//if protocolCtrlInfo.ContentType == CONTENT_TYPE_PROTOBUF {
+	conn.Write(contentBytes, websocket.BinaryMessage)
+	//} else {
+	//	conn.Write(contentBytes, websocket.TextMessage)
+	//}
 }

@@ -8,6 +8,8 @@ import (
 	fmt "fmt"
 	proto "github.com/golang/protobuf/proto"
 	grpc "google.golang.org/grpc"
+	codes "google.golang.org/grpc/codes"
+	status "google.golang.org/grpc/status"
 	math "math"
 )
 
@@ -1474,6 +1476,74 @@ type FrameSyncServer interface {
 	SC_StartBattle(context.Context, *StartBattle) (*Empty, error)
 	SC_RestartGame(context.Context, *RestartGame) (*Empty, error)
 	SC_GameOver(context.Context, *GameOver) (*Empty, error)
+}
+
+// UnimplementedFrameSyncServer can be embedded to have forward compatible implementations.
+type UnimplementedFrameSyncServer struct {
+}
+
+func (*UnimplementedFrameSyncServer) CS_PlayerOperations(ctx context.Context, req *LogicFrame) (*Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CS_PlayerOperations not implemented")
+}
+func (*UnimplementedFrameSyncServer) CS_PlayerResumeGame(ctx context.Context, req *PlayerResumeGame) (*Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CS_PlayerResumeGame not implemented")
+}
+func (*UnimplementedFrameSyncServer) CS_PlayerReady(ctx context.Context, req *PlayerReady) (*Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CS_PlayerReady not implemented")
+}
+func (*UnimplementedFrameSyncServer) CS_PlayerOver(ctx context.Context, req *PlayerOver) (*Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CS_PlayerOver not implemented")
+}
+func (*UnimplementedFrameSyncServer) CS_RoomHistory(ctx context.Context, req *RoomHistory) (*Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CS_RoomHistory not implemented")
+}
+func (*UnimplementedFrameSyncServer) CS_RoomBaseInfo(ctx context.Context, req *RoomBaseInfo) (*Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CS_RoomBaseInfo not implemented")
+}
+func (*UnimplementedFrameSyncServer) CS_PlayerMatchSign(ctx context.Context, req *PlayerMatchSign) (*Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CS_PlayerMatchSign not implemented")
+}
+func (*UnimplementedFrameSyncServer) CS_PlayerMatchSignCancel(ctx context.Context, req *PlayerMatchSignCancel) (*Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CS_PlayerMatchSignCancel not implemented")
+}
+func (*UnimplementedFrameSyncServer) SC_PlayerMatchSignFailed(ctx context.Context, req *PlayerMatchSignFailed) (*Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SC_PlayerMatchSignFailed not implemented")
+}
+func (*UnimplementedFrameSyncServer) SC_PlayerMatchingFailed(ctx context.Context, req *PlayerMatchingFailed) (*Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SC_PlayerMatchingFailed not implemented")
+}
+func (*UnimplementedFrameSyncServer) SC_EnterBattle(ctx context.Context, req *EnterBattle) (*Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SC_EnterBattle not implemented")
+}
+func (*UnimplementedFrameSyncServer) SC_LogicFrame(ctx context.Context, req *LogicFrame) (*Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SC_LogicFrame not implemented")
+}
+func (*UnimplementedFrameSyncServer) SC_RoomHistory(ctx context.Context, req *RoomHistory) (*Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SC_RoomHistory not implemented")
+}
+func (*UnimplementedFrameSyncServer) SC_RoomBaseInfo(ctx context.Context, req *RoomBaseInfo) (*Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SC_RoomBaseInfo not implemented")
+}
+func (*UnimplementedFrameSyncServer) SC_OtherPlayerOffline(ctx context.Context, req *OtherPlayerOffline) (*Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SC_OtherPlayerOffline not implemented")
+}
+func (*UnimplementedFrameSyncServer) SC_OtherPlayerOver(ctx context.Context, req *PlayerOver) (*Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SC_OtherPlayerOver not implemented")
+}
+func (*UnimplementedFrameSyncServer) SC_OtherPlayerResumeGame(ctx context.Context, req *PlayerResumeGame) (*Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SC_OtherPlayerResumeGame not implemented")
+}
+func (*UnimplementedFrameSyncServer) SC_ReadyTimeout(ctx context.Context, req *ReadyTimeout) (*Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SC_ReadyTimeout not implemented")
+}
+func (*UnimplementedFrameSyncServer) SC_StartBattle(ctx context.Context, req *StartBattle) (*Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SC_StartBattle not implemented")
+}
+func (*UnimplementedFrameSyncServer) SC_RestartGame(ctx context.Context, req *RestartGame) (*Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SC_RestartGame not implemented")
+}
+func (*UnimplementedFrameSyncServer) SC_GameOver(ctx context.Context, req *GameOver) (*Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SC_GameOver not implemented")
 }
 
 func RegisterFrameSyncServer(s *grpc.Server, srv FrameSyncServer) {

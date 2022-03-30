@@ -169,6 +169,7 @@ function mapFunctionId($serviceName,$serviceFuncListInfo,$mapIdSeparate){
     if(strlen($serviceId) < 2 ){
         $serviceId = $serviceId . "0";
     }
+    $mapFuncIdNo = 100;
     foreach ($serviceFuncListInfo as $k=>$funcInfo){
         $in = "empty";
         $out = "empty";
@@ -179,12 +180,11 @@ function mapFunctionId($serviceName,$serviceFuncListInfo,$mapIdSeparate){
             $out =  $funcInfo["out"];
         }
 
-//        $mapFuncIdNo = $GLOBALS["mapFuncIdNo"];
-        if(strlen($mapFuncIdNo) == 1 ){
-            $mapFuncIdNo = "00".$mapFuncIdNo;
-        }else if(strlen($mapFuncIdNo) == 2 ){
-            $mapFuncIdNo = "0".$mapFuncIdNo;
-        }
+//         if(strlen($mapFuncIdNo) == 1 ){
+//             $mapFuncIdNo = "00".$mapFuncIdNo;
+//         }else if(strlen($mapFuncIdNo) == 2 ){
+//             $mapFuncIdNo = "0".$mapFuncIdNo;
+//         }
 //    $outContent .= $GLOBALS["mapIdNo"]  . $mapIdSeparate .$serviceInfo["name"] . $mapIdSeparate .  $in . $mapIdSeparate .  $out . $mapIdSeparate. $arr['desc'] . "\n";
         $outContent = $serviceId . $mapFuncIdNo . $mapIdSeparate .$serviceName . $mapIdSeparate. $funcInfo["name"] . $mapIdSeparate .  $in . $mapIdSeparate .  $out . $mapIdSeparate. $funcInfo['desc'] . "\n";
 //        $GLOBALS["mapFuncIdNo"] ++;$GLOBALS["mapFuncIdNo"] ++;//PB生成的全是奇数，用于表示：client请求server ，长连接时会有server请求client，这些都是偶数

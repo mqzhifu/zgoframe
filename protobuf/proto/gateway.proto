@@ -69,17 +69,17 @@ message KickOff{
 
 
 message Msg{
-    int32   data_length      = 1;
-    int32   content_type     = 2;
-    int32   protocol_type    = 3;
-
-    int32   action_id        = 4;
-    int32   service_id       = 5;
-
-    string  action           = 6;
-    string  content          = 7;
-
+    int32   id               = 1;
+    int32   sid_fid          = 2;
+    int32   data_length      = 3;
+    int32   content_type     = 4;
+    int32   protocol_type    = 5;
+    int32   service_id       = 6;
+    int32   action_id        = 7;
     string  reserved         = 8;
+    string  content          = 9;
+
+
 }
 
 

@@ -83,7 +83,7 @@ function Sync (playerId,token,data,DomIdPreObj,contentType,protocolType){
         // var requestLoginObj = new proto.pb.RequestLogin();
         var requestLoginObj = new proto.pb.Login();
         requestLoginObj.setToken(self.token) ;
-        this.sendMsg("login",requestLoginObj);
+        this.sendMsg("CS_Login",requestLoginObj);
     };
     //更新当前状态
     this.upStatus = function(status){
@@ -94,20 +94,59 @@ function Sync (playerId,token,data,DomIdPreObj,contentType,protocolType){
         var id = self.getActionId(action,"client");
         console.log( self.descPre , " <sendMsg>" ,  " actionName: "+action , " actionName:" , id  , " content:" ,contentObj.toObject());
         var content = null;
+
+        //解析C端发送的数据，这一层，对于用户层的content数据不做处理
+        //1-4字节：当前包数据总长度，~可用于：TCP粘包的情况
+        //5字节：content type
+        //6字节：protocol type
+        //7字节 :服务Id
+        //8-9字节 :函数Id
+        //10-19：预留，还没想好，可以存sessionId，也可以换成UID
+        //19 以后为内容体
+        //结尾会添加一个字节：\f ,可用于 TCP 粘包 分隔
+
+        var serviceId = id.toString().substring(0,2);
+        var funcId = id.toString().substring(2);
+        var session = "1234567890"
+        console.log("serviceId:",serviceId,"funcId:",funcId , parseInt(funcId));
         if (contentTypeDesc[self.contentType] == "json"){
             content = contentObj.toObject();
             content = JSON.stringify(content);
+            content = "111";
+
             if(action == "playerOperations"){
                 console.log(content);
                 content = content.replace("operationsList","operations");
                 console.log(content);
             }
-            var protocolCtrl = contentType +  "" + protocolType + id;
-            if (action == "login" ){
-                content = protocolCtrl + content;
-            }else{
-                content = protocolCtrl + self.sessionId +  content;
-            }
+
+            var contentLenByte = intToByte4( content.length);
+            var contentTypeByte = intToOneByteArr(contentType);
+            var protocolTypeByte = intToOneByteArr(protocolType);
+            var serviceIdByte = intToOneByteArr(parseInt(serviceId));
+            var funcIdByte = intToTwoByteArr(parseInt(funcId));
+            var sessionByte = stringToUint8Array(session);
+            var contentByte = stringToUint8Array(content);
+
+            // console.log("bbyte:",contentLenByte,contentTypeByte,protocolTypeByte,serviceIdByte,funcIdByte);
+            // concatenate(contentLenByte,contentTypeByte[3]);
+            // content =  concatenate(contentLenByte,contentTypeByte[3],protocolTypeByte[3],serviceIdByte[3],funcIdByte[3],sessionByte,contentByte);
+            var endStr = new Uint8Array(1);
+            endStr[0] = "\f";
+            content =  concatenate(contentLenByte,contentTypeByte,protocolTypeByte,serviceIdByte,funcIdByte,sessionByte,contentByte,endStr)  ;
+
+            // content = contentLenByte +"" + contentTypeByte + "" + protocolTypeByte + "" +serviceIdByte + "" + funcIdByte +"" +sessionByte + contentByte+ "\f";
+
+            // var finalContent = contentLenByte + contentTypeByte +  "" + protocolTypeByte + serviceIdByte + "" +  funcIdByte + sessionByte + contentByte  + "\f";
+
+
+            // var protocolCtrl = contentType +  "" + protocolType + id;
+            // if (action == "login" ){
+            //     content = contentLen + protocolCtrl + content;
+            // }else{
+            //     content = contentLen + protocolCtrl + self.sessionId +  content;
+            // }
+            //下面未使用
             // var contentTypeByte = contentType << 5;
             // console.log("aLeftL:",aLeft);
             // var firstbyte = contentTypeByte | protocolType;
@@ -176,8 +215,18 @@ function Sync (playerId,token,data,DomIdPreObj,contentType,protocolType){
     //接收S端WS消息
     this.onmessage = function(ev){
         var pre = self.descPre;
-        console.log("onmessage:"+ pre + " " +ev.data);
+        console.log("onmessage , ev :",ev );
         var msgObj = self.newMsgObj();
+
+        //解析C端发送的数据，这一层，对于用户层的content数据不做处理
+        //1-4字节：当前包数据总长度，~可用于：TCP粘包的情况
+        //5字节：content type
+        //6字节：protocol type
+        //7字节 :服务Id
+        //8-9字节 :函数Id
+        //10-19：预留，还没想好，可以存sessionId，也可以换成UID
+        //19 以后为内容体
+        //结尾会添加一个字节：\f ,可用于 TCP 粘包 分隔
 
         if (contentTypeDesc[self.contentType] == 'protobuf'){
             var reader = new FileReader();
@@ -201,15 +250,42 @@ function Sync (playerId,token,data,DomIdPreObj,contentType,protocolType){
                 self.router(msgObj);
             };
         }else if(contentTypeDesc[self.contentType] == "json"){
-            msgObj.contentType = ev.data.substr(0,1);
-            msgObj.protocolType = ev.data.substr(1,1);
-            msgObj.actionId = ev.data.substr(2,4);
-            msgObj.sessionId = ev.data.substr(6,37);
-            msgObj.content = ev.data.substr(38);
-            // console.log(pre + " contentType:" +contentType+ ",protocolType:" + protocolType  +" ,actionId:"+actionId +",sessionId:" +sessionId + " ,content:",content );
-            msgObj.action = self.getActionName(msgObj.actionId,"server")
-            msgObj.content =  eval("("+msgObj.content+")");
-            self.router(msgObj);
+            var reader = new FileReader();
+            reader.readAsArrayBuffer(ev.data);
+            reader.onloadend = function(e) {
+                var dataBuffer = new Uint8Array(reader.result);
+
+                var bytes4 = processBufferRange(dataBuffer,0,4);
+                msgObj.dataLength = Byte4ToInt(bytes4);
+                var bytes1 = processBufferRange(dataBuffer,4,5);
+                msgObj.contentType = Byte1ToInt(bytes1);
+                var bytes1 = processBufferRange(dataBuffer,5,6);
+                msgObj.protocolType = Byte1ToInt(bytes1);
+                var bytes1 = processBufferRange(dataBuffer,6,7);
+                msgObj.serviceId = Byte1ToInt(bytes1);
+                var bytes2 = processBufferRange(dataBuffer,7,9);
+                msgObj.actionId = Byte2ToInt(bytes2);
+                var sessionBytes = processBufferRange(dataBuffer,9,19);
+                msgObj.sessionId = processBufferString(sessionBytes,0)
+                var content = processBufferRange(dataBuffer,19,19+msgObj.dataLength);
+                content = processBufferString(content,0);
+                // console.log("lenDataBuffer:",dataBuffer.length," content:",content);
+                msgObj.content =  eval("("+content+")");
+                console.log("msgObj:",msgObj);
+                self.router(msgObj);
+            };
+
+        // }else if(contentTypeDesc[self.contentType] == "json"){//这种是纯JSON格式，传输的是字符流，我再想想如何处理
+        //     msgObj.contentType = ev.data.substr(0,1);
+        //     msgObj.protocolType = ev.data.substr(1,1);
+        //     msgObj.actionId = ev.data.substr(2,4);
+        //     msgObj.sessionId = ev.data.substr(6,37);
+        //     msgObj.content = ev.data.substr(38);
+        //     alert(msgObj.actionId);
+        //     // console.log(pre + " contentType:" +contentType+ ",protocolType:" + protocolType  +" ,actionId:"+actionId +",sessionId:" +sessionId + " ,content:",content );
+        //     msgObj.action = self.getActionName(msgObj.actionId,"server")
+        //     msgObj.content =  eval("("+msgObj.content+")");
+        //     self.router(msgObj);
         }else{
             return alert("contentType err");
         }
@@ -697,7 +773,7 @@ function Sync (playerId,token,data,DomIdPreObj,contentType,protocolType){
 
     this.descPre = this.getPlayerDescById(playerId);
     this.newMsgObj = function (){
-        var msg = new proto.myproto.Msg();
+        var msg = new proto.pb.Msg();
         return msg.toObject();
     };
 };
@@ -731,6 +807,17 @@ function processBufferString (dataBuffer,start,end){
     return str;
 }
 
+function processBufferInt(dataBuffer,start,en){
+    var str = "";
+    for (var i = start; i < dataBuffer.length; i++) {
+        if (i >= end){
+            break;
+        }
+        str += dataBuffer[i];
+    }
+    return str;
+}
+
 function processBuffer(dataBuffer,start){
     //创建content ArrayBuffer和Uint8Array
     var contentArrayBuffer = new ArrayBuffer( dataBuffer.length - start );
@@ -741,4 +828,99 @@ function processBuffer(dataBuffer,start){
         j++;
     }
     return contentUint8Array;
+}
+
+function processBufferRange(dataBuffer,start,end){
+    //创建content ArrayBuffer和Uint8Array
+    var contentArrayBuffer = new ArrayBuffer( end - start );
+    var contentUint8Array = new Uint8Array(contentArrayBuffer);
+    var j = 0;
+    for (var i = start; i < end; i++) {
+        contentUint8Array[j] = dataBuffer[i];
+        j++;
+    }
+    return contentUint8Array;
+}
+
+// function intToByte(i) {
+//     var b = i & 0xFF;
+//     var c = 0;
+//     if (b >= 128) {
+//         c = b % 128;
+//         c = -1 * (128 - c);
+//     } else {
+//         c = b;
+//     }
+//     return c;
+// }
+
+function intToOneByteArr(i){
+    var targets = new Uint8Array(1);
+    targets[0] = i & 0xFF
+    return targets;
+}
+
+function intToTwoByteArr(i){
+    var targets = new Uint8Array(2);
+    targets[0] = (i >> 8 & 0xFF);
+    targets[1] = i & 0xFF
+    return targets;
+}
+
+
+function intToByte4(i) {
+    var targets = new Uint8Array(4);
+    targets[0] = (i >> 24 & 0xFF);
+    targets[1] = (i >> 16 & 0xFF);
+    targets[2] = (i >> 8 & 0xFF);
+    targets[3] = (i & 0xFF);
+    return targets;
+}
+
+function Byte4ToInt(d) {
+    var targets = new Array(4);
+    targets[0] = (d[0] << 24 & 0xFF);
+    targets[1] = (d[1] << 16 & 0xFF);
+    targets[2] = (d[2] << 8 & 0xFF);
+    targets[3] = (d[3] & 0xFF);
+    return targets[0] + targets[1] +targets[2] +targets[3];
+}
+
+function Byte1ToInt(d) {
+    var targets = new Array(1);
+    targets[0] = (d[0] & 0xFF);
+    return targets[0] ;
+}
+
+function Byte2ToInt(d) {
+    var targets = new Array(2);
+    targets[0] = (d[0] << 8 & 0xFF);
+    targets[1] = (d[1] & 0xFF);
+    // alert(targets[0]);
+    // alert(targets[1]);
+    return targets[0] + targets[1]  ;
+}
+
+function concatenate(...arrays) {
+    let totalLen = 0;
+    for (let arr of arrays)
+
+        totalLen += arr.byteLength;
+
+    let res = new Uint8Array(totalLen)
+
+    let offset = 0
+
+    for (let arr of arrays) {
+
+        let uint8Arr = new Uint8Array(arr)
+
+        res.set(uint8Arr, offset)
+
+        offset += arr.byteLength
+
+    }
+
+    return res.buffer
+
 }

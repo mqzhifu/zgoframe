@@ -33,7 +33,7 @@ type Global struct {
 	Websocket        *util.Websocket
 	ConnMng          *util.ConnManager
 	RecoverGo        *util.RecoverGo
-	ProtobufMap      *util.ProtobufMap
+	ProtoMap         *util.ProtoMap
 	Process          *util.Process
 	Err              *util.ErrMsg
 	Email            *util.MyEmail

@@ -7,8 +7,10 @@ import (
 
 //总路由器，这里分成了两类：gateway 自解析 和 代理后方的请求
 func (netWay *NetWay) Router(msg pb.Msg, conn *Conn) (data interface{}, err error) {
-	actionInfo, _ := netWay.ProtobufMap.ActionMaps[int(msg.ActionId)]
+	//serviceActionIds, _ := strconv.Atoi(strconv.Itoa(int(msg.ServiceId)) + strconv.Itoa(int(msg.ActionId)))
+	actionInfo, _ := netWay.ProtoMap.GetServiceFuncById(int(msg.SidFid))
 	serviceName := actionInfo.ServiceName
+	//MyPrint("Router:", actionInfo, "serviceActionIds:", serviceActionIds, " msg info:", msg)
 	switch serviceName {
 	case "Gateway":
 		data, err = netWay.RouterServiceGateway(msg, conn)
@@ -21,7 +23,7 @@ func (netWay *NetWay) Router(msg pb.Msg, conn *Conn) (data interface{}, err erro
 }
 
 //帧同步的路由
-func (netWay *NetWay) RouterServiceSync(msg pb.Msg, conn *Conn, actionMap ActionMap) (data []byte, err error) {
+func (netWay *NetWay) RouterServiceSync(msg pb.Msg, conn *Conn, actionMap ProtoServiceFunc) (data []byte, err error) {
 	//zgoframeClient, err := netWay.Option.GrpcManager.GetZgoframeClient(actionMap.ServiceName, strconv.Itoa(int(conn.UserId)))
 	//ctx := context.Background()
 	//switch msg.Action {
@@ -48,8 +50,9 @@ func (netWay *NetWay) RouterServiceGateway(msg pb.Msg, conn *Conn) (data interfa
 	//requestClientPing := pb.RequestClientPing{}
 	//requestClientHeartbeat := pb.RequestClientHeartbeat{}
 	//这里有个BUG，LOGIN 函数只能在第一次调用，回头加个限定
-	switch msg.Action {
-	case "ClientLogin": //
+	protoServiceFunc, _ := netWay.Option.ProtoMap.GetServiceFuncById(int(msg.SidFid))
+	switch protoServiceFunc.FuncName {
+	case "CS_Login": //
 		err = netWay.ProtocolManager.parserContentMsg(msg, &requestLogin, conn.UserId)
 	//case "clientPong": //
 	//	err = netWay.ProtocolManager.parserContentMsg(msg, &requestClientPong, conn.UserId)
@@ -64,9 +67,9 @@ func (netWay *NetWay) RouterServiceGateway(msg pb.Msg, conn *Conn) (data interfa
 	if err != nil {
 		return data, err
 	}
-	netWay.Option.Log.Info("Router " + msg.Action)
-	switch msg.Action {
-	case "ClientLogin": //
+	netWay.Option.Log.Info("Router " + protoServiceFunc.FuncName)
+	switch protoServiceFunc.FuncName {
+	case "CS_Login": //
 		netWay.Option.Log.Info("requestLogin token:" + requestLogin.Token)
 		data, err = netWay.login(requestLogin, conn)
 		//return jwtData, err

@@ -8,6 +8,8 @@ import (
 	fmt "fmt"
 	proto "github.com/golang/protobuf/proto"
 	grpc "google.golang.org/grpc"
+	codes "google.golang.org/grpc/codes"
+	status "google.golang.org/grpc/status"
 	math "math"
 )
 
@@ -283,6 +285,17 @@ func (c *zgoframeClient) Comm(ctx context.Context, in *RequestUser, opts ...grpc
 type ZgoframeServer interface {
 	SayHello(context.Context, *RequestUser) (*ResponseUser, error)
 	Comm(context.Context, *RequestUser) (*ResponseUser, error)
+}
+
+// UnimplementedZgoframeServer can be embedded to have forward compatible implementations.
+type UnimplementedZgoframeServer struct {
+}
+
+func (*UnimplementedZgoframeServer) SayHello(ctx context.Context, req *RequestUser) (*ResponseUser, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SayHello not implemented")
+}
+func (*UnimplementedZgoframeServer) Comm(ctx context.Context, req *RequestUser) (*ResponseUser, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Comm not implemented")
 }
 
 func RegisterZgoframeServer(s *grpc.Server, srv ZgoframeServer) {

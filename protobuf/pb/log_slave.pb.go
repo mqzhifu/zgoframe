@@ -8,6 +8,8 @@ import (
 	fmt "fmt"
 	proto "github.com/golang/protobuf/proto"
 	grpc "google.golang.org/grpc"
+	codes "google.golang.org/grpc/codes"
+	status "google.golang.org/grpc/status"
 	math "math"
 )
 
@@ -124,6 +126,14 @@ func (c *logSlaveClient) Push(ctx context.Context, in *SlavePushMsg, opts ...grp
 // LogSlaveServer is the server API for LogSlave service.
 type LogSlaveServer interface {
 	Push(context.Context, *SlavePushMsg) (*Empty, error)
+}
+
+// UnimplementedLogSlaveServer can be embedded to have forward compatible implementations.
+type UnimplementedLogSlaveServer struct {
+}
+
+func (*UnimplementedLogSlaveServer) Push(ctx context.Context, req *SlavePushMsg) (*Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Push not implemented")
 }
 
 func RegisterLogSlaveServer(s *grpc.Server, srv LogSlaveServer) {

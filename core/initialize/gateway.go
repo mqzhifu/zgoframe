@@ -10,7 +10,7 @@ import (
 //var GateWsUri = "/ws"
 //var GateTcpPort = "2222"
 var GateDefaultProtocol = int32(util.PROTOCOL_WEBSOCKET)
-var GateDefaultContentType = int32(util.CONTENT_TYPE_PROTOBUF)
+var GateDefaultContentType = int32(util.CONTENT_TYPE_JSON)
 
 func InitGateway() (*util.Gateway, error) {
 	netWayOption := util.NetWayOption{
@@ -34,7 +34,7 @@ func InitGateway() (*util.Gateway, error) {
 		ConnTimeout:      60,    //一个FD超时时间
 		GrpcManager:      global.V.GrpcManager,
 		Log:              global.V.Zap,
-		ProtobufMap:      global.V.ProtobufMap,
+		ProtoMap:         global.V.ProtoMap,
 		//ProtobufMapPath		string		`json:"portobuf_map_path"`//协议号对应的函数名
 		//两种快速关闭方式，也可以直接调用shutdown函数
 		//OutCxt 				context.Context `json:"-"`			//调用方的CTX，用于所有协程的退出操作

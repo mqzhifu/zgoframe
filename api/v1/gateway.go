@@ -71,13 +71,13 @@ func GatewayProto(c *gin.Context) {
 // @Security ApiKeyAuth
 // @Router /gateway/action/map [get]
 func ActionMap(c *gin.Context) {
-	list := global.V.ProtobufMap.GetActionMap()
+	list := global.V.ProtoMap.GetServiceFuncMap()
 	//格式化数据，方便前端使用
-	rsList := make(map[string]map[int]util.ActionMap)
-	clientList := make(map[int]util.ActionMap)
-	serverList := make(map[int]util.ActionMap)
+	rsList := make(map[string]map[int]util.ProtoServiceFunc)
+	clientList := make(map[int]util.ProtoServiceFunc)
+	serverList := make(map[int]util.ProtoServiceFunc)
 	for _, v := range list {
-		cate := string([]byte(v.Action)[:2])
+		cate := string([]byte(v.FuncName)[:2])
 		if cate == "CS" {
 			clientList[v.Id] = v
 		} else if cate == "SC" {

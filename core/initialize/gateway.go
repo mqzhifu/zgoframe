@@ -25,8 +25,8 @@ func InitGateway() (*util.Gateway, error) {
 		DefaultProtocolType: GateDefaultProtocol,    //兼容协议：ws tcp udp
 		DefaultContentType:  GateDefaultContentType, //默认内容格式 ：json protobuf
 
-		LoginAuthType:      "/jwt", //jwt
-		LoginAuthSecretKey: "aaaa", //密钥
+		LoginAuthType:      "jwt",            //jwt
+		LoginAuthSecretKey: global.C.Jwt.Key, //密钥
 
 		MaxClientConnNum: 10,    //客户端最大连接数
 		MsgContentMax:    10240, //一条消息内容最大值

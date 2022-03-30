@@ -1,5 +1,5 @@
 //=========
-function Sync (playerId,token,data,DomIdPreObj,contentType,protocolType){
+function Sync (playerId,token,data,DomIdPreObj,contentType,protocolType,playerInfo){
     var self = this;
     this.wsObj = null;//js内置ws 对象
     //ws 连接 s 端地址
@@ -16,6 +16,7 @@ function Sync (playerId,token,data,DomIdPreObj,contentType,protocolType){
         9:"end",
         10:"close",
     };
+    this.playerInfo = playerInfo;
     this.status = 1;//1初始化 2等待准备 3运行中  4结束
     this.playerId = playerId;//玩家ID
     this.matchGroupPeople = data.roomPeople;//一个副本的人数
@@ -112,7 +113,6 @@ function Sync (playerId,token,data,DomIdPreObj,contentType,protocolType){
         if (contentTypeDesc[self.contentType] == "json"){
             content = contentObj.toObject();
             content = JSON.stringify(content);
-            content = "111";
 
             if(action == "playerOperations"){
                 console.log(content);
@@ -162,17 +162,17 @@ function Sync (playerId,token,data,DomIdPreObj,contentType,protocolType){
 
             self.wsObj.send(content);
         }else if ( contentTypeDesc[self.contentType]  == "protobuf"){
-            content = contentObj.serializeBinary();
-            var protocolCtrl = contentType +  "" + protocolType + id;
-            if (action != "login" ){
-                protocolCtrl = protocolCtrl + self.sessionId  ;
-            }
-            var idBinary = stringToUint8Array(protocolCtrl);
-            var mergedArray = new Uint8Array(idBinary.length + content.length);
-            mergedArray.set(idBinary);
-            mergedArray.set(content, idBinary.length);
-
-            self.wsObj.send(mergedArray);
+            // content = contentObj.serializeBinary();
+            // var protocolCtrl = contentType +  "" + protocolType + id;
+            // if (action != "login" ){
+            //     protocolCtrl = protocolCtrl + self.sessionId  ;
+            // }
+            // var idBinary = stringToUint8Array(protocolCtrl);
+            // var mergedArray = new Uint8Array(idBinary.length + content.length);
+            // mergedArray.set(idBinary);
+            // mergedArray.set(content, idBinary.length);
+            //
+            // self.wsObj.send(mergedArray);
         }
     };
     //更新操作按钮文字，解除 点击事件
@@ -208,9 +208,9 @@ function Sync (playerId,token,data,DomIdPreObj,contentType,protocolType){
     //心跳执行函数
     this.heartbeat = function(){
         var now = Date.now();
-        var requestClientHeartbeat = new proto.myproto.RequestClientHeartbeat();
+        var requestClientHeartbeat = new proto.pb.Heartbeat();
         requestClientHeartbeat.setTime(now);
-        this.sendMsg("clientHeartbeat",requestClientHeartbeat);
+        this.sendMsg("CS_Heartbeat",requestClientHeartbeat);
     };
     //接收S端WS消息
     this.onmessage = function(ev){
@@ -232,22 +232,22 @@ function Sync (playerId,token,data,DomIdPreObj,contentType,protocolType){
             var reader = new FileReader();
             reader.readAsArrayBuffer(ev.data);
             reader.onloadend = function(e) {
-                var dataBuffer = new Uint8Array(reader.result);
-
-                msgObj.contentType = processBufferString(dataBuffer,0,1);
-                msgObj.protocolType = processBufferString(dataBuffer,1,2);
-                msgObj.actionId = processBufferString(dataBuffer,2,6);
-                msgObj.sessionId = processBufferString(dataBuffer,6,38);
-                var content = processBuffer(dataBuffer,38);
-                msgObj.action = self.getActionName(msgObj.actionId,"server")
-                //首字母转大写
-                var actionLow = msgObj.action.substring(0, 1).toUpperCase() + msgObj.action.substring(1)
-                //拼接成最终classname
-                var className =  "proto.myproto.Response" + actionLow;
-                var responseProtoClass = eval(className);
-                //将进制流转换成对象
-                msgObj.content =  responseProtoClass.deserializeBinary(content).toObject();
-                self.router(msgObj);
+                // var dataBuffer = new Uint8Array(reader.result);
+                //
+                // msgObj.contentType = processBufferString(dataBuffer,0,1);
+                // msgObj.protocolType = processBufferString(dataBuffer,1,2);
+                // msgObj.actionId = processBufferString(dataBuffer,2,6);
+                // msgObj.sessionId = processBufferString(dataBuffer,6,38);
+                // var content = processBuffer(dataBuffer,38);
+                // msgObj.action = self.getActionName(msgObj.actionId,"server")
+                // //首字母转大写
+                // var actionLow = msgObj.action.substring(0, 1).toUpperCase() + msgObj.action.substring(1)
+                // //拼接成最终classname
+                // var className =  "proto.pb.Response" + actionLow;
+                // var responseProtoClass = eval(className);
+                // //将进制流转换成对象
+                // msgObj.content =  responseProtoClass.deserializeBinary(content).toObject();
+                // self.router(msgObj);
             };
         }else if(contentTypeDesc[self.contentType] == "json"){
             var reader = new FileReader();
@@ -264,13 +264,16 @@ function Sync (playerId,token,data,DomIdPreObj,contentType,protocolType){
                 var bytes1 = processBufferRange(dataBuffer,6,7);
                 msgObj.serviceId = Byte1ToInt(bytes1);
                 var bytes2 = processBufferRange(dataBuffer,7,9);
-                msgObj.actionId = Byte2ToInt(bytes2);
+                msgObj.funcId = Byte2ToInt(bytes2);
                 var sessionBytes = processBufferRange(dataBuffer,9,19);
                 msgObj.sessionId = processBufferString(sessionBytes,0)
                 var content = processBufferRange(dataBuffer,19,19+msgObj.dataLength);
                 content = processBufferString(content,0);
                 // console.log("lenDataBuffer:",dataBuffer.length," content:",content);
                 msgObj.content =  eval("("+content+")");
+
+                msgObj.sidFid = msgObj.serviceId + "" + msgObj.funcId;
+
                 console.log("msgObj:",msgObj);
                 self.router(msgObj);
             };
@@ -295,7 +298,9 @@ function Sync (playerId,token,data,DomIdPreObj,contentType,protocolType){
     };
     this.router = function(msgObj){
         console.log("router:",msgObj)
-        var action  = msgObj.action;
+        var action = this.actionMap.server[msgObj.sidFid].func_name;
+        // console.log("sidFid:" , msgObj.sidFid , "server:",s);
+        // return alert("1");
         var content = msgObj.content;
 
         // var actionUp = msgObj.action.substring(0, 1).toUpperCase() + msgObj.action.substring(1)
@@ -305,7 +310,7 @@ function Sync (playerId,token,data,DomIdPreObj,contentType,protocolType){
         // self.call("tttt","bbb")
         // return 1;
         // console.log("router:",action,content)
-        if ( action == 'loginRes' ) {
+        if ( action == 'SC_Login' ) {
             self.rLoginRes(content);
         }else if( action == 'serverPing'){//获取一个当前玩家的状态，如：是否有历史未结束的游戏
             self.rServerPing(content);
@@ -370,11 +375,11 @@ function Sync (playerId,token,data,DomIdPreObj,contentType,protocolType){
                 self.rPushLogicFrame(data,"rPushRoomHistory");
                 }
         }
-        var requestPlayerResumeGame = new proto.myproto.RequestPlayerResumeGame();
+        var requestPlayerResumeGame = new proto.pb.PlayerResumeGame();
         requestPlayerResumeGame.setRoomId(self.roomId);
         requestPlayerResumeGame.setSequenceNumber(self.sequenceNumber);
         requestPlayerResumeGame.setPlayerId(self.playerId);
-        self.sendMsg("playerResumeGame",requestPlayerResumeGame);
+        self.sendMsg("CS_PlayerResumeGame",requestPlayerResumeGame);
     };
     this.upOptBntHref = function(domId,value,clickCallback){
         var bntContent = "<a href='javascript:void(0);' onclick='' id='"+domId+"'>"+value+"</a>";
@@ -387,21 +392,22 @@ function Sync (playerId,token,data,DomIdPreObj,contentType,protocolType){
             return alert("loginRes failed!!!"+logicFrame.code + " , "+logicFrame.errMsg);
         }
 
-        var playerConnInfo = logicFrame.player;
-        self.sessionId = playerConnInfo.sessionId;
+        // var playerConnInfo = logicFrame.player;
+        // self.sessionId = playerConnInfo.sessionId;
 
         var now = Date.now();
-        var requestClientPing = new proto.myproto.RequestClientPing();
+        var requestClientPing = new proto.pb.Ping();
         requestClientPing.setAddTime(now);
-        this.sendMsg("clientPing",requestClientPing);
+        this.sendMsg("CS_Ping",requestClientPing);
         this.upStatus(3);
 
-        if (playerConnInfo.roomId){
+        //这里是有问题的，roomId我在外层写死了均为空，应该是动态从后端拿，且最好是短连接去取，回头优化
+        if (this.playerInfo.roomId){
             alert("检测出，有未结束的一局游戏，开始恢复中...,先获取房间信息:rooId:"+playerConnInfo.roomId);
-            var requestGetRoom = new proto.myproto.RequestGetRoom();
+            var requestGetRoom = new proto.pb.RoomBaseInfo();
             requestGetRoom.setRoomId(playerConnInfo.roomId);
             requestGetRoom.setPlayerId(playerId);
-            self.sendMsg("getRoom",requestGetRoom);
+            self.sendMsg("CS_RoomBaseInfo",requestGetRoom);
             //     var msg = {"roomId":playerConnInfo.roomId,"playerId":playerId};
         }else{
             var matchSignBntId = "matchSign_"+self.playerId;
@@ -417,12 +423,12 @@ function Sync (playerId,token,data,DomIdPreObj,contentType,protocolType){
     this.rServerPing = function(logicFrame){
         var now = Date.now();
 
-        var requestClientPong = new proto.myproto.RequestClientPong();
+        var requestClientPong = new proto.pb.Pong();
         requestClientPong.setClientReceiveTime(now);
         requestClientPong.setAddTime(logicFrame.addTime);
         requestClientPong.setRttTimeout(logicFrame.rttTimeout);
         requestClientPong.setRttTimes(logicFrame.rttTimes);
-        this.sendMsg("clientPong",requestClientPong);
+        this.sendMsg("CS_Pong",requestClientPong);
         //     logicFrame.clientReceiveTime =  now
     };
     this.rStartBattle = function(logicFrame){
@@ -437,14 +443,14 @@ function Sync (playerId,token,data,DomIdPreObj,contentType,protocolType){
             logicFrame.playerList = logicFrame.playerListList;
         }
         self.initLocalGlobalVar(logicFrame);
-        var requestRoomHistory = new proto.myproto.RequestRoomHistory();
+        var requestRoomHistory = new proto.pb.RoomHistory();
         requestRoomHistory.setRoomId(self.roomId);
         requestRoomHistory.setSequenceNumberstart(0);
         requestRoomHistory.setSequenceNumberend(-1);
         requestRoomHistory.setPlayerId(self.playerId);
         // var history ={"roomId":self.roomId,"sequenceNumber":0,"playerId":self.playerId };
         // self.sendMsg("getRoomHistory",history);
-        self.sendMsg("roomHistory",requestRoomHistory);
+        self.sendMsg("CS_RoomHistory",requestRoomHistory);
 
         var readySignBntId = "ready_"+self.playerId;
         var hrefBody = "匹配成功，准备";
@@ -589,18 +595,18 @@ function Sync (playerId,token,data,DomIdPreObj,contentType,protocolType){
     };
     this.ready = function(){
         self.upStatus(7);
-        var requestPlayerReady = new proto.myproto.RequestPlayerReady();
+        var requestPlayerReady = new proto.pb.PlayerReady();
         requestPlayerReady.setPlayerId(self.playerId);
         requestPlayerReady.setRoomId(self.roomId);
-        self.sendMsg("playerReady",requestPlayerReady);
+        self.sendMsg("CS_PlayerReady",requestPlayerReady);
         self.upOptBntHref("","等待其它玩家准备",this.ready);
     };
     this.cancelSign = function(){
         self.upStatus(6);
 
-        var requestPlayerMatchSignCancel = new proto.myproto.RequestPlayerMatchSignCancel();
+        var requestPlayerMatchSignCancel = new proto.pb.PlayerMatchSignCancel();
         requestPlayerMatchSignCancel.setPlayerId(self.playerId);
-        self.sendMsg("playerMatchSignCancel",requestPlayerMatchSignCancel);
+        self.sendMsg("CS_PlayerMatchSignCancel",requestPlayerMatchSignCancel);
 
         var matchSignBntId = "matchSign_"+self.playerId;
         var hrefBody = "连接成功，匹配报名";
@@ -610,9 +616,9 @@ function Sync (playerId,token,data,DomIdPreObj,contentType,protocolType){
     this.matchSign = function(){
         self.upStatus(5)
 
-        var requestPlayerMatchSign = new proto.myproto.RequestPlayerMatchSign();
+        var requestPlayerMatchSign = new proto.pb.PlayerMatchSign();
         requestPlayerMatchSign.setPlayerId(self.playerId);
-        self.sendMsg("playerMatchSign",requestPlayerMatchSign);
+        self.sendMsg("CS_PlayerMatchSign",requestPlayerMatchSign);
 
         var cancelBntId = "cancelSign_"+self.playerId;
         var hrefBody = "取消匹配报名";
@@ -688,7 +694,7 @@ function Sync (playerId,token,data,DomIdPreObj,contentType,protocolType){
         tdObj.css("background", "");
     }
     this.playerCommandPush = function (){
-        var requestPlayerOperations = new proto.myproto.RequestPlayerOperations();
+        var requestPlayerOperations = new proto.pb.LogicFrame();
         requestPlayerOperations.setId(3);
         requestPlayerOperations.setRoomId(self.roomId);
         requestPlayerOperations.setSequenceNumber(self.sequenceNumber);
@@ -701,7 +707,7 @@ function Sync (playerId,token,data,DomIdPreObj,contentType,protocolType){
             // {"id":self.operationsInc,"event":"move","value":newLocation,"playerId":self.playerId}
             var operations = new Array(self.playerOperationsQueue.length)
             for(var i=0;i<self.playerOperationsQueue.length;i++){
-                var operation = new proto.myproto.Operation();
+                var operation = new proto.pb.Operation();
                 operation.setId(self.playerOperationsQueue[i].id);
                 operation.setEvent(self.playerOperationsQueue[i].event);
                 operation.setValue(self.playerOperationsQueue[i].value);
@@ -716,7 +722,7 @@ function Sync (playerId,token,data,DomIdPreObj,contentType,protocolType){
             // window.clearInterval(self.pushLogicFrameLoopFunc);
 
             var operations = new Array(1);
-            var operation = new proto.myproto.Operation();
+            var operation = new proto.pb.Operation();
             operation.setId(1);
             operation.setEvent("empty");
             operation.setValue("-1");
@@ -728,7 +734,7 @@ function Sync (playerId,token,data,DomIdPreObj,contentType,protocolType){
             // var emptyCommand = [{"id":1,"event":"empty","value":"-1","playerId":self.playerId}];
             // loginFrame.operations = emptyCommand;
         }
-        self.sendMsg("playerOperations",requestPlayerOperations);
+        self.sendMsg("CS_PlayerOperations",requestPlayerOperations);
         self.playerCommandPushLock = 1;
         // self.sendMsg("playerOperations",loginFrame);
     };
@@ -737,11 +743,11 @@ function Sync (playerId,token,data,DomIdPreObj,contentType,protocolType){
     this.gameOverAndClear = function(){
         this.upStatus(9);
 
-        var requestGameOver = new proto.myproto.RequestGameOver()
+        var requestGameOver = new proto.pb.GameOver()
         requestGameOver.setRoomId(self.roomId);
         requestGameOver.setSequenceNumber(self.sequenceNumber);
         requestGameOver.setResult("ccccccWin");
-        this.sendMsg("gameOver", requestGameOver);
+        this.sendMsg("CS_GameOver", requestGameOver);
 
         clearInterval(self.pushLogicFrameLoopFunc);
         self.upOptBnt("游戏结束1",1)
@@ -759,11 +765,11 @@ function Sync (playerId,token,data,DomIdPreObj,contentType,protocolType){
     this.getActionId = function (action,category){
         var data = self.actionMap[category];
         for(let key  in data){
-            if (data[key].action == action){
+            if (data[key].func_name == action){
                 return data[key].id;
             }
         }
-        alert(action + ": no match");
+        // alert(action + ": no match");
         return "";
     };
     this.getActionName = function (actionId,category){

@@ -78,8 +78,6 @@ message Msg{
     int32   action_id        = 7;
     string  reserved         = 8;
     string  content          = 9;
-
-
 }
 
 

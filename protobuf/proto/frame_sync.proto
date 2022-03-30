@@ -114,9 +114,15 @@ message LogicFrame{
 	int32 id 	                    = 1;
 	string room_id 		            = 2;
 	int32 sequence_number           = 3;
-	repeated LogicFrame operations   = 4;
+	repeated Operation operations   = 4;
 }
 
+message Operation{
+	int32   id 	        = 1;
+	string  event 	    = 2;
+	string  value 	    = 3;
+	int32   player_id 	= 4;
+}
 
 
 

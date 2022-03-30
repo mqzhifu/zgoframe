@@ -293,6 +293,7 @@ func (connManager *ConnManager) ParserContentProtocol(content string) (message p
 	}
 	//提取数据,ps: tcp 会自动删除末尾分隔符，而ws会有分隔符的
 	data := content[19 : 19+dataLength]
+	connManager.Option.Log.Debug("ParserContentProtocol content:" + string(data))
 	msg := pb.Msg{
 		Id:           0,
 		SidFid:       int32(serviceActionId),

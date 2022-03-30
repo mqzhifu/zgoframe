@@ -3,9 +3,11 @@ package util
 import (
 	"context"
 	"errors"
+	"github.com/dgrijalva/jwt-go"
 	"go.uber.org/zap"
 	"strconv"
 	"time"
+	"zgoframe/http/request"
 	"zgoframe/protobuf/pb"
 )
 
@@ -213,7 +215,7 @@ func (netWay *NetWay) OpenNewConn(connFD FDAdapter) {
 		return
 	}
 	//登陆验证已通过，开始添加各种状态及初始化
-	NewConn.UserId = jwtData.Payload.Uid
+	NewConn.UserId = int32(jwtData.Id)
 	//将新的连接加入到连接池中，并且与玩家ID绑定
 	netWay.ConnManager.addConnPool(NewConn)
 	//if err != nil{
@@ -234,7 +236,7 @@ func (netWay *NetWay) OpenNewConn(connFD FDAdapter) {
 		Uid:    NewConn.UserId,
 	}
 	//告知玩家：登陆结果
-	NewConn.SendMsgCompressByUid(jwtData.Payload.Uid, "ServerLogin", &loginRes)
+	NewConn.SendMsgCompressByUid(NewConn.UserId, "SC_Login", &loginRes)
 	//统计 当前FD 数量/历史FD数量
 	netWay.Metrics.CounterInc("create_fd_ok")
 	//初始化即登陆成功的响应均完成后，开始该连接的 消息IO 协程
@@ -294,7 +296,7 @@ func (netWay *NetWay) loginPreFailedSendMsg(msg string, closeSource int, conn *C
 }
 
 //首次建立连接，登陆验证，预处理
-func (netWay *NetWay) loginPre(conn *Conn) (jwt JwtData, firstMsg pb.Msg, err error) {
+func (netWay *NetWay) loginPre(conn *Conn) (jwt request.CustomClaims, firstMsg pb.Msg, err error) {
 	content, err := conn.Read()
 	if err != nil {
 		netWay.loginPreFailedSendMsg(err.Error(), CLOSE_SOURCE_FD_READ_EMPTY, conn)
@@ -317,7 +319,7 @@ func (netWay *NetWay) loginPre(conn *Conn) (jwt JwtData, firstMsg pb.Msg, err er
 		netWay.loginPreFailedSendMsg(err.Error(), CLOSE_SOURCE_CONN_LOGIN_ROUTER_ERR, conn)
 		return
 	}
-	jwt = jwtDataInterface.(JwtData)
+	jwt = jwtDataInterface.(request.CustomClaims)
 	if err != nil {
 		netWay.loginPreFailedSendMsg(err.Error(), CLOSE_SOURCE_AUTH_FAILED, conn)
 		return jwt, firstMsg, err
@@ -327,24 +329,28 @@ func (netWay *NetWay) loginPre(conn *Conn) (jwt JwtData, firstMsg pb.Msg, err er
 }
 
 //登陆验证token
-func (netWay *NetWay) login(requestLogin pb.Login, conn *Conn) (jwtData JwtData, err error) {
+func (netWay *NetWay) login(requestLogin pb.Login, conn *Conn) (customClaims request.CustomClaims, err error) {
 	if conn.UserId > 0 {
 		msg := " don't repeat login." + strconv.Itoa(int(conn.UserId))
 		netWay.Option.Log.Error(msg)
-		return jwtData, errors.New(msg)
+		return customClaims, errors.New(msg)
 	}
 	token := ""
 	if netWay.Option.LoginAuthType == "jwt" {
 		token = requestLogin.Token
-		jwtData, err := ParseJwtToken(netWay.Option.LoginAuthSecretKey, token)
-		return jwtData, err
+		tokenParseWithClaims, err := jwt.ParseWithClaims(token, &request.CustomClaims{}, func(token *jwt.Token) (i interface{}, e error) {
+			return []byte(netWay.Option.LoginAuthSecretKey), nil
+		})
+		claims, _ := tokenParseWithClaims.Claims.(*request.CustomClaims)
+		//jwtData, err := ParseJwtToken(netWay.Option.LoginAuthSecretKey, token)
+		return *claims, err
 	} else {
 		errMsg := "LoginAuthType err"
 		netWay.Option.Log.Error(errMsg)
-		return jwtData, errors.New(errMsg)
+		return customClaims, errors.New(errMsg)
 	}
 
-	return jwtData, err
+	return customClaims, err
 }
 
 //直接给一个FD发送消息，基本上不用，只是特殊报错的时候，直接使用

@@ -1,0 +1,82 @@
+<html>
+
+
+<script src="/static/js/jquery.min.js"></script>
+
+<script>
+    var domain = "127.0.0.1:5555";
+    var serverHostUri = "http://"+domain + "/logslave/getWsServer";//S端配置信息
+    var apiListHostUri = "http://"+domain + "/logslave/getApiList";//api 映射表
+    var contentType = 1;
+    var protocolType = 1;
+    var token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhcHBfaWQiOjUsInNvdXJjZV90eXBlIjoxLCJpZCI6MSwidXNlcm5hbWUiOiJtcXpoaWZ1QHNpbmEuY29tIiwibmlja19uYW1lIjoieGlhb2EiLCJidWZmZXJfdGltZSI6MzYwMDAsImV4cCI6MTYzMDMyMDU0MiwiaXNzIjoiY29jb3MiLCJuYmYiOjE2Mjk5NTk1NDJ9.Qr5b_vKYptKzbx_JTwK216vHy4jvC9yHcmCIHL7Qrbo";
+    var header = {"X-Source-Type":"1","X-Token":token};
+    var apiList = null;
+    console.log("serverHostUri:"+serverHostUri)
+
+    function init(){
+        $.ajax({
+            type: "GET",
+            headers:header,
+            url:apiListHostUri,
+            success: function(returnData){
+                console.log(returnData);
+                // data = eval(  "(" + data + ")" );
+                if(returnData.code != 200){
+                    alert("err : "+ returnData.msg);
+                    return false;
+                }
+
+                apiList = returnData.data;
+                initWsConn();
+                // alert(apiList[1000]);
+
+            }
+        });
+    }
+
+    function initWsConn(){
+        $.ajax({
+            type: "GET",
+            headers:header,
+            url:serverHostUri,
+            success: function(returnData){
+                console.log(returnData);
+                // data = eval(  "(" + data + ")" );
+                if(returnData.code != 200){
+                    return alert("err : "+ returnData.msg);
+                }
+                var hostUri = "ws://"+returnData.data.ip + ":"+ returnData.data.port + returnData.data.uri;
+                console.log("hostUri:"+hostUri)
+                initWs(hostUri);
+            }
+        });
+    }
+
+    function initWs(hostUri){
+        var wsObj = new WebSocket(hostUri);
+
+        wsObj.onclose = function(ev){
+            console.log(ev)
+            alert("err")
+        };
+        //设置 接收S端消息-回调
+        wsObj.onmessage = function(ev){
+            alert("onmessage:"+ev)
+        };
+        //设置 连接建立成功回调
+        wsObj.onopen = function(){
+            var content =  contentType + "" + protocolType + token;
+            wsObj.send(content);
+        };
+        wsObj.onerror = function(ev){
+            alert("wsObj.onerror");
+            console.log("error:"+ev);
+        };
+
+    }
+
+    init();
+</script>
+
+</html>

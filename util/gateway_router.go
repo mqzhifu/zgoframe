@@ -16,8 +16,25 @@ func (netWay *NetWay) Router(msg pb.Msg, conn *Conn) (data interface{}, err erro
 		data, err = netWay.RouterServiceGateway(msg, conn)
 	case "FrameSync":
 		data, err = netWay.RouterServiceSync(msg, conn, actionInfo)
+	case "GameMatch":
+		data, err = netWay.RouterServiceGameMatch(msg, conn, actionInfo)
 	default:
 		netWay.Option.Log.Error("netWay Router err.")
+	}
+	return data, err
+}
+func (netWay *NetWay) RouterServiceGameMatch(msg pb.Msg, conn *Conn, actionMap ProtoServiceFunc) (data []byte, err error) {
+	requestPlayerMatchSign := pb.PlayerMatchSign{}
+	requestPlayerMatchSignCancel := pb.PlayerMatchSignCancel{}
+	protoServiceFunc, _ := netWay.Option.ProtoMap.GetServiceFuncById(int(msg.SidFid))
+	switch protoServiceFunc.FuncName {
+	case "CS_PlayerMatchSign":
+		err = netWay.ProtocolManager.parserContentMsg(msg, &requestPlayerMatchSign, conn.UserId)
+	case "CS_PlayerMatchSignCancel":
+		err = netWay.ProtocolManager.parserContentMsg(msg, &requestPlayerMatchSignCancel, conn.UserId)
+	default:
+		netWay.Option.Log.Error("RouterServiceGateway Router err:")
+		return data, errors.New("RouterServiceGateway Router err")
 	}
 	return data, err
 }

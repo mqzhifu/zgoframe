@@ -32,7 +32,7 @@ func GatewayService(c *gin.Context) {
 	//}
 
 	fmt.Println(prefix+" ServiceName:"+serviceName, " funcName:"+funcName+" data:"+string(data))
-	backData, err := global.V.Gateway.HttpCallGrpc(serviceName, funcName, "", data)
+	backData, err := global.V.MyService.Gateway.HttpCallGrpc(serviceName, funcName, "", data)
 	if err != nil {
 		fmt.Println(err)
 		httpresponse.FailWithMessage(err.Error(), c)

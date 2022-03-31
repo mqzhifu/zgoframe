@@ -207,8 +207,6 @@ func (initialize *Initialize) Start() error {
 		util.MyPrint("GetNewViper err:", err)
 		return err
 	}
-	global.V.MyService = service.NewService(global.V.Gorm, global.V.Zap, global.V.Email, global.V.Redis)
-
 	//websocket
 	//if global.C.Websocket.Status == global.CONFIG_STATUS_OPEN{
 	//	if global.C.Http.Status != global.CONFIG_STATUS_OPEN{
@@ -250,14 +248,16 @@ func (initialize *Initialize) Start() error {
 		//global.V.AlertHook.Alert("Aaaa")
 		//util.ExitPrint(123123123)
 	}
-
+	var netWayOption util.NetWayOption
 	if global.C.Gateway.Status == global.CONFIG_STATUS_OPEN {
-		global.V.Gateway, err = InitGateway()
-		if err != nil {
-			global.V.Zap.Error(prefix + "InitGateway err:" + err.Error())
-			return err
-		}
+		netWayOption = InitGateway()
+		//	global.V.Gateway, err = InitGateway()
+		//	if err != nil {
+		//		global.V.Zap.Error(prefix + "InitGateway err:" + err.Error())
+		//		return err
+		//	}
 	}
+	global.V.MyService = service.NewService(global.V.Gorm, global.V.Zap, global.V.Email, global.V.Redis, netWayOption, global.V.GrpcManager)
 
 	global.C.System.ENV = initialize.Option.Env
 	//启动http

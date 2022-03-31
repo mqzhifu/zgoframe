@@ -12,8 +12,8 @@ import (
 var GateDefaultProtocol = int32(util.PROTOCOL_WEBSOCKET)
 var GateDefaultContentType = int32(util.CONTENT_TYPE_JSON)
 
-func InitGateway() (*util.Gateway, error) {
-	netWayOption := util.NetWayOption{
+func InitGateway() (netWayOption util.NetWayOption) {
+	netWayOption = util.NetWayOption{
 		ListenIp: global.C.Gateway.ListenIp, //程序启动时监听的IP
 		OutIp:    global.C.Gateway.OutIp,    //对外访问的IP
 
@@ -41,8 +41,5 @@ func InitGateway() (*util.Gateway, error) {
 		//CloseChan 			chan int		`json:"-"`
 		FPS: 10,
 	}
-	gateway := util.NewGateway(global.V.GrpcManager, global.V.Zap)
-	netway, err := gateway.StartSocket(netWayOption)
-	global.V.MyService.FrameSync.SetNetway(netway)
-	return gateway, err
+	return netWayOption
 }

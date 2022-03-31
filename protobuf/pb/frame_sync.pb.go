@@ -25,19 +25,19 @@ var _ = math.Inf
 const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
 
 type RoomBaseInfo struct {
-	Id                   string    `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	AddTime              int32     `protobuf:"varint,2,opt,name=add_time,json=addTime,proto3" json:"add_time,omitempty"`
-	Status               int32     `protobuf:"varint,3,opt,name=status,proto3" json:"status,omitempty"`
-	Timeout              int32     `protobuf:"varint,4,opt,name=timeout,proto3" json:"timeout,omitempty"`
-	SequenceNumber       int32     `protobuf:"varint,5,opt,name=sequence_number,json=sequenceNumber,proto3" json:"sequence_number,omitempty"`
-	RandSeek             int32     `protobuf:"varint,6,opt,name=rand_seek,json=randSeek,proto3" json:"rand_seek,omitempty"`
-	PlayerList           []*Player `protobuf:"bytes,7,rep,name=player_list,json=playerList,proto3" json:"player_list,omitempty"`
-	RoomId               string    `protobuf:"bytes,8,opt,name=room_id,json=roomId,proto3" json:"room_id,omitempty"`
-	StartTime            int32     `protobuf:"varint,9,opt,name=start_time,json=startTime,proto3" json:"start_time,omitempty"`
-	EndTime              int32     `protobuf:"varint,10,opt,name=end_time,json=endTime,proto3" json:"end_time,omitempty"`
-	XXX_NoUnkeyedLiteral struct{}  `json:"-"`
-	XXX_unrecognized     []byte    `json:"-"`
-	XXX_sizecache        int32     `json:"-"`
+	Id                   string   `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	AddTime              int32    `protobuf:"varint,2,opt,name=add_time,json=addTime,proto3" json:"add_time,omitempty"`
+	Status               int32    `protobuf:"varint,3,opt,name=status,proto3" json:"status,omitempty"`
+	Timeout              int32    `protobuf:"varint,4,opt,name=timeout,proto3" json:"timeout,omitempty"`
+	SequenceNumber       int32    `protobuf:"varint,5,opt,name=sequence_number,json=sequenceNumber,proto3" json:"sequence_number,omitempty"`
+	RandSeek             int32    `protobuf:"varint,6,opt,name=rand_seek,json=randSeek,proto3" json:"rand_seek,omitempty"`
+	PlayerIds            []int32  `protobuf:"varint,7,rep,packed,name=player_ids,json=playerIds,proto3" json:"player_ids,omitempty"`
+	RoomId               string   `protobuf:"bytes,8,opt,name=room_id,json=roomId,proto3" json:"room_id,omitempty"`
+	StartTime            int32    `protobuf:"varint,9,opt,name=start_time,json=startTime,proto3" json:"start_time,omitempty"`
+	EndTime              int32    `protobuf:"varint,10,opt,name=end_time,json=endTime,proto3" json:"end_time,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
 }
 
 func (m *RoomBaseInfo) Reset()         { *m = RoomBaseInfo{} }
@@ -107,9 +107,9 @@ func (m *RoomBaseInfo) GetRandSeek() int32 {
 	return 0
 }
 
-func (m *RoomBaseInfo) GetPlayerList() []*Player {
+func (m *RoomBaseInfo) GetPlayerIds() []int32 {
 	if m != nil {
-		return m.PlayerList
+		return m.PlayerIds
 	}
 	return nil
 }
@@ -190,45 +190,6 @@ func (m *PlayerResumeGame) GetSequenceNumber() int32 {
 	return 0
 }
 
-type PlayerMatchSign struct {
-	PlayerId             int32    `protobuf:"varint,1,opt,name=player_id,json=playerId,proto3" json:"player_id,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
-}
-
-func (m *PlayerMatchSign) Reset()         { *m = PlayerMatchSign{} }
-func (m *PlayerMatchSign) String() string { return proto.CompactTextString(m) }
-func (*PlayerMatchSign) ProtoMessage()    {}
-func (*PlayerMatchSign) Descriptor() ([]byte, []int) {
-	return fileDescriptor_33c39964a4dd7e9c, []int{2}
-}
-
-func (m *PlayerMatchSign) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_PlayerMatchSign.Unmarshal(m, b)
-}
-func (m *PlayerMatchSign) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_PlayerMatchSign.Marshal(b, m, deterministic)
-}
-func (m *PlayerMatchSign) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_PlayerMatchSign.Merge(m, src)
-}
-func (m *PlayerMatchSign) XXX_Size() int {
-	return xxx_messageInfo_PlayerMatchSign.Size(m)
-}
-func (m *PlayerMatchSign) XXX_DiscardUnknown() {
-	xxx_messageInfo_PlayerMatchSign.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_PlayerMatchSign proto.InternalMessageInfo
-
-func (m *PlayerMatchSign) GetPlayerId() int32 {
-	if m != nil {
-		return m.PlayerId
-	}
-	return 0
-}
-
 type PlayerReady struct {
 	PlayerId             int32    `protobuf:"varint,1,opt,name=player_id,json=playerId,proto3" json:"player_id,omitempty"`
 	RoomId               string   `protobuf:"bytes,2,opt,name=room_id,json=roomId,proto3" json:"room_id,omitempty"`
@@ -241,7 +202,7 @@ func (m *PlayerReady) Reset()         { *m = PlayerReady{} }
 func (m *PlayerReady) String() string { return proto.CompactTextString(m) }
 func (*PlayerReady) ProtoMessage()    {}
 func (*PlayerReady) Descriptor() ([]byte, []int) {
-	return fileDescriptor_33c39964a4dd7e9c, []int{3}
+	return fileDescriptor_33c39964a4dd7e9c, []int{2}
 }
 
 func (m *PlayerReady) XXX_Unmarshal(b []byte) error {
@@ -276,7 +237,7 @@ func (m *PlayerReady) GetRoomId() string {
 	return ""
 }
 
-type RoomHistory struct {
+type ReqRoomHistory struct {
 	PlayerId             int32    `protobuf:"varint,1,opt,name=player_id,json=playerId,proto3" json:"player_id,omitempty"`
 	RoomId               string   `protobuf:"bytes,2,opt,name=room_id,json=roomId,proto3" json:"room_id,omitempty"`
 	SequenceNumberStart  int32    `protobuf:"varint,3,opt,name=sequence_numberStart,json=sequenceNumberStart,proto3" json:"sequence_numberStart,omitempty"`
@@ -286,11 +247,112 @@ type RoomHistory struct {
 	XXX_sizecache        int32    `json:"-"`
 }
 
+func (m *ReqRoomHistory) Reset()         { *m = ReqRoomHistory{} }
+func (m *ReqRoomHistory) String() string { return proto.CompactTextString(m) }
+func (*ReqRoomHistory) ProtoMessage()    {}
+func (*ReqRoomHistory) Descriptor() ([]byte, []int) {
+	return fileDescriptor_33c39964a4dd7e9c, []int{3}
+}
+
+func (m *ReqRoomHistory) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_ReqRoomHistory.Unmarshal(m, b)
+}
+func (m *ReqRoomHistory) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_ReqRoomHistory.Marshal(b, m, deterministic)
+}
+func (m *ReqRoomHistory) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ReqRoomHistory.Merge(m, src)
+}
+func (m *ReqRoomHistory) XXX_Size() int {
+	return xxx_messageInfo_ReqRoomHistory.Size(m)
+}
+func (m *ReqRoomHistory) XXX_DiscardUnknown() {
+	xxx_messageInfo_ReqRoomHistory.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ReqRoomHistory proto.InternalMessageInfo
+
+func (m *ReqRoomHistory) GetPlayerId() int32 {
+	if m != nil {
+		return m.PlayerId
+	}
+	return 0
+}
+
+func (m *ReqRoomHistory) GetRoomId() string {
+	if m != nil {
+		return m.RoomId
+	}
+	return ""
+}
+
+func (m *ReqRoomHistory) GetSequenceNumberStart() int32 {
+	if m != nil {
+		return m.SequenceNumberStart
+	}
+	return 0
+}
+
+func (m *ReqRoomHistory) GetSequenceNumberEnd() int32 {
+	if m != nil {
+		return m.SequenceNumberEnd
+	}
+	return 0
+}
+
+type RoomHistoryList struct {
+	List                 []*RoomHistory `protobuf:"bytes,1,rep,name=list,proto3" json:"list,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}       `json:"-"`
+	XXX_unrecognized     []byte         `json:"-"`
+	XXX_sizecache        int32          `json:"-"`
+}
+
+func (m *RoomHistoryList) Reset()         { *m = RoomHistoryList{} }
+func (m *RoomHistoryList) String() string { return proto.CompactTextString(m) }
+func (*RoomHistoryList) ProtoMessage()    {}
+func (*RoomHistoryList) Descriptor() ([]byte, []int) {
+	return fileDescriptor_33c39964a4dd7e9c, []int{4}
+}
+
+func (m *RoomHistoryList) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_RoomHistoryList.Unmarshal(m, b)
+}
+func (m *RoomHistoryList) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_RoomHistoryList.Marshal(b, m, deterministic)
+}
+func (m *RoomHistoryList) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_RoomHistoryList.Merge(m, src)
+}
+func (m *RoomHistoryList) XXX_Size() int {
+	return xxx_messageInfo_RoomHistoryList.Size(m)
+}
+func (m *RoomHistoryList) XXX_DiscardUnknown() {
+	xxx_messageInfo_RoomHistoryList.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_RoomHistoryList proto.InternalMessageInfo
+
+func (m *RoomHistoryList) GetList() []*RoomHistory {
+	if m != nil {
+		return m.List
+	}
+	return nil
+}
+
+type RoomHistory struct {
+	Id                   int32    `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	Action               string   `protobuf:"bytes,2,opt,name=action,proto3" json:"action,omitempty"`
+	Content              string   `protobuf:"bytes,3,opt,name=content,proto3" json:"content,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
 func (m *RoomHistory) Reset()         { *m = RoomHistory{} }
 func (m *RoomHistory) String() string { return proto.CompactTextString(m) }
 func (*RoomHistory) ProtoMessage()    {}
 func (*RoomHistory) Descriptor() ([]byte, []int) {
-	return fileDescriptor_33c39964a4dd7e9c, []int{4}
+	return fileDescriptor_33c39964a4dd7e9c, []int{5}
 }
 
 func (m *RoomHistory) XXX_Unmarshal(b []byte) error {
@@ -311,71 +373,25 @@ func (m *RoomHistory) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_RoomHistory proto.InternalMessageInfo
 
-func (m *RoomHistory) GetPlayerId() int32 {
+func (m *RoomHistory) GetId() int32 {
 	if m != nil {
-		return m.PlayerId
+		return m.Id
 	}
 	return 0
 }
 
-func (m *RoomHistory) GetRoomId() string {
+func (m *RoomHistory) GetAction() string {
 	if m != nil {
-		return m.RoomId
+		return m.Action
 	}
 	return ""
 }
 
-func (m *RoomHistory) GetSequenceNumberStart() int32 {
+func (m *RoomHistory) GetContent() string {
 	if m != nil {
-		return m.SequenceNumberStart
+		return m.Content
 	}
-	return 0
-}
-
-func (m *RoomHistory) GetSequenceNumberEnd() int32 {
-	if m != nil {
-		return m.SequenceNumberEnd
-	}
-	return 0
-}
-
-type PlayerMatchSignCancel struct {
-	PlayerId             int32    `protobuf:"varint,1,opt,name=player_id,json=playerId,proto3" json:"player_id,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
-}
-
-func (m *PlayerMatchSignCancel) Reset()         { *m = PlayerMatchSignCancel{} }
-func (m *PlayerMatchSignCancel) String() string { return proto.CompactTextString(m) }
-func (*PlayerMatchSignCancel) ProtoMessage()    {}
-func (*PlayerMatchSignCancel) Descriptor() ([]byte, []int) {
-	return fileDescriptor_33c39964a4dd7e9c, []int{5}
-}
-
-func (m *PlayerMatchSignCancel) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_PlayerMatchSignCancel.Unmarshal(m, b)
-}
-func (m *PlayerMatchSignCancel) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_PlayerMatchSignCancel.Marshal(b, m, deterministic)
-}
-func (m *PlayerMatchSignCancel) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_PlayerMatchSignCancel.Merge(m, src)
-}
-func (m *PlayerMatchSignCancel) XXX_Size() int {
-	return xxx_messageInfo_PlayerMatchSignCancel.Size(m)
-}
-func (m *PlayerMatchSignCancel) XXX_DiscardUnknown() {
-	xxx_messageInfo_PlayerMatchSignCancel.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_PlayerMatchSignCancel proto.InternalMessageInfo
-
-func (m *PlayerMatchSignCancel) GetPlayerId() int32 {
-	if m != nil {
-		return m.PlayerId
-	}
-	return 0
+	return ""
 }
 
 type GameOver struct {
@@ -567,17 +583,17 @@ func (m *StartBattle) GetSequenceNumberStart() int32 {
 }
 
 type EnterBattle struct {
-	RandSeek             int32     `protobuf:"varint,1,opt,name=rand_seek,json=randSeek,proto3" json:"rand_seek,omitempty"`
-	RoomId               string    `protobuf:"bytes,2,opt,name=room_id,json=roomId,proto3" json:"room_id,omitempty"`
-	SequenceNumber       int32     `protobuf:"varint,3,opt,name=sequence_number,json=sequenceNumber,proto3" json:"sequence_number,omitempty"`
-	Status               int32     `protobuf:"varint,4,opt,name=status,proto3" json:"status,omitempty"`
-	AddTime              int32     `protobuf:"varint,5,opt,name=add_time,json=addTime,proto3" json:"add_time,omitempty"`
-	Time                 int64     `protobuf:"varint,6,opt,name=time,proto3" json:"time,omitempty"`
-	PlayerList           []*Player `protobuf:"bytes,7,rep,name=player_list,json=playerList,proto3" json:"player_list,omitempty"`
-	UdpPort              string    `protobuf:"bytes,8,opt,name=udp_port,json=udpPort,proto3" json:"udp_port,omitempty"`
-	XXX_NoUnkeyedLiteral struct{}  `json:"-"`
-	XXX_unrecognized     []byte    `json:"-"`
-	XXX_sizecache        int32     `json:"-"`
+	RandSeek             int32    `protobuf:"varint,1,opt,name=rand_seek,json=randSeek,proto3" json:"rand_seek,omitempty"`
+	RoomId               string   `protobuf:"bytes,2,opt,name=room_id,json=roomId,proto3" json:"room_id,omitempty"`
+	SequenceNumber       int32    `protobuf:"varint,3,opt,name=sequence_number,json=sequenceNumber,proto3" json:"sequence_number,omitempty"`
+	Status               int32    `protobuf:"varint,4,opt,name=status,proto3" json:"status,omitempty"`
+	AddTime              int32    `protobuf:"varint,5,opt,name=add_time,json=addTime,proto3" json:"add_time,omitempty"`
+	Time                 int64    `protobuf:"varint,6,opt,name=time,proto3" json:"time,omitempty"`
+	UdpPort              string   `protobuf:"bytes,7,opt,name=udp_port,json=udpPort,proto3" json:"udp_port,omitempty"`
+	PlayerIds            []int32  `protobuf:"varint,8,rep,packed,name=player_ids,json=playerIds,proto3" json:"player_ids,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
 }
 
 func (m *EnterBattle) Reset()         { *m = EnterBattle{} }
@@ -647,18 +663,18 @@ func (m *EnterBattle) GetTime() int64 {
 	return 0
 }
 
-func (m *EnterBattle) GetPlayerList() []*Player {
-	if m != nil {
-		return m.PlayerList
-	}
-	return nil
-}
-
 func (m *EnterBattle) GetUdpPort() string {
 	if m != nil {
 		return m.UdpPort
 	}
 	return ""
+}
+
+func (m *EnterBattle) GetPlayerIds() []int32 {
+	if m != nil {
+		return m.PlayerIds
+	}
+	return nil
 }
 
 type LogicFrame struct {
@@ -826,204 +842,6 @@ func (m *ReadyTimeout) GetRoomId() string {
 	return ""
 }
 
-type Player struct {
-	Id                   int32    `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
-	Username             string   `protobuf:"bytes,2,opt,name=username,proto3" json:"username,omitempty"`
-	Nickname             string   `protobuf:"bytes,3,opt,name=nickname,proto3" json:"nickname,omitempty"`
-	Status               int32    `protobuf:"varint,4,opt,name=status,proto3" json:"status,omitempty"`
-	AddTime              int32    `protobuf:"varint,5,opt,name=add_time,json=addTime,proto3" json:"add_time,omitempty"`
-	UpTime               int32    `protobuf:"varint,6,opt,name=upTime,proto3" json:"upTime,omitempty"`
-	RoomId               string   `protobuf:"bytes,7,opt,name=room_id,json=roomId,proto3" json:"room_id,omitempty"`
-	SessionId            string   `protobuf:"bytes,8,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
-	Timeout              int32    `protobuf:"varint,9,opt,name=timeout,proto3" json:"timeout,omitempty"`
-	ContentType          int32    `protobuf:"varint,10,opt,name=content_type,json=contentType,proto3" json:"content_type,omitempty"`
-	ProtocolType         int32    `protobuf:"varint,11,opt,name=protocol_type,json=protocolType,proto3" json:"protocol_type,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
-}
-
-func (m *Player) Reset()         { *m = Player{} }
-func (m *Player) String() string { return proto.CompactTextString(m) }
-func (*Player) ProtoMessage()    {}
-func (*Player) Descriptor() ([]byte, []int) {
-	return fileDescriptor_33c39964a4dd7e9c, []int{14}
-}
-
-func (m *Player) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_Player.Unmarshal(m, b)
-}
-func (m *Player) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_Player.Marshal(b, m, deterministic)
-}
-func (m *Player) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_Player.Merge(m, src)
-}
-func (m *Player) XXX_Size() int {
-	return xxx_messageInfo_Player.Size(m)
-}
-func (m *Player) XXX_DiscardUnknown() {
-	xxx_messageInfo_Player.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_Player proto.InternalMessageInfo
-
-func (m *Player) GetId() int32 {
-	if m != nil {
-		return m.Id
-	}
-	return 0
-}
-
-func (m *Player) GetUsername() string {
-	if m != nil {
-		return m.Username
-	}
-	return ""
-}
-
-func (m *Player) GetNickname() string {
-	if m != nil {
-		return m.Nickname
-	}
-	return ""
-}
-
-func (m *Player) GetStatus() int32 {
-	if m != nil {
-		return m.Status
-	}
-	return 0
-}
-
-func (m *Player) GetAddTime() int32 {
-	if m != nil {
-		return m.AddTime
-	}
-	return 0
-}
-
-func (m *Player) GetUpTime() int32 {
-	if m != nil {
-		return m.UpTime
-	}
-	return 0
-}
-
-func (m *Player) GetRoomId() string {
-	if m != nil {
-		return m.RoomId
-	}
-	return ""
-}
-
-func (m *Player) GetSessionId() string {
-	if m != nil {
-		return m.SessionId
-	}
-	return ""
-}
-
-func (m *Player) GetTimeout() int32 {
-	if m != nil {
-		return m.Timeout
-	}
-	return 0
-}
-
-func (m *Player) GetContentType() int32 {
-	if m != nil {
-		return m.ContentType
-	}
-	return 0
-}
-
-func (m *Player) GetProtocolType() int32 {
-	if m != nil {
-		return m.ProtocolType
-	}
-	return 0
-}
-
-type PlayerStatus struct {
-	Id                   int32    `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
-	Nickname             string   `protobuf:"bytes,2,opt,name=nickname,proto3" json:"nickname,omitempty"`
-	Status               int32    `protobuf:"varint,3,opt,name=status,proto3" json:"status,omitempty"`
-	RoomId               string   `protobuf:"bytes,4,opt,name=room_id,json=roomId,proto3" json:"room_id,omitempty"`
-	AddTime              int32    `protobuf:"varint,5,opt,name=add_time,json=addTime,proto3" json:"add_time,omitempty"`
-	UpTime               int32    `protobuf:"varint,6,opt,name=up_time,json=upTime,proto3" json:"up_time,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
-}
-
-func (m *PlayerStatus) Reset()         { *m = PlayerStatus{} }
-func (m *PlayerStatus) String() string { return proto.CompactTextString(m) }
-func (*PlayerStatus) ProtoMessage()    {}
-func (*PlayerStatus) Descriptor() ([]byte, []int) {
-	return fileDescriptor_33c39964a4dd7e9c, []int{15}
-}
-
-func (m *PlayerStatus) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_PlayerStatus.Unmarshal(m, b)
-}
-func (m *PlayerStatus) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_PlayerStatus.Marshal(b, m, deterministic)
-}
-func (m *PlayerStatus) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_PlayerStatus.Merge(m, src)
-}
-func (m *PlayerStatus) XXX_Size() int {
-	return xxx_messageInfo_PlayerStatus.Size(m)
-}
-func (m *PlayerStatus) XXX_DiscardUnknown() {
-	xxx_messageInfo_PlayerStatus.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_PlayerStatus proto.InternalMessageInfo
-
-func (m *PlayerStatus) GetId() int32 {
-	if m != nil {
-		return m.Id
-	}
-	return 0
-}
-
-func (m *PlayerStatus) GetNickname() string {
-	if m != nil {
-		return m.Nickname
-	}
-	return ""
-}
-
-func (m *PlayerStatus) GetStatus() int32 {
-	if m != nil {
-		return m.Status
-	}
-	return 0
-}
-
-func (m *PlayerStatus) GetRoomId() string {
-	if m != nil {
-		return m.RoomId
-	}
-	return ""
-}
-
-func (m *PlayerStatus) GetAddTime() int32 {
-	if m != nil {
-		return m.AddTime
-	}
-	return 0
-}
-
-func (m *PlayerStatus) GetUpTime() int32 {
-	if m != nil {
-		return m.UpTime
-	}
-	return 0
-}
-
 type RestartGame struct {
 	RoomId               string   `protobuf:"bytes,1,opt,name=room_id,json=roomId,proto3" json:"room_id,omitempty"`
 	PlayerIds            []int32  `protobuf:"varint,2,rep,packed,name=player_ids,json=playerIds,proto3" json:"player_ids,omitempty"`
@@ -1036,7 +854,7 @@ func (m *RestartGame) Reset()         { *m = RestartGame{} }
 func (m *RestartGame) String() string { return proto.CompactTextString(m) }
 func (*RestartGame) ProtoMessage()    {}
 func (*RestartGame) Descriptor() ([]byte, []int) {
-	return fileDescriptor_33c39964a4dd7e9c, []int{16}
+	return fileDescriptor_33c39964a4dd7e9c, []int{14}
 }
 
 func (m *RestartGame) XXX_Unmarshal(b []byte) error {
@@ -1071,131 +889,13 @@ func (m *RestartGame) GetPlayerIds() []int32 {
 	return nil
 }
 
-type PlayerMatchSignFailed struct {
-	PlayerId             int32    `protobuf:"varint,1,opt,name=player_id,json=playerId,proto3" json:"player_id,omitempty"`
-	Msg                  string   `protobuf:"bytes,2,opt,name=msg,proto3" json:"msg,omitempty"`
-	Code                 int32    `protobuf:"varint,3,opt,name=code,proto3" json:"code,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
-}
-
-func (m *PlayerMatchSignFailed) Reset()         { *m = PlayerMatchSignFailed{} }
-func (m *PlayerMatchSignFailed) String() string { return proto.CompactTextString(m) }
-func (*PlayerMatchSignFailed) ProtoMessage()    {}
-func (*PlayerMatchSignFailed) Descriptor() ([]byte, []int) {
-	return fileDescriptor_33c39964a4dd7e9c, []int{17}
-}
-
-func (m *PlayerMatchSignFailed) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_PlayerMatchSignFailed.Unmarshal(m, b)
-}
-func (m *PlayerMatchSignFailed) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_PlayerMatchSignFailed.Marshal(b, m, deterministic)
-}
-func (m *PlayerMatchSignFailed) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_PlayerMatchSignFailed.Merge(m, src)
-}
-func (m *PlayerMatchSignFailed) XXX_Size() int {
-	return xxx_messageInfo_PlayerMatchSignFailed.Size(m)
-}
-func (m *PlayerMatchSignFailed) XXX_DiscardUnknown() {
-	xxx_messageInfo_PlayerMatchSignFailed.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_PlayerMatchSignFailed proto.InternalMessageInfo
-
-func (m *PlayerMatchSignFailed) GetPlayerId() int32 {
-	if m != nil {
-		return m.PlayerId
-	}
-	return 0
-}
-
-func (m *PlayerMatchSignFailed) GetMsg() string {
-	if m != nil {
-		return m.Msg
-	}
-	return ""
-}
-
-func (m *PlayerMatchSignFailed) GetCode() int32 {
-	if m != nil {
-		return m.Code
-	}
-	return 0
-}
-
-type PlayerMatchingFailed struct {
-	PlayerId             int32    `protobuf:"varint,1,opt,name=player_id,json=playerId,proto3" json:"player_id,omitempty"`
-	Msg                  string   `protobuf:"bytes,2,opt,name=msg,proto3" json:"msg,omitempty"`
-	RoomId               string   `protobuf:"bytes,3,opt,name=roomId,proto3" json:"roomId,omitempty"`
-	Code                 int32    `protobuf:"varint,4,opt,name=code,proto3" json:"code,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
-}
-
-func (m *PlayerMatchingFailed) Reset()         { *m = PlayerMatchingFailed{} }
-func (m *PlayerMatchingFailed) String() string { return proto.CompactTextString(m) }
-func (*PlayerMatchingFailed) ProtoMessage()    {}
-func (*PlayerMatchingFailed) Descriptor() ([]byte, []int) {
-	return fileDescriptor_33c39964a4dd7e9c, []int{18}
-}
-
-func (m *PlayerMatchingFailed) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_PlayerMatchingFailed.Unmarshal(m, b)
-}
-func (m *PlayerMatchingFailed) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_PlayerMatchingFailed.Marshal(b, m, deterministic)
-}
-func (m *PlayerMatchingFailed) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_PlayerMatchingFailed.Merge(m, src)
-}
-func (m *PlayerMatchingFailed) XXX_Size() int {
-	return xxx_messageInfo_PlayerMatchingFailed.Size(m)
-}
-func (m *PlayerMatchingFailed) XXX_DiscardUnknown() {
-	xxx_messageInfo_PlayerMatchingFailed.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_PlayerMatchingFailed proto.InternalMessageInfo
-
-func (m *PlayerMatchingFailed) GetPlayerId() int32 {
-	if m != nil {
-		return m.PlayerId
-	}
-	return 0
-}
-
-func (m *PlayerMatchingFailed) GetMsg() string {
-	if m != nil {
-		return m.Msg
-	}
-	return ""
-}
-
-func (m *PlayerMatchingFailed) GetRoomId() string {
-	if m != nil {
-		return m.RoomId
-	}
-	return ""
-}
-
-func (m *PlayerMatchingFailed) GetCode() int32 {
-	if m != nil {
-		return m.Code
-	}
-	return 0
-}
-
 func init() {
 	proto.RegisterType((*RoomBaseInfo)(nil), "pb.RoomBaseInfo")
 	proto.RegisterType((*PlayerResumeGame)(nil), "pb.PlayerResumeGame")
-	proto.RegisterType((*PlayerMatchSign)(nil), "pb.PlayerMatchSign")
 	proto.RegisterType((*PlayerReady)(nil), "pb.PlayerReady")
+	proto.RegisterType((*ReqRoomHistory)(nil), "pb.ReqRoomHistory")
+	proto.RegisterType((*RoomHistoryList)(nil), "pb.RoomHistoryList")
 	proto.RegisterType((*RoomHistory)(nil), "pb.RoomHistory")
-	proto.RegisterType((*PlayerMatchSignCancel)(nil), "pb.PlayerMatchSignCancel")
 	proto.RegisterType((*GameOver)(nil), "pb.GameOver")
 	proto.RegisterType((*PlayerOver)(nil), "pb.PlayerOver")
 	proto.RegisterType((*OtherPlayerOffline)(nil), "pb.OtherPlayerOffline")
@@ -1204,87 +904,69 @@ func init() {
 	proto.RegisterType((*LogicFrame)(nil), "pb.LogicFrame")
 	proto.RegisterType((*Operation)(nil), "pb.Operation")
 	proto.RegisterType((*ReadyTimeout)(nil), "pb.ReadyTimeout")
-	proto.RegisterType((*Player)(nil), "pb.Player")
-	proto.RegisterType((*PlayerStatus)(nil), "pb.PlayerStatus")
 	proto.RegisterType((*RestartGame)(nil), "pb.RestartGame")
-	proto.RegisterType((*PlayerMatchSignFailed)(nil), "pb.PlayerMatchSignFailed")
-	proto.RegisterType((*PlayerMatchingFailed)(nil), "pb.PlayerMatchingFailed")
 }
 
 func init() { proto.RegisterFile("frame_sync.proto", fileDescriptor_33c39964a4dd7e9c) }
 
 var fileDescriptor_33c39964a4dd7e9c = []byte{
-	// 1108 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xb4, 0x56, 0xcd, 0x6e, 0xe4, 0x44,
-	0x10, 0x66, 0xfe, 0xc7, 0x35, 0xb3, 0x49, 0xe8, 0xfc, 0x39, 0x41, 0x48, 0xc1, 0x1c, 0x36, 0x12,
-	0xec, 0x40, 0x02, 0x42, 0x48, 0x80, 0x04, 0x19, 0x65, 0x21, 0xd2, 0x42, 0x56, 0x76, 0x4e, 0x7b,
-	0xb1, 0x3c, 0x76, 0x27, 0x6b, 0x65, 0xdc, 0xed, 0xd8, 0xed, 0x48, 0x73, 0xe4, 0x01, 0x78, 0x06,
-	0x4e, 0x3c, 0x00, 0x07, 0x9e, 0x89, 0x87, 0xe0, 0x82, 0xfa, 0xc7, 0x9e, 0xee, 0xb1, 0x77, 0x96,
-	0x04, 0xb8, 0xb9, 0xbf, 0xae, 0xaa, 0xae, 0xfa, 0x5c, 0xfd, 0x55, 0xc3, 0xd6, 0x75, 0x16, 0x24,
-	0xd8, 0xcf, 0x17, 0x24, 0x9c, 0xa4, 0x19, 0x65, 0x14, 0xb5, 0xd3, 0xd9, 0xe1, 0x38, 0xa4, 0x49,
-	0x42, 0x89, 0x44, 0x9c, 0xdf, 0xdb, 0x30, 0x76, 0x29, 0x4d, 0xce, 0x82, 0x1c, 0x5f, 0x90, 0x6b,
-	0x8a, 0x36, 0xa0, 0x1d, 0x47, 0x76, 0xeb, 0xa8, 0x75, 0x6c, 0xb9, 0xed, 0x38, 0x42, 0x07, 0x30,
-	0x0c, 0xa2, 0xc8, 0x67, 0x71, 0x82, 0xed, 0xf6, 0x51, 0xeb, 0xb8, 0xe7, 0x0e, 0x82, 0x28, 0xba,
-	0x8a, 0x13, 0x8c, 0xf6, 0xa0, 0x9f, 0xb3, 0x80, 0x15, 0xb9, 0xdd, 0x11, 0x1b, 0x6a, 0x85, 0x6c,
-	0x18, 0x70, 0x73, 0x5a, 0x30, 0xbb, 0x2b, 0x3d, 0xd4, 0x12, 0x3d, 0x85, 0xcd, 0x1c, 0xdf, 0x15,
-	0x98, 0x84, 0xd8, 0x27, 0x45, 0x32, 0xc3, 0x99, 0xdd, 0x13, 0x16, 0x1b, 0x25, 0xfc, 0x93, 0x40,
-	0xd1, 0x7b, 0x60, 0x65, 0x01, 0x89, 0xfc, 0x1c, 0xe3, 0x5b, 0xbb, 0x2f, 0x4c, 0x86, 0x1c, 0xf0,
-	0x30, 0xbe, 0x45, 0x1f, 0xc1, 0x28, 0x9d, 0x07, 0x0b, 0x9c, 0xf9, 0xf3, 0x38, 0x67, 0xf6, 0xe0,
-	0xa8, 0x73, 0x3c, 0x3a, 0x85, 0x49, 0x3a, 0x9b, 0xbc, 0x14, 0xb0, 0x0b, 0x72, 0xfb, 0x45, 0x9c,
-	0x33, 0xb4, 0x0f, 0x83, 0x8c, 0xd2, 0xc4, 0x8f, 0x23, 0x7b, 0x28, 0x8a, 0xea, 0xf3, 0xe5, 0x45,
-	0x84, 0xde, 0x07, 0xc8, 0x59, 0x90, 0x31, 0x59, 0x9a, 0x25, 0xce, 0xb0, 0x04, 0x22, 0x8a, 0x3b,
-	0x80, 0x21, 0x26, 0xaa, 0x6e, 0x90, 0x55, 0x60, 0x22, 0xea, 0x76, 0xee, 0x60, 0x4b, 0x1d, 0x84,
-	0xf3, 0x22, 0xc1, 0xdf, 0x07, 0x09, 0xe6, 0x09, 0xab, 0x9c, 0x14, 0x7b, 0x3d, 0x77, 0x28, 0x81,
-	0x8b, 0x48, 0xcf, 0xa1, 0x6d, 0xe4, 0xd0, 0xc0, 0x47, 0xa7, 0x89, 0x0f, 0x67, 0x02, 0x9b, 0xf2,
-	0xc8, 0x1f, 0x03, 0x16, 0xbe, 0xf6, 0xe2, 0x1b, 0xb2, 0xf6, 0x44, 0x67, 0x0a, 0xa3, 0x32, 0xc5,
-	0x20, 0x5a, 0x3c, 0x2e, 0x3b, 0xe7, 0xb7, 0x16, 0x8c, 0x78, 0x6f, 0xfc, 0x10, 0xe7, 0x8c, 0x66,
-	0x8f, 0x8c, 0x82, 0x4e, 0x60, 0x67, 0xa5, 0x46, 0x8f, 0x93, 0xac, 0x0a, 0xdd, 0x36, 0x0b, 0x15,
-	0x5b, 0xe8, 0x19, 0xa0, 0x15, 0x97, 0x73, 0x12, 0xa9, 0x5e, 0x7a, 0xd7, 0x74, 0x38, 0x27, 0x91,
-	0xf3, 0x39, 0xec, 0xae, 0x90, 0x33, 0x0d, 0x48, 0x88, 0xe7, 0xeb, 0x29, 0xfa, 0xb9, 0x05, 0x43,
-	0xfe, 0xeb, 0x2e, 0xef, 0x65, 0xbf, 0xfd, 0x8f, 0xbf, 0x8f, 0xdf, 0x94, 0x0c, 0xe7, 0xc5, 0x5c,
-	0x5e, 0x08, 0x1e, 0x40, 0xac, 0x1c, 0x17, 0x40, 0x66, 0xfe, 0xf6, 0x24, 0x1a, 0xce, 0x6a, 0x37,
-	0xb6, 0xca, 0x09, 0xa0, 0x4b, 0xf6, 0x1a, 0x67, 0x2a, 0xf0, 0xf5, 0xf5, 0x3c, 0x26, 0xeb, 0xfb,
-	0xd3, 0xf9, 0x0e, 0x46, 0x82, 0xf8, 0xb3, 0x80, 0xb1, 0x39, 0x46, 0xa7, 0xb0, 0xbb, 0x72, 0x94,
-	0x2f, 0xee, 0x85, 0xf2, 0x6b, 0xfa, 0x65, 0xce, 0x5f, 0x2d, 0x18, 0x9d, 0x13, 0x86, 0x33, 0x15,
-	0xc3, 0xb8, 0xc0, 0xad, 0x95, 0x0b, 0xfc, 0x9f, 0x10, 0xaa, 0xa4, 0xa7, 0x6b, 0x48, 0x8f, 0xae,
-	0x56, 0x3d, 0x53, 0xad, 0x10, 0x74, 0x05, 0xcc, 0xd5, 0xa4, 0xe3, 0x8a, 0xef, 0x87, 0x29, 0xc9,
-	0x01, 0x0c, 0x8b, 0x28, 0xf5, 0x53, 0x9a, 0x31, 0x25, 0x25, 0x83, 0x22, 0x4a, 0x5f, 0xd2, 0x8c,
-	0x39, 0xbf, 0xb4, 0x00, 0x5e, 0xd0, 0x9b, 0x38, 0x7c, 0xce, 0x15, 0x57, 0xd3, 0xd0, 0x9e, 0xd0,
-	0xd0, 0x7f, 0x5f, 0xef, 0x33, 0x00, 0x9a, 0xe2, 0x2c, 0x60, 0x31, 0x25, 0xbc, 0x66, 0x9e, 0xe7,
-	0x13, 0x9e, 0xe7, 0x65, 0x89, 0xba, 0x9a, 0x81, 0x13, 0x81, 0x55, 0x6d, 0xd4, 0xb2, 0xd9, 0x81,
-	0x1e, 0xbe, 0xc7, 0x84, 0xa9, 0x5c, 0xe4, 0x82, 0xa3, 0xf7, 0xc1, 0xbc, 0xc0, 0x22, 0x01, 0xcb,
-	0x95, 0x0b, 0xb3, 0x6d, 0xba, 0x2b, 0x6d, 0xf3, 0x14, 0xc6, 0x42, 0x5e, 0xae, 0x94, 0xba, 0x6b,
-	0x65, 0xb6, 0x0c, 0x21, 0xf9, 0xa3, 0x0d, 0x7d, 0x49, 0x68, 0x2d, 0x99, 0x43, 0x18, 0x16, 0x39,
-	0xce, 0x48, 0xa0, 0xc6, 0x8b, 0xe5, 0x56, 0x6b, 0xbe, 0x47, 0xe2, 0xf0, 0x56, 0xec, 0xc9, 0xac,
-	0xaa, 0xf5, 0x63, 0x1a, 0x60, 0x0f, 0xfa, 0x45, 0x7a, 0x55, 0xb6, 0x40, 0xcf, 0x55, 0x2b, 0x3d,
-	0xed, 0x41, 0x6d, 0x42, 0xe0, 0x3c, 0x8f, 0x29, 0x59, 0x4e, 0x0f, 0x4b, 0x21, 0x17, 0x91, 0x3e,
-	0xe6, 0x2c, 0x73, 0xcc, 0x7d, 0x00, 0xe3, 0x90, 0x12, 0x86, 0x09, 0xf3, 0xd9, 0x22, 0x2d, 0xe7,
-	0xc7, 0x48, 0x61, 0x57, 0x8b, 0x14, 0xa3, 0x0f, 0xe1, 0x89, 0x18, 0xc0, 0x21, 0x9d, 0x4b, 0x9b,
-	0x91, 0xb0, 0x19, 0x97, 0x20, 0x37, 0x72, 0x7e, 0x6d, 0xc1, 0x58, 0xf2, 0xe6, 0xc9, 0xea, 0x1a,
-	0xd8, 0xab, 0x18, 0x6a, 0xbf, 0x91, 0x21, 0x73, 0x3a, 0x6b, 0xe5, 0x76, 0x8d, 0x72, 0xd7, 0x50,
-	0xb7, 0x0f, 0x83, 0x22, 0xf5, 0x59, 0x8d, 0x3b, 0xe7, 0x1c, 0x46, 0x2e, 0x16, 0xe2, 0x20, 0xa6,
-	0xe0, 0x9b, 0x3a, 0x80, 0x53, 0x59, 0xf5, 0x51, 0x6e, 0xb7, 0x8f, 0x3a, 0x7c, 0xd8, 0x96, 0x8d,
-	0x94, 0x3b, 0xaf, 0x6a, 0x0a, 0xfe, 0x3c, 0x88, 0xe7, 0x38, 0x5a, 0x2f, 0x89, 0x5b, 0xd0, 0x49,
-	0xf2, 0x1b, 0x55, 0x38, 0xff, 0xe4, 0x77, 0x3c, 0xa4, 0x11, 0x56, 0x15, 0x8b, 0x6f, 0xe7, 0x0e,
-	0x76, 0xb4, 0xd8, 0x31, 0xb9, 0x79, 0x5c, 0x68, 0x2e, 0xe1, 0xa2, 0x16, 0xd5, 0x8a, 0x65, 0x65,
-	0xe5, 0x91, 0xdd, 0xe5, 0x91, 0xa7, 0x7f, 0x0e, 0xc1, 0x12, 0x4a, 0xe0, 0x2d, 0x48, 0x88, 0x4e,
-	0x61, 0x7b, 0xea, 0xf9, 0x4a, 0x8e, 0xab, 0x3b, 0x8a, 0x36, 0xf8, 0xf5, 0x5d, 0x8a, 0xc6, 0xa1,
-	0xc5, 0xd7, 0xe7, 0x49, 0xca, 0x16, 0xce, 0x3b, 0xe8, 0x4b, 0xcd, 0x47, 0x7b, 0x65, 0xec, 0x68,
-	0xd2, 0x54, 0xa1, 0xa6, 0xe7, 0x04, 0x36, 0x34, 0x4f, 0x3e, 0xfc, 0x37, 0x75, 0xa7, 0x20, 0x5a,
-	0x98, 0xf6, 0x1f, 0xc3, 0x93, 0x65, 0x76, 0x7c, 0x0a, 0x6d, 0x2c, 0xcd, 0xf9, 0xba, 0x29, 0xba,
-	0xfe, 0x28, 0x10, 0xd1, 0x35, 0xc0, 0xb4, 0xff, 0x14, 0x36, 0x95, 0x7d, 0xf5, 0xc0, 0xdc, 0x2a,
-	0x1d, 0x4a, 0xc4, 0xf4, 0xf8, 0x02, 0x50, 0x95, 0xcf, 0xf2, 0xb1, 0xb3, 0xbd, 0x4c, 0xaa, 0x02,
-	0x4d, 0xbf, 0x33, 0xb0, 0xeb, 0x7e, 0xea, 0x1d, 0x70, 0xd0, 0xe0, 0x2d, 0xb7, 0x6a, 0x31, 0xbc,
-	0xa9, 0xdf, 0xdc, 0x89, 0x4d, 0x31, 0xe4, 0x96, 0x19, 0xe3, 0x5b, 0xd8, 0x37, 0x63, 0x2c, 0x3b,
-	0xce, 0x5e, 0x09, 0x51, 0xed, 0xd4, 0x38, 0xf6, 0xa6, 0xbe, 0x3e, 0x4c, 0x05, 0xc7, 0x1a, 0x50,
-	0xfb, 0x83, 0xde, 0xd4, 0xd7, 0xc7, 0xcf, 0xba, 0xce, 0x92, 0xd1, 0x1f, 0xf4, 0x07, 0x95, 0xfd,
-	0x3f, 0xfd, 0x83, 0x5f, 0xc3, 0xae, 0x37, 0xf5, 0x1b, 0xde, 0x20, 0x7b, 0x62, 0x60, 0xd5, 0x70,
-	0xd3, 0xfb, 0x04, 0xd0, 0x8a, 0xf7, 0x5b, 0x9b, 0xf2, 0x1b, 0xf1, 0xdb, 0x34, 0x97, 0x87, 0xdd,
-	0x18, 0x55, 0xa1, 0x3e, 0xc9, 0x64, 0x85, 0x1a, 0xd2, 0xc4, 0xa1, 0xfe, 0x64, 0x12, 0x1c, 0x6a,
-	0x40, 0x23, 0xe7, 0x9a, 0x50, 0x4a, 0xce, 0x97, 0x80, 0x69, 0x7f, 0x0c, 0x23, 0x6f, 0xea, 0x57,
-	0x8f, 0xd3, 0x31, 0xdf, 0x2b, 0x57, 0x86, 0xe5, 0xd9, 0xe0, 0x55, 0x6f, 0xf2, 0xc9, 0x57, 0xe9,
-	0x6c, 0xd6, 0x17, 0x83, 0xe3, 0xb3, 0xbf, 0x03, 0x00, 0x00, 0xff, 0xff, 0xda, 0x47, 0xed, 0xde,
-	0xf4, 0x0d, 0x00, 0x00,
+	// 888 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xb4, 0x56, 0x4f, 0x8f, 0xe3, 0x34,
+	0x14, 0x27, 0x69, 0xd3, 0x36, 0xaf, 0xb3, 0xed, 0xe0, 0x99, 0x1d, 0xb2, 0x8b, 0x90, 0xaa, 0x70,
+	0xd8, 0x1e, 0xd8, 0xc2, 0x14, 0x09, 0x21, 0x01, 0x07, 0xa6, 0x2a, 0x30, 0xd2, 0x8a, 0xae, 0x92,
+	0x3d, 0x71, 0x89, 0xd2, 0xda, 0x85, 0x68, 0x1b, 0x3b, 0x93, 0x38, 0x23, 0xf5, 0xc8, 0x07, 0xe0,
+	0x53, 0x70, 0xe1, 0xc3, 0xc1, 0x77, 0x40, 0xb6, 0x93, 0xd6, 0x4e, 0xc3, 0xae, 0x76, 0x80, 0x5b,
+	0xdf, 0x2f, 0xef, 0xd9, 0xef, 0xf7, 0xfe, 0xfc, 0x5c, 0x38, 0xdf, 0xe6, 0x71, 0x4a, 0xa2, 0x62,
+	0x4f, 0x37, 0xb3, 0x2c, 0x67, 0x9c, 0x21, 0x3b, 0x5b, 0x3f, 0x3d, 0xdb, 0xb0, 0x34, 0x65, 0x54,
+	0x21, 0xfe, 0xef, 0x36, 0x9c, 0x05, 0x8c, 0xa5, 0x37, 0x71, 0x41, 0x6e, 0xe9, 0x96, 0xa1, 0x11,
+	0xd8, 0x09, 0xf6, 0xac, 0x89, 0x35, 0x75, 0x03, 0x3b, 0xc1, 0xe8, 0x09, 0x0c, 0x62, 0x8c, 0x23,
+	0x9e, 0xa4, 0xc4, 0xb3, 0x27, 0xd6, 0xd4, 0x09, 0xfa, 0x31, 0xc6, 0xaf, 0x92, 0x94, 0xa0, 0x2b,
+	0xe8, 0x15, 0x3c, 0xe6, 0x65, 0xe1, 0x75, 0xe4, 0x87, 0xca, 0x42, 0x1e, 0xf4, 0x85, 0x3b, 0x2b,
+	0xb9, 0xd7, 0x55, 0x11, 0x95, 0x89, 0x9e, 0xc1, 0xb8, 0x20, 0x77, 0x25, 0xa1, 0x1b, 0x12, 0xd1,
+	0x32, 0x5d, 0x93, 0xdc, 0x73, 0xa4, 0xc7, 0xa8, 0x86, 0x7f, 0x94, 0x28, 0xfa, 0x10, 0xdc, 0x3c,
+	0xa6, 0x38, 0x2a, 0x08, 0x79, 0xed, 0xf5, 0xa4, 0xcb, 0x40, 0x00, 0x21, 0x21, 0xaf, 0xd1, 0x47,
+	0x00, 0xd9, 0x2e, 0xde, 0x93, 0x3c, 0x4a, 0x70, 0xe1, 0xf5, 0x27, 0x9d, 0xa9, 0x13, 0xb8, 0x0a,
+	0xb9, 0xc5, 0x05, 0xfa, 0x00, 0xfa, 0x39, 0x63, 0x69, 0x94, 0x60, 0x6f, 0x20, 0x69, 0xf4, 0x84,
+	0x79, 0x8b, 0x45, 0x5c, 0xc1, 0xe3, 0x9c, 0x2b, 0x32, 0xae, 0x3c, 0xd5, 0x95, 0x88, 0xa4, 0xf3,
+	0x04, 0x06, 0x84, 0x56, 0x4c, 0x41, 0xe5, 0x4d, 0xa8, 0x64, 0xea, 0xdf, 0xc1, 0xf9, 0x4b, 0x79,
+	0x7e, 0x40, 0x8a, 0x32, 0x25, 0xdf, 0xc7, 0x29, 0x11, 0x29, 0x1e, 0xb2, 0x90, 0xf5, 0x72, 0x82,
+	0x41, 0x9d, 0x84, 0x9e, 0x83, 0x6d, 0xe4, 0xd0, 0x52, 0x81, 0x4e, 0x5b, 0x05, 0xfc, 0x05, 0x0c,
+	0xeb, 0x2b, 0x63, 0xbc, 0x7f, 0xd8, 0x6d, 0xfe, 0x1f, 0x16, 0x8c, 0x02, 0x72, 0x27, 0x1a, 0xfc,
+	0x43, 0x52, 0x70, 0x96, 0x3f, 0xf0, 0x20, 0x74, 0x0d, 0x97, 0x8d, 0xb4, 0x43, 0x51, 0xb7, 0x2a,
+	0xf7, 0x0b, 0x33, 0x77, 0xf9, 0x09, 0x3d, 0x07, 0xd4, 0x08, 0x59, 0x52, 0x5c, 0x0d, 0xc4, 0xfb,
+	0x66, 0xc0, 0x92, 0x62, 0xff, 0x0b, 0x18, 0x6b, 0x69, 0xbe, 0x48, 0x0a, 0x8e, 0x3e, 0x86, 0xee,
+	0x2e, 0x29, 0xb8, 0x67, 0x4d, 0x3a, 0xd3, 0xe1, 0x7c, 0x3c, 0xcb, 0xd6, 0x33, 0xcd, 0x25, 0x90,
+	0x1f, 0xfd, 0x15, 0x0c, 0x75, 0x7a, 0xc7, 0xf1, 0x75, 0xe4, 0xf8, 0x5e, 0x41, 0x2f, 0xde, 0xf0,
+	0x84, 0xd1, 0x9a, 0x90, 0xb2, 0xc4, 0x8c, 0x6e, 0x18, 0xe5, 0x84, 0x2a, 0x0e, 0x6e, 0x50, 0x9b,
+	0xfe, 0xaf, 0x16, 0x0c, 0x44, 0x83, 0x57, 0xf7, 0x6a, 0x0e, 0xff, 0xc7, 0x26, 0x8b, 0xec, 0x72,
+	0x52, 0x94, 0x3b, 0xb5, 0x28, 0xe2, 0x00, 0x69, 0xf9, 0x01, 0x80, 0x6a, 0xfe, 0xdb, 0x93, 0x68,
+	0xb9, 0xcb, 0x6e, 0x1d, 0xa8, 0x6b, 0x40, 0x2b, 0xfe, 0x0b, 0xc9, 0xab, 0x83, 0xb7, 0xdb, 0x5d,
+	0x42, 0xdf, 0x3c, 0xc5, 0xfe, 0xb7, 0x30, 0x94, 0xbd, 0xbc, 0x89, 0x39, 0xdf, 0x11, 0x34, 0x87,
+	0xc7, 0x8d, 0xab, 0x22, 0xb9, 0x3d, 0x55, 0x5c, 0xdb, 0x14, 0xf8, 0x7f, 0x59, 0x30, 0x5c, 0x52,
+	0x4e, 0xf2, 0xea, 0x0c, 0x63, 0xb1, 0xad, 0xc6, 0x62, 0xff, 0x27, 0x05, 0xad, 0x24, 0xa9, 0x6b,
+	0x48, 0x92, 0xae, 0x62, 0x8e, 0xa9, 0x62, 0x08, 0xba, 0x12, 0x16, 0x2a, 0xd3, 0x09, 0xe4, 0x6f,
+	0xe1, 0x5e, 0xe2, 0x2c, 0xca, 0x58, 0xce, 0xbd, 0xbe, 0x1a, 0x8f, 0x12, 0x67, 0x2f, 0x59, 0xce,
+	0x1b, 0xe2, 0x33, 0x68, 0x88, 0x8f, 0xff, 0x9b, 0x05, 0xf0, 0x82, 0xfd, 0x9c, 0x6c, 0xbe, 0x13,
+	0xda, 0x7b, 0x32, 0x8e, 0xff, 0x9e, 0xe1, 0x73, 0x00, 0x96, 0x91, 0x3c, 0x16, 0x53, 0x2c, 0x58,
+	0x8a, 0xd5, 0x78, 0x24, 0x56, 0x63, 0x55, 0xa3, 0x81, 0xe6, 0xe0, 0x63, 0x70, 0x0f, 0x1f, 0x4e,
+	0xb2, 0xb9, 0x04, 0x87, 0xdc, 0x8b, 0x15, 0x50, 0xb9, 0x28, 0x43, 0xa0, 0xf7, 0xf1, 0xae, 0x24,
+	0xd5, 0x62, 0x28, 0xc3, 0x1c, 0x94, 0x6e, 0x63, 0x50, 0x9e, 0xc1, 0x99, 0x94, 0xa9, 0x57, 0x95,
+	0xce, 0x6b, 0x34, 0x2d, 0x43, 0x90, 0x96, 0x30, 0x0c, 0x88, 0x1c, 0x1a, 0xa9, 0xa1, 0xff, 0xe4,
+	0xd7, 0xa8, 0xb2, 0xdd, 0xa8, 0xf2, 0xfc, 0xcf, 0x1e, 0xb8, 0xb2, 0xc0, 0xe1, 0x9e, 0x6e, 0xd0,
+	0x0c, 0x46, 0x8b, 0x30, 0xd2, 0xd5, 0x52, 0x6a, 0x85, 0x06, 0x3c, 0x75, 0x05, 0xb0, 0x4c, 0x33,
+	0xbe, 0xf7, 0xdf, 0x43, 0x73, 0xb8, 0x38, 0xf8, 0x1f, 0x8a, 0x53, 0xa0, 0x91, 0xf0, 0x39, 0xf6,
+	0xce, 0x8c, 0xf9, 0x52, 0x8b, 0xd1, 0x1e, 0x81, 0x4b, 0xfd, 0xa2, 0x1a, 0x35, 0x23, 0x3f, 0x81,
+	0x47, 0xc7, 0xdb, 0xc4, 0x3a, 0x8f, 0x8e, 0x31, 0xc2, 0x36, 0xbd, 0xaf, 0x25, 0x17, 0x5d, 0xd1,
+	0x90, 0xd4, 0x3d, 0x43, 0xc4, 0xcd, 0x90, 0xcf, 0x60, 0x5c, 0x85, 0x1c, 0x1e, 0xf1, 0xf3, 0x5a,
+	0x2b, 0x6b, 0xe4, 0x24, 0x22, 0x5c, 0x44, 0x46, 0xc7, 0x54, 0x84, 0x86, 0x98, 0x11, 0x33, 0x18,
+	0x85, 0x8b, 0x48, 0x5f, 0x64, 0x59, 0x62, 0x0d, 0x38, 0x21, 0x1d, 0x2e, 0x22, 0x7d, 0x11, 0xde,
+	0x54, 0xdc, 0xb9, 0x3c, 0x5d, 0x27, 0x7d, 0xd1, 0x10, 0x7b, 0xf1, 0x1e, 0xb4, 0x72, 0x78, 0x07,
+	0xd6, 0x5f, 0xc3, 0xe3, 0x70, 0x11, 0xb5, 0x68, 0xe0, 0x95, 0x5c, 0x9f, 0x13, 0xbc, 0xd9, 0x18,
+	0xd4, 0x88, 0x7e, 0x6b, 0x2f, 0xbf, 0x01, 0xcf, 0x0c, 0x79, 0xb7, 0xc1, 0x51, 0x35, 0xd7, 0x05,
+	0x58, 0xd6, 0x5c, 0x03, 0xda, 0xfc, 0xf5, 0xf5, 0x52, 0x4f, 0xe6, 0x11, 0x30, 0xfd, 0xa7, 0x30,
+	0x0c, 0x17, 0xd1, 0xe1, 0xa9, 0x3b, 0x13, 0xdf, 0x6a, 0xcb, 0xf0, 0xbc, 0xe9, 0xff, 0xe4, 0xcc,
+	0x3e, 0xfd, 0x2a, 0x5b, 0xaf, 0x7b, 0xf2, 0x4f, 0xe3, 0xe7, 0x7f, 0x07, 0x00, 0x00, 0xff, 0xff,
+	0x06, 0x71, 0x0f, 0x10, 0x5a, 0x0a, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -1299,24 +981,20 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type FrameSyncClient interface {
+	CS_PlayerReady(ctx context.Context, in *PlayerReady, opts ...grpc.CallOption) (*Empty, error)
 	CS_PlayerOperations(ctx context.Context, in *LogicFrame, opts ...grpc.CallOption) (*Empty, error)
 	CS_PlayerResumeGame(ctx context.Context, in *PlayerResumeGame, opts ...grpc.CallOption) (*Empty, error)
-	CS_PlayerReady(ctx context.Context, in *PlayerReady, opts ...grpc.CallOption) (*Empty, error)
 	CS_PlayerOver(ctx context.Context, in *PlayerOver, opts ...grpc.CallOption) (*Empty, error)
-	CS_RoomHistory(ctx context.Context, in *RoomHistory, opts ...grpc.CallOption) (*Empty, error)
+	CS_RoomHistory(ctx context.Context, in *ReqRoomHistory, opts ...grpc.CallOption) (*Empty, error)
 	CS_RoomBaseInfo(ctx context.Context, in *RoomBaseInfo, opts ...grpc.CallOption) (*Empty, error)
-	CS_PlayerMatchSign(ctx context.Context, in *PlayerMatchSign, opts ...grpc.CallOption) (*Empty, error)
-	CS_PlayerMatchSignCancel(ctx context.Context, in *PlayerMatchSignCancel, opts ...grpc.CallOption) (*Empty, error)
-	SC_PlayerMatchSignFailed(ctx context.Context, in *PlayerMatchSignFailed, opts ...grpc.CallOption) (*Empty, error)
-	SC_PlayerMatchingFailed(ctx context.Context, in *PlayerMatchingFailed, opts ...grpc.CallOption) (*Empty, error)
+	SC_ReadyTimeout(ctx context.Context, in *ReadyTimeout, opts ...grpc.CallOption) (*Empty, error)
 	SC_EnterBattle(ctx context.Context, in *EnterBattle, opts ...grpc.CallOption) (*Empty, error)
 	SC_LogicFrame(ctx context.Context, in *LogicFrame, opts ...grpc.CallOption) (*Empty, error)
-	SC_RoomHistory(ctx context.Context, in *RoomHistory, opts ...grpc.CallOption) (*Empty, error)
+	SC_RoomHistory(ctx context.Context, in *RoomHistoryList, opts ...grpc.CallOption) (*Empty, error)
 	SC_RoomBaseInfo(ctx context.Context, in *RoomBaseInfo, opts ...grpc.CallOption) (*Empty, error)
 	SC_OtherPlayerOffline(ctx context.Context, in *OtherPlayerOffline, opts ...grpc.CallOption) (*Empty, error)
 	SC_OtherPlayerOver(ctx context.Context, in *PlayerOver, opts ...grpc.CallOption) (*Empty, error)
 	SC_OtherPlayerResumeGame(ctx context.Context, in *PlayerResumeGame, opts ...grpc.CallOption) (*Empty, error)
-	SC_ReadyTimeout(ctx context.Context, in *ReadyTimeout, opts ...grpc.CallOption) (*Empty, error)
 	SC_StartBattle(ctx context.Context, in *StartBattle, opts ...grpc.CallOption) (*Empty, error)
 	SC_RestartGame(ctx context.Context, in *RestartGame, opts ...grpc.CallOption) (*Empty, error)
 	SC_GameOver(ctx context.Context, in *GameOver, opts ...grpc.CallOption) (*Empty, error)
@@ -1328,6 +1006,15 @@ type frameSyncClient struct {
 
 func NewFrameSyncClient(cc *grpc.ClientConn) FrameSyncClient {
 	return &frameSyncClient{cc}
+}
+
+func (c *frameSyncClient) CS_PlayerReady(ctx context.Context, in *PlayerReady, opts ...grpc.CallOption) (*Empty, error) {
+	out := new(Empty)
+	err := c.cc.Invoke(ctx, "/pb.FrameSync/CS_PlayerReady", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (c *frameSyncClient) CS_PlayerOperations(ctx context.Context, in *LogicFrame, opts ...grpc.CallOption) (*Empty, error) {
@@ -1348,15 +1035,6 @@ func (c *frameSyncClient) CS_PlayerResumeGame(ctx context.Context, in *PlayerRes
 	return out, nil
 }
 
-func (c *frameSyncClient) CS_PlayerReady(ctx context.Context, in *PlayerReady, opts ...grpc.CallOption) (*Empty, error) {
-	out := new(Empty)
-	err := c.cc.Invoke(ctx, "/pb.FrameSync/CS_PlayerReady", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *frameSyncClient) CS_PlayerOver(ctx context.Context, in *PlayerOver, opts ...grpc.CallOption) (*Empty, error) {
 	out := new(Empty)
 	err := c.cc.Invoke(ctx, "/pb.FrameSync/CS_PlayerOver", in, out, opts...)
@@ -1366,7 +1044,7 @@ func (c *frameSyncClient) CS_PlayerOver(ctx context.Context, in *PlayerOver, opt
 	return out, nil
 }
 
-func (c *frameSyncClient) CS_RoomHistory(ctx context.Context, in *RoomHistory, opts ...grpc.CallOption) (*Empty, error) {
+func (c *frameSyncClient) CS_RoomHistory(ctx context.Context, in *ReqRoomHistory, opts ...grpc.CallOption) (*Empty, error) {
 	out := new(Empty)
 	err := c.cc.Invoke(ctx, "/pb.FrameSync/CS_RoomHistory", in, out, opts...)
 	if err != nil {
@@ -1384,36 +1062,9 @@ func (c *frameSyncClient) CS_RoomBaseInfo(ctx context.Context, in *RoomBaseInfo,
 	return out, nil
 }
 
-func (c *frameSyncClient) CS_PlayerMatchSign(ctx context.Context, in *PlayerMatchSign, opts ...grpc.CallOption) (*Empty, error) {
+func (c *frameSyncClient) SC_ReadyTimeout(ctx context.Context, in *ReadyTimeout, opts ...grpc.CallOption) (*Empty, error) {
 	out := new(Empty)
-	err := c.cc.Invoke(ctx, "/pb.FrameSync/CS_PlayerMatchSign", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *frameSyncClient) CS_PlayerMatchSignCancel(ctx context.Context, in *PlayerMatchSignCancel, opts ...grpc.CallOption) (*Empty, error) {
-	out := new(Empty)
-	err := c.cc.Invoke(ctx, "/pb.FrameSync/CS_PlayerMatchSignCancel", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *frameSyncClient) SC_PlayerMatchSignFailed(ctx context.Context, in *PlayerMatchSignFailed, opts ...grpc.CallOption) (*Empty, error) {
-	out := new(Empty)
-	err := c.cc.Invoke(ctx, "/pb.FrameSync/SC_PlayerMatchSignFailed", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *frameSyncClient) SC_PlayerMatchingFailed(ctx context.Context, in *PlayerMatchingFailed, opts ...grpc.CallOption) (*Empty, error) {
-	out := new(Empty)
-	err := c.cc.Invoke(ctx, "/pb.FrameSync/SC_PlayerMatchingFailed", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/pb.FrameSync/SC_ReadyTimeout", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1438,7 +1089,7 @@ func (c *frameSyncClient) SC_LogicFrame(ctx context.Context, in *LogicFrame, opt
 	return out, nil
 }
 
-func (c *frameSyncClient) SC_RoomHistory(ctx context.Context, in *RoomHistory, opts ...grpc.CallOption) (*Empty, error) {
+func (c *frameSyncClient) SC_RoomHistory(ctx context.Context, in *RoomHistoryList, opts ...grpc.CallOption) (*Empty, error) {
 	out := new(Empty)
 	err := c.cc.Invoke(ctx, "/pb.FrameSync/SC_RoomHistory", in, out, opts...)
 	if err != nil {
@@ -1483,15 +1134,6 @@ func (c *frameSyncClient) SC_OtherPlayerResumeGame(ctx context.Context, in *Play
 	return out, nil
 }
 
-func (c *frameSyncClient) SC_ReadyTimeout(ctx context.Context, in *ReadyTimeout, opts ...grpc.CallOption) (*Empty, error) {
-	out := new(Empty)
-	err := c.cc.Invoke(ctx, "/pb.FrameSync/SC_ReadyTimeout", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *frameSyncClient) SC_StartBattle(ctx context.Context, in *StartBattle, opts ...grpc.CallOption) (*Empty, error) {
 	out := new(Empty)
 	err := c.cc.Invoke(ctx, "/pb.FrameSync/SC_StartBattle", in, out, opts...)
@@ -1521,24 +1163,20 @@ func (c *frameSyncClient) SC_GameOver(ctx context.Context, in *GameOver, opts ..
 
 // FrameSyncServer is the server API for FrameSync service.
 type FrameSyncServer interface {
+	CS_PlayerReady(context.Context, *PlayerReady) (*Empty, error)
 	CS_PlayerOperations(context.Context, *LogicFrame) (*Empty, error)
 	CS_PlayerResumeGame(context.Context, *PlayerResumeGame) (*Empty, error)
-	CS_PlayerReady(context.Context, *PlayerReady) (*Empty, error)
 	CS_PlayerOver(context.Context, *PlayerOver) (*Empty, error)
-	CS_RoomHistory(context.Context, *RoomHistory) (*Empty, error)
+	CS_RoomHistory(context.Context, *ReqRoomHistory) (*Empty, error)
 	CS_RoomBaseInfo(context.Context, *RoomBaseInfo) (*Empty, error)
-	CS_PlayerMatchSign(context.Context, *PlayerMatchSign) (*Empty, error)
-	CS_PlayerMatchSignCancel(context.Context, *PlayerMatchSignCancel) (*Empty, error)
-	SC_PlayerMatchSignFailed(context.Context, *PlayerMatchSignFailed) (*Empty, error)
-	SC_PlayerMatchingFailed(context.Context, *PlayerMatchingFailed) (*Empty, error)
+	SC_ReadyTimeout(context.Context, *ReadyTimeout) (*Empty, error)
 	SC_EnterBattle(context.Context, *EnterBattle) (*Empty, error)
 	SC_LogicFrame(context.Context, *LogicFrame) (*Empty, error)
-	SC_RoomHistory(context.Context, *RoomHistory) (*Empty, error)
+	SC_RoomHistory(context.Context, *RoomHistoryList) (*Empty, error)
 	SC_RoomBaseInfo(context.Context, *RoomBaseInfo) (*Empty, error)
 	SC_OtherPlayerOffline(context.Context, *OtherPlayerOffline) (*Empty, error)
 	SC_OtherPlayerOver(context.Context, *PlayerOver) (*Empty, error)
 	SC_OtherPlayerResumeGame(context.Context, *PlayerResumeGame) (*Empty, error)
-	SC_ReadyTimeout(context.Context, *ReadyTimeout) (*Empty, error)
 	SC_StartBattle(context.Context, *StartBattle) (*Empty, error)
 	SC_RestartGame(context.Context, *RestartGame) (*Empty, error)
 	SC_GameOver(context.Context, *GameOver) (*Empty, error)
@@ -1548,35 +1186,26 @@ type FrameSyncServer interface {
 type UnimplementedFrameSyncServer struct {
 }
 
+func (*UnimplementedFrameSyncServer) CS_PlayerReady(ctx context.Context, req *PlayerReady) (*Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CS_PlayerReady not implemented")
+}
 func (*UnimplementedFrameSyncServer) CS_PlayerOperations(ctx context.Context, req *LogicFrame) (*Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CS_PlayerOperations not implemented")
 }
 func (*UnimplementedFrameSyncServer) CS_PlayerResumeGame(ctx context.Context, req *PlayerResumeGame) (*Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CS_PlayerResumeGame not implemented")
 }
-func (*UnimplementedFrameSyncServer) CS_PlayerReady(ctx context.Context, req *PlayerReady) (*Empty, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method CS_PlayerReady not implemented")
-}
 func (*UnimplementedFrameSyncServer) CS_PlayerOver(ctx context.Context, req *PlayerOver) (*Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CS_PlayerOver not implemented")
 }
-func (*UnimplementedFrameSyncServer) CS_RoomHistory(ctx context.Context, req *RoomHistory) (*Empty, error) {
+func (*UnimplementedFrameSyncServer) CS_RoomHistory(ctx context.Context, req *ReqRoomHistory) (*Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CS_RoomHistory not implemented")
 }
 func (*UnimplementedFrameSyncServer) CS_RoomBaseInfo(ctx context.Context, req *RoomBaseInfo) (*Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CS_RoomBaseInfo not implemented")
 }
-func (*UnimplementedFrameSyncServer) CS_PlayerMatchSign(ctx context.Context, req *PlayerMatchSign) (*Empty, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method CS_PlayerMatchSign not implemented")
-}
-func (*UnimplementedFrameSyncServer) CS_PlayerMatchSignCancel(ctx context.Context, req *PlayerMatchSignCancel) (*Empty, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method CS_PlayerMatchSignCancel not implemented")
-}
-func (*UnimplementedFrameSyncServer) SC_PlayerMatchSignFailed(ctx context.Context, req *PlayerMatchSignFailed) (*Empty, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method SC_PlayerMatchSignFailed not implemented")
-}
-func (*UnimplementedFrameSyncServer) SC_PlayerMatchingFailed(ctx context.Context, req *PlayerMatchingFailed) (*Empty, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method SC_PlayerMatchingFailed not implemented")
+func (*UnimplementedFrameSyncServer) SC_ReadyTimeout(ctx context.Context, req *ReadyTimeout) (*Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SC_ReadyTimeout not implemented")
 }
 func (*UnimplementedFrameSyncServer) SC_EnterBattle(ctx context.Context, req *EnterBattle) (*Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SC_EnterBattle not implemented")
@@ -1584,7 +1213,7 @@ func (*UnimplementedFrameSyncServer) SC_EnterBattle(ctx context.Context, req *En
 func (*UnimplementedFrameSyncServer) SC_LogicFrame(ctx context.Context, req *LogicFrame) (*Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SC_LogicFrame not implemented")
 }
-func (*UnimplementedFrameSyncServer) SC_RoomHistory(ctx context.Context, req *RoomHistory) (*Empty, error) {
+func (*UnimplementedFrameSyncServer) SC_RoomHistory(ctx context.Context, req *RoomHistoryList) (*Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SC_RoomHistory not implemented")
 }
 func (*UnimplementedFrameSyncServer) SC_RoomBaseInfo(ctx context.Context, req *RoomBaseInfo) (*Empty, error) {
@@ -1599,9 +1228,6 @@ func (*UnimplementedFrameSyncServer) SC_OtherPlayerOver(ctx context.Context, req
 func (*UnimplementedFrameSyncServer) SC_OtherPlayerResumeGame(ctx context.Context, req *PlayerResumeGame) (*Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SC_OtherPlayerResumeGame not implemented")
 }
-func (*UnimplementedFrameSyncServer) SC_ReadyTimeout(ctx context.Context, req *ReadyTimeout) (*Empty, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method SC_ReadyTimeout not implemented")
-}
 func (*UnimplementedFrameSyncServer) SC_StartBattle(ctx context.Context, req *StartBattle) (*Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SC_StartBattle not implemented")
 }
@@ -1614,6 +1240,24 @@ func (*UnimplementedFrameSyncServer) SC_GameOver(ctx context.Context, req *GameO
 
 func RegisterFrameSyncServer(s *grpc.Server, srv FrameSyncServer) {
 	s.RegisterService(&_FrameSync_serviceDesc, srv)
+}
+
+func _FrameSync_CS_PlayerReady_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PlayerReady)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(FrameSyncServer).CS_PlayerReady(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/pb.FrameSync/CS_PlayerReady",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(FrameSyncServer).CS_PlayerReady(ctx, req.(*PlayerReady))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _FrameSync_CS_PlayerOperations_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -1652,24 +1296,6 @@ func _FrameSync_CS_PlayerResumeGame_Handler(srv interface{}, ctx context.Context
 	return interceptor(ctx, in, info, handler)
 }
 
-func _FrameSync_CS_PlayerReady_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(PlayerReady)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(FrameSyncServer).CS_PlayerReady(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/pb.FrameSync/CS_PlayerReady",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(FrameSyncServer).CS_PlayerReady(ctx, req.(*PlayerReady))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _FrameSync_CS_PlayerOver_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(PlayerOver)
 	if err := dec(in); err != nil {
@@ -1689,7 +1315,7 @@ func _FrameSync_CS_PlayerOver_Handler(srv interface{}, ctx context.Context, dec 
 }
 
 func _FrameSync_CS_RoomHistory_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(RoomHistory)
+	in := new(ReqRoomHistory)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -1701,7 +1327,7 @@ func _FrameSync_CS_RoomHistory_Handler(srv interface{}, ctx context.Context, dec
 		FullMethod: "/pb.FrameSync/CS_RoomHistory",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(FrameSyncServer).CS_RoomHistory(ctx, req.(*RoomHistory))
+		return srv.(FrameSyncServer).CS_RoomHistory(ctx, req.(*ReqRoomHistory))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1724,74 +1350,20 @@ func _FrameSync_CS_RoomBaseInfo_Handler(srv interface{}, ctx context.Context, de
 	return interceptor(ctx, in, info, handler)
 }
 
-func _FrameSync_CS_PlayerMatchSign_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(PlayerMatchSign)
+func _FrameSync_SC_ReadyTimeout_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ReadyTimeout)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(FrameSyncServer).CS_PlayerMatchSign(ctx, in)
+		return srv.(FrameSyncServer).SC_ReadyTimeout(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/pb.FrameSync/CS_PlayerMatchSign",
+		FullMethod: "/pb.FrameSync/SC_ReadyTimeout",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(FrameSyncServer).CS_PlayerMatchSign(ctx, req.(*PlayerMatchSign))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _FrameSync_CS_PlayerMatchSignCancel_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(PlayerMatchSignCancel)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(FrameSyncServer).CS_PlayerMatchSignCancel(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/pb.FrameSync/CS_PlayerMatchSignCancel",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(FrameSyncServer).CS_PlayerMatchSignCancel(ctx, req.(*PlayerMatchSignCancel))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _FrameSync_SC_PlayerMatchSignFailed_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(PlayerMatchSignFailed)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(FrameSyncServer).SC_PlayerMatchSignFailed(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/pb.FrameSync/SC_PlayerMatchSignFailed",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(FrameSyncServer).SC_PlayerMatchSignFailed(ctx, req.(*PlayerMatchSignFailed))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _FrameSync_SC_PlayerMatchingFailed_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(PlayerMatchingFailed)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(FrameSyncServer).SC_PlayerMatchingFailed(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/pb.FrameSync/SC_PlayerMatchingFailed",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(FrameSyncServer).SC_PlayerMatchingFailed(ctx, req.(*PlayerMatchingFailed))
+		return srv.(FrameSyncServer).SC_ReadyTimeout(ctx, req.(*ReadyTimeout))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1833,7 +1405,7 @@ func _FrameSync_SC_LogicFrame_Handler(srv interface{}, ctx context.Context, dec 
 }
 
 func _FrameSync_SC_RoomHistory_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(RoomHistory)
+	in := new(RoomHistoryList)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -1845,7 +1417,7 @@ func _FrameSync_SC_RoomHistory_Handler(srv interface{}, ctx context.Context, dec
 		FullMethod: "/pb.FrameSync/SC_RoomHistory",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(FrameSyncServer).SC_RoomHistory(ctx, req.(*RoomHistory))
+		return srv.(FrameSyncServer).SC_RoomHistory(ctx, req.(*RoomHistoryList))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1922,24 +1494,6 @@ func _FrameSync_SC_OtherPlayerResumeGame_Handler(srv interface{}, ctx context.Co
 	return interceptor(ctx, in, info, handler)
 }
 
-func _FrameSync_SC_ReadyTimeout_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ReadyTimeout)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(FrameSyncServer).SC_ReadyTimeout(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/pb.FrameSync/SC_ReadyTimeout",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(FrameSyncServer).SC_ReadyTimeout(ctx, req.(*ReadyTimeout))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _FrameSync_SC_StartBattle_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(StartBattle)
 	if err := dec(in); err != nil {
@@ -1999,16 +1553,16 @@ var _FrameSync_serviceDesc = grpc.ServiceDesc{
 	HandlerType: (*FrameSyncServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
+			MethodName: "CS_PlayerReady",
+			Handler:    _FrameSync_CS_PlayerReady_Handler,
+		},
+		{
 			MethodName: "CS_PlayerOperations",
 			Handler:    _FrameSync_CS_PlayerOperations_Handler,
 		},
 		{
 			MethodName: "CS_PlayerResumeGame",
 			Handler:    _FrameSync_CS_PlayerResumeGame_Handler,
-		},
-		{
-			MethodName: "CS_PlayerReady",
-			Handler:    _FrameSync_CS_PlayerReady_Handler,
 		},
 		{
 			MethodName: "CS_PlayerOver",
@@ -2023,20 +1577,8 @@ var _FrameSync_serviceDesc = grpc.ServiceDesc{
 			Handler:    _FrameSync_CS_RoomBaseInfo_Handler,
 		},
 		{
-			MethodName: "CS_PlayerMatchSign",
-			Handler:    _FrameSync_CS_PlayerMatchSign_Handler,
-		},
-		{
-			MethodName: "CS_PlayerMatchSignCancel",
-			Handler:    _FrameSync_CS_PlayerMatchSignCancel_Handler,
-		},
-		{
-			MethodName: "SC_PlayerMatchSignFailed",
-			Handler:    _FrameSync_SC_PlayerMatchSignFailed_Handler,
-		},
-		{
-			MethodName: "SC_PlayerMatchingFailed",
-			Handler:    _FrameSync_SC_PlayerMatchingFailed_Handler,
+			MethodName: "SC_ReadyTimeout",
+			Handler:    _FrameSync_SC_ReadyTimeout_Handler,
 		},
 		{
 			MethodName: "SC_EnterBattle",
@@ -2065,10 +1607,6 @@ var _FrameSync_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SC_OtherPlayerResumeGame",
 			Handler:    _FrameSync_SC_OtherPlayerResumeGame_Handler,
-		},
-		{
-			MethodName: "SC_ReadyTimeout",
-			Handler:    _FrameSync_SC_ReadyTimeout_Handler,
 		},
 		{
 			MethodName: "SC_StartBattle",

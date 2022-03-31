@@ -1,0 +1,38 @@
+syntax = "proto3";
+
+import "common.proto";
+
+package pb;
+option go_package ="./;pb";
+
+
+service GameMatch {
+
+    rpc CS_PlayerMatchSign         ( PlayerMatchSign)        returns (Empty) {}//玩家匹配报名
+    rpc CS_PlayerMatchSignCancel   ( PlayerMatchSignCancel)  returns (Empty) {}//玩家匹配取消报名
+
+    rpc SC_PlayerMatchSignFailed   ( PlayerMatchSignFailed) returns (Empty) {}//玩家报名(匹配)失败
+    rpc SC_PlayerMatchingFailed    ( PlayerMatchingFailed)  returns (Empty) {}//玩家匹配失败(可能超时，可能人不够组团)
+}
+
+
+message PlayerMatchSign{
+    int32 player_id = 1;
+}
+
+message PlayerMatchSignCancel{
+    int32 player_id = 1;
+}
+
+message PlayerMatchSignFailed{
+    int32   player_id   = 1;
+    string  msg         = 2;
+    int32   code        = 3;
+}
+
+message PlayerMatchingFailed{
+    int32   player_id   = 1;
+    string  msg         = 2;
+    string  roomId      = 3;
+    int32   code        = 4;
+}

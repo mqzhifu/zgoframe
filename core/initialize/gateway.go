@@ -42,6 +42,7 @@ func InitGateway() (*util.Gateway, error) {
 		FPS: 10,
 	}
 	gateway := util.NewGateway(global.V.GrpcManager, global.V.Zap)
-	_, err := gateway.StartSocket(netWayOption)
+	netway, err := gateway.StartSocket(netWayOption)
+	global.V.MyService.FrameSync.SetNetway(netway)
 	return gateway, err
 }

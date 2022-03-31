@@ -24,21 +24,54 @@ func (netWay *NetWay) Router(msg pb.Msg, conn *Conn) (data interface{}, err erro
 
 //帧同步的路由
 func (netWay *NetWay) RouterServiceSync(msg pb.Msg, conn *Conn, actionMap ProtoServiceFunc) (data []byte, err error) {
-	//zgoframeClient, err := netWay.Option.GrpcManager.GetZgoframeClient(actionMap.ServiceName, strconv.Itoa(int(conn.UserId)))
-	//ctx := context.Background()
-	//switch msg.Action {
-	//case "SayHello": //
-	//	requestUser := pb.RequestUser{}
-	//	proto.Unmarshal([]byte(msg.Content), &requestUser)
-	//	//*ResponseUser
-	//	dataClass, err := zgoframeClient.SayHello(ctx, &requestUser)
-	//	if err != nil {
-	//		return data, err
-	//	}
-	//	data, err = proto.Marshal(dataClass)
-	//default:
-	//
-	//}
+	requestLogicFrame := pb.LogicFrame{}
+	requestPlayerResumeGame := pb.PlayerResumeGame{}
+	requestPlayerReady := pb.PlayerReady{}
+	requestPlayerOver := pb.PlayerOver{}
+	requestRoomHistory := pb.RoomHistory{}
+	requestRoomBaseInfo := pb.RoomBaseInfo{}
+	requestPlayerMatchSign := pb.PlayerMatchSign{}
+	requestPlayerMatchSignCancel := pb.PlayerMatchSignCancel{}
+
+	protoServiceFunc, _ := netWay.Option.ProtoMap.GetServiceFuncById(int(msg.SidFid))
+	switch protoServiceFunc.FuncName {
+	case "CS_PlayerOperations":
+		err = netWay.ProtocolManager.parserContentMsg(msg, &requestLogicFrame, conn.UserId)
+	case "CS_PlayerResumeGame":
+		err = netWay.ProtocolManager.parserContentMsg(msg, &requestPlayerResumeGame, conn.UserId)
+	case "CS_PlayerReady":
+		err = netWay.ProtocolManager.parserContentMsg(msg, &requestPlayerReady, conn.UserId)
+	case "CS_PlayerOver":
+		err = netWay.ProtocolManager.parserContentMsg(msg, &requestPlayerOver, conn.UserId)
+	case "CS_RoomHistory":
+		err = netWay.ProtocolManager.parserContentMsg(msg, &requestRoomHistory, conn.UserId)
+	case "CS_RoomBaseInfo":
+		err = netWay.ProtocolManager.parserContentMsg(msg, &requestRoomBaseInfo, conn.UserId)
+	case "CS_PlayerMatchSign":
+		err = netWay.ProtocolManager.parserContentMsg(msg, &requestPlayerMatchSign, conn.UserId)
+	case "CS_PlayerMatchSignCancel":
+		err = netWay.ProtocolManager.parserContentMsg(msg, &requestPlayerMatchSignCancel, conn.UserId)
+	default:
+		netWay.Option.Log.Error("RouterServiceGateway Router err:")
+		return data, errors.New("RouterServiceGateway Router err")
+	}
+	if err != nil {
+		return data, err
+	}
+
+	switch protoServiceFunc.FuncName {
+	case "CS_PlayerOperations":
+	case "CS_PlayerResumeGame":
+	case "CS_PlayerReady":
+	case "CS_PlayerOver":
+	case "CS_RoomHistory":
+	case "CS_RoomBaseInfo":
+	case "CS_PlayerMatchSign":
+	case "CS_PlayerMatchSignCancel":
+	default:
+		netWay.Option.Log.Error("RouterServiceGateway Router err:")
+		return data, errors.New("RouterServiceGateway Router err")
+	}
 
 	return data, err
 }

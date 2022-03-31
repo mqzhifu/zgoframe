@@ -355,18 +355,20 @@ func (connManager *ConnManager) PackContentMsg(msg pb.Msg) []byte {
 //==============================
 //一个连接
 type Conn struct {
-	AddTime      int32
-	UpTime       int32
-	UserId       int32
-	Status       int
-	Conn         FDAdapter //TCP/WS Conn FD
-	CloseChan    chan int
-	RTT          int64
-	SessionId    string
-	ConnManager  *ConnManager //父类
-	MsgInChan    chan pb.Msg
-	ContentType  int32 //传输数据的内容类型	此值由第一次通信时确定，直到断开连接前，不会变更
-	ProtocolType int32 //传输数据的类型		此值由第一次通信时确定，直到断开连接前，不会变更
+	AddTime        int32
+	UpTime         int32
+	UserId         int32
+	Status         int
+	UserPlayStatus int
+	Conn           FDAdapter //TCP/WS Conn FD
+	CloseChan      chan int
+	RTT            int64
+	SessionId      string
+	ConnManager    *ConnManager //父类
+	MsgInChan      chan pb.Msg
+	ContentType    int32 //传输数据的内容类型	此值由第一次通信时确定，直到断开连接前，不会变更
+	ProtocolType   int32 //传输数据的类型		此值由第一次通信时确定，直到断开连接前，不会变更
+	RoomId         string
 	//RTTCancelChan chan int
 	//UdpConn 		bool
 }
@@ -420,7 +422,9 @@ func (conn *Conn) Read() (content string, err error) {
 	content = string(dataByte)
 	return content, nil
 }
-
+func (conn *Conn) UpPlayerRoomId(roomId string) {
+	conn.RoomId = roomId
+}
 func (conn *Conn) IOLoop() {
 	conn.ConnManager.Option.Log.Info("conn IOLoop:")
 	conn.ConnManager.Option.Log.Info("set conn status :" + strconv.Itoa(CONN_STATUS_EXECING) + " make close chan")

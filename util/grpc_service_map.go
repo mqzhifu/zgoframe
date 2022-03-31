@@ -18,6 +18,16 @@ func (grpcManager *GrpcManager) GetFrameSyncClient(name string, balanceFactor st
 	return client.(pb.FrameSyncClient), nil
 }
 
+//获取一个服务的grpc client : GameMatch
+func (grpcManager *GrpcManager) GetGameMatchClient(name string, balanceFactor string) (pb.GameMatchClient, error) {
+	client, err := grpcManager.GetClientByLoadBalance(name, balanceFactor)
+	if err != nil {
+		return nil, err
+	}
+
+	return client.(pb.GameMatchClient), nil
+}
+
 //获取一个服务的grpc client : Gateway
 func (grpcManager *GrpcManager) GetGatewayClient(name string, balanceFactor string) (pb.GatewayClient, error) {
 	client, err := grpcManager.GetClientByLoadBalance(name, balanceFactor)
@@ -54,6 +64,8 @@ func (myGrpcClient *MyGrpcClient) GetGrpcClientByServiceName(serviceName string,
 	switch serviceName {
 	case "FrameSync":
 		incClient = pb.NewFrameSyncClient(myGrpcClient.ClientConn)
+	case "GameMatch":
+		incClient = pb.NewGameMatchClient(myGrpcClient.ClientConn)
 	case "Gateway":
 		incClient = pb.NewGatewayClient(myGrpcClient.ClientConn)
 	case "LogSlave":
@@ -77,6 +89,13 @@ func (grpcManager *GrpcManager) CallServiceFuncFrameSync(funcName string, balanc
 
 	ctx := context.Background()
 	switch funcName {
+	case "CS_PlayerReady":
+		request := pb.PlayerReady{}
+		err := json.Unmarshal(postData, &request)
+		if err != nil {
+			return data, err
+		}
+		data, err = grpcClient.CS_PlayerReady(ctx, &request)
 	case "CS_PlayerOperations":
 		request := pb.LogicFrame{}
 		err := json.Unmarshal(postData, &request)
@@ -91,13 +110,6 @@ func (grpcManager *GrpcManager) CallServiceFuncFrameSync(funcName string, balanc
 			return data, err
 		}
 		data, err = grpcClient.CS_PlayerResumeGame(ctx, &request)
-	case "CS_PlayerReady":
-		request := pb.PlayerReady{}
-		err := json.Unmarshal(postData, &request)
-		if err != nil {
-			return data, err
-		}
-		data, err = grpcClient.CS_PlayerReady(ctx, &request)
 	case "CS_PlayerOver":
 		request := pb.PlayerOver{}
 		err := json.Unmarshal(postData, &request)
@@ -106,7 +118,7 @@ func (grpcManager *GrpcManager) CallServiceFuncFrameSync(funcName string, balanc
 		}
 		data, err = grpcClient.CS_PlayerOver(ctx, &request)
 	case "CS_RoomHistory":
-		request := pb.RoomHistory{}
+		request := pb.ReqRoomHistory{}
 		err := json.Unmarshal(postData, &request)
 		if err != nil {
 			return data, err
@@ -119,34 +131,13 @@ func (grpcManager *GrpcManager) CallServiceFuncFrameSync(funcName string, balanc
 			return data, err
 		}
 		data, err = grpcClient.CS_RoomBaseInfo(ctx, &request)
-	case "CS_PlayerMatchSign":
-		request := pb.PlayerMatchSign{}
+	case "SC_ReadyTimeout":
+		request := pb.ReadyTimeout{}
 		err := json.Unmarshal(postData, &request)
 		if err != nil {
 			return data, err
 		}
-		data, err = grpcClient.CS_PlayerMatchSign(ctx, &request)
-	case "CS_PlayerMatchSignCancel":
-		request := pb.PlayerMatchSignCancel{}
-		err := json.Unmarshal(postData, &request)
-		if err != nil {
-			return data, err
-		}
-		data, err = grpcClient.CS_PlayerMatchSignCancel(ctx, &request)
-	case "SC_PlayerMatchSignFailed":
-		request := pb.PlayerMatchSignFailed{}
-		err := json.Unmarshal(postData, &request)
-		if err != nil {
-			return data, err
-		}
-		data, err = grpcClient.SC_PlayerMatchSignFailed(ctx, &request)
-	case "SC_PlayerMatchingFailed":
-		request := pb.PlayerMatchingFailed{}
-		err := json.Unmarshal(postData, &request)
-		if err != nil {
-			return data, err
-		}
-		data, err = grpcClient.SC_PlayerMatchingFailed(ctx, &request)
+		data, err = grpcClient.SC_ReadyTimeout(ctx, &request)
 	case "SC_EnterBattle":
 		request := pb.EnterBattle{}
 		err := json.Unmarshal(postData, &request)
@@ -162,7 +153,7 @@ func (grpcManager *GrpcManager) CallServiceFuncFrameSync(funcName string, balanc
 		}
 		data, err = grpcClient.SC_LogicFrame(ctx, &request)
 	case "SC_RoomHistory":
-		request := pb.RoomHistory{}
+		request := pb.RoomHistoryList{}
 		err := json.Unmarshal(postData, &request)
 		if err != nil {
 			return data, err
@@ -196,13 +187,6 @@ func (grpcManager *GrpcManager) CallServiceFuncFrameSync(funcName string, balanc
 			return data, err
 		}
 		data, err = grpcClient.SC_OtherPlayerResumeGame(ctx, &request)
-	case "SC_ReadyTimeout":
-		request := pb.ReadyTimeout{}
-		err := json.Unmarshal(postData, &request)
-		if err != nil {
-			return data, err
-		}
-		data, err = grpcClient.SC_ReadyTimeout(ctx, &request)
 	case "SC_StartBattle":
 		request := pb.StartBattle{}
 		err := json.Unmarshal(postData, &request)
@@ -224,6 +208,51 @@ func (grpcManager *GrpcManager) CallServiceFuncFrameSync(funcName string, balanc
 			return data, err
 		}
 		data, err = grpcClient.SC_GameOver(ctx, &request)
+
+	default:
+		return data, errors.New("func name router failed.")
+	}
+	return data, err
+}
+
+//动态调用服务的函数 : GameMatch
+func (grpcManager *GrpcManager) CallServiceFuncGameMatch(funcName string, balanceFactor string, postData []byte) (data interface{}, err error) {
+	//获取GRPC一个连接
+	grpcClient, err := grpcManager.GetGameMatchClient("GameMatch", balanceFactor)
+	if err != nil {
+		return data, err
+	}
+
+	ctx := context.Background()
+	switch funcName {
+	case "CS_PlayerMatchSign":
+		request := pb.PlayerMatchSign{}
+		err := json.Unmarshal(postData, &request)
+		if err != nil {
+			return data, err
+		}
+		data, err = grpcClient.CS_PlayerMatchSign(ctx, &request)
+	case "CS_PlayerMatchSignCancel":
+		request := pb.PlayerMatchSignCancel{}
+		err := json.Unmarshal(postData, &request)
+		if err != nil {
+			return data, err
+		}
+		data, err = grpcClient.CS_PlayerMatchSignCancel(ctx, &request)
+	case "SC_PlayerMatchSignFailed":
+		request := pb.PlayerMatchSignFailed{}
+		err := json.Unmarshal(postData, &request)
+		if err != nil {
+			return data, err
+		}
+		data, err = grpcClient.SC_PlayerMatchSignFailed(ctx, &request)
+	case "SC_PlayerMatchingFailed":
+		request := pb.PlayerMatchingFailed{}
+		err := json.Unmarshal(postData, &request)
+		if err != nil {
+			return data, err
+		}
+		data, err = grpcClient.SC_PlayerMatchingFailed(ctx, &request)
 
 	default:
 		return data, errors.New("func name router failed.")
@@ -344,32 +373,32 @@ func (grpcManager *GrpcManager) CallServiceFuncLogSlave(funcName string, balance
 
 //动态调用服务的函数 : Zgoframe
 func (grpcManager *GrpcManager) CallServiceFuncZgoframe(funcName string, balanceFactor string, postData []byte) (data interface{}, err error) {
-	////获取GRPC一个连接
-	//grpcClient, err := grpcManager.GetZgoframeClient("Zgoframe", balanceFactor)
-	//if err != nil {
-	//	return data, err
-	//}
-	//
-	//ctx := context.Background()
-	//switch funcName {
-	//case "SayHello":
-	//	request := pb.RequestUser{}
-	//	err := json.Unmarshal(postData, &request)
-	//	if err != nil {
-	//		return data, err
-	//	}
-	//	//data, err = grpcClient.SayHello(ctx, &request)
-	//case "Comm":
-	//	request := pb.RequestUser{}
-	//	err := json.Unmarshal(postData, &request)
-	//	if err != nil {
-	//		return data, err
-	//	}
-	//	//data, err = grpcClient.Comm(ctx, &request)
-	//
-	//default:
-	//	return data, errors.New("func name router failed.")
-	//}
+	//获取GRPC一个连接
+	grpcClient, err := grpcManager.GetZgoframeClient("Zgoframe", balanceFactor)
+	if err != nil {
+		return data, err
+	}
+
+	ctx := context.Background()
+	switch funcName {
+	case "SayHello":
+		request := pb.RequestUser{}
+		err := json.Unmarshal(postData, &request)
+		if err != nil {
+			return data, err
+		}
+		data, err = grpcClient.SayHello(ctx, &request)
+	case "Comm":
+		request := pb.RequestUser{}
+		err := json.Unmarshal(postData, &request)
+		if err != nil {
+			return data, err
+		}
+		data, err = grpcClient.Comm(ctx, &request)
+
+	default:
+		return data, errors.New("func name router failed.")
+	}
 	return data, err
 }
 
@@ -378,6 +407,8 @@ func (grpcManager *GrpcManager) CallGrpc(serviceName string, funcName string, ba
 	switch serviceName {
 	case "FrameSync":
 		resData, err = grpcManager.CallServiceFuncFrameSync(funcName, balanceFactor, requestData)
+	case "GameMatch":
+		resData, err = grpcManager.CallServiceFuncGameMatch(funcName, balanceFactor, requestData)
 	case "Gateway":
 		resData, err = grpcManager.CallServiceFuncGateway(funcName, balanceFactor, requestData)
 	case "LogSlave":

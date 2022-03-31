@@ -1,7 +1,7 @@
 <?php
 /*
 脚本执行：
-php makepbservice.php pb /data/www/golang/src/zgoframe/protobuf/proto /data/www/golang/src/zgoframe/protobuf/pbservice
+php makepbservice.php pb ~/data/www/golang/zgoframe/protobuf/proto ~/data/www/golang/zgoframe/protobuf/pbservice
 
 功能描述：快速生成protobuf中间文件等工具集
 
@@ -18,7 +18,7 @@ ps:以上所有功能，均依赖：.proto 描述文件
 
 define("DEBUG",1);
 
-//引入静态模块类(字符串)，用于动态生成GO文件
+//引入静态模块类(字符串)，用于动态生成GO文件、连接DB等
 include 'makepbservice_template.php';
 $template = new Template();
 $db = new DB();
@@ -44,7 +44,7 @@ $callServiceFuncTotalStr = "";
 
 
 //编译proto 生成 PB 文件的SHELL脚本
-$compileCommand = "export PATH=\$PATH:/Users/mayanyan/go/bin; cd /Users/mayanyan/data/www/golang/src/zgoframe/protobuf; protoc --go_out=plugins=grpc:./pb ./proto/#proto_file_name#";
+// $compileCommand = "export PATH=\$PATH:/Users/mayanyan/go/bin; cd /Users/mayanyan/data/www/golang/src/zgoframe/protobuf; protoc --go_out=plugins=grpc:./pb ./proto/#proto_file_name#";
 
 pp("packageName:$packageName , protoFilePath:$protoFilePath , outPath:$outPath");
 pp("compileCommand:$compileCommand");
@@ -135,7 +135,7 @@ function dynamicCallGrpcService($serviceName, $serviceInfo,$packageName){
     $callGrpcServiceCase .= $CallGrpcCase . "\n";
 }
 
-//编译proto文件，生成pb.go 文件
+//编译proto文件，生成pb.go 文件，这个单独用shell执行再好一些
 function compileProtoFile($compileCommand,$fileName){
     $compileCommandFile = str_replace("#proto_file_name#",$fileName,$compileCommand);
     pp("compileProtoFile: $compileCommandFile");

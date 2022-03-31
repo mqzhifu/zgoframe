@@ -312,7 +312,7 @@ function Sync (playerId,token,data,DomIdPreObj,contentType,protocolType,playerIn
         // console.log("router:",action,content)
         if ( action == 'SC_Login' ) {
             self.rLoginRes(content);
-        }else if( action == 'serverPing'){//获取一个当前玩家的状态，如：是否有历史未结束的游戏
+        }else if( action == 'SC_Ping'){//获取一个当前玩家的状态，如：是否有历史未结束的游戏
             self.rServerPing(content);
         }else if ( action == 'startBattle' ){
             self.rStartBattle(content);
@@ -330,7 +330,7 @@ function Sync (playerId,token,data,DomIdPreObj,contentType,protocolType,playerIn
             self.rPushLogicFrame(content,"router")
         }else if( "readyTimeout" == action){
             self.rReadyTimeout(content)
-        }else if( "serverPong" == action){
+        }else if( "SC_Pong" == action){
             self.rServerPong(content)
         }else if( "otherPlayerResumeGame" == action){
             self.rOtherPlayerResumeGame(content)
@@ -338,7 +338,7 @@ function Sync (playerId,token,data,DomIdPreObj,contentType,protocolType,playerIn
             self.rPushRoomHistory(content);
             // alert("接收到，玩家-房间-历史操作记录~");
         }else{
-            return alert("action error.");
+            return alert("action error."+action);
         }
     };
     //=================== 以下都是 接收S端的处理函数========================================
@@ -774,7 +774,7 @@ function Sync (playerId,token,data,DomIdPreObj,contentType,protocolType,playerIn
     };
     this.getActionName = function (actionId,category){
         var data = self.actionMap[category];
-        return data[actionId].action;
+        return data[actionId].func_name;
     };
 
     this.descPre = this.getPlayerDescById(playerId);

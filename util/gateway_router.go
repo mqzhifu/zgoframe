@@ -46,20 +46,20 @@ func (netWay *NetWay) RouterServiceSync(msg pb.Msg, conn *Conn, actionMap ProtoS
 //网关自解析的路由
 func (netWay *NetWay) RouterServiceGateway(msg pb.Msg, conn *Conn) (data interface{}, err error) {
 	requestLogin := pb.Login{}
-	//requestClientPong := pb.RequestClientPong{}
-	//requestClientPing := pb.RequestClientPing{}
-	//requestClientHeartbeat := pb.RequestClientHeartbeat{}
-	//这里有个BUG，LOGIN 函数只能在第一次调用，回头加个限定
+	requestClientPong := pb.Pong{}
+	requestClientPing := pb.Ping{}
+	requestClientHeartbeat := pb.Heartbeat{}
+
 	protoServiceFunc, _ := netWay.Option.ProtoMap.GetServiceFuncById(int(msg.SidFid))
 	switch protoServiceFunc.FuncName {
 	case "CS_Login": //
 		err = netWay.ProtocolManager.parserContentMsg(msg, &requestLogin, conn.UserId)
-	//case "clientPong": //
-	//	err = netWay.ProtocolManager.parserContentMsg(msg, &requestClientPong, conn.UserId)
-	//case "clientPing":
-	//	err = netWay.ProtocolManager.parserContentMsg(msg, &requestClientPing, conn.UserId)
-	//case "clientHeartbeat": //心跳
-	//	err = netWay.ProtocolManager.parserContentMsg(msg, &requestClientHeartbeat, conn.UserId)
+	case "CS_Pong": //
+		err = netWay.ProtocolManager.parserContentMsg(msg, &requestClientPong, conn.UserId)
+	case "CS_Ping":
+		err = netWay.ProtocolManager.parserContentMsg(msg, &requestClientPing, conn.UserId)
+	case "CS_Heartbeat": //心跳
+		err = netWay.ProtocolManager.parserContentMsg(msg, &requestClientHeartbeat, conn.UserId)
 	default:
 		netWay.Option.Log.Error("RouterServiceGateway Router err:")
 		return data, errors.New("RouterServiceGateway Router err")
@@ -70,15 +70,14 @@ func (netWay *NetWay) RouterServiceGateway(msg pb.Msg, conn *Conn) (data interfa
 	netWay.Option.Log.Info("Router " + protoServiceFunc.FuncName)
 	switch protoServiceFunc.FuncName {
 	case "CS_Login": //
-		netWay.Option.Log.Info("requestLogin token:" + requestLogin.Token)
+		//这里有个BUG，LOGIN 函数只能在第一次调用，回头加个限定
 		data, err = netWay.login(requestLogin, conn)
-		//return jwtData, err
-		//case "clientPong": //
-		//	//netWay.ClientPong(requestClientPong, conn)
-		//case "clientHeartbeat": //心跳
-		//	netWay.heartbeat(requestClientHeartbeat, conn)
-		//case "clientPing": //
-		//	netWay.clientPing(requestClientPing, conn)
+	case "CS_Ping":
+		netWay.clientPing(requestClientPing, conn)
+	case "CS_Pong":
+		netWay.ClientPong(requestClientPong, conn)
+	case "CS_Heartbeat":
+		netWay.heartbeat(requestClientHeartbeat, conn)
 	}
 	return data, err
 }
@@ -95,5 +94,5 @@ func (netWay *NetWay) clientPing(pingRTT pb.Ping, conn *Conn) {
 		RttTimes:           pingRTT.RttTimes,
 		RttTimeout:         pingRTT.RttTimeout,
 	}
-	conn.SendMsgCompressByUid(conn.UserId, "serverPong", &responseServerPong)
+	conn.SendMsgCompressByUid(conn.UserId, "SC_Pong", &responseServerPong)
 }

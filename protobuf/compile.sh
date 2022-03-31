@@ -13,5 +13,6 @@ cd /data/www/golang/src/zgoframe/protobuf/pb/js
 browserify exports_frame_sync.js > exports_frame_sync_pb.js
 browserify exports_gateway.js > exports_gateway_pb.js
 
-mv exports_frame_sync_pb.js /data/www/golang/src/zgoframe//static/js/pb/frame_sync_pb.js
-mv exports_gateway_pb.js /data/www/golang/src/zgoframe//static/js/pb/gateway_pb.js
+mv exports_frame_sync_pb.js ~/data/www/golang/zgoframe/static/js/pb/frame_sync_pb.js
+mv exports_gateway_pb.js ~/data/www/golang/zgoframe/static/js/pb/gateway_pb.js
+rm *_pb.js

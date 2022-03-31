@@ -30,22 +30,14 @@ message Heartbeat{
 
 message ProjectPush{
     string  project_id  = 1;
-    string  msg         = 2;
-    string  target_uids = 3;
-    string  action_id   = 4;
-    string  service_id  = 5;
+    string  service_id  = 2;
+    string  func_id     = 3;
+    string  target_uids = 4;
+    string  msg         = 5;
 }
 
 message Login{
     string token = 1;
-}
-
-message Pong{
-    int64 add_time              = 1;
-    int64 client_receive_time   = 2;
-    int64 server_response_time   = 3;
-    int64 rtt_timeout           = 4;
-    int32 rtt_times             = 5;
 }
 
 message Ping{
@@ -56,6 +48,13 @@ message Ping{
     int32 rtt_times               = 5;
 }
 
+message Pong{
+    int64 add_time              = 1;
+    int64 client_receive_time   = 2;
+    int64 server_response_time  = 3;
+    int64 rtt_timeout           = 4;
+    int32 rtt_times             = 5;
+}
 
 message LoginRes{
     int32   code        = 1;
@@ -67,17 +66,18 @@ message KickOff{
     int64 time = 1;
 }
 
-
+//长连接传输内容：一条标准的内容
 message Msg{
-    int32   id               = 1;
-    int32   sid_fid          = 2;
-    int32   data_length      = 3;
-    int32   content_type     = 4;
-    int32   protocol_type    = 5;
-    int32   service_id       = 6;
-    int32   action_id        = 7;
-    string  reserved         = 8;
-    string  content          = 9;
+    int32   id               = 1;//未使用，保留
+    int32   sid_fid          = 2;//无实际用，方便开发，service_id+func_id
+    int32   data_length      = 3;//内容的总长度
+    int32   content_type     = 4;//内容类型
+    int32   protocol_type    = 5;//协议类型
+    int32   service_id       = 6;//服务ID
+    int32   func_id          = 7;//函数ID
+    string  reserved         = 8;//保留字段，未使用，后期可存sessionId
+    string  content          = 9;//具体传输内容
+    string  end_char         =10;//包结束字符，用于TCP粘包，无实际作用，只是保证消息完整性
 }
 
 
@@ -116,15 +116,18 @@ message CfgServer{
     	string  TcpPort             =24;
 }
 
-message CfgProtocolActions{
-    map<int32,CfgActions> client = 1;
-    map<int32,CfgActions> server = 2;
+message CfgProtoMap{
+    map<int32,CfgProtoServiceFunc> client = 1;
+    map<int32,CfgProtoServiceFunc> server = 2;
 }
 
-message CfgActions{
-    int32 id        = 1;
-    string action   = 2;
-    string desc     = 3;
-    string demo     = 4;
+message CfgProtoServiceFunc{
+    int32   id          = 1;
+    string  service_id  = 2;
+    string  func_id     = 3;
+    string  func_name   = 4;
+    string  response    = 6;
+    string  request     = 7;
+    string  desc        = 8;
+    string  demo        = 9;
 }
-

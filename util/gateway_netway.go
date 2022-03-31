@@ -249,6 +249,12 @@ func (netWay *NetWay) OpenNewConn(connFD FDAdapter) {
 func (netWay *NetWay) heartbeat(requestClientHeartbeat pb.Heartbeat, conn *Conn) {
 	now := GetNowTimeSecondToInt()
 	conn.UpTime = int32(now)
+
+	responseHeartbeat := pb.Heartbeat{
+		Time: int64(now),
+	}
+
+	conn.SendMsgCompressByUid(conn.UserId, "SC_Headerbeat", &responseHeartbeat)
 }
 
 //=================================

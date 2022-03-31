@@ -297,7 +297,7 @@ func (connManager *ConnManager) ParserContentProtocol(content string) (message p
 	msg := pb.Msg{
 		Id:           0,
 		SidFid:       int32(serviceActionId),
-		ActionId:     int32(actionId),
+		FuncId:       int32(actionId),
 		ServiceId:    int32(serviceId),
 		DataLength:   int32(dataLength),
 		Content:      data,
@@ -341,7 +341,7 @@ func (connManager *ConnManager) PackContentMsg(msg pb.Msg) []byte {
 	protocolTypeBytes := byte(msg.ProtocolType)
 	//actionIdByte := Int32ToBytes(msg.ActionId)
 	//actionIdByte = actionIdByte[2:4]
-	funcId, _ := strconv.Atoi(strconv.Itoa(int(msg.ActionId))[2:])
+	funcId, _ := strconv.Atoi(strconv.Itoa(int(msg.FuncId))[2:])
 	actionIdByte := Int32ToBytes(int32(funcId))[2:]
 	reserved := []byte("reserved--")
 	serviceIdBytes := Int32ToBytes(msg.ServiceId)[3]
@@ -624,7 +624,7 @@ func (conn *Conn) SendMsg(action string, content []byte) {
 	msg := pb.Msg{
 		Content:      string(content),
 		ServiceId:    int32(actionMap.ServiceId),
-		ActionId:     int32(actionMap.Id),
+		FuncId:       int32(actionMap.Id),
 		ContentType:  protocolCtrlInfo.ContentType,
 		ProtocolType: protocolCtrlInfo.ProtocolType,
 	}

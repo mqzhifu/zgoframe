@@ -104,7 +104,7 @@ func (connManager *ConnManager) Shutdown() {
 }
 
 //创建一个新的连接结构体
-func (connManager *ConnManager) CreateOneConn(connFd FDAdapter) (myConn *Conn) {
+func (connManager *ConnManager) CreateOneConn(connFd FDAdapter, netWay *NetWay) (myConn *Conn) {
 	connManager.PoolRWLock.RLock()
 	defer connManager.PoolRWLock.RUnlock()
 
@@ -124,6 +124,7 @@ func (connManager *ConnManager) CreateOneConn(connFd FDAdapter) (myConn *Conn) {
 		ContentType:  connManager.Option.DefaultContentType,
 		ProtocolType: connManager.Option.DefaultProtocolType,
 		MsgInChan:    make(chan pb.Msg, 5000), //从底层FD中读出消息后，存储此处，等待其它协程接收
+		netWay:       netWay,
 		//CloseChan 		chan int
 	}
 
@@ -369,6 +370,7 @@ type Conn struct {
 	ContentType    int32 //传输数据的内容类型	此值由第一次通信时确定，直到断开连接前，不会变更
 	ProtocolType   int32 //传输数据的类型		此值由第一次通信时确定，直到断开连接前，不会变更
 	RoomId         string
+	netWay         *NetWay
 	//RTTCancelChan chan int
 	//UdpConn 		bool
 }

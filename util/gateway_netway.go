@@ -53,6 +53,8 @@ type NetWayOption struct {
 	FPS              int32 `json:"fps"`              //frame pre second
 	RoomReadyTimeout int32 `json:"roomReadyTimeout"` //一个房间的，玩家的准备，超时时间
 	//Store 			int32 		`json:"store"`			//持久化：players room
+
+	RouterBack func(msg pb.Msg, conn *Conn) (data interface{}, err error) `json:"-"`
 }
 
 var myMetrics *MyMetrics
@@ -201,7 +203,7 @@ func (netWay *NetWay) OpenNewConn(connFD FDAdapter) {
 		return
 	}
 	//创建一个新的连接结体体，将 FD 保存到该容器中
-	NewConn := netWay.ConnManager.CreateOneConn(connFD)
+	NewConn := netWay.ConnManager.CreateOneConn(connFD, netWay)
 	//defer func() {
 	//	if err := recover(); err != nil {
 	//		netWay.Option.Log.Panic("OpenNewConn:")
@@ -335,7 +337,7 @@ func (netWay *NetWay) loginPre(conn *Conn) (jwt request.CustomClaims, firstMsg p
 }
 
 //登陆验证token
-func (netWay *NetWay) login(requestLogin pb.Login, conn *Conn) (customClaims request.CustomClaims, err error) {
+func (netWay *NetWay) Login(requestLogin pb.Login, conn *Conn) (customClaims request.CustomClaims, err error) {
 	if conn.UserId > 0 {
 		msg := " don't repeat login." + strconv.Itoa(int(conn.UserId))
 		netWay.Option.Log.Error(msg)

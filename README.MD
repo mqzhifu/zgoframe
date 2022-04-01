@@ -14,7 +14,7 @@
 | etcd                     | 分布式存储      ||     |
 | gorm                     | DB-MYSQL   ||     |
 | grpc                     | 异步调用       ||     |
-| protobuf                 | 传输内容压缩     ||     |
+| protobuf                 | 传输内容压缩     ||     |g
 | uuid                     | uniq-uid   ||     |
 | go-redis                 | redis      ||     |
 | gorilla/websocket        | websocket  ||     |

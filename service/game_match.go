@@ -45,7 +45,7 @@ func (match *Match) getOneSignPlayerById(playerId int32) (playerSign PlayerSign,
 	return playerSign, true
 }
 
-func (match *Match) addOnePlayer(requestPlayerMatchSign pb.PlayerMatchSign, conn *util.Conn) {
+func (match *Match) AddOnePlayer(requestPlayerMatchSign pb.PlayerMatchSign, conn *util.Conn) {
 	//playerId := conn.UserId
 	//player, empty := myPlayerManager.GetById(requestPlayerMatchSign.PlayerId)
 	if conn.UserId <= 0 {
@@ -88,7 +88,7 @@ func (match *Match) matchSignErrAndSend(msg string, conn *util.Conn) {
 	conn.SendMsgCompressByUid(conn.UserId, "playerMatchSignFailed", &playerMatchSignFailed)
 }
 
-func (match *Match) delOnePlayer(requestCancelSign pb.PlayerMatchSignCancel, conn *util.Conn) {
+func (match *Match) CancelOnePlayer(requestCancelSign pb.PlayerMatchSignCancel, conn *util.Conn) {
 	//playerId := requestCancelSign.PlayerId
 	match.Option.Log.Info("cancel : delOnePlayer " + strconv.Itoa(int(requestCancelSign.PlayerId)))
 	for k, v := range signPlayerPool {

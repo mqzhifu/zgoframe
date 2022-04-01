@@ -49,7 +49,7 @@ func GatewayService(c *gin.Context) {
 // @Success 200 {object} util.NetWayOption
 // @Router /gateway/config [get]
 func GatewayConfig(c *gin.Context) {
-	httpresponse.OkWithDetailed(global.V.Gateway.NetWayOption, "ok", c)
+	httpresponse.OkWithDetailed(global.V.MyService.Gateway.NetWayOption, "ok", c)
 
 }
 

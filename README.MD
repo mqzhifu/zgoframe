@@ -42,6 +42,10 @@
 | node_exporter | 服务器metrics     |
 | etcd          | 分布式存储          |
 
+
+目录说明：
+![目录说明](https://github.com/mqzhifu/zgoframe/blob/master/dir_desc.png)
+
 http request header:
 
 | key           | desc           | require |

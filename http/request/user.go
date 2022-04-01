@@ -98,6 +98,15 @@ type SendEmail struct {
 	SendIp     string            `json:"send_ip"`     //发送者IP，如为空系统默认取：请求方的IP,最好给真实的，一但被刷，会使用此值
 }
 
+//@description 发送站内信
+type SendMail struct {
+	RuleId     int               `json:"rule_id"`    //配置规则的ID
+	ReplaceVar map[string]string `json:"replaceVar"` //邮件内容模块中变量替换
+	Receiver   string            `json:"receiver"`   //接收者: uid or grpuId or tagId or uids
+	SendUid    int               `json:"send_uid"`   //发送者ID，管理员是9999，未知8888
+	SendIp     string            `json:"send_ip"`    //发送者IP，如为空系统默认取：请求方的IP,最好给真实的，一但被刷，会使用此值
+}
+
 //@description 设置/修改密码
 type SetPassword struct {
 	Password           string `json:"password"`             //旧密码

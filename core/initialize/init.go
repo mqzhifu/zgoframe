@@ -41,6 +41,8 @@ func NewInitialize(option InitOption) *Initialize {
 
 //初始化-入口
 func (initialize *Initialize) Start() error {
+	autoCreateUpDbTable() //自动创建表，根据MODEL- struct
+
 	prefix := "initialize ,"
 	//初始化 : 配置信息
 	viperOption := ViperOption{
@@ -266,7 +268,6 @@ func (initialize *Initialize) Start() error {
 		StartHttpGin()
 	}
 
-	//autoCreateUpDbTable() //自动创建表，根据MODEL- struct
 	//_ ,cancelFunc := context.WithCancel(option.RootCtx)
 	//进程通信相关
 	ProcessPathFileName := "/tmp/" + global.V.Project.Name + ".pid"

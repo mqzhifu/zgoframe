@@ -341,7 +341,7 @@ func (cicdManager *CicdManager) DeployOneServiceFailed(publish model.CicdPublish
 	return cicdManager.MakeError(errMsg)
 }
 
-var ThirdInstance = []string{"mysql", "redis", "etcd", "rabbitmq", "kafka", "log", "alert", "email", "cdn", "consul", "sms", "prometheus", "es", "kibana", "grafana", "push_gateway"}
+var ThirdInstance = []string{"mysql", "redis", "log", "email", "etcd", "rabbitmq", "kafka", "alert", "cdn", "consul", "sms", "prometheus", "es", "kibana", "grafana", "push_gateway"}
 
 func (cicdManager *CicdManager) ReplaceInstance(content string, serviceName string, env string) string {
 	category := ThirdInstance

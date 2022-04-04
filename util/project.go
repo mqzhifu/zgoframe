@@ -6,13 +6,6 @@ import (
 	"zgoframe/model"
 )
 
-const (
-	PROJECT_TYPE_SERVICE = 1
-	PROJECT_TYPE_FE      = 2
-	PROJECT_TYPE_APP     = 3
-	PROJECT_TYPE_BE      = 4
-)
-
 type Project struct {
 	Id   int    `json:"id"`
 	Name string `json:"name"`
@@ -23,22 +16,6 @@ type Project struct {
 	Status    int    `json:"status"`
 	Git       string `json:"git"`
 	Access    string `json:"access"`
-}
-
-func GetConstListProjectType() map[string]int {
-	list := make(map[string]int)
-	list["PROJECT_TYPE_SERVICE"] = PROJECT_TYPE_SERVICE
-	list["PROJECT_TYPE_FE"] = PROJECT_TYPE_FE
-	list["PROJECT_TYPE_APP"] = PROJECT_TYPE_APP
-	list["PROJECT_TYPE_BE"] = PROJECT_TYPE_BE
-	return list
-}
-
-var PROJECT_TYPE_MAP = map[int]string{
-	PROJECT_TYPE_SERVICE: "service",
-	PROJECT_TYPE_FE:      "frontend",
-	PROJECT_TYPE_APP:     "app",
-	PROJECT_TYPE_BE:      "backend",
 }
 
 type ProjectManager struct {
@@ -110,10 +87,10 @@ func (projectManager *ProjectManager) GetByName(name string) (project Project, e
 	return project, true
 }
 
-func (projectManager *ProjectManager) GetTypeName(typeValue int) string {
-	v, _ := PROJECT_TYPE_MAP[typeValue]
-	return v
-}
+//func (projectManager *ProjectManager) GetTypeName(typeValue int) string {
+//	v, _ := PROJECT_TYPE_MAP[typeValue]
+//	return v
+//}
 
 func BasePathPlusTypeStr(basePath string, typeStr string) string {
 	return basePath + "/" + typeStr + "/"

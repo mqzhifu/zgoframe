@@ -2,6 +2,8 @@ package v1
 
 import (
 	"github.com/gin-gonic/gin"
+	"strconv"
+	"strings"
 	"zgoframe/core/global"
 	"zgoframe/http/request"
 	httpresponse "zgoframe/http/response"
@@ -73,26 +75,47 @@ func ConstList(c *gin.Context) {
 	var a model.Project
 	c.ShouldBind(&a)
 
-	list := make(map[string]interface{})
-
-	list["PROJECT_TYPE_MAP"] = util.GetConstListProjectType()
-	list["PLATFORM"] = model.GetConstListPlatform()
-	list["USER_TYPE_THIRD"] = model.GetConstListUserTypeThird()
-	list["USER_REG_TYPE"] = model.GetConstListUserRegType()
-	list["USER_SEX"] = model.GetConstListUserSex()
-	list["USER_STATUS"] = model.GetConstListUserStatus()
-	list["PURPOSE"] = model.GetConstListPurpose()
-	list["AUTH_CODE"] = model.GetConstListAuthCode()
-	list["GUEST"] = model.GetConstListUserGuest()
-	list["THIRD_CN"] = model.GetConstListUserTypeThirdCN()
-	list["THIRD_NOT_CN"] = model.GetConstListUserTypeThirdNotCN()
-	list["USER_ROBOT"] = model.GetConstListUserRobot()
-	list["USER_TEST"] = model.GetConstListUserTest()
-	list["RULE_TYPE"] = model.GetConstListRuleType()
-	list["SMS_CHANNEL"] = model.GetConstListSmsChannel()
+	list := global.V.MyService.User.GetConstList()
 
 	httpresponse.OkWithDetailed(list, "成功", c)
 
+}
+
+// @Tags Tools
+// @Summary 常量列表 - 生成mysql导入脚本
+// @Description 给后台使用，生成到MYSQL数据库中，便于后台统一使用
+// @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
+// @Param X-Project-Id header string true "项目ID" default(6)
+// @Param X-Access header string true "访问KEY" default(imzgoframe)
+// @Produce  application/json
+// @Success 200 {object} httpresponse.Response
+// @Router /tools/const/init/db [get]
+func ConstInitDb(c *gin.Context) {
+
+	list := global.V.MyService.User.GetConstList()
+	sqlTemp := "INSERT INTO `sys_dictionaries` (`id`, `created_at`, `updated_at`, `deleted_at`, `name`, `type`, `status`, `desc`) VALUES (#id#, NULL,NULL, NULL, '#name#', '#key#', '1', '')"
+	subSqlTemp := "INSERT INTO `sys_dictionary_details` (`id`, `created_at`, `updated_at`, `deleted_at`, `label`, `value`, `status`, `sort`, `sys_dictionary_id`) VALUES (NULL,  NULL,NULL , NULL, '#name#', '#value#', '1', '0', '#link_id#')"
+	sqlStr := ""
+	id := 10
+	for _, v := range list {
+		sql1 := strings.Replace(sqlTemp, "#id#", strconv.Itoa(id), -1)
+		sql1 = strings.Replace(sql1, "#name#", v.Name, -1)
+		sql1 = strings.Replace(sql1, "#key#", v.Key, -1)
+		util.MyPrint(sql1)
+		sqlStr += sql1 + ";    "
+		//sqlList = append(sqlList, sql1)
+
+		for k, sub := range v.List {
+			sql2_sub := strings.Replace(subSqlTemp, "#link_id#", strconv.Itoa(id), -1)
+			sql2_sub = strings.Replace(sql2_sub, "#name#", k, -1)
+			sql2_sub = strings.Replace(sql2_sub, "#value#", strconv.Itoa(sub), -1)
+			sqlStr += sql2_sub + ";    "
+			util.MyPrint("    " + sql2_sub)
+		}
+
+		id++
+	}
+	httpresponse.OkWithDetailed(sqlStr, "成功", c)
 }
 
 // @Tags Tools

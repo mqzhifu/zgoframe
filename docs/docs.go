@@ -784,19 +784,12 @@ const docTemplate_swagger = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "demo",
+                "description": "后期考虑替换掉PHP解析过程，直接用GO",
                 "tags": [
                     "Gateway"
                 ],
-                "summary": "php解析.proto文件，再通过GO读取出来",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/util.ActionMap"
-                        }
-                    }
-                }
+                "summary": "php解析:.proto文件，生成.txt , 再通过GO读取出来",
+                "responses": {}
             }
         },
         "/gateway/config": {
@@ -1001,6 +994,57 @@ const docTemplate_swagger = `{
                         "description": "{\"success\":true,\"data\":{},\"msg\":\"登陆成功\"}",
                         "schema": {
                             "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/tools/const/init/db": {
+            "get": {
+                "description": "给后台使用，生成到MYSQL数据库中，便于后台统一使用",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Tools"
+                ],
+                "summary": "常量列表 - 生成mysql导入脚本",
+                "parameters": [
+                    {
+                        "enum": [
+                            "11",
+                            "12",
+                            "21",
+                            "22"
+                        ],
+                        "type": "string",
+                        "description": "来源",
+                        "name": "X-Source-Type",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "6",
+                        "description": "项目ID",
+                        "name": "X-Project-Id",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "imzgoframe",
+                        "description": "访问KEY",
+                        "name": "X-Access",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/httpresponse.Response"
                         }
                     }
                 }
@@ -1674,7 +1718,7 @@ const docTemplate_swagger = `{
             "type": "object",
             "properties": {
                 "access": {
-                    "description": "简单baseAuth 认证KEY",
+                    "description": "baseAuth 认证KEY",
                     "type": "string"
                 },
                 "created_at": {
@@ -1686,7 +1730,7 @@ const docTemplate_swagger = `{
                     "$ref": "#/definitions/gorm.DeletedAt"
                 },
                 "desc": {
-                    "description": "描述",
+                    "description": "描述信息",
                     "type": "string"
                 },
                 "git": {
@@ -1698,7 +1742,7 @@ const docTemplate_swagger = `{
                     "type": "integer"
                 },
                 "name": {
-                    "description": "项目名称",
+                    "description": "名称",
                     "type": "string"
                 },
                 "secret_key": {
@@ -1706,11 +1750,11 @@ const docTemplate_swagger = `{
                     "type": "string"
                 },
                 "status": {
-                    "description": "状态",
+                    "description": "状态1正常2关闭",
                     "type": "integer"
                 },
                 "type": {
-                    "description": "类型",
+                    "description": "类型,1service 2frontend 3backend 4app",
                     "type": "integer"
                 },
                 "updated_at": {
@@ -2440,32 +2484,6 @@ const docTemplate_swagger = `{
                 }
             }
         },
-        "util.ActionMap": {
-            "type": "object",
-            "properties": {
-                "action": {
-                    "type": "string"
-                },
-                "demo": {
-                    "type": "string"
-                },
-                "desc": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "response": {
-                    "type": "string"
-                },
-                "service_id": {
-                    "type": "integer"
-                },
-                "service_name": {
-                    "type": "string"
-                }
-            }
-        },
         "util.NetWayOption": {
             "type": "object",
             "properties": {
@@ -2479,6 +2497,10 @@ const docTemplate_swagger = `{
                 },
                 "default_protocol_type": {
                     "description": "默认响应协议：ws tcp udp",
+                    "type": "integer"
+                },
+                "fps": {
+                    "description": "LockMode  \t\tint32 \t\t` + "`" + `json:\"lockMode\"` + "`" + `\t\t//锁模式，乐观|悲观",
                     "type": "integer"
                 },
                 "io_timeout": {
@@ -2505,9 +2527,17 @@ const docTemplate_swagger = `{
                     "description": "一条消息内容最大值,byte,ps:最大10KB",
                     "type": "integer"
                 },
+                "offLineWaitTime": {
+                    "description": "以下都是帧同步的配置信息：\nMapSize\t\t\tint32\t\t` + "`" + `json:\"mapSize\"` + "`" + `\t\t//地址大小，给前端初始化使用\nRoomPeople\t\tint32\t\t` + "`" + `json:\"roomPeople\"` + "`" + `\t\t//一局游戏包含几个玩家\nRoomTimeout \t\tint32 \t\t` + "`" + `json:\"roomTimeout\"` + "`" + `\t//一个房间超时时间",
+                    "type": "integer"
+                },
                 "outIp": {
                     "description": "对外访问的IP",
                     "type": "string"
+                },
+                "roomReadyTimeout": {
+                    "description": "一个房间的，玩家的准备，超时时间",
+                    "type": "integer"
                 },
                 "tcpPort": {
                     "description": "tcp监听端口号",

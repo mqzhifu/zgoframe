@@ -47,6 +47,8 @@ func InitToolsRouter(Router *gin.RouterGroup) {
 		ToolsRouter.GET("header/struct", v1.HeaderStruct)
 		//所有常量列表
 		ToolsRouter.GET("const/list", v1.ConstList)
+		//所有常量列表 - 生成MYSQL 脚本
+		ToolsRouter.GET("const/init/db", v1.ConstInitDb)
 		//获取APP 列表
 		ToolsRouter.POST("project/list", v1.ProjectList)
 		//获取APP 列表

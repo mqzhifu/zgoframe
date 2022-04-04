@@ -67,7 +67,6 @@ func GatewayProto(c *gin.Context) {
 // @Tags Gateway
 // @Summary php解析:.proto文件，生成.txt , 再通过GO读取出来
 // @Description 后期考虑替换掉PHP解析过程，直接用GO
-// @Success 200 {object} util.ActionMap
 // @Security ApiKeyAuth
 // @Router /gateway/action/map [get]
 func ActionMap(c *gin.Context) {

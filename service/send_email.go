@@ -65,7 +65,7 @@ func (SendEmail *SendEmail) Send(projectId int, info request.SendEmail) (recordN
 		SendUid:   info.SendUid,
 	}
 	//如果是验证码类型，要SERVER端生成CODE，并替换到模板中
-	if rule.Type == model.RULE_TYHP_AUTH_CODE {
+	if rule.Type == model.RULE_TYPE_AUTH_CODE {
 		//验证码必须得有失效时间
 		if rule.ExpireTime <= 0 {
 			return 0, errors.New("rule.ExpireTime <= 0 ，验证码类型短信，必须得有失效时间")

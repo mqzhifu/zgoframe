@@ -15,13 +15,15 @@ type DbTool struct {
 }
 
 type TableOption struct {
-	Name          string
-	Comment       string
-	Engine        string
-	Charset       string
-	ColumnsOption map[string]TableColumnOption
+	Name    string
+	Comment string
+	Engine  string
+	Charset string
+	//ColumnsOption map[string]TableColumnOption
+	ColumnsOption []TableColumnOption
 }
 type TableColumnOption struct {
+	Name       string
 	Comment    string
 	Unique     string
 	Index      string
@@ -44,13 +46,57 @@ func NewDbTool(gorm *gorm.DB) *DbTool {
 func (db *DbTool) CreateTable(tableStruct ...interface{}) {
 	for i := 0; i < len(tableStruct); i++ {
 		db.processOneTable(tableStruct[i])
+		//ExitPrint(111)
 
 	}
-	ExitPrint(111)
+
 }
+
+//1 2 3 4 5 6 7
+//1 4 5 6 2 3 4
+
+//1 2 3 4 5
+//1 5 2 3 4
 
 func (db *DbTool) AddField(tableStruct ...interface{}) {
 	//ALTER TABLE `sms_rule` ADD `purpose` TINYINT(1) NOT NULL DEFAULT '0' COMMENT '用途,1注册2找回密码3修改密码4登陆' AFTER `third_callback_info`;
+}
+
+//公共model中的 创建时间 更新时间 是否删除 3个字段统一放到最后面
+func (db *DbTool) ProcessCommonModelFiledSort(columnsOption []TableColumnOption) []TableColumnOption {
+	if len(columnsOption) <= 4 { //公共字段一共就4个，小于4就没必要处理了
+		return columnsOption
+	}
+	newColumnsOption := []TableColumnOption{}
+
+	frontArr := db.mergeTwoArr(columnsOption[0:1], columnsOption[4:])
+	newColumnsOption = db.mergeTwoArr(frontArr, columnsOption[1:4])
+	//ExitPrint(newColumnsOption)
+	//firstField := columnsOption[0:1]
+	//frontField := tmp[1:4]
+	//endField := columnsOption[4:]
+	//
+	//MyPrint("firstField:", firstField, "frontField:", frontField, "endField:", endField)
+	//
+	//frontArr := append(firstField, endField...)
+	//ExitPrint(frontField)
+	//newColumnsOption = append(frontArr, frontField...)
+
+	//ExitPrint(newColumnsOption)
+
+	return newColumnsOption
+}
+
+func (db *DbTool) mergeTwoArr(firstField []TableColumnOption, endField []TableColumnOption) []TableColumnOption {
+	newColumnsOption := []TableColumnOption{}
+	for _, v := range firstField {
+		newColumnsOption = append(newColumnsOption, v)
+	}
+	//newColumnsOption = firstField
+	for _, v := range endField {
+		newColumnsOption = append(newColumnsOption, v)
+	}
+	return newColumnsOption
 }
 
 func (db *DbTool) processOneTable(tableStruct interface{}) {
@@ -70,19 +116,24 @@ func (db *DbTool) processOneTable(tableStruct interface{}) {
 	if tableOption.Name == "" {
 		structFullName := ValueOfTableStruct.Elem().Type()
 		tableOption.Name = Lcfirst(structFullName.Name())
+		MyPrint("tableOption.Name:", tableOption.Name)
+	} else {
+		MyPrint("err: tableOption.Name empty")
 	}
 	//MyPrint(tableOption)
 	sql := db.Br + "create table " + string(CamelToSnake2([]byte(tableOption.Name))) + "(" + db.Br
-	columnsOption := make(map[string]TableColumnOption)
+	//columnsOption := []TableColumnOption{}
 
 	TypeOfOneTableStruct := reflect.TypeOf(tableStruct)
-	db.GetField(TypeOfOneTableStruct.Elem(), columnsOption)
+	columnsOption := db.GetField(TypeOfOneTableStruct.Elem())
+
+	columnsOption = db.ProcessCommonModelFiledSort(columnsOption)
 
 	sqlMid := ""
 	primarykey := false
-	for k, v := range columnsOption {
-		ak := string(CamelToSnake2([]byte(k)))
-		//ak := CamelToSnake2([]byte("addHeaderCddddDdddd"))
+	for _, v := range columnsOption {
+		//ak := string(CamelToSnake2([]byte(k)))
+		ak := string(CamelToSnake2([]byte(v.Name)))
 		sql += "    `" + ak + "` "
 		if v.Define != "" {
 			sql += v.Define + " "
@@ -91,7 +142,7 @@ func (db *DbTool) processOneTable(tableStruct interface{}) {
 		if v.Unsigned != "" {
 			sql += " UNSIGNED "
 		}
-		if k != "DeletedAt" { //这个特殊，得允许null
+		if v.Name != "DeletedAt" { //这个特殊，得允许null
 			if v.Define == "text" {
 				sql += " null "
 			} else {
@@ -157,10 +208,12 @@ func (db *DbTool) processOneTable(tableStruct interface{}) {
 	sql += " comment=" + comment + db.Br
 
 	MyPrint(sql)
-
 }
 
-func (db *DbTool) GetField(typeOfStruct reflect.Type, columnsOption map[string]TableColumnOption) {
+func (db *DbTool) GetField(typeOfStruct reflect.Type) []TableColumnOption {
+	columnsOption := []TableColumnOption{}
+	//func (db *DbTool) GetField(typeOfStruct reflect.Type, columnsOption map[string]TableColumnOption) {
+	//MyPrint("typeOfStruct:", typeOfStruct)
 	for i := 0; i < typeOfStruct.NumField(); i++ {
 		tableOneColumnOption := TableColumnOption{}
 		structFiled := typeOfStruct.Field(i)
@@ -169,7 +222,7 @@ func (db *DbTool) GetField(typeOfStruct reflect.Type, columnsOption map[string]T
 		if structFiled.Type.Name() == "MODEL" {
 			commonMODEL := model.MODEL{}
 			typeOfGlobalMODEL := reflect.TypeOf(commonMODEL)
-			db.GetField(typeOfGlobalMODEL, columnsOption)
+			columnsOption = db.GetField(typeOfGlobalMODEL)
 			continue
 		}
 
@@ -189,6 +242,10 @@ func (db *DbTool) GetField(typeOfStruct reflect.Type, columnsOption map[string]T
 			}
 			//MyPrint(tableOneColumnOption)
 		}
-		columnsOption[structFiled.Name] = tableOneColumnOption
+		tableOneColumnOption.Name = structFiled.Name
+		//columnsOption[structFiled.Name] = tableOneColumnOption
+		columnsOption = append(columnsOption, tableOneColumnOption)
 	}
+	return columnsOption
+	//ExitPrint(1)
 }

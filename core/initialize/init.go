@@ -41,7 +41,7 @@ func NewInitialize(option InitOption) *Initialize {
 
 //初始化-入口
 func (initialize *Initialize) Start() error {
-	autoCreateUpDbTable() //自动创建表，根据MODEL- struct
+	//autoCreateUpDbTable() //自动创建表，根据MODEL- struct
 
 	prefix := "initialize ,"
 	//初始化 : 配置信息
@@ -259,7 +259,7 @@ func (initialize *Initialize) Start() error {
 		//		return err
 		//	}
 	}
-	global.V.MyService = service.NewService(global.V.Gorm, global.V.Zap, global.V.Email, global.V.Redis, netWayOption, global.V.GrpcManager)
+	global.V.MyService = service.NewService(global.V.Gorm, global.V.Zap, global.V.Email, global.V.Redis, netWayOption, global.V.GrpcManager, global.V.ProjectMng, global.C.Http.StaticPath)
 
 	global.C.System.ENV = initialize.Option.Env
 	//启动http

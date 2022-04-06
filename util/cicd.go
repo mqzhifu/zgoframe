@@ -182,10 +182,10 @@ func (cicdManager *CicdManager) Publish(c *gin.Context) {
 
 //获取所有服务列表
 func (cicdManager *CicdManager) GetServiceList(c *gin.Context) {
-	dirList, _ := ForeachDir(cicdManager.Option.Config.System.ServiceDir)
+	dirList := ForeachDir(cicdManager.Option.Config.System.ServiceDir)
 	for _, service := range cicdManager.Option.ServiceList {
-		for _, dirName := range dirList {
-			if service.Name == dirName {
+		for _, dirInfo := range dirList {
+			if service.Name == dirInfo.Name {
 				service.Deploy = 1
 				break
 			}

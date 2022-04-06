@@ -8,20 +8,36 @@ import (
 )
 
 type Service struct {
-	User       *User
-	SendSms    *SendSms
-	SendEmail  *SendEmail
-	RoomManage *RoomManager
-	FrameSync  *FrameSync
-	Gateway    *Gateway
-	GameMatch  *Match
+	User           *User
+	SendSms        *SendSms
+	SendEmail      *SendEmail
+	RoomManage     *RoomManager
+	FrameSync      *FrameSync
+	Gateway        *Gateway
+	GameMatch      *Match
+	ConfigCenter   *ConfigCenter
+	ProjectManager *util.ProjectManager
 }
 
-func NewService(gorm *gorm.DB, zap *zap.Logger, myEmail *util.MyEmail, myRedis *util.MyRedis, netWayOption util.NetWayOption, grpcManager *util.GrpcManager) *Service {
+func NewService(gorm *gorm.DB, zap *zap.Logger, myEmail *util.MyEmail, myRedis *util.MyRedis, netWayOption util.NetWayOption, grpcManager *util.GrpcManager, projectManager *util.ProjectManager, dataDir string) *Service {
 	service := new(Service)
 	service.User = NewUser(gorm, myRedis)
 	service.SendSms = NewSendSms(gorm)
 	service.SendEmail = NewSendEmail(gorm, myEmail)
+
+	configCenterOption := ConfigCenterOption{
+		envList:            util.GetEnvList(),
+		Gorm:               gorm,
+		Redis:              myRedis,
+		ProjectManager:     projectManager,
+		PersistenceType:    PERSITENCE_TYPE_FILE,
+		PersistenceFileDir: dataDir + "/data/config/",
+	}
+	var err error
+	service.ConfigCenter, err = NewConfigCenter(configCenterOption)
+	if err != nil {
+		util.ExitPrint("NewConfigCenter err:" + err.Error())
+	}
 
 	//room要先实例化,math frame_sync 都强依赖room
 	roomManagerOption := RoomManagerOption{
@@ -49,7 +65,7 @@ func NewService(gorm *gorm.DB, zap *zap.Logger, myEmail *util.MyEmail, myRedis *
 	//service.Gateway, netway, err = CreateGateway(netWayOption, grpcManager, zap)
 
 	gateway := NewGateway(grpcManager, zap)
-	netway, err := gateway.StartSocket(netWayOption)
+	netway, err = gateway.StartSocket(netWayOption)
 	if err != nil {
 		util.ExitPrint("InitGateway err:" + err.Error())
 	}

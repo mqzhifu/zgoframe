@@ -17,11 +17,13 @@ type Service struct {
 	GameMatch      *Match
 	ConfigCenter   *ConfigCenter
 	ProjectManager *util.ProjectManager
+	Mail 		*Mail
 }
 
 func NewService(gorm *gorm.DB, zap *zap.Logger, myEmail *util.MyEmail, myRedis *util.MyRedis, netWayOption util.NetWayOption, grpcManager *util.GrpcManager, projectManager *util.ProjectManager, dataDir string) *Service {
 	service := new(Service)
 	service.User = NewUser(gorm, myRedis)
+	service.Mail = NewMail(gorm,zap)
 	service.SendSms = NewSendSms(gorm)
 	service.SendEmail = NewSendEmail(gorm, myEmail)
 
@@ -64,6 +66,7 @@ func NewService(gorm *gorm.DB, zap *zap.Logger, myEmail *util.MyEmail, myRedis *
 	service.RoomManage.SetFrameSync(service.FrameSync)
 	//service.Gateway, netway, err = CreateGateway(netWayOption, grpcManager, zap)
 
+	//util.ExitPrint(netWayOption)
 	gateway := NewGateway(grpcManager, zap)
 	netway, err = gateway.StartSocket(netWayOption)
 	if err != nil {

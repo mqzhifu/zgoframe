@@ -105,7 +105,24 @@ type SendMail struct {
 	Receiver   string            `json:"receiver"`   //接收者: uid or grpuId or tagId or uids
 	SendUid    int               `json:"send_uid"`   //发送者ID，管理员是9999，未知8888
 	SendIp     string            `json:"send_ip"`    //发送者IP，如为空系统默认取：请求方的IP,最好给真实的，一但被刷，会使用此值
+	SendTime   int 				 `json:"send_time"` //定时发送，unixStamp 必须大于当前时间
 }
+//@description 站内信列表
+type MailList  struct {
+	BoxType 		int		`json:"box_type"`		//1收件箱2发件箱4全部
+	ReceiverRead 	int		`json:"receiver_read"`	//1接收者已读2接收者未读
+	ReceiverDel		int 	`json:"receiver_del"`	//1接收者已删除2接收者未删除
+	Expire 			int 	`json:"expire"`			//1消息已过期2消息未过期
+	PageInfo										//分页
+}
+
+//@description 站内信一条消息详情
+type MailInfo  struct {
+	Id int `json:"id"`
+	AutoReceiverRead 	int		`json:"auto_receiver_read"`	//自动更新为：接收者已读
+	AutoReceiverDel 	int		`json:"auto_receiver_del"`	//自动更新为：接收者已删除
+}
+
 
 //@description 设置/修改密码
 type SetPassword struct {

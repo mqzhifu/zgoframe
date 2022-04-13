@@ -542,6 +542,39 @@ func (user *User) GetConstList() []ConstInfo {
 		Key:  "CICD_PUBLISH_STATUS",
 	})
 
+	ConstList = append(ConstList, ConstInfo{
+		List: util.GetConstListEnv(),
+		Name: "env-环境",
+		Key:  "ENV",
+	})
+
+	ConstList = append(ConstList, ConstInfo{
+		List: GetConstListMailBoxType(),
+		Name: "站内信,信件箱类型",
+		Key:  "MAIL_BOX",
+	})
+
+	ConstList = append(ConstList, ConstInfo{
+		List: GetConstListMailPeople(),
+		Name: "站内信,接收人群类型",
+		Key:  "MAIL_PEOPLE",
+	})
+
+
+	ConstList = append(ConstList, ConstInfo{
+		List: GetConstListConfigPersistenceType(),
+		Name: "配置中心持久化类型",
+		Key:  "CONFIG_PERSISTENCE_TYPE",
+	})
+
+
+
+
+
+
+
+
+
 	//ConstList = append(ConstList, ConstInfo{
 	//	List: model.GetConstListProjectType(),
 	//	Name: "项目类型",

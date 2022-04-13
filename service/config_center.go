@@ -10,12 +10,22 @@ import (
 )
 
 const (
-	PERSITENCE_TYPE_MYSQL   = 1
-	PERSITENCE_TYPE_REDIS   = 2
-	PERSITENCE_TYPE_FILE    = 3
-	PERSITENCE_TYPE_ETCD    = 4
-	PERSITENCE_TYPE_CONSULE = 5
+	PERSISTENCE_TYPE_MYSQL   = 1
+	PERSISTENCE_TYPE_REDIS   = 2
+	PERSISTENCE_TYPE_FILE    = 3
+	PERSISTENCE_TYPE_ETCD    = 4
+	PERSISTENCE_TYPE_CONSULE = 5
 )
+func GetConstListConfigPersistenceType() map[string]int {
+	list := make(map[string]int)
+	list["mysql"] = PERSISTENCE_TYPE_MYSQL
+	list["redis"] = PERSISTENCE_TYPE_REDIS
+	list["file"] = PERSISTENCE_TYPE_FILE
+	list["etcd"] = PERSISTENCE_TYPE_ETCD
+	list["consul"] = PERSISTENCE_TYPE_CONSULE
+
+	return list
+}
 
 type ConfigCenter struct {
 	Option ConfigCenterOption
@@ -35,11 +45,12 @@ func NewConfigCenter(Option ConfigCenterOption) (*ConfigCenter, error) {
 	configCenter := new(ConfigCenter)
 	configCenter.Option = Option
 
-	err := configCenter.Init()
-	if err != nil {
-		util.ExitPrint(err)
-	}
-	return configCenter, err
+	//err := configCenter.Init()
+	//if err != nil {
+	//	util.ExitPrint(err)
+	//}
+
+	return configCenter, nil
 }
 
 func (configCenter *ConfigCenter) Init() error {
@@ -51,7 +62,7 @@ func (configCenter *ConfigCenter) Init() error {
 		return errors.New("PersistenceType <=0")
 	}
 
-	if configCenter.Option.PersistenceType == PERSITENCE_TYPE_FILE {
+	if configCenter.Option.PersistenceType == PERSISTENCE_TYPE_FILE {
 		return configCenter.InitPersistenceFile()
 	}
 

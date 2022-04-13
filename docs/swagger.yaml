@@ -8,7 +8,6 @@ definitions:
         type: boolean
     type: object
   httpresponse.LoginResponse:
-    description: 登陆成功返回结果
     properties:
       expires_at:
         description: token失效时间
@@ -27,19 +26,18 @@ definitions:
         description: 登陆成功结果响应
     type: object
   httpresponse.Response:
-    description: 公共HTTP响应结构体
     properties:
       code:
         description: 状态码，200是OK，4代表有发生错误
         type: integer
       data:
         description: 请求时有数据返回，会在此字段中
+        type: object
       msg:
         description: 如果有错误会写在此，如果有些提示信息也会放在这里
         type: string
     type: object
   httpresponse.SysCaptchaResponse:
-    description: 获取图片验证码
     properties:
       id:
         type: string
@@ -48,7 +46,6 @@ definitions:
         type: string
     type: object
   model.Project:
-    description: 项目详情
     properties:
       access:
         description: baseAuth 认证KEY
@@ -85,7 +82,6 @@ definitions:
         type: integer
     type: object
   model.User:
-    description: 用户基础信息
     properties:
       birthday:
         description: 出生日期,unix时间戳
@@ -200,7 +196,6 @@ definitions:
         type: string
     type: object
   request.CustomClaims:
-    description: jwt 容器内容
     properties:
       id:
         description: 用户ID
@@ -221,7 +216,6 @@ definitions:
   request.Empty:
     type: object
   request.HeaderBaseInfo:
-    description: http客户端请求头-基础信息
     properties:
       app_version:
         description: app/前端/服务/项目 版本号
@@ -258,7 +252,6 @@ definitions:
         type: string
     type: object
   request.HeaderRequest:
-    description: http客户端请求头
     properties:
       access:
         description: 使用网关时，不允许随意访问，得有key
@@ -319,7 +312,6 @@ definitions:
         type: string
     type: object
   request.Login:
-    description: 正常登陆，需要用户名密码
     properties:
       captcha:
         description: 验证码
@@ -335,7 +327,6 @@ definitions:
         type: string
     type: object
   request.LoginSMS:
-    description: 短信登陆
     properties:
       captcha:
         type: string
@@ -351,8 +342,39 @@ definitions:
         description: 短信类型，登陆/注册
         type: integer
     type: object
+  request.MailInfo:
+    properties:
+      auto_receiver_del:
+        description: 自动更新为：接收者已删除
+        type: integer
+      auto_receiver_read:
+        description: 自动更新为：接收者已读
+        type: integer
+      id:
+        type: integer
+    type: object
+  request.MailList:
+    properties:
+      box_type:
+        description: 1收件箱2发件箱4全部
+        type: integer
+      expire:
+        description: 1消息已过期2消息未过期
+        type: integer
+      page:
+        description: 当前页数
+        type: integer
+      pageSize:
+        description: 每页多少条记录
+        type: integer
+      receiver_del:
+        description: 1接收者已删除2接收者未删除
+        type: integer
+      receiver_read:
+        description: 1接收者已读2接收者未读
+        type: integer
+    type: object
   request.PageInfo:
-    description: 分页
     properties:
       page:
         description: 当前页数
@@ -362,13 +384,11 @@ definitions:
         type: integer
     type: object
   request.ParserToken:
-    description: 解析token
     properties:
       token:
         type: string
     type: object
   request.RLoginThird:
-    description: 3方登陆
     properties:
       birthday:
         description: 生日
@@ -423,7 +443,6 @@ definitions:
         type: string
     type: object
   request.Register:
-    description: 注册信息
     properties:
       birthday:
         description: 生日
@@ -472,7 +491,6 @@ definitions:
         type: string
     type: object
   request.RegisterSms:
-    description: 注册信息 - 通过手机号
     properties:
       mobile:
         description: 手机号
@@ -488,7 +506,6 @@ definitions:
         type: integer
     type: object
   request.RestPasswordSms:
-    description: 修改密码
     properties:
       mobile:
         description: 手机号
@@ -510,7 +527,6 @@ definitions:
         type: integer
     type: object
   request.SendEmail:
-    description: 发送邮件
     properties:
       carbon_copy:
         description: 抄送，，email格式
@@ -535,8 +551,30 @@ definitions:
         description: 发送者ID，管理员是9999，未知8888
         type: integer
     type: object
+  request.SendMail:
+    properties:
+      receiver:
+        description: '接收者: uid or grpuId or tagId or uids'
+        type: string
+      replaceVar:
+        additionalProperties:
+          type: string
+        description: 邮件内容模块中变量替换
+        type: object
+      rule_id:
+        description: 配置规则的ID
+        type: integer
+      send_ip:
+        description: 发送者IP，如为空系统默认取：请求方的IP,最好给真实的，一但被刷，会使用此值
+        type: string
+      send_time:
+        description: 定时发送，unixStamp 必须大于当前时间
+        type: integer
+      send_uid:
+        description: 发送者ID，管理员是9999，未知8888
+        type: integer
+    type: object
   request.SendSMS:
-    description: 发送验证码
     properties:
       captcha:
         description: 验证码
@@ -563,7 +601,6 @@ definitions:
         type: integer
     type: object
   request.SetPassword:
-    description: 设置/修改密码
     properties:
       new_password_confirm:
         description: 新密码确认
@@ -576,7 +613,6 @@ definitions:
         type: string
     type: object
   request.SetUserInfo:
-    description: 修改用户基础信息
     properties:
       birthday:
         description: 生日
@@ -592,7 +628,6 @@ definitions:
         type: integer
     type: object
   request.SystemConfig:
-    description: 系统管理员操作，需要2次验证
     properties:
       password:
         description: 密码
@@ -1206,7 +1241,6 @@ paths:
   /gateway/action/map:
     get:
       description: 后期考虑替换掉PHP解析过程，直接用GO
-      responses: {}
       security:
       - ApiKeyAuth: []
       summary: php解析:.proto文件，生成.txt , 再通过GO读取出来
@@ -1228,7 +1262,6 @@ paths:
   /gateway/proto:
     get:
       description: proto接口及GRPC微服务函数的信息等
-      responses: {}
       security:
       - ApiKeyAuth: []
       summary: 获取所有服务的.proto 配置文件
@@ -1267,12 +1300,96 @@ paths:
   /gateway/service/ws:
     get:
       description: 通过网关调取后端服务(ws)
-      responses: {}
       security:
       - ApiKeyAuth: []
       summary: 网关 - 长连接 websocket
       tags:
       - Gateway
+  /mail/info:
+    post:
+      consumes:
+      - application/json
+      description: 注意参数
+      parameters:
+      - description: 参数信息,参考model
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/request.MailInfo'
+      responses:
+        "200":
+          description: '{"success":true,"data":{},"msg":"成功"}'
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      - ApiKeyAuth: []
+      summary: 获取用户一条信息的详情
+      tags:
+      - Mail
+  /mail/list:
+    post:
+      consumes:
+      - application/json
+      description: 注意参数
+      parameters:
+      - description: 参数信息,参考model
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/request.MailList'
+      responses:
+        "200":
+          description: '{"success":true,"data":{},"msg":"成功"}'
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      - ApiKeyAuth: []
+      summary: 获取用户站内信列表
+      tags:
+      - Mail
+  /mail/send:
+    post:
+      consumes:
+      - application/json
+      description: 注意参数
+      parameters:
+      - description: 参数信息,参考model
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/request.SendMail'
+      responses:
+        "200":
+          description: '{"success":true,"data":{},"msg":"成功"}'
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      - ApiKeyAuth: []
+      summary: 发送一条站内信
+      tags:
+      - Mail
+  /mail/unread:
+    get:
+      consumes:
+      - application/json
+      description: 注意参数
+      responses:
+        "200":
+          description: '{"success":true,"data":{},"msg":"成功"}'
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      - ApiKeyAuth: []
+      summary: 站内信未读总数
+      tags:
+      - Mail
   /metrics:
     post:
       description: 标量- 实时统计信息
@@ -1781,3 +1898,5 @@ tags:
   name: User
 - description: 系统管理(需要二次认证)
   name: System
+- description: 站内信/内部邮件通知
+  name: Mail

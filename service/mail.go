@@ -13,13 +13,51 @@ import (
 )
 
 const (
+	//管理员默认UID，主要用于：确定发送者的UID
+	MAIL_ADMIN_USER_UID = 9999
+
 	//1单发2群发3指定group4指定tag5指定UIDS
 	MAIL_PEOPLE_PERSON = 1
 	MAIL_PEOPLE_ALL    = 2
 	MAIL_PEOPLE_GROUP  = 3
 	MAIL_PEOPLE_TAG    = 4
 	MAIL_PEOPLE_UIDS   = 5
+
+	MAIL_IN_BOX = 1
+	MAIL_OUT_BOX = 2
+	//MAIL_IN_DEL_BOX = 3
+	MAIL_ALL_BOX = 4
+
+	RECEIVER_READ_TRUE = 1
+	RECEIVER_READ_FALSE = 2
+
+	RECEIVER_DEL_TRUE = 1
+	RECEIVER_DEL_FALSE = 2
+
+	MAIL_EXPIRE_TRUE = 1
+	MAIL_EXPIRE_FALSE = 1
 )
+
+func GetConstListMailBoxType() map[string]int {
+	list := make(map[string]int)
+	list["收件箱"] = MAIL_IN_BOX
+	list["发件箱"] = MAIL_OUT_BOX
+	//list["收件删除箱"] = MAIL_IN_DEL_BOX
+	list["全部"] = MAIL_ALL_BOX
+	return list
+}
+
+func GetConstListMailPeople() map[string]int {
+	list := make(map[string]int)
+	list["个人"] = MAIL_PEOPLE_PERSON
+	list["所有人"] = MAIL_PEOPLE_ALL
+	list["针对组"] = MAIL_PEOPLE_GROUP
+	list["针对TAG"] = MAIL_PEOPLE_TAG
+	list["指针若干人"] = MAIL_PEOPLE_UIDS
+
+	return list
+}
+
 
 type Mail struct {
 	Gorm *gorm.DB
@@ -33,8 +71,7 @@ func NewMail(gorm *gorm.DB, Log *zap.Logger) *Mail {
 	return mail
 }
 
-func (mail *Mail) Send(projectId int, info request.SendMail) (recordNewId int, err error) {
-	util.MyPrint("im in sendMail.send , formInfo:", info)
+func (mail *Mail) Send( info request.SendMail) (recordNewId int, err error) {
 	if info.RuleId <= 0 || info.SendIp == "" || info.SendUid <= 0 {
 		return 0, errors.New("RuleId  || SendIp || SendUid is empty")
 	}
@@ -59,57 +96,66 @@ func (mail *Mail) Send(projectId int, info request.SendMail) (recordNewId int, e
 		return 0, err
 	}
 
+	//群发全部用户，不需要指定收件人，其它类型都需要指定收件人/组ID/tagId
 	if rule.PeopleType != MAIL_PEOPLE_ALL {
 		if info.Receiver == "" {
 			return 0, errors.New("Receiver empty")
 		}
 	}
-
 	//创建记录之前，先更新一下已失效的记录
-	mail.CheckExpireAndUpStatus()
+	//mail.CheckExpireAndUpStatus()
+
+	//定时：发送时间
+	now := util.GetNowTimeSecondToInt()
+	if info.SendTime > 0{
+		if  info.SendTime <= now{
+			return 0 , errors.New("info.SendTime <= now")
+		}
+	}
 
 	switch rule.PeopleType {
-	case MAIL_PEOPLE_PERSON:
+	case MAIL_PEOPLE_PERSON://点对点
 		recordNewId, err = mail.SendPerson(rule, info, 0)
-	case MAIL_PEOPLE_ALL:
+	case MAIL_PEOPLE_ALL://群发
 		newInfo := info
 		newInfo.Receiver = "all"
 		recordNewId, err = mail.SendGroup(rule, info)
-	case MAIL_PEOPLE_GROUP:
+	case MAIL_PEOPLE_GROUP://根据组，群发
 		recordNewId, err = mail.SendGroup(rule, info)
-	case MAIL_PEOPLE_TAG:
+	case MAIL_PEOPLE_TAG://根据tag标签，群发
 		recordNewId, err = mail.SendGroup(rule, info)
-	case MAIL_PEOPLE_UIDS:
+	case MAIL_PEOPLE_UIDS://指定UID，群发
 		uids := strings.Split(info.Receiver, ",")
 		for _, v := range uids {
 			newInfo := info
 			newInfo.Receiver = v
-			mail.SendPerson(rule, newInfo, projectId)
+			mail.SendPerson(rule, newInfo, 0)
 		}
 	default:
 		return 0, errors.New("PeopleType error")
 	}
 
+
 	return recordNewId, err
 
 }
 
-//检测：已失效(未使用过)的 短信，并更新状态为：已失效
-//验证码类型的字段sms_log中没直接存，所以 expire_time > 0 即可.
-func (mail *Mail) CheckExpireAndUpStatus() {
-	var mailLog model.MailLog
-	now := util.GetNowTimeSecondToInt()
-	upRsObj := mail.Gorm.Model(&mailLog).Where("expire_time > 0  and expire_time <=  ? and status = ?  ", now, model.AUTH_CODE_STATUS_NORMAL).Update("status", model.AUTH_CODE_STATUS_EXPIRE)
-	if upRsObj.Error != nil {
-		//if upRsObj.Error == gorm.ErrRecordNotFound {
-		//	util.MyPrint("CheckExpireAndUpStatus not record.")
-		//} else {
-		util.MyPrint("CheckExpireAndUpStatus gorm err:" + upRsObj.Error.Error())
-		//}
-	} else {
-		util.MyPrint("CheckExpireAndUpStatus up record RowsAffected:" + strconv.Itoa(int(upRsObj.RowsAffected)))
-	}
-}
+////检测：已失效(未使用过)的 短信，并更新状态为：已失效
+////验证码类型的字段sms_log中没直接存，所以 expire_time > 0 即可.
+//func (mail *Mail) CheckExpireAndUpStatus() {
+//	var mailLog model.MailLog
+//	now := util.GetNowTimeSecondToInt()
+//	upRsObj := mail.Gorm.Model(&mailLog).Where("expire_time > 0  and expire_time <=  ? and status = ?  ", now, model.AUTH_CODE_STATUS_NORMAL).Update("status", model.AUTH_CODE_STATUS_EXPIRE)
+//	if upRsObj.Error != nil {
+//		//if upRsObj.Error == gorm.ErrRecordNotFound {
+//		//	util.MyPrint("CheckExpireAndUpStatus not record.")
+//		//} else {
+//		util.MyPrint("CheckExpireAndUpStatus gorm err:" + upRsObj.Error.Error())
+//		//}
+//	} else {
+//		util.MyPrint("CheckExpireAndUpStatus up record RowsAffected:" + strconv.Itoa(int(upRsObj.RowsAffected)))
+//	}
+//}
 
 func (mail *Mail) ReplaceContentTemplate(content string, replaceVar map[string]string) string {
 	if len(replaceVar) <= 0 {
@@ -201,16 +247,25 @@ func (mail *Mail) SendPerson(rule model.MailRule, info request.SendMail, MailGro
 		//替换模板动态内容
 		content = mail.ReplaceContentTemplate(rule.Content, info.ReplaceVar)
 	}
+	r ,_ := strconv.Atoi(info.Receiver)
+	if r != MAIL_ADMIN_USER_UID {
+		return recordNewId,errors.New("Receiver Uid 不能等于管理员 ID")
+	}
 	//替换模板动态内容
 	mailLog := model.MailLog{
 		ProjectId:   rule.ProjectId,
 		RuleId:      rule.Id,
-		Receiver:    info.Receiver,
+		Receiver:  r  ,
 		Content:     content,
 		Title:       rule.Title,
 		SendIp:      info.SendIp,
 		SendUid:     info.SendUid,
 		MailGroupId: MailGroupId,
+		SendTime: info.SendTime,
+	}
+	//失效时间
+	if rule.ExpireTime > 0 {
+		mailLog.ExpireTime = util.GetNowTimeSecondToInt() + rule.ExpireTime
 	}
 
 	err = mail.Gorm.Create(&mailLog).Error
@@ -232,6 +287,7 @@ func (mail *Mail) SendGroup(rule model.MailRule, info request.SendMail) (recordN
 		Title:    rule.Title,
 		SendIp:   info.SendIp,
 		SendUid:  info.SendUid,
+		SendTime: info.SendTime,
 	}
 
 	err = mail.Gorm.Create(&mailGroup).Error
@@ -242,24 +298,22 @@ func (mail *Mail) SendGroup(rule model.MailRule, info request.SendMail) (recordN
 	util.MyPrint("SendGroup new id:", mailGroup.Id, " content:", mailGroup.Content)
 	return mailGroup.Id, err
 }
-
-func (mail *Mail) CheckGroupMsg(uid int) {
+//检测：是否有群发消息，需要生成到mail_log表中
+func (mail *Mail) CheckGroupMsg(uid int) error{
 	var mailGroupList []model.MailGroup
-	err := mail.Gorm.Where("people_type = ?", MAIL_PEOPLE_ALL).Find(&mailGroupList).Error
+	//目前仅支持：全部群发
+	where := " people_type = "+strconv.Itoa(MAIL_PEOPLE_ALL)
+	where += mail.GetSqlWhereSendTime()
+	err := mail.Gorm.Where(where).Find(&mailGroupList).Error
 	if err != nil {
-
+		return err
 	}
 
-	//ids := ""
-	//for _, v := range mailGroupList {
-	//	ids = strconv.Itoa(v.Id) + " , "
-	//}
-
 	var mailList []model.MailLog
-	where := "receiver = '" + strconv.Itoa(uid) + "' " + " and mail_group_id > 0 "
+	where = "receiver = '" + strconv.Itoa(uid) + "' " + " and mail_group_id > 0 "
 	err = mail.Gorm.Where(where).Find(&mailList).Error
 	if err != nil {
-
+		return err
 	}
 
 	for _, group := range mailGroupList {
@@ -269,61 +323,132 @@ func (mail *Mail) CheckGroupMsg(uid int) {
 				exist = true
 			}
 		}
-		rule := model.MailRule{
-			Title:      group.Title,
-			Content:    group.Content,
-			PeopleType: group.PeopleType,
-		}
-		info := request.SendMail{
-			SendUid:  group.SendUid,
-			SendIp:   group.SendIp,
-			Receiver: strconv.Itoa(uid),
-		}
+
 		if !exist {
+			rule := model.MailRule{
+				Title:      group.Title,
+				Content:    group.Content,
+				PeopleType: group.PeopleType,
+			}
+			info := request.SendMail{
+				SendUid:  group.SendUid,
+				SendIp:   group.SendIp,
+				Receiver: strconv.Itoa(uid),
+			}
+
 			mail.SendPerson(rule, info, group.Id)
 		}
 	}
+	return nil
 
 }
 
-func (mail *Mail) GetUserListByUid(uid int, actionType int, readType int) error {
+func (mail *Mail)GetSqlWhereExpire( )string{
+	now := util.GetNowTimeSecondToInt()
+	where := "( expire_time > 0  and expire_time <=  " + strconv.Itoa(now) + " ) "
+	return where
+}
+
+func (mail *Mail)GetSqlWhereSendTime( )string{
+	now := util.GetNowTimeSecondToInt()
+	where := "( send_time > 0  and send_time <=  " + strconv.Itoa(now) + " ) "
+	return where
+}
+
+func (mail *Mail) GetUserListByUid(uid int,form request.MailList)(mailList []model.MailLog ,err error) {
 	mail.CheckGroupMsg(uid)
 
-	var mailList []model.MailLog
+	//var mailList []model.MailLog
 	where := ""
-	if actionType == 1 { //收件箱
+	if form.BoxType == MAIL_IN_BOX { //收件箱
 		where = "receiver = '" + strconv.Itoa(uid) + "' "
-	} else if actionType == 2 { //发件箱
+	} else if form.BoxType == MAIL_OUT_BOX { //发件箱
 		where = "sendUid = " + strconv.Itoa(uid)
-	} else if actionType == 3 { //全部
+	} else if form.BoxType == MAIL_ALL_BOX { //全部
 		where = "receiver = '" + strconv.Itoa(uid) + "' or " + "sendUid = " + strconv.Itoa(uid)
 	} else {
-		return errors.New("actionType err")
+		return mailList,errors.New("boxType err")
 	}
 
-	if readType > 0 {
-		where += "receiver_read = " + strconv.Itoa(readType)
+	if form.ReceiverRead == RECEIVER_READ_TRUE {//接收者，已读
+		where += "receiver_read = " + strconv.Itoa(RECEIVER_READ_TRUE)
+	}else if  form.ReceiverRead == RECEIVER_READ_FALSE {//接收者，未读
+		where += "receiver_read = " + strconv.Itoa(RECEIVER_READ_FALSE)
+	}else{
+		return mailList,errors.New("ReceiverRead err")
 	}
 
-	where += "receiver_del = 0"
+	if form.ReceiverDel == RECEIVER_DEL_TRUE {//接收者，已删除
+		where += "receiver_del = " + strconv.Itoa(RECEIVER_DEL_TRUE)
+	}else if  form.ReceiverRead == RECEIVER_DEL_FALSE {//接收者，未删除
+		where += "receiver_del = " + strconv.Itoa(RECEIVER_DEL_FALSE)
+	}else{
+		return mailList,errors.New("ReceiverDel err")
+	}
+	//未失效
+	if form.Expire == MAIL_EXPIRE_FALSE{
+		where += mail.GetSqlWhereExpire( )
+	}
 
-	err := mail.Gorm.Where(where).Find(&mailList).Error
+	where +=  mail.GetSqlWhereSendTime()
+
+
+	var count int64
+	err = mail.Gorm.Model(model.MailLog{}).Where(where).Count(&count).Error
 	if err != nil {
-
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
+			return mailList,nil
+		}
 	}
-	return nil
+
+	err = mail.Gorm.Where(where).Find(&mailList).Error
+	if err != nil {
+		return mailList,err
+	}
+
+	return mailList,nil
 }
 
-func (mail *Mail) GetOneByUid(uid int, id int, autoRead int) (mailLog model.MailLog) {
+func (mail *Mail) GetOneByUid(uid int,form request.MailInfo) (mailLog model.MailLog, err error) {
 	//var mailLog model.MailLog
-	err := mail.Gorm.Find(&mailLog, id).Error
+	err = mail.Gorm.Find(&mailLog, form.Id).Error
 	if err != nil {
-
+		return mailLog,err
+	}
+	now := util.GetNowTimeSecondToInt()
+	if mailLog.ExpireTime >0 && mailLog.ExpireTime < now{
+		return mailLog,errors.New("has expire")
 	}
 
-	if autoRead == 1 {
-		mail.Gorm.Update("receiver_read", 1)
+	if mailLog.SendTime > 0 && mailLog.SendTime < now{
+		return mailLog,errors.New("未到发送时间")
 	}
 
-	return mailLog
+	if mailLog.Receiver != uid && mailLog.SendUid != uid{
+		return mailLog,errors.New("该邮件不属于该用户")
+	}
+
+	if form.AutoReceiverRead == RECEIVER_READ_TRUE {
+		mail.Gorm.Update("receiver_read", RECEIVER_READ_TRUE)
+	}
+
+	if form.AutoReceiverDel == RECEIVER_DEL_TRUE {
+		mail.Gorm.Update("receiver_del", RECEIVER_DEL_TRUE)
+	}
+
+	return mailLog,nil
+}
+
+func (mail *Mail) GetUnreadCnt(uid int)int{
+	where := "receiver = "+strconv.Itoa(uid)+" and receiver_read =  " + strconv.Itoa(RECEIVER_DEL_FALSE)
+	where += " and " +  mail.GetSqlWhereSendTime() + " and " +  mail.GetSqlWhereExpire()
+	var count int64
+	err := mail.Gorm.Model(model.MailLog{}).Where(where).Count(&count).Error
+	if err != nil {
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
+			return 0
+		}
+	}
+
+	return int(count)
 }

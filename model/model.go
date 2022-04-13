@@ -12,22 +12,5 @@ type MODEL struct {
 	DeletedAt gorm.DeletedAt `json:"deleted_at" gorm:"index" json:"-" db:"comment:是否删除;define:bigint;index:true;defaultValue:null"`        //是否删除
 }
 
-//type ModelList struct {
-//	User User
-//	App App
-//	SmsRule SmsRule
-//	SmsLog SmsLog
-//	UserReg UserReg
-//	OperationRecord OperationRecord
-//}
-//
-//var V = ModelList{
-//	User: User{},
-//	App: App{},
-//	SmsRule: SmsRule{},
-//	SmsLog: SmsLog{},
-//	UserReg: UserReg{},
-//	OperationRecord : OperationRecord{},
-//}
 
 var Db *gorm.DB

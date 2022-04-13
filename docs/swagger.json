@@ -779,8 +779,7 @@
                 "tags": [
                     "Gateway"
                 ],
-                "summary": "php解析:.proto文件，生成.txt , 再通过GO读取出来",
-                "responses": {}
+                "summary": "php解析:.proto文件，生成.txt , 再通过GO读取出来"
             }
         },
         "/gateway/config": {
@@ -816,8 +815,7 @@
                 "tags": [
                     "Gateway"
                 ],
-                "summary": "获取所有服务的.proto 配置文件",
-                "responses": {}
+                "summary": "获取所有服务的.proto 配置文件"
             }
         },
         "/gateway/service/ws": {
@@ -831,8 +829,7 @@
                 "tags": [
                     "Gateway"
                 ],
-                "summary": "网关 - 长连接 websocket",
-                "responses": {}
+                "summary": "网关 - 长连接 websocket"
             }
         },
         "/gateway/service/{service_name}/{func_name}": {
@@ -877,6 +874,151 @@
                         "description": "true:成功 false:否",
                         "schema": {
                             "type": "bool"
+                        }
+                    }
+                }
+            }
+        },
+        "/mail/info": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "注意参数",
+                "consumes": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Mail"
+                ],
+                "summary": "获取用户一条信息的详情",
+                "parameters": [
+                    {
+                        "description": "参数信息,参考model",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.MailInfo"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"success\":true,\"data\":{},\"msg\":\"成功\"}",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/mail/list": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "注意参数",
+                "consumes": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Mail"
+                ],
+                "summary": "获取用户站内信列表",
+                "parameters": [
+                    {
+                        "description": "参数信息,参考model",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.MailList"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"success\":true,\"data\":{},\"msg\":\"成功\"}",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/mail/send": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "注意参数",
+                "consumes": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Mail"
+                ],
+                "summary": "发送一条站内信",
+                "parameters": [
+                    {
+                        "description": "参数信息,参考model",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.SendMail"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"success\":true,\"data\":{},\"msg\":\"成功\"}",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/mail/unread": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "注意参数",
+                "consumes": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Mail"
+                ],
+                "summary": "站内信未读总数",
+                "responses": {
+                    "200": {
+                        "description": "{\"success\":true,\"data\":{},\"msg\":\"成功\"}",
+                        "schema": {
+                            "type": "string"
                         }
                     }
                 }
@@ -1649,7 +1791,6 @@
             }
         },
         "httpresponse.LoginResponse": {
-            "description": "登陆成功返回结果",
             "type": "object",
             "properties": {
                 "expires_at": {
@@ -1675,7 +1816,6 @@
             }
         },
         "httpresponse.Response": {
-            "description": "公共HTTP响应结构体",
             "type": "object",
             "properties": {
                 "code": {
@@ -1683,7 +1823,8 @@
                     "type": "integer"
                 },
                 "data": {
-                    "description": "请求时有数据返回，会在此字段中"
+                    "description": "请求时有数据返回，会在此字段中",
+                    "type": "object"
                 },
                 "msg": {
                     "description": "如果有错误会写在此，如果有些提示信息也会放在这里",
@@ -1692,7 +1833,6 @@
             }
         },
         "httpresponse.SysCaptchaResponse": {
-            "description": "获取图片验证码",
             "type": "object",
             "properties": {
                 "id": {
@@ -1705,7 +1845,6 @@
             }
         },
         "model.Project": {
-            "description": "项目详情",
             "type": "object",
             "properties": {
                 "access": {
@@ -1755,7 +1894,6 @@
             }
         },
         "model.User": {
-            "description": "用户基础信息",
             "type": "object",
             "properties": {
                 "birthday": {
@@ -1914,7 +2052,6 @@
             }
         },
         "request.CustomClaims": {
-            "description": "jwt 容器内容",
             "type": "object",
             "properties": {
                 "id": {
@@ -1943,7 +2080,6 @@
             "type": "object"
         },
         "request.HeaderBaseInfo": {
-            "description": "http客户端请求头-基础信息",
             "type": "object",
             "properties": {
                 "app_version": {
@@ -1993,7 +2129,6 @@
             }
         },
         "request.HeaderRequest": {
-            "description": "http客户端请求头",
             "type": "object",
             "properties": {
                 "access": {
@@ -2076,7 +2211,6 @@
             }
         },
         "request.Login": {
-            "description": "正常登陆，需要用户名密码",
             "type": "object",
             "properties": {
                 "captcha": {
@@ -2098,7 +2232,6 @@
             }
         },
         "request.LoginSMS": {
-            "description": "短信登陆",
             "type": "object",
             "properties": {
                 "captcha": {
@@ -2122,8 +2255,52 @@
                 }
             }
         },
+        "request.MailInfo": {
+            "type": "object",
+            "properties": {
+                "auto_receiver_del": {
+                    "description": "自动更新为：接收者已删除",
+                    "type": "integer"
+                },
+                "auto_receiver_read": {
+                    "description": "自动更新为：接收者已读",
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "request.MailList": {
+            "type": "object",
+            "properties": {
+                "box_type": {
+                    "description": "1收件箱2发件箱4全部",
+                    "type": "integer"
+                },
+                "expire": {
+                    "description": "1消息已过期2消息未过期",
+                    "type": "integer"
+                },
+                "page": {
+                    "description": "当前页数",
+                    "type": "integer"
+                },
+                "pageSize": {
+                    "description": "每页多少条记录",
+                    "type": "integer"
+                },
+                "receiver_del": {
+                    "description": "1接收者已删除2接收者未删除",
+                    "type": "integer"
+                },
+                "receiver_read": {
+                    "description": "1接收者已读2接收者未读",
+                    "type": "integer"
+                }
+            }
+        },
         "request.PageInfo": {
-            "description": "分页",
             "type": "object",
             "properties": {
                 "page": {
@@ -2137,7 +2314,6 @@
             }
         },
         "request.ParserToken": {
-            "description": "解析token",
             "type": "object",
             "properties": {
                 "token": {
@@ -2146,7 +2322,6 @@
             }
         },
         "request.RLoginThird": {
-            "description": "3方登陆",
             "type": "object",
             "properties": {
                 "birthday": {
@@ -2220,7 +2395,6 @@
             }
         },
         "request.Register": {
-            "description": "注册信息",
             "type": "object",
             "properties": {
                 "birthday": {
@@ -2286,7 +2460,6 @@
             }
         },
         "request.RegisterSms": {
-            "description": "注册信息 - 通过手机号",
             "type": "object",
             "properties": {
                 "mobile": {
@@ -2308,7 +2481,6 @@
             }
         },
         "request.RestPasswordSms": {
-            "description": "修改密码",
             "type": "object",
             "properties": {
                 "mobile": {
@@ -2338,7 +2510,6 @@
             }
         },
         "request.SendEmail": {
-            "description": "发送邮件",
             "type": "object",
             "properties": {
                 "carbon_copy": {
@@ -2373,8 +2544,39 @@
                 }
             }
         },
+        "request.SendMail": {
+            "type": "object",
+            "properties": {
+                "receiver": {
+                    "description": "接收者: uid or grpuId or tagId or uids",
+                    "type": "string"
+                },
+                "replaceVar": {
+                    "description": "邮件内容模块中变量替换",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "rule_id": {
+                    "description": "配置规则的ID",
+                    "type": "integer"
+                },
+                "send_ip": {
+                    "description": "发送者IP，如为空系统默认取：请求方的IP,最好给真实的，一但被刷，会使用此值",
+                    "type": "string"
+                },
+                "send_time": {
+                    "description": "定时发送，unixStamp 必须大于当前时间",
+                    "type": "integer"
+                },
+                "send_uid": {
+                    "description": "发送者ID，管理员是9999，未知8888",
+                    "type": "integer"
+                }
+            }
+        },
         "request.SendSMS": {
-            "description": "发送验证码",
             "type": "object",
             "properties": {
                 "captcha": {
@@ -2411,7 +2613,6 @@
             }
         },
         "request.SetPassword": {
-            "description": "设置/修改密码",
             "type": "object",
             "properties": {
                 "newPassword": {
@@ -2429,7 +2630,6 @@
             }
         },
         "request.SetUserInfo": {
-            "description": "修改用户基础信息",
             "type": "object",
             "properties": {
                 "birthday": {
@@ -2451,7 +2651,6 @@
             }
         },
         "request.SystemConfig": {
-            "description": "系统管理员操作，需要2次验证",
             "type": "object",
             "properties": {
                 "password": {
@@ -2568,6 +2767,10 @@
         {
             "description": "系统管理(需要二次认证)",
             "name": "System"
+        },
+        {
+            "description": "站内信/内部邮件通知",
+            "name": "Mail"
         }
     ]
 }

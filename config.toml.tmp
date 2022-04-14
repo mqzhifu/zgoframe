@@ -3,6 +3,7 @@ dbType       = "mysql"
 env          = "#env#"
 projectId    = 0
 errorMsgFile = "/data/lang.txt"
+opDirName    = "operation"
 
 [jwt]
 status      = "open"
@@ -121,4 +122,9 @@ OutIp    = "127.0.0.1"
 WsPort   = "4444"
 TcpPort  = "5555"
 WsUri    = "/ws"
+
+[configCenter]
+status  = "close"
+persistenceType = 3
+dataPath = "/data/config/"
 

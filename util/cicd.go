@@ -29,9 +29,12 @@ const (
 
 //===============配置 结构体 开始===================
 type ConfigCicdSystem struct {
-	Env        []string
-	LogDir     string
-	ServiceDir string
+	Env        			[]string
+	LogDir     			string
+	ServiceDir 			string
+	MasterDirName		string
+	GitCloneTmpDirName	string
+	HttpPort 			string
 }
 
 type ConfigServiceCICDSystem struct {
@@ -40,6 +43,8 @@ type ConfigServiceCICDSystem struct {
 	TestUnit       string
 	Build          string
 	Command        string
+	ConfigTmpFileName string
+	ConfigFileName string
 }
 
 type ConfigServiceCICDDepend struct {

@@ -3,9 +3,16 @@ env=["local","dev","test","pre","online"]
 
 logDir="/data/www/golang/testcicd/logs"
 serviceDir="/data/www/golang/testcicd"
-serviceMasterName="master"
+
+#serviceMasterName="master"
+masterDirName = "master"
+gitCloneTmpDirName="clone"
+httpPort="4455"
 
 [superVisor]
 rpcPort="9001"
 confTemplateFile="/data/www/golang/src/zgoframe/operation/super_visor.ini"
 confDir="/etc/supervisord.d"
+
+
+

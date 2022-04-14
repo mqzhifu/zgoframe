@@ -53,8 +53,8 @@ func main() {
 	debug := flag.Int("debug", 0, "startup debug mode level")
 	//是否为CICD模式
 	//deploy 				:= flag.String("dep", "", "deploy")//部署模式下，启动程序只是为了测试脚本正常，因为之后，要立刻退出
-	//开启测试模式
-	//testFlag 			:= flag.String("t", "", "testFlag:empty or 1")
+	//开启自动测试模式
+	testFlag 			:= flag.String("t", "", "testFlag:empty or 1")
 	//解析命令行参数
 	flag.Parse()
 	//检测环境变量值ENV是否正常
@@ -85,6 +85,7 @@ func main() {
 		RootCtx:           mainCxt,
 		RootCancelFunc:    mainCancelFunc,
 		RootQuitFunc:      QuitAll,
+		TestFlag :		   *testFlag,
 	}
 	//开始正式全局初始化
 	initializeVar = initialize.NewInitialize(initOption)
@@ -95,7 +96,7 @@ func main() {
 		return
 	}
 	//执行用户自己的一些功能
-	go core.DoMySelf()
+	go core.DoMySelf(*testFlag)
 	//监听外部进程信号
 	go global.V.Process.DemonSignal()
 	util.MyPrint(prefix + "wait mainCxt.done...")

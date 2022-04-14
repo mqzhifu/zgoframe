@@ -23,8 +23,8 @@ type ServiceDeployConfig struct {
 	MasterPath         string //full path + MasterDirName
 	CICDConfFileName   string //一个服务自己的需要执行的cicd脚本
 	OpDirName          string //存放所有：运维工具脚本的目录
-	ConfigTmpFileName  string //一个服务的配置文件的模板文件名
-	ConfigFileName     string //一个服务的配置文件名,由上面CP
+	//ConfigTmpFileName  string //一个服务的配置文件的模板文件名
+	//ConfigFileName     string //一个服务的配置文件名,由上面CP
 	GitCloneTmpDirName string //git clone 一个服务的项目代码时，临时存在的目录名
 	ClonePath          string //service dir + GitCloneTmpDirName
 	CodeGitClonePath   string // ClonePath + service name
@@ -36,13 +36,15 @@ func (cicdManager *CicdManager) DeployAllService() {
 	cicdManager.Option.Log.Info("DeployAllService:")
 	serviceDeployConfig := ServiceDeployConfig{
 		BaseDir:            cicdManager.Option.Config.System.ServiceDir,
-		OpDirName:          "operation",
-		MasterDirName:      "master",
-		CICDConfFileName:   "cicd.toml",
-		ConfigTmpFileName:  "config.toml.tmp",
-		ConfigFileName:     "config.toml",
-		GitCloneTmpDirName: "clone",
-		CICDShellFileName:  "cicd.sh",
+		OpDirName:          cicdManager.Option.OpDirName,
+		MasterDirName:     cicdManager.Option.Config.System.MasterDirName,
+		GitCloneTmpDirName: cicdManager.Option.Config.System.GitCloneTmpDirName,
+
+		CICDConfFileName:   "cicd.toml",//本项目的相关 脚本及配置
+		CICDShellFileName:  "cicd.sh",//执行：git clone 代码，并获取当前git最新版本号
+
+		//ConfigTmpFileName:  "config.toml.tmp",
+		//ConfigFileName:     "config.toml",
 	}
 	PrintStruct(serviceDeployConfig, ":")
 
@@ -130,7 +132,7 @@ func (cicdManager *CicdManager) DeployOneService(server Server, serviceDeployCon
 		return cicdManager.DeployOneServiceFailed(publish, err.Error())
 	}
 	//step 4: 处理项目自带的主配置文件
-	err = cicdManager.DeployOneServiceProjectConfig(newGitCodeDir, server, serviceDeployConfig)
+	err = cicdManager.DeployOneServiceProjectConfig(newGitCodeDir, server, serviceDeployConfig,serviceCICDConfig)
 	if err != nil {
 		return cicdManager.DeployOneServiceFailed(publish, err.Error())
 	}
@@ -248,10 +250,10 @@ func (cicdManager *CicdManager) DeployOneServiceSuperVisor(serviceDeployConfig S
 }
 
 //step 4
-func (cicdManager *CicdManager) DeployOneServiceProjectConfig(newGitCodeDir string, server Server, serviceDeployConfig ServiceDeployConfig) error {
+func (cicdManager *CicdManager) DeployOneServiceProjectConfig(newGitCodeDir string, server Server, serviceDeployConfig ServiceDeployConfig,configServiceCICD ConfigServiceCICD ) error {
 	cicdManager.Option.Log.Info("step 4 : create project self conf file.")
 	//读取该服务自己的配置文件 config.toml
-	serviceSelfConfigTmpFileDir := newGitCodeDir + DIR_SEPARATOR + serviceDeployConfig.ConfigTmpFileName
+	serviceSelfConfigTmpFileDir := newGitCodeDir + DIR_SEPARATOR + configServiceCICD.System.ConfigTmpFileName
 	_, err := FileExist(serviceSelfConfigTmpFileDir)
 	if err != nil {
 		return errors.New("serviceSelfConfigTmpFileDir CheckFileIsExist err:" + err.Error())
@@ -265,7 +267,7 @@ func (cicdManager *CicdManager) DeployOneServiceProjectConfig(newGitCodeDir stri
 	//开始替换 服务自己配置文件中的，实例信息，如：IP PORT
 	serviceSelfConfigTmpFileContentNew := cicdManager.ReplaceInstance(serviceSelfConfigTmpFileContent, serviceDeployConfig.Name, server.Env)
 	//生成新的配置文件
-	newConfig := newGitCodeDir + DIR_SEPARATOR + serviceDeployConfig.ConfigFileName
+	newConfig := newGitCodeDir + DIR_SEPARATOR + configServiceCICD.System.ConfigFileName
 	newConfigFile, _ := os.Create(newConfig)
 	newConfigFile.Write([]byte(serviceSelfConfigTmpFileContentNew))
 

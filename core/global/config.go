@@ -20,6 +20,7 @@ type Config struct {
 	ServiceDiscovery ServiceDiscovery
 	PushGateway      PushGateway
 	Gateway          Gateway
+	ConfigCenter 	 ConfigCenter
 }
 
 type Protobuf struct {
@@ -65,6 +66,7 @@ type System struct {
 	DbType       string
 	ENV          string
 	ErrorMsgFile string
+	OpDirName	string
 }
 
 type Jwt struct {
@@ -169,4 +171,10 @@ type Gateway struct {
 	WsPort   string
 	TcpPort  string
 	WsUri    string
+}
+
+type ConfigCenter struct {
+	Status   string
+	PersistenceType int
+	DataPath    string
 }

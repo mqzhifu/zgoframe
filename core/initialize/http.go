@@ -90,6 +90,7 @@ func RegGinHttpRoute() {
 		router.InitLogslaveRouter(PrivateGroup)
 		router.InitSysRouter(PrivateGroup)
 		router.InitMailRouter(PrivateGroup)
+		//router.InitConfigCenterRouter(PrivateGroup)
 	}
 
 	GatewayGroup := global.V.Gin.Group("")

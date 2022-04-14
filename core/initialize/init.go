@@ -31,6 +31,7 @@ type InitOption struct {
 	RootCtx           context.Context
 	RootCancelFunc    context.CancelFunc
 	RootQuitFunc      func(source int)
+	TestFlag		string
 }
 
 func NewInitialize(option InitOption) *Initialize {
@@ -259,7 +260,19 @@ func (initialize *Initialize) Start() error {
 		//		return err
 		//	}
 	}
-	global.V.MyService = service.NewService(global.V.Gorm, global.V.Zap, global.V.Email, global.V.Redis, netWayOption, global.V.GrpcManager, global.V.ProjectMng, global.C.Http.StaticPath)
+	MyServiceOptions := service.MyServiceOptions {
+		Gorm :global.V.Gorm,
+		Zap :global.V.Zap,
+		MyEmail :global.V.Email,
+		MyRedis :global.V.Redis,
+		NetWayOption :netWayOption,
+		GrpcManager :global.V.GrpcManager,
+		ProjectManager : global.V.ProjectMng,
+		ConfigCenterDataDir :global.C.Http.StaticPath + global.C.ConfigCenter.DataPath,
+		ConfigCenterPersistenceType	:global.C.ConfigCenter.PersistenceType,
+	}
+
+	global.V.MyService = service.NewService(MyServiceOptions)
 
 	global.C.System.ENV = initialize.Option.Env
 	//启动http

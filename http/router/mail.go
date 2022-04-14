@@ -6,15 +6,15 @@ import (
 )
 
 func InitMailRouter(Router *gin.RouterGroup) {
-	ToolsRouter := Router.Group("mail")
+	mailRouter := Router.Group("mail")
 	{
 		//发送站一条站内信
-		ToolsRouter.POST("send", v1.MailSend)
+		mailRouter.POST("send", v1.MailSend)
 		//站内信列表
-		ToolsRouter.POST("list", v1.MailList)
+		mailRouter.POST("list", v1.MailList)
 		//一条站内信详情
-		ToolsRouter.POST("info", v1.MailInfo)
+		mailRouter.POST("info", v1.MailInfo)
 		//未读站内信总数
-		ToolsRouter.GET("unread", v1.MailUnread)
+		mailRouter.GET("unread", v1.MailUnread)
 	}
 }

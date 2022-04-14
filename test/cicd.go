@@ -8,31 +8,18 @@ import (
 
 func Cicd(){
 
-	testPushCounterName := "testPushCounter"
-
-	global.V.Metric.CreateCounter(testPushCounterName,"im_test_counter")
-	global.V.Metric.CounterInc(testPushCounterName)
-
-	testPushGaugeName := "testPushGauge"
-
-	global.V.Metric.CreateGauge(testPushGaugeName,"im_test_gauge")
-	global.V.Metric.GaugeSet(testPushGaugeName,0.001)
-
-
-	push_err := global.V.Metric.PushMetrics()
-	util.MyPrint("test pusher err:",push_err)
-	return
 	/*依赖
 		host.toml cicd.sh
 		table:  project instance server cicd_publish
 	*/
 
-	opDirName := "operation"
+	opDirName := global.C.System.OpDirName
 	pwd , _ := os.Getwd()//当前路径]
 	opDirFull := pwd + "/" + opDirName
 	util.MyPrint(opDirFull,opDirName)
 
 	cicdConfig := util.ConfigCicd{}
+	//运维：服务器的配置信息
 	configFile := opDirFull + "/host" + "." +"toml"
 
 	//读取配置文件中的内容
@@ -52,7 +39,7 @@ func Cicd(){
 
 	//util.ExitPrint(22)
 	op := util.CicdManagerOption{
-		HttpPort		: "1111",
+		HttpPort		: cicdConfig.System.HttpPort,
 		ServerList 		: serverList,
 		Config			: cicdConfig,
 		ServiceList		: global.V.ServiceManager.Pool,
@@ -60,7 +47,6 @@ func Cicd(){
 		PublicManager 	: publicManager,
 		Log				: global.V.Zap,
 		OpDirName		: opDirName,
-
 	}
 
 	cicd ,err := util.NewCicdManager(op)
@@ -68,10 +54,10 @@ func Cicd(){
 		util.ExitPrint(err)
 	}
 	//生成 filebeat 配置文件
-	cicd.GenerateAllFilebeat()
+	//cicd.GenerateAllFilebeat()
 	//cicd.GetSuperVisorList()
 	//部署所有机器上的所有服务项目
-	//cicd.DeployAllService()
+	cicd.DeployAllService()
 	//go cicd.StartHttp(global.C.Http.StaticPath)
 }
 

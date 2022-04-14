@@ -69,8 +69,9 @@ func (configCenter *ConfigCenter) Init() error {
 	return nil
 }
 
-func (configCenter *ConfigCenter) GetByFile(env string, projectName string, fileName string) (data interface{}, err error) {
-	myViper, ok := configCenter.pool[env][projectName][fileName]
+func (configCenter *ConfigCenter) GetByCategory(env string, projectId int, category string) (data interface{}, err error) {
+	project ,_ := configCenter.Option.ProjectManager.GetById(projectId)
+	myViper, ok := configCenter.pool[env][project.Name][category]
 	if !ok {
 		return data, err
 	}
@@ -80,8 +81,9 @@ func (configCenter *ConfigCenter) GetByFile(env string, projectName string, file
 
 }
 
-func (configCenter *ConfigCenter) GetByKey(env string, projectName string, fileName string, key string) (data interface{}, err error) {
-	myViper, ok := configCenter.pool[env][projectName][fileName]
+func (configCenter *ConfigCenter) GetByKey(env string,projectId int, category string, key string) (data interface{}, err error) {
+	project ,_ := configCenter.Option.ProjectManager.GetById(projectId)
+	myViper, ok := configCenter.pool[env][project.Name][category]
 	if !ok {
 		return data, err
 	}

@@ -39,7 +39,6 @@ type Global struct {
 	Email            *util.MyEmail
 	ServiceManager   *util.ServiceManager   //管理已注册的服务
 	ServiceDiscovery *util.ServiceDiscovery //管理服务发现，会用到上面的ServiceManager
-
 	//ConnProtocol *util.ConnProtocol
 }
 

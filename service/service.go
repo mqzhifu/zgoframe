@@ -20,20 +20,32 @@ type Service struct {
 	Mail 		*Mail
 }
 
-func NewService(gorm *gorm.DB, zap *zap.Logger, myEmail *util.MyEmail, myRedis *util.MyRedis, netWayOption util.NetWayOption, grpcManager *util.GrpcManager, projectManager *util.ProjectManager, dataDir string) *Service {
+type MyServiceOptions struct {
+	Gorm *gorm.DB
+	Zap *zap.Logger
+	MyEmail *util.MyEmail
+	MyRedis *util.MyRedis
+	NetWayOption util.NetWayOption
+	GrpcManager *util.GrpcManager
+	ProjectManager *util.ProjectManager
+	ConfigCenterDataDir string
+	ConfigCenterPersistenceType	int
+}
+
+func NewService(options MyServiceOptions) *Service {
 	service := new(Service)
-	service.User = NewUser(gorm, myRedis)
-	service.Mail = NewMail(gorm,zap)
-	service.SendSms = NewSendSms(gorm)
-	service.SendEmail = NewSendEmail(gorm, myEmail)
+	service.User = NewUser(options.Gorm, options.MyRedis)
+	service.Mail = NewMail(options.Gorm,options.Zap)
+	service.SendSms = NewSendSms(options.Gorm)
+	service.SendEmail = NewSendEmail(options.Gorm, options.MyEmail)
 
 	configCenterOption := ConfigCenterOption{
 		envList:            util.GetEnvList(),
-		Gorm:               gorm,
-		Redis:              myRedis,
-		ProjectManager:     projectManager,
-		PersistenceType:    PERSITENCE_TYPE_FILE,
-		PersistenceFileDir: dataDir + "/data/config/",
+		Gorm:               options.Gorm,
+		Redis:              options.MyRedis,
+		ProjectManager:     options.ProjectManager,
+		PersistenceType:    PERSISTENCE_TYPE_FILE,
+		PersistenceFileDir: options.ConfigCenterDataDir,
 	}
 	var err error
 	service.ConfigCenter, err = NewConfigCenter(configCenterOption)
@@ -43,19 +55,19 @@ func NewService(gorm *gorm.DB, zap *zap.Logger, myEmail *util.MyEmail, myRedis *
 
 	//room要先实例化,math frame_sync 都强依赖room
 	roomManagerOption := RoomManagerOption{
-		Log:          zap,
+		Log:          options.Zap,
 		ReadyTimeout: 60,
 		RoomPeople:   4,
 	}
 	service.RoomManage = NewRoomManager(roomManagerOption)
 	matchOption := MatchOption{
-		Log:         zap,
+		Log:         options.Zap,
 		RoomManager: service.RoomManage,
 		//MatchSuccessChan chan *Room
 	}
 	service.GameMatch = NewMatch(matchOption)
 	syncOption := FrameSyncOption{
-		Log:        zap,
+		Log:        options.Zap,
 		RoomManage: service.RoomManage,
 	}
 	//强-依赖room
@@ -67,8 +79,8 @@ func NewService(gorm *gorm.DB, zap *zap.Logger, myEmail *util.MyEmail, myRedis *
 	//service.Gateway, netway, err = CreateGateway(netWayOption, grpcManager, zap)
 
 	//util.ExitPrint(netWayOption)
-	gateway := NewGateway(grpcManager, zap)
-	netway, err = gateway.StartSocket(netWayOption)
+	gateway := NewGateway(options.GrpcManager, options.Zap)
+	netway, err = gateway.StartSocket(options.NetWayOption)
 	if err != nil {
 		util.ExitPrint("InitGateway err:" + err.Error())
 	}

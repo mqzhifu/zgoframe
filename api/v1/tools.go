@@ -91,10 +91,14 @@ func ConstList(c *gin.Context) {
 // @Success 200 {object} httpresponse.Response
 // @Router /tools/const/init/db [get]
 func ConstInitDb(c *gin.Context) {
+	/*
+	delete from sys_dictionaries where id > 6;
+	delete from sys_dictionary_details where sys_dictionary_id > 6;
+	*/
 
 	list := global.V.MyService.User.GetConstList()
-	sqlTemp := "INSERT INTO `sys_dictionaries` (`id`, `created_at`, `updated_at`, `deleted_at`, `name`, `type`, `status`, `desc`) VALUES (#id#, NULL,NULL, NULL, '#name#', '#key#', '1', '')"
-	subSqlTemp := "INSERT INTO `sys_dictionary_details` (`id`, `created_at`, `updated_at`, `deleted_at`, `label`, `value`, `status`, `sort`, `sys_dictionary_id`) VALUES (NULL,  NULL,NULL , NULL, '#name#', '#value#', '1', '0', '#link_id#')"
+	sqlTemp := "INSERT INTO `sys_dictionaries` (`id`, `created_at`, `updated_at`, `deleted_at`, `name`, `type`, `status`, `desc`) VALUES (#id#, '2022-04-04 00:01:01',NULL, NULL, '#name#', '#key#', '1', '')"
+	subSqlTemp := "INSERT INTO `sys_dictionary_details` (`id`, `created_at`, `updated_at`, `deleted_at`, `label`, `value`, `status`, `sort`, `sys_dictionary_id`) VALUES (NULL,  '2022-04-04 00:00:01',NULL , NULL, '#name#', '#value#', '1', '0', '#link_id#')"
 	sqlStr := ""
 	id := 10
 	for _, v := range list {
@@ -117,6 +121,66 @@ func ConstInitDb(c *gin.Context) {
 	}
 	httpresponse.OkWithDetailed(sqlStr, "成功", c)
 }
+
+// @Tags Tools
+// @Summary 基数据 - 生成mysql导入脚本
+// @Description tables: project instance server
+// @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
+// @Param X-Project-Id header string true "项目ID" default(6)
+// @Param X-Access header string true "访问KEY" default(imzgoframe)
+// @Produce  application/json
+// @Success 200 {object} httpresponse.Response
+// @Router /tools/test/init/db [get]
+func ConstInitTestDb(c *gin.Context) {
+	envList := util.GetConstListEnv()
+	//id := 1
+	ipList := make(map[int]string)
+	ipList[1] = "127.0.0.1"
+	ipList[2] = "1.1.1.1"
+	ipList[3] = "2.2.2.2"
+	ipList[4] = "8.142.177.235"
+	ipList[5] = "3.3.3.3"
+
+	serverSql := ""
+	for k,v:=range envList{
+		serverInsertSql := "INSERT INTO `server` (`id`, `name`, `platform`, `out_ip`, `inner_ip`, `env`, `status`, `ext`, `charge_user_name`, `start_time`, `end_time`, `price`, `created_at`, `updated_at`, `deleted_at`,`state`) "
+		serverInsertSql += "VALUES  ("+strconv.Itoa(v)+",'"+k+"', 1,   '"+ipList[v]+"', '127.0.0.1', "+strconv.Itoa(v)+", '1', '', '小z', '1650006845', '1650006845', '100', '1650006845', '0', NULL,1);   "
+		serverSql += serverInsertSql
+	}
+
+	instanceSql := ""
+	for _,envId:=range envList{
+		for _,instance := range util.ThirdInstance{
+			if !CheckInAllowInstance(instance){
+				continue
+			}
+			instanceInsertSql := "INSERT INTO `instance` (`id`, `platform`, `name`, `host`, `port`, `env`, `user`, `ps`, `ext`, `status`, `charge_user_name`, `start_time`, `end_time`, `price`, `created_at`, `updated_at`, `deleted_at`) "
+			instanceInsertSql += "VALUES                  (NULL, '1', '"+instance+"', '"+ipList[4] +"', '3306', '"+strconv.Itoa(envId)+"', 'aaaa', 'bbbb', '', '1', '小z', '1650006845', '1650006845', '200', '1650006845', '0', NULL);"
+			instanceSql += instanceInsertSql
+		}
+	}
+
+	rs := make(map[string]string)
+	rs["serverSql"] = serverSql
+	rs["instanceSql"] = instanceSql
+
+
+	httpresponse.OkWithDetailed(rs, "成功", c)
+}
+
+func CheckInAllowInstance(name string)bool{
+	allowInstance := []string{"mysql","redis","prometheus","kibana","grafana","etcd","es"}
+	for _,v:= range allowInstance {
+		if v == name{
+			return true
+		}
+
+	}
+	return false
+
+}
+
+
 
 // @Tags Tools
 // @Summary header头结构体

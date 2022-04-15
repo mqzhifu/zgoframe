@@ -1,6 +1,5 @@
 [system]
 dbType       = "mysql"
-env          = "#env#"
 projectId    = 0
 errorMsgFile = "/data/lang.txt"
 opDirName    = "operation"

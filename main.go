@@ -38,7 +38,8 @@ var initializeVar *initialize.Initialize
 func main() {
 	prefix := "main "
 	//获取<环境变量>枚举值
-	envList := util.GetEnvList()
+	envList := util.GetConstListEnv()
+	envListStr := util.ConstListEnvToStr()
 	//配置读取源类型，1 文件  2 etcd
 	configSourceType := flag.String("cs", global.DEFAULT_CONFIG_SOURCE_TYPE, "configSource:file or etcd")
 	//配置文件的类型
@@ -48,7 +49,7 @@ func main() {
 	//获取etcd 配置信息的URL
 	etcdUrl := flag.String("etl", "http://127.0.0.1/getEtcdCluster/Ip/Port", "get etcd config url")
 	//当前环境,env:local test pre dev online
-	env := flag.String("e", "", "must require , env:local test pre dev online")
+	env := flag.Int("e", 0, "must require , "+envListStr)
 	//DEBUG模式
 	debug := flag.Int("debug", 0, "startup debug mode level")
 	//是否为CICD模式
@@ -61,7 +62,7 @@ func main() {
 	if !util.CheckEnvExist(*env) {
 		msg := prefix + " argv env , is err :"
 		util.MyPrint(msg, envList)
-		panic(msg + *env)
+		panic(msg + strconv.Itoa(*env))
 	}
 
 	imUser, _ := user.Current()

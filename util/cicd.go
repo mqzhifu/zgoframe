@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"strconv"
 	"strings"
 	"time"
 	"zgoframe/model"
@@ -259,7 +260,7 @@ func (cicdManager *CicdManager) GetSuperVisorList(c *gin.Context) {
 	serverServiceSuperVisor := make(map[int][]supervisord.ProcessInfo)
 	serverStatus := make(map[int]int)
 	for _, server := range cicdManager.Option.ServerList {
-		fmt.Println("for each service:" + server.OutIp + " " + server.Env)
+		fmt.Println("for each service:" + server.OutIp + " " + strconv.Itoa(server.Env))
 
 		dns := "http://" + server.OutIp + ":" + cicdManager.Option.HttpPort
 		//ping 测试一下 其它机器是否开启了sdk HTTP
@@ -350,7 +351,7 @@ func (cicdManager *CicdManager) GenerateFilebeat(server Server, opDir string) {
 
 	instance, empty := cicdManager.Option.InstanceManager.GetByEnvName(server.Env, "es")
 	if empty {
-		ExitPrint("ProcessFilebeat GetByEnvName es empty :" + server.Env)
+		ExitPrint("ProcessFilebeat GetByEnvName es empty :" + strconv.Itoa(server.Env))
 	}
 
 	esDns := instance.Host + ":" + instance.Port

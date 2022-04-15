@@ -20,7 +20,7 @@ type Initialize struct {
 }
 
 type InitOption struct {
-	Env               string
+	Env               int
 	Debug             int
 	ConfigType        string
 	ConfigFileName    string
@@ -356,7 +356,7 @@ func InitPath(rootDir string) (rootDirName string, err error) {
 	return rootDirName, nil
 }
 
-func GetNewEtcd(env string, configZapReturn global.Zap, prefix string) (myEtcd *util.MyEtcd, err error) {
+func GetNewEtcd(env int, configZapReturn global.Zap, prefix string) (myEtcd *util.MyEtcd, err error) {
 	//这个是给3方库：clientv3使用的
 	//有点操蛋，我回头想想如何优化掉
 	zl := zap.Config{

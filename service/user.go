@@ -434,6 +434,12 @@ func (user *User) GetConstList() []ConstInfo {
 	ConstList := []ConstInfo{}
 
 	ConstList = append(ConstList, ConstInfo{
+		List: util.GetConstListEnv(),
+		Name: "env-环境",
+		Key:  "ENV",
+	})
+
+	ConstList = append(ConstList, ConstInfo{
 		List: model.GetConstListProjectType(),
 		Name: "项目类型",
 		Key:  "PROJECT_TYPE",
@@ -540,12 +546,6 @@ func (user *User) GetConstList() []ConstInfo {
 		List: model.GetConstListCicdPublishStatus(),
 		Name: "CICD发布状态",
 		Key:  "CICD_PUBLISH_STATUS",
-	})
-
-	ConstList = append(ConstList, ConstInfo{
-		List: util.GetConstListEnv(),
-		Name: "env-环境",
-		Key:  "ENV",
 	})
 
 	ConstList = append(ConstList, ConstInfo{

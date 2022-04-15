@@ -1517,6 +1517,57 @@ var doc = `{
                 }
             }
         },
+        "/tools/test/init/db": {
+            "get": {
+                "description": "tables: project instance server",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Tools"
+                ],
+                "summary": "基数据 - 生成mysql导入脚本",
+                "parameters": [
+                    {
+                        "enum": [
+                            "11",
+                            "12",
+                            "21",
+                            "22"
+                        ],
+                        "type": "string",
+                        "description": "来源",
+                        "name": "X-Source-Type",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "6",
+                        "description": "项目ID",
+                        "name": "X-Project-Id",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "imzgoframe",
+                        "description": "访问KEY",
+                        "name": "X-Access",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/httpresponse.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/user/delete": {
             "delete": {
                 "security": [
@@ -1886,6 +1937,10 @@ var doc = `{
                 "id": {
                     "description": "自增ID",
                     "type": "integer"
+                },
+                "lang": {
+                    "description": "实现语言1php2go3java4js",
+                    "type": "string"
                 },
                 "name": {
                     "description": "名称",

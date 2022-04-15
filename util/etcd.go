@@ -29,7 +29,7 @@ type EtcdOption struct {
 	ProjectName string
 	//ProjectKey string
 	Timeout         int
-	ProjectENV      string
+	ProjectENV      int
 	FindEtcdUrl     string
 	Username        string
 	Password        string

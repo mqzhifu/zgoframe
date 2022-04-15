@@ -40,7 +40,7 @@ func NewService(options MyServiceOptions) *Service {
 	service.SendEmail = NewSendEmail(options.Gorm, options.MyEmail)
 
 	configCenterOption := ConfigCenterOption{
-		envList:            util.GetEnvList(),
+		envList:            util.GetConstListEnv(),
 		Gorm:               options.Gorm,
 		Redis:              options.MyRedis,
 		ProjectManager:     options.ProjectManager,

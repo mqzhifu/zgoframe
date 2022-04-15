@@ -22,5 +22,9 @@ func InitToolsRouter(Router *gin.RouterGroup) {
 		ToolsRouter.POST("project/info/{id}", v1.ProjectOneInfo)
 		//获取APP 列表
 		ToolsRouter.POST("frame/sync/js/demo", v1.FrameSyncJsDemo)
+		//
+		ToolsRouter.GET("test/init/db", v1.ConstInitTestDb)
+
+
 	}
 }

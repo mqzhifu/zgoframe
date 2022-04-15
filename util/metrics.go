@@ -16,6 +16,8 @@ import (
 	"errors"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/push"
+	"strconv"
+
 	//"github.com/prometheus/client_golang/prometheus/push"
 	"go.uber.org/zap"
 )
@@ -31,7 +33,7 @@ type MyMetricsOption struct{
 	Log *zap.Logger
 	PushGateway PushGateway
 	NameSpace string
-	Env string
+	Env int
 }
 
 type MyMetrics struct {
@@ -75,7 +77,7 @@ func (myMetrics *MyMetrics)PushMetrics()error{
 		return errors.New("PushGateway.Status != open")
 	}
 
-	myMetrics.Pusher.Grouping("instance", myMetrics.Option.PushGateway.Ip ).Grouping("env",myMetrics.Option.Env).Push()
+	myMetrics.Pusher.Grouping("instance", myMetrics.Option.PushGateway.Ip ).Grouping("env",strconv.Itoa(myMetrics.Option.Env)).Push()
 
 	return nil
 }

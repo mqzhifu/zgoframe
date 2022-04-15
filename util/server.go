@@ -19,7 +19,7 @@ type Server struct {
 	Platform string `json:"platform"`
 	OutIp    string `json:"out_ip"`
 	InnerIp  string `json:"inner_ip"`
-	Env      string `json:"env"`
+	Env      int `json:"env"`
 	Status   int    `json:"status"` //1正常2关闭3异常
 }
 

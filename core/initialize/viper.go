@@ -27,7 +27,7 @@ type ViperOption struct {
 	ConfigFileType string
 	ConfigFileName string
 	EtcdUrl        string
-	ENV            string
+	ENV            int
 	PrintPrefix    string
 }
 

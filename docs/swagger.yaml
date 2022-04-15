@@ -65,6 +65,9 @@ definitions:
       id:
         description: 自增ID
         type: integer
+      lang:
+        description: 实现语言1php2go3java4js
+        type: string
       name:
         description: 名称
         type: string
@@ -1715,6 +1718,42 @@ paths:
           schema:
             $ref: '#/definitions/model.Project'
       summary: 项目列表
+      tags:
+      - Tools
+  /tools/test/init/db:
+    get:
+      description: 'tables: project instance server'
+      parameters:
+      - description: 来源
+        enum:
+        - "11"
+        - "12"
+        - "21"
+        - "22"
+        in: header
+        name: X-Source-Type
+        required: true
+        type: string
+      - default: "6"
+        description: 项目ID
+        in: header
+        name: X-Project-Id
+        required: true
+        type: string
+      - default: imzgoframe
+        description: 访问KEY
+        in: header
+        name: X-Access
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/httpresponse.Response'
+      summary: 基数据 - 生成mysql导入脚本
       tags:
       - Tools
   /user/delete:

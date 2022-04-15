@@ -64,7 +64,7 @@ type System struct {
 	//AppId int
 	//ServiceId int
 	DbType       string
-	ENV          string
+	ENV          int
 	ErrorMsgFile string
 	OpDirName	string
 }

@@ -46,6 +46,7 @@ func (cicdManager *CicdManager) DeployAllService() {
 		//ConfigTmpFileName:  "config.toml.tmp",
 		//ConfigFileName:     "config.toml",
 	}
+	return
 	PrintStruct(serviceDeployConfig, ":")
 
 	//先遍历所有服务器，然后，把所有已知服务部署到每台服务器上(每台机器都可以部署任何服务)
@@ -104,7 +105,7 @@ func (cicdManager *CicdManager) DeployOneService(server Server, serviceDeployCon
 		MyPrint("service name != Zgoframe")
 		return nil
 	}
-	cicdManager.Option.Log.Info("DeployOneService:" + server.OutIp + " " + server.Env + " " + service.Name)
+	cicdManager.Option.Log.Info("DeployOneService:" + server.OutIp + " " + strconv.Itoa(server.Env) + " " + service.Name)
 	//创建发布记录
 	publish := cicdManager.Option.PublicManager.InsertOne(service, server)
 	cicdManager.Option.Log.Info("create publish:" + strconv.Itoa(publish.Id))
@@ -210,7 +211,7 @@ func (cicdManager *CicdManager) DeployOneServiceCICIConfig(newGitCodeDir string,
 		return serviceCICDConfig, errors.New(err.Error())
 	}
 	serviceCICDConfig.System.Build = strings.Replace(serviceCICDConfig.System.Build, "#service_name#", serviceDeployConfig.Name, -1)
-	serviceCICDConfig.System.Startup = strings.Replace(serviceCICDConfig.System.Startup, "#env#", server.Env, -1)
+	serviceCICDConfig.System.Startup = strings.Replace(serviceCICDConfig.System.Startup, "#env#",strconv.Itoa( server.Env), -1)
 	PrintStruct(serviceCICDConfig, ":")
 
 	return serviceCICDConfig, nil
@@ -345,11 +346,11 @@ func (cicdManager *CicdManager) DeployOneServiceFailed(publish model.CicdPublish
 
 var ThirdInstance = []string{"mysql", "redis", "log", "email", "etcd", "rabbitmq", "kafka", "alert", "cdn", "consul", "sms", "prometheus", "es", "kibana", "grafana", "push_gateway"}
 
-func (cicdManager *CicdManager) ReplaceInstance(content string, serviceName string, env string) string {
+func (cicdManager *CicdManager) ReplaceInstance(content string, serviceName string, env int) string {
 	category := ThirdInstance
 	//attr := []string{"ip","port","user","ps"}
 	separator := STR_SEPARATOR
-	content = strings.Replace(content, separator+"env"+separator, env, -1)
+	content = strings.Replace(content, separator+"env"+separator, strconv.Itoa(env), -1)
 	projectLogDir := cicdManager.Option.Config.System.LogDir + DIR_SEPARATOR + serviceName
 
 	pathNotExistCreate(projectLogDir)

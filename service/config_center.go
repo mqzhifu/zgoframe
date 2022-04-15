@@ -5,6 +5,7 @@ import (
 	"github.com/spf13/viper"
 	"gorm.io/gorm"
 	"os"
+	"strconv"
 	"strings"
 	"zgoframe/util"
 )
@@ -29,11 +30,11 @@ func GetConstListConfigPersistenceType() map[string]int {
 
 type ConfigCenter struct {
 	Option ConfigCenterOption
-	pool   map[string]map[string]map[string]*viper.Viper
+	pool   map[int]map[string]map[string]*viper.Viper
 }
 
 type ConfigCenterOption struct {
-	envList            []string
+	envList            map[string]int
 	Gorm               *gorm.DB
 	Redis              *util.MyRedis
 	ProjectManager     *util.ProjectManager
@@ -69,7 +70,7 @@ func (configCenter *ConfigCenter) Init() error {
 	return nil
 }
 
-func (configCenter *ConfigCenter) GetByCategory(env string, projectId int, category string) (data interface{}, err error) {
+func (configCenter *ConfigCenter) GetByCategory(env int, projectId int, category string) (data interface{}, err error) {
 	project ,_ := configCenter.Option.ProjectManager.GetById(projectId)
 	myViper, ok := configCenter.pool[env][project.Name][category]
 	if !ok {
@@ -81,7 +82,7 @@ func (configCenter *ConfigCenter) GetByCategory(env string, projectId int, categ
 
 }
 
-func (configCenter *ConfigCenter) GetByKey(env string,projectId int, category string, key string) (data interface{}, err error) {
+func (configCenter *ConfigCenter) GetByKey(env int,projectId int, category string, key string) (data interface{}, err error) {
 	project ,_ := configCenter.Option.ProjectManager.GetById(projectId)
 	myViper, ok := configCenter.pool[env][project.Name][category]
 	if !ok {
@@ -93,7 +94,7 @@ func (configCenter *ConfigCenter) GetByKey(env string,projectId int, category st
 
 }
 
-func (configCenter *ConfigCenter) SetByKey(env string, projectName string, key string, fileName string, value interface{}) (err error) {
+func (configCenter *ConfigCenter) SetByKey(env int, projectName string, key string, fileName string, value interface{}) (err error) {
 	myViper, ok := configCenter.pool[env][projectName][fileName]
 	if !ok {
 		return err
@@ -115,9 +116,9 @@ func (configCenter *ConfigCenter) InitPersistenceFile() error {
 		return errors.New(prefix + err.Error())
 	}
 	//             map[env][projectName][fileName]myViper
-	envPool := make(map[string]map[string]map[string]*viper.Viper)
+	envPool := make(map[int]map[string]map[string]*viper.Viper)
 	for _, env := range configCenter.Option.envList {
-		envDir := configCenter.Option.PersistenceFileDir + "/" + env
+		envDir := configCenter.Option.PersistenceFileDir + "/" + strconv.Itoa(env)
 		util.MyPrint("envDir:" + envDir)
 		_, err = util.PathExists(envDir)
 		if err != nil { //

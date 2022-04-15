@@ -18,7 +18,7 @@ type Instance struct {
 	Name        string	`json:"name"`
 	Host 		string	`json:"host"`
 	Port        string	`json:"port"`
-	Env 		string	`json:"env"`
+	Env 		int	`json:"env"`
 	User 		string	`json:"user"`
 	Ps 			string	`json:"ps"`
 	Status		int		`json:"status"`
@@ -91,7 +91,7 @@ func (instanceManager *InstanceManager) GetById(id int)(Instance,bool){
 }
 
 
-func  (instanceManager *InstanceManager)GetByEnvName(env string,name string) (in Instance,empty bool){
+func  (instanceManager *InstanceManager)GetByEnvName(env int,name string) (in Instance,empty bool){
 	for _,v := range instanceManager.Pool{
 		if v.Env == env && v.Name == name{
 			return v,false

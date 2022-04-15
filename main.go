@@ -28,6 +28,8 @@ var initializeVar *initialize.Initialize
 // @tag.description 用户相关操作(需要登陆，头里加X-Token = jwt)
 // @tag.name System
 // @tag.description 系统管理(需要二次认证)
+// @tag.name Cicd
+// @tag.description 自动化部署与持续集成
 // @tag.name Mail
 // @tag.description 站内信/内部邮件通知
 // @securityDefinitions.apikey ApiKeyAuth

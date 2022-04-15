@@ -103,6 +103,8 @@ func RegGinHttpRoute() {
 	PublicToolsGroup.Use(httpmiddleware.Limiter()).Use(httpmiddleware.Record()).Use(httpmiddleware.Header()).Use(httpmiddleware.HeaderAuth())
 	{
 		router.InitToolsRouter(PublicToolsGroup)
+		router.InitCicdRouter(PublicToolsGroup)
+
 	}
 
 }

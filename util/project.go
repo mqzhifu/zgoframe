@@ -40,16 +40,16 @@ func (projectManager *ProjectManager) initAppPool() error {
 
 func (projectManager *ProjectManager) GetFromDb() error {
 	db := projectManager.Gorm.Model(&model.Project{})
-	var appList []model.Project
-	err := db.Where(" status = ? ", 1).Find(&appList).Error
+	var projectList []model.Project
+	err := db.Where(" status = ? ", 1).Find(&projectList).Error
 	if err != nil {
 		return err
 	}
-	if len(appList) == 0 {
+	if len(projectList) == 0 {
 		return errors.New("app list empty!!!")
 	}
 
-	for _, v := range appList {
+	for _, v := range projectList {
 		n := Project{
 			Id:     v.Id,
 			Status: v.Status,

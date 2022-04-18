@@ -80,6 +80,9 @@ func RegGinHttpRoute() {
 	PublicGroup.Use(httpmiddleware.Limiter()).Use(httpmiddleware.Record()).Use(httpmiddleware.Header()).Use(httpmiddleware.HeaderAuth())
 	{
 		router.InitBaseRouter(PublicGroup)
+		router.InitToolsRouter(PublicGroup)
+		router.InitCicdRouter(PublicGroup)
+		router.InitConfigCenterRouter(PublicGroup)
 	}
 	PrivateGroup := global.V.Gin.Group("")
 	//设置正常API（需要验证）
@@ -90,21 +93,12 @@ func RegGinHttpRoute() {
 		router.InitLogslaveRouter(PrivateGroup)
 		router.InitSysRouter(PrivateGroup)
 		router.InitMailRouter(PrivateGroup)
-		//router.InitConfigCenterRouter(PrivateGroup)
 	}
 
 	GatewayGroup := global.V.Gin.Group("")
 	GatewayGroup.Use(httpmiddleware.Limiter()).Use(httpmiddleware.Record()).Use(httpmiddleware.Header())
 	{
 		router.InitGatewayRouter(GatewayGroup)
-	}
-
-	PublicToolsGroup := global.V.Gin.Group("")
-	PublicToolsGroup.Use(httpmiddleware.Limiter()).Use(httpmiddleware.Record()).Use(httpmiddleware.Header()).Use(httpmiddleware.HeaderAuth())
-	{
-		router.InitToolsRouter(PublicToolsGroup)
-		router.InitCicdRouter(PublicToolsGroup)
-
 	}
 
 }

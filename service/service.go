@@ -4,20 +4,24 @@ package service
 import (
 	"go.uber.org/zap"
 	"gorm.io/gorm"
+	"os"
+	"zgoframe/service/cicd"
 	"zgoframe/util"
 )
 
 type Service struct {
 	User           *User
-	SendSms        *SendSms
-	SendEmail      *SendEmail
+	Sms        *Sms
+	Email      *Email
 	RoomManage     *RoomManager
 	FrameSync      *FrameSync
 	Gateway        *Gateway
 	GameMatch      *Match
 	ConfigCenter   *ConfigCenter
+	Cicd 		*cicd.CicdManager
 	ProjectManager *util.ProjectManager
 	Mail 		*Mail
+
 }
 
 type MyServiceOptions struct {
@@ -30,14 +34,16 @@ type MyServiceOptions struct {
 	ProjectManager *util.ProjectManager
 	ConfigCenterDataDir string
 	ConfigCenterPersistenceType	int
+	OpDirName 	string
+	ServiceList map[int]util.Service
 }
 
 func NewService(options MyServiceOptions) *Service {
 	service := new(Service)
 	service.User = NewUser(options.Gorm, options.MyRedis)
 	service.Mail = NewMail(options.Gorm,options.Zap)
-	service.SendSms = NewSendSms(options.Gorm)
-	service.SendEmail = NewSendEmail(options.Gorm, options.MyEmail)
+	service.Sms = NewSms(options.Gorm)
+	service.Email = NewEmail(options.Gorm, options.MyEmail)
 
 	configCenterOption := ConfigCenterOption{
 		envList:            util.GetConstListEnv(),
@@ -85,9 +91,67 @@ func NewService(options MyServiceOptions) *Service {
 		util.ExitPrint("InitGateway err:" + err.Error())
 	}
 
+	service.Cicd ,err = InitCicd(options.Gorm,options.Zap,options.OpDirName,options.ServiceList)
+
 	service.FrameSync.SetNetway(netway)
 	gateway.MyService = service
 	return service
+}
+
+func InitCicd(gorm *gorm.DB,zap *zap.Logger,opDir string,ServiceList map[int]util.Service)(*cicd.CicdManager,error){
+
+	/*依赖
+	host.toml cicd.sh
+	table:  project instance server cicd_publish
+	*/
+
+	opDirName := opDir
+	pwd , _ := os.Getwd()//当前路径]
+	opDirFull := pwd + "/" + opDirName
+	util.MyPrint(opDirFull,opDirName)
+
+	cicdConfig := cicd.ConfigCicd{}
+	//运维：服务器的配置信息
+	configFile := opDirFull + "/host" + "." +"toml"
+
+	//读取配置文件中的内容
+	err := util.ReadConfFile(configFile,&cicdConfig)
+	if err != nil{
+		util.ExitPrint(err.Error())
+	}
+
+	util.PrintStruct(cicdConfig , " : ")
+	//3方实例
+	instanceManager ,_:= util.NewInstanceManager(gorm )
+	//服务器列表
+	serverManger,_ := util.NewServerManger( gorm )
+	serverList := serverManger.Pool
+	//发布管理
+	publicManager := cicd.NewCICDPublicManager(gorm )
+
+	//util.ExitPrint(22)
+	op := cicd.CicdManagerOption{
+		HttpPort		: cicdConfig.System.HttpPort,
+		ServerList 		: serverList,
+		Config			: cicdConfig,
+		ServiceList		: ServiceList,
+		InstanceManager : instanceManager,
+		PublicManager 	: publicManager,
+		Log				: zap,
+		OpDirName		: opDirName,
+	}
+
+	cicd ,err := cicd.NewCicdManager(op)
+	if err != nil{
+		util.ExitPrint(err)
+	}
+	return cicd,err
+	//生成 filebeat 配置文件
+	//cicd.GenerateAllFilebeat()
+	//cicd.GetSuperVisorList()
+	//部署所有机器上的所有服务项目
+	//cicd.DeployAllService()
+	//go cicd.StartHttp(global.C.Http.StaticPath)
 }
 
 var GateDefaultProtocol = int32(util.PROTOCOL_WEBSOCKET)

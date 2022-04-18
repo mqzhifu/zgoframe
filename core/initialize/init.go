@@ -270,6 +270,8 @@ func (initialize *Initialize) Start() error {
 		ProjectManager : global.V.ProjectMng,
 		ConfigCenterDataDir :global.C.Http.StaticPath + global.C.ConfigCenter.DataPath,
 		ConfigCenterPersistenceType	:global.C.ConfigCenter.PersistenceType,
+		OpDirName: global.C.System.OpDirName,
+		ServiceList: global.V.ServiceManager.Pool,
 	}
 
 	global.V.MyService = service.NewService(MyServiceOptions)
@@ -295,7 +297,7 @@ func autoCreateUpDbTable() {
 	mydb.CreateTable(&model.User{}, &model.UserReg{}, &model.UserLogin{},
 		&model.OperationRecord{}, &model.Project{},
 		&model.CicdPublish{}, &model.Server{}, &model.Instance{},
-		&model.SmsRule{}, &model.SmsLog{}, &model.EmailRule{}, &model.EmailLog{})
+		&model.SmsRule{}, &model.SmsLog{}, &model.EmailRule{}, &model.EmailLog{}, &model.MailRule{}, &model.MailLog{}, &model.MailGroup{})
 
 	util.ExitPrint("init done.")
 }

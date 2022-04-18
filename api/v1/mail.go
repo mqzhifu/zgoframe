@@ -43,7 +43,12 @@ func MailList(c *gin.Context) {
 	_ = c.ShouldBind(&form)
 	//projectId, _ := request.GetProjectId(c)
 	uid ,_ := request.GetUid(c)
-	global.V.MyService.Mail.GetUserListByUid(uid,form)
+	mailList , err := global.V.MyService.Mail.GetUserListByUid(uid,form)
+	if err != nil{
+		httpresponse.FailWithMessage("失败了："+err.Error(), c)
+	}else{
+		httpresponse.OkWithDetailed(mailList,"ok",c)
+	}
 }
 
 // @Tags Mail
@@ -59,7 +64,12 @@ func MailInfo(c *gin.Context) {
 	var form request.MailInfo
 	_ = c.ShouldBind(&form)
 	uid ,_ := request.GetUid(c)
-	global.V.MyService.Mail.GetOneByUid(uid,form)
+	info,err := global.V.MyService.Mail.GetOneByUid(uid,form)
+	if err != nil{
+		httpresponse.FailWithMessage("失败了："+err.Error(), c)
+	}else{
+		httpresponse.OkWithDetailed(info,"ok",c)
+	}
 }
 
 // @Tags Mail
@@ -72,5 +82,6 @@ func MailInfo(c *gin.Context) {
 // @Router /mail/unread [get]
 func MailUnread(c *gin.Context) {
 	uid ,_ := request.GetUid(c)
-	global.V.MyService.Mail.GetUnreadCnt(uid)
+	cnt := global.V.MyService.Mail.GetUnreadCnt(uid)
+	httpresponse.OkWithDetailed(cnt,"ok",c)
 }

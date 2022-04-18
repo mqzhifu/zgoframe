@@ -9,8 +9,22 @@ import (
 )
 
 const (
+	DIR_SEPARATOR = "/"
+	STR_SEPARATOR = "#"
+
 	SUPER_VISOR_PROCESS_NAME_SERVICE_PREFIX = "service_"//进程启动时，启程名称的前缀，方便统一管理
 )
+
+type SuperVisorReplace struct {
+	Script_name            string
+	Startup_script_command string
+	Script_work_dir        string
+	Stdout_logfile         string
+	Stderr_logfile         string
+	Process_name           string
+}
+
+//==============superVisor===========
 
 type SuperVisorOption struct {
 	Ip					string
@@ -112,22 +126,22 @@ func(superVisor *SuperVisor)ReplaceConfTemplate(replaceSource SuperVisorReplace)
 	content := superVisor.ConfTemplateFileContent
 	key := superVisor.Option.Separator+"script_name"+superVisor.Option.Separator
 	MyPrint(key)
-	content = strings.Replace(content,key,replaceSource.script_name,-1)
+	content = strings.Replace(content,key,replaceSource.Script_name,-1)
 
 	key = superVisor.Option.Separator+"startup_script_command"+superVisor.Option.Separator
-	content = strings.Replace(content,key,replaceSource.startup_script_command,-1)
+	content = strings.Replace(content,key,replaceSource.Startup_script_command,-1)
 
 	key = superVisor.Option.Separator+"script_work_dir"+superVisor.Option.Separator
-	content = strings.Replace(content,key,replaceSource.script_work_dir,-1)
+	content = strings.Replace(content,key,replaceSource.Script_work_dir,-1)
 
 	key = superVisor.Option.Separator+"stdout_logfile"+superVisor.Option.Separator
-	content = strings.Replace(content,key,replaceSource.stdout_logfile,-1)
+	content = strings.Replace(content,key,replaceSource.Stdout_logfile,-1)
 
 	key = superVisor.Option.Separator+"stderr_logfile"+superVisor.Option.Separator
-	content = strings.Replace(content,key,replaceSource.stderr_logfile,-1)
+	content = strings.Replace(content,key,replaceSource.Stderr_logfile,-1)
 
 	key = superVisor.Option.Separator+"process_name"+superVisor.Option.ServiceNamePrefix + superVisor.Option.Separator
-	content = strings.Replace(content,key,replaceSource.process_name,-1)
+	content = strings.Replace(content,key,replaceSource.Process_name,-1)
 
 	//ExitPrint(content)
 

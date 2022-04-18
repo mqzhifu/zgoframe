@@ -1,4 +1,4 @@
-package util
+package cicd
 
 import (
 	"encoding/json"
@@ -14,6 +14,7 @@ import (
 	"strings"
 	"time"
 	"zgoframe/model"
+	"zgoframe/util"
 )
 
 /*
@@ -23,10 +24,7 @@ import (
 	代码依赖：git
 	系统脚本：依赖shell
 */
-const (
-	DIR_SEPARATOR = "/"
-	STR_SEPARATOR = "#"
-)
+
 
 //===============配置 结构体 开始===================
 type ConfigCicdSystem struct {
@@ -73,16 +71,7 @@ type ConfigCicd struct {
 
 //===============配置 结构体 结束===================
 
-type SuperVisorReplace struct {
-	script_name            string
-	startup_script_command string
-	script_work_dir        string
-	stdout_logfile         string
-	stderr_logfile         string
-	process_name           string
-}
 
-//==============superVisor===========
 
 type CicdPublish struct {
 	Id            int
@@ -91,7 +80,7 @@ type CicdPublish struct {
 	ServiceName   string
 	Logs          []string
 	TotalExecTime int
-	Server        Server
+	Server        util.Server
 }
 
 type CicdManager struct {
@@ -99,11 +88,11 @@ type CicdManager struct {
 }
 
 type CicdManagerOption struct {
-	ServerList  map[int]Server  //所有服务器
-	ServiceList map[int]Service //所有项目/服务
+	ServerList  map[int]util.Server  //所有服务器
+	ServiceList map[int]util.Service //所有项目/服务
 
 	HttpPort        string
-	InstanceManager *InstanceManager
+	InstanceManager *util.InstanceManager
 	Config          ConfigCicd
 	PublicManager   *CICDPublicManager
 	Log             *zap.Logger
@@ -114,22 +103,22 @@ func NewCicdManager(cicdManagerOption CicdManagerOption) (*CicdManager, error) {
 	cicdManager := new(CicdManager)
 	cicdManager.Option = cicdManagerOption
 
-	_, err := PathExists(cicdManagerOption.Config.System.ServiceDir) //service 根目录
+	_, err := util.PathExists(cicdManagerOption.Config.System.ServiceDir) //service 根目录
 	if err != nil {
 		return cicdManager, cicdManager.MakeError("Option.Config.System.ServiceDir :" + err.Error())
 	}
 	//SuperVisor 模板文件
-	_, err = FileExist(cicdManager.Option.Config.SuperVisor.ConfTemplateFile) //superVisor 模板文件
+	_, err = util.FileExist(cicdManager.Option.Config.SuperVisor.ConfTemplateFile) //superVisor 模板文件
 	if err != nil {
 		return cicdManager, cicdManager.MakeError("SuperVisor.ConfTemplateFile :" + err.Error())
 	}
 	//SuperVisor 配置文件统一放置目录
-	_, err = PathExists(cicdManager.Option.Config.SuperVisor.ConfDir) //superVisor 配置文件统一放置目录
+	_, err = util.PathExists(cicdManager.Option.Config.SuperVisor.ConfDir) //superVisor 配置文件统一放置目录
 	if err != nil {
 		return cicdManager, cicdManager.MakeError("SuperVisor.ConfDir :" + err.Error())
 	}
 	//日志统一放置目录
-	_, err = PathExists(cicdManager.Option.Config.System.LogDir)
+	_, err = util.PathExists(cicdManager.Option.Config.System.LogDir)
 	if err != nil {
 		return cicdManager, cicdManager.MakeError("System.LogDir :" + err.Error())
 	}
@@ -145,7 +134,7 @@ func (cicdManager *CicdManager) MakeError(errMsg string) error {
 //开始HTTP监听，供管理员UI可视化管理
 func (cicdManager *CicdManager) StartHttp(staticDir string) {
 	//HttpZapLog = zapLog
-	ginRouter := gin.Default()
+	//ginRouter := gin.Default()
 	//单独的日志记录，GIN默认的日志不会持久化的
 	//ginRouter.Use(ZapLog())
 	//加载静态目录
@@ -155,18 +144,17 @@ func (cicdManager *CicdManager) StartHttp(staticDir string) {
 	//设置跨域
 	//ginRouter.Use(httpmiddleware.Cors())
 
-	ginRouter.StaticFS("/static", http.Dir(staticDir))
+	//ginRouter.StaticFS("/static", http.Dir(staticDir))
 
-	ginRouter.GET("/ping", cicdManager.Ping)
-	ginRouter.GET("/getServerList", cicdManager.GetServerList)
-	ginRouter.GET("/getInstanceList", cicdManager.GetInstanceList)
-	ginRouter.GET("/getPublishList", cicdManager.GetPublishList)
-	ginRouter.GET("/getSuperVisorList", cicdManager.GetSuperVisorList)
-	ginRouter.GET("/getServiceList", cicdManager.GetServiceList)
+	//ginRouter.GET("/ping", cicdManager.Ping)
+	//ginRouter.GET("/getServerList", cicdManager.GetServerList)
+	//ginRouter.GET("/getInstanceList", cicdManager.GetInstanceList)
+	//ginRouter.GET("/getPublishList", cicdManager.GetPublishList)
+	//ginRouter.GET("/getSuperVisorList", cicdManager.GetSuperVisorList)
+	//ginRouter.GET("/getServiceList", cicdManager.GetServiceList)
+	//ginRouter.POST("/publish", cicdManager.Publish)
 
-	ginRouter.POST("/publish", cicdManager.Publish)
-
-	ginRouter.Run("0.0.0.0:" + cicdManager.Option.HttpPort)
+	//ginRouter.Run("0.0.0.0:" + cicdManager.Option.HttpPort)
 
 	//404
 	//ginRouter.NoMethod(HandleNotFound)
@@ -179,16 +167,16 @@ func (cicdManager *CicdManager) Ping(c *gin.Context) {
 	//c.String(200,string(str))
 }
 
-//发布|部署 一次 服务
-func (cicdManager *CicdManager) Publish(c *gin.Context) {
-
-	//str,_ := json.Marshal(cicdManager.Option.ServiceList)
-	//c.String(200,string(str))
-}
+////发布|部署 一次 服务
+//func (cicdManager *CicdManager) Publish(c *gin.Context) {
+//
+//	//str,_ := json.Marshal(cicdManager.Option.ServiceList)
+//	//c.String(200,string(str))
+//}
 
 //获取所有服务列表
-func (cicdManager *CicdManager) GetServiceList(c *gin.Context) {
-	dirList := ForeachDir(cicdManager.Option.Config.System.ServiceDir)
+func (cicdManager *CicdManager) GetServiceList( ) map[int]util.Service {
+	dirList := util.ForeachDir(cicdManager.Option.Config.System.ServiceDir)
 	for _, service := range cicdManager.Option.ServiceList {
 		for _, dirInfo := range dirList {
 			if service.Name == dirInfo.Name {
@@ -197,14 +185,14 @@ func (cicdManager *CicdManager) GetServiceList(c *gin.Context) {
 			}
 		}
 	}
-	str, _ := json.Marshal(cicdManager.Option.ServiceList)
-	c.String(200, string(str))
+	return cicdManager.Option.ServiceList
+	//str, _ := json.Marshal(cicdManager.Option.ServiceList)
 }
 
 //获取所有服务器列表
 func (cicdManager *CicdManager) GetServerList(c *gin.Context) {
 	for _, server := range cicdManager.Option.ServerList {
-		status := PingByShell(server.OutIp, "2")
+		status := util.PingByShell(server.OutIp, "2")
 		if !status {
 			server.Status = 3
 		}
@@ -217,7 +205,7 @@ func (cicdManager *CicdManager) GetServerList(c *gin.Context) {
 //获取所有3方服务列表
 func (cicdManager *CicdManager) GetInstanceList(c *gin.Context) {
 	for _, instance := range cicdManager.Option.InstanceManager.Pool {
-		status := CheckIpPort(instance.Host, instance.Port, 2)
+		status := util.CheckIpPort(instance.Host, instance.Port, 2)
 		if !status {
 			instance.Status = 3
 		}
@@ -239,22 +227,29 @@ func (cicdManager *CicdManager) GetPublishList(c *gin.Context) {
 	c.String(200, string(str))
 }
 
+//创建一个新的结构体
+type ServerServiceSuperVisorList struct {
+	ServerStatus            map[int]int                       `json:"server_status"`
+	ServerServiceSuperVisor map[int][]supervisord.ProcessInfo `json:"server_service_super_visor"`
+}
 //每台服务器上 都会启动一个superVisor进程
 //列出每台机器上的：superVisor进程 的所有服务进程的状态信息
-func (cicdManager *CicdManager) GetSuperVisorList(c *gin.Context) {
+func (cicdManager *CicdManager) GetSuperVisorList( )(list ServerServiceSuperVisorList , err error) {
 	serviceBaseDir := cicdManager.Option.Config.System.ServiceDir
 
 	if len(cicdManager.Option.ServerList) == 0 {
-		MyPrint("GetSuperVisorList err:ServerList is empty")
-		return
+		errMsg := "GetSuperVisorList err:ServerList is empty"
+		//util.MyPrint()
+		return list,errors.New(errMsg)
 	}
 
 	if len(cicdManager.Option.ServiceList) == 0 {
-		MyPrint("GetSuperVisorList err:ServiceList is empty")
-		return
+		errMsg := "GetSuperVisorList err:ServiceList is empty"
+		//util.MyPrint(errMsg)
+		return list,errors.New(errMsg)
 	}
 
-	MyPrint("serverList len:", len(cicdManager.Option.ServerList), " ServiceList len:", len(cicdManager.Option.ServiceList))
+	util.MyPrint("serverList len:", len(cicdManager.Option.ServerList), " ServiceList len:", len(cicdManager.Option.ServiceList))
 
 	//serverId=>superVisorList
 	serverServiceSuperVisor := make(map[int][]supervisord.ProcessInfo)
@@ -266,28 +261,28 @@ func (cicdManager *CicdManager) GetSuperVisorList(c *gin.Context) {
 		//ping 测试一下 其它机器是否开启了sdk HTTP
 		testServerRs := cicdManager.TestServerStateHttp(dns + "/ping")
 		if testServerRs == 0 {
-			MyPrint("")
+			util.MyPrint("")
 			serverStatus[server.Id] = 3
 			continue
 		}
 		//创建实例
-		superVisorOption := SuperVisorOption{
+		superVisorOption := util.SuperVisorOption{
 			Ip:               server.OutIp,
 			RpcPort:          cicdManager.Option.Config.SuperVisor.RpcPort,
 			ConfTemplateFile: cicdManager.Option.Config.SuperVisor.ConfTemplateFile,
 			ServiceName:      "",
 			ConfDir:          cicdManager.Option.Config.SuperVisor.ConfDir,
 		}
-		serviceSuperVisor, err := NewSuperVisor(superVisorOption)
+		serviceSuperVisor, err := util.NewSuperVisor(superVisorOption)
 		if err != nil {
-			MyPrint("NewSuperVisor err:", err)
+			util.MyPrint("NewSuperVisor err:", err)
 			serverStatus[server.Id] = 4
 			continue
 		}
 		//建立 XMLRpc
 		err = serviceSuperVisor.InitXMLRpc()
 		if err != nil {
-			MyPrint("serviceSuperVisor InitXMLRpc err:", err)
+			util.MyPrint("serviceSuperVisor InitXMLRpc err:", err)
 			serverStatus[server.Id] = 4
 			continue
 		}
@@ -296,16 +291,16 @@ func (cicdManager *CicdManager) GetSuperVisorList(c *gin.Context) {
 
 		processInfoList, _ := serviceSuperVisor.Cli.GetAllProcessInfo()
 		for _, service := range cicdManager.Option.ServiceList {
-			servicePath := serviceBaseDir + DIR_SEPARATOR + service.Name
-			MyPrint("servicePath:", servicePath)
+			servicePath := serviceBaseDir + util.DIR_SEPARATOR + service.Name
+			util.MyPrint("servicePath:", servicePath)
 
 			superVisorProcessInfo := supervisord.ProcessInfo{
-				Name:  SUPER_VISOR_PROCESS_NAME_SERVICE_PREFIX + service.Name,
+				Name:  util.SUPER_VISOR_PROCESS_NAME_SERVICE_PREFIX + service.Name,
 				State: 999, //项目未部署过
 			}
 
 			for _, process := range processInfoList {
-				if process.Name == SUPER_VISOR_PROCESS_NAME_SERVICE_PREFIX+service.Name {
+				if process.Name == util.SUPER_VISOR_PROCESS_NAME_SERVICE_PREFIX+service.Name {
 					superVisorProcessInfo = process
 					break
 				}
@@ -313,28 +308,25 @@ func (cicdManager *CicdManager) GetSuperVisorList(c *gin.Context) {
 
 			_, ok := serverServiceSuperVisor[server.Id]
 			if !ok {
-				MyPrint(22222)
+				util.MyPrint(22222)
 				serverServiceSuperVisor[server.Id] = []supervisord.ProcessInfo{superVisorProcessInfo}
 			} else {
-				MyPrint(3333)
+				util.MyPrint(3333)
 				serverServiceSuperVisor[server.Id] = append(serverServiceSuperVisor[server.Id], superVisorProcessInfo)
 			}
 		}
 
 	}
 
-	type response struct {
-		ServerStatus            map[int]int                       `json:"server_status"`
-		ServerServiceSuperVisor map[int][]supervisord.ProcessInfo `json:"server_service_super_visor"`
-	}
 
-	myresponse := response{
+	list = ServerServiceSuperVisorList{
 		ServerStatus:            serverStatus,
 		ServerServiceSuperVisor: serverServiceSuperVisor,
 	}
-	str, err := json.Marshal(myresponse)
-	MyPrint("json err:", err)
-	c.String(200, string(str))
+	return list,nil
+	//str, err := json.Marshal(myresponse)
+	//util.MyPrint("json err:", err)
+	//c.String(200, string(str))
 }
 
 func (cicdManager *CicdManager) GenerateAllFilebeat() {
@@ -343,26 +335,26 @@ func (cicdManager *CicdManager) GenerateAllFilebeat() {
 
 	for _, server := range cicdManager.Option.ServerList {
 		cicdManager.GenerateFilebeat(server, opDirFull)
-		MyPrint("finish one ...........")
+		util.MyPrint("finish one ...........")
 	}
-	ExitPrint(33)
+	util.ExitPrint(33)
 }
-func (cicdManager *CicdManager) GenerateFilebeat(server Server, opDir string) {
+func (cicdManager *CicdManager) GenerateFilebeat(server util.Server, opDir string) {
 
 	instance, empty := cicdManager.Option.InstanceManager.GetByEnvName(server.Env, "es")
 	if empty {
-		ExitPrint("ProcessFilebeat GetByEnvName es empty :" + strconv.Itoa(server.Env))
+		util.ExitPrint("ProcessFilebeat GetByEnvName es empty :" + strconv.Itoa(server.Env))
 	}
 
 	esDns := instance.Host + ":" + instance.Port
 	filebeatConfigFile := opDir + "/" + "filebeat.yaml"
-	filebeatConfigFileContent, _ := ReadString(filebeatConfigFile)
+	filebeatConfigFileContent, _ := util.ReadString(filebeatConfigFile)
 	filebeatConfigFileContent = strings.Replace(filebeatConfigFileContent, "#elasticsearch_output_hosts#", esDns, -1)
 
 	filebeatInput := ""
 	for _, service := range cicdManager.Option.ServiceList {
 		filebeat_input_file := opDir + "/" + "filebeat_input.yaml"
-		filebeat_input_content, _ := ReadString(filebeat_input_file)
+		filebeat_input_content, _ := util.ReadString(filebeat_input_file)
 		serviceLogDir := cicdManager.Option.Config.System.LogDir + "/" + service.Name + "/*.log"
 		//ExitPrint(serviceLogDir)
 		filebeat_input_content = strings.Replace(filebeat_input_content, "#paths#", serviceLogDir, -1)
@@ -373,7 +365,7 @@ func (cicdManager *CicdManager) GenerateFilebeat(server Server, opDir string) {
 	esOutput := ""
 	for _, service := range cicdManager.Option.ServiceList {
 		esOutputFile := opDir + "/" + "filebeat_es_output.yaml"
-		esOutputFileContent, _ := ReadString(esOutputFile)
+		esOutputFileContent, _ := util.ReadString(esOutputFile)
 		esOutputFileContent = strings.Replace(esOutputFileContent, "#index#", service.Name, -1)
 
 		esOutput += esOutputFileContent + "\n"
@@ -383,12 +375,12 @@ func (cicdManager *CicdManager) GenerateFilebeat(server Server, opDir string) {
 	filebeatConfigFileContent = strings.Replace(filebeatConfigFileContent, "#filebeat_inputs#", filebeatInput, -1)
 	filebeatConfigFileContent = strings.Replace(filebeatConfigFileContent, "#elasticsearch_output_index#", esOutput, -1)
 
-	MyPrint(filebeatConfigFileContent)
+	util.MyPrint(filebeatConfigFileContent)
 }
 
 //如果一个路径不存在
 func pathNotExistCreate(path string) error {
-	_, err := PathExists(path)
+	_, err := util.PathExists(path)
 	if err == nil { //目录存在
 		return nil
 	}
@@ -409,13 +401,13 @@ func pathNotExistCreate(path string) error {
 
 //执行shell文件
 func ExecShellFile(shellFile string, argc string) (string, error) {
-	MyPrint("ExecShellFile:", shellFile, " ", argc)
+	util.MyPrint("ExecShellFile:", shellFile, " ", argc)
 	shellCommand := shellFile + " " + argc
 	c := exec.Command("sh", "-c", shellCommand)
 
 	output, err := c.CombinedOutput()
 	if err != nil {
-		MyPrint("exec.Command err:", err)
+		util.MyPrint("exec.Command err:", err)
 		return "", err
 	}
 	outStr := string(output)
@@ -426,7 +418,7 @@ func ExecShellFile(shellFile string, argc string) (string, error) {
 
 //执行shell 指令
 func ExecShellCommand(command string, argc string) (string, error) {
-	MyPrint("ExecShellCommand:", command, argc)
+	util.MyPrint("ExecShellCommand:", command, argc)
 	//shellCommand := command + " " + argc
 	c := exec.Command("bash", "-c", command)
 
@@ -449,11 +441,11 @@ func (cicdManager *CicdManager) TestServerStateHttp(hostUri string) int {
 
 	resp, err := httpClient.Get(hostUri)
 	if err != nil {
-		MyPrint("http get err:", err)
+		util.MyPrint("http get err:", err)
 		return 0
 	}
 
-	MyPrint("http get status:", resp.Status)
+	util.MyPrint("http get status:", resp.Status)
 
 	return 1
 

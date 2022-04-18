@@ -113,6 +113,7 @@ func (mail *Mail) Send( info request.SendMail) (recordNewId int, err error) {
 		}
 	}
 
+
 	switch rule.PeopleType {
 	case MAIL_PEOPLE_PERSON://点对点
 		recordNewId, err = mail.SendPerson(rule, info, 0)
@@ -248,7 +249,7 @@ func (mail *Mail) SendPerson(rule model.MailRule, info request.SendMail, MailGro
 		content = mail.ReplaceContentTemplate(rule.Content, info.ReplaceVar)
 	}
 	r ,_ := strconv.Atoi(info.Receiver)
-	if r != MAIL_ADMIN_USER_UID {
+	if r == MAIL_ADMIN_USER_UID {
 		return recordNewId,errors.New("Receiver Uid 不能等于管理员 ID")
 	}
 	//替换模板动态内容
@@ -262,6 +263,8 @@ func (mail *Mail) SendPerson(rule model.MailRule, info request.SendMail, MailGro
 		SendUid:     info.SendUid,
 		MailGroupId: MailGroupId,
 		SendTime: info.SendTime,
+		ReceiverRead: RECEIVER_READ_FALSE,
+		ReceiverDel: RECEIVER_DEL_FALSE,
 	}
 	//失效时间
 	if rule.ExpireTime > 0 {
@@ -303,14 +306,18 @@ func (mail *Mail) CheckGroupMsg(uid int) error{
 	var mailGroupList []model.MailGroup
 	//目前仅支持：全部群发
 	where := " people_type = "+strconv.Itoa(MAIL_PEOPLE_ALL)
-	where += mail.GetSqlWhereSendTime()
+	where += " and " +  mail.GetSqlWhereSendTime()
 	err := mail.Gorm.Where(where).Find(&mailGroupList).Error
 	if err != nil {
 		return err
 	}
 
+	if len(mailGroupList) <= 0{
+		return errors.New("mailGroupList empty~")
+	}
+
 	var mailList []model.MailLog
-	where = "receiver = '" + strconv.Itoa(uid) + "' " + " and mail_group_id > 0 "
+	where = " receiver = '" + strconv.Itoa(uid) + "' " + " and mail_group_id > 0 "
 	err = mail.Gorm.Where(where).Find(&mailList).Error
 	if err != nil {
 		return err
@@ -345,13 +352,13 @@ func (mail *Mail) CheckGroupMsg(uid int) error{
 
 func (mail *Mail)GetSqlWhereExpire( )string{
 	now := util.GetNowTimeSecondToInt()
-	where := "( expire_time > 0  and expire_time <=  " + strconv.Itoa(now) + " ) "
+	where := "( expire_time <=0 or ( expire_time > 0  and expire_time <=  " + strconv.Itoa(now) + " ) )"
 	return where
 }
 
 func (mail *Mail)GetSqlWhereSendTime( )string{
 	now := util.GetNowTimeSecondToInt()
-	where := "( send_time > 0  and send_time <=  " + strconv.Itoa(now) + " ) "
+	where := "( send_time <= 0 or ( send_time > 0  and send_time <=  " + strconv.Itoa(now) + " ) )"
 	return where
 }
 
@@ -359,38 +366,38 @@ func (mail *Mail) GetUserListByUid(uid int,form request.MailList)(mailList []mod
 	mail.CheckGroupMsg(uid)
 
 	//var mailList []model.MailLog
-	where := ""
+	where := " 1 = 1 and "
 	if form.BoxType == MAIL_IN_BOX { //收件箱
-		where = "receiver = '" + strconv.Itoa(uid) + "' "
+		where += " receiver = '" + strconv.Itoa(uid) + "' "
 	} else if form.BoxType == MAIL_OUT_BOX { //发件箱
-		where = "sendUid = " + strconv.Itoa(uid)
+		where += " sendUid = " + strconv.Itoa(uid)
 	} else if form.BoxType == MAIL_ALL_BOX { //全部
-		where = "receiver = '" + strconv.Itoa(uid) + "' or " + "sendUid = " + strconv.Itoa(uid)
+		where += " receiver = '" + strconv.Itoa(uid) + "' or " + "sendUid = " + strconv.Itoa(uid)
 	} else {
 		return mailList,errors.New("boxType err")
 	}
 
 	if form.ReceiverRead == RECEIVER_READ_TRUE {//接收者，已读
-		where += "receiver_read = " + strconv.Itoa(RECEIVER_READ_TRUE)
+		where += " and receiver_read = " + strconv.Itoa(RECEIVER_READ_TRUE)
 	}else if  form.ReceiverRead == RECEIVER_READ_FALSE {//接收者，未读
-		where += "receiver_read = " + strconv.Itoa(RECEIVER_READ_FALSE)
+		where += " and receiver_read = " + strconv.Itoa(RECEIVER_READ_FALSE)
 	}else{
 		return mailList,errors.New("ReceiverRead err")
 	}
 
 	if form.ReceiverDel == RECEIVER_DEL_TRUE {//接收者，已删除
-		where += "receiver_del = " + strconv.Itoa(RECEIVER_DEL_TRUE)
+		where += " and receiver_del = " + strconv.Itoa(RECEIVER_DEL_TRUE)
 	}else if  form.ReceiverRead == RECEIVER_DEL_FALSE {//接收者，未删除
-		where += "receiver_del = " + strconv.Itoa(RECEIVER_DEL_FALSE)
+		where += " and receiver_del = " + strconv.Itoa(RECEIVER_DEL_FALSE)
 	}else{
 		return mailList,errors.New("ReceiverDel err")
 	}
 	//未失效
 	if form.Expire == MAIL_EXPIRE_FALSE{
-		where += mail.GetSqlWhereExpire( )
+		where += " and " + mail.GetSqlWhereExpire( )
 	}
 
-	where +=  mail.GetSqlWhereSendTime()
+	where +=  " and " + mail.GetSqlWhereSendTime()
 
 
 	var count int64
@@ -409,9 +416,10 @@ func (mail *Mail) GetUserListByUid(uid int,form request.MailList)(mailList []mod
 	return mailList,nil
 }
 
-func (mail *Mail) GetOneByUid(uid int,form request.MailInfo) (mailLog model.MailLog, err error) {
+func (mail *Mail) GetOneByUid(uid int,form request.MailInfo) ( model.MailLog,  error) {
+	var mailLog model.MailLog
 	//var mailLog model.MailLog
-	err = mail.Gorm.Find(&mailLog, form.Id).Error
+	err := mail.Gorm.First(&mailLog, form.Id).Error
 	if err != nil {
 		return mailLog,err
 	}
@@ -429,11 +437,15 @@ func (mail *Mail) GetOneByUid(uid int,form request.MailInfo) (mailLog model.Mail
 	}
 
 	if form.AutoReceiverRead == RECEIVER_READ_TRUE {
-		mail.Gorm.Update("receiver_read", RECEIVER_READ_TRUE)
+		var upDataModel model.MailLog
+		upDataModel.Id = mailLog.Id
+		mail.Gorm.Model(&upDataModel).Update("receiver_read", RECEIVER_READ_TRUE)
 	}
 
 	if form.AutoReceiverDel == RECEIVER_DEL_TRUE {
-		mail.Gorm.Update("receiver_del", RECEIVER_DEL_TRUE)
+		var upDataModel model.MailLog
+		upDataModel.Id = mailLog.Id
+		mail.Gorm.Model(&upDataModel).Update("receiver_del", RECEIVER_DEL_TRUE)
 	}
 
 	return mailLog,nil

@@ -32,6 +32,8 @@ var initializeVar *initialize.Initialize
 // @tag.description 自动化部署与持续集成
 // @tag.name Mail
 // @tag.description 站内信/内部邮件通知
+// @tag.name ConfigCenter
+// @tag.description 配置中心
 // @securityDefinitions.apikey ApiKeyAuth
 // @name xa
 // @name X-Token

@@ -8,6 +8,7 @@ import (
 	"zgoframe/http/request"
 	httpresponse "zgoframe/http/response"
 	"zgoframe/model"
+	"zgoframe/service/cicd"
 	"zgoframe/util"
 )
 
@@ -150,7 +151,7 @@ func ConstInitTestDb(c *gin.Context) {
 
 	instanceSql := ""
 	for _,envId:=range envList{
-		for _,instance := range util.ThirdInstance{
+		for _,instance := range cicd.ThirdInstance{
 			if !CheckInAllowInstance(instance){
 				continue
 			}

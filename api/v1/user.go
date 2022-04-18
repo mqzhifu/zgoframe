@@ -229,7 +229,7 @@ func SetMobile(c *gin.Context) {
 		httpresponse.FailWithMessage("Mobile || SmsAuthCode || SmsRuleId is empty", c)
 		return
 	}
-	err := global.V.MyService.SendSms.Verify(form.RuleId, form.Mobile, form.SmsAuthCode)
+	err := global.V.MyService.Sms.Verify(form.RuleId, form.Mobile, form.SmsAuthCode)
 	if err != nil {
 		httpresponse.FailWithMessage("SendSms.Verify err:"+err.Error(), c)
 		return
@@ -262,7 +262,7 @@ func SetEmail(c *gin.Context) {
 		httpresponse.FailWithMessage("email || SmsAuthCode || SmsRuleId is empty", c)
 		return
 	}
-	err := global.V.MyService.SendEmail.Verify(form.RuleId, form.Email, form.SmsAuthCode)
+	err := global.V.MyService.Email.Verify(form.RuleId, form.Email, form.SmsAuthCode)
 	if err != nil {
 		httpresponse.FailWithMessage("SendSms.Verify err:"+err.Error(), c)
 		return

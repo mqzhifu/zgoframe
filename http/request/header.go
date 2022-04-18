@@ -48,6 +48,11 @@ func GetProjectId(c *gin.Context) (int, error) {
 	return customClaims.ProjectId, nil
 }
 
+func GetProjectIdByHeader(c *gin.Context) (int) {
+	header := GetMyHeader(c)
+	return header.ProjectId
+}
+
 func GetSourceType(c *gin.Context) (int, error) {
 	customClaims, err := GetClaims(c)
 	if err != nil {

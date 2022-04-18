@@ -3,11 +3,11 @@ package util
 import "strconv"
 
 const (
-	//ENV_LOCAL  = "local"  //开发环境
-	//ENV_DEV    = "dev"    //开发环境
-	//ENV_TEST   = "test"   //测试环境
-	//ENV_PRE    = "pre"    //预发布环境
-	//ENV_ONLINE = "online" //线上环境
+	ENV_LOCAL_STR  = "local"  //开发环境
+	ENV_DEV_STR    = "dev"    //开发环境
+	ENV_TEST_STR   = "test"   //测试环境
+	ENV_PRE_STR    = "pre"    //预发布环境
+	ENV_ONLINE_STR = "online" //线上环境
 
 	ENV_LOCAL_INT  = 1  //开发环境
 	ENV_DEV_INT    = 2    //开发环境
@@ -60,6 +60,17 @@ func ConstListEnvToStr()string{
 		str += strconv.Itoa(v) + k
 	}
 	return str
+}
+
+func GetConstListEnvStr() map[int]string {
+	list := make(map[int]string)
+	list[ENV_LOCAL_INT] = ENV_LOCAL_STR
+	list[ENV_DEV_INT] =ENV_DEV_STR
+	list[ENV_TEST_INT] = ENV_TEST_STR
+	list[ENV_PRE_INT] = ENV_PRE_STR
+	list[ENV_ONLINE_INT] = ENV_ONLINE_STR
+
+	return list
 }
 
 //func GetConstListEnvString() map[string]string {

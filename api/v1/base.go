@@ -60,7 +60,7 @@ func SendSms(c *gin.Context) {
 	}
 
 	projectId, _ := request.GetProjectId(c)
-	dbNewId, err := global.V.MyService.SendSms.Send(projectId, sendSMSForm)
+	dbNewId, err := global.V.MyService.Sms.Send(projectId, sendSMSForm)
 	if err != nil {
 		httpresponse.FailWithMessage("失败了："+err.Error(), c)
 	} else {
@@ -86,7 +86,7 @@ func SendEmail(c *gin.Context) {
 	}
 
 	projectId, _ := request.GetProjectId(c)
-	dbNewId, err := global.V.MyService.SendEmail.Send(projectId, sendEmailForm)
+	dbNewId, err := global.V.MyService.Email.Send(projectId, sendEmailForm)
 	if err != nil {
 		httpresponse.FailWithMessage("失败了："+err.Error(), c)
 	} else {
@@ -117,7 +117,7 @@ func ResetPasswordSms(c *gin.Context) {
 		return
 	}
 
-	err := global.V.MyService.SendSms.Verify(form.SmsRuleId, form.Mobile, form.SmsAuthCode)
+	err := global.V.MyService.Sms.Verify(form.SmsRuleId, form.Mobile, form.SmsAuthCode)
 	if err != nil {
 		httpresponse.FailWithMessage(err.Error(), c)
 		return
@@ -186,7 +186,7 @@ func RegisterSms(c *gin.Context) {
 		Test:     model.USER_TEST_FALSE,
 	}
 
-	err := global.V.MyService.SendSms.Verify(registerSmsForm.SmsRuleId, registerSmsForm.Mobile, registerSmsForm.SmsAuthCode)
+	err := global.V.MyService.Sms.Verify(registerSmsForm.SmsRuleId, registerSmsForm.Mobile, registerSmsForm.SmsAuthCode)
 	if err != nil {
 		httpresponse.FailWithMessage(err.Error(), c)
 		return
@@ -401,7 +401,7 @@ func LoginSms(c *gin.Context) {
 	var L request.LoginSMS
 	c.ShouldBind(&L)
 
-	err := global.V.MyService.SendSms.Verify(L.SmsRuleId, L.Mobile, L.SmsAuthCode)
+	err := global.V.MyService.Sms.Verify(L.SmsRuleId, L.Mobile, L.SmsAuthCode)
 	if err != nil {
 		httpresponse.FailWithMessage(err.Error(), c)
 		return

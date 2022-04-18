@@ -1,4 +1,4 @@
-package util
+package cicd
 
 import (
 	"encoding/json"
@@ -6,6 +6,7 @@ import (
 	"gorm.io/gorm"
 	"strconv"
 	"zgoframe/model"
+	"zgoframe/util"
 )
 
 //部署项目时，触发按钮及一次部署的数据记录
@@ -20,7 +21,7 @@ func NewCICDPublicManager(gorm *gorm.DB) *CICDPublicManager {
 	return cICDPublicManager
 }
 
-func (CICDPublicManager *CICDPublicManager) InsertOne(service Service, server Server) model.CicdPublish {
+func (CICDPublicManager *CICDPublicManager) InsertOne(service util.Service, server util.Server) model.CicdPublish {
 	serviceInfo, _ := json.Marshal(service)
 	serverInfo, _ := json.Marshal(server)
 	data := model.CicdPublish{
@@ -35,7 +36,7 @@ func (CICDPublicManager *CICDPublicManager) InsertOne(service Service, server Se
 }
 
 func (CICDPublicManager *CICDPublicManager) UpStatus(m model.CicdPublish, status int) {
-	MyPrint("CICDPublicManager UpStatus publishId:", m.Id, " new status:"+strconv.Itoa(status))
+	util.MyPrint("CICDPublicManager UpStatus publishId:", m.Id, " new status:"+strconv.Itoa(status))
 	CICDPublicManager.Db.Model(&m).Update("status", status)
 	//db.Model(&Food{}).Update("price", 25)
 }

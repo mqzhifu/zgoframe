@@ -198,6 +198,22 @@ definitions:
         description: 用户名
         type: string
     type: object
+  request.ConfigCenterGetByKeyReq:
+    properties:
+      key:
+        type: string
+      module:
+        type: string
+    type: object
+  request.ConfigCenterSetByKeyReq:
+    properties:
+      key:
+        type: string
+      module:
+        type: string
+      value:
+        type: object
+    type: object
   request.CustomClaims:
     properties:
       id:
@@ -1241,6 +1257,236 @@ paths:
       summary: 重置密码 - 通过短信
       tags:
       - Base
+  /cicd/service/deploy/{name}:
+    get:
+      description: demo
+      parameters:
+      - description: 来源
+        enum:
+        - "11"
+        - "12"
+        - "21"
+        - "22"
+        in: header
+        name: X-Source-Type
+        required: true
+        type: string
+      - default: "6"
+        description: 项目ID
+        in: header
+        name: X-Project-Id
+        required: true
+        type: string
+      - default: imzgoframe
+        description: 访问KEY
+        in: header
+        name: X-Access
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Project'
+      summary: 部署一个服务
+      tags:
+      - Cicd
+  /cicd/service/list:
+    get:
+      description: demo
+      parameters:
+      - description: 来源
+        enum:
+        - "11"
+        - "12"
+        - "21"
+        - "22"
+        in: header
+        name: X-Source-Type
+        required: true
+        type: string
+      - default: "6"
+        description: 项目ID
+        in: header
+        name: X-Project-Id
+        required: true
+        type: string
+      - default: imzgoframe
+        description: 访问KEY
+        in: header
+        name: X-Access
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Project'
+      summary: 服务 列表 - 从目录中检索出
+      tags:
+      - Cicd
+  /cicd/superVisor/list:
+    get:
+      description: demo
+      parameters:
+      - description: 来源
+        enum:
+        - "11"
+        - "12"
+        - "21"
+        - "22"
+        in: header
+        name: X-Source-Type
+        required: true
+        type: string
+      - default: "6"
+        description: 项目ID
+        in: header
+        name: X-Project-Id
+        required: true
+        type: string
+      - default: imzgoframe
+        description: 访问KEY
+        in: header
+        name: X-Access
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Project'
+      summary: superVisor 列表
+      tags:
+      - Cicd
+  /config/center/get/key:
+    post:
+      parameters:
+      - description: 来源
+        enum:
+        - "11"
+        - "12"
+        - "21"
+        - "22"
+        in: header
+        name: X-Source-Type
+        required: true
+        type: string
+      - default: "6"
+        description: 项目ID
+        in: header
+        name: X-Project-Id
+        required: true
+        type: string
+      - default: imzgoframe
+        description: 访问KEY
+        in: header
+        name: X-Access
+        required: true
+        type: string
+      - description: ' '
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/request.ConfigCenterGetByKeyReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/httpresponse.LoginResponse'
+      summary: 以以模块(文件)+里面具体的key 为单位，获取配置信息
+      tags:
+      - ConfigCenter
+  /config/center/module/{name}:
+    get:
+      parameters:
+      - description: 来源
+        enum:
+        - "11"
+        - "12"
+        - "21"
+        - "22"
+        in: header
+        name: X-Source-Type
+        required: true
+        type: string
+      - default: "6"
+        description: 项目ID
+        in: header
+        name: X-Project-Id
+        required: true
+        type: string
+      - default: imzgoframe
+        description: 访问KEY
+        in: header
+        name: X-Access
+        required: true
+        type: string
+      - description: module name
+        in: path
+        name: name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/httpresponse.LoginResponse'
+      summary: 以模块(文件)为单位，获取该模块(文件)下的所有配置信息
+      tags:
+      - ConfigCenter
+  /config/center/set/key:
+    post:
+      parameters:
+      - description: 来源
+        enum:
+        - "11"
+        - "12"
+        - "21"
+        - "22"
+        in: header
+        name: X-Source-Type
+        required: true
+        type: string
+      - default: "6"
+        description: 项目ID
+        in: header
+        name: X-Project-Id
+        required: true
+        type: string
+      - default: imzgoframe
+        description: 访问KEY
+        in: header
+        name: X-Access
+        required: true
+        type: string
+      - description: ' '
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/request.ConfigCenterSetByKeyReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/httpresponse.LoginResponse'
+      summary: 以模块(文件)+里面具体的key 为单位，设置置信息(如果存在，覆盖)
+      tags:
+      - ConfigCenter
   /gateway/action/map:
     get:
       description: 后期考虑替换掉PHP解析过程，直接用GO
@@ -1937,5 +2183,9 @@ tags:
   name: User
 - description: 系统管理(需要二次认证)
   name: System
+- description: 自动化部署与持续集成
+  name: Cicd
 - description: 站内信/内部邮件通知
   name: Mail
+- description: 配置中心
+  name: ConfigCenter

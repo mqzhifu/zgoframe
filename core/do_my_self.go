@@ -1,10 +1,8 @@
 package core
 
-import "zgoframe/test"
-
 func DoMySelf(testFlag string) {
 
-	test.Cicd()
+	//test.Cicd()
 	//global.V.AlertPush.Push(1,"error","test push alert info.")
 	//time.Sleep(time.Second * 1)
 	//util.ExitPrint(22)

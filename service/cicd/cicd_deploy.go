@@ -6,6 +6,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"zgoframe/http/request"
 	"zgoframe/model"
 	"zgoframe/util"
 )
@@ -32,9 +33,7 @@ type ServiceDeployConfig struct {
 	CodeGitClonePath   string // ClonePath + service name
 	CICDShellFileName  string //有一一些操作需要借用于shell 执行，如：git clone . 该变量就是shell 文件名
 }
-
-//一次部署全部服务项目
-func (cicdManager *CicdManager) DeployAllService() {
+func (cicdManager *CicdManager)GetDeployConfig()ServiceDeployConfig{
 	cicdManager.Option.Log.Info("DeployAllService:")
 	serviceDeployConfig := ServiceDeployConfig{
 		BaseDir:            cicdManager.Option.Config.System.ServiceDir,
@@ -49,7 +48,27 @@ func (cicdManager *CicdManager) DeployAllService() {
 		//ConfigFileName:     "config.toml",
 	}
 	util.PrintStruct(serviceDeployConfig, ":")
+	return serviceDeployConfig
+}
+func (cicdManager *CicdManager) ApiDeployOneService(form request.CicdDeploy) error{
+	server , ok := cicdManager.Option.ServerList[form.ServerId]
+	if !ok {
+		return errors.New("serviceId not in list")
+	}
+	service , ok := cicdManager.Option.ServiceList[form.ServiceId]
+	if !ok {
+		return errors.New("serviceId not in list")
+	}
 
+	serviceDeployConfig := cicdManager.GetDeployConfig()
+	err := cicdManager.DeployOneService(server, serviceDeployConfig, service)
+	return err
+}
+
+//一次部署全部服务项目
+func (cicdManager *CicdManager) DeployAllService() {
+
+	serviceDeployConfig := cicdManager.GetDeployConfig()
 	//先遍历所有服务器，然后，把所有已知服务部署到每台服务器上(每台机器都可以部署任何服务)
 	for _, server := range cicdManager.Option.ServerList {
 		//遍历所有服务

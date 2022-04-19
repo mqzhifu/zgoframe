@@ -886,8 +886,8 @@ var doc = `{
                 }
             }
         },
-        "/cicd/service/deploy/{name}": {
-            "get": {
+        "/cicd/service/deploy": {
+            "post": {
                 "description": "demo",
                 "produces": [
                     "application/json"
@@ -925,6 +925,15 @@ var doc = `{
                         "name": "X-Access",
                         "in": "header",
                         "required": true
+                    },
+                    {
+                        "description": "用户信息",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.CicdDeploy"
+                        }
                     }
                 ],
                 "responses": {
@@ -2549,6 +2558,17 @@ var doc = `{
                 "username": {
                     "description": "用户名",
                     "type": "string"
+                }
+            }
+        },
+        "request.CicdDeploy": {
+            "type": "object",
+            "properties": {
+                "server_id": {
+                    "type": "integer"
+                },
+                "service_id": {
+                    "type": "integer"
                 }
             }
         },

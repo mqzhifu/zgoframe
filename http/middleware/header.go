@@ -19,7 +19,7 @@ func Header() gin.HandlerFunc {
 		global.V.Zap.Debug("middle Header start:")
 
 		//string header map 映射到 request.Header 结构体中
-		util.MyPrint(c.Request.Header)
+		//util.MyPrint(c.Request.Header)
 		header := HttpHeaderSureMapCovertSureStruct(c.Request.Header)
 
 		header.AutoIp = c.Request.RemoteAddr

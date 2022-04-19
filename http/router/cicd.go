@@ -14,8 +14,8 @@ func InitCicdRouter(Router *gin.RouterGroup) {
 		CicdRouter.GET("service/list", v1.CicdServiceList)
 
 		CicdRouter.GET("server/list", v1.CicdServerList)
-
-		CicdRouter.GET("service/deploy/{name}", v1.CicdServiceDeploy)
+		//部署一个服务
+		CicdRouter.POST("service/deploy", v1.CicdServiceDeploy)
 
 		CicdRouter.GET("service/deploy/all", v1.CicdServiceDeploy)
 

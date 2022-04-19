@@ -86,7 +86,8 @@ publish:<br/>
     var instanceList = null;
     var publishList = null;
 
-    var serverStatusDesc = {1:"正常",2:"关闭",3:"down机",4:"未开启superVisor"};
+    var server_ping_status_desc = {1:"正常",2:"关闭"};
+    var super_visor_status_desc = {0:"正常",1:"初始化失败",2:"XMLRpc连接失败"}
     var deployStatus = {0:"否",1:"是"};
 
     $(document).ready(function(){
@@ -183,9 +184,11 @@ publish:<br/>
             contentType: "application/json;charset=utf-8",
             url: "/cicd/superVisor/list",
             success: function(backData){
-                alert(backData);
-                // var serverService = $.parseJSON(backData)
-                // ProcessServerService( serverService)
+                backData = eval(   backData  );
+                if(backData.code != 200){
+                    return alert("ajax req back data err");
+                }
+                ProcessServerService( backData.data)
             }
         });
     });
@@ -214,42 +217,80 @@ publish:<br/>
     }
 
 
-    //
-    // function ProcessServerService(serverService){
-    //     var serverStatsList = serverService.server_status;
-    //     // alert(serverStatsList);
-    //     var serviceSuperVisorList = serverService.server_service_super_visor;
-    //     var tableHtml = "<table><th>server_id</th><th>status</th><th>env</th><th>service_super_visor</th>";
-    //
-    //     for(let serverId  in serverStatsList){
-    //         var status = serverStatsList[serverId];
-    //         var tr = "<tr><td>"+serverId+"</td><td>"+serverStatusDesc[status]+"</td><td>"+serverList[serverId].env+"</td>";
-    //         if (status == 4 || status == 3){
-    //             alert("server status err.");
-    //             tr +="<td></td></tr>";
-    //         }else{
-    //             tr += "<td>";
-    //             var serviceSuperVisor = serviceSuperVisorList[serverId];
-    //
-    //             var processListTable = "<table>";
-    //
-    //
-    //             for(var i=0;i<serviceSuperVisor.length;i++){
-    //                 processListTable += "<tr><td>"+serviceSuperVisor[i].Name+"</td><td>"+serviceSuperVisor[i].State+"</td><td>&nbsp;</td><td>"+GetOptBnt()+"</td></tr>";
-    //             }
-    //             processListTable += "</table>";
-    //
-    //             tr += processListTable;
-    //             tr += "</td>";
-    //         }
-    //         tableHtml += tr;
-    //     }
-    //
-    //     tableHtml += "</table>";
-    //
-    //     $("#server_service_super_visor").html(tableHtml);
-    // }
-    //
+
+    function ProcessServerService(serverService){
+        var server_ping_status = serverService.server_ping_status;
+        var super_visor_status = serverService.super_visor_status;
+
+        var serviceSuperVisorList = serverService.server_service_super_visor;
+        var tableHtml = "<table><th>server_id</th><th>ping_status</th><th>super_visor_status</th><th>env</th><th>service_super_visor</th>";
+
+        for(let serverId  in server_ping_status){
+            var status = server_ping_status[serverId];
+            var sv_status = super_visor_status[serverId]
+
+            var tr = "<tr><td>"+serverId+"</td><td>"+server_ping_status_desc[status]+"</td><td>"+super_visor_status_desc[sv_status]+"</td><td>"+serverList[serverId].env+"</td>";
+            if (status != 1){
+                // alert("server status err.");
+                tr +="<td></td></tr>";
+                tableHtml += tr;
+                continue;
+            }
+
+            if  (sv_status){
+                // alert("super_visor_status status err.");
+                tr +="<td></td></tr>";
+                tableHtml += tr;
+                continue;
+            }
+
+            tr += "<td>";
+            var serviceSuperVisor = serviceSuperVisorList[serverId];
+            console.log("serviceSuperVisor:",serviceSuperVisor);
+            var processListTable = "<table>";
+
+            for(var i=0;i<serviceSuperVisor.length;i++){
+                var bnt = GetBnt(serviceSuperVisor[i].State);
+                processListTable += "<tr><td>"+serviceSuperVisor[i].Name+"</td><td>"+serviceSuperVisor[i].State+"</td><td>&nbsp;</td><td>"+bnt+"</td></tr>";
+            }
+            processListTable += "</table>";
+
+            tr += processListTable;
+            tr += "</td>";
+            tableHtml += tr;
+
+        }
+
+        tableHtml += "</table>";
+
+        $("#server_service_super_visor").html(tableHtml);
+    }
+
+    function GetBnt(superVisorState ){
+        var optBnt = "<a href='#'>部署</a>&nbsp;";
+        if (superVisorState == 999){
+            return optBnt;
+        }else if (superVisorState === 0 || superVisorState == 30 || superVisorState == 100 || superVisorState == 200){
+            optBnt += "<a href='#'>启动</a>&nbsp;"
+        }else if (superVisorState == 20 ){
+            optBnt += "<a href='#'>停止</a>&nbsp;"
+            optBnt += "<a href='#'>重启</a>&nbsp;"
+            return optBnt;
+        }else if (superVisorState == 10 ){
+            optBnt = "<a href='#'>启动中,请等待</a>&nbsp;"
+            return optBnt;
+        }else if (superVisorState == 40 ){
+            optBnt = "<a href='#'>停止中,请等待</a>&nbsp;"
+            return optBnt;
+        }else{
+            optBnt = "<a href='#'>未知状态</a>&nbsp;"
+            return optBnt;
+        }
+        optBnt += "<a href='#'>发布</a>&nbsp;";
+        optBnt += "<a href='#'>回滚</a>&nbsp;";
+        return optBnt
+    }
+
     function ProcessServiceList(objId,data_list){
         var tableObj = $("#"+objId);
         // alert(servier_list[0]);

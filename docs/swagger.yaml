@@ -198,6 +198,13 @@ definitions:
         description: 用户名
         type: string
     type: object
+  request.CicdDeploy:
+    properties:
+      server_id:
+        type: integer
+      service_id:
+        type: integer
+    type: object
   request.ConfigCenterGetByKeyReq:
     properties:
       key:
@@ -1329,8 +1336,8 @@ paths:
       summary: 服务器 列表
       tags:
       - Cicd
-  /cicd/service/deploy/{name}:
-    get:
+  /cicd/service/deploy:
+    post:
       description: demo
       parameters:
       - description: 来源
@@ -1355,6 +1362,12 @@ paths:
         name: X-Access
         required: true
         type: string
+      - description: 用户信息
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/request.CicdDeploy'
       produces:
       - application/json
       responses:

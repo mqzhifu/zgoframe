@@ -77,6 +77,11 @@ type NiukeQuestionSearch struct {
 	Title string `json:"title"`
 }
 
+type CicdDeploy struct {
+	ServerId	int	`json:"server_id"`
+	ServiceId 	int	`json:"service_id"`
+}
+
 //@description 3方登陆
 type RLoginThird struct {
 	Register

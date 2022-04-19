@@ -12,6 +12,7 @@ import (
 	"os/exec"
 	"strconv"
 	"strings"
+	"time"
 	"zgoframe/model"
 	"zgoframe/util"
 )
@@ -205,10 +206,11 @@ func (cicdManager *CicdManager) GetServerList( ) map[int]util.Server{
 		if !cicdManager.CheckInTestServer(server.OutIp){
 			server.Status = 3
 		}else{
-			status := util.PingByShell(server.OutIp, "2")
-			if !status {
-				server.Status = 3
-			}
+			//status := util.PingByShell(server.OutIp, "2")
+			//if !status {
+			//	server.Status = 3
+			//}
+			server.Status = 3
 		}
 
 		list[k] = server
@@ -252,7 +254,7 @@ type ServerServiceSuperVisorList struct {
 //每台服务器上 都会启动一个superVisor进程
 //列出每台机器上的：superVisor进程 的所有服务进程的状态信息
 func (cicdManager *CicdManager) GetSuperVisorList( )(list ServerServiceSuperVisorList , err error) {
-	serviceBaseDir := cicdManager.Option.Config.System.ServiceDir
+	//serviceBaseDir := cicdManager.Option.Config.System.ServiceDir
 
 	if len(cicdManager.Option.ServerList) == 0 {
 		//服务器 为空
@@ -281,15 +283,17 @@ func (cicdManager *CicdManager) GetSuperVisorList( )(list ServerServiceSuperViso
 		//dns := "http://" + server.OutIp + ":9001"
 		if cicdManager.CheckInTestServer(server.OutIp){
 			//ping 测试一下 对端服务器：是否开启了sdk HTTP
-			testServerRs := cicdManager.TestServerStateHttp(dns + "/ping")
+			testServerRs := cicdManager.TestServerStateHttp(dns + "/cicd/ping")
 			if testServerRs == 0 {
 				util.MyPrint("")
 				serverStatus[server.Id] = util.SERVER_PING_FAIL
+				superVisorStatus[server.Id ] = util.SV_ERROR_INIT
 				continue
 			}else{
 				serverStatus[server.Id] = util.SERVER_PING_OK
 			}
 		}else{
+			superVisorStatus[server.Id ] = util.SV_ERROR_INIT
 			serverStatus[server.Id] = util.SERVER_PING_FAIL
 			continue
 		}
@@ -321,36 +325,40 @@ func (cicdManager *CicdManager) GetSuperVisorList( )(list ServerServiceSuperViso
 			util.MyPrint("SuperVisor GetAllProcessInfo err:"+err.Error())
 			continue
 		}else{
-			jsonStr,_  := json.Marshal(processInfoList)
-			util.MyPrint(jsonStr)
+			//jsonStr,_  := json.Marshal(processInfoList)
+			//util.MyPrint(jsonStr)
 			//util.ExitPrint(string(jsonStr))
 		}
+		superVisorStatus[server.Id ] = util.SV_ERROR_NONE
 
 		for _, service := range cicdManager.Option.ServiceList {
 			//获取当前服务器，已部署的服务目录
-			servicePath := serviceBaseDir + util.DIR_SEPARATOR + service.Name
-			util.MyPrint("servicePath:", servicePath)
+			//servicePath := serviceBaseDir + util.DIR_SEPARATOR + service.Name
+			//util.MyPrint("servicePath:", servicePath)
 
-			//superVisorProcessInfo := supervisord.ProcessInfo{
-			//	Name:  util.SUPER_VISOR_PROCESS_NAME_SERVICE_PREFIX + service.Name,
-			//	State: 999, //项目未部署过
-			//}
-			search := 0
-			var superVisorProcessInfo supervisord.ProcessInfo
+			superVisorProcessInfo := supervisord.ProcessInfo{
+				Name:  util.SUPER_VISOR_PROCESS_NAME_SERVICE_PREFIX + service.Name,
+				State: 999, //项目未部署过
+			}
+			//search := 0
+			//var superVisorProcessInfo supervisord.ProcessInfo
 			//先筛选一下，看看该服务有没有被 添加到superVisor中
 			for _, process := range processInfoList {
+				//rs := fmt.Sprintf("%+v",process)
+				//util.MyPrint(rs)
 				if process.Name == util.SUPER_VISOR_PROCESS_NAME_SERVICE_PREFIX+service.Name {
+					util.MyPrint(fmt.Sprintf("%+v",process))
 					superVisorProcessInfo = process
-					superVisorStatus[server.Id ] = util.SV_ERROR_NONE
-					search = 1
+					//superVisorStatus[service.Id ] = util.SV_ERROR_NONE
+					//search = 1
 					break
 				}
 			}
 
-			if search == 0{
-				superVisorStatus[server.Id ] = util.SV_ERROR_NOT_FOUND
-				continue
-			}
+			//if search == 0{
+			//	superVisorStatus[server.Id ] = util.SV_ERROR_NOT_FOUND
+			//	continue
+			//}
 
 			_, ok := serverServiceSuperVisor[server.Id]
 			if !ok {
@@ -481,7 +489,9 @@ func ExecShellCommand(command string, argc string) (string, error) {
 
 //这里有一条简单的操作，80端口基本上都得用，测试服务器状态，用ping curl 也可以.
 func (cicdManager *CicdManager) TestServerStateHttp(hostUri string) int {
-	client := &http.Client{}
+	client := &http.Client{
+		Timeout:  1 * time.Second,
+	}
 	//提交请求
 	reqest, err := http.NewRequest("GET", hostUri, nil)
 	if err != nil {

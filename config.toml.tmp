@@ -31,7 +31,7 @@ autoAlert       = true
 status      = "open"
 db-number   = 1
 ip          = "#redis_ip#"
-port        = "#redis_ip#"
+port        = "#redis_port#"
 password    =  "#redis_ps#"
 
 [captcha]

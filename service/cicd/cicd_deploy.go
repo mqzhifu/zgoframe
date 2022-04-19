@@ -102,8 +102,13 @@ func (cicdManager *CicdManager) DeployServiceCheck(server util.Server, serviceDe
 
 //部署一个服务
 func (cicdManager *CicdManager) DeployOneService(server util.Server, serviceDeployConfig ServiceDeployConfig, service util.Service) error {
-	if service.Name != "Zgoframe" && server.Env != 1 { //测试代码,只部署：local Zgoframe
+	if service.Name != "Zgoframe"  { //测试代码,只部署：local Zgoframe
 		util.MyPrint("service name != Zgoframe")
+		return nil
+	}
+
+	if server.Env != 1  { //测试代码,只部署：local Zgoframe
+		util.MyPrint(" server.Env != 1 ")
 		return nil
 	}
 

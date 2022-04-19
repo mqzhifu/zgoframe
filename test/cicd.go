@@ -1,7 +1,9 @@
 package test
 
-func Cicd(){
+import "zgoframe/core/global"
 
+func Cicd(){
+	global.V.MyService.Cicd.DeployAllService()
 }
 
 

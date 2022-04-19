@@ -47,7 +47,6 @@ func (cicdManager *CicdManager) DeployAllService() {
 		//ConfigTmpFileName:  "config.toml.tmp",
 		//ConfigFileName:     "config.toml",
 	}
-	return
 	util.PrintStruct(serviceDeployConfig, ":")
 
 	//先遍历所有服务器，然后，把所有已知服务部署到每台服务器上(每台机器都可以部署任何服务)
@@ -106,6 +105,7 @@ func (cicdManager *CicdManager) DeployOneService(server util.Server, serviceDepl
 		util.MyPrint("service name != Zgoframe")
 		return nil
 	}
+
 	cicdManager.Option.Log.Info("DeployOneService:" + server.OutIp + " " + strconv.Itoa(server.Env) + " " + service.Name)
 	//创建发布记录
 	publish := cicdManager.Option.PublicManager.InsertOne(service, server)
@@ -240,6 +240,7 @@ func (cicdManager *CicdManager) DeployOneServiceSuperVisor(serviceDeployConfig S
 		Stderr_logfile:         serviceDeployConfig.BaseDir + util.DIR_SEPARATOR + "super_visor_stderr.log",
 		Process_name:           serviceDeployConfig.Name,
 	}
+	util.ExitPrint(superVisorReplace)
 	//替换配置文件中的动态值，并生成配置文件
 	serviceConfFileContent := serviceSuperVisor.ReplaceConfTemplate(superVisorReplace)
 	//将已替换好的文件，生成一个新的配置文件

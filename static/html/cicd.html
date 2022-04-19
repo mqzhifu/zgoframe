@@ -76,82 +76,133 @@ publish:<br/>
 
 
 <script>
+    // 后端公共HTTP接口-头信息
+    var header_X_Source_Type = "11";
+    var header_X_Project_Id = "6";
+    var header_X_Access = "imzgoframe";
+    //===========================
     var serviceList = null;
     var serverList = null;
     var instanceList = null;
     var publishList = null;
 
     var serverStatusDesc = {1:"正常",2:"关闭",3:"down机",4:"未开启superVisor"};
+    var deployStatus = {0:"否",1:"是"};
 
     $(document).ready(function(){
         $.ajax({
+            headers: {
+                "X-Source-Type": header_X_Source_Type,
+                "X-Project-Id": header_X_Project_Id,
+                "X-Access": header_X_Access,
+            },
             type: "GET",
             contentType: "application/json;charset=utf-8",
-            url: "/getServerList",
-            // data: {username:$("#username").val(), content:$("#content").val()},
-            // dataType: "json",
+            url: "/cicd/service/list",
             success: function(backData){
-                // backData = eval(   backData  );
-                // if(backData.Code != 200){
-                //     return alert("ajax req back data err");
-                // }
-                // data = backData
-                serverList =  $.parseJSON(backData)
-                ProcessList("table_server_list",serverList)
-            }
-        });
-    });
-
-    $(document).ready(function(){
-        $.ajax({
-            type: "GET",
-            contentType: "application/json;charset=utf-8",
-            url: "/getInstanceList",
-            success: function(backData){
-                instanceList = $.parseJSON(backData)
-                ProcessList("table_instance_list",instanceList)
-            }
-        });
-    });
-
-    $(document).ready(function(){
-        $.ajax({
-            type: "GET",
-            contentType: "application/json;charset=utf-8",
-            url: "/getPublishList",
-            success: function(backData){
-                publishList = $.parseJSON(backData)
-                ProcessPublishList("table_publish_list",publishList)
-            }
-        });
-    });
-
-    $(document).ready(function(){
-        $.ajax({
-            type: "GET",
-            contentType: "application/json;charset=utf-8",
-            url: "/getServiceList",
-            success: function(backData){
-                serviceList =  $.parseJSON(backData)
+                backData = eval(   backData  );
+                if(backData.code != 200){
+                    return alert("ajax req back data err");
+                }
+                // serverList =  $.parseJSON(backData)
+                serviceList =  backData.data;
                 ProcessServiceList("table_service_list",serviceList)
+
             }
         });
     });
 
     $(document).ready(function(){
+        $("#table_server_list").html("server 正在 ping 中，略慢，请等待...")
         $.ajax({
+            headers: {
+                "X-Source-Type": header_X_Source_Type,
+                "X-Project-Id": header_X_Project_Id,
+                "X-Access": header_X_Access,
+            },
             type: "GET",
             contentType: "application/json;charset=utf-8",
-            url: "/getSuperVisorList",
+            url: "/cicd/server/list",
             success: function(backData){
-                var serverService = $.parseJSON(backData)
-                ProcessServerService( serverService)
+                backData = eval(   backData  );
+                if(backData.code != 200){
+                    return alert("ajax req back data err");
+                }
+                serverList =  backData.data;
+                ProcessList("table_server_list",serverList)
+
             }
         });
     });
 
 
-    function GetOptBnt(){
+    // $(document).ready(function(){
+    //     $.ajax({
+    //         type: "GET",
+    //         contentType: "application/json;charset=utf-8",
+    //         url: "/getInstanceList",
+    //         success: function(backData){
+    //             instanceList = $.parseJSON(backData)
+    //             ProcessList("table_instance_list",instanceList)
+    //         }
+    //     });
+    // });
+    //
+    // $(document).ready(function(){
+    //     $.ajax({
+    //         type: "GET",
+    //         contentType: "application/json;charset=utf-8",
+    //         url: "/getPublishList",
+    //         success: function(backData){
+    //             publishList = $.parseJSON(backData)
+    //             ProcessPublishList("table_publish_list",publishList)
+    //         }
+    //     });
+    // });
+    //
+    // $(document).ready(function(){
+    //     $.ajax({
+    //         type: "GET",
+    //         contentType: "application/json;charset=utf-8",
+    //         url: "/getServiceList",
+    //         success: function(backData){
+    //             serviceList =  $.parseJSON(backData)
+    //             ProcessServiceList("table_service_list",serviceList)
+    //         }
+    //     });
+    // });
+    //
+    $(document).ready(function(){
+        $.ajax({
+            headers: {
+                "X-Source-Type": header_X_Source_Type,
+                "X-Project-Id": header_X_Project_Id,
+                "X-Access": header_X_Access,
+            },
+            type: "GET",
+            contentType: "application/json;charset=utf-8",
+            url: "/cicd/superVisor/list",
+            success: function(backData){
+                alert(backData);
+                // var serverService = $.parseJSON(backData)
+                // ProcessServerService( serverService)
+            }
+        });
+    });
+    //
+    //
+    // function GetOptBnt(){
+    //     var optBnt = "<a href='#'>停止</a>&nbsp;";
+    //     optBnt += "<a href='#'>重启</a>&nbsp;";
+    //     optBnt += "<a href='#'>启动</a>&nbsp;";
+    //     optBnt += "<a href='#'>部署代码</a>&nbsp;";
+    //     optBnt += "<a href='#'>发布代码</a>&nbsp;";
+    //     optBnt += "<a href='#'>回滚</a>&nbsp;";
+    //
+    //     return optBnt;
+    // }
+
+    function GetServiceOptBnt(){
         var optBnt = "<a href='#'>停止</a>&nbsp;";
         optBnt += "<a href='#'>重启</a>&nbsp;";
         optBnt += "<a href='#'>启动</a>&nbsp;";
@@ -162,41 +213,43 @@ publish:<br/>
         return optBnt;
     }
 
-    function ProcessServerService(serverService){
-        var serverStatsList = serverService.server_status;
-        // alert(serverStatsList);
-        var serviceSuperVisorList = serverService.server_service_super_visor;
-        var tableHtml = "<table><th>server_id</th><th>status</th><th>env</th><th>service_super_visor</th>";
 
-        for(let serverId  in serverStatsList){
-            var status = serverStatsList[serverId];
-            var tr = "<tr><td>"+serverId+"</td><td>"+serverStatusDesc[status]+"</td><td>"+serverList[serverId].env+"</td>";
-            if (status == 4 || status == 3){
-                alert("server status err.");
-                tr +="<td></td></tr>";
-            }else{
-                tr += "<td>";
-                var serviceSuperVisor = serviceSuperVisorList[serverId];
-
-                var processListTable = "<table>";
-
-
-                for(var i=0;i<serviceSuperVisor.length;i++){
-                    processListTable += "<tr><td>"+serviceSuperVisor[i].Name+"</td><td>"+serviceSuperVisor[i].State+"</td><td>&nbsp;</td><td>"+GetOptBnt()+"</td></tr>";
-                }
-                processListTable += "</table>";
-
-                tr += processListTable;
-                tr += "</td>";
-            }
-            tableHtml += tr;
-        }
-
-        tableHtml += "</table>";
-
-        $("#server_service_super_visor").html(tableHtml);
-    }
-
+    //
+    // function ProcessServerService(serverService){
+    //     var serverStatsList = serverService.server_status;
+    //     // alert(serverStatsList);
+    //     var serviceSuperVisorList = serverService.server_service_super_visor;
+    //     var tableHtml = "<table><th>server_id</th><th>status</th><th>env</th><th>service_super_visor</th>";
+    //
+    //     for(let serverId  in serverStatsList){
+    //         var status = serverStatsList[serverId];
+    //         var tr = "<tr><td>"+serverId+"</td><td>"+serverStatusDesc[status]+"</td><td>"+serverList[serverId].env+"</td>";
+    //         if (status == 4 || status == 3){
+    //             alert("server status err.");
+    //             tr +="<td></td></tr>";
+    //         }else{
+    //             tr += "<td>";
+    //             var serviceSuperVisor = serviceSuperVisorList[serverId];
+    //
+    //             var processListTable = "<table>";
+    //
+    //
+    //             for(var i=0;i<serviceSuperVisor.length;i++){
+    //                 processListTable += "<tr><td>"+serviceSuperVisor[i].Name+"</td><td>"+serviceSuperVisor[i].State+"</td><td>&nbsp;</td><td>"+GetOptBnt()+"</td></tr>";
+    //             }
+    //             processListTable += "</table>";
+    //
+    //             tr += processListTable;
+    //             tr += "</td>";
+    //         }
+    //         tableHtml += tr;
+    //     }
+    //
+    //     tableHtml += "</table>";
+    //
+    //     $("#server_service_super_visor").html(tableHtml);
+    // }
+    //
     function ProcessServiceList(objId,data_list){
         var tableObj = $("#"+objId);
         // alert(servier_list[0]);
@@ -209,9 +262,13 @@ publish:<br/>
             server_list_first_key = key;
             var trTd = "<tr>";
             for(let key2  in data_list[key]){
-                trTd += "<td>"+data_list[key][key2]+ "</td>";
+                if (key2 == "deploy"){
+                    trTd += "<td>"+ deployStatus[data_list[key][key2]]+ "</td>";
+                }else{
+                    trTd += "<td>"+data_list[key][key2]+ "</td>";
+                }
             }
-            trTd += "<td><a href='#'>"+GetOptBnt()+"</a></td></tr>"
+            trTd += "<td><a href='#'>"+GetServiceOptBnt()+"</a></td></tr>"
             trTdAll += trTd;
         }
 
@@ -228,48 +285,50 @@ publish:<br/>
         tableObj.append(tableTh);
         tableObj.append(trTdAll);
     }
-
-    function ProcessPublishList(objId,data_list){
-        var tableObj = $("#"+objId);
-        // alert(servier_list[0]);
-        // var server_list =
-        var tableTh = "";
-
-        var server_list_first_key = 0;
-        var trTdAll = "";
-        for(let key  in data_list){
-            server_list_first_key = key;
-            var trTd = "<tr>";
-            for(let key2  in data_list[key]){
-                trTd += "<td>"+data_list[key][key2]+ "</td>";
-            }
-            trTd += "<td><a href='#'>取消发布</a>&nbsp;<a href='#'>重新发布</a></td></tr>"
-            trTdAll += trTd;
-        }
-
-        for(let key  in data_list[server_list_first_key]){
-            tableTh += "<th>"+key+"</th>";
-        }
-
-        tableTh += "<th></th>";
-
-        // alert(trTdAll);
-        // var html = tableTh + trTdAll;
-        // alert(html);
-        // $("#table_server_list").html(html);
-        tableObj.append(tableTh);
-        tableObj.append(trTdAll);
-    }
-
-
+    //
+    // function ProcessPublishList(objId,data_list){
+    //     var tableObj = $("#"+objId);
+    //     // alert(servier_list[0]);
+    //     // var server_list =
+    //     var tableTh = "";
+    //
+    //     var server_list_first_key = 0;
+    //     var trTdAll = "";
+    //     for(let key  in data_list){
+    //         server_list_first_key = key;
+    //         var trTd = "<tr>";
+    //         for(let key2  in data_list[key]){
+    //             trTd += "<td>"+data_list[key][key2]+ "</td>";
+    //         }
+    //         trTd += "<td><a href='#'>取消发布</a>&nbsp;<a href='#'>重新发布</a></td></tr>"
+    //         trTdAll += trTd;
+    //     }
+    //
+    //     for(let key  in data_list[server_list_first_key]){
+    //         tableTh += "<th>"+key+"</th>";
+    //     }
+    //
+    //     tableTh += "<th></th>";
+    //
+    //     // alert(trTdAll);
+    //     // var html = tableTh + trTdAll;
+    //     // alert(html);
+    //     // $("#table_server_list").html(html);
+    //     tableObj.append(tableTh);
+    //     tableObj.append(trTdAll);
+    // }
+    //
+    //
     function ProcessList(objId,data_list){
         var tableObj = $("#"+objId);
+        tableObj.html("");
         // alert(servier_list[0]);
         // var server_list =
         var tableTh = "";
 
         var server_list_first_key = 0;
         var trTdAll = "";
+
         for(let key  in data_list){
             server_list_first_key = key;
             var trTd = "<tr>";

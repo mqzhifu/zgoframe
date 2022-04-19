@@ -43,7 +43,7 @@ type Service struct {
 	SecretKey  string         `json:"secret_key"`
 	Git        string         `json:"git"`
 	LBType     int            `json:"lb_type"`
-	Deploy     int            `json:"deploy"`
+	Deploy     int            `json:"deploy"`//是否已部署到本机，0否，1是
 	List       []*ServiceNode `json:"-"`
 
 	Log *zap.Logger `json:"-"`

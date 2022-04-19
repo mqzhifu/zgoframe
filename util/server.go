@@ -7,10 +7,12 @@ import (
 )
 
 const (
-//APP_TYPE_SERVICE = 1
-//APP_TYPE_FE = 2
-//APP_TYPE_APP = 3
-//APP_TYPE_BE = 4
+	SERVER_STATUS_NORMAL = 1
+	SERVER_STATUS_CLOSE = 2
+
+	SERVER_PING_OK = 1	//正常：PING 成功
+	SERVER_PING_FAIL = 2 //异常：PING 失败了
+
 )
 
 type Server struct {
@@ -46,7 +48,7 @@ func (serverManager *ServerManager) initAppPool() error {
 func (serverManager *ServerManager) GetFromDb() error {
 	db := serverManager.Gorm.Model(&model.Server{})
 	var serverList []model.Server
-	err := db.Where(" status = ?  ", 1).Find(&serverList).Error
+	err := db.Where(" status = ?  ", SERVER_STATUS_NORMAL).Find(&serverList).Error
 	if err != nil {
 		return err
 	}

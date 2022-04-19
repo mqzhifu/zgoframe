@@ -12,7 +12,6 @@ import (
 	"os/exec"
 	"strconv"
 	"strings"
-	"time"
 	"zgoframe/model"
 	"zgoframe/util"
 )
@@ -97,10 +96,15 @@ type CicdManagerOption struct {
 	PublicManager   *CICDPublicManager
 	Log             *zap.Logger
 	OpDirName       string
+	TestServerList 	[]string
 }
+
 
 func NewCicdManager(cicdManagerOption CicdManagerOption) (*CicdManager, error) {
 	cicdManager := new(CicdManager)
+
+	cicdManagerOption.TestServerList = []string{"127.0.0.1","8.142.177.235"}
+
 	cicdManager.Option = cicdManagerOption
 
 	_, err := util.PathExists(cicdManagerOption.Config.System.ServiceDir) //service 根目录
@@ -174,31 +178,43 @@ func (cicdManager *CicdManager) Ping(c *gin.Context) {
 //	//c.String(200,string(str))
 //}
 
-//获取所有服务列表
+//在当前服务器上，从<部署目录>中检索出每个服务（目录名），分析出：哪些服务~已经部署
 func (cicdManager *CicdManager) GetServiceList( ) map[int]util.Service {
+	list := make(map[int]util.Service)
+
 	dirList := util.ForeachDir(cicdManager.Option.Config.System.ServiceDir)
-	for _, service := range cicdManager.Option.ServiceList {
+	for k, service := range cicdManager.Option.ServiceList {
+		s := service
 		for _, dirInfo := range dirList {
-			if service.Name == dirInfo.Name {
-				service.Deploy = 1
+			if s.Name == dirInfo.Name {
+				s.Deploy = 1
 				break
 			}
 		}
+		list[k] = s
 	}
-	return cicdManager.Option.ServiceList
+	return list
 	//str, _ := json.Marshal(cicdManager.Option.ServiceList)
 }
 
-//获取所有服务器列表
-func (cicdManager *CicdManager) GetServerList(c *gin.Context) {
-	for _, server := range cicdManager.Option.ServerList {
-		status := util.PingByShell(server.OutIp, "2")
-		if !status {
+//获取所有服务器列表，并做ping，确定状态
+func (cicdManager *CicdManager) GetServerList( ) map[int]util.Server{
+	list := make(map[int]util.Server)
+	for k, server := range cicdManager.Option.ServerList {
+		//这里是测试代码，不然PING太慢
+		if !cicdManager.CheckInTestServer(server.OutIp){
 			server.Status = 3
+		}else{
+			status := util.PingByShell(server.OutIp, "2")
+			if !status {
+				server.Status = 3
+			}
 		}
+
+		list[k] = server
 	}
-	str, _ := json.Marshal(cicdManager.Option.ServerList)
-	c.String(200, string(str))
+
+	return list
 
 }
 
@@ -227,9 +243,10 @@ func (cicdManager *CicdManager) GetPublishList(c *gin.Context) {
 	c.String(200, string(str))
 }
 
-//创建一个新的结构体
+//创建一个新的结构体,主要是给前端返回结果使用
 type ServerServiceSuperVisorList struct {
-	ServerStatus            map[int]int                       `json:"server_status"`
+	ServerPingStatus            map[int]int	`json:"server_ping_status"`
+	SuperVisorStatus            map[int]int `json:"super_visor_status"`
 	ServerServiceSuperVisor map[int][]supervisord.ProcessInfo `json:"server_service_super_visor"`
 }
 //每台服务器上 都会启动一个superVisor进程
@@ -238,31 +255,42 @@ func (cicdManager *CicdManager) GetSuperVisorList( )(list ServerServiceSuperViso
 	serviceBaseDir := cicdManager.Option.Config.System.ServiceDir
 
 	if len(cicdManager.Option.ServerList) == 0 {
+		//服务器 为空
 		errMsg := "GetSuperVisorList err:ServerList is empty"
 		//util.MyPrint()
 		return list,errors.New(errMsg)
 	}
 
 	if len(cicdManager.Option.ServiceList) == 0 {
+		//服务为空
 		errMsg := "GetSuperVisorList err:ServiceList is empty"
 		//util.MyPrint(errMsg)
 		return list,errors.New(errMsg)
 	}
 
 	util.MyPrint("serverList len:", len(cicdManager.Option.ServerList), " ServiceList len:", len(cicdManager.Option.ServiceList))
-
-	//serverId=>superVisorList
+	//服务器 上面:已经开启的 superVisor	map[serverId]=>superVisorList
 	serverServiceSuperVisor := make(map[int][]supervisord.ProcessInfo)
+	//服务器 状态
 	serverStatus := make(map[int]int)
+	superVisorStatus := make(map[int]int)
 	for _, server := range cicdManager.Option.ServerList {
 		fmt.Println("for each service:" + server.OutIp + " " + strconv.Itoa(server.Env))
 
 		dns := "http://" + server.OutIp + ":" + cicdManager.Option.HttpPort
-		//ping 测试一下 其它机器是否开启了sdk HTTP
-		testServerRs := cicdManager.TestServerStateHttp(dns + "/ping")
-		if testServerRs == 0 {
-			util.MyPrint("")
-			serverStatus[server.Id] = 3
+		//dns := "http://" + server.OutIp + ":9001"
+		if cicdManager.CheckInTestServer(server.OutIp){
+			//ping 测试一下 对端服务器：是否开启了sdk HTTP
+			testServerRs := cicdManager.TestServerStateHttp(dns + "/ping")
+			if testServerRs == 0 {
+				util.MyPrint("")
+				serverStatus[server.Id] = util.SERVER_PING_FAIL
+				continue
+			}else{
+				serverStatus[server.Id] = util.SERVER_PING_OK
+			}
+		}else{
+			serverStatus[server.Id] = util.SERVER_PING_FAIL
 			continue
 		}
 		//创建实例
@@ -276,52 +304,70 @@ func (cicdManager *CicdManager) GetSuperVisorList( )(list ServerServiceSuperViso
 		serviceSuperVisor, err := util.NewSuperVisor(superVisorOption)
 		if err != nil {
 			util.MyPrint("NewSuperVisor err:", err)
-			serverStatus[server.Id] = 4
+			superVisorStatus[server.Id ] = util.SV_ERROR_INIT
 			continue
 		}
 		//建立 XMLRpc
 		err = serviceSuperVisor.InitXMLRpc()
 		if err != nil {
 			util.MyPrint("serviceSuperVisor InitXMLRpc err:", err)
-			serverStatus[server.Id] = 4
+			superVisorStatus[server.Id ] =  util.SV_ERROR_CONN
 			continue
 		}
+		//获取当前机器上的superVisor 的所有 服务进程 状态
+		processInfoList, err := serviceSuperVisor.Cli.GetAllProcessInfo()
+		if err != nil{
+			superVisorStatus[server.Id ] =  util.SV_ERROR_CONN
+			util.MyPrint("SuperVisor GetAllProcessInfo err:"+err.Error())
+			continue
+		}else{
+			jsonStr,_  := json.Marshal(processInfoList)
+			util.MyPrint(jsonStr)
+			//util.ExitPrint(string(jsonStr))
+		}
 
-		serverStatus[server.Id] = server.Status
-
-		processInfoList, _ := serviceSuperVisor.Cli.GetAllProcessInfo()
 		for _, service := range cicdManager.Option.ServiceList {
+			//获取当前服务器，已部署的服务目录
 			servicePath := serviceBaseDir + util.DIR_SEPARATOR + service.Name
 			util.MyPrint("servicePath:", servicePath)
 
-			superVisorProcessInfo := supervisord.ProcessInfo{
-				Name:  util.SUPER_VISOR_PROCESS_NAME_SERVICE_PREFIX + service.Name,
-				State: 999, //项目未部署过
-			}
-
+			//superVisorProcessInfo := supervisord.ProcessInfo{
+			//	Name:  util.SUPER_VISOR_PROCESS_NAME_SERVICE_PREFIX + service.Name,
+			//	State: 999, //项目未部署过
+			//}
+			search := 0
+			var superVisorProcessInfo supervisord.ProcessInfo
+			//先筛选一下，看看该服务有没有被 添加到superVisor中
 			for _, process := range processInfoList {
 				if process.Name == util.SUPER_VISOR_PROCESS_NAME_SERVICE_PREFIX+service.Name {
 					superVisorProcessInfo = process
+					superVisorStatus[server.Id ] = util.SV_ERROR_NONE
+					search = 1
 					break
 				}
 			}
 
+			if search == 0{
+				superVisorStatus[server.Id ] = util.SV_ERROR_NOT_FOUND
+				continue
+			}
+
 			_, ok := serverServiceSuperVisor[server.Id]
 			if !ok {
-				util.MyPrint(22222)
+				//util.MyPrint(22222)
 				serverServiceSuperVisor[server.Id] = []supervisord.ProcessInfo{superVisorProcessInfo}
 			} else {
-				util.MyPrint(3333)
+				//util.MyPrint(3333)
 				serverServiceSuperVisor[server.Id] = append(serverServiceSuperVisor[server.Id], superVisorProcessInfo)
 			}
 		}
 
 	}
 
-
 	list = ServerServiceSuperVisorList{
-		ServerStatus:            serverStatus,
-		ServerServiceSuperVisor: serverServiceSuperVisor,
+		ServerPingStatus		: serverStatus,
+		SuperVisorStatus		: superVisorStatus,
+		ServerServiceSuperVisor	: serverServiceSuperVisor,
 	}
 	return list,nil
 	//str, err := json.Marshal(myresponse)
@@ -435,18 +481,38 @@ func ExecShellCommand(command string, argc string) (string, error) {
 
 //这里有一条简单的操作，80端口基本上都得用，测试服务器状态，用ping curl 也可以.
 func (cicdManager *CicdManager) TestServerStateHttp(hostUri string) int {
-	httpClient := http.Client{
-		Timeout: time.Second * 1,
-	}
-
-	resp, err := httpClient.Get(hostUri)
+	client := &http.Client{}
+	//提交请求
+	reqest, err := http.NewRequest("GET", hostUri, nil)
 	if err != nil {
-		util.MyPrint("http get err:", err)
+		return 0
+	}
+	util.MyPrint("TestServerStateHttp uri:"+hostUri)
+	//增加header选项
+	reqest.Header.Add("X-Source-Type", "11")
+	reqest.Header.Add("X-Project-Id", "6")
+	reqest.Header.Add("X-Access", "imzgoframe")
+	//处理返回结果
+	response, err := client.Do(reqest)
+	//defer response.Body.Close()
+	if  err != nil{
 		return 0
 	}
 
-	util.MyPrint("http get status:", resp.Status)
+	util.MyPrint("TestServerStateHttp http status:", response.Status)
+
+
 
 	return 1
 
 }
+
+func (cicdManager *CicdManager) CheckInTestServer(ip string)bool{
+	for _ , v := range cicdManager.Option.TestServerList{
+		if ip == v {
+			return true
+		}
+	}
+	return false
+}
+

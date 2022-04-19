@@ -13,6 +13,12 @@ const (
 	STR_SEPARATOR = "#"
 
 	SUPER_VISOR_PROCESS_NAME_SERVICE_PREFIX = "service_"//进程启动时，启程名称的前缀，方便统一管理
+
+	//下面是错误标识，主要是给CICD部署时使用，最终给前端使用
+	SV_ERROR_NONE = 0
+	SV_ERROR_INIT = 1
+	SV_ERROR_CONN = 2
+	SV_ERROR_NOT_FOUND = 3
 )
 
 type SuperVisorReplace struct {
@@ -75,13 +81,17 @@ func NewSuperVisor(superVisorOption SuperVisorOption )(*SuperVisor,error){
 //通过XML Rpc 控制远程 superVisor 服务进程
 func(superVisor *SuperVisor) InitXMLRpc()error{
 	dns := "http://" + superVisor.Option.Ip + ":" + superVisor.Option.RpcPort + "/RPC2"
+	MyPrint(dns)
 	c, err := supervisord.NewClient(dns)
 	if err != nil{
 		MyPrint("superVisor init err:",err)
 		return err
 	}
-
-
+	state ,err := c.GetState()
+	MyPrint("superVisor: XMLRpc state:",state," err:",err)
+	if err != nil{
+		MyPrint("superVisor err:"+err.Error())
+	}
 
 	superVisor.Cli = c
 	return nil

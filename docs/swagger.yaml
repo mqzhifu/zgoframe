@@ -1257,6 +1257,78 @@ paths:
       summary: 重置密码 - 通过短信
       tags:
       - Base
+  /cicd/ping:
+    get:
+      description: 测试对端有没有开启服务
+      parameters:
+      - description: 来源
+        enum:
+        - "11"
+        - "12"
+        - "21"
+        - "22"
+        in: header
+        name: X-Source-Type
+        required: true
+        type: string
+      - default: "6"
+        description: 项目ID
+        in: header
+        name: X-Project-Id
+        required: true
+        type: string
+      - default: imzgoframe
+        description: 访问KEY
+        in: header
+        name: X-Access
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Project'
+      summary: ping
+      tags:
+      - Cicd
+  /cicd/server/list:
+    get:
+      description: 获取所有服务器列表，并做ping，确定状态
+      parameters:
+      - description: 来源
+        enum:
+        - "11"
+        - "12"
+        - "21"
+        - "22"
+        in: header
+        name: X-Source-Type
+        required: true
+        type: string
+      - default: "6"
+        description: 项目ID
+        in: header
+        name: X-Project-Id
+        required: true
+        type: string
+      - default: imzgoframe
+        description: 访问KEY
+        in: header
+        name: X-Access
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Project'
+      summary: 服务器 列表
+      tags:
+      - Cicd
   /cicd/service/deploy/{name}:
     get:
       description: demo
@@ -1295,7 +1367,7 @@ paths:
       - Cicd
   /cicd/service/list:
     get:
-      description: demo
+      description: 在当前服务器上，从<部署目录>中检索出每个服务（目录名），分析出：哪些服务~已经部署
       parameters:
       - description: 来源
         enum:
@@ -1326,7 +1398,7 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/model.Project'
-      summary: 服务 列表 - 从目录中检索出
+      summary: 服务 列表
       tags:
       - Cicd
   /cicd/superVisor/list:

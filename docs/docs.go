@@ -784,6 +784,108 @@ var doc = `{
                 }
             }
         },
+        "/cicd/ping": {
+            "get": {
+                "description": "测试对端有没有开启服务",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Cicd"
+                ],
+                "summary": "ping",
+                "parameters": [
+                    {
+                        "enum": [
+                            "11",
+                            "12",
+                            "21",
+                            "22"
+                        ],
+                        "type": "string",
+                        "description": "来源",
+                        "name": "X-Source-Type",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "6",
+                        "description": "项目ID",
+                        "name": "X-Project-Id",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "imzgoframe",
+                        "description": "访问KEY",
+                        "name": "X-Access",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.Project"
+                        }
+                    }
+                }
+            }
+        },
+        "/cicd/server/list": {
+            "get": {
+                "description": "获取所有服务器列表，并做ping，确定状态",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Cicd"
+                ],
+                "summary": "服务器 列表",
+                "parameters": [
+                    {
+                        "enum": [
+                            "11",
+                            "12",
+                            "21",
+                            "22"
+                        ],
+                        "type": "string",
+                        "description": "来源",
+                        "name": "X-Source-Type",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "6",
+                        "description": "项目ID",
+                        "name": "X-Project-Id",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "imzgoframe",
+                        "description": "访问KEY",
+                        "name": "X-Access",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.Project"
+                        }
+                    }
+                }
+            }
+        },
         "/cicd/service/deploy/{name}": {
             "get": {
                 "description": "demo",
@@ -837,14 +939,14 @@ var doc = `{
         },
         "/cicd/service/list": {
             "get": {
-                "description": "demo",
+                "description": "在当前服务器上，从\u003c部署目录\u003e中检索出每个服务（目录名），分析出：哪些服务~已经部署",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "Cicd"
                 ],
-                "summary": "服务 列表 - 从目录中检索出",
+                "summary": "服务 列表",
                 "parameters": [
                     {
                         "enum": [

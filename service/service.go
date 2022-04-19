@@ -36,6 +36,7 @@ type MyServiceOptions struct {
 	ConfigCenterPersistenceType	int
 	OpDirName 	string
 	ServiceList map[int]util.Service
+	HttpPort 	string
 }
 
 func NewService(options MyServiceOptions) *Service {
@@ -91,14 +92,14 @@ func NewService(options MyServiceOptions) *Service {
 		util.ExitPrint("InitGateway err:" + err.Error())
 	}
 
-	service.Cicd ,err = InitCicd(options.Gorm,options.Zap,options.OpDirName,options.ServiceList)
+	service.Cicd ,err = InitCicd(options.Gorm,options.Zap,options.OpDirName,options.ServiceList,options.HttpPort)
 
 	service.FrameSync.SetNetway(netway)
 	gateway.MyService = service
 	return service
 }
 
-func InitCicd(gorm *gorm.DB,zap *zap.Logger,opDir string,ServiceList map[int]util.Service)(*cicd.CicdManager,error){
+func InitCicd(gorm *gorm.DB,zap *zap.Logger,opDir string,ServiceList map[int]util.Service,httpPort string)(*cicd.CicdManager,error){
 
 	/*依赖
 	host.toml cicd.sh
@@ -131,7 +132,7 @@ func InitCicd(gorm *gorm.DB,zap *zap.Logger,opDir string,ServiceList map[int]uti
 
 	//util.ExitPrint(22)
 	op := cicd.CicdManagerOption{
-		HttpPort		: cicdConfig.System.HttpPort,
+		HttpPort		: httpPort,
 		ServerList 		: serverList,
 		Config			: cicdConfig,
 		ServiceList		: ServiceList,

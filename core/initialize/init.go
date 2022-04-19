@@ -272,6 +272,7 @@ func (initialize *Initialize) Start() error {
 		ConfigCenterPersistenceType	:global.C.ConfigCenter.PersistenceType,
 		OpDirName: global.C.System.OpDirName,
 		ServiceList: global.V.ServiceManager.Pool,
+		HttpPort:global.C.Http.Port,
 	}
 
 	global.V.MyService = service.NewService(MyServiceOptions)

@@ -342,19 +342,9 @@ func InitPath(rootDir string) (rootDirName string, err error) {
 	projectNameByte := util.CamelToSnake2([]byte(global.V.Project.Name))
 	projectName := util.StrFirstToLower(string(projectNameByte))
 	if rootDirName != projectName {
-		//方便测试，先注释掉
-		return rootDirName, errors.New("mainDirName != app name , rootDirName : " + rootDirName + " , ProjectName:" + projectName)
+		//这里与CICD部署的时候冲突，先注释掉，回头想想怎么解决掉
+		//return rootDirName, errors.New("mainDirName != app name , rootDirName : " + rootDirName + " , ProjectName:" + projectName)
 	}
-
-	//if global.C.System.ProjectId > 0 {
-	//	if rootDirName != global.V.App.Key {
-	//		return rootDirName,errors.New("mainDirName != app name , "+rootDirName + " "+  global.V.App.Key)
-	//	}
-	//}else{
-	//	if rootDirName != global.V.Service.Key {
-	//		return rootDirName,errors.New("mainDirName != serviceName name , "+rootDirName + " "+  global.V.Service.Key)
-	//	}
-	//}
 
 	return rootDirName, nil
 }

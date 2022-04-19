@@ -253,7 +253,7 @@ func (initialize *Initialize) Start() error {
 	}
 	var netWayOption util.NetWayOption
 	if global.C.Gateway.Status == global.CONFIG_STATUS_OPEN {
-		netWayOption = InitGateway()
+		//netWayOption = InitGateway()
 		//	global.V.Gateway, err = InitGateway()
 		//	if err != nil {
 		//		global.V.Zap.Error(prefix + "InitGateway err:" + err.Error())
@@ -273,6 +273,7 @@ func (initialize *Initialize) Start() error {
 		OpDirName: global.C.System.OpDirName,
 		ServiceList: global.V.ServiceManager.Pool,
 		HttpPort:global.C.Http.Port,
+		GatewayStatus: global.C.Gateway.Status,
 	}
 
 	global.V.MyService = service.NewService(MyServiceOptions)

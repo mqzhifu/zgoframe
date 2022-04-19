@@ -5,7 +5,6 @@ import (
 	"github.com/spf13/viper"
 	"gorm.io/gorm"
 	"os"
-	"strconv"
 	"strings"
 	"zgoframe/util"
 )
@@ -105,7 +104,7 @@ func (configCenter *ConfigCenter) SetByKey(env int, projectId int,  module strin
 	return e
 }
 func (configCenter *ConfigCenter)GetModuleInfo(env int , projectId int,module string)(myViper *viper.Viper, err error){
-	util.MyPrint("GetModuleInfo ,  env:"+strconv.Itoa(env)  + " projectId:"+strconv.Itoa(projectId) + " module:"+ module)
+	//util.MyPrint("GetModuleInfo ,  env:"+strconv.Itoa(env)  + " projectId:"+strconv.Itoa(projectId) + " module:"+ module)
 	project , empty := configCenter.Option.ProjectManager.GetById(projectId)
 	if empty{
 		return myViper,errors.New("projectId is empty")
@@ -134,7 +133,7 @@ func (configCenter *ConfigCenter) InitPersistenceFile() error {
 		//envDir := configCenter.Option.PersistenceFileDir + "/" + strconv.Itoa(env)
 		envDir := configCenter.Option.PersistenceFileDir + "/" + util.GetConstListEnvStr()[env]
 
-		util.MyPrint("envDir:" + envDir)
+		//util.MyPrint("envDir:" + envDir)
 		_, err = util.PathExists(envDir)
 		if err != nil { //
 			if !os.IsNotExist(err) {
@@ -174,7 +173,7 @@ func (configCenter *ConfigCenter) InitPersistenceFile() error {
 			//}
 
 			projectDir := envDir + "/" + projectInfo.Name
-			util.MyPrint("projectDir:" + projectDir)
+			//util.MyPrint("projectDir:" + projectDir)
 			_, err = util.PathExists(projectDir)
 			if err != nil { //
 				if !os.IsNotExist(err) {

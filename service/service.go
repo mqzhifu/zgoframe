@@ -37,6 +37,7 @@ type MyServiceOptions struct {
 	OpDirName 	string
 	ServiceList map[int]util.Service
 	HttpPort 	string
+	GatewayStatus string
 }
 
 func NewService(options MyServiceOptions) *Service {
@@ -80,22 +81,23 @@ func NewService(options MyServiceOptions) *Service {
 	//强-依赖room
 	service.FrameSync = NewFrameSync(syncOption)
 
-	//var err error
-	var netway *util.NetWay
 	service.RoomManage.SetFrameSync(service.FrameSync)
-	//service.Gateway, netway, err = CreateGateway(netWayOption, grpcManager, zap)
 
-	//util.ExitPrint(netWayOption)
-	gateway := NewGateway(options.GrpcManager, options.Zap)
-	netway, err = gateway.StartSocket(options.NetWayOption)
-	if err != nil {
-		util.ExitPrint("InitGateway err:" + err.Error())
+	if options.GatewayStatus == "open"{
+		gateway := NewGateway(options.GrpcManager, options.Zap)
+		var netway *util.NetWay
+		netway, err = gateway.StartSocket(options.NetWayOption)
+		if err != nil {
+			util.ExitPrint("InitGateway err:" + err.Error())
+		}
+
+		service.FrameSync.SetNetway(netway)
+		gateway.MyService = service
 	}
 
 	service.Cicd ,err = InitCicd(options.Gorm,options.Zap,options.OpDirName,options.ServiceList,options.HttpPort)
 
-	service.FrameSync.SetNetway(netway)
-	gateway.MyService = service
+
 	return service
 }
 

@@ -134,8 +134,9 @@ func(superVisor *SuperVisor)ReloadProcess(){
 
 func(superVisor *SuperVisor)ReplaceConfTemplate(replaceSource SuperVisorReplace)string{
 	content := superVisor.ConfTemplateFileContent
+	//MyPrint(content)
 	key := superVisor.Option.Separator+"script_name"+superVisor.Option.Separator
-	MyPrint(key)
+	//MyPrint(key)
 	content = strings.Replace(content,key,replaceSource.Script_name,-1)
 
 	key = superVisor.Option.Separator+"startup_script_command"+superVisor.Option.Separator
@@ -150,8 +151,8 @@ func(superVisor *SuperVisor)ReplaceConfTemplate(replaceSource SuperVisorReplace)
 	key = superVisor.Option.Separator+"stderr_logfile"+superVisor.Option.Separator
 	content = strings.Replace(content,key,replaceSource.Stderr_logfile,-1)
 
-	key = superVisor.Option.Separator+"process_name"+superVisor.Option.ServiceNamePrefix + superVisor.Option.Separator
-	content = strings.Replace(content,key,replaceSource.Process_name,-1)
+	key = superVisor.Option.Separator+"process_name"+ superVisor.Option.Separator
+	content = strings.Replace(content,key,superVisor.Option.ServiceNamePrefix  + replaceSource.Process_name,-1)
 
 	//ExitPrint(content)
 

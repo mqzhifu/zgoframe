@@ -1,6 +1,7 @@
 package cicd
 
 import (
+	"bytes"
 	"errors"
 	"os"
 	"strconv"
@@ -134,7 +135,7 @@ func (cicdManager *CicdManager) DeployOneService(server util.Server, serviceDepl
 		return cicdManager.DeployOneServiceFailed(publish, err.Error())
 	}
 	//step 4: 处理项目自带的主配置文件
-	err = cicdManager.DeployOneServiceProjectConfig(newGitCodeDir, server, serviceDeployConfig,serviceCICDConfig)
+	err = cicdManager.DeployOneServiceProjectConfig(newGitCodeDir, server, serviceDeployConfig,serviceCICDConfig,service)
 	if err != nil {
 		return cicdManager.DeployOneServiceFailed(publish, err.Error())
 	}
@@ -236,13 +237,14 @@ func (cicdManager *CicdManager) DeployOneServiceSuperVisor(serviceDeployConfig S
 		Script_name:            serviceDeployConfig.Name,
 		Startup_script_command: configServiceCICD.System.Startup,
 		Script_work_dir:        serviceDeployConfig.MasterPath,
-		Stdout_logfile:         serviceDeployConfig.BaseDir + util.DIR_SEPARATOR + "super_visor_stdout.log",
-		Stderr_logfile:         serviceDeployConfig.BaseDir + util.DIR_SEPARATOR + "super_visor_stderr.log",
+		Stdout_logfile:         serviceDeployConfig.BaseDir + util.DIR_SEPARATOR + serviceDeployConfig.Name +  "/super_visor_stdout.log",
+		Stderr_logfile:         serviceDeployConfig.BaseDir + util.DIR_SEPARATOR + serviceDeployConfig.Name + "/super_visor_stderr.log",
 		Process_name:           serviceDeployConfig.Name,
 	}
-	util.ExitPrint(superVisorReplace)
+	//util.PrintStruct(superVisorReplace,":")
 	//替换配置文件中的动态值，并生成配置文件
 	serviceConfFileContent := serviceSuperVisor.ReplaceConfTemplate(superVisorReplace)
+	//util.ExitPrint(serviceConfFileContent)
 	//将已替换好的文件，生成一个新的配置文件
 	err = serviceSuperVisor.CreateServiceConfFile(serviceConfFileContent)
 	if err != nil {
@@ -253,7 +255,7 @@ func (cicdManager *CicdManager) DeployOneServiceSuperVisor(serviceDeployConfig S
 }
 
 //step 4
-func (cicdManager *CicdManager) DeployOneServiceProjectConfig(newGitCodeDir string, server util.Server, serviceDeployConfig ServiceDeployConfig,configServiceCICD ConfigServiceCICD ) error {
+func (cicdManager *CicdManager) DeployOneServiceProjectConfig(newGitCodeDir string, server util.Server, serviceDeployConfig ServiceDeployConfig,configServiceCICD ConfigServiceCICD ,service util.Service ) error {
 	cicdManager.Option.Log.Info("step 4 : create project self conf file.")
 	//读取该服务自己的配置文件 config.toml
 	serviceSelfConfigTmpFileDir := newGitCodeDir + util.DIR_SEPARATOR + configServiceCICD.System.ConfigTmpFileName
@@ -269,10 +271,15 @@ func (cicdManager *CicdManager) DeployOneServiceProjectConfig(newGitCodeDir stri
 	}
 	//开始替换 服务自己配置文件中的，实例信息，如：IP PORT
 	serviceSelfConfigTmpFileContentNew := cicdManager.ReplaceInstance(serviceSelfConfigTmpFileContent, serviceDeployConfig.Name, server.Env)
+
+	key := util.STR_SEPARATOR + "projectId" + util.STR_SEPARATOR
+	serviceSelfConfigTmpFileContentNew = strings.Replace(serviceSelfConfigTmpFileContentNew, key, strconv.Itoa(service.Id) , -1)
+
 	//生成新的配置文件
 	newConfig := newGitCodeDir + util.DIR_SEPARATOR + configServiceCICD.System.ConfigFileName
 	newConfigFile, _ := os.Create(newConfig)
-	newConfigFile.Write([]byte(serviceSelfConfigTmpFileContentNew))
+	contentByte := bytes.Trim([]byte(serviceSelfConfigTmpFileContentNew),"\x00")//NUL
+	newConfigFile.Write(contentByte)
 
 	return nil
 }

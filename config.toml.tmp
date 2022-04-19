@@ -1,6 +1,6 @@
 [system]
 dbType       = "mysql"
-projectId    = 0
+projectId    = #projectId#
 errorMsgFile = "/data/lang.txt"
 opDirName    = "operation"
 
@@ -126,4 +126,3 @@ WsUri    = "/ws"
 status  = "close"
 persistenceType = 3
 dataPath = "/data/config/"
-

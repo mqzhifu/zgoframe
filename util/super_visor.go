@@ -1,10 +1,12 @@
 package util
 
 import (
+	"bufio"
 	"bytes"
 	"errors"
 	"github.com/abrander/go-supervisord"
 	"os"
+	"strconv"
 	"strings"
 )
 
@@ -171,4 +173,59 @@ func(superVisor *SuperVisor)CreateServiceConfFile(content string)error{
 	file.Write(contentByte)
 	file.Close()
 	return nil
+}
+
+const RESP_OK = "RESULT 2\nOK"
+const RESP_FAIL = "RESULT 4\nFAIL"
+
+func(superVisor *SuperVisor)ListenerEvent(){
+	stdin := bufio.NewReader(os.Stdin)
+	stdout := bufio.NewWriter(os.Stdout)
+	stderr := bufio.NewWriter(os.Stderr)
+
+	for {
+		// 发送后等待接收event
+		_, _ = stdout.WriteString("READY\n")
+		_ = stdout.Flush()
+		// 接收header
+		line, _, _ := stdin.ReadLine()
+		stderr.WriteString("stdin ReadLine: " + string(line))
+		stderr.Flush()
+
+		header, payloadSize := parseHeader(line)
+
+		// 接收payload
+		payload := make([]byte, payloadSize)
+		stdin.Read(payload)
+		stderr.WriteString(" , stdin Read , payload : " + string(payload) + "\n")
+		stderr.Flush()
+
+		result := alarm(header, payload)
+
+		if result {   // 发送处理结果
+			stdout.WriteString(RESP_OK)
+		} else {
+			stdout.WriteString(RESP_FAIL)
+		}
+		stdout.Flush()
+	}
+}
+
+func parseHeader(data []byte) (header map[string]string, payloadSize int) {
+	pairs := strings.Split(string(data), " ")
+	header = make(map[string]string, len(pairs))
+
+	for _, pair := range pairs {
+		token := strings.Split(pair, ":")
+		header[token[0]] = token[1]
+	}
+
+	payloadSize, _ = strconv.Atoi(header["len"])
+	return header, payloadSize
+}
+
+// 这里设置报警即可
+func alarm(header map[string]string, payload []byte) bool {
+	// send mail
+	return true
 }

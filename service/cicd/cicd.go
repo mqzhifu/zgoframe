@@ -368,9 +368,9 @@ func (cicdManager *CicdManager) GetSuperVisorList( )(list ServerServiceSuperViso
 					serviceDeployConfig ,_= cicdManager.DeployServiceCheck(serviceDeployConfig,service)
 					path := serviceDeployConfig.MasterPath + "/" + serviceDeployConfig.OpDirName
 					util.MyPrint(path)
-					masterSrc,_ := ExecShellFile(path + "/" + "get_soft_link_src.sh",serviceDeployConfig.MasterPath)
-					util.ExitPrint(masterSrc)
-					
+					//masterSrc,_ := ExecShellFile(path + "/" + "get_soft_link_src.sh",serviceDeployConfig.MasterPath)
+					//util.ExitPrint(masterSrc)
+
 					break
 				}
 			}

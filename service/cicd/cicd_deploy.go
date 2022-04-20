@@ -81,7 +81,7 @@ func (cicdManager *CicdManager) DeployAllService() {
 	}
 }
 
-func (cicdManager *CicdManager) DeployServiceCheck(server util.Server, serviceDeployConfig ServiceDeployConfig, service util.Service) (ServiceDeployConfig, error) {
+func (cicdManager *CicdManager) DeployServiceCheck( serviceDeployConfig ServiceDeployConfig, service util.Service) (ServiceDeployConfig, error) {
 	if service.Git == "" {
 		errMsg := "service.Git is empty~" + service.Name
 		return serviceDeployConfig, errors.New(errMsg)
@@ -121,6 +121,7 @@ func (cicdManager *CicdManager) DeployServiceCheck(server util.Server, serviceDe
 
 //部署一个服务
 func (cicdManager *CicdManager) DeployOneService(server util.Server, serviceDeployConfig ServiceDeployConfig, service util.Service) error {
+	startTime := util.GetNowTimeSecondToInt()
 	if service.Name != "Zgoframe"  { //测试代码,只部署：local Zgoframe
 		util.MyPrint("service name != Zgoframe")
 		return nil
@@ -136,7 +137,7 @@ func (cicdManager *CicdManager) DeployOneService(server util.Server, serviceDepl
 	publish := cicdManager.Option.PublicManager.InsertOne(service, server)
 	cicdManager.Option.Log.Info("create publish:" + strconv.Itoa(publish.Id))
 	//检查各种路径是否正确
-	newServiceDeployConfig, err := cicdManager.DeployServiceCheck(server, serviceDeployConfig, service)
+	newServiceDeployConfig, err := cicdManager.DeployServiceCheck( serviceDeployConfig, service)
 	if err != nil {
 		return cicdManager.DeployOneServiceFailed(publish, err.Error())
 	}
@@ -144,10 +145,16 @@ func (cicdManager *CicdManager) DeployOneService(server util.Server, serviceDepl
 
 	serviceDeployConfig = newServiceDeployConfig
 	//step 1 : 项目代码及目录(git)相关
-	newGitCodeDir, err := cicdManager.DeployOneServiceGitCode(serviceDeployConfig, service)
+	newGitCodeDir, projectDirName ,err := cicdManager.DeployOneServiceGitCode(serviceDeployConfig, service)
+
 	if err != nil {
 		return cicdManager.DeployOneServiceFailed(publish, err.Error())
 	}
+	p := model.CicdPublish{}
+	p.Id = publish.Id
+	p.CodeDir = projectDirName
+	cicdManager.Option.PublicManager.UpInfo(p)
+	//util.ExitPrint(p)
 	//step 2 : 读取service项目代码里自带的cicd.toml ,供:后面使用
 	serviceCICDConfig, err := cicdManager.DeployOneServiceCICIConfig(newGitCodeDir, serviceDeployConfig, server)
 	if err != nil {
@@ -168,18 +175,42 @@ func (cicdManager *CicdManager) DeployOneService(server util.Server, serviceDepl
 	if err != nil {
 		return cicdManager.DeployOneServiceFailed(publish, err.Error())
 	}
-	//将master软链 指向 上面刚刚clone下的最新代码上
-	err = cicdManager.DeployOneServiceLinkMaster(newGitCodeDir, serviceDeployConfig)
-	if err != nil {
-		return cicdManager.DeployOneServiceFailed(publish, err.Error())
+
+	cicdManager.Option.PublicManager.UpDeployStatus(publish, model.CICD_PUBLISH_DEPLOY_STATUS_FINISH)
+	cicdManager.Option.PublicManager.UpStatus(publish,model.CICD_PUBLISH_STATUS_WAIT_PUB)
+
+	endTime :=util.GetNowTimeSecondToInt()
+	execTime := endTime - startTime
+	e := model.CicdPublish{}
+	e.Id = publish.Id
+	e.ExecTime = execTime
+	cicdManager.Option.PublicManager.UpInfo(e)
+
+	return nil
+}
+
+func (cicdManager *CicdManager)Publish(id int)error{
+	serviceDeployConfig := cicdManager.GetDeployConfig()
+	publishRecord , err := cicdManager.Option.PublicManager.GetById(id)
+	if err !=nil{
+		return err
 	}
-	cicdManager.Option.PublicManager.UpStatus(publish, 2)
-	util.ExitPrint("finish one.")
+	service := cicdManager.Option.ServiceList[publishRecord.ServiceId]
+	serviceDeployConfig ,_ = cicdManager.DeployServiceCheck(serviceDeployConfig,service)
+
+	//将master软链 指向 上面刚刚clone下的最新代码上
+	err = cicdManager.DeployOneServiceLinkMaster(publishRecord.CodeDir, serviceDeployConfig)
+	if err != nil {
+		cicdManager.Option.PublicManager.UpStatus(publishRecord, model.CICD_PUBLISH_DEPLOY_FAIL)
+		return err
+		//return cicdManager.DeployOneServiceFailed(publish, err.Error())
+	}
+	cicdManager.Option.PublicManager.UpStatus(publishRecord, model.CICD_PUBLISH_DEPLOY_OK)
 	return nil
 }
 
 //step 1
-func (cicdManager *CicdManager) DeployOneServiceGitCode(serviceDeployConfig ServiceDeployConfig, service util.Service) (string, error) {
+func (cicdManager *CicdManager) DeployOneServiceGitCode(serviceDeployConfig ServiceDeployConfig, service util.Service) (string, string, error) {
 	cicdManager.Option.Log.Info("step 1 : git clone project code and get git commit id.")
 
 	//FullPath 一个服务的根目录，大部分操作都在这个目录下(除了superVisor)
@@ -207,21 +238,22 @@ func (cicdManager *CicdManager) DeployOneServiceGitCode(serviceDeployConfig Serv
 
 	gitLastCommitId, err := ExecShellFile(opDirFull+"/"+serviceDeployConfig.CICDShellFileName, shellArgc)
 	if err != nil {
-		return "", errors.New("ExecShellFile err:" + err.Error())
+		return "","", errors.New("ExecShellFile err:" + err.Error())
 	}
 	//cicdManager.Option.Log.Info("gitLastCommitId:" + gitLastCommitId)
 	//刚刚clone完后，项目的目录
 	//serviceCodeGitClonePath := serviceDeployConfig.ClonePath + DIR_SEPARATOR + service.Name
 	//新刚刚克隆好的项目目录，移动一个新目录下，新目录名：git_master_versionId + 当前时间
-	newGitCodeDir := serviceDeployConfig.FullPath + util.DIR_SEPARATOR + strconv.Itoa(util.GetNowTimeSecondToInt()) + "_" + gitLastCommitId
+	projectDirName := strconv.Itoa(util.GetNowTimeSecondToInt()) + "_" + gitLastCommitId
+	newGitCodeDir := serviceDeployConfig.FullPath + util.DIR_SEPARATOR + projectDirName
 	cicdManager.Option.Log.Info(" service code move :" + serviceDeployConfig.CodeGitClonePath + " to " + newGitCodeDir)
 	//执行 移动操作
 	err = os.Rename(serviceDeployConfig.CodeGitClonePath, newGitCodeDir)
 	if err != nil {
-		return newGitCodeDir, errors.New("serviceCodeGitClonePath os.Rename err:" + err.Error())
+		return newGitCodeDir, "", errors.New("serviceCodeGitClonePath os.Rename err:" + err.Error())
 	}
 	cicdManager.Option.Log.Info("step 1 finish , newGitCodeDir :  " + newGitCodeDir + " , gitLastCommitId:" + gitLastCommitId)
-	return newGitCodeDir, nil
+	return newGitCodeDir , projectDirName , nil
 }
 
 //step 2
@@ -373,7 +405,7 @@ func (cicdManager *CicdManager) DeployOneServiceLinkMaster(newGitCodeDir string,
 
 //部署一个服务失败，统一处理接口
 func (cicdManager *CicdManager) DeployOneServiceFailed(publish model.CicdPublish, errMsg string) error {
-	cicdManager.Option.PublicManager.UpStatus(publish, 3)
+	cicdManager.Option.PublicManager.UpDeployStatus(publish, model.CICD_PUBLISH_DEPLOY_FAIL)
 	return cicdManager.MakeError(errMsg)
 }
 

@@ -25,7 +25,8 @@ func (CICDPublicManager *CICDPublicManager) InsertOne(service util.Service, serv
 	serviceInfo, _ := json.Marshal(service)
 	serverInfo, _ := json.Marshal(server)
 	data := model.CicdPublish{
-		Status:      1,
+		Status:      model.CICD_PUBLISH_STATUS_WAIT_DEPLOY,
+		DeployStatus: model.CICD_PUBLISH_DEPLOY_STATUS_ING,
 		ServiceId:   service.Id,
 		ServerId:    server.Id,
 		ServiceInfo: string(serviceInfo),
@@ -35,10 +36,31 @@ func (CICDPublicManager *CICDPublicManager) InsertOne(service util.Service, serv
 	return data
 }
 
+func (CICDPublicManager *CICDPublicManager) UpDeployStatus(m model.CicdPublish, status int) {
+	util.MyPrint("CICDPublicManager DeployStatus publishId:", m.Id, " new status:"+strconv.Itoa(status))
+	CICDPublicManager.Db.Model(&m).Update("deploy_status", status)
+	//db.Model(&Food{}).Update("price", 25)
+}
+
 func (CICDPublicManager *CICDPublicManager) UpStatus(m model.CicdPublish, status int) {
 	util.MyPrint("CICDPublicManager UpStatus publishId:", m.Id, " new status:"+strconv.Itoa(status))
 	CICDPublicManager.Db.Model(&m).Update("status", status)
 	//db.Model(&Food{}).Update("price", 25)
+}
+
+func (CICDPublicManager *CICDPublicManager) UpInfo(m model.CicdPublish ) {
+	util.MyPrint("CICDPublicManager UpInfo publishId:", m.Id)
+	err := CICDPublicManager.Db.Updates(m).Error
+	if err != nil{
+		util.MyPrint("UpInfo err:"+err.Error())
+	}
+	//db.Model(&Food{}).Update("price", 25)
+}
+
+func (CICDPublicManager *CICDPublicManager) GetById(id int)(model.CicdPublish , error) {
+	var m model.CicdPublish
+	err  := CICDPublicManager.Db.First(&m,id).Error
+	return m,err
 }
 
 func (CICDPublicManager *CICDPublicManager) GetList() ([]model.CicdPublish, error) {

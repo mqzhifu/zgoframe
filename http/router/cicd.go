@@ -21,5 +21,8 @@ func InitCicdRouter(Router *gin.RouterGroup) {
 
 		CicdRouter.GET("ping", v1.CicdPing)
 
+		CicdRouter.GET("publish/list", v1.CicdPublishList)
+
+
 	}
 }

@@ -5,6 +5,7 @@ import (
 	"zgoframe/core/global"
 	"zgoframe/http/request"
 	httpresponse "zgoframe/http/response"
+	"zgoframe/util"
 )
 
 // @Tags Cicd
@@ -55,6 +56,21 @@ func CicdServerList(c *gin.Context) {
 }
 
 // @Tags Cicd
+// @Summary 部署/发布 列表
+// @Description 部署/发布 列表
+// @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
+// @Param X-Project-Id header string true "项目ID" default(6)
+// @Param X-Access header string true "访问KEY" default(imzgoframe)
+// @Produce  application/json
+// @Success 200 {object} model.Project
+// @Router /cicd/publish/list [get]
+func CicdPublishList(c *gin.Context) {
+	list := global.V.MyService.Cicd.GetPublishList()
+	httpresponse.OkWithDetailed(list, "成功", c)
+}
+
+
+// @Tags Cicd
 // @Summary 部署一个服务
 // @Description demo
 // @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
@@ -68,8 +84,14 @@ func CicdServiceDeploy(c *gin.Context) {
 	var form request.CicdDeploy
 	c.ShouldBind(&form)
 
-	global.V.MyService.Cicd.ApiDeployOneService(form)
-	httpresponse.OkWithDetailed("aaaa", "成功", c)
+	util.MyPrint("CicdServiceDeploy form:",form)
+	err := global.V.MyService.Cicd.ApiDeployOneService(form)
+	if err != nil{
+		httpresponse.FailWithMessage(err.Error(),c)
+	}else{
+		httpresponse.OkWithDetailed("aaaa", "成功", c)
+	}
+
 }
 
 // @Tags Cicd

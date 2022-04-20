@@ -261,20 +261,39 @@ func GetConstListServerPlatform() map[string]int {
 }
 
 const (
-	CICD_PUBLISH_STATUS_ING  = 1
-	CICD_PUBLISH_STATUS_FAIL = 2
-	CICD_PUBLISH_STATUS_OK   = 3
+	CICD_PUBLISH_DEPLOY_STATUS_ING  = 1
+	CICD_PUBLISH_DEPLOY_STATUS_FAIL = 2
+	CICD_PUBLISH_DEPLOY_STATUS_FINISH   = 3
+)
+
+func GetConstListCicdPublishDeployStatus() map[string]int {
+	list := make(map[string]int)
+
+	list["部署中"] = CICD_PUBLISH_DEPLOY_STATUS_ING
+	list["失败"] = CICD_PUBLISH_DEPLOY_STATUS_FAIL
+	list["完成"] = CICD_PUBLISH_DEPLOY_STATUS_FINISH
+
+	return list
+}
+
+const (
+	CICD_PUBLISH_STATUS_WAIT_DEPLOY  = 1
+	CICD_PUBLISH_STATUS_WAIT_PUB  = 2
+	CICD_PUBLISH_DEPLOY_OK = 3
+	CICD_PUBLISH_DEPLOY_FAIL   =  4
 )
 
 func GetConstListCicdPublishStatus() map[string]int {
 	list := make(map[string]int)
 
-	list["发送中"] = CICD_PUBLISH_STATUS_ING
-	list["失败"] = CICD_PUBLISH_STATUS_FAIL
-	list["成功"] = CICD_PUBLISH_STATUS_OK
+	list["待部署"] = CICD_PUBLISH_STATUS_WAIT_DEPLOY
+	list["待发布"] = CICD_PUBLISH_STATUS_WAIT_PUB
+	list["成功"] = CICD_PUBLISH_DEPLOY_OK
+	list["失败"] = CICD_PUBLISH_DEPLOY_OK
 
 	return list
 }
+
 
 const (
 	PROJECT_STATUS_OPEN  = 1

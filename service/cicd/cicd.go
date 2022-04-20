@@ -235,21 +235,27 @@ func (cicdManager *CicdManager) GetInstanceList(c *gin.Context) {
 }
 
 //获取所有 部署发布 记录列表，ps:未加分页
-func (cicdManager *CicdManager) GetPublishList(c *gin.Context) {
+func (cicdManager *CicdManager) GetPublishList( ) map[int]model.CicdPublish{
 	listArr, _ := cicdManager.Option.PublicManager.GetList()
 	listMap := make(map[int]model.CicdPublish)
 	for _, v := range listArr {
 		listMap[v.Id] = v
 	}
-	str, _ := json.Marshal(listArr)
-	c.String(200, string(str))
+	return listMap
+	//str, _ := json.Marshal(listArr)
+	//c.String(200, string(str))
 }
 
 //创建一个新的结构体,主要是给前端返回结果使用
 type ServerServiceSuperVisorList struct {
 	ServerPingStatus            map[int]int	`json:"server_ping_status"`
 	SuperVisorStatus            map[int]int `json:"super_visor_status"`
-	ServerServiceSuperVisor map[int][]supervisord.ProcessInfo `json:"server_service_super_visor"`
+	ServerServiceSuperVisor map[int][]MyProcessInfo `json:"server_service_super_visor"`
+}
+
+type MyProcessInfo struct {
+	ServiceId int			`json:"service_id"`
+	supervisord.ProcessInfo
 }
 //每台服务器上 都会启动一个superVisor进程
 //列出每台机器上的：superVisor进程 的所有服务进程的状态信息
@@ -272,10 +278,11 @@ func (cicdManager *CicdManager) GetSuperVisorList( )(list ServerServiceSuperViso
 
 	util.MyPrint("serverList len:", len(cicdManager.Option.ServerList), " ServiceList len:", len(cicdManager.Option.ServiceList))
 	//服务器 上面:已经开启的 superVisor	map[serverId]=>superVisorList
-	serverServiceSuperVisor := make(map[int][]supervisord.ProcessInfo)
+	serverServiceSuperVisor := make(map[int][]MyProcessInfo)
 	//服务器 状态
 	serverStatus := make(map[int]int)
 	superVisorStatus := make(map[int]int)
+	//遍历服务器列表
 	for _, server := range cicdManager.Option.ServerList {
 		fmt.Println("for each service:" + server.OutIp + " " + strconv.Itoa(server.Env))
 
@@ -336,9 +343,14 @@ func (cicdManager *CicdManager) GetSuperVisorList( )(list ServerServiceSuperViso
 			//servicePath := serviceBaseDir + util.DIR_SEPARATOR + service.Name
 			//util.MyPrint("servicePath:", servicePath)
 
-			superVisorProcessInfo := supervisord.ProcessInfo{
+			defaultProcessInfo := supervisord.ProcessInfo{
 				Name:  util.SUPER_VISOR_PROCESS_NAME_SERVICE_PREFIX + service.Name,
 				State: 999, //项目未部署过
+			}
+
+			superVisorProcessInfo := MyProcessInfo{
+				ServiceId : service.Id,
+				ProcessInfo : defaultProcessInfo,
 			}
 			//search := 0
 			//var superVisorProcessInfo supervisord.ProcessInfo
@@ -348,9 +360,17 @@ func (cicdManager *CicdManager) GetSuperVisorList( )(list ServerServiceSuperViso
 				//util.MyPrint(rs)
 				if process.Name == util.SUPER_VISOR_PROCESS_NAME_SERVICE_PREFIX+service.Name {
 					util.MyPrint(fmt.Sprintf("%+v",process))
-					superVisorProcessInfo = process
+					superVisorProcessInfo.ProcessInfo = process
 					//superVisorStatus[service.Id ] = util.SV_ERROR_NONE
 					//search = 1
+
+					serviceDeployConfig := cicdManager.GetDeployConfig()
+					serviceDeployConfig ,_= cicdManager.DeployServiceCheck(serviceDeployConfig,service)
+					path := serviceDeployConfig.MasterPath + "/" + serviceDeployConfig.OpDirName
+					util.MyPrint(path)
+					masterSrc,_ := ExecShellFile(path + "/" + "get_soft_link_src.sh",serviceDeployConfig.MasterPath)
+					util.ExitPrint(masterSrc)
+					
 					break
 				}
 			}
@@ -363,7 +383,7 @@ func (cicdManager *CicdManager) GetSuperVisorList( )(list ServerServiceSuperViso
 			_, ok := serverServiceSuperVisor[server.Id]
 			if !ok {
 				//util.MyPrint(22222)
-				serverServiceSuperVisor[server.Id] = []supervisord.ProcessInfo{superVisorProcessInfo}
+				serverServiceSuperVisor[server.Id] = []MyProcessInfo{superVisorProcessInfo}
 			} else {
 				//util.MyPrint(3333)
 				serverServiceSuperVisor[server.Id] = append(serverServiceSuperVisor[server.Id], superVisorProcessInfo)

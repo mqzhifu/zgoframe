@@ -1300,6 +1300,42 @@ paths:
       summary: ping
       tags:
       - Cicd
+  /cicd/publish/list:
+    get:
+      description: 部署/发布 列表
+      parameters:
+      - description: 来源
+        enum:
+        - "11"
+        - "12"
+        - "21"
+        - "22"
+        in: header
+        name: X-Source-Type
+        required: true
+        type: string
+      - default: "6"
+        description: 项目ID
+        in: header
+        name: X-Project-Id
+        required: true
+        type: string
+      - default: imzgoframe
+        description: 访问KEY
+        in: header
+        name: X-Access
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Project'
+      summary: 部署/发布 列表
+      tags:
+      - Cicd
   /cicd/server/list:
     get:
       description: 获取所有服务器列表，并做ping，确定状态
@@ -1412,6 +1448,47 @@ paths:
           schema:
             $ref: '#/definitions/model.Project'
       summary: 服务 列表
+      tags:
+      - Cicd
+  /cicd/service/publish/{id}:
+    get:
+      description: 发布项目
+      parameters:
+      - description: 来源
+        enum:
+        - "11"
+        - "12"
+        - "21"
+        - "22"
+        in: header
+        name: X-Source-Type
+        required: true
+        type: string
+      - default: "6"
+        description: 项目ID
+        in: header
+        name: X-Project-Id
+        required: true
+        type: string
+      - default: imzgoframe
+        description: 访问KEY
+        in: header
+        name: X-Access
+        required: true
+        type: string
+      - description: publish id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Project'
+      summary: 发布项目
       tags:
       - Cicd
   /cicd/superVisor/list:

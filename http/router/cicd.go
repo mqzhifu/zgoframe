@@ -23,6 +23,9 @@ func InitCicdRouter(Router *gin.RouterGroup) {
 
 		CicdRouter.GET("publish/list", v1.CicdPublishList)
 
+		CicdRouter.GET("service/publish/:id", v1.CicdServicePublish)
+
+
 
 	}
 }

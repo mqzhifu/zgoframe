@@ -255,6 +255,7 @@ type ServerServiceSuperVisorList struct {
 
 type MyProcessInfo struct {
 	ServiceId int			`json:"service_id"`
+	MasterSrc	string 	`json:"master_src"`
 	supervisord.ProcessInfo
 }
 //每台服务器上 都会启动一个superVisor进程
@@ -367,10 +368,10 @@ func (cicdManager *CicdManager) GetSuperVisorList( )(list ServerServiceSuperViso
 					serviceDeployConfig := cicdManager.GetDeployConfig()
 					serviceDeployConfig ,_= cicdManager.DeployServiceCheck(serviceDeployConfig,service)
 					path := serviceDeployConfig.MasterPath + "/" + serviceDeployConfig.OpDirName
-					util.MyPrint(path)
-					//masterSrc,_ := ExecShellFile(path + "/" + "get_soft_link_src.sh",serviceDeployConfig.MasterPath)
+					//util.MyPrint(path)
+					masterSrc,_ := ExecShellFile2(path + "/" + "get_soft_link_src.sh",serviceDeployConfig.MasterPath)
 					//util.ExitPrint(masterSrc)
-
+					superVisorProcessInfo.MasterSrc = masterSrc
 					break
 				}
 			}
@@ -480,6 +481,7 @@ func ExecShellFile(shellFile string, argc string) (string, error) {
 	c := exec.Command("sh", "-c", shellCommand)
 
 	output, err := c.CombinedOutput()
+	//util.MyPrint(string(output),err)
 	if err != nil {
 		util.MyPrint("exec.Command err:", err)
 		return "", err
@@ -488,6 +490,24 @@ func ExecShellFile(shellFile string, argc string) (string, error) {
 	outArr := strings.Split(outStr, "\n")
 
 	return outArr[1], nil
+}
+
+//执行shell文件
+func ExecShellFile2(shellFile string, argc string) (string, error) {
+	util.MyPrint("ExecShellFile:", shellFile, " ", argc)
+	shellCommand := shellFile + " " + argc
+	c := exec.Command("sh", "-c", shellCommand)
+
+	output, err := c.CombinedOutput()
+	//util.MyPrint(string(output),err)
+	if err != nil {
+		util.MyPrint("exec.Command err:", err)
+		return "", err
+	}
+	outStr := string(output)
+	//outArr := strings.Split(outStr, "\n")
+
+	return outStr, nil
 }
 
 //执行shell 指令

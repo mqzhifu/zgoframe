@@ -2,6 +2,7 @@ package v1
 
 import (
 	"github.com/gin-gonic/gin"
+	"strconv"
 	"zgoframe/core/global"
 	"zgoframe/http/request"
 	httpresponse "zgoframe/http/response"
@@ -67,6 +68,42 @@ func CicdServerList(c *gin.Context) {
 func CicdPublishList(c *gin.Context) {
 	list := global.V.MyService.Cicd.GetPublishList()
 	httpresponse.OkWithDetailed(list, "成功", c)
+}
+
+// @Tags Cicd
+// @Summary 发布项目
+// @Description 发布项目
+// @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
+// @Param X-Project-Id header string true "项目ID" default(6)
+// @Param X-Access header string true "访问KEY" default(imzgoframe)
+// @Param id path string true "publish id"
+// @Produce  application/json
+// @Success 200 {object} model.Project
+// @Router /cicd/service/publish/{id} [get]
+func CicdServicePublish(c *gin.Context) {
+	idStr  := c.Param("id")
+	if idStr == ""{
+		httpresponse.FailWithMessage("id empty 1",c)
+		return
+	}
+	id ,err := strconv.Atoi(idStr)
+	if err != nil {
+		httpresponse.FailWithMessage("id empty 2",c)
+		return
+	}
+	if id == 0{
+		httpresponse.FailWithMessage("id empty 3",c)
+		return
+	}
+
+	err = global.V.MyService.Cicd.Publish(id)
+	if err != nil{
+		httpresponse.FailWithMessage(err.Error(),c)
+	}else{
+		httpresponse.OkWithDetailed("bbb", "成功", c)
+	}
+
+
 }
 
 

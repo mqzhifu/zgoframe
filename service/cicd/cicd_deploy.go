@@ -197,7 +197,6 @@ func (cicdManager *CicdManager)Publish(id int)error{
 	}
 	service := cicdManager.Option.ServiceList[publishRecord.ServiceId]
 	serviceDeployConfig ,_ = cicdManager.DeployServiceCheck(serviceDeployConfig,service)
-
 	//将master软链 指向 上面刚刚clone下的最新代码上
 	err = cicdManager.DeployOneServiceLinkMaster(publishRecord.CodeDir, serviceDeployConfig)
 	if err != nil {

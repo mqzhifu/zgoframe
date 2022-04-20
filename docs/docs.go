@@ -835,6 +835,57 @@ var doc = `{
                 }
             }
         },
+        "/cicd/publish/list": {
+            "get": {
+                "description": "部署/发布 列表",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Cicd"
+                ],
+                "summary": "部署/发布 列表",
+                "parameters": [
+                    {
+                        "enum": [
+                            "11",
+                            "12",
+                            "21",
+                            "22"
+                        ],
+                        "type": "string",
+                        "description": "来源",
+                        "name": "X-Source-Type",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "6",
+                        "description": "项目ID",
+                        "name": "X-Project-Id",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "imzgoframe",
+                        "description": "访问KEY",
+                        "name": "X-Access",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.Project"
+                        }
+                    }
+                }
+            }
+        },
         "/cicd/server/list": {
             "get": {
                 "description": "获取所有服务器列表，并做ping，确定状态",
@@ -984,6 +1035,64 @@ var doc = `{
                         "description": "访问KEY",
                         "name": "X-Access",
                         "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.Project"
+                        }
+                    }
+                }
+            }
+        },
+        "/cicd/service/publish/{id}": {
+            "get": {
+                "description": "发布项目",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Cicd"
+                ],
+                "summary": "发布项目",
+                "parameters": [
+                    {
+                        "enum": [
+                            "11",
+                            "12",
+                            "21",
+                            "22"
+                        ],
+                        "type": "string",
+                        "description": "来源",
+                        "name": "X-Source-Type",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "6",
+                        "description": "项目ID",
+                        "name": "X-Project-Id",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "imzgoframe",
+                        "description": "访问KEY",
+                        "name": "X-Access",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "publish id",
+                        "name": "id",
+                        "in": "path",
                         "required": true
                     }
                 ],

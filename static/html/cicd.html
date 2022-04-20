@@ -251,10 +251,11 @@ publish:<br/>
             var serviceSuperVisor = serviceSuperVisorList[serverId];
             console.log("serviceSuperVisor:",serviceSuperVisor);
             var processListTable = "<table>";
+            processListTable += "<th>name</th><th>state_code</th><th>master_src</th><th>opt</th>";
 
             for(var i=0;i<serviceSuperVisor.length;i++){
                 var bnt = GetBnt(serviceSuperVisor[i].State,serverId,serviceSuperVisor[i].service_id);
-                processListTable += "<tr><td>"+serviceSuperVisor[i].Name+"</td><td>"+serviceSuperVisor[i].State+"</td><td>&nbsp;</td><td>"+bnt+"</td></tr>";
+                processListTable += "<tr><td>"+serviceSuperVisor[i].Name+"</td><td>"+serviceSuperVisor[i].State+"</td><td>"+serviceSuperVisor[i].master_src+"</td><td>"+bnt+"</td></tr>";
             }
             processListTable += "</table>";
 
@@ -269,7 +270,7 @@ publish:<br/>
         $("#server_service_super_visor").html(tableHtml);
     }
 
-    function deployService(serverId,serviceId ){
+    function optDeployService(serverId,serviceId ){
         console.log("deploy serverId:",serverId , " serviceId:",serviceId);
         $.ajax({
             headers: {
@@ -288,17 +289,36 @@ publish:<br/>
                     return alert("ajax req back data err");
                 }
                 alert(backData);
-                // serverList =  $.parseJSON(backData)
-                // serviceList =  backData.data;
-                // ProcessServiceList("table_service_list",serviceList)
+            }
+        });
+    }
 
+    function optPublishService(publishId ){
+        console.log("optPublishService publishId:",publishId  );
+        $.ajax({
+            headers: {
+                "X-Source-Type": header_X_Source_Type,
+                "X-Project-Id": header_X_Project_Id,
+                "X-Access": header_X_Access,
+            },
+            dataType: "json",
+            type: "GET",
+            // data: JSON.stringify({"server_id": serverId, "service_id": serviceId}),
+            contentType: "application/json;charset=utf-8",
+            url: "/cicd/service/publish/"+publishId,
+            success: function(backData){
+                backData = eval(   backData  );
+                if(backData.code != 200){
+                    return alert("ajax req back data err");
+                }
+                alert(backData);
             }
         });
     }
 
     function GetBnt(superVisorState,serverId,serviceId ){
         console.log("GetBnt serverId:",serverId , " serviceId:",serviceId);
-        var optBnt = "<a href='#' onclick='deployService("+serverId+","+serviceId+")'>部署</a>&nbsp;";
+        var optBnt = "<a href='#' onclick='optDeployService("+serverId+","+serviceId+")'>部署</a>&nbsp;";
         if (superVisorState == 999){
             return optBnt;
         }else if (superVisorState === 0 || superVisorState == 30 || superVisorState == 100 || superVisorState == 200){
@@ -348,7 +368,7 @@ publish:<br/>
             tableTh += "<th>"+key+"</th>";
         }
 
-        tableTh += "<th></th>";
+        tableTh += "<th>操作所有机器服务</th>";
 
         // alert(trTdAll);
         // var html = tableTh + trTdAll;
@@ -392,7 +412,14 @@ publish:<br/>
                 }
 
             }
-            trTd += "<td><a href='#'>发布</a></td></tr>"
+
+            if ( data_list[key].status ==  2){
+                trTd += "<td><a href='#' onclick='optPublishService("+data_list[key].id+")'>发布</a></td></tr>"
+            }else  if ( data_list[key].status ==  3){
+                trTd += "<td><a href='#' onclick='optPublishService("+data_list[key].id+")'>重新发布</a></td></tr>"
+            }
+
+
             trTdAll += trTd;
         }
 

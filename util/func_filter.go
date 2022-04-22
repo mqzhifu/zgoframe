@@ -50,3 +50,9 @@ func CheckIdNumberRule(idNumber string) bool {
 	return reg.MatchString(idNumber)
 
 }
+
+func CheckServiceDeployDirName(name string)bool{
+	pattern := `^\d{10,13}_[A-Za-z0-9]{6,10}$`
+	reg := regexp.MustCompile(pattern)
+	return reg.MatchString(name)
+}

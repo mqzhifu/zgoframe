@@ -39,6 +39,9 @@
 
 <body>
 
+<a href="#" onclick="test()">点击测试</a>
+<br/>
+
 server service superVisor :<br/>
 <div id="server_service_super_visor">
 
@@ -86,7 +89,8 @@ publish:<br/>
     var instanceList = null;
     var publishList = null;
 
-    var server_ping_status_desc = {1:"正常",2:"关闭"};
+    var status_desc = {1:"正常",2:"关闭"};
+    var server_ping_status_desc = {1:"正常",2:"失败"};
     var super_visor_status_desc = {0:"正常",1:"初始化失败",2:"XMLRpc连接失败"}
     var deployStatus = {0:"否",1:"是"};
     var envDesc = {1:"本地",2:"开发",3:"测试",4:"预发布",5:"线是"}
@@ -113,7 +117,6 @@ publish:<br/>
                 // serverList =  $.parseJSON(backData)
                 serviceList =  backData.data;
                 ProcessServiceList("table_service_list",serviceList)
-
             }
         });
     });
@@ -136,7 +139,7 @@ publish:<br/>
                 }
                 serverList =  backData.data;
                 ProcessList("table_server_list",serverList)
-
+                ajaxProcessServerService();
             }
         });
     });
@@ -187,25 +190,28 @@ publish:<br/>
     //     });
     // });
     //
-    $(document).ready(function(){
-        $.ajax({
-            headers: {
-                "X-Source-Type": header_X_Source_Type,
-                "X-Project-Id": header_X_Project_Id,
-                "X-Access": header_X_Access,
-            },
-            type: "GET",
-            contentType: "application/json;charset=utf-8",
-            url: "/cicd/superVisor/list",
-            success: function(backData){
-                backData = eval(   backData  );
-                if(backData.code != 200){
-                    return alert("ajax req back data err");
+    function ajaxProcessServerService(){
+        $(document).ready(function(){
+            $.ajax({
+                headers: {
+                    "X-Source-Type": header_X_Source_Type,
+                    "X-Project-Id": header_X_Project_Id,
+                    "X-Access": header_X_Access,
+                },
+                type: "GET",
+                contentType: "application/json;charset=utf-8",
+                url: "/cicd/superVisor/list",
+                success: function(backData){
+                    backData = eval(   backData  );
+                    if(backData.code != 200){
+                        return alert("ajax req back data err");
+                    }
+                    ProcessServerService( backData.data)
                 }
-                ProcessServerService( backData.data)
-            }
+            });
         });
-    });
+    }
+
 
 
     function GetServiceOptBnt(){
@@ -249,7 +255,7 @@ publish:<br/>
 
             tr += "<td>";
             var serviceSuperVisor = serviceSuperVisorList[serverId];
-            console.log("serviceSuperVisor:",serviceSuperVisor);
+            // console.log("serviceSuperVisor:",serviceSuperVisor);
             var processListTable = "<table>";
             processListTable += "<th>name</th><th>state_code</th><th>master_src</th><th>opt</th>";
 
@@ -270,7 +276,7 @@ publish:<br/>
         $("#server_service_super_visor").html(tableHtml);
     }
 
-    function optDeployService(serverId,serviceId ){
+    function optDeployService(serverId,serviceId ,flag){
         console.log("deploy serverId:",serverId , " serviceId:",serviceId);
         $.ajax({
             headers: {
@@ -280,7 +286,7 @@ publish:<br/>
             },
             dataType: "json",
             type: "POST",
-            data: JSON.stringify({"server_id": serverId, "service_id": serviceId}),
+            data: JSON.stringify({"server_id": serverId, "service_id": serviceId ,"flag":flag}),
             contentType: "application/json;charset=utf-8",
             url: "/cicd/service/deploy",
             success: function(backData){
@@ -318,7 +324,7 @@ publish:<br/>
 
     function GetBnt(superVisorState,serverId,serviceId ){
         console.log("GetBnt serverId:",serverId , " serviceId:",serviceId);
-        var optBnt = "<a href='#' onclick='optDeployService("+serverId+","+serviceId+")'>部署</a>&nbsp;";
+        var optBnt = "<a href='#' onclick='optDeployService("+serverId+","+serviceId+",1)'>部署</a>&nbsp;";
         if (superVisorState == 999){
             return optBnt;
         }else if (superVisorState === 0 || superVisorState == 30 || superVisorState == 100 || superVisorState == 200){
@@ -355,7 +361,7 @@ publish:<br/>
             var trTd = "<tr>";
             for(let key2  in data_list[key]){
                 if (key2 == "deploy"){
-                    trTd += "<td>"+ deployStatus[data_list[key][key2]]+ "</td>";
+                    trTd += "<td>"+ GetDeployStatusDesc(data_list[key][key2]) + "</td>";
                 }else{
                     trTd += "<td>"+data_list[key][key2]+ "</td>";
                 }
@@ -386,6 +392,27 @@ publish:<br/>
             }
         }
         return false;
+    }
+
+    function GetPingStatusDesc(status){
+        var word = server_ping_status_desc[status]
+        if (status == 1){
+            var str = "<span style='background-color:#00FF00'>"+word+"</span>";
+        }else{
+            var str = "<span style='background-color:#FF0000'>"+word+"</span>";
+        }
+        return str;
+    }
+
+    function GetDeployStatusDesc(status){
+
+        var word = deployStatus[status]
+        if (status == 1){
+            var str = "<span style='background-color:#00FF00'>"+word+"</span>";
+        }else{
+            var str = "<span style='background-color:#FF0000'>"+word+"</span>";
+        }
+        return str;
     }
 
     function ProcessPublishList(objId,data_list){
@@ -450,7 +477,16 @@ publish:<br/>
             server_list_first_key = key;
             var trTd = "<tr>";
             for(let key2  in data_list[key]){
-                trTd += "<td>"+data_list[key][key2]+ "</td>";
+                if (key2 == "ping_status"){
+                    trTd += "<td>"+ GetPingStatusDesc(data_list[key][key2])+ "</td>";
+
+                }else if (key2 == "status"){
+                    trTd += "<td>"+ status_desc[data_list[key][key2]]+ "</td>";
+
+                } else{
+                    trTd += "<td>"+data_list[key][key2]+ "</td>";
+                }
+
             }
             trTd += "</tr>"
             trTdAll += trTd;
@@ -467,6 +503,13 @@ publish:<br/>
         tableObj.append(tableTh);
         tableObj.append(trTdAll);
     }
+
+
+
+    function test(){
+        optDeployService(4,6,1);
+    }
+
 
 </script>
 

@@ -10,9 +10,11 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
+	"zgoframe/http/request"
 	"zgoframe/model"
 	"zgoframe/util"
 )
@@ -30,7 +32,9 @@ import (
 type ConfigCicdSystem struct {
 	Env        			[]string
 	LogDir     			string
-	ServiceDir 			string
+	WorkBaseDir 		string
+	//ServiceDir 			string	//远程部署目录
+	//LocalServiceDir		string 	//本地部署目录
 	MasterDirName		string
 	GitCloneTmpDirName	string
 	HttpPort 			string
@@ -71,6 +75,19 @@ type ConfigCicd struct {
 
 //===============配置 结构体 结束===================
 
+//创建一个新的结构体,主要是给前端返回结果使用
+type ServerServiceSuperVisorList struct {
+	ServerPingStatus            map[int]int	`json:"server_ping_status"`
+	SuperVisorStatus            map[int]int `json:"super_visor_status"`
+	ServerServiceSuperVisor map[int][]MyProcessInfo `json:"server_service_super_visor"`
+}
+
+type MyProcessInfo struct {
+	ServiceId int			`json:"service_id"`
+	MasterSrc	string 	`json:"master_src"`
+	supervisord.ProcessInfo
+}
+//============================
 
 
 type CicdPublish struct {
@@ -108,7 +125,8 @@ func NewCicdManager(cicdManagerOption CicdManagerOption) (*CicdManager, error) {
 
 	cicdManager.Option = cicdManagerOption
 
-	_, err := util.PathExists(cicdManagerOption.Config.System.ServiceDir) //service 根目录
+	//_, err := util.PathExists(cicdManagerOption.Config.System.ServiceDir) //service 根目录
+	_, err := util.PathExists(cicdManagerOption.Config.System.WorkBaseDir)
 	if err != nil {
 		return cicdManager, cicdManager.MakeError("Option.Config.System.ServiceDir :" + err.Error())
 	}
@@ -135,50 +153,12 @@ func (cicdManager *CicdManager) MakeError(errMsg string) error {
 	cicdManager.Option.Log.Error(errMsg)
 	return errors.New(errMsg)
 }
-
-//开始HTTP监听，供管理员UI可视化管理
-func (cicdManager *CicdManager) StartHttp(staticDir string) {
-	//HttpZapLog = zapLog
-	//ginRouter := gin.Default()
-	//单独的日志记录，GIN默认的日志不会持久化的
-	//ginRouter.Use(ZapLog())
-	//加载静态目录
-	//	Router.Static("/form-generator", "./resource/page")
-	//加载swagger api 工具
-	//ginRouter.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
-	//设置跨域
-	//ginRouter.Use(httpmiddleware.Cors())
-
-	//ginRouter.StaticFS("/static", http.Dir(staticDir))
-
-	//ginRouter.GET("/ping", cicdManager.Ping)
-	//ginRouter.GET("/getServerList", cicdManager.GetServerList)
-	//ginRouter.GET("/getInstanceList", cicdManager.GetInstanceList)
-	//ginRouter.GET("/getPublishList", cicdManager.GetPublishList)
-	//ginRouter.GET("/getSuperVisorList", cicdManager.GetSuperVisorList)
-	//ginRouter.GET("/getServiceList", cicdManager.GetServiceList)
-	//ginRouter.POST("/publish", cicdManager.Publish)
-
-	//ginRouter.Run("0.0.0.0:" + cicdManager.Option.HttpPort)
-
-	//404
-	//ginRouter.NoMethod(HandleNotFound)
-}
-
 //发布|部署 一次 服务
 func (cicdManager *CicdManager) Ping(c *gin.Context) {
 
 	//str,_ := json.Marshal(cicdManager.Option.ServiceList)
 	//c.String(200,string(str))
 }
-
-////发布|部署 一次 服务
-//func (cicdManager *CicdManager) Publish(c *gin.Context) {
-//
-//	//str,_ := json.Marshal(cicdManager.Option.ServiceList)
-//	//c.String(200,string(str))
-//}
-
 //在当前服务器上，从<部署目录>中检索出每个服务（目录名），分析出：哪些服务~已经部署
 func (cicdManager *CicdManager) GetServiceList( ) map[int]util.Service {
 	list := make(map[int]util.Service)
@@ -204,15 +184,22 @@ func (cicdManager *CicdManager) GetServerList( ) map[int]util.Server{
 	for k, server := range cicdManager.Option.ServerList {
 		//这里是测试代码，不然PING太慢
 		if !cicdManager.CheckInTestServer(server.OutIp){
-			server.Status = 3
+			server.PingStatus = 2
 		}else{
-			//status := util.PingByShell(server.OutIp, "2")
-			//if !status {
-			//	server.Status = 3
-			//}
-			server.Status = 3
+			argsmap:=map[string]interface{}{}
+			p:= util.NewPingOption()
+			//host := "127.0.0.1"
+			//host := "111.1.34.56"
+			err  := p.Ping3(server.OutIp,argsmap)
+			util.MyPrint("Ping3 rs:",err)
+			if err != nil{
+				server.PingStatus = 2
+			}else{
+				server.PingStatus = 1
+			}
+			util.PrintStruct(server,":")
 		}
-
+		util.PrintStruct(server,":")
 		list[k] = server
 	}
 
@@ -245,24 +232,9 @@ func (cicdManager *CicdManager) GetPublishList( ) map[int]model.CicdPublish{
 	//str, _ := json.Marshal(listArr)
 	//c.String(200, string(str))
 }
-
-//创建一个新的结构体,主要是给前端返回结果使用
-type ServerServiceSuperVisorList struct {
-	ServerPingStatus            map[int]int	`json:"server_ping_status"`
-	SuperVisorStatus            map[int]int `json:"super_visor_status"`
-	ServerServiceSuperVisor map[int][]MyProcessInfo `json:"server_service_super_visor"`
-}
-
-type MyProcessInfo struct {
-	ServiceId int			`json:"service_id"`
-	MasterSrc	string 	`json:"master_src"`
-	supervisord.ProcessInfo
-}
 //每台服务器上 都会启动一个superVisor进程
 //列出每台机器上的：superVisor进程 的所有服务进程的状态信息
 func (cicdManager *CicdManager) GetSuperVisorList( )(list ServerServiceSuperVisorList , err error) {
-	//serviceBaseDir := cicdManager.Option.Config.System.ServiceDir
-
 	if len(cicdManager.Option.ServerList) == 0 {
 		//服务器 为空
 		errMsg := "GetSuperVisorList err:ServerList is empty"
@@ -365,28 +337,21 @@ func (cicdManager *CicdManager) GetSuperVisorList( )(list ServerServiceSuperViso
 					//superVisorStatus[service.Id ] = util.SV_ERROR_NONE
 					//search = 1
 
-					serviceDeployConfig := cicdManager.GetDeployConfig()
-					serviceDeployConfig ,_= cicdManager.DeployServiceCheck(serviceDeployConfig,service)
-					path := serviceDeployConfig.MasterPath + "/" + serviceDeployConfig.OpDirName
-					//util.MyPrint(path)
-					masterSrc,_ := ExecShellFile2(path + "/" + "get_soft_link_src.sh",serviceDeployConfig.MasterPath)
-					//util.ExitPrint(masterSrc)
-					superVisorProcessInfo.MasterSrc = masterSrc
+					serviceDeployConfig := cicdManager.GetDeployConfig(DEPLOY_TARGET_TYPE_REMOTE)
+					serviceDeployConfig ,_= cicdManager.DeployServiceCheck(serviceDeployConfig,service,server)
+					//path := serviceDeployConfig.MasterPath + "/" + serviceDeployConfig.OpDirName
+					//masterSrc,_ := ExecShellFile2(path + "/" + "get_soft_link_src.sh",serviceDeployConfig.MasterPath)
+					masterSrcPath ,_ := filepath.EvalSymlinks(serviceDeployConfig.MasterPath)
+					masterSrcPathArr := strings.Split(masterSrcPath,"/")
+					superVisorProcessInfo.MasterSrc = masterSrcPathArr[len(masterSrcPathArr)-1]
 					break
 				}
 			}
 
-			//if search == 0{
-			//	superVisorStatus[server.Id ] = util.SV_ERROR_NOT_FOUND
-			//	continue
-			//}
-
 			_, ok := serverServiceSuperVisor[server.Id]
 			if !ok {
-				//util.MyPrint(22222)
 				serverServiceSuperVisor[server.Id] = []MyProcessInfo{superVisorProcessInfo}
 			} else {
-				//util.MyPrint(3333)
 				serverServiceSuperVisor[server.Id] = append(serverServiceSuperVisor[server.Id], superVisorProcessInfo)
 			}
 		}
@@ -399,60 +364,74 @@ func (cicdManager *CicdManager) GetSuperVisorList( )(list ServerServiceSuperViso
 		ServerServiceSuperVisor	: serverServiceSuperVisor,
 	}
 	return list,nil
-	//str, err := json.Marshal(myresponse)
-	//util.MyPrint("json err:", err)
-	//c.String(200, string(str))
 }
 
-func (cicdManager *CicdManager) GenerateAllFilebeat() {
-	pwd, _ := os.Getwd() //当前路径
-	opDirFull := pwd + "/" + cicdManager.Option.OpDirName
-
-	for _, server := range cicdManager.Option.ServerList {
-		cicdManager.GenerateFilebeat(server, opDirFull)
-		util.MyPrint("finish one ...........")
+func (cicdManager *CicdManager)LocalSyncTarget(form request.CicdSync)error{
+	sFrom := request.CicdDeploy{
+		ServerId: form.ServerId,
+		ServiceId: form.ServiceId,
+		Flag:DEPLOY_TARGET_TYPE_LOCAL,
 	}
-	util.ExitPrint(33)
-}
-func (cicdManager *CicdManager) GenerateFilebeat(server util.Server, opDir string) {
-
-	instance, empty := cicdManager.Option.InstanceManager.GetByEnvName(server.Env, "es")
-	if empty {
-		util.ExitPrint("ProcessFilebeat GetByEnvName es empty :" + strconv.Itoa(server.Env))
+	server,service,err := cicdManager.CheckCicdRequestForm(sFrom)
+	if err != nil{
+		return err
 	}
 
-	esDns := instance.Host + ":" + instance.Port
-	filebeatConfigFile := opDir + "/" + "filebeat.yaml"
-	filebeatConfigFileContent, _ := util.ReadString(filebeatConfigFile)
-	filebeatConfigFileContent = strings.Replace(filebeatConfigFileContent, "#elasticsearch_output_hosts#", esDns, -1)
+	targetServiceDeployConfig := cicdManager.GetDeployConfig(DEPLOY_TARGET_TYPE_REMOTE)
+	targetServiceDeployConfig ,_= cicdManager.DeployServiceCheck(targetServiceDeployConfig,service,server)
+	targetDir := targetServiceDeployConfig.FullPath
 
-	filebeatInput := ""
-	for _, service := range cicdManager.Option.ServiceList {
-		filebeat_input_file := opDir + "/" + "filebeat_input.yaml"
-		filebeat_input_content, _ := util.ReadString(filebeat_input_file)
-		serviceLogDir := cicdManager.Option.Config.System.LogDir + "/" + service.Name + "/*.log"
-		//ExitPrint(serviceLogDir)
-		filebeat_input_content = strings.Replace(filebeat_input_content, "#paths#", serviceLogDir, -1)
-		filebeat_input_content = strings.Replace(filebeat_input_content, "#source#", service.Name, -1)
+	localServiceDeployConfig := cicdManager.GetDeployConfig(DEPLOY_TARGET_TYPE_LOCAL)
+	localServiceDeployConfig ,_= cicdManager.DeployServiceCheck(localServiceDeployConfig,service,server)
+	localDir := localServiceDeployConfig.FullPath
 
-		filebeatInput += filebeat_input_content + "\n"
-	}
-	esOutput := ""
-	for _, service := range cicdManager.Option.ServiceList {
-		esOutputFile := opDir + "/" + "filebeat_es_output.yaml"
-		esOutputFileContent, _ := util.ReadString(esOutputFile)
-		esOutputFileContent = strings.Replace(esOutputFileContent, "#index#", service.Name, -1)
-
-		esOutput += esOutputFileContent + "\n"
-	}
-	//MyPrint(filebeatInput)
-	//MyPrint(esOutput)
-	filebeatConfigFileContent = strings.Replace(filebeatConfigFileContent, "#filebeat_inputs#", filebeatInput, -1)
-	filebeatConfigFileContent = strings.Replace(filebeatConfigFileContent, "#elasticsearch_output_index#", esOutput, -1)
-
-	util.MyPrint(filebeatConfigFileContent)
+	//scp local_file remote_username@remote_ip:remote_folder
+	shell := "scp " + localDir + "root@"+server.OutIp + ":" + targetDir
+	util.ExitPrint(shell)
+	return nil
 }
 
+func (cicdManager *CicdManager)GetHasDeployService()map[int]map[int][]string{
+	list := make(map[int]map[int][]string)
+	for _,server := range cicdManager.Option.ServerList{
+		serverDirList := make(map[int][]string)
+		for _,service:= range cicdManager.Option.ServiceList{
+			form := request.CicdDeploy{
+				ServiceId: service.Id,
+				ServerId: server.Id,
+				Flag: DEPLOY_TARGET_TYPE_REMOTE,
+			}
+			dirList , _  := cicdManager.GetHasDeployServiceDirList(form)
+			serverDirList[service.Id] = dirList
+		}
+
+		list[server.Id] = serverDirList
+	}
+	return list
+}
+//获取当前服务器上的，已部署过的，服务的，目录列表
+func (cicdManager *CicdManager)GetHasDeployServiceDirList(form request.CicdDeploy)([]string,error){
+	server,service,err := cicdManager.CheckCicdRequestForm(form)
+	if err != nil{
+		return nil,err
+	}
+	serviceDeployConfig := cicdManager.GetDeployConfig(DEPLOY_TARGET_TYPE_REMOTE)
+	serviceDeployConfig ,_= cicdManager.DeployServiceCheck(serviceDeployConfig,service,server)
+	dirList := util.ForeachDir(serviceDeployConfig.BaseDir)
+	list := []string{}
+	for _,v:= range dirList{
+		if v.Cate == "file"{
+			continue
+		}
+
+		if util.CheckServiceDeployDirName(v.Name){
+			list = append(list,v.Name)
+		}
+	}
+
+	return list,nil
+
+}
 //如果一个路径不存在
 func pathNotExistCreate(path string) error {
 	_, err := util.PathExists(path)

@@ -1048,7 +1048,7 @@ var doc = `{
                 }
             }
         },
-        "/cicd/service/publish/{id}": {
+        "/cicd/service/publish/{id}/{flag}": {
             "get": {
                 "description": "发布项目",
                 "produces": [
@@ -2673,6 +2673,10 @@ var doc = `{
         "request.CicdDeploy": {
             "type": "object",
             "properties": {
+                "flag": {
+                    "description": "1本地2远程",
+                    "type": "integer"
+                },
                 "server_id": {
                     "type": "integer"
                 },

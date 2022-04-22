@@ -2,8 +2,9 @@
 env=["local","dev","test","pre","online"]
 
 logDir="/data/www/golang/testcicd/logs"
-serviceDir="/data/www/golang/testcicd"
-
+workBaseDir= "/data/www/golang/testcicd"
+#serviceDir="/data/www/golang/testcicd"
+#localServiceDir="/data/www/golang/testcicd/local"
 #serviceMasterName="master"
 masterDirName = "master"
 gitCloneTmpDirName="clone"

@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"reflect"
+	"runtime"
 	"strconv"
 	"time"
 )
@@ -117,15 +118,35 @@ func GetLocalIp()(ip string,err error){
 }
 
 func PingByShell(host string,timeOut string)bool{
-	cmd := exec.Command("ping", host, "-c", timeOut)
+	os := runtime.GOOS
+	//sendPackageNum := 4
+	var cmd *exec.Cmd
+	str := "PingByShell host:" + host +" timeOut:" +timeOut + " os:" + os
+	cmdStr := ""
+	if os == "darwin"{
+		cmdStr =  host +  " -c 4 -t " +  timeOut
+	}else if os == "windows"{
+		cmdStr =  host +  " -n 4 -w " +  timeOut
+		//cmd = exec.Command("ping", host +  "-n 4 -w" +  timeOut)
+	}else if os == "linux"{
+		cmdStr =  host +  " -c 4 -w " +  timeOut
+		//cmd = exec.Command("ping", host +  "-c 4 -w" +  timeOut)
+	}else{
+		MyPrint("get os err:",os)
+		return false
+	}
+	MyPrint(str + " ping " + cmdStr)
+	//ExitPrint(3)
+	cmd = exec.Command("ping",cmdStr)
+	//MyPrint("ping " +  host + "-c " +timeOut)
 	//fmt.Println("NetWorkStatus Start:", time.Now().Unix())
 	err := cmd.Run()
-	//fmt.Println("NetWorkStatus End  :", time.Now().Unix())
+	fmt.Println("PingByShell finish ,  :", time.Now().Unix())
 	if err != nil {
-		fmt.Println(err.Error())
+		fmt.Println("PingByShell err:",err.Error())
 		return false
 	} else {
-		fmt.Println("Net Status , OK")
+		fmt.Println("PingByShell ok~")
 	}
 	return true
 

@@ -22,7 +22,8 @@ type Server struct {
 	OutIp    string `json:"out_ip"`
 	InnerIp  string `json:"inner_ip"`
 	Env      int `json:"env"`
-	Status   int    `json:"status"` //1正常2关闭3异常
+	Status   int    `json:"status"` //1正常2关闭
+	PingStatus int 	`json:"ping_status"`//1正常2异常
 }
 
 type ServerManager struct {

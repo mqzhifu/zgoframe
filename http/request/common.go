@@ -80,6 +80,13 @@ type NiukeQuestionSearch struct {
 type CicdDeploy struct {
 	ServerId	int	`json:"server_id"`
 	ServiceId 	int	`json:"service_id"`
+	Flag 		int `json:"flag"`//1本地2远程
+}
+
+type CicdSync struct {
+	ServerId	int	`json:"server_id"`
+	ServiceId 	int	`json:"service_id"`
+	VersionDir	string `json:"version_dir"`
 }
 
 //@description 3方登陆

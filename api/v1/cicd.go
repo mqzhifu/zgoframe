@@ -79,9 +79,10 @@ func CicdPublishList(c *gin.Context) {
 // @Param id path string true "publish id"
 // @Produce  application/json
 // @Success 200 {object} model.Project
-// @Router /cicd/service/publish/{id} [get]
+// @Router /cicd/service/publish/{id}/{flag} [get]
 func CicdServicePublish(c *gin.Context) {
 	idStr  := c.Param("id")
+	flagStr  := c.Param("flag")
 	if idStr == ""{
 		httpresponse.FailWithMessage("id empty 1",c)
 		return
@@ -96,7 +97,9 @@ func CicdServicePublish(c *gin.Context) {
 		return
 	}
 
-	err = global.V.MyService.Cicd.Publish(id)
+	flag ,_ := strconv.Atoi(flagStr)
+
+	err = global.V.MyService.Cicd.Publish(id,flag)
 	if err != nil{
 		httpresponse.FailWithMessage(err.Error(),c)
 	}else{
@@ -142,5 +145,36 @@ func CicdServiceDeploy(c *gin.Context) {
 // @Router /cicd/ping [get]
 func CicdPing(c *gin.Context) {
 	httpresponse.OkWithDetailed("aaaa", "成功", c)
+}
+
+// @Tags Cicd
+// @Summary 本机部署的项目
+// @Description 本机部署的项目
+// @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
+// @Param X-Project-Id header string true "项目ID" default(6)
+// @Param X-Access header string true "访问KEY" default(imzgoframe)
+// @Produce  application/json
+// @Success 200 {object} model.Project
+// @Router /cicd/local/deploy/dir/list [get]
+func CicdLocalDeployDirList(c *gin.Context) {
+	list := global.V.MyService.Cicd.GetHasDeployService()
+	httpresponse.OkWithDetailed(list, "成功", c)
+}
+
+// @Tags Cicd
+// @Summary 同步 本机部署的项目 -> 到目标机器
+// @Description scp
+// @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
+// @Param X-Project-Id header string true "项目ID" default(6)
+// @Param X-Access header string true "访问KEY" default(imzgoframe)
+// @Produce  application/json
+// @Success 200 {object} model.Project
+// @Router /cicd/local/sync/target [get]
+func CicdLocalSyncTarget(c *gin.Context) {
+	var form request.CicdSync
+	c.ShouldBind(&form)
+
+	list := global.V.MyService.Cicd.LocalSyncTarget(form)
+	httpresponse.OkWithDetailed(list, "成功", c)
 }
 

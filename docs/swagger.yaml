@@ -200,6 +200,9 @@ definitions:
     type: object
   request.CicdDeploy:
     properties:
+      flag:
+        description: 1本地2远程
+        type: integer
       server_id:
         type: integer
       service_id:
@@ -1450,7 +1453,7 @@ paths:
       summary: 服务 列表
       tags:
       - Cicd
-  /cicd/service/publish/{id}:
+  /cicd/service/publish/{id}/{flag}:
     get:
       description: 发布项目
       parameters:

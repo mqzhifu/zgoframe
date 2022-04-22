@@ -530,9 +530,11 @@ publish:<br/>
                 if (! data_list[serverId][serviceId].length ){
                     trTd += "<td>&nbsp;</td>"
                 }else{
+                    var dirList = ""
                     for(let key  in data_list[serverId][serviceId]){
-                        trTd += "<td>"+data_list[serverId][serviceId][key]+ "</td><td><a href='#' onclick='opt_sync_remote("+serverId+","+serviceId+ ",\""+data_list[serverId][serviceId][key] +"\")'>同步</a> </td>";
+                        dirList += "<tr><td>"+data_list[serverId][serviceId][key]+ "</td><td><a href='#' onclick='opt_sync_remote("+serverId+","+serviceId+ ",\""+data_list[serverId][serviceId][key] +"\")'>同步</a></tr>";
                     }
+                    trTd += "<td><table>"+dirList+"</table></td>";
                 }
 
             }

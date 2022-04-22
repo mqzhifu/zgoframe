@@ -383,17 +383,26 @@ func (cicdManager *CicdManager)LocalSyncTarget(form request.CicdSync)error{
 		return err
 	}
 
+	if form.VersionDir == ""{
+		return errors.New("VersionDir empty")
+	}
+
 	targetServiceDeployConfig := cicdManager.GetDeployConfig(DEPLOY_TARGET_TYPE_LOCAL)
 	targetServiceDeployConfig ,_= cicdManager.DeployServiceCheck(targetServiceDeployConfig,service,server)
 	targetDir := targetServiceDeployConfig.FullPath
 
 	localServiceDeployConfig := cicdManager.GetDeployConfig(DEPLOY_TARGET_TYPE_REMOTE)
 	localServiceDeployConfig ,_= cicdManager.DeployServiceCheck(localServiceDeployConfig,service,server)
-	localDir := localServiceDeployConfig.FullPath
+	localDir := localServiceDeployConfig.FullPath+ "/" + form.VersionDir
 
 	//scp local_file remote_username@remote_ip:remote_folder
-	shell := "scp -r " + localDir + " root@"+server.OutIp + ":" + targetDir
-	util.ExitPrint(shell)
+	//shellArgc := " -r " + localDir + " root@"+server.OutIp + ":" + targetDir
+	//util.ExitPrint("scp "+ shellArgc)
+	//ExecShellCommand("scp",shellArgc)
+
+	shellArgc := "scp  -r " + localDir + " root@"+server.OutIp + ":" + targetDir
+	util.MyPrint(shellArgc)
+	ExecShellCommand(shellArgc ,"")
 	return nil
 }
 
@@ -500,11 +509,12 @@ func ExecShellFile2(shellFile string, argc string) (string, error) {
 
 //执行shell 指令
 func ExecShellCommand(command string, argc string) (string, error) {
-	util.MyPrint("ExecShellCommand:", command, argc)
+	//util.MyPrint("ExecShellCommand:", command, argc)
 	//shellCommand := command + " " + argc
 	c := exec.Command("bash", "-c", command)
 
 	output, err := c.CombinedOutput()
+	util.MyPrint(string(output),err)
 	if err != nil {
 		fmt.Println("exec.Command err:", err)
 		return "", err

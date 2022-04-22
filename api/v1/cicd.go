@@ -167,6 +167,7 @@ func CicdLocalDeployDirList(c *gin.Context) {
 // @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
 // @Param X-Project-Id header string true "项目ID" default(6)
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
+// @Param data body request.CicdSync true "用户信息"
 // @Produce  application/json
 // @Success 200 {object} model.Project
 // @Router /cicd/local/sync/target [get]

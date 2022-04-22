@@ -26,3 +26,5 @@ CI_COMMIT_ID=$(git rev-parse --short HEAD)
 
 
 echo $CI_COMMIT_ID
+
+rm -rf .git

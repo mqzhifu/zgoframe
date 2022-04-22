@@ -105,9 +105,9 @@ func (cicdManager *CicdManager) DeployAllService(deployTargetType int) {
 func (cicdManager *CicdManager)GetDeployConfig(deployTargetType int)ServiceDeployConfig{
 	serviceBaseDir := ""
 	if deployTargetType == DEPLOY_TARGET_TYPE_REMOTE{
-		serviceBaseDir = cicdManager.Option.Config.System.WorkBaseDir + "/" + DEPLOY_TARGET_TYPE_REMOTE_NAME
+		serviceBaseDir = cicdManager.Option.Config.System.WorkBaseDir + "/" + DEPLOY_TARGET_TYPE_REMOTE_NAME + "/"
 	}else if deployTargetType == DEPLOY_TARGET_TYPE_LOCAL{
-		serviceBaseDir  = cicdManager.Option.Config.System.WorkBaseDir + "/" + DEPLOY_TARGET_TYPE_LOCAL_NAME
+		serviceBaseDir  = cicdManager.Option.Config.System.WorkBaseDir + "/" + DEPLOY_TARGET_TYPE_LOCAL_NAME + "/"
 	}else{
 		util.ExitPrint("deployTargetType err:",deployTargetType)
 	}
@@ -162,8 +162,8 @@ func (cicdManager *CicdManager) DeployServiceCheck( serviceDeployConfig ServiceD
 			}
 		}
 	}
-	//本机部分编译，要把远程部署多出一层：加一怪 服务IP
-	if serviceDeployConfig.DeployTargetType == DEPLOY_TARGET_TYPE_LOCAL{
+	//本机部分编译，要把远程部署多出一层： 服务器IP目录->服务目录
+	if serviceDeployConfig.DeployTargetType == DEPLOY_TARGET_TYPE_REMOTE{
 		newBaseDir := serviceDeployConfig.BaseDir + "/" + server.OutIp
 		_, err := util.PathExists(newBaseDir)
 		if err != nil{

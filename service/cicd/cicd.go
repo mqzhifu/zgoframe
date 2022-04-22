@@ -163,8 +163,14 @@ func (cicdManager *CicdManager) Ping(c *gin.Context) {
 func (cicdManager *CicdManager) GetServiceList( ) map[int]util.Service {
 	list := make(map[int]util.Service)
 
-	dirList := util.ForeachDir(cicdManager.Option.Config.System.ServiceDir)
 	for k, service := range cicdManager.Option.ServiceList {
+
+		server := cicdManager.Option.ServerList[service.Id]
+		localServiceDeployConfig := cicdManager.GetDeployConfig(DEPLOY_TARGET_TYPE_LOCAL)
+		localServiceDeployConfig ,_= cicdManager.DeployServiceCheck(localServiceDeployConfig,service,server)
+
+		dirList := util.ForeachDir(localServiceDeployConfig.BaseDir)
+
 		s := service
 		for _, dirInfo := range dirList {
 			if s.Name == dirInfo.Name {
@@ -377,16 +383,16 @@ func (cicdManager *CicdManager)LocalSyncTarget(form request.CicdSync)error{
 		return err
 	}
 
-	targetServiceDeployConfig := cicdManager.GetDeployConfig(DEPLOY_TARGET_TYPE_REMOTE)
+	targetServiceDeployConfig := cicdManager.GetDeployConfig(DEPLOY_TARGET_TYPE_LOCAL)
 	targetServiceDeployConfig ,_= cicdManager.DeployServiceCheck(targetServiceDeployConfig,service,server)
 	targetDir := targetServiceDeployConfig.FullPath
 
-	localServiceDeployConfig := cicdManager.GetDeployConfig(DEPLOY_TARGET_TYPE_LOCAL)
+	localServiceDeployConfig := cicdManager.GetDeployConfig(DEPLOY_TARGET_TYPE_REMOTE)
 	localServiceDeployConfig ,_= cicdManager.DeployServiceCheck(localServiceDeployConfig,service,server)
 	localDir := localServiceDeployConfig.FullPath
 
 	//scp local_file remote_username@remote_ip:remote_folder
-	shell := "scp " + localDir + "root@"+server.OutIp + ":" + targetDir
+	shell := "scp -r " + localDir + " root@"+server.OutIp + ":" + targetDir
 	util.ExitPrint(shell)
 	return nil
 }
@@ -407,6 +413,7 @@ func (cicdManager *CicdManager)GetHasDeployService()map[int]map[int][]string{
 
 		list[server.Id] = serverDirList
 	}
+	//util.ExitPrint(list)
 	return list
 }
 //获取当前服务器上的，已部署过的，服务的，目录列表
@@ -417,18 +424,20 @@ func (cicdManager *CicdManager)GetHasDeployServiceDirList(form request.CicdDeplo
 	}
 	serviceDeployConfig := cicdManager.GetDeployConfig(DEPLOY_TARGET_TYPE_REMOTE)
 	serviceDeployConfig ,_= cicdManager.DeployServiceCheck(serviceDeployConfig,service,server)
-	dirList := util.ForeachDir(serviceDeployConfig.BaseDir)
+	dirList := util.ForeachDir(serviceDeployConfig.FullPath)
 	list := []string{}
+	//util.MyPrint("lis len:",len(list) , " FullPath:",serviceDeployConfig.FullPath," list:",dirList)
 	for _,v:= range dirList{
 		if v.Cate == "file"{
 			continue
 		}
 
 		if util.CheckServiceDeployDirName(v.Name){
+			//util.MyPrint(111111,"===========")
 			list = append(list,v.Name)
 		}
 	}
-
+	//util.MyPrint(list)
 	return list,nil
 
 }

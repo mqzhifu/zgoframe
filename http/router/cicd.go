@@ -27,7 +27,7 @@ func InitCicdRouter(Router *gin.RouterGroup) {
 
 		CicdRouter.GET("local/deploy/dir/list", v1.CicdLocalDeployDirList)
 
-		CicdRouter.GET("local/sync/target", v1.CicdLocalSyncTarget)
+		CicdRouter.POST("local/sync/target", v1.CicdLocalSyncTarget)
 
 	}
 }

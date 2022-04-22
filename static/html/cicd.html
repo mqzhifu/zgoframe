@@ -46,7 +46,12 @@ server service superVisor :<br/>
 <div id="server_service_super_visor">
 
 </div>
+<br/>
+本地部署，同步到远端:<br/>
+<table class='table' id="remote_server_service">
 
+</table>
+<br/>
 
 
 
@@ -140,6 +145,7 @@ publish:<br/>
                 serverList =  backData.data;
                 ProcessList("table_server_list",serverList)
                 ajaxProcessServerService();
+                ajaxProcessRemoteServerService();
             }
         });
     });
@@ -212,6 +218,28 @@ publish:<br/>
         });
     }
 
+    function ajaxProcessRemoteServerService(){
+        $(document).ready(function(){
+            $.ajax({
+                headers: {
+                    "X-Source-Type": header_X_Source_Type,
+                    "X-Project-Id": header_X_Project_Id,
+                    "X-Access": header_X_Access,
+                },
+                type: "GET",
+                contentType: "application/json;charset=utf-8",
+                url: "/cicd/local/deploy/dir/list",
+                success: function(backData){
+                    backData = eval(   backData  );
+                    if(backData.code != 200){
+                        return alert("ajax req back data err");
+                    }
+                    ProcessRemoteServerServiceList("remote_server_service", backData.data)
+                }
+            });
+        });
+    }
+
 
 
     function GetServiceOptBnt(){
@@ -274,6 +302,29 @@ publish:<br/>
         tableHtml += "</table>";
 
         $("#server_service_super_visor").html(tableHtml);
+    }
+
+    function opt_sync_remote(serverId,serviceId,dirName){
+        console.log("opt_sync_remote:",serverId,serviceId,dirName)
+        $.ajax({
+            headers: {
+                "X-Source-Type": header_X_Source_Type,
+                "X-Project-Id": header_X_Project_Id,
+                "X-Access": header_X_Access,
+            },
+            dataType: "json",
+            type: "POST",
+            data: JSON.stringify({"server_id": serverId, "service_id": serviceId ,"version_dir":dirName}),
+            contentType: "application/json;charset=utf-8",
+            url: "/cicd/local/sync/target",
+            success: function(backData){
+                backData = eval(   backData  );
+                if(backData.code != 200){
+                    return alert("ajax req back data err");
+                }
+                alert(backData);
+            }
+        });
     }
 
     function optDeployService(serverId,serviceId ,flag){
@@ -463,6 +514,39 @@ publish:<br/>
         tableObj.append(trTdAll);
     }
 
+
+    function ProcessRemoteServerServiceList(objId,data_list){
+        var tableObj = $("#"+objId);
+        tableObj.html("");
+        // var tableTh = "";
+        // var server_list_first_key = 0;
+        var trTdAll = "";
+
+        for(let serverId  in data_list){
+            // server_list_first_key = key;
+            var trTd = "<tr><td>"+serverId+"</td>";
+            for(let serviceId  in data_list[serverId]){
+                trTd += "<td>"+serviceId+"</td>"
+                if (! data_list[serverId][serviceId].length ){
+                    trTd += "<td>&nbsp;</td>"
+                }else{
+                    for(let key  in data_list[serverId][serviceId]){
+                        trTd += "<td>"+data_list[serverId][serviceId][key]+ "</td><td><a href='#' onclick='opt_sync_remote("+serverId+","+serviceId+ ",\""+data_list[serverId][serviceId][key] +"\")'>同步</a> </td>";
+                    }
+                }
+
+            }
+            trTd += "</tr>"
+            trTdAll += trTd;
+        }
+        // for(let key  in data_list[server_list_first_key]){
+        //     tableTh += "<th>"+key+"</th>";
+        // }
+        // tableObj.append(tableTh);
+        tableObj.append(trTdAll);
+    }
+
+
     function ProcessList(objId,data_list){
         var tableObj = $("#"+objId);
         tableObj.html("");
@@ -507,7 +591,7 @@ publish:<br/>
 
 
     function test(){
-        optDeployService(4,6,1);
+        optDeployService(4,6,2);
     }
 
 

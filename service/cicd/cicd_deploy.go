@@ -112,7 +112,7 @@ func (cicdManager *CicdManager)GetDeployConfig(deployTargetType int)ServiceDeplo
 		util.ExitPrint("deployTargetType err:",deployTargetType)
 	}
 
-	cicdManager.Option.Log.Info("DeployAllService:")
+	//cicdManager.Option.Log.Info("DeployAllService:")
 	serviceDeployConfig := ServiceDeployConfig{
 		DeployTargetType: deployTargetType,
 		BaseDir:            serviceBaseDir,
@@ -190,7 +190,7 @@ func (cicdManager *CicdManager) DeployServiceCheck( serviceDeployConfig ServiceD
 	newServiceDeployConfig := serviceDeployConfig
 
 
-	util.PrintStruct(newServiceDeployConfig, ":")
+	//util.PrintStruct(newServiceDeployConfig, ":")
 
 	return newServiceDeployConfig, nil
 }
@@ -212,7 +212,7 @@ func (cicdManager *CicdManager) DeployOneService(server util.Server, serviceDepl
 
 	cicdManager.Option.Log.Info("DeployOneService:" + server.OutIp + " " + strconv.Itoa(server.Env) + " " + service.Name)
 	//创建发布记录
-	publish := cicdManager.Option.PublicManager.InsertOne(service, server)
+	publish := cicdManager.Option.PublicManager.InsertOne(service, server,serviceDeployConfig.DeployTargetType)
 	cicdManager.Option.Log.Info("create publish:" + strconv.Itoa(publish.Id))
 	//检查各种路径是否正确
 	newServiceDeployConfig, err := cicdManager.DeployServiceCheck( serviceDeployConfig, service , server)
@@ -357,31 +357,32 @@ func (cicdManager *CicdManager) DeployOneServiceCICIConfig(newGitCodeDir string,
 	return serviceCICDConfig, nil
 }
 
-////step 3 生成该服务的，superVisor 配置文件
+//step 3 生成该服务的，superVisor 配置文件
 func (cicdManager *CicdManager) DeployOneServiceSuperVisor(serviceDeployConfig ServiceDeployConfig, configServiceCICD ConfigServiceCICD) error {
 	cicdManager.Option.Log.Info("step 3 : create superVisor conf file.")
 	superVisorOption := util.SuperVisorOption{
-		ServiceName:      serviceDeployConfig.Name,
-		ConfTemplateFile: cicdManager.Option.Config.SuperVisor.ConfTemplateFile,
-		ConfDir:          cicdManager.Option.Config.SuperVisor.ConfDir,
+		//ServiceName:      serviceDeployConfig.Name,
+		//ConfTemplateFile: cicdManager.Option.Config.SuperVisor.ConfTemplateFile,
+		//ConfDir:          cicdManager.Option.Config.SuperVisor.ConfDir,
 	}
 
 	serviceSuperVisor, err := util.NewSuperVisor(superVisorOption)
 	if err != nil {
 		return err
 	}
+	serviceSuperVisor.SetConfTemplateFile(cicdManager.Option.Config.SuperVisor.ConfTemplateFile)
 	//superVisor 配置文件中 动态的占位符，需要替换掉
 	superVisorReplace := util.SuperVisorReplace{
-		Script_name:            serviceDeployConfig.Name,
-		Startup_script_command: configServiceCICD.System.Startup,
-		Script_work_dir:        serviceDeployConfig.MasterPath,
-		Stdout_logfile:         serviceDeployConfig.BaseDir + util.DIR_SEPARATOR + serviceDeployConfig.Name +  "/super_visor_stdout.log",
-		Stderr_logfile:         serviceDeployConfig.BaseDir + util.DIR_SEPARATOR + serviceDeployConfig.Name + "/super_visor_stderr.log",
-		Process_name:           serviceDeployConfig.Name,
+		ScriptName:            serviceDeployConfig.Name,
+		StartupScriptCommand: configServiceCICD.System.Startup,
+		ScriptWorkDir:        serviceDeployConfig.MasterPath,
+		StdoutLogfile:         serviceDeployConfig.BaseDir + util.DIR_SEPARATOR + serviceDeployConfig.Name +  "/super_visor_stdout.log",
+		StderrLogfile:         serviceDeployConfig.BaseDir + util.DIR_SEPARATOR + serviceDeployConfig.Name + "/super_visor_stderr.log",
+		ProcessName:           serviceDeployConfig.Name,
 	}
 	//util.PrintStruct(superVisorReplace,":")
 	//替换配置文件中的动态值，并生成配置文件
-	serviceConfFileContent := serviceSuperVisor.ReplaceConfTemplate(superVisorReplace)
+	serviceConfFileContent,_ := serviceSuperVisor.ReplaceConfTemplate(superVisorReplace)
 	//util.ExitPrint(serviceConfFileContent)
 	//将已替换好的文件，生成一个新的配置文件
 	err = serviceSuperVisor.CreateServiceConfFile(serviceConfFileContent)

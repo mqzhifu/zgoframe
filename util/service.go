@@ -35,7 +35,7 @@ type Service struct {
 	Id   int    `json:"id"`
 	Name string `json:"name"`
 	//Key 		string			`json:"key"`
-	DBKey      string         `json:"db_key"`
+	DBKey      string         `json:"db_key"`//存储ETCD的KEY，服务发现使用
 	Status     int            `json:"status"`
 	Desc       string         `json:"desc"`
 	Type       int            `json:"type"`

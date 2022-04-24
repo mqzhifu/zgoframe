@@ -135,6 +135,29 @@ func CicdServiceDeploy(c *gin.Context) {
 }
 
 // @Tags Cicd
+// @Summary 操作进程
+// @Description 通过superVisor
+// @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
+// @Param X-Project-Id header string true "项目ID" default(6)
+// @Param X-Access header string true "访问KEY" default(imzgoframe)
+// @Param data body request.CicdDeploy true "用户信息"
+// @Produce  application/json
+// @Success 200 {object} model.Project
+// @Router /cicd/superVisor/process [post]
+func CicdSuperVisorProcess(c *gin.Context) {
+	var form request.CicdSuperVisor
+	c.ShouldBind(&form)
+
+	util.MyPrint("CicdSuperVisorProcess form:",form)
+	err := global.V.MyService.Cicd.SuperVisorProcess(form)
+	if err != nil{
+		httpresponse.FailWithMessage(err.Error(),c)
+	}else{
+		httpresponse.OkWithDetailed("aaaa", "成功", c)
+	}
+}
+
+// @Tags Cicd
 // @Summary ping
 // @Description 测试对端有没有开启服务
 // @Param X-Source-Type header string true "来源" Enums(11,12,21,22)

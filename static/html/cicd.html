@@ -42,10 +42,6 @@
 <a href="#" onclick="test()">点击测试</a>
 <br/>
 
-server service superVisor :<br/>
-<div id="server_service_super_visor">
-
-</div>
 <br/>
 本地部署，同步到远端:<br/>
 <table class='table' id="remote_server_service">
@@ -54,30 +50,40 @@ server service superVisor :<br/>
 <br/>
 
 
+server-service-superVisor :<br/>
+<div id="server_service_super_visor">
 
-server:<br/>
+</div>
+
+
+
+
+server table list:<br/>
 <table class='table' id="table_server_list">
 
 </table>
 <br/>
 
-service:<br/>
+service table list:<br/>
 <table class='table' id="table_service_list">
 
 </table>
 <br/>
 
-instance:<br/>
+
+
+publish table list:<br/>
+<table class='table' id="table_publish_list">
+
+</table>
+<br/>
+
+instance table list:<br/>
 <table class='table' id="table_instance_list">
 
 </table>
 <br/>
 
-publish:<br/>
-<table class='table' id="table_publish_list">
-
-</table>
-<b/>
 
 
 
@@ -99,32 +105,12 @@ publish:<br/>
     var super_visor_status_desc = {0:"正常",1:"初始化失败",2:"XMLRpc连接失败"}
     var deployStatus = {0:"否",1:"是"};
     var envDesc = {1:"本地",2:"开发",3:"测试",4:"预发布",5:"线是"}
-
+    // var lbTypeDesc = {1:"轮询",2:"固定分子hash"}
 
     var publishDeployStatusDesc = {1:"部署中" ,2:"失败",3:"完成"}
     var publishStatusDesc = {1:"待部署" ,2:"待发布",3:"成功",4:"失败"}
-
-    $(document).ready(function(){
-        $.ajax({
-            headers: {
-                "X-Source-Type": header_X_Source_Type,
-                "X-Project-Id": header_X_Project_Id,
-                "X-Access": header_X_Access,
-            },
-            type: "GET",
-            contentType: "application/json;charset=utf-8",
-            url: "/cicd/service/list",
-            success: function(backData){
-                backData = eval(   backData  );
-                if(backData.code != 200){
-                    return alert("ajax req back data err");
-                }
-                // serverList =  $.parseJSON(backData)
-                serviceList =  backData.data;
-                ProcessServiceList("table_service_list",serviceList)
-            }
-        });
-    });
+    var platformDesc = {1:"自有" ,2:"阿里",3:"腾讯",4:"华为"}
+    var serviceTypeDesc = {1:"service" ,2:"frontend",3:"backend",4:"app"}
 
     $(document).ready(function(){
         $("#table_server_list").html("server 正在 ping 中，略慢，请等待...")
@@ -149,6 +135,30 @@ publish:<br/>
             }
         });
     });
+
+    $(document).ready(function(){
+        $.ajax({
+            headers: {
+                "X-Source-Type": header_X_Source_Type,
+                "X-Project-Id": header_X_Project_Id,
+                "X-Access": header_X_Access,
+            },
+            type: "GET",
+            contentType: "application/json;charset=utf-8",
+            url: "/cicd/service/list",
+            success: function(backData){
+                backData = eval(   backData  );
+                if(backData.code != 200){
+                    return alert("ajax req back data err");
+                }
+                // serverList =  $.parseJSON(backData)
+                serviceList =  backData.data;
+                ProcessServiceList("table_service_list",serviceList)
+            }
+        });
+    });
+
+
 
 
     // $(document).ready(function(){
@@ -303,7 +313,27 @@ publish:<br/>
 
         $("#server_service_super_visor").html(tableHtml);
     }
-
+    function optProcess(serverId,serviceId,opt){
+        $.ajax({
+            headers: {
+                "X-Source-Type": header_X_Source_Type,
+                "X-Project-Id": header_X_Project_Id,
+                "X-Access": header_X_Access,
+            },
+            dataType: "json",
+            type: "POST",
+            data: JSON.stringify({"server_id": serverId, "service_id": serviceId ,"command":opt , "flag":1}),
+            contentType: "application/json;charset=utf-8",
+            url: "/cicd/superVisor/process",
+            success: function(backData){
+                backData = eval(   backData  );
+                if(backData.code != 200){
+                    return alert("ajax req back data err");
+                }
+                alert(backData);
+            }
+        });
+    }
     function opt_sync_remote(serverId,serviceId,dirName){
         console.log("opt_sync_remote:",serverId,serviceId,dirName)
         $.ajax({
@@ -362,7 +392,7 @@ publish:<br/>
             type: "GET",
             // data: JSON.stringify({"server_id": serverId, "service_id": serviceId}),
             contentType: "application/json;charset=utf-8",
-            url: "/cicd/service/publish/"+publishId,
+            url: "/cicd/service/publish/"+publishId + "/1",
             success: function(backData){
                 backData = eval(   backData  );
                 if(backData.code != 200){
@@ -379,7 +409,7 @@ publish:<br/>
         if (superVisorState == 999){
             return optBnt;
         }else if (superVisorState === 0 || superVisorState == 30 || superVisorState == 100 || superVisorState == 200){
-            optBnt += "<a href='#'>启动</a>&nbsp;"
+            optBnt += "<a href='#' onclick='optProcess("+serverId+","+serviceId+",\"startup\")'>启动</a>&nbsp;"
         }else if (superVisorState == 20 ){
             optBnt += "<a href='#'>停止</a>&nbsp;"
             optBnt += "<a href='#'>重启</a>&nbsp;"
@@ -411,8 +441,13 @@ publish:<br/>
             server_list_first_key = key;
             var trTd = "<tr>";
             for(let key2  in data_list[key]){
+                if (key2 == "db_key" || key2 == "lb_type"){//此值给服务发现使用，这里用不到
+                    continue;
+                }
                 if (key2 == "deploy"){
                     trTd += "<td>"+ GetDeployStatusDesc(data_list[key][key2]) + "</td>";
+                }else if (key2 == "type"){
+                    trTd += "<td>"+ serviceTypeDesc[data_list[key][key2]] + "</td>";
                 }else{
                     trTd += "<td>"+data_list[key][key2]+ "</td>";
                 }
@@ -422,6 +457,9 @@ publish:<br/>
         }
 
         for(let key  in data_list[server_list_first_key]){
+            if (key == "db_key"|| key == "lb_type"){//此值给服务发现使用，这里用不到
+                continue;
+            }
             tableTh += "<th>"+key+"</th>";
         }
 
@@ -568,6 +606,12 @@ publish:<br/>
 
                 }else if (key2 == "status"){
                     trTd += "<td>"+ status_desc[data_list[key][key2]]+ "</td>";
+
+                }else if (key2 == "env"){
+                    trTd += "<td>"+ envDesc[data_list[key][key2]]+ "</td>";
+
+                }else if (key2 == "platform"){
+                    trTd += "<td>"+ platformDesc[data_list[key][key2]]+ "</td>";
 
                 } else{
                     trTd += "<td>"+data_list[key][key2]+ "</td>";

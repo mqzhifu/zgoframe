@@ -20,8 +20,8 @@ const (
 	SERVICE_HEADER_KEY = "service_diy"
 
 	//服务发现的 负载均衡 类型
-	LOAD_BALANCE_ROBIN = 1
-	LOAD_BALANCE_HASH = 2
+	LOAD_BALANCE_ROBIN = 1//轮询
+	LOAD_BALANCE_HASH = 2//固定分子hash
 )
 //公共请求头
 type ServiceClientHeader struct {//这里全用的string 方便 http header 处理

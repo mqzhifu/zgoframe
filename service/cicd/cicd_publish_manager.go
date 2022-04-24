@@ -21,12 +21,13 @@ func NewCICDPublicManager(gorm *gorm.DB) *CICDPublicManager {
 	return cICDPublicManager
 }
 
-func (CICDPublicManager *CICDPublicManager) InsertOne(service util.Service, server util.Server) model.CicdPublish {
+func (CICDPublicManager *CICDPublicManager) InsertOne(service util.Service, server util.Server,DeployType int) model.CicdPublish {
 	serviceInfo, _ := json.Marshal(service)
 	serverInfo, _ := json.Marshal(server)
 	data := model.CicdPublish{
 		Status:      model.CICD_PUBLISH_STATUS_WAIT_DEPLOY,
 		DeployStatus: model.CICD_PUBLISH_DEPLOY_STATUS_ING,
+		DeployType: DeployType,
 		ServiceId:   service.Id,
 		ServerId:    server.Id,
 		ServiceInfo: string(serviceInfo),

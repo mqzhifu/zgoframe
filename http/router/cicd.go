@@ -29,5 +29,9 @@ func InitCicdRouter(Router *gin.RouterGroup) {
 
 		CicdRouter.POST("local/sync/target", v1.CicdLocalSyncTarget)
 
+		CicdRouter.POST("superVisor/process", v1.CicdSuperVisorProcess)
+
+
+
 	}
 }

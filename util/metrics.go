@@ -96,7 +96,7 @@ func (myMetrics *MyMetrics)CreateGauge(name string,help string )error{
 	})
 
 
-	myMetrics.Option.Log.Info("metrics: CreateGauge "+ name)
+	//myMetrics.Option.Log.Info("metrics: CreateGauge "+ name)
 
 	prometheus.MustRegister(gauge)
 
@@ -167,7 +167,7 @@ func (myMetrics *MyMetrics)CreateCounter(name string,help string )error{
 		},
 	)
 
-	myMetrics.Option.Log.Info("metrics: CreateCounter "+name )
+	//myMetrics.Option.Log.Info("metrics: CreateCounter "+name )
 
 
 	if myMetrics.Option.PushGateway.Status == "open"{

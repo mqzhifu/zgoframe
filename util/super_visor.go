@@ -24,12 +24,12 @@ const (
 )
 
 type SuperVisorReplace struct {
-	Script_name            string
-	Startup_script_command string
-	Script_work_dir        string
-	Stdout_logfile         string
-	Stderr_logfile         string
-	Process_name           string
+	ScriptName            string
+	StartupScriptCommand string
+	ScriptWorkDir        string
+	StdoutLogfile         string
+	StderrLogfile         string
+	ProcessName           string
 }
 
 //==============superVisor===========
@@ -47,13 +47,6 @@ type SuperVisorOption struct {
 
 
 type SuperVisor struct {
-	//Ip						string
-	//RpcPort 				string
-	//ConfTemplateFile 		string
-	//ServiceName 			string
-	//ConfDir 				string
-	//Separator 				string
-	//ServiceNamePrefix 		string
 	Option 					SuperVisorOption
 	ConfTemplateFileContent string
 	Cli *supervisord.Client
@@ -61,38 +54,30 @@ type SuperVisor struct {
 
 func NewSuperVisor(superVisorOption SuperVisorOption )(*SuperVisor,error){
 	superVisor := new(SuperVisor)
-	//superVisor.Ip 			= superVisorOption.Ip
-	//superVisor.RpcPort 		= superVisorOption.Port
-	//superVisor.ConfDir 		= superVisorOption.ServiceName
-	//superVisor.ServiceName 	= superVisorOption.ConfDir
 	superVisorOption.Separator	= STR_SEPARATOR
 	superVisorOption.ServiceNamePrefix = SUPER_VISOR_PROCESS_NAME_SERVICE_PREFIX
 	superVisor.Option = superVisorOption
-
-
-	superVisorConfTemplateFileContent ,err := ReadString(superVisorOption.ConfTemplateFile)
-	if err != nil{
-		return superVisor,errors.New("read superVisorConfTemplateFileContent err."+err.Error() + " , "+superVisorOption.ConfTemplateFile)
-	}
-
-	//superVisor.ConfTemplateFile = superVisorOption.ConfTemplateFile
-	superVisor.ConfTemplateFileContent = superVisorConfTemplateFileContent
 
 	return superVisor,nil
 }
 //通过XML Rpc 控制远程 superVisor 服务进程
 func(superVisor *SuperVisor) InitXMLRpc()error{
+	if superVisor.Option.Ip == "" || superVisor.Option.RpcPort == ""{
+		return errors.New("ip or port empty")
+	}
 	dns := "http://" + superVisor.Option.Ip + ":" + superVisor.Option.RpcPort + "/RPC2"
-	MyPrint(dns)
+	MyPrint("InitXMLRpc: " + dns)
 	c, err := supervisord.NewClient(dns)
 	if err != nil{
 		MyPrint("superVisor init err:",err)
 		return err
 	}
-	state ,err := c.GetState()
-	MyPrint("superVisor: XMLRpc state:",state," err:",err)
+	_ ,err = c.GetState()
+	//state ,err := c.GetState()
+	//MyPrint("superVisor: XMLRpc state:",state," err:",err)
 	if err != nil{
 		MyPrint("superVisor err:"+err.Error())
+		return errors.New("superVisor err:"+err.Error())
 	}
 
 	superVisor.Cli = c
@@ -100,67 +85,59 @@ func(superVisor *SuperVisor) InitXMLRpc()error{
 }
 
 func(superVisor *SuperVisor)StartProcess(serviceName string,wait bool)error{
-	//processListInfo  ,err := superVisor.Cli.GetAllProcessInfo()
-	//if err != nil{
-	//
-	//}
-	//
-	//var serviceSuperVisorInfo supervisord.ProcessInfo
-	//hasSearch := false
-	//for _,v := range processListInfo{
-	//	if serviceName == v.Name{
-	//		serviceSuperVisorInfo = v
-	//		break
-	//	}
-	//}
-	//if !hasSearch{
-	//
-	//}
-	//
-	//if serviceSuperVisorInfo.State !=  supervisord.StateStopped && serviceSuperVisorInfo.State == supervisord.StateExited {
-	//
-	//}
+
 	return superVisor.Cli.StartProcess(serviceName,wait)
 
 }
 
-func(superVisor *SuperVisor)StopProcess(){
-
+func(superVisor *SuperVisor)StopProcess(serviceName string,wait bool)error{
+	processName := superVisor.Option.ServiceNamePrefix + serviceName
+	return superVisor.Cli.StopProcess(processName,wait)
 }
 
 func(superVisor *SuperVisor)ReloadProcess(){
 
 }
+func(superVisor *SuperVisor)SetConfTemplateFile(ConfTemplateFile string)error{
+	superVisorConfTemplateFileContent ,err := ReadString(ConfTemplateFile)
+	if err != nil{
+		return errors.New("read superVisorConfTemplateFileContent err."+err.Error() + " , "+ConfTemplateFile)
+	}
+	superVisor.ConfTemplateFileContent = superVisorConfTemplateFileContent
+	return nil
+}
 
 
-
-func(superVisor *SuperVisor)ReplaceConfTemplate(replaceSource SuperVisorReplace)string{
+func(superVisor *SuperVisor)ReplaceConfTemplate(replaceSource SuperVisorReplace)(string,error){
+	if superVisor.ConfTemplateFileContent == ""{
+		return "",errors.New("ConfTemplateFileContent empty")
+	}
 	content := superVisor.ConfTemplateFileContent
 	//MyPrint(content)
 	key := superVisor.Option.Separator+"script_name"+superVisor.Option.Separator
 	//MyPrint(key)
-	content = strings.Replace(content,key,replaceSource.Script_name,-1)
+	content = strings.Replace(content,key,replaceSource.ScriptName,-1)
 
 	key = superVisor.Option.Separator+"startup_script_command"+superVisor.Option.Separator
-	content = strings.Replace(content,key,replaceSource.Startup_script_command,-1)
+	content = strings.Replace(content,key,replaceSource.StartupScriptCommand,-1)
 
 	key = superVisor.Option.Separator+"script_work_dir"+superVisor.Option.Separator
-	content = strings.Replace(content,key,replaceSource.Script_work_dir,-1)
+	content = strings.Replace(content,key,replaceSource.ScriptWorkDir,-1)
 
 	key = superVisor.Option.Separator+"stdout_logfile"+superVisor.Option.Separator
-	content = strings.Replace(content,key,replaceSource.Stdout_logfile,-1)
+	content = strings.Replace(content,key,replaceSource.StdoutLogfile,-1)
 
 	key = superVisor.Option.Separator+"stderr_logfile"+superVisor.Option.Separator
-	content = strings.Replace(content,key,replaceSource.Stderr_logfile,-1)
+	content = strings.Replace(content,key,replaceSource.StderrLogfile,-1)
 
 	key = superVisor.Option.Separator+"process_name"+ superVisor.Option.Separator
-	content = strings.Replace(content,key,superVisor.Option.ServiceNamePrefix  + replaceSource.Process_name,-1)
+	content = strings.Replace(content,key,superVisor.Option.ServiceNamePrefix  + replaceSource.ProcessName,-1)
 
 	//ExitPrint(content)
 
-	return content
+	return content,nil
 }
-
+//========监听相关
 func(superVisor *SuperVisor)CreateServiceConfFile(content string)error{
 	fileName := superVisor.Option.ConfDir +DIR_SEPARATOR +  superVisor.Option.ServiceName + ".ini"
 	file ,err := os.Create(fileName)

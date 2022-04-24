@@ -197,15 +197,13 @@ func (cicdManager *CicdManager) GetServerList( ) map[int]util.Server{
 			//host := "127.0.0.1"
 			//host := "111.1.34.56"
 			err  := p.Ping3(server.OutIp,argsmap)
-			util.MyPrint("Ping3 rs:",err)
+			//util.MyPrint("Ping3 rs:",err)
 			if err != nil{
 				server.PingStatus = 2
 			}else{
 				server.PingStatus = 1
 			}
-			util.PrintStruct(server,":")
 		}
-		util.PrintStruct(server,":")
 		list[k] = server
 	}
 
@@ -238,6 +236,47 @@ func (cicdManager *CicdManager) GetPublishList( ) map[int]model.CicdPublish{
 	//str, _ := json.Marshal(listArr)
 	//c.String(200, string(str))
 }
+func (cicdManager *CicdManager) SuperVisorProcess( form request.CicdSuperVisor)(err error){
+	server,service,err := cicdManager.CheckCicdRequestForm(form.CicdDeploy)
+	if err != nil{
+		return err
+	}
+	if form.Command == ""{
+		return errors.New("command is empty")
+	}
+	//创建实例
+	superVisorOption := util.SuperVisorOption{
+		Ip:               server.OutIp,
+		RpcPort:          cicdManager.Option.Config.SuperVisor.RpcPort,
+	}
+
+	serviceSuperVisor, err := util.NewSuperVisor(superVisorOption)
+	//建立 XMLRpc
+	err = serviceSuperVisor.InitXMLRpc()
+	if err != nil {
+		return errors.New("serviceSuperVisor InitXMLRpc err:" + err.Error())
+	}
+
+	if form.Command == "startup"{
+		util.MyPrint("process service name :",service.Name)
+		err = serviceSuperVisor.Cli.StartProcess(service.Name,true)
+		//err = serviceSuperVisor.StopProcess(service.Name,true)
+		util.ExitPrint(err)
+		err = serviceSuperVisor.Cli.StartProcess(service.Name,true)
+	}else if form.Command == "stop"{
+		//err = serviceSuperVisor.Cli.StopProcess(service.Name,true)
+		err = serviceSuperVisor.StopProcess(service.Name,true)
+		util.ExitPrint(err)
+		//err = serviceSuperVisor.Cli.StopProcess(service.Name,true)
+	}else if form.Command == "restart"{
+	}else{
+		return errors.New("command err")
+	}
+
+	return err
+}
+
+
 //每台服务器上 都会启动一个superVisor进程
 //列出每台机器上的：superVisor进程 的所有服务进程的状态信息
 func (cicdManager *CicdManager) GetSuperVisorList( )(list ServerServiceSuperVisorList , err error) {
@@ -255,7 +294,7 @@ func (cicdManager *CicdManager) GetSuperVisorList( )(list ServerServiceSuperViso
 		return list,errors.New(errMsg)
 	}
 
-	util.MyPrint("serverList len:", len(cicdManager.Option.ServerList), " ServiceList len:", len(cicdManager.Option.ServiceList))
+	util.MyPrint("GetSuperVisorList serverList len:", len(cicdManager.Option.ServerList), " ServiceList len:", len(cicdManager.Option.ServiceList))
 	//服务器 上面:已经开启的 superVisor	map[serverId]=>superVisorList
 	serverServiceSuperVisor := make(map[int][]MyProcessInfo)
 	//服务器 状态
@@ -263,7 +302,7 @@ func (cicdManager *CicdManager) GetSuperVisorList( )(list ServerServiceSuperViso
 	superVisorStatus := make(map[int]int)
 	//遍历服务器列表
 	for _, server := range cicdManager.Option.ServerList {
-		fmt.Println("for each service:" + server.OutIp + " " + strconv.Itoa(server.Env))
+		fmt.Println("for each service , outIp:" + server.OutIp + " env:" + strconv.Itoa(server.Env))
 
 		dns := "http://" + server.OutIp + ":" + cicdManager.Option.HttpPort
 		//dns := "http://" + server.OutIp + ":9001"
@@ -287,9 +326,6 @@ func (cicdManager *CicdManager) GetSuperVisorList( )(list ServerServiceSuperViso
 		superVisorOption := util.SuperVisorOption{
 			Ip:               server.OutIp,
 			RpcPort:          cicdManager.Option.Config.SuperVisor.RpcPort,
-			ConfTemplateFile: cicdManager.Option.Config.SuperVisor.ConfTemplateFile,
-			ServiceName:      "",
-			ConfDir:          cicdManager.Option.Config.SuperVisor.ConfDir,
 		}
 		serviceSuperVisor, err := util.NewSuperVisor(superVisorOption)
 		if err != nil {
@@ -343,7 +379,7 @@ func (cicdManager *CicdManager) GetSuperVisorList( )(list ServerServiceSuperViso
 					//superVisorStatus[service.Id ] = util.SV_ERROR_NONE
 					//search = 1
 
-					serviceDeployConfig := cicdManager.GetDeployConfig(DEPLOY_TARGET_TYPE_REMOTE)
+					serviceDeployConfig := cicdManager.GetDeployConfig(DEPLOY_TARGET_TYPE_LOCAL)
 					serviceDeployConfig ,_= cicdManager.DeployServiceCheck(serviceDeployConfig,service,server)
 					//path := serviceDeployConfig.MasterPath + "/" + serviceDeployConfig.OpDirName
 					//masterSrc,_ := ExecShellFile2(path + "/" + "get_soft_link_src.sh",serviceDeployConfig.MasterPath)
@@ -427,14 +463,26 @@ func (cicdManager *CicdManager)GetHasDeployService()map[int]map[int][]string{
 }
 //获取当前服务器上的，已部署过的，服务的，目录列表
 func (cicdManager *CicdManager)GetHasDeployServiceDirList(form request.CicdDeploy)([]string,error){
+	list := []string{}
+
 	server,service,err := cicdManager.CheckCicdRequestForm(form)
 	if err != nil{
 		return nil,err
 	}
 	serviceDeployConfig := cicdManager.GetDeployConfig(DEPLOY_TARGET_TYPE_REMOTE)
-	serviceDeployConfig ,_= cicdManager.DeployServiceCheck(serviceDeployConfig,service,server)
+	serviceDeployConfig ,err = cicdManager.DeployServiceCheck(serviceDeployConfig,service,server)
+	if err != nil{
+		return list,err
+	}
+
+	_,err = util.PathExists(serviceDeployConfig.FullPath)
+	if err != nil{
+		return list,err
+	}
+
+
 	dirList := util.ForeachDir(serviceDeployConfig.FullPath)
-	list := []string{}
+
 	//util.MyPrint("lis len:",len(list) , " FullPath:",serviceDeployConfig.FullPath," list:",dirList)
 	for _,v:= range dirList{
 		if v.Cate == "file"{

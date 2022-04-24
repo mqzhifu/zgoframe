@@ -30,6 +30,7 @@ func NewPingOption()*PingOption{
 //一台主机向一个节点发送一个类型字段值为8的ICMP报文，如果途中没有异常（如果没有被路由丢弃，目标不回应ICMP或者传输失败），
 //则目标返回类型字段值为0的ICMP报文，说明这台主机可达
 func (p *PingOption)Ping3(host string, args map[string]interface{})error {
+	prefix := "Ping3"
 	//要发送的回显请求数
 	var count int = 1
 	//要发送缓冲区大小,单位：字节
@@ -38,7 +39,7 @@ func (p *PingOption)Ping3(host string, args map[string]interface{})error {
 	var timeout int64 = 1000
 	//Ping 指定的主机，直到停止
 	var neverstop bool = false
-	fmt.Println(args,"args")
+
 	if len(args)!=0{
 		count = args["n"].(int)
 		size = args["l"].(int)
@@ -98,10 +99,9 @@ func (p *PingOption)Ping3(host string, args map[string]interface{})error {
 		msg[3] = byte(check & 255)
 
 		conn, err = net.DialTimeout("ip:icmp", host, time.Duration(timeout*1000*1000))
-
 		//todo test
 		//ip := conn.RemoteAddr()
-		fmt.Println("remote ip:",host)
+		fmt.Println(prefix ," remote ip:",host , " args:",args)
 
 		checkError3(err)
 

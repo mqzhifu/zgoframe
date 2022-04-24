@@ -2,7 +2,6 @@ package httpmiddleware
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/gin-gonic/gin"
 	uuid "github.com/satori/go.uuid"
 	"reflect"
@@ -16,7 +15,7 @@ import (
 func Header() gin.HandlerFunc {
 
 	return func(c *gin.Context) {
-		global.V.Zap.Debug("middle Header start:")
+		//global.V.Zap.Debug("middle Header start:")
 
 		//string header map 映射到 request.Header 结构体中
 		//util.MyPrint(c.Request.Header)
@@ -33,8 +32,8 @@ func Header() gin.HandlerFunc {
 			header.TraceId = CreateOneTraceId()
 		}
 
-		formatHeader := fmt.Sprintf("%+v", header)
-		util.MyPrint("parser haeder:", formatHeader)
+		//formatHeader := fmt.Sprintf("%+v", header)
+		//util.MyPrint("parser haeder:", formatHeader)
 
 		c.Set("myheader", header)
 

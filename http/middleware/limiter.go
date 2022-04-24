@@ -13,7 +13,7 @@ import (
 //对API的访问次数、频繁，做限制,防止恶意DDos
 func Limiter() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		global.V.Zap.Debug("middle Limiter start:")
+		//global.V.Zap.Debug("middle Limiter start:")
 		//fmt.Println("RateMiddleware pref")
 		// 如果ip请求连接数在10秒内超过N次，返回429并抛出error
 		maxTimes := global.C.Http.ReqLimitTimes
@@ -27,7 +27,7 @@ func Limiter() gin.HandlerFunc {
 				return
 			}
 		}
-		global.V.Zap.Debug("middle Limiter finish.")
+		//global.V.Zap.Debug("middle Limiter finish.")
 		c.Next()
 		//fmt.Println("RateMiddleware after")
 	}

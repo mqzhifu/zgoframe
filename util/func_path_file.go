@@ -103,7 +103,7 @@ func ForeachDir(path string) []ForeachDirInfo {
 	var list []ForeachDirInfo
 	fs, err := ioutil.ReadDir(path)
 	if err != nil {
-		MyPrint("GetFileListByDir err:", err.Error())
+		MyPrint("ForeachDir err:", err.Error())
 		return list
 	}
 	for _, file := range fs {

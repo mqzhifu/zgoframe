@@ -42,7 +42,7 @@ imgHeight    = 80
 
 
 [http]
-status          = "close"
+status          = "http"
 ip              = "#http_ip#"
 port            = "#http_port#"
 staticPath      = "/data/www/golang/src/zgoframe/static"

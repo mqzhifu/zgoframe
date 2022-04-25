@@ -136,11 +136,11 @@ func ConstInitTestDb(c *gin.Context) {
 	envList := util.GetConstListEnv()
 	//id := 1
 	ipList := make(map[int]string)
-	ipList[1] = "127.0.0.1"
-	ipList[2] = "1.1.1.1"
-	ipList[3] = "2.2.2.2"
-	ipList[4] = "8.142.177.235"
-	ipList[5] = "3.3.3.3"
+	ipList[1] = "127.0.0.1"//本地
+	//ipList[2] = "1.1.1.1"//开发
+	//ipList[3] = "2.2.2.2"//测试
+	ipList[4] = "8.142.177.235"//预发布
+	//ipList[5] = "3.3.3.3"//线上
 
 	serverSql := ""
 	for k,v:=range envList{
@@ -151,13 +151,15 @@ func ConstInitTestDb(c *gin.Context) {
 
 	instanceSql := ""
 	for _,envId:=range envList{
-		for _,instance := range cicd.ThirdInstance{
-			if !CheckInAllowInstance(instance){
-				continue
+		if envId == 1 || envId == 4 {
+			for _,instance := range cicd.ThirdInstance{
+				if !CheckInAllowInstance(instance){
+					continue
+				}
+				instanceInsertSql := "INSERT INTO `instance` (`id`, `platform`, `name`, `host`, `port`, `env`, `user`, `ps`, `ext`, `status`, `charge_user_name`, `start_time`, `end_time`, `price`, `created_at`, `updated_at`, `deleted_at`) "
+				instanceInsertSql += "VALUES                  (NULL, '1', '"+instance+"', '"+ipList[envId] +"', '3306', '"+strconv.Itoa(envId)+"', 'aaaa', 'bbbb', '', '1', '小z', '1650006845', '1650006845', '200', '1650006845', '0', NULL);"
+				instanceSql += instanceInsertSql
 			}
-			instanceInsertSql := "INSERT INTO `instance` (`id`, `platform`, `name`, `host`, `port`, `env`, `user`, `ps`, `ext`, `status`, `charge_user_name`, `start_time`, `end_time`, `price`, `created_at`, `updated_at`, `deleted_at`) "
-			instanceInsertSql += "VALUES                  (NULL, '1', '"+instance+"', '"+ipList[4] +"', '3306', '"+strconv.Itoa(envId)+"', 'aaaa', 'bbbb', '', '1', '小z', '1650006845', '1650006845', '200', '1650006845', '0', NULL);"
-			instanceSql += instanceInsertSql
 		}
 	}
 
@@ -170,7 +172,7 @@ func ConstInitTestDb(c *gin.Context) {
 }
 
 func CheckInAllowInstance(name string)bool{
-	allowInstance := []string{"mysql","redis","prometheus","kibana","grafana","etcd","es"}
+	allowInstance := []string{"mysql","redis","prometheus","kibana","grafana","etcd","es","http"}
 	for _,v:= range allowInstance {
 		if v == name{
 			return true

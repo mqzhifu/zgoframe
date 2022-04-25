@@ -17,6 +17,7 @@ import (
 
 func StartHttpGin() {
 	dns := global.C.Http.Ip + ":" + global.C.Http.Port
+	util.MyPrint("http gin dns:"+dns)
 	server := &http.Server{
 		Addr:           dns,
 		Handler:        global.V.Gin,

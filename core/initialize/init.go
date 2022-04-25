@@ -11,7 +11,6 @@ import (
 	"strings"
 	"zgoframe/core/global"
 	"zgoframe/model"
-	"zgoframe/service"
 	"zgoframe/util"
 )
 
@@ -251,32 +250,16 @@ func (initialize *Initialize) Start() error {
 		//global.V.AlertHook.Alert("Aaaa")
 		//util.ExitPrint(123123123)
 	}
-	var netWayOption util.NetWayOption
-	if global.C.Gateway.Status == global.CONFIG_STATUS_OPEN {
-		netWayOption = InitGateway()
-		//	global.V.Gateway, err = InitGateway()
-		//	if err != nil {
-		//		global.V.Zap.Error(prefix + "InitGateway err:" + err.Error())
-		//		return err
-		//	}
-	}
-	MyServiceOptions := service.MyServiceOptions {
-		Gorm :global.V.Gorm,
-		Zap :global.V.Zap,
-		MyEmail :global.V.Email,
-		MyRedis :global.V.Redis,
-		NetWayOption :netWayOption,
-		GrpcManager :global.V.GrpcManager,
-		ProjectManager : global.V.ProjectMng,
-		ConfigCenterDataDir :global.C.Http.StaticPath + global.C.ConfigCenter.DataPath,
-		ConfigCenterPersistenceType	:global.C.ConfigCenter.PersistenceType,
-		OpDirName: global.C.System.OpDirName,
-		ServiceList: global.V.ServiceManager.Pool,
-		HttpPort:global.C.Http.Port,
-		GatewayStatus: global.C.Gateway.Status,
-	}
-
-	global.V.MyService = service.NewService(MyServiceOptions)
+	//var netWayOption util.NetWayOption
+	//if global.C.Gateway.Status == global.CONFIG_STATUS_OPEN {
+	//	netWayOption = InitGateway()
+	//	//	global.V.Gateway, err = InitGateway()
+	//	//	if err != nil {
+	//	//		global.V.Zap.Error(prefix + "InitGateway err:" + err.Error())
+	//	//		return err
+	//	//	}
+	//}
+	InitMyService()
 
 	global.C.System.ENV = initialize.Option.Env
 	//启动http

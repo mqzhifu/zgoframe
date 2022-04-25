@@ -567,55 +567,5 @@ func (user *User) GetConstList() []ConstInfo {
 		Key:  "CONFIG_PERSISTENCE_TYPE",
 	})
 
-
-
-
-
-
-
-
-
-	//ConstList = append(ConstList, ConstInfo{
-	//	List: model.GetConstListProjectType(),
-	//	Name: "项目类型",
-	//	Key:  "PROJECT_TYPE",
-	//})
-
 	return ConstList
 }
-
-//
-////批量获取用户信息
-//func GetUserInfoList(info request.PageInfo) (err error, list interface{}, total int64) {
-//	limit := info.PageSize
-//	offset := info.PageSize * (info.Page - 1)
-//	db := user.Gorm.Model(&model.User{})
-//	var userList []model.User
-//	err = db.Count(&total).Error
-//	err = db.Limit(limit).Offset(offset).Preload("Authority").Find(&userList).Error
-//	return err, userList, total
-//}
-
-////后台使用，权限控制
-//func SetUserAuthority(uuid uuid.UUID, authorityId string) (err error) {
-//	err = user.Gorm.Where("uuid = ?", uuid).First(&model.User{}).Update("authority_id", authorityId).Error
-//	return err
-//}
-//
-//func CheckUserIsCpByUserId(userId int) (res bool) {
-//	_, user := FindUserById(userId)
-//	auid, _ := strconv.Atoi(user.AuthorityId)
-//	if auid == 9528 {
-//		return true
-//	}
-//	return false
-//}
-//
-//func CheckIsSuperAdmin(userId int) (res bool) {
-//	_, user := FindUserById(userId)
-//	auid, _ := strconv.Atoi(user.AuthorityId)
-//	if auid == 888 {
-//		return true
-//	}
-//	return false
-//}

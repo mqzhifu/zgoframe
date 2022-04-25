@@ -21,13 +21,14 @@ const (
 
 type Room struct {
 	Id                     string          `json:"id"`           //房间ID
+	Category 			   int32 			`json:"category"`	//分类  - 标签
 	AddTime                int32           `json:"addTime"`      //创建时间
 	StartTime              int32           `json:"startTime"`    //开始游戏时间
 	EndTime                int32           `json:"endTime"`      //游戏结束时间
 	ReadyTimeout           int32           `json:"readyTimeout"` //玩家准备超时时间
 	Status                 int32           `json:"status"`       //状态
 	PlayerList             []*util.Conn    `json:"playerList"`   //玩家列表
-	PlayerIds              []int32         `json:"player_ids"`
+	PlayerIds              []int32         `json:"player_ids"`	//玩家列表IDS
 	SequenceNumber         int             `json:"sequenceNumber"`   //当前帧频逻辑帧顺序号
 	PlayersReadyList       map[int32]int32 `json:"playersReadyList"` //玩家准备列表
 	RandSeek               int32           `json:"randSeek"`         //随机数种子
@@ -42,6 +43,7 @@ type Room struct {
 	WaitPlayerOfflineCloseChan chan int   `json:"-"` //<一局游戏，某个玩家掉线，其它玩家等待它的时间>
 	//本局游戏，历史记录，玩家的所有操作
 	LogicFrameHistory []*pb.RoomHistory `json:"logicFrameHistory"` //玩家的历史所有记录
+	Rs 						string 			`json:"rs"` //本房间的一局游戏，最终的比赛结果
 	RoomManager       *RoomManager      //父类
 }
 
@@ -53,8 +55,8 @@ type RoomManager struct {
 type RoomManagerOption struct {
 	Log          *zap.Logger
 	FrameSync    *FrameSync
-	ReadyTimeout int32
-	RoomPeople   int32
+	ReadyTimeout int32	//房间人数满足了，等待 所有玩家确认，超时时间
+	RoomPeople   int32	//房间有多少人后，可以开始游戏了
 }
 
 func NewRoomManager(roomManagerOption RoomManagerOption) *RoomManager {
@@ -66,7 +68,7 @@ func NewRoomManager(roomManagerOption RoomManagerOption) *RoomManager {
 func (roomManager *RoomManager) SetFrameSync(frameSync *FrameSync) {
 	roomManager.Option.FrameSync = frameSync
 }
-
+//创建一个空房间
 func (roomManager *RoomManager) NewRoom() *Room {
 	room := new(Room)
 	room.Id = CreateRoomId()
@@ -82,7 +84,8 @@ func (roomManager *RoomManager) NewRoom() *Room {
 	room.PlayersOperationQueue = list.New()
 	room.PlayersReadyList = make(map[int32]int32)
 	room.PlayersReadyListRWLock = &sync.RWMutex{}
-
+	room.Rs = ""
+	room.Category = 0
 	readyTimeout := int32(util.GetNowTimeSecondToInt()) + roomManager.Option.ReadyTimeout
 	room.ReadyTimeout = readyTimeout
 

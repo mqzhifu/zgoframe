@@ -42,11 +42,15 @@ type MyServiceOptions struct {
 
 func NewService(options MyServiceOptions) *Service {
 	service := new(Service)
+	//用户服务
 	service.User = NewUser(options.Gorm, options.MyRedis)
+	//站内信服务
 	service.Mail = NewMail(options.Gorm,options.Zap)
+	//短信服务
 	service.Sms = NewSms(options.Gorm)
+	//电子邮件服务
 	service.Email = NewEmail(options.Gorm, options.MyEmail)
-
+	//配置中心服务
 	configCenterOption := ConfigCenterOption{
 		envList:            util.GetConstListEnv(),
 		Gorm:               options.Gorm,
@@ -61,13 +65,14 @@ func NewService(options MyServiceOptions) *Service {
 		util.ExitPrint("NewConfigCenter err:" + err.Error())
 	}
 
-	//room要先实例化,math frame_sync 都强依赖room
+	//房间服务 - room要先实例化,math frame_sync 都强依赖room
 	roomManagerOption := RoomManagerOption{
 		Log:          options.Zap,
 		ReadyTimeout: 60,
 		RoomPeople:   4,
 	}
 	service.RoomManage = NewRoomManager(roomManagerOption)
+	//匹配服务
 	matchOption := MatchOption{
 		Log:         options.Zap,
 		RoomManager: service.RoomManage,
@@ -78,10 +83,13 @@ func NewService(options MyServiceOptions) *Service {
 		Log:        options.Zap,
 		RoomManage: service.RoomManage,
 	}
-	//强-依赖room
+	//帧同步服务 - 强-依赖room
 	service.FrameSync = NewFrameSync(syncOption)
 
 	service.RoomManage.SetFrameSync(service.FrameSync)
+	//他们3个的关系：
+	//room -> match , match -> room ,room ->frame sync ， frame sync -> room
+
 
 	if options.GatewayStatus == "open"{
 		gateway := NewGateway(options.GrpcManager, options.Zap)

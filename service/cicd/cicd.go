@@ -264,8 +264,10 @@ func (cicdManager *CicdManager) SuperVisorProcess( form request.CicdSuperVisor)(
 		util.ExitPrint(err)
 		err = serviceSuperVisor.Cli.StartProcess(service.Name,true)
 	}else if form.Command == "stop"{
-		//err = serviceSuperVisor.Cli.StopProcess(service.Name,true)
-		err = serviceSuperVisor.StopProcess(service.Name,true)
+		name := service.Name + ":service_" + service.Name
+		util.MyPrint("name:",name)
+		err = serviceSuperVisor.Cli.StopProcess(name,true)
+		//err = serviceSuperVisor.StopProcess(service.Name,true)
 		util.ExitPrint(err)
 		//err = serviceSuperVisor.Cli.StopProcess(service.Name,true)
 	}else if form.Command == "restart"{

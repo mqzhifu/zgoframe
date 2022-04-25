@@ -52,7 +52,10 @@ func GetNewHttpGIN(zapLog *zap.Logger, prefix string) (*gin.Engine, error) {
 	staticFSUriName := "/static"
 	swaggerUri := "/swagger/*any"
 
-	zapLog.Info(prefix + "GetNewHttpGIN static config , uri: " + staticFSUriName + " , diskPath: " + global.C.Http.StaticPath)
+
+	staticPath := global.V.RootDir  + "/" + global.C.Http.StaticPath
+
+	zapLog.Info(prefix + "GetNewHttpGIN static config , uri: " + staticFSUriName + " , diskPath: " + staticPath)
 	zapLog.Info(prefix + "GetNewHttpGIN swagger uri:" + swaggerUri)
 	//这里用到了两个log ，一个是gin 自己的LOG，它不会持久化，只输出到屏幕，另一个是zap自建的LOG，用于持久化，但不输出到屏幕
 	HttpZapLog = zapLog
@@ -62,7 +65,7 @@ func GetNewHttpGIN(zapLog *zap.Logger, prefix string) (*gin.Engine, error) {
 	ginRouter.Use(ZapLog())
 	//加载静态目录
 	//	Router.Static("/form-generator", "./resource/page")
-	ginRouter.StaticFS(staticFSUriName, http.Dir(global.C.Http.StaticPath))
+	ginRouter.StaticFS(staticFSUriName, http.Dir(staticPath))
 	//加载swagger api 工具
 	ginRouter.GET(swaggerUri, ginSwagger.WrapHandler(swaggerFiles.Handler))
 	//设置跨域

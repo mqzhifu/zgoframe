@@ -45,6 +45,7 @@ imgHeight    = 80
 status          = "http"
 ip              = "#http_ip#"
 port            = "#http_port#"
+#staticPath      = "/data/www/golang/src/zgoframe/static" ，这里先改成相对路径
 staticPath      = "/data/www/golang/src/zgoframe/static"
 reqLimitTimes   = 100
 
@@ -63,7 +64,6 @@ logZap          = false
 
 [casbin]
 status      = "open"
-modelPath   = "/data/www/golang/src/zgoframe/static/data/rbac_model.conf"
 
 [etcd]
 status      = "open"

@@ -361,9 +361,9 @@ func (cicdManager *CicdManager) DeployOneServiceCICIConfig(newGitCodeDir string,
 func (cicdManager *CicdManager) DeployOneServiceSuperVisor(serviceDeployConfig ServiceDeployConfig, configServiceCICD ConfigServiceCICD) error {
 	cicdManager.Option.Log.Info("step 3 : create superVisor conf file.")
 	superVisorOption := util.SuperVisorOption{
-		//ServiceName:      serviceDeployConfig.Name,
+		ConfDir:          cicdManager.Option.Config.SuperVisor.ConfDir,
+		ServiceName:      serviceDeployConfig.Name,
 		//ConfTemplateFile: cicdManager.Option.Config.SuperVisor.ConfTemplateFile,
-		//ConfDir:          cicdManager.Option.Config.SuperVisor.ConfDir,
 	}
 
 	serviceSuperVisor, err := util.NewSuperVisor(superVisorOption)

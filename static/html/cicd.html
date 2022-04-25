@@ -357,8 +357,12 @@ instance table list:<br/>
         });
     }
 
-    function optDeployService(serverId,serviceId ,flag){
+    function optDeployService(serverId,serviceId ,flag,obj){
         console.log("deploy serverId:",serverId , " serviceId:",serviceId);
+        // var jqObj = $(obj);
+        // jqObj.removeAttr("onclick");
+        // jqObj.html("部署慢，请等待10后，再点击");
+        // setTimeout( optDeployService , 10 * 1000);
         $.ajax({
             headers: {
                 "X-Source-Type": header_X_Source_Type,
@@ -405,7 +409,7 @@ instance table list:<br/>
 
     function GetBnt(superVisorState,serverId,serviceId ){
         console.log("GetBnt serverId:",serverId , " serviceId:",serviceId);
-        var optBnt = "<a href='#' onclick='optDeployService("+serverId+","+serviceId+",1)'>部署</a>&nbsp;";
+        var optBnt = "<a href='#' onclick='optDeployService("+serverId+","+serviceId+",1,this)'>部署</a>&nbsp;";
         if (superVisorState == 999){
             return optBnt;
         }else if (superVisorState === 0 || superVisorState == 30 || superVisorState == 100 || superVisorState == 200){

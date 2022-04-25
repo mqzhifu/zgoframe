@@ -415,7 +415,7 @@ instance table list:<br/>
         }else if (superVisorState === 0 || superVisorState == 30 || superVisorState == 100 || superVisorState == 200){
             optBnt += "<a href='#' onclick='optProcess("+serverId+","+serviceId+",\"startup\")'>启动</a>&nbsp;"
         }else if (superVisorState == 20 ){
-            optBnt += "<a href='#'>停止</a>&nbsp;"
+            optBnt += "<a href='#' onclick='optProcess("+serverId+","+serviceId+",\"stop\")'>停止</a>&nbsp;"
             optBnt += "<a href='#'>重启</a>&nbsp;"
             return optBnt;
         }else if (superVisorState == 10 ){

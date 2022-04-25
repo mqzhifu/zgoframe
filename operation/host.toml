@@ -14,6 +14,7 @@ httpPort="4455"
 
 [superVisor]
 rpcPort="9001"
+#confTemplateFile="/data/www/golang/src/zgoframe/operation/super_visor.ini" #暂时用相对路径，方便CICD
 confTemplateFile="super_visor.ini"
 confDir="/etc/supervisord.d"
 

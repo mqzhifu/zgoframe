@@ -1,6 +1,6 @@
 #当前项目的CICD配置信息
 [system]
-startup = "go run main -e #env#"
+startup = "go run main.go -e #env#"
 listeningPorts = "3306,3308"
 testUnit = "go run test"
 build = "go build -o #service_name#"

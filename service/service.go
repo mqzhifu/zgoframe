@@ -123,6 +123,8 @@ func InitCicd(gorm *gorm.DB,zap *zap.Logger,opDir string,ServiceList map[int]uti
 		util.ExitPrint(err.Error())
 	}
 
+	cicdConfig.SuperVisor.ConfTemplateFile = pwd + "/" + opDir  +  "/" + cicdConfig.SuperVisor.ConfTemplateFile
+
 	util.PrintStruct(cicdConfig , " : ")
 	//3方实例
 	instanceManager ,_:= util.NewInstanceManager(gorm )

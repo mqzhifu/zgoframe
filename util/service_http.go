@@ -23,9 +23,7 @@ type ServiceHttp struct {
 
 func NewServiceHttp (projectId int,targetServiceName string,ip string ,port string,targetServiceId int)*ServiceHttp{
 	serviceHttp 		   := new(ServiceHttp)
-	//serviceHttp.AppId 		= appId
-	//serviceHttp.ServiceId 	= serviceId
-	serviceHttp.ProjectId = projectId
+	serviceHttp.ProjectId 	= projectId
 	serviceHttp.Ip 			= ip
 	serviceHttp.Port 		= port
 	serviceHttp.TargetServiceName 	= targetServiceName

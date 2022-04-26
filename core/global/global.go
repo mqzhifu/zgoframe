@@ -7,8 +7,8 @@ import (
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 	"net/http"
-	"zgoframe/service"
 	"zgoframe/util"
+	"zgoframe/service"
 )
 
 type Global struct {
@@ -20,8 +20,6 @@ type Global struct {
 	Redis            *util.MyRedis
 	Gin              *gin.Engine
 	Gorm             *gorm.DB
-	Service          util.Service
-	MyService        *service.Service
 	Project          util.Project
 	ProjectMng       *util.ProjectManager
 	Etcd             *util.MyEtcd
@@ -37,6 +35,10 @@ type Global struct {
 	Process          *util.Process
 	Err              *util.ErrMsg
 	Email            *util.MyEmail
+
+	MyService        *service.Service//内部快捷服务
+
+	//Service          util.Service
 	ServiceManager   *util.ServiceManager   //管理已注册的服务
 	ServiceDiscovery *util.ServiceDiscovery //管理服务发现，会用到上面的ServiceManager
 	//ConnProtocol *util.ConnProtocol

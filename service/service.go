@@ -2,6 +2,7 @@
 package service
 
 import (
+	"zgoframe/service/gamematch"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 	"os"
@@ -29,6 +30,7 @@ type MyServiceOptions struct {
 	Zap *zap.Logger
 	MyEmail *util.MyEmail
 	MyRedis *util.MyRedis
+	MyRedisGo *util.MyRedisGo
 	NetWayOption util.NetWayOption
 	GrpcManager *util.GrpcManager
 	ProjectManager *util.ProjectManager
@@ -38,6 +40,10 @@ type MyServiceOptions struct {
 	ServiceList map[int]util.Service
 	HttpPort 	string
 	GatewayStatus string
+	Etcd *util.MyEtcd
+	Metrics *util.MyMetrics
+	ProjectId int
+	ServiceDiscovery *util.ServiceDiscovery
 }
 
 func NewService(options MyServiceOptions) *Service {
@@ -105,6 +111,23 @@ func NewService(options MyServiceOptions) *Service {
 
 	service.Cicd ,err = InitCicd(options.Gorm,options.Zap,options.OpDirName,options.ServiceList,options.HttpPort)
 
+
+	gameMatchOption :=  gamematch.GamematchOption{
+		Log :options.Zap,
+		Redis :options.MyRedisGo,
+		ServiceDiscovery : options.ServiceDiscovery,
+		Etcd : options.Etcd,
+		Metrics: options.Metrics,
+		ProjectId :options.ProjectId,
+		//HttpdOption: myHttpdOption,
+	}
+
+	myGamematch,errs := gamematch.NewGameMatch(gameMatchOption)
+	if errs != nil{
+		util.ExitPrint("NewGamematch : ",errs.Error(),myGamematch)
+	}
+	util.ExitPrint(33)
+	//myGamematch.Startup()
 
 	return service
 }

@@ -27,6 +27,7 @@ require (
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/groupcache v0.0.0-20200121045136-8c9f03a8e57e // indirect
 	github.com/golang/protobuf v1.5.2
+	github.com/gomodule/redigo v1.8.7
 	github.com/google/btree v1.0.0 // indirect
 	github.com/google/go-cmp v0.5.6 // indirect
 	github.com/google/uuid v1.3.0 // indirect
@@ -80,5 +81,4 @@ require (
 	gorm.io/driver/mysql v1.1.1
 	gorm.io/gorm v1.21.12
 	sigs.k8s.io/yaml v1.2.0 // indirect
-
 )

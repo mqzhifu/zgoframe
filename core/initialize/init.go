@@ -124,12 +124,22 @@ func (initialize *Initialize) Start() error {
 	//基础类：用于恢复一个挂了的协程,避免主进程被panic fatal 带挂了，同时有重度次数控制
 	global.V.RecoverGo = util.NewRecoverGo(global.V.Zap, 3)
 	//redis
+	var redisGo *util.MyRedisGo
 	if global.C.Redis.Status == global.CONFIG_STATUS_OPEN {
 		global.V.Redis, err = GetNewRedis(prefix)
 		if err != nil {
 			global.V.Zap.Error(prefix + " GetRedis " + err.Error())
 			return err
 		}
+
+		redisGoOption := util.RedisGoOption{
+			Host: global.C.Redis.Ip,
+			Port: global.C.Redis.Port,
+			Ps	: global.C.Redis.Password,
+			Log : global.V.Zap,
+		}
+		redisGo , _ = util.NewRedisConnPool(redisGoOption)
+
 	}
 	//http server
 	if global.C.Http.Status == global.CONFIG_STATUS_OPEN {
@@ -259,7 +269,7 @@ func (initialize *Initialize) Start() error {
 	//	//		return err
 	//	//	}
 	//}
-	InitMyService()
+	InitMyService(redisGo)
 
 	global.C.System.ENV = initialize.Option.Env
 	//启动http

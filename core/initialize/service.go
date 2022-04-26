@@ -3,9 +3,10 @@ package initialize
 import (
 	"zgoframe/core/global"
 	"zgoframe/service"
+	"zgoframe/util"
 )
 //内部服务，按说：一个项目里最多也就1-2个服务，其它的服务应该在其它项目，并且访问的时候通过HTTP/TCP，这里方便使用，先统计把其它服务当成一个类使用
-func InitMyService( ){
+func InitMyService( redisGo *util.MyRedisGo){
 	netWayOption := InitGateway()
 	MyServiceOptions := service.MyServiceOptions {
 		Gorm :global.V.Gorm,
@@ -21,6 +22,11 @@ func InitMyService( ){
 		ServiceList: global.V.ServiceManager.Pool,
 		HttpPort:global.C.Http.Port,
 		GatewayStatus: global.C.Gateway.Status,
+		MyRedisGo:redisGo,
+		Etcd: global.V.Etcd,
+		Metrics: global.V.Metric,
+		ServiceDiscovery: global.V.ServiceDiscovery,
+		ProjectId : global.C.System.ProjectId,
 	}
 
 	global.V.MyService = service.NewService(MyServiceOptions)

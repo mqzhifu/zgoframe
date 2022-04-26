@@ -99,3 +99,9 @@ func (errMsg *ErrMsg) NewReplace(code int, replace map[int]string) error {
 	}
 	return errors.New(errInfo.Msg)
 }
+
+func (errMsg *ErrMsg)MakeOneStringReplace(str string)map[int]string{
+	msg := make(map[int]string)
+	msg[0] = str
+	return msg
+}

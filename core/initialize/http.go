@@ -87,6 +87,7 @@ func RegGinHttpRoute() {
 		router.InitToolsRouter(PublicGroup)
 		router.InitCicdRouter(PublicGroup)
 		router.InitConfigCenterRouter(PublicGroup)
+		router.InitGameMatchRouter(PublicGroup)
 	}
 	PrivateGroup := global.V.Gin.Group("")
 	//设置正常API（需要验证）

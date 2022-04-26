@@ -186,7 +186,6 @@ func (myEtcd *MyEtcd) GetListByPrefix(key string) (list map[string]string, err e
 	kvc := clientv3.NewKV(myEtcd.cli)
 
 	ctx, cancelFunc := context.WithTimeout(rootContext, time.Duration(myEtcd.option.Timeout)*time.Second)
-	//myEtcd.option.Log.Info("-------------====")
 	//获取值
 	response, err := kvc.Get(ctx, key, clientv3.WithPrefix())
 	defer cancelFunc()
@@ -203,7 +202,6 @@ func (myEtcd *MyEtcd) GetListByPrefix(key string) (list map[string]string, err e
 	kvs := response.Kvs
 	list = make(map[string]string)
 	for _, v := range kvs {
-		//MyPrint(string(v.Key),string(v.Value))
 		list[string(v.Key)] = string(v.Value)
 	}
 	//MyPrint(list)

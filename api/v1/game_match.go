@@ -1,14 +1,10 @@
 package v1
 
 import (
-	"encoding/json"
 	"zgoframe/service/gamematch"
 	"github.com/gin-gonic/gin"
-	"github.com/mojocn/base64Captcha"
-	"go.uber.org/zap"
 	"zgoframe/core/global"
 	httpresponse "zgoframe/http/response"
-	"zlib"
 )
 
 // @Tags GameMatch

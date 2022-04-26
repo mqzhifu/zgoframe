@@ -145,7 +145,7 @@ func (queueSign *QueueSign) cancelByPlayerId(  playerId int ) {
 	//queueSign.delOneByPlayerId(playerId)
 }
 
-func (queueSign *QueueSign) cancelByGroupId(  groupId int ) error {
+func (queueSign *QueueSign) CancelByGroupId(  groupId int ) error {
 	group := queueSign.getGroupElementById(groupId)
 	queueSign.Log.Info("cancelByGroupId groupId : "+strconv.Itoa(groupId))
 	//mylog.Debug(group)

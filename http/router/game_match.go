@@ -6,7 +6,7 @@ import (
 )
 
 func InitGameMatchRouter(Router *gin.RouterGroup) {
-	gameMatchRouter := Router.Group("game/match")
+	gameMatchRouter := Router.Group("/game/match")
 	{
 		//
 		gameMatchRouter.POST("sign", v1.GameMatchSign)

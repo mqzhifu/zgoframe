@@ -99,9 +99,9 @@ func (gateway *Gateway) RouterServiceGameMatch(msg pb.Msg, conn *util.Conn) (dat
 
 	switch protoServiceFunc.FuncName {
 	case "CS_PlayerMatchSign":
-		gateway.MyService.GameMatch.AddOnePlayer(requestPlayerMatchSign, conn)
+		gateway.MyService.Match.AddOnePlayer(requestPlayerMatchSign, conn)
 	case "CS_PlayerMatchSignCancel":
-		gateway.MyService.GameMatch.CancelOnePlayer(requestPlayerMatchSignCancel, conn)
+		gateway.MyService.Match.CancelOnePlayer(requestPlayerMatchSignCancel, conn)
 
 	default:
 		gateway.Netway.Option.Log.Error("RouterServiceGateway Router err:")

@@ -32,6 +32,8 @@ var initializeVar *initialize.Initialize
 // @tag.description 自动化部署与持续集成
 // @tag.name Mail
 // @tag.description 站内信/内部邮件通知
+// @tag.name GameMatch
+// @tag.description 游戏匹配机制
 // @tag.name ConfigCenter
 // @tag.description 配置中心
 // @securityDefinitions.apikey ApiKeyAuth
@@ -180,7 +182,6 @@ func tt2(){
 //}
 //
 //func tt4(){
-//	name := "1650433030123_2dfeff3"
-//	rs := util.CheckServiceDeployDirName(name)
-//	util.ExitPrint(rs)
+//	randNum := util.GetRandInt32Num(0)
+//	util.ExitPrint(randNum)
 //}

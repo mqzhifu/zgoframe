@@ -17,12 +17,12 @@ type Service struct {
 	RoomManage     *RoomManager
 	FrameSync      *FrameSync
 	Gateway        *Gateway
-	GameMatch      *Match
+	Match      *Match
 	ConfigCenter   *ConfigCenter
 	Cicd 		*cicd.CicdManager
 	ProjectManager *util.ProjectManager
 	Mail 		*Mail
-
+	GameMatch 	*gamematch.Gamematch
 }
 
 type MyServiceOptions struct {
@@ -84,7 +84,7 @@ func NewService(options MyServiceOptions) *Service {
 		RoomManager: service.RoomManage,
 		//MatchSuccessChan chan *Room
 	}
-	service.GameMatch = NewMatch(matchOption)
+	service.Match = NewMatch(matchOption)
 	syncOption := FrameSyncOption{
 		Log:        options.Zap,
 		RoomManage: service.RoomManage,
@@ -124,9 +124,10 @@ func NewService(options MyServiceOptions) *Service {
 
 	myGamematch,errs := gamematch.NewGameMatch(gameMatchOption)
 	if errs != nil{
-		util.ExitPrint("NewGamematch : ",errs.Error(),myGamematch)
+		util.ExitPrint("NewGamematch : ",errs.Error())
 	}
-	util.ExitPrint(33)
+	service.GameMatch = myGamematch
+
 	//myGamematch.Startup()
 
 	return service

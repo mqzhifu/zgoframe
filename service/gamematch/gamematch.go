@@ -288,3 +288,44 @@ func  (gamematch *Gamematch)startOneRuleDomon(rule Rule){
 //	}
 //	return newLog
 //}
+
+
+//通用 业务型  请求 数据  检查
+func  (gamematch *Gamematch) BusinessCheckData(form HttpReqBusiness)(errCode int,httpReqBusiness HttpReqBusiness){
+	//mylog.Info(" businessCheckData : ")
+	//if postJsonStr == ""{
+	//	return 802,httpReqBusiness
+	//}
+	//var jsonUnmarshalErr error
+	//jsonUnmarshalErr = json.Unmarshal([]byte(postJsonStr),&httpReqBusiness)
+	//if jsonUnmarshalErr != nil{
+	//	mylog.Error(jsonUnmarshalErr.Error())
+	//	return 459,httpReqBusiness
+	//}
+	if form.MatchCode == ""{
+		return 450,httpReqBusiness
+	}
+	rule ,err := gamematch.RuleConfig.getByCategory(httpReqBusiness.MatchCode)
+	if err !=nil{
+		return 806,httpReqBusiness
+	}
+	httpReqBusiness.RuleId = rule.Id
+	_,err  = gamematch.checkHttpdState(httpReqBusiness.RuleId)
+	if err != nil{
+		return 804,httpReqBusiness
+	}
+
+	return 0 ,httpReqBusiness
+}
+
+func  (gamematch *Gamematch) checkHttpdState(ruleId int)(bool,error){
+	//state ,ok := gamematch.HttpdRuleState[ruleId]
+	//if !ok {
+	//	return false,myerr.NewErrorCode(803)
+	//}
+	//if state == HTTPD_RULE_STATE_OK{
+	//	return true,nil
+	//}
+	//return false,myerr.NewErrorCode(804)
+	return true,nil
+}

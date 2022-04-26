@@ -13,7 +13,7 @@ type HttpReqBusiness struct {
 	//取消报名
 	//GroupId
 	//删除一条 匹配成功记录
-	SuccessId	int		`json:"rule_ver" desc:"一条匹配成功的记录，由系统生成"`
+	SuccessId	int		`json:"success_id"`
 }
 
 type HttpReqPlayer struct {

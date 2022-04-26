@@ -1,93 +1,92 @@
 package v1
 
 import (
+	"encoding/json"
+	"zgoframe/service/gamematch"
 	"github.com/gin-gonic/gin"
 	"github.com/mojocn/base64Captcha"
 	"go.uber.org/zap"
 	"zgoframe/core/global"
 	httpresponse "zgoframe/http/response"
+	"zlib"
 )
 
 // @Tags GameMatch
-// @Summary 生成图片验证码
-// @Description BASE64图片内容，防止有人恶意攻击，如：短信轰炸、暴力破解密码等,<img src="data:image/jpg;base64,内容"/>
+// @Summary 玩家报名
+// @Description  玩家报名
 // @Security ApiKeyAuth
 // @accept application/json
 // @Param X-Source-Type header string true "来源" default(11)
 // @Param X-Project-Id header string true "项目ID"  default(6)
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
 // @Produce application/json
+// @Param data body gamematch.HttpReqBusiness true ""
 // @Success 200 {object} httpresponse.SysCaptchaResponse
-// @Router /base/captcha [get]
+// @Router /game/match/sign [get]
 func GameMatchSign(c *gin.Context) {
-	//var httpReqBusiness gamematch.HttpReqBusiness
-	//c.ShouldBind(&sendSMSForm)
+	var form gamematch.HttpReqBusiness
+	c.ShouldBind(&form)
 
+	code,httpReqBusiness  := global.V.MyService.GameMatch.BusinessCheckData(form)
+	if code != 0{
+		err := global.V.Err.New(code)
+		httpresponse.FailWithMessage(err.Error(), c)
+		return
+	}
 
-	////httpd.Log.Info(" routing in signHandler : ")
-	//
-	//errCode , httpReqBusiness:= httpd.businessCheckData(postJsonStr)
-	//if errCode != 0{
-	//	errs := myerr.NewErrorCode(errCode)
-	//	errInfo := zlib.ErrInfo{}
-	//	json.Unmarshal([]byte(errs.Error()),&errInfo)
-	//	return errInfo.Code,errInfo.Msg
-	//}
-	//errs := httpd.Gamematch.CheckHttpSignData(httpReqBusiness)
-	//if errs != nil{
-	//	errInfo := zlib.ErrInfo{}
-	//	json.Unmarshal([]byte(errs.Error()),&errInfo)
-	//
-	//	return errInfo.Code,errInfo.Msg
-	//}
-	//signRsData, errs := httpd.Gamematch.Sign(httpReqBusiness)
-	//if errs != nil{
-	//	errInfo := zlib.ErrInfo{}
-	//	json.Unmarshal([]byte(errs.Error()),&errInfo)
-	//
-	//	return errInfo.Code,errInfo.Msg
-	//}
-	//return 200,signRsData
-	//
-	//
-	////// 生成默认数字的driver
-	////driver := base64Captcha.NewDriverDigit(global.C.Captcha.ImgHeight, global.C.Captcha.ImgWidth, global.C.Captcha.NumberLength, 0.7, 80)
-	////cp := base64Captcha.NewCaptcha(driver, store)
-	////if id, b64s, err := cp.Generate(); err != nil {
-	////	global.V.Zap.Error("验证码获取失败!", zap.Any("err", err))
-	////	httpresponse.FailWithMessage("验证码获取失败", c)
-	////} else {
-	////	httpresponse.OkWithDetailed(httpresponse.SysCaptchaResponse{
-	////		Id:         id,
-	////		PicContent: b64s,
-	////	}, "验证码获取成功", c)
-	////}
+	err := global.V.MyService.GameMatch.CheckHttpSignData(httpReqBusiness)
+	if err != nil{
+		httpresponse.FailWithMessage(err.Error(), c)
+		return
+	}
+
+	signRsData, err := global.V.MyService.GameMatch.Sign(httpReqBusiness)
+	if err != nil{
+		httpresponse.FailWithMessage(err.Error(), c)
+		return
+	}
+
+	httpresponse.OkWithDetailed(signRsData,"ok",c)
 }
 
 // @Tags GameMatch
-// @Summary 生成图片验证码
-// @Description BASE64图片内容，防止有人恶意攻击，如：短信轰炸、暴力破解密码等,<img src="data:image/jpg;base64,内容"/>
+// @Summary 取消报名 -
+// @Description  删除已参与匹配的玩家信息
 // @Security ApiKeyAuth
 // @accept application/json
 // @Param X-Source-Type header string true "来源" default(11)
 // @Param X-Project-Id header string true "项目ID"  default(6)
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
 // @Produce application/json
+// @Param data body gamematch.HttpReqBusiness true ""
 // @Success 200 {object} httpresponse.SysCaptchaResponse
-// @Router /base/captcha [get]
+// @Router /game/match/sign/cancel [get]
 func GameMatchSignCancel(c *gin.Context) {
-	// 生成默认数字的driver
-	driver := base64Captcha.NewDriverDigit(global.C.Captcha.ImgHeight, global.C.Captcha.ImgWidth, global.C.Captcha.NumberLength, 0.7, 80)
-	cp := base64Captcha.NewCaptcha(driver, store)
-	if id, b64s, err := cp.Generate(); err != nil {
-		global.V.Zap.Error("验证码获取失败!", zap.Any("err", err))
-		httpresponse.FailWithMessage("验证码获取失败", c)
-	} else {
-		httpresponse.OkWithDetailed(httpresponse.SysCaptchaResponse{
-			Id:         id,
-			PicContent: b64s,
-		}, "验证码获取成功", c)
+	var form gamematch.HttpReqBusiness
+	c.ShouldBind(&form)
+
+	code,httpReqBusiness  := global.V.MyService.GameMatch.BusinessCheckData(form)
+	if code != 0{
+		err := global.V.Err.New(code)
+		httpresponse.FailWithMessage(err.Error(), c)
+		return
 	}
+
+	err :=  global.V.MyService.GameMatch.CheckHttpSignCancelData(httpReqBusiness)
+	if err != nil{
+		httpresponse.FailWithMessage(err.Error(), c)
+		return
+	}
+
+	signClass :=  global.V.MyService.GameMatch.GetContainerSignByRuleId(httpReqBusiness.RuleId)
+	global.V.Zap.Info("del by groupId")
+	err = signClass.CancelByGroupId(httpReqBusiness.GroupId)
+	if err != nil{
+		httpresponse.FailWithMessage(err.Error(), c)
+		return
+	}
+
+	httpresponse.OkWithDetailed("成功","ok",c)
 }
 
 //}else if uri == "/success/del"{//匹配成功记录，不想要了，删除一掉
@@ -108,32 +107,4 @@ func GameMatchSignCancel(c *gin.Context) {
 //code,msg = httpd.RedisStoreDb()
 //}else if uri == "/tools/getHttpReqBusiness"{//html api
 
-//
-////通用 业务型  请求 数据  检查
-//func  businessCheckData(postJsonStr string )(errCode int,httpReqBusiness HttpReqBusiness){
-//	httpd.Log.Info(" businessCheckData : ")
-//	if postJsonStr == ""{
-//		return 802,httpReqBusiness
-//	}
-//	var jsonUnmarshalErr error
-//	jsonUnmarshalErr = json.Unmarshal([]byte(postJsonStr),&httpReqBusiness)
-//	if jsonUnmarshalErr != nil{
-//		httpd.Log.Error(jsonUnmarshalErr)
-//		mylog.Error(jsonUnmarshalErr)
-//		return 459,httpReqBusiness
-//	}
-//	if httpReqBusiness.MatchCode == ""{
-//		return 450,httpReqBusiness
-//	}
-//	rule ,err := httpd.Gamematch.RuleConfig.getByCategory(httpReqBusiness.MatchCode)
-//	if err !=nil{
-//		return 806,httpReqBusiness
-//	}
-//	httpReqBusiness.RuleId = rule.Id
-//	_,err  = httpd.checkHttpdState(httpReqBusiness.RuleId)
-//	if err != nil{
-//		return 804,httpReqBusiness
-//	}
-//
-//	return 0 ,httpReqBusiness
-//}
+

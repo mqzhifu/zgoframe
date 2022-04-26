@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>config</title>
+</head>
+<body>
+CmsArg
+<div id="CmsArg"></div>
+PushRetryPeriod
+<div id="PushRetryPeriod"></div>
+EtcdAppConf
+<div id="EtcdAppConf"></div>
+AppInfo
+<div id="AppInfo"></div>
+Other
+<div id="Other"></div>
+
+
+
+
+<script src="jquery.min.js" type="text/javascript"></script>
+<script>
+    var serverHostUri = "/config";
+    $.ajax({
+        type: "GET",
+        url:serverHostUri,
+        success: function(data){
+            if (data.Code == 200){
+                init(data.Msg);
+            }else{
+                alert("code err.");
+            }
+
+        }
+    });
+
+    function init(data){
+        var html = "<table border='1'><tr><td>key</td><td>描述</td></tr>";
+        for(let key  in data.CmsArg){
+            html += "<tr><td>"+key +"</td><td>"+data.CmsArg[key]+"</td>"+"</tr>";
+        }
+        html += "</table>";
+        $("#CmsArg").html(html)
+
+
+        var html = "<table border='1'><tr><td>key</td><td>描述</td></tr>";
+        for(let key  in data.AppInfo){
+            html += "<tr><td>"+key +"</td><td>"+data.AppInfo[key]+"</td>"+"</tr>";
+        }
+        html += "</table>";
+        $("#AppInfo").html(html)
+
+
+        var html = "<table border='1'><tr><td>key</td><td>描述</td></tr>";
+        for(let key  in data.EtcdAppConf){
+            html += "<tr><td>"+key +"</td><td>"+data.EtcdAppConf[key]+"</td>"+"</tr>";
+        }
+        html += "</table>";
+        $("#EtcdAppConf").html(html)
+
+        var html = "<table border='1'><tr><td>key</td><td>描述</td></tr>";
+        for(let key  in data.Other){
+            html += "<tr><td>"+key +"</td><td>"+data.Other[key]+"</td>"+"</tr>";
+        }
+        html += "</table>";
+        $("#Other").html(html)
+
+
+        var html = "<table border='1'><tr><td>重试时间间隔</td> </tr>";
+        for(var i=0;i<data.PushRetryPeriod.length;i++){
+            html += "<tr><td>"+data.PushRetryPeriod[i]+"</td>"+"</tr>";
+        }
+        html += "</table>";
+        $("#PushRetryPeriod").html(html)
+
+    }
+</script>
+
+
+</body>
+</html>

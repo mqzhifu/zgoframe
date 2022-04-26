@@ -1,0 +1,85 @@
+<html>
+
+<head>
+    <title>gamematch - metrics</title>
+    <script src="jquery.min.js" type="text/javascript" ></script>
+</head>
+<style>
+    table
+    {
+        border-collapse: collapse;
+        /*margin: 0 auto;*/
+        text-align: center;
+    }
+    table td, table th
+    {
+        border: 1px solid #cad9ea;
+        color: #666;
+        height: 30px;
+    }
+    table thead th
+    {
+        background-color: #CCE8EB;
+        width: 100px;
+    }
+    table tr:nth-child(odd)
+    {
+        background: #fff;
+    }
+    table tr:nth-child(even) {
+        background: #F5FAFA;
+    }
+
+    .portlet {
+        border:1px solid #ff0000;
+        margin:5px;
+    }
+
+</style>
+<body>
+
+<div id="normal_content" class="portlet">
+
+</div>
+
+<script>
+    // var data = null;
+    $(document).ready(function(){
+
+        $.ajax({
+            type: "GET",
+            url: "./tools/getErrorInfo",
+            // data: {username:$("#username").val(), content:$("#content").val()},
+            // dataType: "json",
+            success: function(backData){
+                backData = eval(   backData  );
+                if(backData.Code != 200){
+                    return alert("ajax req back data err");
+                }
+                // data = backData
+                processNormal(backData.Msg)
+            }
+        });
+    });
+    function processNormal(data){
+        var html = ""
+        html += "<table class='table'><tbody>";
+        html += "<tr><td>错误码</td><td>英文描述</td><td>分类</td><td>中文描述</td></tr>"
+        for(i =0 ;i< data.length;i++){
+            vv = data[i];
+            html += "<tr>";
+            html += "<td>"+vv.Code+"</td>";
+            html += "<td>"+vv.Msg+"</td>";
+            html += "<td>"+vv.Flag+"</td>";
+            html += "<td>"+vv.MsgCn+"</td>";
+            html += "</tr>";
+        }
+        html += "</tbody></table>";
+        $("#normal_content").html(html)
+    }
+
+</script>
+
+</body>
+
+</html>

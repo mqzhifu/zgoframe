@@ -874,6 +874,15 @@ var doc = `{
                         "name": "X-Access",
                         "in": "header",
                         "required": true
+                    },
+                    {
+                        "description": "用户信息",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.CicdSync"
+                        }
                     }
                 ],
                 "responses": {
@@ -1259,6 +1268,66 @@ var doc = `{
                 }
             }
         },
+        "/cicd/superVisor/process": {
+            "post": {
+                "description": "通过superVisor",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Cicd"
+                ],
+                "summary": "操作进程",
+                "parameters": [
+                    {
+                        "enum": [
+                            "11",
+                            "12",
+                            "21",
+                            "22"
+                        ],
+                        "type": "string",
+                        "description": "来源",
+                        "name": "X-Source-Type",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "6",
+                        "description": "项目ID",
+                        "name": "X-Project-Id",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "imzgoframe",
+                        "description": "访问KEY",
+                        "name": "X-Access",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "用户信息",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.CicdDeploy"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/model.Project"
+                        }
+                    }
+                }
+            }
+        },
         "/config/center/get/key": {
             "post": {
                 "produces": [
@@ -1429,6 +1498,132 @@ var doc = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/httpresponse.LoginResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/game/match/sign": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "玩家报名",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "GameMatch"
+                ],
+                "summary": "玩家报名",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "default": "11",
+                        "description": "来源",
+                        "name": "X-Source-Type",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "6",
+                        "description": "项目ID",
+                        "name": "X-Project-Id",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "imzgoframe",
+                        "description": "访问KEY",
+                        "name": "X-Access",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": " ",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/gamematch.HttpReqBusiness"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/httpresponse.SysCaptchaResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/game/match/sign/cancel": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "删除已参与匹配的玩家信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "GameMatch"
+                ],
+                "summary": "取消报名 -",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "default": "11",
+                        "description": "来源",
+                        "name": "X-Source-Type",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "6",
+                        "description": "项目ID",
+                        "name": "X-Project-Id",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "imzgoframe",
+                        "description": "访问KEY",
+                        "name": "X-Access",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": " ",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/gamematch.HttpReqBusiness"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/httpresponse.SysCaptchaResponse"
                         }
                     }
                 }
@@ -2495,6 +2690,55 @@ var doc = `{
         }
     },
     "definitions": {
+        "gamematch.HttpReqBusiness": {
+            "type": "object",
+            "properties": {
+                "addition": {
+                    "type": "string"
+                },
+                "customProp": {
+                    "type": "string"
+                },
+                "groupId": {
+                    "description": "报名",
+                    "type": "integer"
+                },
+                "matchCode": {
+                    "description": "公共参数",
+                    "type": "string"
+                },
+                "playerList": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/gamematch.HttpReqPlayer"
+                    }
+                },
+                "ruleId": {
+                    "type": "integer"
+                },
+                "rule_ver": {
+                    "type": "integer"
+                },
+                "success_id": {
+                    "description": "取消报名\nGroupId\n删除一条 匹配成功记录",
+                    "type": "integer"
+                }
+            }
+        },
+        "gamematch.HttpReqPlayer": {
+            "type": "object",
+            "properties": {
+                "matchAttr": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer"
+                    }
+                },
+                "uid": {
+                    "type": "integer"
+                }
+            }
+        },
         "gorm.DeletedAt": {
             "type": "object",
             "properties": {
@@ -2784,6 +3028,20 @@ var doc = `{
                 },
                 "service_id": {
                     "type": "integer"
+                }
+            }
+        },
+        "request.CicdSync": {
+            "type": "object",
+            "properties": {
+                "server_id": {
+                    "type": "integer"
+                },
+                "service_id": {
+                    "type": "integer"
+                },
+                "version_dir": {
+                    "type": "string"
                 }
             }
         },
@@ -3536,6 +3794,10 @@ var doc = `{
         {
             "description": "站内信/内部邮件通知",
             "name": "Mail"
+        },
+        {
+            "description": "游戏匹配机制",
+            "name": "GameMatch"
         },
         {
             "description": "配置中心",

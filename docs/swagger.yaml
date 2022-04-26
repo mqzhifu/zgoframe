@@ -1,4 +1,40 @@
 definitions:
+  gamematch.HttpReqBusiness:
+    properties:
+      addition:
+        type: string
+      customProp:
+        type: string
+      groupId:
+        description: 报名
+        type: integer
+      matchCode:
+        description: 公共参数
+        type: string
+      playerList:
+        items:
+          $ref: '#/definitions/gamematch.HttpReqPlayer'
+        type: array
+      rule_ver:
+        type: integer
+      ruleId:
+        type: integer
+      success_id:
+        description: |-
+          取消报名
+          GroupId
+          删除一条 匹配成功记录
+        type: integer
+    type: object
+  gamematch.HttpReqPlayer:
+    properties:
+      matchAttr:
+        additionalProperties:
+          type: integer
+        type: object
+      uid:
+        type: integer
+    type: object
   gorm.DeletedAt:
     properties:
       time:
@@ -207,6 +243,15 @@ definitions:
         type: integer
       service_id:
         type: integer
+    type: object
+  request.CicdSync:
+    properties:
+      server_id:
+        type: integer
+      service_id:
+        type: integer
+      version_dir:
+        type: string
     type: object
   request.ConfigCenterGetByKeyReq:
     properties:
@@ -1329,6 +1374,12 @@ paths:
         name: X-Access
         required: true
         type: string
+      - description: 用户信息
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/request.CicdSync'
       produces:
       - application/json
       responses:
@@ -1602,6 +1653,48 @@ paths:
       summary: superVisor 列表
       tags:
       - Cicd
+  /cicd/superVisor/process:
+    post:
+      description: 通过superVisor
+      parameters:
+      - description: 来源
+        enum:
+        - "11"
+        - "12"
+        - "21"
+        - "22"
+        in: header
+        name: X-Source-Type
+        required: true
+        type: string
+      - default: "6"
+        description: 项目ID
+        in: header
+        name: X-Project-Id
+        required: true
+        type: string
+      - default: imzgoframe
+        description: 访问KEY
+        in: header
+        name: X-Access
+        required: true
+        type: string
+      - description: 用户信息
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/request.CicdDeploy'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.Project'
+      summary: 操作进程
+      tags:
+      - Cicd
   /config/center/get/key:
     post:
       parameters:
@@ -1724,6 +1817,90 @@ paths:
       summary: 以模块(文件)+里面具体的key 为单位，设置置信息(如果存在，覆盖)
       tags:
       - ConfigCenter
+  /game/match/sign:
+    get:
+      consumes:
+      - application/json
+      description: 玩家报名
+      parameters:
+      - default: "11"
+        description: 来源
+        in: header
+        name: X-Source-Type
+        required: true
+        type: string
+      - default: "6"
+        description: 项目ID
+        in: header
+        name: X-Project-Id
+        required: true
+        type: string
+      - default: imzgoframe
+        description: 访问KEY
+        in: header
+        name: X-Access
+        required: true
+        type: string
+      - description: ' '
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/gamematch.HttpReqBusiness'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/httpresponse.SysCaptchaResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: 玩家报名
+      tags:
+      - GameMatch
+  /game/match/sign/cancel:
+    get:
+      consumes:
+      - application/json
+      description: 删除已参与匹配的玩家信息
+      parameters:
+      - default: "11"
+        description: 来源
+        in: header
+        name: X-Source-Type
+        required: true
+        type: string
+      - default: "6"
+        description: 项目ID
+        in: header
+        name: X-Project-Id
+        required: true
+        type: string
+      - default: imzgoframe
+        description: 访问KEY
+        in: header
+        name: X-Access
+        required: true
+        type: string
+      - description: ' '
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/gamematch.HttpReqBusiness'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/httpresponse.SysCaptchaResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: 取消报名 -
+      tags:
+      - GameMatch
   /gateway/action/map:
     get:
       description: 后期考虑替换掉PHP解析过程，直接用GO
@@ -2424,5 +2601,7 @@ tags:
   name: Cicd
 - description: 站内信/内部邮件通知
   name: Mail
+- description: 游戏匹配机制
+  name: GameMatch
 - description: 配置中心
   name: ConfigCenter

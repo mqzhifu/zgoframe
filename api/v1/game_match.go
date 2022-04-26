@@ -16,7 +16,7 @@ import (
 // @Param X-Project-Id header string true "项目ID"  default(6)
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
 // @Produce application/json
-// @Param data body gamematch.HttpReqBusiness true ""
+// @Param data body gamematch.HttpReqBusiness true " "
 // @Success 200 {object} httpresponse.SysCaptchaResponse
 // @Router /game/match/sign [get]
 func GameMatchSign(c *gin.Context) {
@@ -54,7 +54,7 @@ func GameMatchSign(c *gin.Context) {
 // @Param X-Project-Id header string true "项目ID"  default(6)
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
 // @Produce application/json
-// @Param data body gamematch.HttpReqBusiness true ""
+// @Param data body gamematch.HttpReqBusiness true " "
 // @Success 200 {object} httpresponse.SysCaptchaResponse
 // @Router /game/match/sign/cancel [get]
 func GameMatchSignCancel(c *gin.Context) {

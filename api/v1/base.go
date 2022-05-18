@@ -49,7 +49,7 @@ func Captcha(c *gin.Context) {
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
 // @Param data body request.SendSMS true "用户信息"
 // @Produce  application/json
-// @Success 200 {bool} bool "true:成功 false:否"
+// @Success 200 {boolean} boolean "true:成功 false:否"
 // @Router /base/send/sms [post]
 func SendSms(c *gin.Context) {
 	var sendSMSForm request.SendSMS
@@ -75,7 +75,7 @@ func SendSms(c *gin.Context) {
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
 // @Param data body request.SendEmail true "基础信息"
 // @Produce  application/json
-// @Success 200 {bool} bool "true:成功 false:否"
+// @Success 200 {boolean} boolean "true:成功 false:否"
 // @Router /base/send/email [post]
 func SendEmail(c *gin.Context) {
 	var sendEmailForm request.SendEmail
@@ -100,7 +100,7 @@ func SendEmail(c *gin.Context) {
 // @Param X-Project-Id header string true "项目ID" Enums(1,2,3,4) default(6)
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
 // @Param data body request.RestPasswordSms true "用户名, 原密码, 新密码"
-// @Success 200 {bool} bool "true:成功 false:否"
+// @Success 200 {boolean} boolean "true:成功 false:否"
 // @Router /base/sms/reset/password [post]
 func ResetPasswordSms(c *gin.Context) {
 	var form request.RestPasswordSms
@@ -211,7 +211,7 @@ func RegisterSms(c *gin.Context) {
 // @Success 200 {string} string "{"success":true,"data":{},"msg":"发送成功"}"
 // @Param X-Project-Id header string true "项目ID"  default(6)
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
-// @Success 200 {bool} bool "true:存在 false:不存在"
+// @Success 200 {boolean} boolean "true:存在 false:不存在"
 // @Router /base/check/mobile [post]
 func CheckMobileExist(c *gin.Context) {
 	var form request.CheckMobileExist
@@ -250,7 +250,7 @@ func CheckMobileExist(c *gin.Context) {
 // @Success 200 {string} string "{"success":true,"data":{},"msg":"发送成功"}"
 // @Param X-Project-Id header string true "项目ID"  default(6)
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
-// @Success 200 {bool} bool "true:存在 false:不存在"
+// @Success 200 {boolean} boolean "true:存在 false:不存在"
 // @Router /base/check/username [post]
 func CheckUsernameExist(c *gin.Context) {
 	var form request.CheckUsernameExist
@@ -288,7 +288,7 @@ func CheckUsernameExist(c *gin.Context) {
 // @Param X-Project-Id header string true "项目ID"  default(6)
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
 // @Param data body request.CheckEmailExist true "用户信息"
-// @Success 200 {bool} bool "true:存在 false:不存在"
+// @Success 200 {boolean} boolean "true:存在 false:不存在"
 // @Router /base/check/email [post]
 func CheckEmailExist(c *gin.Context) {
 	var form request.CheckEmailExist

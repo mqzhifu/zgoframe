@@ -67,7 +67,7 @@ func Ok(c *gin.Context) {
 	Result(SUCCESS, map[string]interface{}{}, "操作成功", c)
 }
 
-//快速响应-有简单的输出信息
+//快速响应-有简单类型(一个字符串)的输出信息
 func OkWithMessage(message string, c *gin.Context) {
 	Result(SUCCESS, map[string]interface{}{}, message, c)
 }
@@ -78,13 +78,8 @@ func OkWithData(data interface{}, c *gin.Context) {
 }
 
 //快速响应-即有简单数据，也有复杂数据
-func OkWithDetailed(data interface{}, message string, c *gin.Context) {
+func OkWithAll(data interface{}, message string, c *gin.Context) {
 	Result(SUCCESS, data, message, c)
-}
-
-//快速响应-即有简单数据，也有复杂数据
-func NiuKeOkWithDetailed(data interface{}, message string, c *gin.Context) {
-	Result(0, data, message, c)
 }
 
 //快速响应-失败，无任何输出信息
@@ -98,7 +93,21 @@ func FailWithMessage(message string, c *gin.Context) {
 	Result(ERROR, map[string]interface{}{}, message, c)
 }
 
-func FailWithDetailed(data interface{}, message string, c *gin.Context) {
+func FailWithAll(data interface{}, message string, c *gin.Context) {
 	global.V.Zap.Error("失败", zap.Any("err", message))
 	Result(ERROR, data, message, c)
+}
+var ErrManager = &util.ErrMsg{}
+// 一次请求，发生了一些错误，统一输出，但不停止，依然返回
+func ErrWithAllByCode(code int , c *gin.Context) error{
+	errInfo := ErrManager.New(code)
+	//util.MyPrint("ErrWithAllByCode:",code,errInfo)
+	Result(code, nil , errInfo.Error(), c)
+	return errInfo
+}
+
+
+//快速响应-即有简单数据，也有复杂数据
+func NiuKeOkWithDetailed(data interface{}, message string, c *gin.Context) {
+	Result(0, data, message, c)
 }

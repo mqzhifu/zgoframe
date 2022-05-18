@@ -11,7 +11,7 @@ import (
 )
 
 //对API的访问次数、频繁，做限制,防止恶意DDos
-func Limiter() gin.HandlerFunc {
+func Limiter( ) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		//global.V.Zap.Debug("middle Limiter start:")
 		//fmt.Println("RateMiddleware pref")

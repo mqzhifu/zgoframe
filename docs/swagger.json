@@ -1,9 +1,12 @@
 {
     "swagger": "2.0",
     "info": {
-        "description": "restful api 工具，模拟客户端请求，方便调试/测试\n注：这只是一个工具，不是万能的，像：动态枚举类型、公共请求header、动态常量等\n详细的请去 \u003ca href=\"http://127.0.0.1:6060\" target=\"_black\"\u003egodoc\u003c/a\u003e 里去查看",
+        "description": "restful api 工具，模拟客户端请求，方便调试/测试\n注：这只是一个工具，不是万能的，像：动态枚举类型、公共请求header、动态常量等,详细的请去 \u003ca href=\"http://127.0.0.1:6060\" target=\"_black\"\u003egodoc\u003c/a\u003e 里去查看\n注：所有 header 遵循HTTP标准，即：header中每个key 以大写X开头，单词以中划线分隔，每个单词首字母大写\n注：所有接口的响应格式均是json:code data msg ,具体参考 model.httpresponse.Response",
         "title": "z golang 框架",
-        "contact": {},
+        "contact": {
+            "name": "小z",
+            "email": "78878296@qq.com"
+        },
         "license": {
             "name": "header.BaseInfo-demo:{   \"app_version\": \"v1.1.1\",   \"device\": \"iphone\",   \"device_id\": \"aaaaaaaa\",   \"device_version\": \"12\",   \"dpi\": \"390x844\",   \"ip\": \"127.0.0.1\",   \"lat\": \"21.1111\",   \"lon\": \"32.4444\",   \"os\": 1,   \"os_version\": \"11\",   \"referer\": \"\" }"
         },
@@ -12,12 +15,7 @@
     "paths": {
         "/base/captcha": {
             "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "BASE64图片内容，防止有人恶意攻击，如：短信轰炸、暴力破解密码等,\u003cimg src=\"data:image/jpg;base64,内容\"/\u003e",
+                "description": "BASE64图片内容，防止有人恶意攻击，如：短信轰炸、暴力破解密码等,前端使用方法：\u003cimg src=\"data:image/jpg;base64,接口获取的内容\"/\u003e",
                 "consumes": [
                     "application/json"
                 ],
@@ -3760,7 +3758,7 @@
     },
     "tags": [
         {
-            "description": "不需要登陆，但是会验证头信息 , X-SourceType X-Access X-Project 等，(注：header 中的每个key X开头)",
+            "description": "不需要登陆，但是会验证头信息 , X-SourceType X-Access X-Project 等",
             "name": "Base"
         },
         {

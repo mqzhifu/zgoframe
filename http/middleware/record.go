@@ -15,7 +15,8 @@ import (
 
 func Record() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		global.V.Zap.Debug("middle Record start:")
+		prefix := "http GIN middle Record "
+		global.V.Zap.Debug(prefix + "start:")
 
 		var body []byte
 		var userId int
@@ -58,7 +59,7 @@ func Record() gin.HandlerFunc {
 		}
 		c.Writer = writer
 		startTime := util.GetNowTimeSecondToInt()
-
+		//开始执行用户 业务 函数
 		c.Next()
 
 		//fmt.Println("OperationRecord after")
@@ -69,7 +70,7 @@ func Record() gin.HandlerFunc {
 		record.Latency = latency
 		record.Resp = writer.body.String()
 
-		global.V.Zap.Debug("middle Record finish.")
+		global.V.Zap.Debug(prefix+"finish , func exec time:"+strconv.Itoa(latency))
 
 		//fmt.Println("opt final record:", record)
 		//if err := service.CreateSysOperationRecord(record); err != nil {

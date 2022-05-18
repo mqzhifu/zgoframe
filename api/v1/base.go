@@ -18,14 +18,13 @@ var store = base64Captcha.DefaultMemStore
 
 // @Tags Base
 // @Summary 生成图片验证码
-// @Description BASE64图片内容，防止有人恶意攻击，如：短信轰炸、暴力破解密码等,<img src="data:image/jpg;base64,内容"/>
-// @Security ApiKeyAuth
+// @Description BASE64图片内容，防止有人恶意攻击，如：短信轰炸、暴力破解密码等,前端使用方法：<img src="data:image/jpg;base64,接口获取的内容"/>
 // @accept application/json
 // @Param X-Source-Type header string true "来源" default(11)
 // @Param X-Project-Id header string true "项目ID"  default(6)
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
 // @Produce application/json
-// @Success 200 {object} httpresponse.SysCaptchaResponse
+// @Success 200 {object} httpresponse.SysCaptchaResponse 图片信息
 // @Router /base/captcha [get]
 func Captcha(c *gin.Context) {
 	// 生成默认数字的driver
@@ -35,7 +34,7 @@ func Captcha(c *gin.Context) {
 		global.V.Zap.Error("验证码获取失败!", zap.Any("err", err))
 		httpresponse.FailWithMessage("验证码获取失败", c)
 	} else {
-		httpresponse.OkWithDetailed(httpresponse.SysCaptchaResponse{
+		httpresponse.OkWithAll(httpresponse.SysCaptchaResponse{
 			Id:         id,
 			PicContent: b64s,
 		}, "验证码获取成功", c)
@@ -159,9 +158,9 @@ func Register(c *gin.Context) {
 	err, userInfo := global.V.MyService.User.RegisterByUsername(R, request.GetMyHeader(c))
 	if err != nil {
 		//global.V.Zap.Error("注册失败", zap.Any("err", err))
-		httpresponse.FailWithDetailed(userInfo, "注册失败:"+err.Error(), c)
+		httpresponse.FailWithAll(userInfo, "注册失败:"+err.Error(), c)
 	} else {
-		httpresponse.OkWithDetailed(userInfo, "注册成功", c)
+		httpresponse.OkWithAll(userInfo, "注册成功", c)
 	}
 }
 
@@ -195,11 +194,11 @@ func RegisterSms(c *gin.Context) {
 	err, userInfo := global.V.MyService.User.Register(user, request.GetMyHeader(c), service.UserRegInfo{})
 	if err != nil {
 		//global.V.Zap.Error("注册失败", zap.Any("err", err))
-		httpresponse.FailWithDetailed(userInfo, "注册失败:"+err.Error(), c)
+		httpresponse.FailWithAll(userInfo, "注册失败:"+err.Error(), c)
 		return
 	}
 
-	httpresponse.OkWithDetailed(userInfo, "注册成功", c)
+	httpresponse.OkWithAll(userInfo, "注册成功", c)
 
 }
 
@@ -234,9 +233,9 @@ func CheckMobileExist(c *gin.Context) {
 		httpresponse.FailWithMessage("服务器错误，请等待或重试", c)
 	} else {
 		if !empty {
-			httpresponse.FailWithDetailed(true, "成功", c)
+			httpresponse.OkWithAll(true, "成功", c)
 		} else {
-			httpresponse.FailWithDetailed(false, "成功", c)
+			httpresponse.OkWithAll(false, "成功", c)
 		}
 	}
 
@@ -273,9 +272,9 @@ func CheckUsernameExist(c *gin.Context) {
 		httpresponse.FailWithMessage("服务器错误，请等待或重试", c)
 	} else {
 		if !empty {
-			httpresponse.FailWithDetailed(true, "成功", c)
+			httpresponse.OkWithAll(true, "成功", c)
 		} else {
-			httpresponse.FailWithDetailed(false, "成功", c)
+			httpresponse.OkWithAll(false, "成功", c)
 		}
 	}
 
@@ -315,9 +314,9 @@ func CheckEmailExist(c *gin.Context) {
 		httpresponse.FailWithMessage("服务器错误，请等待或重试", c)
 	} else {
 		if !empty {
-			httpresponse.FailWithDetailed(true, "成功", c)
+			httpresponse.OkWithAll(true, "成功", c)
 		} else {
-			httpresponse.FailWithDetailed(false, "成功", c)
+			httpresponse.OkWithAll(false, "成功", c)
 		}
 	}
 
@@ -341,10 +340,10 @@ func ParserToken(c *gin.Context) {
 	j := httpmiddleware.NewJWT()
 	claims, err := j.ParseToken(p.Token)
 	if err != nil {
-		httpresponse.FailWithMessage("解析失败:"+err.Error(), c)
+		httpresponse.FailWithAll(claims,"解析失败:"+err.Error(), c)
 		return
 	} else {
-		httpresponse.OkWithDetailed(claims, "解析成功", c)
+		httpresponse.OkWithAll(claims, "解析成功", c)
 	}
 }
 
@@ -376,10 +375,10 @@ func Login(c *gin.Context) {
 		//DB比较OK，开始做JWT处理
 		loginResponse, err := tokenNext(c, user, loginType)
 		if err != nil {
-			httpresponse.FailWithMessage(err.Error(), c)
+			httpresponse.FailWithAll(loginResponse,err.Error(), c)
 		} else {
 			loginResponse.User = user
-			httpresponse.OkWithDetailed(loginResponse, "登录成功", c)
+			httpresponse.OkWithAll(loginResponse, "登录成功", c)
 		}
 	}
 	//} else {
@@ -416,10 +415,10 @@ func LoginSms(c *gin.Context) {
 	//DB比较OK，开始做JWT处理
 	loginResponse, err := tokenNext(c, user, model.USER_REG_TYPE_MOBILE)
 	if err != nil {
-		httpresponse.FailWithMessage(err.Error()+",(短信已使用，请重新发送一条)", c)
+		httpresponse.FailWithAll(loginResponse,err.Error()+",(短信已使用，请重新发送一条)", c)
 	} else {
 		loginResponse.User = user
-		httpresponse.OkWithDetailed(loginResponse, "登录成功", c)
+		httpresponse.OkWithAll(loginResponse, "登录成功", c)
 	}
 
 }
@@ -458,10 +457,10 @@ func LoginThird(c *gin.Context) {
 		loginResponse, err := tokenNext(c, user, L.PlatformType)
 		loginResponse.IsNewReg = newReg
 		if err != nil {
-			httpresponse.FailWithMessage(err.Error(), c)
+			httpresponse.FailWithAll(loginResponse,err.Error(), c)
 		} else {
 			loginResponse.User = user
-			httpresponse.OkWithDetailed(loginResponse, "登录成功", c)
+			httpresponse.OkWithAll(loginResponse, "登录成功", c)
 		}
 	}
 	//} else {

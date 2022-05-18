@@ -17,13 +17,16 @@ import (
 var initializeVar *initialize.Initialize
 
 // @title z golang 框架
-// @version 0.1 测试版
+// @version 0.5 测试版Alta
 // @description restful api 工具，模拟客户端请求，方便调试/测试
-// @description 注：这只是一个工具，不是万能的，像：动态枚举类型、公共请求header、动态常量等
-// @description 详细的请去 <a href="http://127.0.0.1:6060" target="_black">godoc</a> 里去查看
+// @description 注：这只是一个工具，不是万能的，像：动态枚举类型、公共请求header、动态常量等,详细的请去 <a href="http://127.0.0.1:6060" target="_black">godoc</a> 里去查看
+// @description 注：所有 header 遵循HTTP标准，即：header中每个key 以大写X开头，单词以中划线分隔，每个单词首字母大写
+// @description 注：所有接口的响应格式均是json格式 ，包含3个值: code data msg ,具体参考 model.httpresponse.Response
 // @license.name header.BaseInfo-demo:{   "app_version": "v1.1.1",   "device": "iphone",   "device_id": "aaaaaaaa",   "device_version": "12",   "dpi": "390x844",   "ip": "127.0.0.1",   "lat": "21.1111",   "lon": "32.4444",   "os": 1,   "os_version": "11",   "referer": "" }
+// @contact.name 小z
+// @contact.email 78878296@qq.com
 // @tag.name Base
-// @tag.description 不需要登陆，但是会验证头信息 , X-SourceType X-Access X-Project 等，(注：header 中的每个key X开头)
+// @tag.description 基础操作（不需要登陆，但是会验证头信息 , X-SourceType X-Access X-Project 等）
 // @tag.name User
 // @tag.description 用户相关操作(需要登陆，头里加X-Token = jwt)
 // @tag.name System

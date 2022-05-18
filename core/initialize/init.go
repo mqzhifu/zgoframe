@@ -214,10 +214,12 @@ func (initialize *Initialize) Start() error {
 	//初始化-protobuf 映射文件
 	dir := initialize.Option.RootDir + "/" + global.C.Protobuf.BasePath + "/" + global.C.Protobuf.PbServicePath
 	//将rpc service 中的方法，转化成ID（由PHP生成 的ID map）
-	global.V.ProtoMap, err = util.NewProtoMap(global.V.Zap, dir, global.C.Protobuf.IdMapFileName, global.V.ProjectMng)
-	if err != nil {
-		util.MyPrint("GetNewViper err:", err)
-		return err
+	if global.C.Protobuf.Status == global.CONFIG_STATUS_OPEN {
+		global.V.ProtoMap, err = util.NewProtoMap(global.V.Zap, dir, global.C.Protobuf.IdMapFileName, global.V.ProjectMng)
+		if err != nil {
+			util.MyPrint("GetNewViper err:", err)
+			return err
+		}
 	}
 	//websocket
 	//if global.C.Websocket.Status == global.CONFIG_STATUS_OPEN{

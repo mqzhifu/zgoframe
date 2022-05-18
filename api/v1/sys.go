@@ -23,7 +23,7 @@ func Quit(c *gin.Context) {
 	if formData.Username == "opendoor" && formData.Password == "123456" {
 		global.V.Process.RootQuitFunc(2)
 		global.V.Process.CancelFunc()
-		httpresponse.OkWithDetailed(global.C, "结束中...", c)
+		httpresponse.OkWithAll(global.C, "结束中...", c)
 	} else {
 		httpresponse.FailWithMessage("验证失败", c)
 	}
@@ -46,7 +46,7 @@ func Config(c *gin.Context) {
 
 	util.MyPrint(formData)
 	if formData.Username == "opendoor" && formData.Password == "123456" {
-		httpresponse.OkWithDetailed(global.C, "结束中...", c)
+		httpresponse.OkWithAll(global.C, "结束中...", c)
 	} else {
 		httpresponse.FailWithMessage("验证失败", c)
 	}

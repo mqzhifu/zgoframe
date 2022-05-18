@@ -1,2 +1,15 @@
 200|成功
 5555|code不存在
+5100|header SourceType unknow
+5101|header ProjectId <= 0
+5102|header ACCESS empty
+5103|header projectId  empty
+5104|header ACCESS  error
+5200|保留
+5201|jwt ParseWithClaims , token过期或未启用，err_info:{0}
+5202|jwt ParseWithClaims , err_info:{0}
+5203|断言失败，request.CustomClaims"
+5204|ProjectId or claims.Id or claims.SourceType : is null
+5205|token 不在redis 中，也可能已失效
+5206|redis 读取token 为空 , 失败:
+5207|uid not in db :{0}

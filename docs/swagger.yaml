@@ -773,11 +773,14 @@ definitions:
         type: string
     type: object
 info:
-  contact: {}
+  contact:
+    email: 78878296@qq.com
+    name: 小z
   description: |-
     restful api 工具，模拟客户端请求，方便调试/测试
-    注：这只是一个工具，不是万能的，像：动态枚举类型、公共请求header、动态常量等
-    详细的请去 <a href="http://127.0.0.1:6060" target="_black">godoc</a> 里去查看
+    注：这只是一个工具，不是万能的，像：动态枚举类型、公共请求header、动态常量等,详细的请去 <a href="http://127.0.0.1:6060" target="_black">godoc</a> 里去查看
+    注：所有 header 遵循HTTP标准，即：header中每个key 以大写X开头，单词以中划线分隔，每个单词首字母大写
+    注：所有接口的响应格式均是json:code data msg ,具体参考 model.httpresponse.Response
   license:
     name: 'header.BaseInfo-demo:{   "app_version": "v1.1.1",   "device": "iphone",   "device_id":
       "aaaaaaaa",   "device_version": "12",   "dpi": "390x844",   "ip": "127.0.0.1",   "lat":
@@ -790,7 +793,7 @@ paths:
     get:
       consumes:
       - application/json
-      description: BASE64图片内容，防止有人恶意攻击，如：短信轰炸、暴力破解密码等,<img src="data:image/jpg;base64,内容"/>
+      description: BASE64图片内容，防止有人恶意攻击，如：短信轰炸、暴力破解密码等,前端使用方法：<img src="data:image/jpg;base64,接口获取的内容"/>
       parameters:
       - default: "11"
         description: 来源
@@ -817,8 +820,6 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/httpresponse.SysCaptchaResponse'
-      security:
-      - ApiKeyAuth: []
       summary: 生成图片验证码
       tags:
       - Base
@@ -2590,8 +2591,7 @@ securityDefinitions:
     type: apiKey
 swagger: "2.0"
 tags:
-- description: 不需要登陆，但是会验证头信息 , X-SourceType X-Access X-Project 等，(注：header 中的每个key
-    X开头)
+- description: 不需要登陆，但是会验证头信息 , X-SourceType X-Access X-Project 等
   name: Base
 - description: 用户相关操作(需要登陆，头里加X-Token = jwt)
   name: User

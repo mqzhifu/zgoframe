@@ -42,7 +42,7 @@ func GameMatchSign(c *gin.Context) {
 		return
 	}
 
-	httpresponse.OkWithDetailed(signRsData,"ok",c)
+	httpresponse.OkWithAll(signRsData,"ok",c)
 }
 
 // @Tags GameMatch
@@ -82,7 +82,7 @@ func GameMatchSignCancel(c *gin.Context) {
 		return
 	}
 
-	httpresponse.OkWithDetailed("成功","ok",c)
+	httpresponse.OkWithAll("成功","ok",c)
 }
 
 //}else if uri == "/success/del"{//匹配成功记录，不想要了，删除一掉

@@ -49,7 +49,7 @@ func GatewayService(c *gin.Context) {
 // @Success 200 {object} util.NetWayOption
 // @Router /gateway/config [get]
 func GatewayConfig(c *gin.Context) {
-	httpresponse.OkWithDetailed(global.V.MyService.Gateway.NetWayOption, "ok", c)
+	httpresponse.OkWithAll(global.V.MyService.Gateway.NetWayOption, "ok", c)
 
 }
 
@@ -89,7 +89,7 @@ func ActionMap(c *gin.Context) {
 	//client
 	//server
 
-	httpresponse.OkWithDetailed(rsList, "ok", c)
+	httpresponse.OkWithAll(rsList, "ok", c)
 }
 
 // @Tags Gateway

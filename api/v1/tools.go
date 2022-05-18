@@ -23,7 +23,7 @@ import (
 // @Success 200 {object} model.Project
 // @Router /tools/frame/sync/js/demo [get]
 func FrameSyncJsDemo(c *gin.Context) {
-	httpresponse.OkWithDetailed("aaaa", "成功", c)
+	httpresponse.OkWithAll("aaaa", "成功", c)
 }
 
 // @Tags Tools
@@ -42,7 +42,7 @@ func ProjectOneInfo(c *gin.Context) {
 
 	rs := global.V.ProjectMng.Pool
 
-	httpresponse.OkWithDetailed(rs, "成功", c)
+	httpresponse.OkWithAll(rs, "成功", c)
 }
 
 // @Tags Tools
@@ -60,7 +60,7 @@ func ProjectList(c *gin.Context) {
 
 	rs := global.V.ProjectMng.Pool
 
-	httpresponse.OkWithDetailed(rs, "成功", c)
+	httpresponse.OkWithAll(rs, "成功", c)
 }
 
 // @Tags Tools
@@ -78,7 +78,7 @@ func ConstList(c *gin.Context) {
 
 	list := global.V.MyService.User.GetConstList()
 
-	httpresponse.OkWithDetailed(list, "成功", c)
+	httpresponse.OkWithAll(list, "成功", c)
 
 }
 
@@ -120,7 +120,7 @@ func ConstInitDb(c *gin.Context) {
 
 		id++
 	}
-	httpresponse.OkWithDetailed(sqlStr, "成功", c)
+	httpresponse.OkWithAll(sqlStr, "成功", c)
 }
 
 // @Tags Tools
@@ -168,7 +168,7 @@ func ConstInitTestDb(c *gin.Context) {
 	rs["instanceSql"] = instanceSql
 
 
-	httpresponse.OkWithDetailed(rs, "成功", c)
+	httpresponse.OkWithAll(rs, "成功", c)
 }
 
 func CheckInAllowInstance(name string)bool{
@@ -200,5 +200,5 @@ func HeaderStruct(c *gin.Context) {
 		HeaderResponse: request.HeaderResponse{},
 	}
 
-	httpresponse.OkWithDetailed(myheader, "成功lalalalala", c)
+	httpresponse.OkWithAll(myheader, "成功lalalalala", c)
 }

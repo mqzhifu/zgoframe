@@ -17,13 +17,6 @@ type JWT struct {
 	SigningKey []byte
 }
 
-var (
-	TokenExpired     = errors.New("Token is expired")
-	TokenNotValidYet = errors.New("Token not active yet")
-	TokenMalformed   = errors.New("That's not even a token")
-	TokenInvalid     = errors.New("Couldn't handle this token:")
-)
-
 //创建一个JWT结构，自带密钥
 func NewJWT() *JWT {
 	return &JWT{
@@ -31,17 +24,17 @@ func NewJWT() *JWT {
 	}
 }
 
-//快捷函数，用于回调
-func JWTAuth() gin.HandlerFunc {
-	util.MyPrint("im in jwtauth:")
-	return RealJWTAuth
-}
-
-// 创建一个token ，HS256(SHA-256 + HMAC ,共享一个密钥)
+// 根据 JWT，创建一个token ，HS256(SHA-256 + HMAC ,共享一个密钥)
 func (j *JWT) CreateToken(claims request.CustomClaims) (string, error) {
 	global.V.Zap.Debug("CreateToken")
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString(j.SigningKey)
+}
+
+//快捷函数，方便 回调
+func JWTAuth() gin.HandlerFunc {
+	util.MyPrint("im in jwtauth:")
+	return RealJWTAuth
 }
 
 // 解析 token
@@ -51,21 +44,21 @@ func (j *JWT) ParseToken(tokenString string) (customClaims request.CustomClaims,
 		return j.SigningKey, nil
 	})
 	//util.MyPrint(token.Header, " ", token.Valid, "  ", token.Signature, " ", token.Method.Alg(), " ", err)
-	//util.ExitPrint(token, err)
-	if err != nil {
+	if err != nil {//发生错误
 		global.V.Zap.Debug("jwt.ParseWithClaims err:" + err.Error())
-		if ve, ok := err.(*jwt.ValidationError); ok {
-			if ve.Errors&jwt.ValidationErrorMalformed != 0 {
-				return customClaims, TokenMalformed
-			} else if ve.Errors&jwt.ValidationErrorExpired != 0 {
-				// Token is expired
-				return customClaims, TokenExpired
-			} else if ve.Errors&jwt.ValidationErrorNotValidYet != 0 {
-				return customClaims, TokenNotValidYet
-			} else {
-				return customClaims, TokenInvalid
+
+		if ve, ok := err.(*jwt.ValidationError); ok { //
+			if ve.Errors&(jwt.ValidationErrorExpired|jwt.ValidationErrorNotValidYet) != 0 {
+				replaceMap := global.V.Err.MakeOneStringReplace(err.Error())
+				err = global.V.Err.NewReplace(5201,replaceMap )
+				return customClaims,err
 			}
 		}
+
+		replaceMap := global.V.Err.MakeOneStringReplace(err.Error())
+		err = global.V.Err.NewReplace(5202,replaceMap )
+		return customClaims,err
+
 	}
 	//if claims, ok := token.Claims.(*request.CustomClaims); ok && token.Valid {
 	//	return claims, nil
@@ -75,16 +68,20 @@ func (j *JWT) ParseToken(tokenString string) (customClaims request.CustomClaims,
 		global.V.Zap.Debug("ParseToken success , id: " + strconv.Itoa(claims.Id) + " username:" + claims.Username + " sourceType" + strconv.Itoa(claims.SourceType))
 		return *claims, nil
 	} else {
-		global.V.Zap.Debug("ParseToken failed ,err: 断言失败，request.CustomClaims")
-		return customClaims, TokenInvalid
+		err := global.V.Err.New(5203)
+		//global.V.Zap.Debug("ParseToken failed ,err: 断言失败，request.CustomClaims")
+		return customClaims, err
 	}
 
 }
-
+//给中间件使用
 func RealJWTAuth(c *gin.Context) {
 	user, customClaims, err := CheckToken(request.GetMyHeader(c))
 	if err != nil {
-		httpresponse.FailWithDetailed(gin.H{"reload": true}, err.Error(), c)
+		code , msg ,_ := global.V.Err.SplitMsg(err.Error())
+		httpresponse.Result(code,nil,msg,c)
+		//ErrAbortWithResponse()
+		//httpresponse.FailWithAll(gin.H{"reload": true}, err.Error(), c)
 		c.Abort()
 		return
 	}
@@ -100,27 +97,23 @@ func RealJWTAuth(c *gin.Context) {
 	c.Next()
 
 }
-
+//检查一个token (解析token)
 func CheckToken(myHeader request.HeaderRequest) (u model.User, customClaims request.CustomClaims, err error) {
-	//parserTokenData.Token = myHeader.Token
-	//parserTokenData.SourceType = myHeader.SourceType
-	//
-	//if parserTokenData.Token == "" || parserTokenData.SourceType <= 0 {
-	//	return parserTokenData, errors.New("SourceType错误，未登录或非法访问")
-	//}
 	//登录时回返回token信息 这里前端需要把token存储到cookie或者本地localStorage中 不过需要跟后端协商过期时间 可以约定刷新令牌或者重新登录
 	j := NewJWT()
 	// parseToken 解析token包含的信息
 	claims, err := j.ParseToken(myHeader.Token)
 	if err != nil {
-		if err == TokenExpired {
-			return u, customClaims, errors.New("授权已过期")
-		}
-		return u, customClaims, errors.New(err.Error())
+		//if err == TokenExpired {
+		//	return u, customClaims, errors.New("授权已过期")
+		//}
+		//return u, customClaims, errors.New(err.Error())
+		return u, customClaims,err
 	}
 
 	if claims.ProjectId <= 0 || claims.Id <= 0 || claims.SourceType <= 0 {
-		return u, customClaims, errors.New("ProjectId or Id or SourceType : is null")
+		//return u, customClaims, errors.New("ProjectId or claims.Id or claims.SourceType : is null")
+		return u, customClaims,global.V.Err.New(5204)
 	}
 	//请求头里的来源类型要与jwt里的对上
 	//if claims.SourceType != parserTokenData.SourceType {
@@ -142,11 +135,13 @@ func CheckToken(myHeader request.HeaderRequest) (u model.User, customClaims requ
 	//	util.MyPrint("jwt not hit nil no no no no ")
 	//}
 	if err == redis.Nil {
-		return u, customClaims, errors.New("token 不在redis 中，也可能已失效")
+		//return u, customClaims, errors.New("token 不在redis 中，也可能已失效")
+		return u, customClaims,global.V.Err.New(5205)
 	}
 
 	if err != nil || jwtStr == "" || err == redis.Nil {
-		return u, customClaims, errors.New("redis 读取token 失败:" + err.Error())
+		//return u, customClaims, errors.New("redis 读取token 为空 , 失败:" + err.Error())
+		return u, customClaims,global.V.Err.New(5206)
 	}
 
 	//if claims.ExpiresAt-time.Now().Unix() < claims.BufferTime {
@@ -161,7 +156,9 @@ func CheckToken(myHeader request.HeaderRequest) (u model.User, customClaims requ
 	var user model.User
 	err = global.V.Gorm.Where("id = ? ", claims.Id).First(&user).Error
 	if err != nil {
-		return u, customClaims, errors.New("uid not in db :" + strconv.Itoa(claims.Id))
+		//return u, customClaims, errors.New("uid not in db :" + strconv.Itoa(claims.Id))
+		replaceMap := global.V.Err.MakeOneStringReplace(err.Error()+ " " +strconv.Itoa(claims.Id))
+		return u, customClaims,global.V.Err.NewReplace(5207,replaceMap )
 	}
 	//if errors.Is(global.V.Gorm.Where("id = ? ", claims.Id).First(&user).Error, gorm.ErrRecordNotFound) {
 	//	return u, customClaims, errors.New("uid not in db :" + strconv.Itoa(claims.Id))

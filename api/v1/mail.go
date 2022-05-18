@@ -47,7 +47,7 @@ func MailList(c *gin.Context) {
 	if err != nil{
 		httpresponse.FailWithMessage("失败了："+err.Error(), c)
 	}else{
-		httpresponse.OkWithDetailed(mailList,"ok",c)
+		httpresponse.OkWithAll(mailList,"ok",c)
 	}
 }
 
@@ -68,7 +68,7 @@ func MailInfo(c *gin.Context) {
 	if err != nil{
 		httpresponse.FailWithMessage("失败了："+err.Error(), c)
 	}else{
-		httpresponse.OkWithDetailed(info,"ok",c)
+		httpresponse.OkWithAll(info,"ok",c)
 	}
 }
 
@@ -83,5 +83,5 @@ func MailInfo(c *gin.Context) {
 func MailUnread(c *gin.Context) {
 	uid ,_ := request.GetUid(c)
 	cnt := global.V.MyService.Mail.GetUnreadCnt(uid)
-	httpresponse.OkWithDetailed(cnt,"ok",c)
+	httpresponse.OkWithAll(cnt,"ok",c)
 }

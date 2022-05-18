@@ -17,24 +17,24 @@ import (
 	"zgoframe/util"
 )
 
-// 登录-DB比对成功后，签发jwt
+// 登录成功(DB比对成功)后，签发jwt
 // 这里分成2个部分，1是JWT字符串2redis，加REDIS是防止恶意攻击
 func tokenNext(c *gin.Context, user model.User, loginType int) (loginResponse httpresponse.LoginResponse, err error) {
-	global.V.Zap.Debug("tokenNext id:" + strconv.Itoa(user.Id) + " sourceType:" + strconv.Itoa(request.GetMyHeader(c).SourceType))
+	//ExpiresAt :=  time.Now().Unix() + global.C.Jwt.ExpiresTime // 过期时间 7天  配置文件
+	ExpiresAt := time.Now().Unix() + 60							//测试使用
+	util.MyPrint("tokenNext uid:" + strconv.Itoa(user.Id) + " sourceType:" + strconv.Itoa(request.GetMyHeader(c).SourceType)+ " ExpiresAt:",ExpiresAt)
 	j := httpmiddleware.NewJWT()
+
 	claims := request.CustomClaims{
-		//UUID:        user.Uuid,
-		//AuthorityId: user.AuthorityId,
 		Id:         user.Id,
 		ProjectId:  user.ProjectId,
 		NickName:   user.NickName,
 		Username:   user.Username,
 		SourceType: request.GetMyHeader(c).SourceType,
-		//BufferTime: global.C.Jwt.BufferTime, // 缓冲时间1天 缓冲时间内会获得新的token刷新令牌 此时一个用户会存在两个有效令牌 但是前端只留一个 另一个会丢失
 		StandardClaims: jwt.StandardClaims{
 			NotBefore: time.Now().Unix() - 10,                       // 签名生效时间，这里提前10秒，用于容错
-			ExpiresAt: time.Now().Unix() + global.C.Jwt.ExpiresTime, // 过期时间 7天  配置文件
-			Issuer:    "cocos",                                      // 签名的发行者
+			ExpiresAt: ExpiresAt,									//失效时间
+			Issuer:    "ck-ar",                                      // 签名的发行者
 		},
 	}
 	//生成token 字符串
@@ -44,10 +44,8 @@ func tokenNext(c *gin.Context, user model.User, loginType int) (loginResponse ht
 	}
 	//从redis里再取一下：可能有，可能没有(redis key=sourceType+uid ，因为可能多端同时登陆，所以得有 sourceType)
 	redisElement, _ := global.V.Redis.GetElementByIndex("jwt", strconv.Itoa(request.GetMyHeader(c).SourceType), strconv.Itoa(user.Id))
-	//key := service.GetLoginJwtKey(request.GetMyHeader(c).SourceType,user.AppId,user.Id)
-	global.V.Zap.Debug("token key:" + redisElement.Key)
 	jwtStr, err := global.V.Redis.Get(redisElement)
-	util.MyPrint("jwtStr:", jwtStr, " err:", err, " ")
+	util.MyPrint("token key:" + redisElement.Key," RedisJwtStr:", jwtStr, " err:", err, " ")
 
 	if err == redis.Nil { //redis里不存在，要么之前没登陆过，要么失效了...
 		//token 写入redis 并设置失效时间
@@ -56,11 +54,6 @@ func tokenNext(c *gin.Context, user model.User, loginType int) (loginResponse ht
 			return loginResponse, errors.New("redis 设置登录状态失败 1" + err.Error())
 		}
 		LoginRecord(c, user.Id, loginType)
-		//httpresponse.OkWithDetailed(httpresponse.LoginResponse{
-		//	User:      user,
-		//	Token:     token,
-		//	ExpiresAt: claims.StandardClaims.ExpiresAt * 1000,
-		//}, "登录成功", c)
 		loginResponse.Token = token
 		loginResponse.ExpiresAt = claims.ExpiresAt
 		loginResponse.IsNewToken = true
@@ -85,12 +78,6 @@ func tokenNext(c *gin.Context, user model.User, loginType int) (loginResponse ht
 		loginResponse.ExpiresAt = oldClaims.ExpiresAt
 
 		LoginRecord(c, user.Id, loginType)
-		//var blackJWT model.JwtBlacklist
-		//blackJWT.Jwt = jwtStr
-		//if err := service.JsonInBlacklist(blackJWT); err != nil {
-		//	httpresponse.FailWithMessage("jwt作废失败", c)
-		//	return
-		//}
 
 		return loginResponse, nil
 	}
@@ -139,7 +126,7 @@ func Logout(c *gin.Context) {
 	redisElement, _ := global.V.Redis.GetElementByIndex("jwt", strconv.Itoa(request.GetMyHeader(c).SourceType), strconv.Itoa(uid))
 	global.V.Redis.Del(redisElement)
 
-	httpresponse.OkWithDetailed("ok", "退出成功", c)
+	httpresponse.OkWithAll("ok", "退出成功", c)
 	//key := service.GetLoginJwtKey(request.GetMyHeader(c).SourceType,appId,uid)
 	//service.DelRedisJWT(key)
 }
@@ -182,7 +169,7 @@ func SetPassword(c *gin.Context) {
 // @Router /user/info [get]
 func GetUserInfo(c *gin.Context) {
 	user, _ := request.GetUser(c)
-	httpresponse.OkWithDetailed(user, "ok", c)
+	httpresponse.OkWithAll(user, "ok", c)
 }
 
 // @Tags User
@@ -310,7 +297,7 @@ func SetUserInfo(c *gin.Context) {
 		global.V.Zap.Error("设置失败", zap.Any("err", err))
 		httpresponse.FailWithMessage("设置失败", c)
 	} else {
-		httpresponse.OkWithDetailed(gin.H{"userInfo": ReqUser}, "设置成功", c)
+		httpresponse.OkWithAll(gin.H{"userInfo": ReqUser}, "设置成功", c)
 	}
 }
 

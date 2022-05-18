@@ -24,6 +24,7 @@ type Config struct {
 }
 
 type Protobuf struct {
+	Status       string
 	BasePath      string
 	PbServicePath string
 	ProtoPath     string
@@ -45,11 +46,12 @@ type ConfigMysql struct {
 }
 
 type Http struct {
-	Status        string
-	Ip            string
-	Port          string
-	StaticPath    string
-	ReqLimitTimes int
+	Status        	string
+	Ip            	string
+	Port          	string
+	StaticPath    	string
+	ReqLimitTimes 	int
+	DiskStaticPath 	string
 }
 
 type PushGateway struct {
@@ -73,7 +75,6 @@ type Jwt struct {
 	Status      string
 	Key         string
 	ExpiresTime int64
-	//BufferTime  int64
 }
 
 type Viper struct {

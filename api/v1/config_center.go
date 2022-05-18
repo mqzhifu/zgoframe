@@ -24,7 +24,7 @@ func ConfigCenterGetByModule(c *gin.Context) {
 	if err != nil{
 		httpresponse.FailWithMessage(err.Error(),c)
 	}else{
-		httpresponse.OkWithDetailed(configInfo,"成功",c)
+		httpresponse.OkWithAll(configInfo,"成功",c)
 	}
 
 }
@@ -49,7 +49,7 @@ func ConfigCenterGetByModuleByKey(c *gin.Context) {
 	if err != nil{
 		httpresponse.FailWithMessage(err.Error(),c)
 	}else{
-		httpresponse.OkWithDetailed(configInfo,"成功",c)
+		httpresponse.OkWithAll(configInfo,"成功",c)
 	}
 }
 
@@ -72,7 +72,7 @@ func ConfigCenterSetByModuleByKey(c *gin.Context) {
 	if err != nil{
 		httpresponse.FailWithMessage(err.Error(),c)
 	}else{
-		httpresponse.OkWithDetailed("ok","成功",c)
+		httpresponse.OkWithAll("ok","成功",c)
 	}
 }
 

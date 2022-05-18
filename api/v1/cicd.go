@@ -16,14 +16,14 @@ import (
 // @Param X-Project-Id header string true "项目ID" default(6)
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
 // @Produce  application/json
-// @Success 200 {object} model.Project
+// @Success 200 {object} cicd.ServerServiceSuperVisorList
 // @Router /cicd/superVisor/list [get]
 func CicdSuperVisorList(c *gin.Context) {
 	list,err := global.V.MyService.Cicd.GetSuperVisorList()
 	if err != nil{
 		httpresponse.FailWithMessage(err.Error(),c)
 	}else{
-		httpresponse.OkWithDetailed(list, "成功", c)
+		httpresponse.OkWithAll(list, "成功", c)
 	}
 
 }
@@ -35,11 +35,11 @@ func CicdSuperVisorList(c *gin.Context) {
 // @Param X-Project-Id header string true "项目ID" default(6)
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
 // @Produce  application/json
-// @Success 200 {object} model.Project
+// @Success 200 {object} util.Service
 // @Router /cicd/service/list [get]
 func CicdServiceList(c *gin.Context) {
 	list := global.V.MyService.Cicd.GetServiceList()
-	httpresponse.OkWithDetailed(list, "成功", c)
+	httpresponse.OkWithAll(list, "成功", c)
 }
 
 // @Tags Cicd
@@ -49,11 +49,11 @@ func CicdServiceList(c *gin.Context) {
 // @Param X-Project-Id header string true "项目ID" default(6)
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
 // @Produce  application/json
-// @Success 200 {object} model.Project
+// @Success 200 {object} util.Server
 // @Router /cicd/server/list [get]
 func CicdServerList(c *gin.Context) {
 	list := global.V.MyService.Cicd.GetServerList()
-	httpresponse.OkWithDetailed(list, "成功", c)
+	httpresponse.OkWithAll(list, "成功", c)
 }
 
 // @Tags Cicd
@@ -63,11 +63,11 @@ func CicdServerList(c *gin.Context) {
 // @Param X-Project-Id header string true "项目ID" default(6)
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
 // @Produce  application/json
-// @Success 200 {object} model.Project
+// @Success 200 {object} model.CicdPublish
 // @Router /cicd/publish/list [get]
 func CicdPublishList(c *gin.Context) {
 	list := global.V.MyService.Cicd.GetPublishList()
-	httpresponse.OkWithDetailed(list, "成功", c)
+	httpresponse.OkWithAll(list, "成功", c)
 }
 
 // @Tags Cicd
@@ -78,7 +78,7 @@ func CicdPublishList(c *gin.Context) {
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
 // @Param id path string true "publish id"
 // @Produce  application/json
-// @Success 200 {object} model.Project
+// @Success 200 {bool} bool "true:成功 false:失败"
 // @Router /cicd/service/publish/{id}/{flag} [get]
 func CicdServicePublish(c *gin.Context) {
 	idStr  := c.Param("id")
@@ -103,7 +103,7 @@ func CicdServicePublish(c *gin.Context) {
 	if err != nil{
 		httpresponse.FailWithMessage(err.Error(),c)
 	}else{
-		httpresponse.OkWithDetailed("bbb", "成功", c)
+		httpresponse.OkWithAll("bbb", "成功", c)
 	}
 
 
@@ -118,7 +118,7 @@ func CicdServicePublish(c *gin.Context) {
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
 // @Param data body request.CicdDeploy true "用户信息"
 // @Produce  application/json
-// @Success 200 {object} model.Project
+// @Success 200 {bool} bool "true:成功 false:失败"
 // @Router /cicd/service/deploy [post]
 func CicdServiceDeploy(c *gin.Context) {
 	var form request.CicdDeploy
@@ -129,7 +129,7 @@ func CicdServiceDeploy(c *gin.Context) {
 	if err != nil{
 		httpresponse.FailWithMessage(err.Error(),c)
 	}else{
-		httpresponse.OkWithDetailed("aaaa", "成功", c)
+		httpresponse.OkWithAll("aaaa", "成功", c)
 	}
 
 }
@@ -142,7 +142,7 @@ func CicdServiceDeploy(c *gin.Context) {
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
 // @Param data body request.CicdDeploy true "用户信息"
 // @Produce  application/json
-// @Success 200 {object} model.Project
+// @Success 200 {bool} bool "true:成功 false:失败"
 // @Router /cicd/superVisor/process [post]
 func CicdSuperVisorProcess(c *gin.Context) {
 	var form request.CicdSuperVisor
@@ -153,7 +153,7 @@ func CicdSuperVisorProcess(c *gin.Context) {
 	if err != nil{
 		httpresponse.FailWithMessage(err.Error(),c)
 	}else{
-		httpresponse.OkWithDetailed("aaaa", "成功", c)
+		httpresponse.OkWithAll("aaaa", "成功", c)
 	}
 }
 
@@ -164,10 +164,10 @@ func CicdSuperVisorProcess(c *gin.Context) {
 // @Param X-Project-Id header string true "项目ID" default(6)
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
 // @Produce  application/json
-// @Success 200 {object} model.Project
+// @Success 200 {bool} bool "true:成功 false:失败"
 // @Router /cicd/ping [get]
 func CicdPing(c *gin.Context) {
-	httpresponse.OkWithDetailed("aaaa", "成功", c)
+	httpresponse.OkWithAll("aaaa", "成功", c)
 }
 
 // @Tags Cicd
@@ -181,7 +181,7 @@ func CicdPing(c *gin.Context) {
 // @Router /cicd/local/deploy/dir/list [get]
 func CicdLocalDeployDirList(c *gin.Context) {
 	list := global.V.MyService.Cicd.GetHasDeployService()
-	httpresponse.OkWithDetailed(list, "成功", c)
+	httpresponse.OkWithAll(list, "成功", c)
 }
 
 // @Tags Cicd
@@ -192,13 +192,13 @@ func CicdLocalDeployDirList(c *gin.Context) {
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
 // @Param data body request.CicdSync true "用户信息"
 // @Produce  application/json
-// @Success 200 {object} model.Project
+// @Success 200 {bool} bool "true:成功 false:失败"
 // @Router /cicd/local/sync/target [get]
 func CicdLocalSyncTarget(c *gin.Context) {
 	var form request.CicdSync
 	c.ShouldBind(&form)
 
 	list := global.V.MyService.Cicd.LocalSyncTarget(form)
-	httpresponse.OkWithDetailed(list, "成功", c)
+	httpresponse.OkWithAll(list, "成功", c)
 }
 

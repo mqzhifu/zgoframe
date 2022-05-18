@@ -29,5 +29,5 @@ func Push(c *gin.Context) {
 	str, _ := json.Marshal(L)
 	global.V.Zap.Info(string(str))
 
-	httpresponse.OkWithDetailed("", "已收录", c)
+	httpresponse.OkWithAll("", "已收录", c)
 }

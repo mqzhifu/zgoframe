@@ -11,6 +11,7 @@ import (
 	"time"
 	"zgoframe/core/global"
 	httpmiddleware "zgoframe/http/middleware"
+	httpresponse "zgoframe/http/response"
 	"zgoframe/http/router"
 	"zgoframe/util"
 )
@@ -55,7 +56,8 @@ func GetNewHttpGIN(zapLog *zap.Logger, prefix string) (*gin.Engine, error) {
 
 
 	staticPath := global.V.RootDir  + "/" + global.C.Http.StaticPath
-
+	//保存一下，给外部使用，主要是给HTTP获取配置信息时，使用
+	global.C.Http.DiskStaticPath = staticPath
 	zapLog.Info(prefix + "GetNewHttpGIN static config , uri: " + staticFSUriName + " , diskPath: " + staticPath)
 	zapLog.Info(prefix + "GetNewHttpGIN swagger uri:" + swaggerUri)
 	//这里用到了两个log ，一个是gin 自己的LOG，它不会持久化，只输出到屏幕，另一个是zap自建的LOG，用于持久化，但不输出到屏幕
@@ -79,9 +81,12 @@ func GetNewHttpGIN(zapLog *zap.Logger, prefix string) (*gin.Engine, error) {
 }
 
 func RegGinHttpRoute() {
+	httpresponse.ErrManager = global.V.Err
+
+	global.V.Gin.Use( httpmiddleware.Limiter() ). Use(httpmiddleware.Record()).Use(httpmiddleware.Header())
 	//设置非登陆可访问API，但是头里要加基础认证的信息
 	PublicGroup := global.V.Gin.Group("")
-	PublicGroup.Use(httpmiddleware.Limiter()).Use(httpmiddleware.Record()).Use(httpmiddleware.Header()).Use(httpmiddleware.HeaderAuth())
+	PublicGroup.Use(httpmiddleware.HeaderAuth())
 	{
 		router.InitBaseRouter(PublicGroup)
 		router.InitToolsRouter(PublicGroup)
@@ -92,7 +97,7 @@ func RegGinHttpRoute() {
 	PrivateGroup := global.V.Gin.Group("")
 	//设置正常API（需要验证）
 	//httpmiddleware.CasbinHandler()
-	PrivateGroup.Use(httpmiddleware.Limiter()).Use(httpmiddleware.Record()).Use(httpmiddleware.Header(), httpmiddleware.JWTAuth())
+	PrivateGroup.Use( httpmiddleware.JWTAuth())
 	{
 		router.InitUserRouter(PrivateGroup)
 		router.InitLogslaveRouter(PrivateGroup)
@@ -101,7 +106,7 @@ func RegGinHttpRoute() {
 	}
 
 	GatewayGroup := global.V.Gin.Group("")
-	GatewayGroup.Use(httpmiddleware.Limiter()).Use(httpmiddleware.Record()).Use(httpmiddleware.Header())
+	GatewayGroup. Use( )
 	{
 		router.InitGatewayRouter(GatewayGroup)
 	}

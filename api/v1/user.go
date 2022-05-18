@@ -118,7 +118,7 @@ func LoginRecord(c *gin.Context, uid int, loginType int) {
 // @Tags User
 // @Security ApiKeyAuth
 // @Produce  application/json
-// @Success 200 {string} string "{"success":true,"data":{},"msg":"退出成功"}"
+// @Success 200 {string} string "成功"
 // @Router /user/logout [post]
 func Logout(c *gin.Context) {
 	uid, _ := request.GetUid(c)

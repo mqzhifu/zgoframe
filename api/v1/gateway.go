@@ -15,7 +15,7 @@ import (
 // @Param service_name path string true "服务名"
 // @Param func_name path string true "函数名"
 // @Param data body request.Empty true "任意，请参考.proto"
-// @Success 200 {bool} bool "true:成功 false:否"
+// @Success 200 {boolean} true "true:成功 false:否"
 // @Router /gateway/service/{service_name}/{func_name} [post]
 func GatewayService(c *gin.Context) {
 	prefix := "Gateway Http , "
@@ -46,7 +46,7 @@ func GatewayService(c *gin.Context) {
 // @Summary 获取网关配置信息
 // @Description 主要是长连接的配置(端口|协议)
 // @Security ApiKeyAuth
-// @Success 200 {object} util.NetWayOption
+// @Success 200 {object} util.NetWayOption "dddd"
 // @Router /gateway/config [get]
 func GatewayConfig(c *gin.Context) {
 	httpresponse.OkWithAll(global.V.MyService.Gateway.NetWayOption, "ok", c)
@@ -57,6 +57,7 @@ func GatewayConfig(c *gin.Context) {
 // @Summary 获取所有服务的.proto 配置文件
 // @Description proto接口及GRPC微服务函数的信息等
 // @Security ApiKeyAuth
+// @Success 200 {string} bbbb " "
 // @Router /gateway/proto [get]
 func GatewayProto(c *gin.Context) {
 	url := "http:/127.0.0.1:" + global.C.Http.Port + "/" + global.C.Http.Status + "/proto"
@@ -68,6 +69,7 @@ func GatewayProto(c *gin.Context) {
 // @Summary php解析:.proto文件，生成.txt , 再通过GO读取出来
 // @Description 后期考虑替换掉PHP解析过程，直接用GO
 // @Security ApiKeyAuth
+// @Success 200 {string} ssss " "
 // @Router /gateway/action/map [get]
 func ActionMap(c *gin.Context) {
 	list := global.V.ProtoMap.GetServiceFuncMap()

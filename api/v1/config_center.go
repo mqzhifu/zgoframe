@@ -14,8 +14,7 @@ import (
 // @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
 // @Param X-Project-Id header string true "项目ID" default(6)
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
-// @Param name path string true "module name"
-// @Success 200 {object} httpresponse.LoginResponse
+// @Success 200 {boolean} true "true:成功 false:否"
 // @Router /config/center/module/{name} [get]
 func ConfigCenterGetByModule(c *gin.Context) {
 	projectId := request.GetProjectIdByHeader(c)
@@ -35,8 +34,7 @@ func ConfigCenterGetByModule(c *gin.Context) {
 // @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
 // @Param X-Project-Id header string true "项目ID" default(6)
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
-// @Param data body request.ConfigCenterGetByKeyReq true " "
-// @Success 200 {object} httpresponse.LoginResponse
+// @Success 200 {boolean} true "true:成功 false:否"
 // @Router /config/center/get/key [post]
 func ConfigCenterGetByModuleByKey(c *gin.Context) {
 	projectId := request.GetProjectIdByHeader(c)
@@ -59,8 +57,7 @@ func ConfigCenterGetByModuleByKey(c *gin.Context) {
 // @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
 // @Param X-Project-Id header string true "项目ID" default(6)
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
-// @Param data body request.ConfigCenterSetByKeyReq true " "
-// @Success 200 {object} httpresponse.LoginResponse
+// @Success 200 {boolean} true "true:成功 false:否"
 // @Router /config/center/set/key [post]
 func ConfigCenterSetByModuleByKey(c *gin.Context) {
 	projectId := request.GetProjectIdByHeader(c)

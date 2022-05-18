@@ -14,7 +14,7 @@ import (
 // @Security ApiKeyAuth
 // @Param data body request.SystemConfig true "用户名/密码"
 // @Produce  application/json
-// @Success 200 {string} string "{"success":true,"data":{},"msg":"登陆成功"}"
+// @Success 200 {string} string "成功"
 // @Router /sys/quit [post]
 func Quit(c *gin.Context) {
 	var formData request.SystemConfig
@@ -36,7 +36,7 @@ func Quit(c *gin.Context) {
 // @Security ApiKeyAuth
 // @Param data body request.SystemConfig true "用户名/密码"
 // @Produce  application/json
-// @Success 200 {string} string "{"success":true,"data":{},"msg":"登陆成功"}"
+// @Success 200 {string} string "成功"
 // @Router /sys/config [post]
 func Config(c *gin.Context) {
 	util.MyPrint("im in sys.config")
@@ -60,7 +60,7 @@ func Config(c *gin.Context) {
 // @Security ApiKeyAuth
 // @Param data body request.SystemConfig true "用户名/密码"
 // @Produce  application/json
-// @Success 200 {string} string "{"success":true,"data":{},"msg":"登陆成功"}"
+// @Success 200 {string} string "成功"
 // @Router /metrics [post]
 func Metrics(c *gin.Context) {
 

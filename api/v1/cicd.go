@@ -16,7 +16,7 @@ import (
 // @Param X-Project-Id header string true "项目ID" default(6)
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
 // @Produce  application/json
-// @Success 200 {object} cicd.ServerServiceSuperVisorList
+// @Success 200 {boolean} true "数据过长，先用bool替代"
 // @Router /cicd/superVisor/list [get]
 func CicdSuperVisorList(c *gin.Context) {
 	list,err := global.V.MyService.Cicd.GetSuperVisorList()

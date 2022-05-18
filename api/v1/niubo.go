@@ -12,7 +12,7 @@ import (
 // @Param X-Source-Type header string true "来源" default(11)
 // @Param X-Project-Id header string true "项目ID"  default(6)
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
-// @Success 200 {bool} bool "true:成功 false:否"
+// @Success 200 {boolean} bool "true:成功 false:否"
 // @Router /tools/niuke/question/dir/list [get]
 func NiukeQuestionDirList(c *gin.Context) {
 

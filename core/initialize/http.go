@@ -93,6 +93,7 @@ func RegGinHttpRoute() {
 		router.InitCicdRouter(PublicGroup)
 		router.InitConfigCenterRouter(PublicGroup)
 		router.InitGameMatchRouter(PublicGroup)
+		router.InitPersistenceRouter(PublicGroup)
 	}
 	PrivateGroup := global.V.Gin.Group("")
 	//设置正常API（需要验证）
@@ -100,7 +101,6 @@ func RegGinHttpRoute() {
 	PrivateGroup.Use( httpmiddleware.JWTAuth())
 	{
 		router.InitUserRouter(PrivateGroup)
-		router.InitLogslaveRouter(PrivateGroup)
 		router.InitSysRouter(PrivateGroup)
 		router.InitMailRouter(PrivateGroup)
 	}

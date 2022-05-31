@@ -37,6 +37,8 @@ var initializeVar *initialize.Initialize
 // @tag.description 站内信/内部邮件通知
 // @tag.name GameMatch
 // @tag.description 游戏匹配机制
+// @tag.name persistence
+// @tag.description 持久化(文件/日志收集/kv存储)
 // @tag.name ConfigCenter
 // @tag.description 配置中心
 // @securityDefinitions.apikey ApiKeyAuth

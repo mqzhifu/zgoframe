@@ -126,3 +126,11 @@ WsUri    = "/ws"
 status  = "close"
 persistenceType = 3
 dataPath = "/data/config/"
+
+[upload]
+path = "/data/www/golang/src/zgoframe/static/upload"
+
+[oss]
+accessKeyId = ""
+accessKeySecret = ""
+endpoint = ""

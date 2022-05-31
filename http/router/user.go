@@ -44,9 +44,3 @@ func InitGatewayRouter(Router *gin.RouterGroup) {
 	}
 }
 
-func InitLogslaveRouter(Router *gin.RouterGroup) {
-	LogsalveRouter := Router.Group("logslave")
-	{
-		LogsalveRouter.POST("push", v1.Push)
-	}
-}

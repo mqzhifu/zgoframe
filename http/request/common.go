@@ -121,3 +121,12 @@ type CasbinInReceive struct {
 	AuthorityId string       `json:"authorityId"`
 	CasbinInfos []CasbinInfo `json:"casbinInfos"`
 }
+
+
+type LogData struct {
+	ProjectId 	int    	`json:"project_id"`					//项目/服务/app- Id
+	Uid     	string 	`json:"uid" form:"uid"`				//用户ID/openId/UUID
+	Category    int    	`json:"category" form:"category"`	//分类ID，保留字，暂不使用
+	Action 		string 	`json:"action" form:"action"`		//动态名称
+	Msg       	string 	`json:"msg" form:"msg"`				//自定义消息体
+}

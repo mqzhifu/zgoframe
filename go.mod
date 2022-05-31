@@ -9,6 +9,7 @@ replace google.golang.org/grpc => google.golang.org/grpc v1.26.0
 //replace go.etcd.io/bbolt v1.3.4 => github.com/coreos/bbolt v1.3.4
 
 require (
+	github.com/aliyun/aliyun-oss-go-sdk v2.0.0+incompatible
 	github.com/abrander/go-supervisord v0.0.0-20210517172913-a5469a4c50e2
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/coreos/bbolt v1.3.4 // indirect
@@ -81,4 +82,6 @@ require (
 	gorm.io/driver/mysql v1.1.1
 	gorm.io/gorm v1.21.12
 	sigs.k8s.io/yaml v1.2.0 // indirect
+
+
 )

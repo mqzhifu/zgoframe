@@ -21,6 +21,8 @@ type Config struct {
 	PushGateway      PushGateway
 	Gateway          Gateway
 	ConfigCenter 	 ConfigCenter
+	Upload 		     Upload
+	Oss 			 Oss
 }
 
 type Protobuf struct {
@@ -178,4 +180,15 @@ type ConfigCenter struct {
 	Status   string
 	PersistenceType int
 	DataPath    string
+}
+
+type Upload struct{
+	Path string
+}
+
+type Oss struct{
+	AccessKeyId string
+	AccessKeySecret string
+	Endpoint string
+
 }

@@ -34,10 +34,16 @@ type SysCaptchaResponse struct {
 	Id         string `json:"id"`
 	PicContent string `json:"pic_content"` //图片内容,base64
 }
+//上传多张图片，处理结果
+type UploadRs struct{
+	Err 		string `json:"err"`			//上传图片是否发生错误，如果为空证明没有
+	Url 		string	`json:"url"`		//上传成功的图片：URL新地址
+	FileName 	string `json:"file_name"`	//原图片文件名
+}
 
 func Result(code int, data interface{}, msg string, c *gin.Context) {
 	// 开始时间
-	myHeader := request.GetMyHeader(c)
+	myHeader,_ := request.GetMyHeader(c)
 	//rid := c.GetHeader("request_id")
 	headerResponse := request.HeaderResponse{}
 

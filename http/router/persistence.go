@@ -11,5 +11,6 @@ func InitPersistenceRouter(Router *gin.RouterGroup) {
 	{
 		persistenceRouter.POST("log/push", v1.LogPush)
 		persistenceRouter.POST("file/upload", v1.Upload)
+		persistenceRouter.POST("file/upload/multi", v1.UploadMulti)
 	}
 }

@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>test file upload</title>
+    <script src="/static/js/jquery.min.js" type="text/javascript" ></script>
+</head>
+<body>
+<table>
+
+
+    <tr>
+        <td>
+            多文件测试：
+        </td>
+
+        <td>
+            <form  id="myFormMulti"  enctype="multipart/form-data" >
+                <table>
+                    <tr><td>category</td><td> <input type="text" name="category" value="1"></td>
+                    <tr><td>module</td><td> <input type="text" name="module" value=""></td></tr>
+                    <tr><td>文件</td><td><input type="file" multiple="multiple" name="files" ></td></tr>
+                    <tr><td></td><td> <input type="button" onclick="subMulti();" value="提交"></td></tr>
+                </table>
+            </form>
+        </td>
+
+
+
+        <td>
+            单文件测试：
+        </td>
+
+        <td>
+            <form  id="myFormOne"  enctype="multipart/form-data" >
+                <table>
+                    <tr><td>category</td><td> <input type="text" name="category" value="1"></td>
+                    <tr><td>module</td><td> <input type="text" name="module" value=""></td></tr>
+                    <tr><td>文件</td><td><input type="file"  name="file" ></td></tr>
+                    <tr><td></td><td> <input type="button" onclick="subOne();" value="提交"></td></tr>
+                </table>
+            </form>
+        </td>
+
+
+    </tr>
+
+
+
+</table>
+
+
+<script>
+    // 后端公共HTTP接口-头信息
+    var header_X_Source_Type = "11";
+    var header_X_Project_Id = "6";
+    var header_X_Access = "imzgoframe";
+    var multiUri ="/persistence/file/upload/multi";
+    var oneUri = "/persistence/file/upload";
+
+    function subMulti(){
+        var myFormData = new FormData(document.getElementById("myFormMulti"));
+        $.ajax({
+            type:"POST",
+            url:multiUri,
+            headers: {
+                "X-Source-Type": header_X_Source_Type,
+                "X-Project-Id": header_X_Project_Id,
+                "X-Access": header_X_Access,
+            },
+            data: myFormData,
+            processData: false,
+            contentType: false,
+            success: function (data) {
+
+                console.log("sucess data:",data);
+                },
+            error: function (data) { console.log("err:",data); }
+
+        });
+
+
+    }
+
+    function subOne(){
+        var myFormData = new FormData(document.getElementById("myFormOne"));
+        $.ajax({
+            type:"POST",
+            url:oneUri,
+            headers: {
+                "X-Source-Type": header_X_Source_Type,
+                "X-Project-Id": header_X_Project_Id,
+                "X-Access": header_X_Access,
+            },
+            data: myFormData,
+            processData: false,
+            contentType: false,
+            success: function (data) {
+
+                console.log("sucess data:",data);
+            },
+            error: function (data) { console.log("err:",data); }
+
+        });
+    }
+
+</script>
+
+</body>
+</html>

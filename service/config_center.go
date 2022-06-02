@@ -5,6 +5,7 @@ import (
 	"github.com/spf13/viper"
 	"gorm.io/gorm"
 	"os"
+	"strconv"
 	"strings"
 	"zgoframe/util"
 )
@@ -16,6 +17,7 @@ const (
 	PERSISTENCE_TYPE_ETCD    = 4
 	PERSISTENCE_TYPE_CONSULE = 5
 )
+
 func GetConstListConfigPersistenceType() map[string]int {
 	list := make(map[string]int)
 	list["mysql"] = PERSISTENCE_TYPE_MYSQL
@@ -104,12 +106,12 @@ func (configCenter *ConfigCenter) SetByKey(env int, projectId int,  module strin
 	return e
 }
 func (configCenter *ConfigCenter)GetModuleInfo(env int , projectId int,module string)(myViper *viper.Viper, err error){
-	//util.MyPrint("GetModuleInfo ,  env:"+strconv.Itoa(env)  + " projectId:"+strconv.Itoa(projectId) + " module:"+ module)
+	util.MyPrint("GetModuleInfo ,  env:"+strconv.Itoa(env)  + " projectId:"+strconv.Itoa(projectId) + " module:"+ module)
 	project , empty := configCenter.Option.ProjectManager.GetById(projectId)
 	if empty{
 		return myViper,errors.New("projectId is empty")
 	}
-
+	//util.MyPrint("ttt:===",configCenter.pool[env])
 	myViper, ok := configCenter.pool[env][project.Name][module]
 	if !ok {
 		return myViper, errors.New("module is empty")
@@ -117,6 +119,45 @@ func (configCenter *ConfigCenter)GetModuleInfo(env int , projectId int,module st
 
 	return myViper,nil
 }
+
+func (configCenter *ConfigCenter)CreateModule(env int , projectId int,module string)error{
+	_ , err := configCenter.GetByModule(env ,projectId,module)
+	if err == nil{
+		return errors.New("文件存在，请不要重复创建")
+	}
+
+	if err.Error() == "module is empty"{
+		project := configCenter.Option.ProjectManager.Pool[projectId]
+		envDir := configCenter.Option.PersistenceFileDir + "/" + util.GetConstListEnvStr()[env]
+		projectDir := envDir + "/" + project.Name
+		moduleDirFile := projectDir + "/" + module + ".toml"
+		util.MyPrint("create file:"+moduleDirFile)
+		_,err = os.Create(moduleDirFile)
+		if err != nil{
+			return err
+		}
+
+		myViper, err := configCenter.ViperRead(moduleDirFile)
+		if err != nil {
+			return err
+		}
+		_ ,ok := configCenter.pool[env][project.Name]
+		if ok{
+			configCenter.pool[env][project.Name][module] = myViper
+		}else{
+			vipMap := make(map[string]*viper.Viper)
+			configCenter.pool[env][project.Name] = vipMap
+		}
+		//a , ok := configCenter.pool[env][project.Name]
+		//util.ExitPrint(a,ok)
+
+
+		return nil
+	}else{
+		return err
+	}
+}
+
 func (configCenter *ConfigCenter) InitPersistenceFile() error {
 	prefix := "InitPersistenceFile "
 	if configCenter.Option.PersistenceFileDir == "" {
@@ -132,7 +173,6 @@ func (configCenter *ConfigCenter) InitPersistenceFile() error {
 	for _, env := range configCenter.Option.envList {
 		//envDir := configCenter.Option.PersistenceFileDir + "/" + strconv.Itoa(env)
 		envDir := configCenter.Option.PersistenceFileDir + "/" + util.GetConstListEnvStr()[env]
-
 		//util.MyPrint("envDir:" + envDir)
 		_, err = util.PathExists(envDir)
 		if err != nil { //
@@ -217,7 +257,7 @@ func (configCenter *ConfigCenter) InitPersistenceFile() error {
 				}
 				//info := myViper.Get("mysql")
 				//util.ExitPrint(err, "tt:", info)
-				filePool[fileInfo.Name] = myViper
+				filePool[fileNameArr[0]] = myViper
 			}
 			projectPool[projectInfo.Name] = filePool
 		}

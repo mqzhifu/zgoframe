@@ -62,12 +62,12 @@ func GetNewHttpGIN(zapLog *zap.Logger, prefix string) (*gin.Engine, error) {
 	zapLog.Info(prefix + "GetNewHttpGIN swagger uri:" + swaggerUri)
 	//这里用到了两个log ，一个是gin 自己的LOG，它不会持久化，只输出到屏幕，另一个是zap自建的LOG，用于持久化，但不输出到屏幕
 	HttpZapLog = zapLog
+	//设置开发模式，日志输出会变少
 	gin.SetMode(gin.ReleaseMode)
 	ginRouter := gin.Default()
 	//单独的日志记录，GIN默认的日志不会持久化的
 	ginRouter.Use(ZapLog())
-	//加载静态目录
-	//	Router.Static("/form-generator", "./resource/page")
+	//设置静态目录，等待请求
 	ginRouter.StaticFS(staticFSUriName, http.Dir(staticPath))
 	//加载swagger api 工具
 	ginRouter.GET(swaggerUri, ginSwagger.WrapHandler(swaggerFiles.Handler))
@@ -75,7 +75,8 @@ func GetNewHttpGIN(zapLog *zap.Logger, prefix string) (*gin.Engine, error) {
 	ginRouter.Use(httpmiddleware.Cors())
 	//404
 	ginRouter.NoMethod(HandleNotFound)
-
+	////8<<20 即 8*2^20=8M
+	//ginRouter.MaxMultipartMemory=8<<20
 	return ginRouter, nil
 
 }

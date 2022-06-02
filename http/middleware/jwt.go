@@ -76,7 +76,8 @@ func (j *JWT) ParseToken(tokenString string) (customClaims request.CustomClaims,
 }
 //给中间件使用
 func RealJWTAuth(c *gin.Context) {
-	user, customClaims, err := CheckToken(request.GetMyHeader(c))
+	header , _ := request.GetMyHeader(c)
+	user, customClaims, err := CheckToken(header)
 	if err != nil {
 		code , msg ,_ := global.V.Err.SplitMsg(err.Error())
 		httpresponse.Result(code,nil,msg,c)

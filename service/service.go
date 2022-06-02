@@ -26,23 +26,23 @@ type Service struct {
 }
 
 type MyServiceOptions struct {
-	Gorm *gorm.DB
-	Zap *zap.Logger
-	MyEmail *util.MyEmail
-	MyRedis *util.MyRedis
-	MyRedisGo *util.MyRedisGo
-	NetWayOption util.NetWayOption
-	GrpcManager *util.GrpcManager
-	ProjectManager *util.ProjectManager
+	Gorm 			*gorm.DB
+	Zap 			*zap.Logger
+	MyEmail 		*util.MyEmail
+	MyRedis 		*util.MyRedis
+	MyRedisGo 		*util.MyRedisGo
+	NetWayOption 	util.NetWayOption
+	GrpcManager 	*util.GrpcManager
+	ProjectManager 	*util.ProjectManager
 	ConfigCenterDataDir string
 	ConfigCenterPersistenceType	int
-	OpDirName 	string
-	ServiceList map[int]util.Service
-	HttpPort 	string
-	GatewayStatus string
-	Etcd *util.MyEtcd
-	Metrics *util.MyMetrics
-	ProjectId int
+	OpDirName 		string
+	ServiceList 	map[int]util.Service
+	HttpPort 		string
+	GatewayStatus 	string
+	Etcd 			*util.MyEtcd
+	Metrics 		*util.MyMetrics
+	ProjectId 		int
 	ServiceDiscovery *util.ServiceDiscovery
 }
 
@@ -56,20 +56,20 @@ func NewService(options MyServiceOptions) *Service {
 	service.Sms = NewSms(options.Gorm)
 	//电子邮件服务
 	service.Email = NewEmail(options.Gorm, options.MyEmail)
-	////配置中心服务
-	//configCenterOption := ConfigCenterOption{
-	//	envList:            util.GetConstListEnv(),
-	//	Gorm:               options.Gorm,
-	//	Redis:              options.MyRedis,
-	//	ProjectManager:     options.ProjectManager,
-	//	PersistenceType:    PERSISTENCE_TYPE_FILE,
-	//	PersistenceFileDir: options.ConfigCenterDataDir,
-	//}
-	//var err error
-	//service.ConfigCenter, err = NewConfigCenter(configCenterOption)
-	//if err != nil {
-	//	util.ExitPrint("NewConfigCenter err:" + err.Error())
-	//}
+	//配置中心服务
+	configCenterOption := ConfigCenterOption{
+		envList:            util.GetConstListEnv(),
+		Gorm:               options.Gorm,
+		Redis:              options.MyRedis,
+		ProjectManager:     options.ProjectManager,
+		PersistenceType:    PERSISTENCE_TYPE_FILE,
+		PersistenceFileDir: options.ConfigCenterDataDir,
+	}
+	var err error
+	service.ConfigCenter, err = NewConfigCenter(configCenterOption)
+	if err != nil {
+		util.ExitPrint("NewConfigCenter err:" + err.Error())
+	}
 	//
 	////房间服务 - room要先实例化,math frame_sync 都强依赖room
 	//roomManagerOption := RoomManagerOption{

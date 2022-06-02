@@ -3,6 +3,7 @@ package util
 import (
 	"errors"
 	"fmt"
+	"math"
 	"math/rand"
 	"net"
 	"os"
@@ -25,6 +26,11 @@ func ExitPrint(a ...interface{})   {
 //输出复杂类型的数据，如：结构体
 func MyComplexPrint(a ...interface{}) (n int, err error) {
 	return fmt.Printf("%+v",a)
+}
+//四舍五入
+func Round(val float64, precision int) float64 {
+	p := math.Pow10(precision)
+	return math.Floor(val*p+0.5) / p
 }
 //一次获取N个空格，用于测试时 输出时 加些空格格式化内容
 func GetSpaceStr(n int)string{

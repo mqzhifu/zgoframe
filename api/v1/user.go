@@ -22,7 +22,9 @@ import (
 func tokenNext(c *gin.Context, user model.User, loginType int) (loginResponse httpresponse.LoginResponse, err error) {
 	//ExpiresAt :=  time.Now().Unix() + global.C.Jwt.ExpiresTime // 过期时间 7天  配置文件
 	ExpiresAt := time.Now().Unix() + 60							//测试使用
-	util.MyPrint("tokenNext uid:" + strconv.Itoa(user.Id) + " sourceType:" + strconv.Itoa(request.GetMyHeader(c).SourceType)+ " ExpiresAt:",ExpiresAt)
+	haeder , _ := request.GetMyHeader(c)
+
+	util.MyPrint("tokenNext uid:" + strconv.Itoa(user.Id) + " sourceType:" + strconv.Itoa(haeder.SourceType)+ " ExpiresAt:",ExpiresAt)
 	j := httpmiddleware.NewJWT()
 
 	claims := request.CustomClaims{
@@ -30,7 +32,7 @@ func tokenNext(c *gin.Context, user model.User, loginType int) (loginResponse ht
 		ProjectId:  user.ProjectId,
 		NickName:   user.NickName,
 		Username:   user.Username,
-		SourceType: request.GetMyHeader(c).SourceType,
+		SourceType: haeder.SourceType,
 		StandardClaims: jwt.StandardClaims{
 			NotBefore: time.Now().Unix() - 10,                       // 签名生效时间，这里提前10秒，用于容错
 			ExpiresAt: ExpiresAt,									//失效时间
@@ -43,7 +45,7 @@ func tokenNext(c *gin.Context, user model.User, loginType int) (loginResponse ht
 		return loginResponse, errors.New("创建token失败:" + err.Error())
 	}
 	//从redis里再取一下：可能有，可能没有(redis key=sourceType+uid ，因为可能多端同时登陆，所以得有 sourceType)
-	redisElement, _ := global.V.Redis.GetElementByIndex("jwt", strconv.Itoa(request.GetMyHeader(c).SourceType), strconv.Itoa(user.Id))
+	redisElement, _ := global.V.Redis.GetElementByIndex("jwt", strconv.Itoa(haeder.SourceType), strconv.Itoa(user.Id))
 	jwtStr, err := global.V.Redis.Get(redisElement)
 	util.MyPrint("token key:" + redisElement.Key," RedisJwtStr:", jwtStr, " err:", err, " ")
 
@@ -88,7 +90,7 @@ func tokenNext(c *gin.Context, user model.User, loginType int) (loginResponse ht
 //2. 减少请求方每次头里加上一些重复的统计信息，有session的功能，但不推荐这么用
 //3. 长连接不可能每次请求都带头信息的
 func LoginRecord(c *gin.Context, uid int, loginType int) {
-	header := request.GetMyHeader(c)
+	header,_ := request.GetMyHeader(c)
 
 	userLogin := model.UserLogin{
 		ProjectId:  header.ProjectId,
@@ -122,8 +124,8 @@ func LoginRecord(c *gin.Context, uid int, loginType int) {
 // @Router /user/logout [post]
 func Logout(c *gin.Context) {
 	uid, _ := request.GetUid(c)
-
-	redisElement, _ := global.V.Redis.GetElementByIndex("jwt", strconv.Itoa(request.GetMyHeader(c).SourceType), strconv.Itoa(uid))
+	header ,_ := request.GetMyHeader(c)
+	redisElement, _ := global.V.Redis.GetElementByIndex("jwt", strconv.Itoa(header.SourceType), strconv.Itoa(uid))
 	global.V.Redis.Del(redisElement)
 
 	httpresponse.OkWithAll("ok", "退出成功", c)

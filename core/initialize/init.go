@@ -292,7 +292,7 @@ func (initialize *Initialize) Start() error {
 func autoCreateUpDbTable() {
 	mydb := util.NewDbTool(global.V.Gorm)
 	mydb.CreateTable(&model.User{}, &model.UserReg{}, &model.UserLogin{},
-		&model.OperationRecord{}, &model.Project{},
+		&model.OperationRecord{}, &model.Project{},&model.StatisticsLog{},
 		&model.CicdPublish{}, &model.Server{}, &model.Instance{},
 		&model.SmsRule{}, &model.SmsLog{}, &model.EmailRule{}, &model.EmailLog{}, &model.MailRule{}, &model.MailLog{}, &model.MailGroup{})
 

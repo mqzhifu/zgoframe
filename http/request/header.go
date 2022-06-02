@@ -6,13 +6,13 @@ import (
 	"zgoframe/model"
 )
 
-func GetMyHeader(c *gin.Context) HeaderRequest {
+func GetMyHeader(c *gin.Context) (hr HeaderRequest ,err error) {
 	myHeaderInterface, exists := c.Get("myheader")
 	if !exists {
-		//global.V.Zap.Error("myheader empty")
+		return hr,errors.New("get myheader is empty~")
 	}
 	myHeader := myHeaderInterface.(HeaderRequest)
-	return myHeader
+	return myHeader,nil
 }
 
 //func GetParserTokenData(c *gin.Context) (parserTokenData ParserTokenData, err error) {
@@ -49,7 +49,7 @@ func GetProjectId(c *gin.Context) (int, error) {
 }
 
 func GetProjectIdByHeader(c *gin.Context) (int) {
-	header := GetMyHeader(c)
+	header,_ := GetMyHeader(c)
 	return header.ProjectId
 }
 

@@ -9,8 +9,8 @@ replace google.golang.org/grpc => google.golang.org/grpc v1.26.0
 //replace go.etcd.io/bbolt v1.3.4 => github.com/coreos/bbolt v1.3.4
 
 require (
-	github.com/aliyun/aliyun-oss-go-sdk v2.0.0+incompatible
 	github.com/abrander/go-supervisord v0.0.0-20210517172913-a5469a4c50e2
+	github.com/aliyun/aliyun-oss-go-sdk v2.0.0+incompatible
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/coreos/bbolt v1.3.4 // indirect
 	github.com/coreos/etcd v3.3.25+incompatible // indirect
@@ -55,6 +55,7 @@ require (
 	github.com/prometheus/common v0.4.1 // indirect
 	github.com/prometheus/procfs v0.6.0 // indirect
 	github.com/satori/go.uuid v1.2.0
+	github.com/shopspring/decimal v1.3.1 // indirect
 	github.com/sirupsen/logrus v1.6.0 // indirect
 	github.com/soheilhy/cmux v0.1.5 // indirect
 	github.com/spf13/afero v1.6.0 // indirect
@@ -82,6 +83,5 @@ require (
 	gorm.io/driver/mysql v1.1.1
 	gorm.io/gorm v1.21.12
 	sigs.k8s.io/yaml v1.2.0 // indirect
-
 
 )

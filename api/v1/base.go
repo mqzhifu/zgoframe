@@ -161,7 +161,8 @@ func Register(c *gin.Context) {
 		return
 	}
 
-	err, userInfo := global.V.MyService.User.RegisterByUsername(R, request.GetMyHeader(c))
+	header , _ :=  request.GetMyHeader(c)
+	err, userInfo := global.V.MyService.User.RegisterByUsername(R,header)
 	if err != nil {
 		//global.V.Zap.Error("注册失败", zap.Any("err", err))
 		httpresponse.FailWithAll(userInfo, "注册失败:"+err.Error(), c)
@@ -196,8 +197,8 @@ func RegisterSms(c *gin.Context) {
 		httpresponse.FailWithMessage(err.Error(), c)
 		return
 	}
-
-	err, userInfo := global.V.MyService.User.Register(user, request.GetMyHeader(c), service.UserRegInfo{})
+	header , _ :=  request.GetMyHeader(c)
+	err, userInfo := global.V.MyService.User.Register(user, header, service.UserRegInfo{})
 	if err != nil {
 		//global.V.Zap.Error("注册失败", zap.Any("err", err))
 		httpresponse.FailWithAll(userInfo, "注册失败:"+err.Error(), c)
@@ -455,7 +456,8 @@ func LoginThird(c *gin.Context) {
 	//if store.Verify(L.CaptchaId, L.Captcha, true) {
 	//先从DB中做比对
 	//U := &model.User{ThirdId: L.Code}
-	user, newReg, err := global.V.MyService.User.LoginThird(L, request.GetMyHeader(c))
+	header ,_ :=  request.GetMyHeader(c)
+	user, newReg, err := global.V.MyService.User.LoginThird(L,header)
 	if err != nil {
 		httpresponse.FailWithMessage("用户名不存在或者密码错误 ,err:"+err.Error(), c)
 	} else {

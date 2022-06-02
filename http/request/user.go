@@ -141,16 +141,6 @@ type RestPasswordSms struct {
 	NewPasswordConfirm string `json:"new_password_confirm"` //新密码确认
 }
 
-type ConfigCenterGetByKeyReq struct {
-	Module string	`json:"module"`
-	Key string	`json:"key"`
-}
-
-type ConfigCenterSetByKeyReq struct {
-	Module string	`json:"module"`
-	Key string	`json:"key"`
-	Value interface{}	`json:"value"`
-}
 
 
 type CheckMobileExist struct {

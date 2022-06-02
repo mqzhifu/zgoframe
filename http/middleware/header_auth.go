@@ -12,7 +12,7 @@ func HeaderAuth() gin.HandlerFunc {
 	//res := httpresponse.Response{}
 	return func(c *gin.Context) {
 		//global.V.Zap.Debug("middle HeaderAuth start:")
-		header := request.GetMyHeader(c)
+		header,_ := request.GetMyHeader(c)
 		//验证SourceType
 		if !model.CheckConstInList(model.GetConstListPlatform(), header.SourceType) {
 			header.SourceType = model.PLATFORM_UNKNOW

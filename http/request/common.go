@@ -16,14 +16,14 @@ type TestHeader struct {
 type HeaderRequest struct {
 	Access            string         `json:"access"`              //使用网关时，不允许随意访问，得有key
 	RequestId         string         `json:"request_id"`          //每次请求的唯一标识，响应时也会返回，如果请求方没有，后端会默认生成一个
-	TraceId           string         `json:"trace_id"`            //追踪ID，主要用于链路追踪，如果请求方没有，后端会默认生成一个，跟request略像，但给后端使用
+	TraceId           string         `json:"trace_id"`            //追踪ID，主要用于链路追踪，如果请求方没有，后端会默认生成一个
 	SourceType        int            `json:"source_type"`         //请求方来源类型(pc h5 ios android vr spider unknow)，不同类型，不同JWT，原因：1手机端登陆后，PC端再登陆，互踢，无法共存。2越权，有些接口不允许互相访问
 	ProjectId         int            `json:"project_id"`          //项目ID，所有的服务/项目/前端/App，均要先向管理员申请一个账号，才能用于日常请求
 	Token             string         `json:"token"`               //JWT用户登陆令牌(HS256 对称算法，共享一个密钥)
-	AutoIp            string         `json:"auto_ip"`             //获取不到请求方IP时，系统自动获取生成,供业务层使用
+	AutoIp            string         `json:"auto_ip"`             //请求方没有IP时，系统自动获取生成,供后端/业务层使用
 	ClientReqTime     int            `json:"client_req_time"`     //客户端请求时间  unixtime
 	ServerReceiveTime int            `json:"server_receive_time"` //服务端接收到请求的时间 unixtime
-	BaseInfo          HeaderBaseInfo `json:"base_info"`           //收集客户端的一些基础信息，json
+	BaseInfo          HeaderBaseInfo `json:"base_info"`           //收集客户端的一些基础信息，json格式，参考：HeaderBaseInfo 结构体
 }
 
 type HeaderResponse struct {
@@ -46,7 +46,7 @@ type HeaderBaseInfo struct {
 	DeviceVersion string `json:"device_version"` //mi8 hongmi7 ios8 ios9 ie8 ie9
 	Lat           string `json:"lat"`            //纬度
 	Lon           string `json:"lon"`            //经度
-	DeviceId      string `json:"device_id"`      //设备ID
+	DeviceId      string `json:"device_id"`      //设备ID,这个可能牵涉权限隐私，获取不到，前端可以跟后端自定义个生成规则
 	DPI           string `json:"dpi"`            //分辨率
 	Ip            string `json:"ip"`             //请求方的IP
 	Referer       string `json:"referer"`        //页面来源
@@ -123,10 +123,28 @@ type CasbinInReceive struct {
 }
 
 
-type LogData struct {
+type StatisticsLogData struct {
 	ProjectId 	int    	`json:"project_id"`					//项目/服务/app- Id
-	Uid     	string 	`json:"uid" form:"uid"`				//用户ID/openId/UUID
+	Uid     	int 	`json:"uid" form:"uid"`				//用户ID
 	Category    int    	`json:"category" form:"category"`	//分类ID，保留字，暂不使用
-	Action 		string 	`json:"action" form:"action"`		//动态名称
+	Action 		string 	`json:"action" form:"action"`		//动作描述
 	Msg       	string 	`json:"msg" form:"msg"`				//自定义消息体
 }
+
+type ConfigCenterOpt struct{
+	Env int `json:"env"` //环境变量
+	Module string `json:"module"` //模块/文件名
+	Key string 	`json:"key"` //文件中的key
+	Value string `json:"value"` //写入时，值
+}
+
+//type ConfigCenterGetByKeyReq struct {
+//	Module string	`json:"module"`
+//	Key string	`json:"key"`
+//}
+//
+//type ConfigCenterSetByKeyReq struct {
+//	Module string	`json:"module"`
+//	Key string	`json:"key"`
+//	Value interface{}	`json:"value"`
+//}

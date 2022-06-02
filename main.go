@@ -40,11 +40,12 @@ var initializeVar *initialize.Initialize
 // @tag.name persistence
 // @tag.description 持久化(文件/日志收集/kv存储)
 // @tag.name ConfigCenter
-// @tag.description 配置中心
+// @tag.description 配置中心，它有几个维度： 环境->项目->文件->模块，项目这个维度头中是公共的，余下3个请求的时候都要带上
 // @securityDefinitions.apikey ApiKeyAuth
 // @name xa
 // @name X-Token
 // @in header
+
 
 func main() {
 	//tt2()

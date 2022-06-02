@@ -20,9 +20,12 @@ var initializeVar *initialize.Initialize
 // @version 0.5 测试版Alta
 // @description restful api 工具，模拟客户端请求，方便调试/测试
 // @description 注：这只是一个工具，不是万能的，像：动态枚举类型、公共请求header、动态常量等,详细的请去 <a href="http://127.0.0.1:6060" target="_black">godoc</a> 里去查看
-// @description 注：所有 header 遵循HTTP标准，即：header中每个key 以大写X开头，单词以中划线分隔，每个单词首字母大写
+// @description 注：所有 header 遵循HTTP标准，即：自定义的header中每个key 以大写X开头，单词以中划线分隔，每个单词首字母大写
+// @description 注：header的格式定义，参考结构：request.HeaderRequest，也可以调用调用接口获得:GET /tools/header/struct
 // @description 注：所有接口的响应格式均是json格式 ，包含3个值: code data msg ,具体参考 model.httpresponse.Response
-// @license.name header.BaseInfo-demo:{   "app_version": "v1.1.1",   "device": "iphone",   "device_id": "aaaaaaaa",   "device_version": "12",   "dpi": "390x844",   "ip": "127.0.0.1",   "lat": "21.1111",   "lon": "32.4444",   "os": 1,   "os_version": "11",   "referer": "" }
+// @description 测试/开发人员：用户上传成功的图片，查看，<a href="/static/upload/" target="_blank">点这里</a>
+// @description 测试/开发人员：配置中心的文件，查看，<a href="/static/data/config/" target="_blank">点这里</a>
+// @license.name xiaoz
 // @contact.name 小z
 // @contact.email 78878296@qq.com
 // @tag.name Base
@@ -38,9 +41,9 @@ var initializeVar *initialize.Initialize
 // @tag.name GameMatch
 // @tag.description 游戏匹配机制
 // @tag.name persistence
-// @tag.description 持久化(文件/日志收集/kv存储)
+// @tag.description 持久化(文件/日志收集)，注：文件上传目前仅支持HTTP协议，也就是form+multipart/form-data模式.不支持：分片传输，断点续传等功能
 // @tag.name ConfigCenter
-// @tag.description 配置中心，它有几个维度： 环境->项目->文件->模块，项目这个维度头中是公共的，余下3个请求的时候都要带上
+// @tag.description 配置中心，它有几个维度注意下： 环境->项目->文件->模块，项目这个维度http-header头中是公共的且已处理，余下3个请求的时候都要带上。目前仅支持：toml格式，后期可加ymal和ini
 // @securityDefinitions.apikey ApiKeyAuth
 // @name xa
 // @name X-Token

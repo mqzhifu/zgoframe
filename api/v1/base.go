@@ -13,28 +13,39 @@ import (
 	"zgoframe/service"
 	"zgoframe/util"
 )
-
+//图片验证码使用，主要是图片的ID得保存在内存(store)中
 var store = base64Captcha.DefaultMemStore
 
 // @Tags Base
 // @Summary 生成图片验证码
-// @Description BASE64图片内容，防止有人恶意攻击，如：短信轰炸、暴力破解密码等,前端使用方法：<img src="data:image/jpg;base64,接口获取的内容"/>
+// @Description 图片格式：BASE64，防止有人恶意攻击，如：短信轰炸、暴力破解密码等,前端使用方法：<img src="data:image/jpg;base64,接口获取的内容"/>
 // @accept application/json
 // @Param X-Source-Type header string true "来源" default(11)
 // @Param X-Project-Id header string true "项目ID"  default(6)
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
+// @Param data body request.Captcha false "基础信息"
 // @Produce application/json
-// @Success 200 {object} httpresponse.SysCaptchaResponse 图片信息
-// @Router /base/captcha [get]
+// @Success 200 {object} httpresponse.Captcha "图片信息"
+// @Router /base/captcha [POST]
 func Captcha(c *gin.Context) {
+	var form request.Captcha
+	c.ShouldBind(&form)
+
+	imgWidth :=global.C.Captcha.ImgWidth
+	imgHeight := global.C.Captcha.ImgHeight
+	if ( form.Width > 0 && form.Width < 1000 )  && ( form.Height > 0 && form.Height < 1000){
+		imgWidth = form.Width
+		imgHeight = form.Height
+	}
+
 	// 生成默认数字的driver
-	driver := base64Captcha.NewDriverDigit(global.C.Captcha.ImgHeight, global.C.Captcha.ImgWidth, global.C.Captcha.NumberLength, 0.7, 80)
+	driver := base64Captcha.NewDriverDigit(imgHeight, imgWidth, global.C.Captcha.NumberLength, 0.7, 80)
 	cp := base64Captcha.NewCaptcha(driver, store)
 	if id, b64s, err := cp.Generate(); err != nil {
 		global.V.Zap.Error("验证码获取失败!", zap.Any("err", err))
 		httpresponse.FailWithMessage("验证码获取失败", c)
 	} else {
-		httpresponse.OkWithAll(httpresponse.SysCaptchaResponse{
+		httpresponse.OkWithAll(httpresponse.Captcha{
 			Id:         id,
 			PicContent: b64s,
 		}, "验证码获取成功", c)
@@ -43,11 +54,11 @@ func Captcha(c *gin.Context) {
 
 // @Tags Base
 // @Summary 发送短信
-// @Description 登陆、注册、找回密码
+// @Description 登陆、注册、找回密码等，短信的内容由ruleId匹配（后台录入）
 // @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
 // @Param X-Project-Id header string true "项目ID" default(6)
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
-// @Param data body request.SendSMS true "用户信息"
+// @Param data body request.SendSMS true "基础信息"
 // @Produce  application/json
 // @Success 200 {boolean} boolean "true:成功 false:否"
 // @Router /base/send/sms [post]
@@ -75,7 +86,7 @@ func SendSms(c *gin.Context) {
 
 // @Tags Base
 // @Summary 发送邮件
-// @Description 登陆、注册、找回密码
+// @Description 登陆、注册、找回密码等使用，目前不支持附件功能，邮件的内容由ruleId匹配（后台录入）
 // @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
 // @Param X-Project-Id header string true "项目ID" default(6)
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
@@ -144,8 +155,8 @@ func ResetPasswordSms(c *gin.Context) {
 // @Param X-Source-Type header string true "来源" default(11)
 // @Param X-Project-Id header string true "项目ID"  default(6)
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
-// @Param X-Base-Info header string false "客户端基础信息(json格式,参考request.HeaderBaseInfo)"
-// @Param data body request.Register true "用户信息"
+// @Param X-Base-Info header string  true "客户端基础信息(json格式,参考request.HeaderBaseInfo)" default("{"app_version": "1.12.2","device": "iphone","device_id": "aaaabbbcccddd","device_version": "11.0.1","dpi": "1028x720","ip": "127.0.0.1","lat": "23.1123334455","lon": "45.11233311","os": 1,"os_version": "10.1","referer": "www.baidu.com"}")
+// @Param data body request.Register true "基础信息"
 // @Success 200 {object} model.User "用户结构体"
 // @Router /base/register [post]
 func Register(c *gin.Context) {
@@ -177,8 +188,8 @@ func Register(c *gin.Context) {
 // @Param X-Source-Type header string true "来源" default(11)
 // @Param X-Project-Id header string true "项目ID"  default(6)
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
-// @Param X-Base-Info header string false "客户端基础信息(json格式,参考request.HeaderBaseInfo)"
-// @Param data body request.RegisterSms true "用户信息"
+// @Param X-Base-Info header string  true "客户端基础信息(json格式,参考request.HeaderBaseInfo)" default("{"app_version": "1.12.2","device": "iphone","device_id": "aaaabbbcccddd","device_version": "11.0.1","dpi": "1028x720","ip": "127.0.0.1","lat": "23.1123334455","lon": "45.11233311","os": 1,"os_version": "10.1","referer": "www.baidu.com"}")
+// @Param data body request.RegisterSms true "基础信息"
 // @Success 200 {object} model.User "用户结构体"
 // @Router /base/register/sms [post]
 func RegisterSms(c *gin.Context) {
@@ -214,10 +225,9 @@ func RegisterSms(c *gin.Context) {
 // @Description 注册/找加密码/登陆 使用
 // @Produce  application/json
 // @Param X-Source-Type header string true "来源" default(11)
-// @Param data body request.CheckMobileExist true "用户信息"
-// @Success 200 {string} string "{"success":true,"data":{},"msg":"发送成功"}"
 // @Param X-Project-Id header string true "项目ID"  default(6)
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
+// @Param data body request.CheckMobileExist true "基础信息"
 // @Success 200 {boolean} boolean "true:存在 false:不存在"
 // @Router /base/check/mobile [post]
 func CheckMobileExist(c *gin.Context) {
@@ -249,14 +259,13 @@ func CheckMobileExist(c *gin.Context) {
 }
 
 // @Tags Base
-// @Summary 检测手机号：用户名 是否已存在
+// @Summary 检测用户名：是否已存在
 // @Description 登陆 使用
 // @Produce  application/json
 // @Param X-Source-Type header string true "来源" default(11)
-// @Param data body request.CheckUsernameExist true "用户信息"
-// @Success 200 {string} string "{"success":true,"data":{},"msg":"发送成功"}"
 // @Param X-Project-Id header string true "项目ID"  default(6)
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
+// @Param data body request.CheckUsernameExist true "用户信息"
 // @Success 200 {boolean} boolean "true:存在 false:不存在"
 // @Router /base/check/username [post]
 func CheckUsernameExist(c *gin.Context) {
@@ -294,7 +303,7 @@ func CheckUsernameExist(c *gin.Context) {
 // @Param X-Source-Type header string true "来源" default(11)
 // @Param X-Project-Id header string true "项目ID"  default(6)
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
-// @Param data body request.CheckEmailExist true "用户信息"
+// @Param data body request.CheckEmailExist true "基础信息"
 // @Success 200 {boolean} boolean "true:存在 false:不存在"
 // @Router /base/check/email [post]
 func CheckEmailExist(c *gin.Context) {
@@ -331,11 +340,11 @@ func CheckEmailExist(c *gin.Context) {
 
 // @Tags Base
 // @Summary 解析一个TOKEN
-// @Description 应用接到token后，要到后端再统计认证一下，确保准确
-// @Param data body request.ParserToken true "需要验证的token值"
+// @Description 单点登陆，各应用收到的接口都会带有token，要到用户中心(微服务)再认证/解析一下，确保安全
 // @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
 // @Param X-Project-Id header string true "项目ID" default(6)
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
+// @Param data body request.ParserToken true "需要验证的token值"
 // @Produce  application/json
 // @Success 200 {object} request.CustomClaims
 // @Router /base/parser/token [post]
@@ -356,12 +365,12 @@ func ParserToken(c *gin.Context) {
 
 // @Tags Base
 // @Summary 普通登陆
-// @Description 用户名(手机邮箱)/密码登陆，验证成功后，生成token
+// @Description 用户名/手机/邮箱+密码->登陆，验证成功后，生成token
 // @Produce  application/json
 // @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
 // @Param X-Project-Id header string true "项目ID" default(6)
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
-// @Param data body request.Login true "用户名, 密码, 验证码"
+// @Param data body request.Login true "基础信息"
 // @Success 200 {object} httpresponse.LoginResponse
 // @Router /base/login [post]
 func Login(c *gin.Context) {
@@ -394,13 +403,13 @@ func Login(c *gin.Context) {
 }
 
 // @Tags Base
-// @Summary 短信登陆
-// @Description 短信通知登陆，验证成功后，生成token
+// @Summary 短信(验证码)登陆
+// @Description 登陆(验证)成功后，生成token
 // @Produce  application/json
 // @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
 // @Param X-Project-Id header string true "项目ID" default(6)
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
-// @Param data body request.LoginSMS true "用户名, 密码, 验证码"
+// @Param data body request.LoginSMS true "基础信息"
 // @Success 200 {object} httpresponse.LoginResponse
 // @Router /base/login/sms [post]
 func LoginSms(c *gin.Context) {
@@ -431,13 +440,13 @@ func LoginSms(c *gin.Context) {
 }
 
 // @Tags Base
-// @Summary 用户登陆三方
+// @Summary 用户使用3方账号联合登陆
 // @Description 3方平台登陆，验证成功后，生成token
 // @Produce  application/json
 // @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
 // @Param X-Project-Id header string true "项目ID" default(6)
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
-// @Param data body request.RLoginThird true "用户名, 密码, 验证码"
+// @Param data body request.RLoginThird true "基础信息"
 // @Success 200 {object} httpresponse.LoginResponse
 // @Router /base/login/third [post]
 func LoginThird(c *gin.Context) {

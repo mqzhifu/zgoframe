@@ -21,10 +21,12 @@ type Register struct {
 
 //@description 注册信息 - 通过手机号
 type RegisterSms struct {
-	ProjectId   int    `json:"project_id"`    //项目Id
+	//ProjectId   int    `json:"project_id"`    //项目Id
 	Mobile      string `json:"mobile"`        //手机号
 	SmsAuthCode string `json:"sms_auth_code"` //短信验证码
 	SmsRuleId   int    `json:"sms_rule_id"`   //短信类型，登陆/注册
+	Captcha     string `json:"captcha"`		//图片验证码
+	CaptchaId   string `json:"captchaId"`	//图片验证码ID
 }
 
 //@descriptionw 绑定手机号
@@ -39,8 +41,8 @@ type BindMobile struct {
 type BindEmail struct {
 	ProjectId   int    `json:"project_id"`    //项目Id
 	Email       string `json:"email"`         //邮箱号
-	SmsAuthCode string `json:"sms_auth_code"` //短信验证码
-	RuleId      int    `json:"rule_id"`       //短信类型，登陆/注册
+	SmsAuthCode string `json:"sms_auth_code"` //邮件验证码
+	RuleId      int    `json:"rule_id"`       //邮件类型，登陆/注册
 }
 
 //@description 修改用户基础信息
@@ -61,11 +63,11 @@ type Login struct {
 
 //@description 短信登陆
 type LoginSMS struct {
-	Code        string `json:"code"`
-	Captcha     string `json:"captcha"`
-	CaptchaId   string `json:"captchaId"`
-	Mobile      string `json:"mobile"`
-	SmsAuthCode string `json:"sms_auth_code"`
+	//Code        string `json:"code"`
+	Captcha     string `json:"captcha"`		//图片验证码
+	CaptchaId   string `json:"captchaId"`	//图片验证码ID
+	Mobile      string `json:"mobile"`		//手机号
+	SmsAuthCode string `json:"sms_auth_code"`//手机验证码
 	SmsRuleId   int    `json:"sms_rule_id"` //短信类型，登陆/注册
 }
 
@@ -88,12 +90,18 @@ type SendSMS struct {
 	CaptchaId  string            `json:"captchaId"`   //获取验证码时拿到的Id
 }
 
+
+type Captcha struct{
+	Width int	`json:"width"` 	//图片宽度，默认：240，最大：1000
+	Height int 	`json:"height"`	//图片高度，默认：80，最大：1000
+}
+
 //@description 发送邮件
 type SendEmail struct {
 	RuleId     int               `json:"rule_id"`     //配置规则的ID
 	ReplaceVar map[string]string `json:"replaceVar"`  //邮件内容模块中变量替换
-	Receiver   string            `json:"receiver"`    //接收者，email格式
-	CarbonCopy []string          `json:"carbon_copy"` //抄送，，email格式
+	Receiver   string            `json:"receiver"`    //接收者（email格式）
+	CarbonCopy []string          `json:"carbon_copy"` //抄送（email格式），可以是多人
 	SendUid    int               `json:"send_uid"`    //发送者ID，管理员是9999，未知8888
 	SendIp     string            `json:"send_ip"`     //发送者IP，如为空系统默认取：请求方的IP,最好给真实的，一但被刷，会使用此值
 }

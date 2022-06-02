@@ -9,7 +9,8 @@ func InitUserRouter(Router *gin.RouterGroup) {
 	UserRouter := Router.Group("user")
 	{
 		UserRouter.POST("set/password", v1.SetPassword) // 设置/修改密码
-		//UserRouter.POST("getUserList", v1.GetUserInfoList) // 分页获取用户列表
+		UserRouter.POST("list", v1.GetUserInfoList) // 分页获取用户列表
+
 		//UserRouter.POST("setUserAuthority", v1.SetUserAuthority) // 设置用户权限
 		UserRouter.DELETE("delete", v1.DeleteUser) // 删除用户
 		UserRouter.PUT("set/mobile", v1.SetMobile) //绑定手机号

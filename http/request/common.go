@@ -5,7 +5,7 @@ import "github.com/dgrijalva/jwt-go"
 
 //@description 解析token
 type ParserToken struct {
-	Token string `json:"token" form:"token"`
+	Token string `json:"token" form:"token"`	//需要解析的token字符串
 }
 type TestHeader struct {
 	HeaderRequest  HeaderRequest  `json:"header_request"`
@@ -97,8 +97,8 @@ type CicdSync struct {
 //@description 3方登陆
 type RLoginThird struct {
 	Register
-	ThirdId      string //3方平台用户ID
-	PlatformType int    //3方平台类型
+	ThirdId      string	`json:"third_id"` 			//3方平台用户ID，此值必填
+	PlatformType int	`json:"platform_type"`    	//3方平台类型，如：微信、QQ、facebook、抖音，此值必填
 }
 
 //@description 分页

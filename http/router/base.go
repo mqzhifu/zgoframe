@@ -9,7 +9,7 @@ func InitBaseRouter(Router *gin.RouterGroup) {
 	BaseRouter := Router.Group("base")
 	{
 		//图形 - 验证码
-		BaseRouter.GET("captcha", v1.Captcha)
+		BaseRouter.POST("captcha", v1.Captcha)
 		//发送短信 登陆/注册/找回密码
 		BaseRouter.POST("send/sms", v1.SendSms)
 		//发送邮件 登陆/注册/找回密码

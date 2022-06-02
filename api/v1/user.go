@@ -116,7 +116,7 @@ func LoginRecord(c *gin.Context, uid int, loginType int) {
 }
 
 // @Summary 用户退出
-// @Description 也算是：删除 jwt，不过是删除一端的JWT
+// @Description 删除 jwt，记录日志。不过只是删除一端的JWT，不同端(source_type)登陆都会生成一个jwt
 // @Tags User
 // @Security ApiKeyAuth
 // @Produce  application/json
@@ -139,7 +139,7 @@ func Logout(c *gin.Context) {
 // @Security ApiKeyAuth
 // @Produce  application/json
 // @Param data body request.SetPassword true "用户名, 原密码, 新密码"
-// @Success 200 {string} string "{"success":true,"data":{},"msg":"修改成功"}"
+// @Success 200 {string} string "ok"
 // @Router /user/set/password [put]
 func SetPassword(c *gin.Context) {
 	var form request.SetPassword
@@ -164,10 +164,10 @@ func SetPassword(c *gin.Context) {
 }
 
 // @Tags User
-// @Summary 获取当前登陆用户的基础信息
+// @Summary 获取当前登陆用户的基础信息(使用头里的token解析)
 // @Security ApiKeyAuth
 // @Produce  application/json
-// @Success 200 {string} string "{"success":true,"data":{},"msg":"修改成功"}"
+// @Success 200 {object} model.User "用户结构体"
 // @Router /user/info [get]
 func GetUserInfo(c *gin.Context) {
 	user, _ := request.GetUser(c)
@@ -175,13 +175,13 @@ func GetUserInfo(c *gin.Context) {
 }
 
 // @Tags User
-// @Summary 分页获取用户列表
+// @Summary 分页获取用户列表,目前并没有加筛选条件
 // @Security ApiKeyAuth
 // @accept application/json
 // @Produce application/json
-// @Param data body request.PageInfo true "页码, 每页大小"
+// @Param data body request.PageInfo true "基础信息
 // @Success 200 {string} string "{"success":true,"data":{},"msg":"获取成功"}"
-// @Router /user/getUserList [post]
+// @Router /user/list [post]
 func GetUserInfoList(c *gin.Context) {
 	//var pageInfo request.PageInfo
 	//_ = c.ShouldBindJSON(&pageInfo)
@@ -207,8 +207,8 @@ func GetUserInfoList(c *gin.Context) {
 // @Security ApiKeyAuth
 // @accept application/json
 // @Produce application/json
-// @Param data body request.BindMobile true " "
-// @Success 200 {string} string "{"success":true,"data":{},"msg":"设置成功"}"
+// @Param data body request.BindMobile true "基础信息"
+// @Success 200 {string} string "ok"
 // @Router /user/set/mobile [put]
 func SetMobile(c *gin.Context) {
 	var form request.BindMobile
@@ -240,8 +240,8 @@ func SetMobile(c *gin.Context) {
 // @Security ApiKeyAuth
 // @accept application/json
 // @Produce application/json
-// @Param data body request.BindEmail true " "
-// @Success 200 {string} string "{"success":true,"data":{},"msg":"设置成功"}"
+// @Param data body request.BindEmail true "基础信息"
+// @Success 200 {string} string "设置成功"
 // @Router /user/set/email [put]
 func SetEmail(c *gin.Context) {
 	var form request.BindEmail
@@ -270,12 +270,12 @@ func SetEmail(c *gin.Context) {
 
 // @Tags User
 // @Summary 设置/修改 用户基础信息
-// @Description 首次设置 与 修改两个动作可以合成一个，因为没有唯一性验证
+// @Description ""
 // @Security ApiKeyAuth
 // @accept application/json
 // @Produce application/json
 // @Param data body request.SetUserInfo true "ID, 用户名, 昵称, 头像链接"
-// @Success 200 {string} string "{"success":true,"data":{},"msg":"设置成功"}"
+// @Success 200 {string} string "成功"
 // @Router /user/set/info [post]
 func SetUserInfo(c *gin.Context) {
 	var editInfoData request.SetUserInfo
@@ -305,12 +305,12 @@ func SetUserInfo(c *gin.Context) {
 
 // @Tags User
 // @Summary 删除用户
-// @Description 欧美国家要求比较严，必须得有这功能，国内现在也有但不多，目前是用来测试的，像脚本做自动化测试生成的用户，以及测试员线上测试时产生的用户数据（危险甚用）
+// @Description 欧美国家要求比较严，必须得有这功能，国内现在也有但不多，目前是用来方便开发/测试的，像脚本做自动化测试生成的用户(需要删除)，以及测试员线上测试时产生的用户数据需要删除（危险甚用）
 // @Security ApiKeyAuth
 // @Accept multipart/form-data
-// @Param uids formData string true "用户IDs"
+// @Param uids formData string true "用户IDs，多用户时用逗号分割"
 // @Produce application/json
-// @Success 200 {string} string "{"success":true,"data":{},"msg":"删除成功"}"
+// @Success 200 {string} string "ok"
 // @Router /user/delete [delete]
 func DeleteUser(c *gin.Context) {
 	uids := c.PostForm("uids")
@@ -332,14 +332,3 @@ func DeleteUser(c *gin.Context) {
 	httpresponse.OkWithMessage("ok", c)
 
 }
-
-//// 从Gin的Context中获取从jwt解析出来的用户ID
-//func GetUserId(c *gin.Context) int {
-//	if claims, exists := c.Get("claims"); !exists {
-//		global.V.Zap.Error("从Gin的Context中获取从jwt解析出来的用户ID失败, 请检查路由是否使用jwt中间件")
-//		return 0
-//	} else {
-//		waitUse := claims.(*request.CustomClaims)
-//		return waitUse.Id
-//	}
-//}

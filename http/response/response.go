@@ -34,11 +34,17 @@ type Captcha struct {
 	Id         string `json:"id"`			//使用(验证)时要带上这个ID，后端才能判断
 	PicContent string `json:"pic_content"` 	//图片内容,base64
 }
-//上传多张图片，处理结果
-type UploadRs struct{
-	Err 		string `json:"err"`			//上传图片是否发生错误，如果为空证明没有
-	Url 		string	`json:"url"`		//上传成功的图片：URL新地址
-	FileName 	string `json:"file_name"`	//原图片文件名
+////上传多张图片，处理结果
+//type UploadRs struct{
+//	Err 		string `json:"err"`			//上传图片是否发生错误，如果为空证明没有，此字段给上传多张图片使用
+//	Url 		string	`json:"url"`		//上传成功的图片：URL新地址
+//	FileName 	string `json:"file_name"`	//原图片文件名
+//}
+type HttpUploadRs struct {
+	util.UploadRs
+	OssUlr string	//阿里OSS的访问地址
+	LocalUrl string	//本地存储的访问地址
+	Err string 		//上传图片是否发生错误，如果为空证明没有，此字段给上传多张图片使用
 }
 
 func Result(code int, data interface{}, msg string, c *gin.Context) {

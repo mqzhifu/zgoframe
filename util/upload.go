@@ -158,16 +158,21 @@ func   (fileUpload *FileUpload)checkLocalDiskDir()(localDiskDir string ,err erro
 	}
 	return localDiskDir,nil
 }
+type UploadRs struct {
+	Filename string		//文件名
+	RelativePath string	//相对路径
+	LocalPath string	//本地硬盘存储的路径
+}
 //func   (fileUpload *FileUpload)UploadOne(file multipart.File,header *multipart.FileHeader)(relativePathFileName string ,err error){
-func   (fileUpload *FileUpload)UploadOne( header *multipart.FileHeader)(relativePathFileName string ,err error){
+func   (fileUpload *FileUpload)UploadOne( header *multipart.FileHeader)(uploadRs UploadRs ,err error){
 	fileExtName ,err := fileUpload.GetExtName(header.Filename)
 	if err != nil{
-		return "",err
+		return uploadRs,err
 	}
 	fileSizeMB := Round(   float64 (header.Size ) / 1024 / 1024 ,4)
 	MyPrint("fileSizeMB:",fileSizeMB)
 	if fileUpload.Option.MaxSize > 0 && fileSizeMB > float64( fileUpload.Option.MaxSize){
-		return  "" ,errors.New("大于限制："+strconv.Itoa(fileUpload.Option.MaxSize) + " m")
+		return  uploadRs ,errors.New("大于限制："+strconv.Itoa(fileUpload.Option.MaxSize) + " m")
 	}
 
 	MyPrint("UploadOne fileExtName:",fileExtName  , " header size:",header.Size , " mb:",fileSizeMB)
@@ -179,7 +184,7 @@ func   (fileUpload *FileUpload)UploadOne( header *multipart.FileHeader)(relative
 
 	localDiskDir , err := fileUpload.checkLocalDiskDir()
 	if err != nil{
-		return "",err
+		return uploadRs,err
 	}
 	//ExitPrint("localDiskDir:",localDiskDir)
 	fileName := strconv.Itoa(fileUpload.Option.Category) + "_" + strconv.Itoa(GetNowTimeSecondToInt()) + "." +fileExtName
@@ -188,30 +193,40 @@ func   (fileUpload *FileUpload)UploadOne( header *multipart.FileHeader)(relative
 		relativePath =   fileUpload.Option.FilePrefix + "/" + relativePath
 	}
 
-	relativePathFileName =  relativePath + "/" + fileName
+	//relativePathFileName :=  relativePath + "/" + fileName
 
 	newFileName := localDiskDir + "/" + fileName
 	MyPrint("uploadOne file:",newFileName)
 	//把用户上传的文件(内存中)，转移到本机的硬盘上
 	out, err := os.Create(newFileName)
 	if err != nil {
-		return "",err
+		return uploadRs,err
 	}
 	defer out.Close()
 	file, err := header.Open()
 	_, err = io.Copy(out, file)
 	if err != nil {
-		return "",err
+		return uploadRs,err
 	}
 	//同步到阿里云
 	err = fileUpload.UploadAliOSS(newFileName,relativePath,fileName)
 	if err != nil{
-		return "",err
+		return uploadRs,err
 	}
+	uploadRs.RelativePath = relativePath
+	uploadRs.Filename = fileName
+	uploadRs.LocalPath = localDiskDir
 
-	return relativePathFileName,nil
+	return uploadRs,nil
 }
 
+func   (fileUpload *FileUpload)GetOssUrl(uploadRs UploadRs,bucketName string,endpoint string)string{
+	return bucketName + "." +endpoint + "/" + uploadRs.RelativePath + "/" + uploadRs.Filename
+}
+
+func   (fileUpload *FileUpload)GetLocalUrl(uploadRs UploadRs,uploadPath string)string{
+	return "/static/" + uploadPath + "/" + uploadRs.RelativePath + "/" + uploadRs.Filename
+}
 
 func   (fileUpload *FileUpload)GetAllowFileTypeList(category int)(rs []string,err error){
 	imgs := []string{"jpg","jpeg","png","gif","x-png","png","bmp","pjpeg"}

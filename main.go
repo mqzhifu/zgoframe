@@ -33,7 +33,7 @@ var initializeVar *initialize.Initialize
 // @tag.name User
 // @tag.description 用户相关操作(需要登陆，头里加X-Token = jwt)
 // @tag.name System
-// @tag.description 系统管理(需要二次认证)
+// @tag.description 系统管理(需要二次认证)，管理员使用，普通用户不要访问
 // @tag.name Cicd
 // @tag.description 自动化部署与持续集成
 // @tag.name Mail
@@ -49,11 +49,7 @@ var initializeVar *initialize.Initialize
 // @name X-Token
 // @in header
 
-
 func main() {
-	//tt2()
-	//tt3()
-	//tt4()
 
 	prefix := "main "
 	//获取<环境变量>枚举值
@@ -115,6 +111,7 @@ func main() {
 		panic(prefix + "initialize.Init err:" + err.Error())
 		return
 	}
+
 	//执行用户自己的一些功能
 	go core.DoMySelf(*testFlag)
 	//监听外部进程信号
@@ -138,59 +135,3 @@ func QuitAll(source int) {
 
 	util.MyPrint("main QuitAll finish.")
 }
-func tt2(){
-	//argsmap:=map[string]interface{}{}
-	//ping3("www.yeepay.com",argsmap)//10.151.30.227  不存在：67.4.3.2（现在又存在了）  公网IP：63.142.250.4（通）
-	argsmap:=map[string]interface{}{}
-	p:= util.NewPingOption()
-	host := "127.0.0.1"
-	//host := "111.1.34.56"
-	rs := p.Ping3(host,argsmap)
-	util.MyPrint("ping rs :",rs)
-	//time.Sleep(time.Second * 5)
-	util.ExitPrint(22)
-}
-
-//func tt(){
-//	//srcIp := "127.0.0.1"
-//	targetIp := "112.131.1.1"
-//	p := util.NewPinger()
-//	ra, err := net.ResolveIPAddr("ip4:icmp", targetIp)
-//	util.MyPrint(ra,err)
-//
-//	//src_ra, _ := net.ResolveIPAddr("ip4:icmp", srcIp)
-//	//util.MyPrint(ra,err)
-//
-//	p.AddIPAddr(ra)
-//	//p.AddIPAddr(src_ra)
-//
-//	p.OnRecv = func(addr *net.IPAddr, rtt time.Duration) {
-//		fmt.Printf("IP Addr: %s receive, RTT: %v\n", addr.String(), rtt)
-//	}
-//	p.OnIdle = func() {
-//		fmt.Println("finish")
-//	}
-//	err = p.Run()
-//	if err != nil {
-//		fmt.Println(err)
-//	}
-//
-//	time.Sleep(2)
-//	util.ExitPrint(33)
-//}
-
-//func tt3(){
-//	file := "/data/www/golang/testcicd/Zgoframe/master"
-//	p ,err := filepath.EvalSymlinks(file)
-//	util.MyPrint(p,err)
-//	//fileInfo , err := os.Lstat(file)
-//	//f.Lsta
-//	//info ,err := f.Stat()
-//	//fmt.Printf("Link info: %+v", fileInfo)
-//	util.ExitPrint(1,err)
-//}
-//
-//func tt4(){
-//	randNum := util.GetRandInt32Num(0)
-//	util.ExitPrint(randNum)
-//}

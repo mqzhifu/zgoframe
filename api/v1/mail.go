@@ -15,7 +15,7 @@ import (
 // @accept application/json
 // @Security ApiKeyAuth
 // @Param data body request.SendMail true "参数信息,参考model"
-// @Success 200 {string} string "成功"
+// @Success 200 {boolean} boolean "true:成功 false:否"
 // @Router /mail/send [post]
 func MailSend(c *gin.Context) {
 	var form request.SendMail
@@ -36,7 +36,7 @@ func MailSend(c *gin.Context) {
 // @accept application/json
 // @Security ApiKeyAuth
 // @Param data body request.MailList true "参数信息,参考model"
-// @Success 200 {string} string "成功"
+// @Success 200 {object} []model.MailLog
 // @Router /mail/list [post]
 func MailList(c *gin.Context) {
 	var form request.MailList
@@ -58,7 +58,7 @@ func MailList(c *gin.Context) {
 // @accept application/json
 // @Security ApiKeyAuth
 // @Param data body request.MailInfo true "参数信息,参考model"
-// @Success 200 {string} string "成功"
+// @Success 200 {object} model.MailLog
 // @Router /mail/info [post]
 func MailInfo(c *gin.Context) {
 	var form request.MailInfo
@@ -78,7 +78,7 @@ func MailInfo(c *gin.Context) {
 // @Security ApiKeyAuth
 // @accept application/json
 // @Security ApiKeyAuth
-// @Success 200 {string} string "成功"
+// @Success 200 {integer} int "155"
 // @Router /mail/unread [get]
 func MailUnread(c *gin.Context) {
 	uid ,_ := request.GetUid(c)

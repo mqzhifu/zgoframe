@@ -128,7 +128,7 @@ persistenceType = 3
 dataPath = "/data/config/"
 
 [upload]
-path = "/data/www/golang/src/zgoframe/static/upload"
+path = "upload" #注意：这里是一个相对路径，具体绝对路径由构架初始化时确定
 
 [oss]
 accessKeyId = ""

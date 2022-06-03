@@ -3,6 +3,7 @@ package initialize
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -19,18 +20,19 @@ type Initialize struct {
 }
 
 type InitOption struct {
-	Env               int
-	Debug             int
-	ConfigType        string
-	ConfigFileName    string
-	ConfigSourceType  string
-	EtcdConfigFindUrl string
-	RootDir           string
-	RootDirName       string
-	RootCtx           context.Context
-	RootCancelFunc    context.CancelFunc
-	RootQuitFunc      func(source int)
-	TestFlag		string
+	Env               int		`json:"env"`
+	Debug             int		`json:"debug"`
+	ConfigType        string	`json:"config_type"`
+	ConfigFileName    string	`json:"config_file_name"`
+	ConfigSourceType  string	`json:"config_source_type"`
+	EtcdConfigFindUrl string	`json:"etcd_config_find_url"`
+	RootDir           string	`json:"root_dir"`
+	RootDirName       string	`json:"root_dir_name"`
+
+	RootCtx           context.Context	`json:"-"`
+	RootCancelFunc    context.CancelFunc`json:"-"`
+	RootQuitFunc      func(source int)	`json:"-"`
+	TestFlag		string		`json:"-"`
 }
 
 func NewInitialize(option InitOption) *Initialize {
@@ -200,7 +202,7 @@ func (initialize *Initialize) Start() error {
 		if global.C.Http.Status != global.CONFIG_STATUS_OPEN {
 			return errors.New("metrics need gin open!")
 		}
-		global.V.Gin.POST("/metrics", gin.WrapH(promhttp.Handler()))
+		global.V.Gin.GET("/metrics", gin.WrapH(promhttp.Handler()))
 		//测试
 		//global.V.Gin.GET("/metrics/count", func(c *gin.Context) {
 		//	global.V.Metric.CounterInc("paySuccess")
@@ -283,11 +285,13 @@ func (initialize *Initialize) Start() error {
 	//_ ,cancelFunc := context.WithCancel(option.RootCtx)
 	//进程通信相关
 	ProcessPathFileName := "/tmp/" + global.V.Project.Name + ".pid"
-	global.V.Process = util.NewProcess(ProcessPathFileName, initialize.Option.RootCancelFunc, global.V.Zap, initialize.Option.RootQuitFunc)
+	global.V.Process = util.NewProcess(ProcessPathFileName, initialize.Option.RootCancelFunc, global.V.Zap, initialize.Option.RootQuitFunc,initialize.OutHttpGetBaseInfo)
 	global.V.Process.InitProcess()
 
 	return nil
 }
+
+
 
 func autoCreateUpDbTable() {
 	mydb := util.NewDbTool(global.V.Gorm)
@@ -297,6 +301,10 @@ func autoCreateUpDbTable() {
 		&model.SmsRule{}, &model.SmsLog{}, &model.EmailRule{}, &model.EmailLog{}, &model.MailRule{}, &model.MailLog{}, &model.MailGroup{})
 
 	util.ExitPrint("init done.")
+}
+func (initialize *Initialize)OutHttpGetBaseInfo()string{
+	optionStr,_ := json.Marshal( initialize.Option)
+	return string(optionStr)
 }
 
 func (initialize *Initialize) Quit() {

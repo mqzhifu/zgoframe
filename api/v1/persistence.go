@@ -68,12 +68,12 @@ func LogPush(c *gin.Context) {
 // @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
 // @Param X-Project-Id header string true "项目ID" default(6)
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
-// @Param file formData file true "文件,html中的input file"
+// @Param file formData file true "文件(html中的input的name)"
 // @Param category formData int true "上传的文件类型，1全部2图片3文档4视频,后端会根据类型做验证"
 // @Param module formData string false "模块/业务名，可用于给文件名加前缀目录"
 // @Accept multipart/form-data
 // @Produce  application/json
-// @Success 200 {boolean} boolean "true:成功 false:否"
+// @Success 200 {object} httpresponse.HttpUploadRs "上传结果"
 // @Router /persistence/file/upload [post]
 func Upload(c *gin.Context){
 	_, header, err := c.Request.FormFile("file")
@@ -86,36 +86,20 @@ func Upload(c *gin.Context){
 	module  := c.PostForm("module")
 
 	fileUpload := GetUploadObj(category,module)
-	relativeFileName,err := fileUpload.UploadOne(header)
+	uploadRs,err := fileUpload.UploadOne(header)
 
-	util.MyPrint("uploadRs:",relativeFileName, " err:",err)
+	util.MyPrint("uploadRs:",uploadRs, " err:",err)
 	if err != nil{
 		httpresponse.FailWithMessage(err.Error(),c)
 	}else{
-		httpresponse.OkWithAll(global.C.Oss.Bucket + "." +global.C.Oss.Endpoint + "/" + relativeFileName, "已上传", c)
+		httpUploadRs := httpresponse.HttpUploadRs{}
+		httpUploadRs.UploadRs = uploadRs
+		httpUploadRs.OssUlr = fileUpload.GetOssUrl(uploadRs,global.C.Oss.Bucket,global.C.Oss.Endpoint)
+		httpUploadRs.LocalUrl = fileUpload.GetLocalUrl(uploadRs,global.C.Upload.Path)
+		httpresponse.OkWithAll( httpUploadRs, "已上传", c)
 	}
 
 }
-
-func GetUploadObj(category int,module string)*util.FileUpload{
-	//projectId := request.GetProjectId(c)
-	fileUploadOption := util.FileUploadOption{
-		FilePrefix		: module,
-		MaxSize			: 8,
-		Category		: category,
-		FileHashType	: util.FILE_HASH_DAY,
-		Path			: global.C.Upload.Path,
-		OssAccessKeyId	: global.C.Oss.AccessKeyId,
-		OssEndpoint		: global.C.Oss.Endpoint,
-		OssBucketName 	: global.C.Oss.Bucket,
-		OssAccessKeySecret: global.C.Oss.AccessKeySecret,
-	}
-
-	fileUpload := util.NewFileUpload( fileUploadOption )
-	return fileUpload
-}
-
-
 
 // @Tags persistence
 // @Summary 上传多文件
@@ -128,7 +112,7 @@ func GetUploadObj(category int,module string)*util.FileUpload{
 // @Param module formData string false "模块/业务名，可用于给文件名加前缀目录"
 // @Accept multipart/form-data
 // @Produce  application/json
-// @Success 200 {object} []httpresponse.UploadRs "每个图片的上传结果"
+// @Success 200 {object} []httpresponse.HttpUploadRs "每个图片的上传结果"
 // @Router /persistence/file/upload/multi [post]
 func UploadMulti(c *gin.Context){
 	category ,_:= strconv.Atoi (c.PostForm("category") )
@@ -150,16 +134,40 @@ func UploadMulti(c *gin.Context){
 	util.MyPrint("files len:",len(files))
 
 
-	errList := []httpresponse.UploadRs{}
+	errList := []httpresponse.HttpUploadRs{}
 	for _, file := range files {
-		url,err := fileUpload.UploadOne(file)
+		httpUploadRs := httpresponse.HttpUploadRs{}
+
+		uploadRs,err := fileUpload.UploadOne(file)
 		errMsg := ""
 		if err != nil{
 			errMsg = err.Error()
 		}
-
-		errList = append(errList, httpresponse.UploadRs { Url: url,Err: errMsg,FileName :file.Filename }  )
+		httpUploadRs.UploadRs = uploadRs
+		httpUploadRs.OssUlr = fileUpload.GetOssUrl(uploadRs,global.C.Oss.Bucket,global.C.Oss.Endpoint)
+		httpUploadRs.LocalUrl = fileUpload.GetLocalUrl(uploadRs,global.C.Upload.Path)
+		httpUploadRs.Err = errMsg
+		errList = append(errList, httpUploadRs  )
 	}
 
 	httpresponse.OkWithAll(errList,"ok",c)
+}
+
+
+func GetUploadObj(category int,module string)*util.FileUpload{
+	//projectId := request.GetProjectId(c)
+	fileUploadOption := util.FileUploadOption{
+		FilePrefix		: module,
+		MaxSize			: 8,
+		Category		: category,
+		FileHashType	: util.FILE_HASH_DAY,
+		Path			: global.C.Http.StaticPath + "/" + global.C.Upload.Path,
+		OssAccessKeyId	: global.C.Oss.AccessKeyId,
+		OssEndpoint		: global.C.Oss.Endpoint,
+		OssBucketName 	: global.C.Oss.Bucket,
+		OssAccessKeySecret: global.C.Oss.AccessKeySecret,
+	}
+
+	fileUpload := util.NewFileUpload( fileUploadOption )
+	return fileUpload
 }

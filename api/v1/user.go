@@ -20,8 +20,8 @@ import (
 // 登录成功(DB比对成功)后，签发jwt
 // 这里分成2个部分，1是JWT字符串2redis，加REDIS是防止恶意攻击
 func tokenNext(c *gin.Context, user model.User, loginType int) (loginResponse httpresponse.LoginResponse, err error) {
-	//ExpiresAt :=  time.Now().Unix() + global.C.Jwt.ExpiresTime // 过期时间 7天  配置文件
-	ExpiresAt := time.Now().Unix() + 60							//测试使用
+	ExpiresAt :=  time.Now().Unix() + global.C.Jwt.ExpiresTime // 过期时间 7天  配置文件
+	//ExpiresAt := time.Now().Unix() + 60							//测试使用
 	haeder , _ := request.GetMyHeader(c)
 
 	util.MyPrint("tokenNext uid:" + strconv.Itoa(user.Id) + " sourceType:" + strconv.Itoa(haeder.SourceType)+ " ExpiresAt:",ExpiresAt)
@@ -65,19 +65,22 @@ func tokenNext(c *gin.Context, user model.User, loginType int) (loginResponse ht
 		//httpresponse.FailWithMessage("redis 设置登录状态失败 2"+err.Error(), c)
 		return loginResponse, errors.New("redis 设置登录状态失败 2" + err.Error())
 	} else { //redis 里已经存在
+		loginResponse.Token = jwtStr
+		util.MyPrint("login token exception ,redis has old token.")
 		//出现这种情况，就是重复登陆，有两种选择
 		//1. 允许重复登陆了，为了兼容性，重新再写入一次
 		//重新写入token到redis
-		//_, err = global.V.Redis.SetEX(redisElement, token, int(global.C.Jwt.ExpiresTime))
-		//if err != nil {
-		//	return customClaims, errors.New("redis 设置登录状态失败 3" + err.Error())
-		//}
+		_, err = global.V.Redis.SetEX(redisElement, token, int(global.C.Jwt.ExpiresTime))
+		if err != nil {
+			return loginResponse, errors.New("redis 设置登录状态失败 3" + err.Error())
+		}
+		loginResponse.IsNewToken = true
+		loginResponse.ExpiresAt = claims.ExpiresAt
 		//2. 不允许重复登陆 ，报个错，返回旧的TOKEN
-		loginResponse.Token = jwtStr
-		loginResponse.IsNewToken = false
-		j := httpmiddleware.NewJWT()
-		oldClaims, _ := j.ParseToken(jwtStr)
-		loginResponse.ExpiresAt = oldClaims.ExpiresAt
+		//loginResponse.IsNewToken = false
+		//j := httpmiddleware.NewJWT()
+		//oldClaims, _ := j.ParseToken(jwtStr)
+		//loginResponse.ExpiresAt = oldClaims.ExpiresAt
 
 		LoginRecord(c, user.Id, loginType)
 
@@ -179,7 +182,7 @@ func GetUserInfo(c *gin.Context) {
 // @Security ApiKeyAuth
 // @accept application/json
 // @Produce application/json
-// @Param data body request.PageInfo true "基础信息
+// @Param data body request.PageInfo true "基础信息"
 // @Success 200 {string} string "{"success":true,"data":{},"msg":"获取成功"}"
 // @Router /user/list [post]
 func GetUserInfoList(c *gin.Context) {

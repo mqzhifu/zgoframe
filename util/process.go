@@ -16,16 +16,18 @@ import (
 type Process struct {
 	PathFileName string
 	CancelFunc   context.CancelFunc
+	InitBaseInfoCallbackFunc  func()string
 	RootQuitFunc func(source int)
 	Log          *zap.Logger
 }
 
-func NewProcess(ProcessPathFileName string, cancelFunc context.CancelFunc, log *zap.Logger, RootQuitFunc func(source int)) *Process {
+func NewProcess(ProcessPathFileName string, cancelFunc context.CancelFunc, log *zap.Logger, RootQuitFunc func(source int),InitBaseInfoCallbackFunc func()string) *Process {
 	process := new(Process)
 	process.PathFileName = ProcessPathFileName
 	process.CancelFunc = cancelFunc
 	process.RootQuitFunc = RootQuitFunc
 	process.Log = log
+	process.InitBaseInfoCallbackFunc = InitBaseInfoCallbackFunc
 	return process
 }
 

@@ -5,7 +5,6 @@ import (
 	"zgoframe/core/global"
 	"zgoframe/http/request"
 	httpresponse "zgoframe/http/response"
-	"zgoframe/util"
 )
 
 // @Tags System
@@ -20,10 +19,9 @@ func Quit(c *gin.Context) {
 	var formData request.SystemConfig
 	c.ShouldBind(&formData)
 
-	if formData.Username == "opendoor" && formData.Password == "123456" {
+	if CheckID(formData) {
 		global.V.Process.RootQuitFunc(2)
-		global.V.Process.CancelFunc()
-		httpresponse.OkWithAll(global.C, "结束中...", c)
+		httpresponse.OkWithAll(global.C, "信号已发出，结束中...请等待几秒", c)
 	} else {
 		httpresponse.FailWithMessage("验证失败", c)
 	}
@@ -39,14 +37,17 @@ func Quit(c *gin.Context) {
 // @Success 200 {string} string "成功"
 // @Router /sys/config [post]
 func Config(c *gin.Context) {
-	util.MyPrint("im in sys.config")
+
 
 	var formData request.SystemConfig
 	c.ShouldBind(&formData)
-
-	util.MyPrint(formData)
-	if formData.Username == "opendoor" && formData.Password == "123456" {
-		httpresponse.OkWithAll(global.C, "结束中...", c)
+	//这里也可以把global.C输出回去
+	//global.C
+	info := global.V.Process.InitBaseInfoCallbackFunc()
+	//util.MyPrint("InitBaseInfoCallbackFunc:",info)
+	//
+	if  CheckID(formData)  {
+		httpresponse.OkWithAll(info, "结束中...", c)
 	} else {
 		httpresponse.FailWithMessage("验证失败", c)
 	}
@@ -63,5 +64,13 @@ func Config(c *gin.Context) {
 // @Success 200 {string} string "成功"
 // @Router /metrics [post]
 func Metrics(c *gin.Context) {
+	//此方法主要是使用注解，生成文档给开发查看，实际在框架的初始化阶段，由GIN拦截了
+}
 
+func CheckID(form request.SystemConfig)bool{
+	if form.Username == "opendoor" && form.Password == "123456" {
+		return true
+	}else{
+		return false
+	}
 }

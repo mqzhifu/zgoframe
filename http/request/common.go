@@ -8,8 +8,8 @@ type ParserToken struct {
 	Token string `json:"token" form:"token"`	//需要解析的token字符串
 }
 type TestHeader struct {
-	HeaderRequest  HeaderRequest  `json:"header_request"`
-	HeaderResponse HeaderResponse `json:"header_response"`
+	HeaderRequest  HeaderRequest  `json:"header_request"`	//请求头-结构
+	HeaderResponse HeaderResponse `json:"header_response"`	//响应头-结构
 }
 
 //@description http客户端请求头
@@ -107,6 +107,7 @@ type PageInfo struct {
 	PageSize int `json:"pageSize" form:"pageSize"` //每页多少条记录
 }
 
+
 //空结构体，1给网关，请求参数泛类型 2给protobuf用 3给swag api工具使用
 type Empty struct{}
 
@@ -127,15 +128,15 @@ type StatisticsLogData struct {
 	ProjectId 	int    	`json:"project_id"`					//项目/服务/app- Id
 	Uid     	int 	`json:"uid" form:"uid"`				//用户ID
 	Category    int    	`json:"category" form:"category"`	//分类ID，保留字，暂不使用
-	Action 		string 	`json:"action" form:"action"`		//动作描述
-	Msg       	string 	`json:"msg" form:"msg"`				//自定义消息体
+	Action 		string 	`json:"action" form:"action"`		//动作描述，如：user_client_a_button
+	Msg       	string 	`json:"msg" form:"msg"`				//自定义消息体，算是对action的一种补充
 }
 
 type ConfigCenterOpt struct{
-	Env int `json:"env"` //环境变量
-	Module string `json:"module"` //模块/文件名
-	Key string 	`json:"key"` //文件中的key
-	Value string `json:"value"` //写入时，值
+	Env 		int 	`json:"env"` 	//环境变量
+	Module 		string `json:"module"` 	//模块/文件名
+	Key 		string 	`json:"key"` 	//文件中的key
+	Value 		string `json:"value"` 	//写入时，值
 }
 
 //type ConfigCenterGetByKeyReq struct {

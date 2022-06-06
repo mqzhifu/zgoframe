@@ -40,11 +40,20 @@ type Captcha struct {
 //	Url 		string	`json:"url"`		//上传成功的图片：URL新地址
 //	FileName 	string `json:"file_name"`	//原图片文件名
 //}
+
+// @Description 上传图片结果
 type HttpUploadRs struct {
 	util.UploadRs
 	OssUlr string	//阿里OSS的访问地址
 	LocalUrl string	//本地存储的访问地址
 	Err string 		//上传图片是否发生错误，如果为空证明没有，此字段给上传多张图片使用
+}
+
+//@description 常量信息
+type ConstInfo struct {
+	List map[string]int
+	Key  string
+	Name string
 }
 
 func Result(code int, data interface{}, msg string, c *gin.Context) {

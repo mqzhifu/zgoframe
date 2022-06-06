@@ -8,8 +8,6 @@ import (
 func InitToolsRouter(Router *gin.RouterGroup) {
 	ToolsRouter := Router.Group("tools")
 	{
-		//牛课网
-		ToolsRouter.GET("niuke/question/dir/list", v1.NiukeQuestionDirList)
 		//header头结构体 - 用于测试
 		ToolsRouter.GET("header/struct", v1.HeaderStruct)
 		//所有常量列表

@@ -65,7 +65,7 @@ func ConfigCenterGetByModuleByKey(c *gin.Context) {
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
 // @Param data body request.ConfigCenterOpt true "请求参数"
 // @Success 200 {boolean} true "true:成功 false:否"
-// @Router /config/center/set/key [post]
+// @Router /config/center/module/set/key [post]
 func ConfigCenterSetByModuleByKey(c *gin.Context) {
 	projectId := request.GetProjectIdByHeader(c)
 

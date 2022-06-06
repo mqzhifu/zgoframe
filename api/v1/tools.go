@@ -10,6 +10,7 @@ import (
 	"zgoframe/model"
 	"zgoframe/service/cicd"
 	"zgoframe/util"
+	myservice "zgoframe/service"
 )
 
 // @Tags Tools
@@ -52,7 +53,7 @@ func ProjectOneInfo(c *gin.Context) {
 // @Param X-Project-Id header string true "项目ID" default(6)
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
 // @Produce  application/json
-// @Success 200 {object} model.Project
+// @Success 200 {object} []model.Project
 // @Router /tools/project/list [post]
 func ProjectList(c *gin.Context) {
 	var a model.Project
@@ -70,13 +71,14 @@ func ProjectList(c *gin.Context) {
 // @Param X-Project-Id header string true "项目ID" default(6)
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
 // @Produce  application/json
-// @Success 200 {object} httpresponse.Response
+// @Success 200 {object} []httpresponse.ConstInfo "常量列表"
 // @Router /tools/const/list [get]
 func ConstList(c *gin.Context) {
 	var a model.Project
 	c.ShouldBind(&a)
 
-	list := global.V.MyService.User.GetConstList()
+	//list := global.V.MyService.User.GetConstList()
+	list := GetConstList()
 
 	httpresponse.OkWithAll(list, "成功", c)
 
@@ -89,7 +91,7 @@ func ConstList(c *gin.Context) {
 // @Param X-Project-Id header string true "项目ID" default(6)
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
 // @Produce  application/json
-// @Success 200 {object} httpresponse.Response
+// @Success 200 {string} string "sql script"
 // @Router /tools/const/init/db [get]
 func ConstInitDb(c *gin.Context) {
 	/*
@@ -97,7 +99,9 @@ func ConstInitDb(c *gin.Context) {
 	delete from sys_dictionary_details where sys_dictionary_id > 6;
 	*/
 
-	list := global.V.MyService.User.GetConstList()
+	//list := global.V.MyService.User.GetConstList()
+	list := GetConstList()
+
 	sqlTemp := "INSERT INTO `sys_dictionaries` (`id`, `created_at`, `updated_at`, `deleted_at`, `name`, `type`, `status`, `desc`) VALUES (#id#, '2022-04-04 00:01:01',NULL, NULL, '#name#', '#key#', '1', '')"
 	subSqlTemp := "INSERT INTO `sys_dictionary_details` (`id`, `created_at`, `updated_at`, `deleted_at`, `label`, `value`, `status`, `sort`, `sys_dictionary_id`) VALUES (NULL,  '2022-04-04 00:00:01',NULL , NULL, '#name#', '#value#', '1', '0', '#link_id#')"
 	sqlStr := ""
@@ -124,13 +128,13 @@ func ConstInitDb(c *gin.Context) {
 }
 
 // @Tags Tools
-// @Summary 基数据 - 生成mysql导入脚本
+// @Summary 基数据 - 生成mysql脚本，导入到DB中，供后台UI可视化查看
 // @Description tables: project instance server
 // @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
 // @Param X-Project-Id header string true "项目ID" default(6)
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
 // @Produce  application/json
-// @Success 200 {object} httpresponse.Response
+// @Success 200 {string} string "sql script"
 // @Router /tools/test/init/db [get]
 func ConstInitTestDb(c *gin.Context) {
 	envList := util.GetConstListEnv()
@@ -186,8 +190,8 @@ func CheckInAllowInstance(name string)bool{
 
 
 // @Tags Tools
-// @Summary header头结构体
-// @Description 日常header里放一诸如验证类的东西，统一公示出来，仅是说明，方便测试，不是真实API，方便使用
+// @Summary header头-结构体
+// @Description 日常header里放一诸如验证类的东西，统一公示出来，仅是说明，方便测试/前端查看，方便使用
 // @Param X-Source-Type header string true "来源" default(11)
 // @Param X-Project-Id header string true "项目ID" Enums(1,2,3,4) default(6)
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
@@ -201,4 +205,155 @@ func HeaderStruct(c *gin.Context) {
 	}
 
 	httpresponse.OkWithAll(myheader, "成功lalalalala", c)
+}
+
+
+
+var ConstDataList = []httpresponse.ConstInfo{}
+
+func AddConstLis(row httpresponse.ConstInfo){
+	ConstDataList = append(ConstDataList,row)
+}
+
+func  GetConstList() []httpresponse.ConstInfo {
+	AddConstLis(httpresponse.ConstInfo{
+			List: util.GetConstListEnv(),
+			Name: "env-环境",
+			Key:  "ENV",
+		})
+
+	AddConstLis( httpresponse.ConstInfo{
+		List: util.GetConstListEnv(),
+		Name: "env-环境",
+		Key:  "ENV",
+	})
+
+	AddConstLis( httpresponse.ConstInfo{
+		List: model.GetConstListProjectType(),
+		Name: "项目类型",
+		Key:  "PROJECT_TYPE",
+	})
+
+	AddConstLis( httpresponse.ConstInfo{
+		List: model.GetConstListProjectStatus(),
+		Name: "项目状态",
+		Key:  "PROJECT_STATUS",
+	})
+
+	AddConstLis( httpresponse.ConstInfo{
+		List: model.GetConstListPlatform(),
+		Name: "平台类型",
+		Key:  "PLATFORM",
+	})
+
+	AddConstLis( httpresponse.ConstInfo{
+		List: model.GetConstListUserTypeThird(),
+		Name: "用户类型3方",
+		Key:  "USER_TYPE_THIRD",
+	})
+
+	AddConstLis( httpresponse.ConstInfo{
+		List: model.GetConstListUserRegType(),
+		Name: "用户注册类型",
+		Key:  "USER_REG_TYPE",
+	})
+
+	AddConstLis( httpresponse.ConstInfo{
+		List: model.GetConstListUserSex(),
+		Name: "用户性别",
+		Key:  "USER_SEX",
+	})
+
+	AddConstLis( httpresponse.ConstInfo{
+		List: model.GetConstListUserStatus(),
+		Name: "用户状态",
+		Key:  "USER_STATUS",
+	})
+
+	AddConstLis( httpresponse.ConstInfo{
+		List: model.GetConstListUserTypeThirdCN(),
+		Name: "用户类型-中国",
+		Key:  "USER_TYPE_THIRD_CN",
+	})
+
+	AddConstLis( httpresponse.ConstInfo{
+		List: model.GetConstListUserTypeThirdNotCN(),
+		Name: "用户类型-外国",
+		Key:  "USER_TYPE_THIRD_NOT_CN",
+	})
+
+	AddConstLis( httpresponse.ConstInfo{
+		List: model.GetConstListUserGuest(),
+		Name: "游客分类",
+		Key:  "USER_GUEST",
+	})
+
+	AddConstLis( httpresponse.ConstInfo{
+		List: model.GetConstListUserRobot(),
+		Name: "机器人",
+		Key:  "USER_ROBOT",
+	})
+
+	AddConstLis( httpresponse.ConstInfo{
+		List: model.GetConstListUserTest(),
+		Name: "测试账号",
+		Key:  "USER_TEST",
+	})
+
+	AddConstLis(httpresponse.ConstInfo{
+		List: model.GetConstListPurpose(),
+		Name: "目的",
+		Key:  "PURPOSE",
+	})
+
+	AddConstLis(   httpresponse.ConstInfo{
+		List: model.GetConstListAuthCodeStatus(),
+		Name: "验证码状态",
+		Key:  "AUTH_CODE_STATUS",
+	})
+
+	AddConstLis( httpresponse.ConstInfo{
+		List: model.GetConstListRuleType(),
+		Name: "配置规则类型",
+		Key:  "RULE_TYPE",
+	})
+
+	//
+	AddConstLis( httpresponse.ConstInfo{
+		List: model.GetConstListSmsChannel(),
+		Name: "短信渠道",
+		Key:  "SMS_CHANNEL",
+	})
+
+	AddConstLis( httpresponse.ConstInfo{
+		List: model.GetConstListServerPlatform(),
+		Name: "服务器平台",
+		Key:  "SERVER_PLATFORM",
+	})
+
+	AddConstLis( httpresponse.ConstInfo{
+		List: model.GetConstListCicdPublishStatus(),
+		Name: "CICD发布状态",
+		Key:  "CICD_PUBLISH_STATUS",
+	})
+	AddConstLis( httpresponse.ConstInfo{
+		List: myservice.GetConstListMailBoxType(),
+		Name: "站内信,信件箱类型",
+		Key:  "MAIL_BOX",
+	})
+
+	AddConstLis( httpresponse.ConstInfo{
+		List: myservice.GetConstListMailPeople(),
+		Name: "站内信,接收人群类型",
+		Key:  "MAIL_PEOPLE",
+	})
+
+
+	AddConstLis(httpresponse.ConstInfo{
+		List: myservice.GetConstListConfigPersistenceType(),
+		Name: "配置中心持久化类型",
+		Key:  "CONFIG_PERSISTENCE_TYPE",
+	})
+
+	return ConstDataList
 }

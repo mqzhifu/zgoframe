@@ -12,7 +12,7 @@ import (
 )
 
 // @Tags persistence
-// @Summary 收集日志
+// @Summary 收集日志,目前是存于MYSQL中，后期可以优化成文件或ES中
 // @Description 用于后台统计
 // @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
 // @Param X-Project-Id header string true "项目ID" default(6)
@@ -36,6 +36,12 @@ func LogPush(c *gin.Context) {
 		httpresponse.FailWithMessage(err.Error(),c)
 		return
 	}
+
+	if form.Action == "" {
+		httpresponse.FailWithMessage("Action is empty",c)
+		return
+	}
+
 	headerJsonStr ,_ := json.Marshal(header)
 	msgJsonStr , _ := json.Marshal(form.Msg)
 	//header.BaseInfo = nil
@@ -64,7 +70,7 @@ func LogPush(c *gin.Context) {
 
 // @Tags persistence
 // @Summary 上传文件
-// @Description 目前是本地存一份，同步到OSS一份，目录结构是根据天做hash
+// @Description 目前是本地存一份，同步到OSS一份，目录结构是根据天做hash,注：form enctype=multipart/form-data
 // @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
 // @Param X-Project-Id header string true "项目ID" default(6)
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
@@ -103,11 +109,11 @@ func Upload(c *gin.Context){
 
 // @Tags persistence
 // @Summary 上传多文件
-// @Description 目前是本地存一份，同步到OSS一份，目录结构是根据天做hash
+// @Description 目前是本地存一份，同步到OSS一份，目录结构是根据天做hash，注：form enctype=multipart/form-data
 // @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
 // @Param X-Project-Id header string true "项目ID" default(6)
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
-// @Param files formData file true "文件,html中的input files multiple "
+// @Param files formData file true "文件(html中的input的name),注：multiple 属性"
 // @Param category formData int true "上传的文件类型，1全部2图片3文档4视频,后端会根据类型做验证"
 // @Param module formData string false "模块/业务名，可用于给文件名加前缀目录"
 // @Accept multipart/form-data

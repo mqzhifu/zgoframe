@@ -31,6 +31,9 @@ func Captcha(c *gin.Context) {
 	var form request.Captcha
 	c.ShouldBind(&form)
 
+	util.MyPrint(c.Request.Host,c.Request.URL)
+
+
 	imgWidth :=global.C.Captcha.ImgWidth
 	imgHeight := global.C.Captcha.ImgHeight
 	if ( form.Width > 0 && form.Width < 1000 )  && ( form.Height > 0 && form.Height < 1000){

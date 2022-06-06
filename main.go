@@ -1,17 +1,28 @@
 package main
 
+//go:generate go env -w GO111MODULE=on
+//go:generate go env -w GOPROXY=https://goproxy.cn,direct
+//go:generate go mod tidy
+//go:generate go mod download
+
 import (
 	"context"
 	_ "embed"
 	"flag"
 	"os"
 	"os/user"
+	"runtime"
 	"strconv"
 	"zgoframe/core"
 	"zgoframe/core/global"
 	"zgoframe/core/initialize"
 	_ "zgoframe/docs"
 	"zgoframe/util"
+)
+//go build -ldflags "-X main.BuildGitVersion='1.0.9' -X 'main.BUILD_TIME=`date`' " -o zgo
+var (
+	BuildTime string
+	BuildGitVersion string
 )
 
 var initializeVar *initialize.Initialize
@@ -27,6 +38,7 @@ var initializeVar *initialize.Initialize
 // @description 注：所有接口的响应格式均是json格式 ，包含3个值: code data msg ,具体参考 model.httpresponse.Response
 // @description 测试/开发人员：用户已上传的图片，查看，<a href="/static/upload/" target="_blank">点这里</a>
 // @description 测试/开发人员：配置中心的文件，查看，<a href="/static/data/config/" target="_blank">点这里</a>
+// @description 后台UI：<a href="http://localhost:8080/" target="_blank">点这里</a>
 // @description <a href="/static/html/cicd.html" target="_blank">测试cicd</a> <a href="/static/html/frame_sync.html" target="_blank">测试帧同步</a> <a href="/static/html/file_upload.html" target="_blank">测试多文件上传</a>
 // @license.name 小z
 // @contact.name 小z
@@ -53,6 +65,7 @@ var initializeVar *initialize.Initialize
 // @in header
 
 func main() {
+	util.MyPrint("BuildTime:",BuildTime , " BuildGitVersion:",BuildGitVersion)
 
 	prefix := "main "
 	//获取<环境变量>枚举值
@@ -73,7 +86,7 @@ func main() {
 	//是否为CICD模式
 	//deploy 				:= flag.String("dep", "", "deploy")//部署模式下，启动程序只是为了测试脚本正常，因为之后，要立刻退出
 	//开启自动测试模式
-	testFlag 			:= flag.String("t", "", "testFlag:empty or 1")
+	testFlag := flag.String("t", "", "testFlag:empty or 1")
 	//解析命令行参数
 	flag.Parse()
 	//检测环境变量值ENV是否正常
@@ -92,19 +105,22 @@ func main() {
 	//主协程的 context
 	util.MyPrint(prefix + "create cancel context")
 	mainCxt, mainCancelFunc := context.WithCancel(context.Background())
+
 	//初始化模块需要的参数
 	initOption := initialize.InitOption{
-		Env:               *env,
-		Debug:             *debug,
-		ConfigType:        *configFileType,
-		ConfigFileName:    *configFileName,
-		ConfigSourceType:  *configSourceType,
-		EtcdConfigFindUrl: *etcdUrl,
-		RootDir:           pwd,
-		RootCtx:           mainCxt,
-		RootCancelFunc:    mainCancelFunc,
-		RootQuitFunc:      QuitAll,
-		TestFlag :		   *testFlag,
+		Env:               	*env,
+		Debug:             	*debug,
+		ConfigType:        	*configFileType,
+		ConfigFileName:    	*configFileName,
+		ConfigSourceType:  	*configSourceType,
+		EtcdConfigFindUrl: 	*etcdUrl,
+		RootDir:           	pwd,
+		GoVersion: 			runtime.Version(),
+		Cpu: 				runtime.GOARCH,
+		RootCtx:           	mainCxt,
+		RootCancelFunc:    	mainCancelFunc,
+		RootQuitFunc:      	QuitAll,
+		TestFlag:          	*testFlag,
 	}
 	//开始正式全局初始化
 	initializeVar = initialize.NewInitialize(initOption)
@@ -112,7 +128,7 @@ func main() {
 	if err != nil {
 		util.MyPrint(prefix+"initialize.Init err:", err)
 		panic(prefix + "initialize.Init err:" + err.Error())
-		return
+
 	}
 
 	//执行用户自己的一些功能

@@ -29,6 +29,8 @@ type InitOption struct {
 	RootDir           string	`json:"root_dir"`
 	RootDirName       string	`json:"root_dir_name"`
 
+	GoVersion 		  string 	`json:"go_version"`
+	Cpu				  string 	`json:"cpu"`
 	RootCtx           context.Context	`json:"-"`
 	RootCancelFunc    context.CancelFunc`json:"-"`
 	RootQuitFunc      func(source int)	`json:"-"`

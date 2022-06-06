@@ -18,6 +18,6 @@ type CicdPublish struct {
 func (cicdPublish *CicdPublish) TableOptions() map[string]string {
 	m := make(map[string]string)
 	m["comment"] = "cicd发布记录"
-
+	
 	return m
 }

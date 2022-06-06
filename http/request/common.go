@@ -39,6 +39,8 @@ type HeaderResponse struct {
 
 //@description http客户端请求头-基础信息
 type HeaderBaseInfo struct {
+	Sn 			  string `json:"sn"`			 //每个自己的设置有一个编号
+	PackName 	  string `json:"pack_name"`		 //APP上传的包名
 	AppVersion    string `json:"app_version"`    //app/前端/服务/项目 版本号
 	OS            int    `json:"os"`             //win mac android ios
 	OSVersion     string `json:"os_version"`     //win7 win9 mac10 android9

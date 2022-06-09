@@ -9,7 +9,7 @@ import (
 	"zgoframe/util"
 )
 
-func GetNewGorm(printPrefix string) (*gorm.DB, error) {
+func GetNewGorm(printPrefix string) ([]*gorm.DB, error) {
 	//global.V.Zap.Info(printPrefix + "GetNewGorm , DBType:" + global.C.System.DbType)
 	switch global.C.System.DbType {
 	//目前仅支持MYSQL ，后期考虑是否加入其它DB
@@ -20,29 +20,37 @@ func GetNewGorm(printPrefix string) (*gorm.DB, error) {
 	}
 }
 
-func GormMysql(printPrefix string) (*gorm.DB, error) {
-	m := global.C.Mysql
-	dns := m.Username + ":" + m.Password + "@tcp(" + m.Ip + ":" + m.Port + ")/" + m.DbName + "?" + m.Config
-	global.V.Zap.Info(printPrefix + " gorm mysql ," + m.Username + ":" + "****" + "@tcp(" + m.Ip + ":" + m.Port + ")/" + m.DbName + "?" + m.Config)
-	mysqlConfig := mysql.Config{
-		DSN:                       dns,   // DSN data source name
-		DefaultStringSize:         191,   // string 类型字段的默认长度
-		DisableDatetimePrecision:  true,  // 禁用 datetime 精度，MySQL 5.6 之前的数据库不支持
-		DontSupportRenameIndex:    true,  // 重命名索引时采用删除并新建的方式，MySQL 5.7 之前的数据库和 MariaDB 不支持重命名索引
-		DontSupportRenameColumn:   true,  // 用 `change` 重命名列，MySQL 8 之前的数据库和 MariaDB 不支持重命名列
-		SkipInitializeWithVersion: false, // 根据版本自动配置
-	}
-	db, err := gorm.Open(mysql.New(mysqlConfig), gormConfig(m.LogMode))
-	if err != nil {
-		global.V.Zap.Error("MySQL启动异常:" + err.Error())
-		return nil, err
-	}
-	//db = db.Debug()
-	sqlDB, _ := db.DB()
-	sqlDB.SetMaxIdleConns(m.MaxIdleConns)
-	sqlDB.SetMaxOpenConns(m.MaxOpenConns)
+func GormMysql(printPrefix string) ([]*gorm.DB, error) {
+	var list []*gorm.DB
+	for _,m:=range global.C.Mysql{
+		if m.Status != "open"{
+			continue
+		}
+		//m :=
+		dns := m.Username + ":" + m.Password + "@tcp(" + m.Ip + ":" + m.Port + ")/" + m.DbName + "?" + m.Config
+		global.V.Zap.Info(printPrefix + " gorm mysql ," + m.Username + ":" + "****" + "@tcp(" + m.Ip + ":" + m.Port + ")/" + m.DbName + "?" + m.Config)
+		mysqlConfig := mysql.Config{
+			DSN:                       dns,   // DSN data source name
+			DefaultStringSize:         191,   // string 类型字段的默认长度
+			DisableDatetimePrecision:  true,  // 禁用 datetime 精度，MySQL 5.6 之前的数据库不支持
+			DontSupportRenameIndex:    true,  // 重命名索引时采用删除并新建的方式，MySQL 5.7 之前的数据库和 MariaDB 不支持重命名索引
+			DontSupportRenameColumn:   true,  // 用 `change` 重命名列，MySQL 8 之前的数据库和 MariaDB 不支持重命名列
+			SkipInitializeWithVersion: false, // 根据版本自动配置
+		}
+		db, err := gorm.Open(mysql.New(mysqlConfig), gormConfig(m.LogMode))
+		if err != nil {
+			global.V.Zap.Error("MySQL启动异常:" + err.Error())
+			return nil, err
+		}
+		//db = db.Debug()
+		sqlDB, _ := db.DB()
+		sqlDB.SetMaxIdleConns(m.MaxIdleConns)
+		sqlDB.SetMaxOpenConns(m.MaxOpenConns)
 
-	return db, nil
+		list = append(list,db)
+	}
+
+	return list, nil
 }
 
 func GormShutdown() {

@@ -19,7 +19,8 @@ type Global struct {
 	Zap              *zap.Logger
 	Redis            *util.MyRedis
 	Gin              *gin.Engine
-	Gorm             *gorm.DB
+	Gorm             *gorm.DB		//多数据库模式下，有一个库肯定会被经常访问，这里加一个快捷链接
+	GormList 		 []*gorm.DB		//所有数据库，连接成功后的列表
 	Project          util.Project
 	ProjectMng       *util.ProjectManager
 	Etcd             *util.MyEtcd

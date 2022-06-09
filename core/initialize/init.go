@@ -88,18 +88,23 @@ func (initialize *Initialize) Start() error {
 	}
 	global.V.Zap = mailZap
 	//初始化：mysql
+	//原单库连接可以判断，现改成框架可以多库连接，判断 就意义了，数据结构还麻烦，只是多了一个status字段
 	//PS:并不一定所有项目都用MYSQL，但基于<多APP/SERVICE>，强依赖 project_id，另外，日志也需要
-	if global.C.Mysql.Status != global.CONFIG_STATUS_OPEN {
-		errMsg := "please open mysql db Module, because need project_id from read db."
-		return errors.New(errMsg)
-	}
+	//if global.C.Mysql.Status != global.CONFIG_STATUS_OPEN {
+	//	errMsg := "please open mysql db Module, because need project_id from read db."
+	//	return errors.New(errMsg)
+	//}
 	//这个变量，主要是给gorm做日志使用，也就是DB的日志，最终也交由zap来接管
 	util.LoggerZap = global.V.Zap
 	//实例化gorm db
-	global.V.Gorm, err = GetNewGorm(prefix)
+	global.V.GormList, err = GetNewGorm(prefix)
 	if err != nil {
 		return err
 	}
+	if len(global.V.GormList) <= 0{
+		return errors.New("至少有一个数据库需要被连接")
+	}
+	global.V.Gorm = global.V.GormList[0]
 	//DB 快捷变量
 	model.Db = global.V.Gorm
 	//初始化APP信息，所有项目都需要有AppId或serviceId，因为要做验证，同时目录名也包含在里面

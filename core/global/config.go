@@ -1,7 +1,7 @@
 package global
 
 type Config struct {
-	Mysql            ConfigMysql
+	Mysql            []Mysql
 	Jwt              Jwt
 	Zap              Zap
 	Captcha          Captcha
@@ -33,7 +33,7 @@ type Protobuf struct {
 	IdMapFileName string
 }
 
-type ConfigMysql struct {
+type Mysql struct {
 	Status       string
 	Ip           string
 	Port         string
@@ -45,7 +45,21 @@ type ConfigMysql struct {
 	MaxOpenConns int
 	LogMode      bool
 	LogZap       bool
+	MasterSlave	 string
 }
+
+//type MysqlConfig struct {
+//	Ip           string
+//	Port         string
+//	Config       string
+//	DbName       string
+//	Username     string
+//	Password     string
+//	MaxIdleConns int
+//	MaxOpenConns int
+//	LogMode      bool
+//	LogZap       bool
+//}
 
 type Http struct {
 	Status        	string

@@ -1,4 +1,0 @@
-/*! 
- Build based on gin-vue-admin 
- Time : 1654839698000 */
-import{_ as e,S as t,r as n,P as a,b as o,o as s,q as u,w as r,v as l,f,d as i,t as d,U as m}from"../gva/gin-vue-admin-index.1654839698000.js";const c={name:"AsyncSubmenu"};var p=e(Object.assign(c,{props:{routerInfo:{default:function(){return null},type:Object},isCollapse:{default:function(){return!1},type:Boolean},theme:{default:function(){return{}},type:Object}},setup(e){const c=e;t((e=>({"3241ba56":p.value})));const p=n(c.theme.normalText);return a((()=>c.theme),(()=>{p.value=c.theme.normalText})),(t,n)=>{const a=o("el-icon"),c=o("el-sub-menu");return s(),u(c,{ref:"subMenu",index:e.routerInfo.name},{title:r((()=>[e.routerInfo.meta.icon?(s(),u(a,{key:0},{default:r((()=>[(s(),u(l(e.routerInfo.meta.icon)))])),_:1})):f("",!0),i("span",null,d(e.routerInfo.meta.title),1)])),default:r((()=>[m(t.$slots,"default",{},void 0,!0)])),_:3},8,["index"])}}}),[["__scopeId","data-v-1b5ed285"]]);export{p as default};

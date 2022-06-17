@@ -1,13 +1,11 @@
 package test
 
 import (
-	"errors"
+	"context"
 	"fmt"
 	"zgoframe/core/global"
 	"zgoframe/protobuf/pb"
-	"zgoframe/protobuf/pbservice"
 	"zgoframe/util"
-	"context"
 )
 
 func Grpc(){
@@ -16,55 +14,55 @@ func Grpc(){
 }
 
 
-func Service()error{
-	//包前缀 + 服务名
-	serviceName :=  global.C.Grpc.ServicePackagePrefix +"." + global.V.Service.Name
-	//serviceName := "pb.First"
-	ip := "127.0.0.1"
-	listenIp := "127.0.0.1"
-	port := "6666"
-	//ip := "8.142.177.235"
-	//listenIp := "0.0.0.0"
-	//port := "7777"
-
-	node := util.ServiceNode{
-		ProjectId	: global.C.System.ProjectId,
-		Ip			: ip ,
-		ListenIp	: listenIp,
-		Port		: port ,
-		Protocol	: util.SERVICE_PROTOCOL_GRPC,
-		IsSelfReg	: true,
-	}
-	//注册一个服务(不牵扯GRPC)
-	err := global.V.ServiceDiscovery.Register(node)
-	if err != nil{
-		util.ExitPrint("serviceDiscovery.Register failed:"+err.Error())
-	}
-	//测试一下刚刚注册的服务，是否成功，从服务管理池中直接寻找
-	testServerRegRs := false
-	for _,service := range global.V.ServiceManager.Pool{
-		if service.Name == serviceName{
-			testServerRegRs = true
-			break
-		}
-	}
-	if !testServerRegRs{
-		util.ExitPrint("reg failed 1.")
-	}
-	//服务发现注册成功后，再创建一个grpc server
-	MyGrpcService,err := global.V.GrpcManager.CreateService(serviceName,node.Ip,node.Port)
-	if err != nil{
-		util.MyPrint("GetServer err:",err)
-		return errors.New(err.Error())
-	}
-	//挂载服务的handler
-	pb.RegisterZgoframeServer(MyGrpcService.GrpcServer, &pbservice.Zgoframe{})
-	//pb.RegisterSyncServer(MyGrpcService.GrpcServer, &pbservice.Sync{})
-	fmt.Println("grpc ServerStart...")
-	MyGrpcService.ServerStart()
-	fmt.Println("GrpcServer.Serve:",err)
-	return nil
-}
+//func Service()error{
+//	//包前缀 + 服务名
+//	serviceName :=  global.C.Grpc.ServicePackagePrefix +"." + global.V.Service.Name
+//	//serviceName := "pb.First"
+//	ip := "127.0.0.1"
+//	listenIp := "127.0.0.1"
+//	port := "6666"
+//	//ip := "8.142.177.235"
+//	//listenIp := "0.0.0.0"
+//	//port := "7777"
+//
+//	node := util.ServiceNode{
+//		ProjectId	: global.C.System.ProjectId,
+//		Ip			: ip ,
+//		ListenIp	: listenIp,
+//		Port		: port ,
+//		Protocol	: util.SERVICE_PROTOCOL_GRPC,
+//		IsSelfReg	: true,
+//	}
+//	//注册一个服务(不牵扯GRPC)
+//	err := global.V.ServiceDiscovery.Register(node)
+//	if err != nil{
+//		util.ExitPrint("serviceDiscovery.Register failed:"+err.Error())
+//	}
+//	//测试一下刚刚注册的服务，是否成功，从服务管理池中直接寻找
+//	testServerRegRs := false
+//	for _,service := range global.V.ServiceManager.Pool{
+//		if service.Name == serviceName{
+//			testServerRegRs = true
+//			break
+//		}
+//	}
+//	if !testServerRegRs{
+//		util.ExitPrint("reg failed 1.")
+//	}
+//	//服务发现注册成功后，再创建一个grpc server
+//	MyGrpcService,err := global.V.GrpcManager.CreateService(serviceName,node.Ip,node.Port)
+//	if err != nil{
+//		util.MyPrint("GetServer err:",err)
+//		return errors.New(err.Error())
+//	}
+//	//挂载服务的handler
+//	pb.RegisterZgoframeServer(MyGrpcService.GrpcServer, &pbservice.Zgoframe{})
+//	//pb.RegisterSyncServer(MyGrpcService.GrpcServer, &pbservice.Sync{})
+//	fmt.Println("grpc ServerStart...")
+//	MyGrpcService.ServerStart()
+//	fmt.Println("GrpcServer.Serve:",err)
+//	return nil
+//}
 
 func  Client()error{
 	//serviceName :=  global.V.Service.Key

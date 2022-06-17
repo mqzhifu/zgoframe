@@ -138,8 +138,12 @@ func(superVisor *SuperVisor)ReplaceConfTemplate(replaceSource SuperVisorReplace)
 	return content,nil
 }
 //========监听相关
-func(superVisor *SuperVisor)CreateServiceConfFile(content string)error{
-	fileName := superVisor.Option.ConfDir +DIR_SEPARATOR +  superVisor.Option.ServiceName + ".ini"
+func(superVisor *SuperVisor)CreateServiceConfFile(content string,newGitCodeDir string)error{
+	//本机部署时：直接将配置文件转到superVisor目录下，立即生效
+	//fileName := superVisor.Option.ConfDir +DIR_SEPARATOR +  superVisor.Option.ServiceName + ".ini"
+	//远程部署：是先在本地部署，再推送到远端，所以，是是先将配置文件生成到代码目录下，最后再同步过去
+	fileName := newGitCodeDir + "/" + superVisor.Option.ServiceName + ".ini"
+	//MyPrint(fileName)
 	file ,err := os.Create(fileName)
 	MyPrint("os.Create:" ,fileName)
 	if err!= nil{
@@ -149,6 +153,9 @@ func(superVisor *SuperVisor)CreateServiceConfFile(content string)error{
 	contentByte := bytes.Trim([]byte(content),"\x00")//NUL
 	file.Write(contentByte)
 	file.Close()
+
+	//ExitPrint(-1)
+
 	return nil
 }
 

@@ -39,6 +39,7 @@ func GetConstListCicdDeployTargetType() map[string]int {
 type ServiceDeployConfig struct {
 	Name               string //服务名称
 	BaseDir            string //所有service项目统一放在一个目录下，由host.toml 中配置
+	RemoteBaseDir 	   string
 	FullPath           string //最终一个服务的目录名,BaseDir + serviceName
 	MasterDirName      string //一个服务的线上使用版本-软连目录名称
 	MasterPath         string //full path + MasterDirName
@@ -190,7 +191,7 @@ func (cicdManager *CicdManager) DeployServiceCheck( serviceDeployConfig ServiceD
 	serviceDeployConfig.MasterPath = serviceDeployConfig.FullPath + util.DIR_SEPARATOR + serviceDeployConfig.MasterDirName
 	serviceDeployConfig.ClonePath = serviceDeployConfig.FullPath + util.DIR_SEPARATOR + serviceDeployConfig.GitCloneTmpDirName
 	serviceDeployConfig.CodeGitClonePath = serviceDeployConfig.ClonePath + util.DIR_SEPARATOR + service.Name
-
+	//serviceDeployConfig.RemoteBaseDir = serviceDeployConfig.RemoteBaseDir
 	newServiceDeployConfig := serviceDeployConfig
 
 
@@ -278,9 +279,9 @@ func (cicdManager *CicdManager)SyncOneServiceToRemote(serviceDeployConfig Servic
 	//1 同步代码
 	syncCodeShellCommand := "rsync -avz --progress "+ serviceDeployConfig.FullPath + " rsync@"+server.OutIp+"::golang"
 	util.MyPrint("SyncOneServiceToRemote:",syncCodeShellCommand)
-	util.ExitPrint(33)
 	//2 同步superVisor
-	//syncSuperVisorShellCommand := "rsync -avz --progress "+ serviceDeployConfig.FullPath + " rsync@"+server.OutIp+"::super_visor"
+	syncSuperVisorShellCommand := "rsync -avz --progress "+ serviceDeployConfig.FullPath + " rsync@"+server.OutIp+"::super_visor"
+	util.MyPrint("syncSuperVisorShellCommand:",syncSuperVisorShellCommand)
 
 	return nil
 }
@@ -392,14 +393,27 @@ func (cicdManager *CicdManager) DeployOneServiceSuperVisor(serviceDeployConfig S
 	}
 	serviceSuperVisor.SetConfTemplateFile(cicdManager.Option.Config.SuperVisor.ConfTemplateFile)
 	//superVisor 配置文件中 动态的占位符，需要替换掉
-	superVisorReplace := util.SuperVisorReplace{
-		ScriptName:            serviceDeployConfig.Name,
-		StartupScriptCommand: configServiceCICD.System.Startup,
-		ScriptWorkDir:        serviceDeployConfig.MasterPath,
-		StdoutLogfile:         serviceDeployConfig.BaseDir + util.DIR_SEPARATOR + serviceDeployConfig.Name +  "/super_visor_stdout.log",
-		StderrLogfile:         serviceDeployConfig.BaseDir + util.DIR_SEPARATOR + serviceDeployConfig.Name + "/super_visor_stderr.log",
-		ProcessName:           serviceDeployConfig.Name,
+	superVisorReplace := util.SuperVisorReplace{}
+	if serviceDeployConfig.DeployTargetType == DEPLOY_TARGET_TYPE_REMOTE{
+		superVisorReplace = util.SuperVisorReplace{
+			ScriptName:            serviceDeployConfig.Name,
+			StartupScriptCommand: configServiceCICD.System.Startup,
+			ScriptWorkDir:        serviceDeployConfig.MasterPath,
+			StdoutLogfile:         serviceDeployConfig.RemoteBaseDir + util.DIR_SEPARATOR + serviceDeployConfig.Name +  "/super_visor_stdout.log",
+			StderrLogfile:         serviceDeployConfig.RemoteBaseDir + util.DIR_SEPARATOR + serviceDeployConfig.Name + "/super_visor_stderr.log",
+			ProcessName:           serviceDeployConfig.Name,
+		}
+	}else{
+		superVisorReplace = util.SuperVisorReplace{
+			ScriptName:            serviceDeployConfig.Name,
+			StartupScriptCommand: configServiceCICD.System.Startup,
+			ScriptWorkDir:        serviceDeployConfig.MasterPath,
+			StdoutLogfile:         serviceDeployConfig.BaseDir + util.DIR_SEPARATOR + serviceDeployConfig.Name +  "/super_visor_stdout.log",
+			StderrLogfile:         serviceDeployConfig.BaseDir + util.DIR_SEPARATOR + serviceDeployConfig.Name + "/super_visor_stderr.log",
+			ProcessName:           serviceDeployConfig.Name,
+		}
 	}
+
 	//util.PrintStruct(superVisorReplace,":")
 	//替换配置文件中的动态值，并生成配置文件
 	serviceConfFileContent,_ := serviceSuperVisor.ReplaceConfTemplate(superVisorReplace)

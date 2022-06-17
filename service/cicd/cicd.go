@@ -33,6 +33,7 @@ type ConfigCicdSystem struct {
 	Env        			[]string
 	LogDir     			string
 	WorkBaseDir 		string
+	RemoteBaseDir		string
 	//ServiceDir 			string	//远程部署目录
 	//LocalServiceDir		string 	//本地部署目录
 	MasterDirName		string

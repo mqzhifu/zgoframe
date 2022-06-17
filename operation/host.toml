@@ -3,6 +3,7 @@ env=["local","dev","test","pre","online"]
 
 logDir="/data/www/golang/testcicd/logs"
 workBaseDir= "/data/www/golang/testcicd"
+remoteBaseDir = "/data/www/golang"
 
 masterDirName = "master"
 gitCloneTmpDirName="clone"

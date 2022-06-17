@@ -279,11 +279,12 @@ func (cicdManager *CicdManager) DeployOneService(server util.Server, serviceDepl
 func (cicdManager *CicdManager)SyncOneServiceToRemote(serviceDeployConfig ServiceDeployConfig,server util.Server,newGitCodeDir string )error{
 	//1 同步代码
 	syncCodeShellCommand := "rsync -avz --progress "+ serviceDeployConfig.FullPath + " rsync@"+server.OutIp+"::golang"
-	util.MyPrint("SyncOneServiceToRemote:",syncCodeShellCommand)
+	_,err := ExecShellCommand(syncCodeShellCommand,"")
+	util.MyPrint("SyncOneServiceToRemote:",syncCodeShellCommand , " err:",err)
 	//2 同步superVisor
 	syncSuperVisorShellCommand := "rsync -avz --progress "+ newGitCodeDir + "/" + serviceDeployConfig.Name + ".ini"  + " rsync@"+server.OutIp+"::super_visor"
-	util.MyPrint("syncSuperVisorShellCommand:",syncSuperVisorShellCommand)
-
+	_,err = ExecShellCommand(syncSuperVisorShellCommand,"")
+	util.MyPrint("syncSuperVisorShellCommand:",syncSuperVisorShellCommand, " err:",err)
 	return nil
 }
 

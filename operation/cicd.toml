@@ -4,7 +4,10 @@ startup = "go run main.go -e #env#"
 listeningPorts = "3306,3308"
 testUnit = "go run test"
 #build = "go build -o #service_name#"
-build = "go build -ldflags \"-X main.BuildGitVersion='#git_version#' -X 'main.BUILD_TIME=`#datetime#`' \" -o #service_name#"
+
+
+build = "go build -ldflags  \"-X main.BuildGitVersion='git_version' -X main.BuildTime='datetime' \" -o #service_name#"
+#build = "go build -ldflags \"-X main.BuildGitVersion='#git_version#' -X 'main.BUILD_TIME=`#datetime#`' \" -o #service_name#"
 command="go generate main.go"
 configTmpFileName="config.toml.tmp"
 configFileName="config.toml"

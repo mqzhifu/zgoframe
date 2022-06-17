@@ -451,7 +451,7 @@ func (cicdManager *CicdManager) DeployOneServiceCommand(newGitCodeDir string, se
 	}
 	//编译项目代码
 	if serviceCICDConfig.System.Build != "" {
-		cicdManager.Option.Log.Info("step 5.2 : project build command " + serviceCICDConfig.System.Build)
+		cicdManager.Option.Log.Info("step 5.2 : project build command :" + serviceCICDConfig.System.Build)
 		output2, err = ExecShellCommand(ExecShellCommandPre+serviceCICDConfig.System.Build, "")
 		if err != nil {
 			return output, errors.New("ExecShellCommand err " + err.Error())

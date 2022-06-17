@@ -454,7 +454,7 @@ func (cicdManager *CicdManager) DeployOneServiceCommand(newGitCodeDir string, se
 	output1 := ""
 	output2 := ""
 	if serviceCICDConfig.System.Command != "" {
-		cicdManager.Option.Log.Info("step 5.1 : System.Command " + serviceCICDConfig.System.Command)
+		cicdManager.Option.Log.Info("step 5.1 : System.Command: " + serviceCICDConfig.System.Command)
 		output1, err = ExecShellCommand(ExecShellCommandPre+serviceCICDConfig.System.Command, "")
 		if err != nil {
 			return output, errors.New("ExecShellCommand err " + err.Error())

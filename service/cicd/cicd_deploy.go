@@ -259,6 +259,8 @@ func (cicdManager *CicdManager) DeployOneService(server util.Server, serviceDepl
 	if err != nil {
 		return cicdManager.DeployOneServiceFailed(publish, err.Error())
 	}
+	//step 6 : 目前均是在本机部署的代码，现在要将代码同步到服务器上
+	cicdManager.SyncOneServiceToRemote(serviceDeployConfig,server)
 
 	cicdManager.Option.PublicManager.UpDeployStatus(publish, model.CICD_PUBLISH_DEPLOY_STATUS_FINISH)
 	cicdManager.Option.PublicManager.UpStatus(publish,model.CICD_PUBLISH_STATUS_WAIT_PUB)
@@ -269,6 +271,16 @@ func (cicdManager *CicdManager) DeployOneService(server util.Server, serviceDepl
 	e.Id = publish.Id
 	e.ExecTime = execTime
 	cicdManager.Option.PublicManager.UpInfo(e)
+
+	return nil
+}
+func (cicdManager *CicdManager)SyncOneServiceToRemote(serviceDeployConfig ServiceDeployConfig,server util.Server)error{
+	//1 同步代码
+	syncCodeShellCommand := "rsync -avz --progress "+ serviceDeployConfig.FullPath + " rsync@"+server.OutIp+"::golang"
+	util.MyPrint("SyncOneServiceToRemote:",syncCodeShellCommand)
+	util.ExitPrint(33)
+	//2 同步superVisor
+	//syncSuperVisorShellCommand := "rsync -avz --progress "+ serviceDeployConfig.FullPath + " rsync@"+server.OutIp+"::super_visor"
 
 	return nil
 }

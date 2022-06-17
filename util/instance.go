@@ -1,7 +1,7 @@
 package util
 
 import (
-	"golang.org/x/tools/go/ssa/interp/testdata/src/errors"
+	"errors"
 	"gorm.io/gorm"
 	"zgoframe/model"
 )
@@ -92,7 +92,7 @@ func (instanceManager *InstanceManager) GetById(id int)(Instance,bool){
 
 
 func  (instanceManager *InstanceManager)GetByEnvName(env int,name string) (in Instance,empty bool){
-	MyPrint("GetByEnvName:",env , " name:",name)
+	//MyPrint("GetByEnvName:",env , " name:",name)
 	for _,v := range instanceManager.Pool{
 		if v.Env == env && v.Name == name{
 			//MyPrint(v)

@@ -64,9 +64,10 @@ type ConfigServiceCICD struct {
 }
 
 type ConfigCicdSuperVisor struct {
-	RpcPort          string
-	ConfTemplateFile string
-	ConfDir          string
+	RpcPort          		string
+	ConfTemplateFile 		string
+	ConfTemplateFileName 	string
+	ConfDir          		string
 }
 
 type ConfigCicd struct {

@@ -121,6 +121,7 @@ func (cicdManager *CicdManager)GetDeployConfig(deployTargetType int)ServiceDeplo
 	serviceDeployConfig := ServiceDeployConfig{
 		DeployTargetType: deployTargetType,
 		BaseDir:            serviceBaseDir,
+		RemoteBaseDir: cicdManager.Option.Config.System.RemoteBaseDir,
 		OpDirName:          cicdManager.Option.OpDirName,
 		MasterDirName:     cicdManager.Option.Config.System.MasterDirName,
 		GitCloneTmpDirName: cicdManager.Option.Config.System.GitCloneTmpDirName,

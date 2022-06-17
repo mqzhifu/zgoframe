@@ -261,7 +261,7 @@ func (cicdManager *CicdManager) DeployOneService(server util.Server, serviceDepl
 		return cicdManager.DeployOneServiceFailed(publish, err.Error())
 	}
 	//step 6 : 目前均是在本机部署的代码，现在要将代码同步到服务器上
-	cicdManager.SyncOneServiceToRemote(serviceDeployConfig,server)
+	cicdManager.SyncOneServiceToRemote(serviceDeployConfig,server,newGitCodeDir)
 
 	cicdManager.Option.PublicManager.UpDeployStatus(publish, model.CICD_PUBLISH_DEPLOY_STATUS_FINISH)
 	cicdManager.Option.PublicManager.UpStatus(publish,model.CICD_PUBLISH_STATUS_WAIT_PUB)
@@ -275,12 +275,12 @@ func (cicdManager *CicdManager) DeployOneService(server util.Server, serviceDepl
 
 	return nil
 }
-func (cicdManager *CicdManager)SyncOneServiceToRemote(serviceDeployConfig ServiceDeployConfig,server util.Server)error{
+func (cicdManager *CicdManager)SyncOneServiceToRemote(serviceDeployConfig ServiceDeployConfig,server util.Server,newGitCodeDir string )error{
 	//1 同步代码
 	syncCodeShellCommand := "rsync -avz --progress "+ serviceDeployConfig.FullPath + " rsync@"+server.OutIp+"::golang"
 	util.MyPrint("SyncOneServiceToRemote:",syncCodeShellCommand)
 	//2 同步superVisor
-	syncSuperVisorShellCommand := "rsync -avz --progress "+ serviceDeployConfig.FullPath + " rsync@"+server.OutIp+"::super_visor"
+	syncSuperVisorShellCommand := "rsync -avz --progress "+ newGitCodeDir + "/" + cicdManager.Option.Config.SuperVisor.ConfTemplateFile  + " rsync@"+server.OutIp+"::super_visor"
 	util.MyPrint("syncSuperVisorShellCommand:",syncSuperVisorShellCommand)
 
 	return nil

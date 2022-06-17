@@ -281,7 +281,7 @@ func (cicdManager *CicdManager)SyncOneServiceToRemote(serviceDeployConfig Servic
 	syncCodeShellCommand := "rsync -avz --progress "+ serviceDeployConfig.FullPath + " rsync@"+server.OutIp+"::golang"
 	util.MyPrint("SyncOneServiceToRemote:",syncCodeShellCommand)
 	//2 同步superVisor
-	syncSuperVisorShellCommand := "rsync -avz --progress "+ newGitCodeDir + "/" + cicdManager.Option.Config.SuperVisor.ConfTemplateFile  + " rsync@"+server.OutIp+"::super_visor"
+	syncSuperVisorShellCommand := "rsync -avz --progress "+ newGitCodeDir + "/" + serviceDeployConfig.Name + ".ini"  + " rsync@"+server.OutIp+"::super_visor"
 	util.MyPrint("syncSuperVisorShellCommand:",syncSuperVisorShellCommand)
 
 	return nil
@@ -399,7 +399,7 @@ func (cicdManager *CicdManager) DeployOneServiceSuperVisor(serviceDeployConfig S
 		superVisorReplace = util.SuperVisorReplace{
 			ScriptName:            serviceDeployConfig.Name,
 			StartupScriptCommand: configServiceCICD.System.Startup,
-			ScriptWorkDir:        serviceDeployConfig.MasterPath,
+			ScriptWorkDir:        serviceDeployConfig.RemoteBaseDir  + util.DIR_SEPARATOR + serviceDeployConfig.Name + "/" + serviceDeployConfig.MasterDirName,
 			StdoutLogfile:         serviceDeployConfig.RemoteBaseDir + util.DIR_SEPARATOR + serviceDeployConfig.Name +  "/super_visor_stdout.log",
 			StderrLogfile:         serviceDeployConfig.RemoteBaseDir + util.DIR_SEPARATOR + serviceDeployConfig.Name + "/super_visor_stderr.log",
 			ProcessName:           serviceDeployConfig.Name,

@@ -2,10 +2,10 @@ package main
 
 //go:generate go env -w GO111MODULE=on
 //go:generate go env -w GOPROXY=https://goproxy.cn,direct
-//go:generate go get -u github.com/swaggo/swag/cmd/swag@v1.7.9
-//go:generate $HOME/go/bin/swag init --parseDependency --parseInternal --parseDepth 3
 //go:generate go mod tidy
 //go:generate go mod download
+//go:generate go get -u github.com/swaggo/swag/cmd/swag@v1.7.9
+//go:generate $HOME/go/bin/swag init --parseDependency --parseInternal --parseDepth 3
 
 import (
 	"context"

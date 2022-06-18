@@ -54,7 +54,7 @@ status = "open"
 ip              = "#mysql_ip#"
 port            = "#mysql_port#"
 config          = "charset=utf8mb4&parseTime=True&loc=Local"
-DbName          = "test"
+DbName          = "seed"
 username        = "#mysql_user#"
 password        = "#mysql_ps#"
 maxIdleConns    = 10

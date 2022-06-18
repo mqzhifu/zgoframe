@@ -123,6 +123,9 @@ WsPort   = "4444"
 TcpPort  = "5555"
 WsUri    = "/ws"
 
+[cicd]
+status  = "close"
+
 [configCenter]
 status  = "open"
 persistenceType = 3

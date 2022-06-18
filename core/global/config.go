@@ -23,6 +23,7 @@ type Config struct {
 	ConfigCenter 	 ConfigCenter
 	Upload 		     Upload
 	Oss 			 Oss
+	Cicd 			 Cicd
 }
 
 type Protobuf struct {
@@ -46,6 +47,10 @@ type Mysql struct {
 	LogMode      bool
 	LogZap       bool
 	MasterSlave	 string
+}
+
+type Cicd struct {
+	Status       string
 }
 
 //type MysqlConfig struct {

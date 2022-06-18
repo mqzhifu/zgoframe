@@ -1,10 +1,16 @@
 package core
 
-import "zgoframe/test"
+import (
+	"zgoframe/core/global"
+	"zgoframe/test"
+)
 
 func DoMySelf(testFlag string) {
 
-	test.Cicd()
+	if global.C.Cicd.Status == "open"{
+		test.Cicd()
+	}
+
 
 
 	//global.V.AlertPush.Push(1,"error","test push alert info.")

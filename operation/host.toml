@@ -1,8 +1,8 @@
 [system]
 env=["local","dev","test","pre","online"]
 
-logDir="/data/www/golang/testcicd/logs"
-workBaseDir= "/data/www/golang/testcicd"
+logDir="/data/logs/golang"
+workBaseDir= "/data/www/golang/cicd"
 remoteBaseDir = "/data/www/golang"
 
 masterDirName = "master"

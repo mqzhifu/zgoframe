@@ -81,7 +81,7 @@ port    = "#alert_port#"
 uri     = "/api/v2/alerts"
 
 [metrics]
-status = "close"
+status = "open"
 
 [websocket]
 status  = "close"
@@ -124,7 +124,7 @@ TcpPort  = "5555"
 WsUri    = "/ws"
 
 [configCenter]
-status  = "close"
+status  = "open"
 persistenceType = 3
 dataPath = "/data/config/"
 
@@ -132,7 +132,7 @@ dataPath = "/data/config/"
 path = "upload" #注意：这里是一个相对路径，具体绝对路径由构架初始化时确定
 
 [oss]
-accessKeyId = ""
-accessKeySecret = ""
-endpoint = ""
-bucket=""
+accessKeyId = "#oss_user#"
+accessKeySecret = "#oss_ps#"
+endpoint = "#oss_ip#"
+bucket="#oss_port#"

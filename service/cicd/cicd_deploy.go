@@ -313,7 +313,7 @@ func (cicdManager *CicdManager)Publish(id int,deployTargetType int)error{
 	}
 
 	//1 同步代码
-	syncCodeShellCommand := "rsync -avz --progress "+ serviceDeployConfig.FullPath + "/" + serviceDeployConfig.MasterDirName  + " rsync@"+server.OutIp+"::golang"
+	syncCodeShellCommand := "rsync -avz --progress "+ serviceDeployConfig.FullPath + "/" + serviceDeployConfig.MasterDirName  + " rsync@"+server.OutIp+"::golang/"+ serviceDeployConfig.Name
 	_,err = ExecShellCommand(syncCodeShellCommand,"")
 	util.MyPrint("SyncOneServiceToRemote:",syncCodeShellCommand , " err:",err)
 

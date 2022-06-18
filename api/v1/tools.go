@@ -2,6 +2,7 @@ package v1
 
 import (
 	"github.com/gin-gonic/gin"
+	"os"
 	"strconv"
 	"strings"
 	"zgoframe/core/global"
@@ -125,6 +126,49 @@ func ConstInitDb(c *gin.Context) {
 		id++
 	}
 	httpresponse.OkWithAll(sqlStr, "成功", c)
+}
+// @Tags Tools
+// @Summary 生成mysql数据-脚本，可导入到DB中
+// @Description tables: project instance server
+// @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
+// @Param X-Project-Id header string true "项目ID" default(6)
+// @Param X-Access header string true "访问KEY" default(imzgoframe)
+// @Produce  application/json
+// @Success 200 {string} string "sql script"
+// @Router /tools/init/db/data [get]
+func InitDbData(c *gin.Context){
+	tables := []string{"sms_rule","mail_rule","project","server","instance"}
+	tablesStr := ""
+	for _,v := range tables{
+		tablesStr += v + " "
+	}
+	outFile := global.C.Http.DiskStaticPath + "/data/db_data.sql"
+	config := global.C.Mysql[0]
+	shell := "/soft/mysql/bin/mysqldump -h "+ config.Ip+" -u" + config.Username + " -p" + config.Password + " " + config.DbName + " " +tablesStr + " > " + outFile
+
+	httpresponse.OkWithMessage(shell,c)
+
+}
+// @Tags Tools
+// @Summary 生成mysql表结构-脚本，可导入到DB中
+// @Description tables: project instance server
+// @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
+// @Param X-Project-Id header string true "项目ID" default(6)
+// @Param X-Access header string true "访问KEY" default(imzgoframe)
+// @Produce  application/json
+// @Success 200 {string} string "sql script"
+// @Router /tools/init/db/structure [get]
+func InitDbStructure(c *gin.Context) {
+	sql := global.AutoCreateUpDbTable()
+	path := global.C.Http.DiskStaticPath + "/data/db_structure.sql"
+	newConfigFile, _ := os.Create(path)
+	for _,v:= range sql{
+		v += " ;\n"
+		newConfigFile.Write([]byte(v))
+	}
+	//util.(path)
+
+	httpresponse.OkWithAll(path, "成功", c)
 }
 
 // @Tags Tools

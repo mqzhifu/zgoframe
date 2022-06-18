@@ -7,6 +7,7 @@ import (
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 	"net/http"
+	"zgoframe/model"
 	"zgoframe/util"
 	"zgoframe/service"
 )
@@ -61,3 +62,14 @@ const (
 
 	CONFIG_STATUS_OPEN = "open"
 )
+
+func AutoCreateUpDbTable()map[string]string {
+	mydb := util.NewDbTool(V.Gorm)
+	sql := mydb.CreateTable(&model.User{}, &model.UserReg{}, &model.UserLogin{},
+		&model.OperationRecord{}, &model.Project{},&model.StatisticsLog{},
+		&model.CicdPublish{}, &model.Server{}, &model.Instance{},
+		&model.SmsRule{}, &model.SmsLog{}, &model.EmailRule{}, &model.EmailLog{}, &model.MailRule{}, &model.MailLog{}, &model.MailGroup{})
+
+	return sql
+	//util.ExitPrint("init done.")
+}

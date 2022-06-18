@@ -21,6 +21,12 @@ func InitToolsRouter(Router *gin.RouterGroup) {
 		//获取APP 列表
 		ToolsRouter.POST("frame/sync/js/demo", v1.FrameSyncJsDemo)
 		//
+		ToolsRouter.GET("init/db/structure", v1.InitDbStructure)
+		ToolsRouter.GET("init/db/data", v1.InitDbData)
+
+
+
+		//生成 MYSQL 测试 数据
 		ToolsRouter.GET("test/init/db", v1.ConstInitTestDb)
 
 

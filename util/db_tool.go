@@ -43,13 +43,16 @@ func NewDbTool(gorm *gorm.DB) *DbTool {
 	return db
 }
 
-func (db *DbTool) CreateTable(tableStruct ...interface{}) {
-	for i := 0; i < len(tableStruct); i++ {
-		db.processOneTable(tableStruct[i])
-		//ExitPrint(111)
+func (db *DbTool) CreateTable(tableStruct ...interface{}) map[string]string{
+	sql_script := make(map[string]string)
 
+	for i := 0; i < len(tableStruct); i++ {
+		tableName , sql := db.processOneTable(tableStruct[i])
+		//ExitPrint(111)
+		sql_script[tableName] = sql
 	}
 
+	return sql_script
 }
 
 //1 2 3 4 5 6 7
@@ -99,8 +102,9 @@ func (db *DbTool) mergeTwoArr(firstField []TableColumnOption, endField []TableCo
 	return newColumnsOption
 }
 
-func (db *DbTool) processOneTable(tableStruct interface{}) {
-	MyPrint("processOneTable:", tableStruct)
+func (db *DbTool) processOneTable(tableStruct interface{})(tableName string ,sql_script string) {
+	//MyPrint("processOneTable:", tableStruct)
+	//sqlMap := make(map[string]string)
 
 	ValueOfTableStruct := reflect.ValueOf(tableStruct)
 	//查找方法
@@ -207,7 +211,9 @@ func (db *DbTool) processOneTable(tableStruct interface{}) {
 	}
 	sql += " comment=" + comment + db.Br
 
+	//sqlMap[tableOption.Name] = sql
 	MyPrint(sql)
+	return tableOption.Name, sql
 }
 
 func (db *DbTool) GetField(typeOfStruct reflect.Type) []TableColumnOption {

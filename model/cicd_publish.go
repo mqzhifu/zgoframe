@@ -10,7 +10,7 @@ type CicdPublish struct {
 	ServerInfo  	string `json:"server_info" form:"server_info" db:"define:varchar(255);comment:服务器信息-备份;defaultValue:''"`
 	DeployType    	int    `json:"deploy_type" form:"status" db:"define:tinyint(1);comment:1本地部署2远程同步部署;defaultValue:0"`
 	CodeDir 		string `json:"code_dir" form:"code_dir" db:"define:varchar(255);comment:项目代码目录名;defaultValue:''"`
-	Log         	string `json:"log" form:"log" db:"define:text;comment:日志;defaultValue:''"`
+	Log         	string `json:"log" form:"log" db:"define:text;comment:日志"`
 	ErrInfo     	string `json:"err_info" form:"err_info" db:"define:varchar(255);comment:错误日志;defaultValue:''"`
 	ExecTime    	int    `json:"exec_time" form:"exec_time" db:"define:int;comment:执行时间;defaultValue:0"`
 }

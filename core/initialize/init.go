@@ -298,17 +298,6 @@ func (initialize *Initialize) Start() error {
 	return nil
 }
 
-
-
-func autoCreateUpDbTable() {
-	mydb := util.NewDbTool(global.V.Gorm)
-	mydb.CreateTable(&model.User{}, &model.UserReg{}, &model.UserLogin{},
-		&model.OperationRecord{}, &model.Project{},&model.StatisticsLog{},
-		&model.CicdPublish{}, &model.Server{}, &model.Instance{},
-		&model.SmsRule{}, &model.SmsLog{}, &model.EmailRule{}, &model.EmailLog{}, &model.MailRule{}, &model.MailLog{}, &model.MailGroup{})
-
-	util.ExitPrint("init done.")
-}
 func (initialize *Initialize)OutHttpGetBaseInfo()string{
 	optionStr,_ := json.Marshal( initialize.Option)
 	return string(optionStr)

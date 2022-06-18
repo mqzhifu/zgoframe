@@ -566,7 +566,7 @@ func ExecShellCommand(command string, argc string) (string, error) {
 	c := exec.Command("bash", "-c", command)
 
 	output, err := c.CombinedOutput()
-	util.MyPrint(string(output),err)
+	util.MyPrint("ExecShellCommand output:",string(output),err)
 	if err != nil {
 		fmt.Println("exec.Command err:", err)
 		return "", err

@@ -100,8 +100,11 @@ func (cicdManager *CicdManager) DeployAllService(deployTargetType int) {
 		for _, service := range cicdManager.Option.ServiceList {
 			publishId ,err := cicdManager.DeployOneService(server, serviceDeployConfig, service)
 			util.MyPrint("DeployOneService err:",err , " publishId:",publishId)
-			err  = cicdManager.Publish(publishId,deployTargetType)
-			util.MyPrint("DeployOneService err:",err )
+			if err == nil{
+				err  = cicdManager.Publish(publishId,deployTargetType)
+				util.MyPrint("DeployOneService err:",err )
+			}
+
 			//if err != nil {
 			//	util.ExitPrint(err)
 			//}
@@ -297,7 +300,7 @@ func (cicdManager *CicdManager)Publish(id int,deployTargetType int)error{
 		return err
 	}
 
-	server := cicdManager.Option.ServerList[publishRecord.ServiceId]
+	server := cicdManager.Option.ServerList[publishRecord.ServerId]
 
 	service := cicdManager.Option.ServiceList[publishRecord.ServiceId]
 	serviceDeployConfig ,_ = cicdManager.DeployServiceCheck(serviceDeployConfig,service,server)
@@ -308,6 +311,13 @@ func (cicdManager *CicdManager)Publish(id int,deployTargetType int)error{
 		return err
 		//return cicdManager.DeployOneServiceFailed(publish, err.Error())
 	}
+
+	//1 同步代码
+	syncCodeShellCommand := "rsync -avz --progress "+ serviceDeployConfig.FullPath + "/" + serviceDeployConfig.MasterDirName  + " rsync@"+server.OutIp+"::golang"
+	_,err = ExecShellCommand(syncCodeShellCommand,"")
+	util.MyPrint("SyncOneServiceToRemote:",syncCodeShellCommand , " err:",err)
+
+
 	cicdManager.Option.PublicManager.UpStatus(publishRecord, model.CICD_PUBLISH_DEPLOY_OK)
 	return nil
 }

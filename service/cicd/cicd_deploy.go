@@ -62,7 +62,7 @@ func (cicdManager *CicdManager) ApiDeployOneService(form request.CicdDeploy)(err
 		return err
 	}
 	serviceDeployConfig := cicdManager.GetDeployConfig(form.Flag)
-	err = cicdManager.DeployOneService(server, serviceDeployConfig, service)
+	_,err = cicdManager.DeployOneService(server, serviceDeployConfig, service)
 	return err
 }
 
@@ -98,8 +98,10 @@ func (cicdManager *CicdManager) DeployAllService(deployTargetType int) {
 		}
 		//遍历所有服务
 		for _, service := range cicdManager.Option.ServiceList {
-			err := cicdManager.DeployOneService(server, serviceDeployConfig, service)
-			util.MyPrint("DeployOneService err:",err)
+			publishId ,err := cicdManager.DeployOneService(server, serviceDeployConfig, service)
+			util.MyPrint("DeployOneService err:",err , " publishId:",publishId)
+			err  = cicdManager.Publish(publishId,deployTargetType)
+			util.MyPrint("DeployOneService err:",err )
 			//if err != nil {
 			//	util.ExitPrint(err)
 			//}
@@ -202,13 +204,13 @@ func (cicdManager *CicdManager) DeployServiceCheck( serviceDeployConfig ServiceD
 }
 
 //部署一个服务
-func (cicdManager *CicdManager) DeployOneService(server util.Server, serviceDeployConfig ServiceDeployConfig, service util.Service) error {
+func (cicdManager *CicdManager) DeployOneService(server util.Server, serviceDeployConfig ServiceDeployConfig, service util.Service) (int ,error) {
 	startTime := util.GetNowTimeSecondToInt()
 	//util.MyPrint("s_name------------------:",service.Name)
 	if service.Name != "Zgoframe"  { //测试代码,只部署：local Zgoframe
 		errMsg := "service name != Zgoframe"
 		util.MyPrint(errMsg)
-		return errors.New(errMsg)
+		return 0,errors.New(errMsg)
 	}
 
 	//if server.Env != 1 &&  server.Env != 4 { //测试代码,只部署：local Zgoframe
@@ -225,7 +227,7 @@ func (cicdManager *CicdManager) DeployOneService(server util.Server, serviceDepl
 	//util.PrintStruct(newServiceDeployConfig,":")
 	//util.ExitPrint(11)
 	if err != nil {
-		return cicdManager.DeployOneServiceFailed(publish, err.Error())
+		return publish.Id,cicdManager.DeployOneServiceFailed(publish, err.Error())
 	}
 	cicdManager.Option.Log.Info("DeployServiceCheck ok~")
 	//time.Sleep(time.Second * 1)
@@ -234,7 +236,7 @@ func (cicdManager *CicdManager) DeployOneService(server util.Server, serviceDepl
 	newGitCodeDir, projectDirName ,gitLastCommitId,err := cicdManager.DeployOneServiceGitCode(serviceDeployConfig, service)
 
 	if err != nil {
-		return cicdManager.DeployOneServiceFailed(publish, err.Error())
+		return publish.Id,cicdManager.DeployOneServiceFailed(publish, err.Error())
 	}
 	p := model.CicdPublish{}
 	p.Id = publish.Id
@@ -244,22 +246,22 @@ func (cicdManager *CicdManager) DeployOneService(server util.Server, serviceDepl
 	//step 2 : 读取service项目代码里自带的cicd.toml ,供:后面使用
 	serviceCICDConfig, err := cicdManager.DeployOneServiceCICIConfig(newGitCodeDir, serviceDeployConfig, server,gitLastCommitId)
 	if err != nil {
-		return cicdManager.DeployOneServiceFailed(publish, err.Error())
+		return publish.Id,cicdManager.DeployOneServiceFailed(publish, err.Error())
 	}
 	//step 3: 生成该服务的，superVisor 配置文件
 	err = cicdManager.DeployOneServiceSuperVisor(serviceDeployConfig, serviceCICDConfig,newGitCodeDir)
 	if err != nil {
-		return cicdManager.DeployOneServiceFailed(publish, err.Error())
+		return publish.Id,cicdManager.DeployOneServiceFailed(publish, err.Error())
 	}
 	//step 4: 处理项目自带的主配置文件
 	err = cicdManager.DeployOneServiceProjectConfig(newGitCodeDir, server, serviceDeployConfig,serviceCICDConfig,service)
 	if err != nil {
-		return cicdManager.DeployOneServiceFailed(publish, err.Error())
+		return publish.Id,cicdManager.DeployOneServiceFailed(publish, err.Error())
 	}
 	//step 5 : 先执行 服务自带的 shell 预处理
 	_, err = cicdManager.DeployOneServiceCommand(newGitCodeDir, serviceDeployConfig, serviceCICDConfig)
 	if err != nil {
-		return cicdManager.DeployOneServiceFailed(publish, err.Error())
+		return publish.Id,cicdManager.DeployOneServiceFailed(publish, err.Error())
 	}
 	//step 6 : 目前均是在本机部署的代码，现在要将代码同步到服务器上
 	cicdManager.SyncOneServiceToRemote(serviceDeployConfig,server,newGitCodeDir)
@@ -274,7 +276,7 @@ func (cicdManager *CicdManager) DeployOneService(server util.Server, serviceDepl
 	e.ExecTime = execTime
 	cicdManager.Option.PublicManager.UpInfo(e)
 
-	return nil
+	return publish.Id,nil
 }
 func (cicdManager *CicdManager)SyncOneServiceToRemote(serviceDeployConfig ServiceDeployConfig,server util.Server,newGitCodeDir string )error{
 	//1 同步代码

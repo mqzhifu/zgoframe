@@ -8,6 +8,7 @@ import (
 	"go.uber.org/zap"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 	"zgoframe/core/global"
 	httpmiddleware "zgoframe/http/middleware"
@@ -16,7 +17,7 @@ import (
 	"zgoframe/util"
 )
 
-func StartHttpGin() {
+func StartHttpGin(option InitOption) {
 	dns := global.C.Http.Ip + ":" + global.C.Http.Port
 	util.MyPrint("http gin dns:"+dns)
 	server := &http.Server{
@@ -32,6 +33,13 @@ func StartHttpGin() {
 	global.V.HttpServer = server
 	go func() {
 		err := server.ListenAndServe()
+		if err != nil{
+			if strings.Contains(err.Error(), "bind: address already in use" )  {
+				util.MyPrint("server.ListenAndServe() err: bind port failed , ", err.Error())
+				option.RootQuitFunc(-5)
+				option.RootCancelFunc()
+			}
+		}
 		util.MyPrint("server.ListenAndServe() err:", err)
 	}()
 }

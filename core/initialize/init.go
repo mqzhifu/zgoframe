@@ -286,7 +286,7 @@ func (initialize *Initialize) Start() error {
 	//启动http
 	if global.C.Http.Status == global.CONFIG_STATUS_OPEN {
 		RegGinHttpRoute() //这里注册项目自己的http 路由策略
-		StartHttpGin()
+		StartHttpGin(initialize.Option)
 	}
 
 	//_ ,cancelFunc := context.WithCancel(option.RootCtx)

@@ -287,19 +287,19 @@ func (cicdManager *CicdManager) DeployOneService(server util.Server, serviceDepl
 	return publish.Id,nil
 }
 func (cicdManager *CicdManager)SyncOneServiceToRemote(serviceDeployConfig ServiceDeployConfig,server util.Server,newGitCodeDir string,project util.Project )error{
-	util.ExitPrint("project.Type:",project.Type)
 	if project.Type == util.PROJECT_TYPE_SERVICE{
 		//1 同步代码
-		syncCodeShellCommand := "rsync -avz --progress "+ serviceDeployConfig.FullPath + " rsync@"+server.OutIp+"::www"
+		syncCodeShellCommand := "rsync -avz --progress --exclude=master "+ serviceDeployConfig.FullPath + " rsync@"+server.OutIp+"::www"
 		_,err := ExecShellCommand(syncCodeShellCommand,"")
 		util.MyPrint("SyncOneServiceToRemote:",syncCodeShellCommand , " err:",err)
 		//2 同步superVisor
 		syncSuperVisorShellCommand := "rsync -avz --progress "+ newGitCodeDir + "/" + serviceDeployConfig.Name + ".ini"  + " rsync@"+server.OutIp+"::super_visor"
 		_,err = ExecShellCommand(syncSuperVisorShellCommand,"")
 		util.MyPrint("syncSuperVisorShellCommand:",syncSuperVisorShellCommand, " err:",err)
-	} else if project.Type == util.PROJECT_TYPE_SERVICE{
-		syncCodeShellCommand := "rsync -avz --progress "+ serviceDeployConfig.FullPath + " rsync@"+server.OutIp+"::www"
-		util.ExitPrint(syncCodeShellCommand)
+	} else if project.Type == util.PROJECT_TYPE_FE{
+		//util.MyPrint(serviceDeployConfig)
+		syncCodeShellCommand := "rsync -avz --progress --exclude=node_modules "+ newGitCodeDir + " rsync@"+server.OutIp+"::www/" + serviceDeployConfig.Name
+		//util.ExitPrint(syncCodeShellCommand)
 		_,err := ExecShellCommand(syncCodeShellCommand,"")
 		util.MyPrint("SyncOneServiceToRemote:",syncCodeShellCommand , " err:",err)
 	}else{
@@ -317,7 +317,6 @@ func (cicdManager *CicdManager)Publish(id int,deployTargetType int)error{
 	}
 
 	server := cicdManager.Option.ServerList[publishRecord.ServerId]
-
 	service := cicdManager.Option.ProjectList[publishRecord.ServiceId]
 	serviceDeployConfig ,_ = cicdManager.DeployServiceCheck(serviceDeployConfig,service,server)
 	//将master软链 指向 上面刚刚clone下的最新代码上
@@ -327,11 +326,19 @@ func (cicdManager *CicdManager)Publish(id int,deployTargetType int)error{
 		return err
 		//return cicdManager.DeployOneServiceFailed(publish, err.Error())
 	}
+	if service.Type == util.PROJECT_TYPE_SERVICE{
+		//1 同步代码
+		syncCodeShellCommand := "rsync -avz --progress "+ serviceDeployConfig.FullPath + "/" + serviceDeployConfig.MasterDirName  + " rsync@"+server.OutIp+"::www/"+ serviceDeployConfig.Name
+		_,err = ExecShellCommand(syncCodeShellCommand,"")
+		util.MyPrint("SyncOneServiceToRemote:",syncCodeShellCommand , " err:",err)
+	} else if service.Type == util.PROJECT_TYPE_FE{
+		syncCodeShellCommand := "rsync -avz --progress "+ serviceDeployConfig.FullPath + "/" + serviceDeployConfig.MasterDirName  + " rsync@"+server.OutIp+"::www/"+ serviceDeployConfig.Name
+		_,err = ExecShellCommand(syncCodeShellCommand,"")
+		util.MyPrint("SyncOneServiceToRemote:",syncCodeShellCommand , " err:",err)
+	}else{
+		return errors.New("SyncOneServiceToRemote :project type err.")
+	}
 
-	//1 同步代码
-	syncCodeShellCommand := "rsync -avz --progress "+ serviceDeployConfig.FullPath + "/" + serviceDeployConfig.MasterDirName  + " rsync@"+server.OutIp+"::www/"+ serviceDeployConfig.Name
-	_,err = ExecShellCommand(syncCodeShellCommand,"")
-	util.MyPrint("SyncOneServiceToRemote:",syncCodeShellCommand , " err:",err)
 
 
 	cicdManager.Option.PublicManager.UpStatus(publishRecord, model.CICD_PUBLISH_DEPLOY_OK)

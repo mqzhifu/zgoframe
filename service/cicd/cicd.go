@@ -109,7 +109,7 @@ type CicdManager struct {
 type CicdManagerOption struct {
 	ServerList  map[int]util.Server  //所有服务器
 	ServiceList map[int]util.Service //所有项目/服务
-
+	ProjectList map[int]util.Project
 	HttpPort        string
 	InstanceManager *util.InstanceManager
 	Config          ConfigCicd
@@ -162,25 +162,25 @@ func (cicdManager *CicdManager) Ping(c *gin.Context) {
 	//c.String(200,string(str))
 }
 //在当前服务器上，从<部署目录>中检索出每个服务（目录名），分析出：哪些服务~已经部署
-func (cicdManager *CicdManager) GetServiceList( ) map[int]util.Service {
-	list := make(map[int]util.Service)
+func (cicdManager *CicdManager) GetServiceList( ) map[int]util.Project {
+	list := make(map[int]util.Project)
 
-	for k, service := range cicdManager.Option.ServiceList {
+	for k, service := range cicdManager.Option.ProjectList {
 
 		server := cicdManager.Option.ServerList[service.Id]
 		localServiceDeployConfig := cicdManager.GetDeployConfig(DEPLOY_TARGET_TYPE_LOCAL)
 		localServiceDeployConfig ,_= cicdManager.DeployServiceCheck(localServiceDeployConfig,service,server)
 
-		dirList := util.ForeachDir(localServiceDeployConfig.BaseDir)
-
-		s := service
-		for _, dirInfo := range dirList {
-			if s.Name == dirInfo.Name {
-				s.Deploy = 1
-				break
-			}
-		}
-		list[k] = s
+		//dirList := util.ForeachDir(localServiceDeployConfig.BaseDir)
+		//s := service
+		//for _, dirInfo := range dirList {
+		//	if s.Name == dirInfo.Name {
+		//		s.Deploy = 1
+		//		break
+		//	}
+		//}
+		//list[k] = s
+		list[k] = service
 	}
 	return list
 	//str, _ := json.Marshal(cicdManager.Option.ServiceList)
@@ -357,7 +357,7 @@ func (cicdManager *CicdManager) GetSuperVisorList( )(list ServerServiceSuperViso
 		}
 		superVisorStatus[server.Id ] = util.SV_ERROR_NONE
 
-		for _, service := range cicdManager.Option.ServiceList {
+		for _, service := range cicdManager.Option.ProjectList {
 			//获取当前服务器，已部署的服务目录
 			//servicePath := serviceBaseDir + util.DIR_SEPARATOR + service.Name
 			//util.MyPrint("servicePath:", servicePath)

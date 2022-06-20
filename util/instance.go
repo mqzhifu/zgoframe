@@ -6,12 +6,7 @@ import (
 	"zgoframe/model"
 )
 
-const(
-	//APP_TYPE_SERVICE = 1
-	//APP_TYPE_FE = 2
-	//APP_TYPE_APP = 3
-	//APP_TYPE_BE = 4
-)
+
 
 type Instance struct {
 	Id 			int
@@ -24,12 +19,7 @@ type Instance struct {
 	Status		int		`json:"status"`
 }
 
-//var APP_TYPE_MAP = map[int]string{
-//	APP_TYPE_SERVICE: "service",
-//	APP_TYPE_FE:      "frontend",
-//	APP_TYPE_APP:     "app",
-//	APP_TYPE_BE:      "backend",
-//}
+
 
 type InstanceManager struct {
 	Pool 	map[int]Instance

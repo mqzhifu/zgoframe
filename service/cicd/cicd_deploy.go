@@ -57,21 +57,21 @@ type ServiceDeployConfig struct {
 
 
 func (cicdManager *CicdManager) ApiDeployOneService(form request.CicdDeploy)(error){
-	server , service ,err := cicdManager.CheckCicdRequestForm(form)
+	server , project ,err := cicdManager.CheckCicdRequestForm(form)
 	if err != nil{
 		return err
 	}
 	serviceDeployConfig := cicdManager.GetDeployConfig(form.Flag)
-	_,err = cicdManager.DeployOneService(server, serviceDeployConfig, service)
+	_,err = cicdManager.DeployOneService(server, serviceDeployConfig, project)
 	return err
 }
 
-func (cicdManager *CicdManager)CheckCicdRequestForm(form request.CicdDeploy)(server util.Server,service util.Service, err error){
+func (cicdManager *CicdManager)CheckCicdRequestForm(form request.CicdDeploy)(server util.Server,service util.Project, err error){
 	server , ok := cicdManager.Option.ServerList[form.ServerId]
 	if !ok {
 		return server,service,errors.New("serviceId not in list")
 	}
-	service , ok = cicdManager.Option.ServiceList[form.ServiceId]
+	service , ok = cicdManager.Option.ProjectList[form.ServiceId]
 	if !ok {
 		return server,service,errors.New("serviceId not in list")
 	}
@@ -97,7 +97,7 @@ func (cicdManager *CicdManager) DeployAllService(deployTargetType int) {
 			continue
 		}
 		//遍历所有服务
-		for _, service := range cicdManager.Option.ServiceList {
+		for _, service := range cicdManager.Option.ProjectList {
 			publishId ,err := cicdManager.DeployOneService(server, serviceDeployConfig, service)
 			util.MyPrint("DeployOneService err:",err , " publishId:",publishId)
 			if err == nil{
@@ -137,7 +137,7 @@ func (cicdManager *CicdManager)GetDeployConfig(deployTargetType int)ServiceDeplo
 	return serviceDeployConfig
 }
 
-func (cicdManager *CicdManager) DeployServiceCheck( serviceDeployConfig ServiceDeployConfig, service util.Service ,server util.Server) (ServiceDeployConfig, error) {
+func (cicdManager *CicdManager) DeployServiceCheck( serviceDeployConfig ServiceDeployConfig, service util.Project ,server util.Server) (ServiceDeployConfig, error) {
 	if service.Git == "" {
 		errMsg := "service.Git is empty~" + service.Name
 		return serviceDeployConfig, errors.New(errMsg)
@@ -207,10 +207,12 @@ func (cicdManager *CicdManager) DeployServiceCheck( serviceDeployConfig ServiceD
 }
 
 //部署一个服务
-func (cicdManager *CicdManager) DeployOneService(server util.Server, serviceDeployConfig ServiceDeployConfig, service util.Service) (int ,error) {
+func (cicdManager *CicdManager) DeployOneService(server util.Server, serviceDeployConfig ServiceDeployConfig, service util.Project) (int ,error) {
 	startTime := util.GetNowTimeSecondToInt()
 	//util.MyPrint("s_name------------------:",service.Name)
-	test_allow_project_name := []string{"Zwebuigo"}
+	//test_allow_project_name := []string{"Zwebuigo"}
+	//test_allow_project_name := []string{"Zgoframe"}
+	test_allow_project_name := []string{"Zwebuivue"}
 	for _,v := range test_allow_project_name{
 		if service.Name != v  { //测试代码,只部署：选择的项目
 			errMsg := "test_allow_project_name service name != " + v
@@ -270,7 +272,7 @@ func (cicdManager *CicdManager) DeployOneService(server util.Server, serviceDepl
 		return publish.Id,cicdManager.DeployOneServiceFailed(publish, err.Error())
 	}
 	//step 6 : 目前均是在本机部署的代码，现在要将代码同步到服务器上
-	cicdManager.SyncOneServiceToRemote(serviceDeployConfig,server,newGitCodeDir)
+	cicdManager.SyncOneServiceToRemote(serviceDeployConfig,server,newGitCodeDir,service)
 
 	cicdManager.Option.PublicManager.UpDeployStatus(publish, model.CICD_PUBLISH_DEPLOY_STATUS_FINISH)
 	cicdManager.Option.PublicManager.UpStatus(publish,model.CICD_PUBLISH_STATUS_WAIT_PUB)
@@ -284,15 +286,26 @@ func (cicdManager *CicdManager) DeployOneService(server util.Server, serviceDepl
 
 	return publish.Id,nil
 }
-func (cicdManager *CicdManager)SyncOneServiceToRemote(serviceDeployConfig ServiceDeployConfig,server util.Server,newGitCodeDir string )error{
-	//1 同步代码
-	syncCodeShellCommand := "rsync -avz --progress "+ serviceDeployConfig.FullPath + " rsync@"+server.OutIp+"::www"
-	_,err := ExecShellCommand(syncCodeShellCommand,"")
-	util.MyPrint("SyncOneServiceToRemote:",syncCodeShellCommand , " err:",err)
-	//2 同步superVisor
-	syncSuperVisorShellCommand := "rsync -avz --progress "+ newGitCodeDir + "/" + serviceDeployConfig.Name + ".ini"  + " rsync@"+server.OutIp+"::super_visor"
-	_,err = ExecShellCommand(syncSuperVisorShellCommand,"")
-	util.MyPrint("syncSuperVisorShellCommand:",syncSuperVisorShellCommand, " err:",err)
+func (cicdManager *CicdManager)SyncOneServiceToRemote(serviceDeployConfig ServiceDeployConfig,server util.Server,newGitCodeDir string,project util.Project )error{
+	util.ExitPrint("project.Type:",project.Type)
+	if project.Type == util.PROJECT_TYPE_SERVICE{
+		//1 同步代码
+		syncCodeShellCommand := "rsync -avz --progress "+ serviceDeployConfig.FullPath + " rsync@"+server.OutIp+"::www"
+		_,err := ExecShellCommand(syncCodeShellCommand,"")
+		util.MyPrint("SyncOneServiceToRemote:",syncCodeShellCommand , " err:",err)
+		//2 同步superVisor
+		syncSuperVisorShellCommand := "rsync -avz --progress "+ newGitCodeDir + "/" + serviceDeployConfig.Name + ".ini"  + " rsync@"+server.OutIp+"::super_visor"
+		_,err = ExecShellCommand(syncSuperVisorShellCommand,"")
+		util.MyPrint("syncSuperVisorShellCommand:",syncSuperVisorShellCommand, " err:",err)
+	} else if project.Type == util.PROJECT_TYPE_SERVICE{
+		syncCodeShellCommand := "rsync -avz --progress "+ serviceDeployConfig.FullPath + " rsync@"+server.OutIp+"::www"
+		util.ExitPrint(syncCodeShellCommand)
+		_,err := ExecShellCommand(syncCodeShellCommand,"")
+		util.MyPrint("SyncOneServiceToRemote:",syncCodeShellCommand , " err:",err)
+	}else{
+		return errors.New("SyncOneServiceToRemote :project type err.")
+	}
+
 	return nil
 }
 
@@ -305,7 +318,7 @@ func (cicdManager *CicdManager)Publish(id int,deployTargetType int)error{
 
 	server := cicdManager.Option.ServerList[publishRecord.ServerId]
 
-	service := cicdManager.Option.ServiceList[publishRecord.ServiceId]
+	service := cicdManager.Option.ProjectList[publishRecord.ServiceId]
 	serviceDeployConfig ,_ = cicdManager.DeployServiceCheck(serviceDeployConfig,service,server)
 	//将master软链 指向 上面刚刚clone下的最新代码上
 	err = cicdManager.DeployOneServiceLinkMaster(publishRecord.CodeDir, serviceDeployConfig)
@@ -326,7 +339,7 @@ func (cicdManager *CicdManager)Publish(id int,deployTargetType int)error{
 }
 
 //step 1
-func (cicdManager *CicdManager) DeployOneServiceGitCode(serviceDeployConfig ServiceDeployConfig, service util.Service) (string, string,string, error) {
+func (cicdManager *CicdManager) DeployOneServiceGitCode(serviceDeployConfig ServiceDeployConfig, service util.Project) (string, string,string, error) {
 	cicdManager.Option.Log.Info("step 1 : git clone project code and get git commit id.")
 
 	//FullPath 一个服务的根目录，大部分操作都在这个目录下(除了superVisor)
@@ -446,7 +459,7 @@ func (cicdManager *CicdManager) DeployOneServiceSuperVisor(serviceDeployConfig S
 }
 
 //step 4
-func (cicdManager *CicdManager) DeployOneServiceProjectConfig(newGitCodeDir string, server util.Server, serviceDeployConfig ServiceDeployConfig,configServiceCICD ConfigServiceCICD ,service util.Service ) error {
+func (cicdManager *CicdManager) DeployOneServiceProjectConfig(newGitCodeDir string, server util.Server, serviceDeployConfig ServiceDeployConfig,configServiceCICD ConfigServiceCICD ,service util.Project ) error {
 	cicdManager.Option.Log.Info("step 4 : create project self conf file.")
 	//读取该服务自己的配置文件 config.toml
 	serviceSelfConfigTmpFileDir := newGitCodeDir + util.DIR_SEPARATOR + configServiceCICD.System.ConfigTmpFileName

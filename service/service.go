@@ -109,7 +109,7 @@ func NewService(options MyServiceOptions) *Service {
 	//	gateway.MyService = service
 	//}
 	//
-	service.Cicd ,err = InitCicd(options.Gorm,options.Zap,options.OpDirName,options.ServiceList,options.HttpPort)
+	service.Cicd ,err = InitCicd(options.Gorm,options.Zap,options.OpDirName,options.ServiceList,options.HttpPort,options.ProjectManager.Pool)
 	//
 	//
 	//gameMatchOption :=  gamematch.GamematchOption{
@@ -132,7 +132,7 @@ func NewService(options MyServiceOptions) *Service {
 	return service
 }
 
-func InitCicd(gorm *gorm.DB,zap *zap.Logger,opDir string,ServiceList map[int]util.Service,httpPort string)(*cicd.CicdManager,error){
+func InitCicd(gorm *gorm.DB,zap *zap.Logger,opDir string,ServiceList map[int]util.Service,httpPort string,projectList map[int]util.Project)(*cicd.CicdManager,error){
 	util.MyPrint(ServiceList)
 	/*依赖
 	host.toml cicd.sh
@@ -171,6 +171,7 @@ func InitCicd(gorm *gorm.DB,zap *zap.Logger,opDir string,ServiceList map[int]uti
 		ServerList 		: serverList,
 		Config			: cicdConfig,
 		ServiceList		: ServiceList,
+		ProjectList 	: projectList,
 		InstanceManager : instanceManager,
 		PublicManager 	: publicManager,
 		Log				: zap,

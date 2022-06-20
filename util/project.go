@@ -6,6 +6,32 @@ import (
 	"zgoframe/model"
 )
 
+
+const(
+	PROJECT_TYPE_SERVICE = 1
+	PROJECT_TYPE_FE = 2
+	PROJECT_TYPE_APP = 4
+	PROJECT_TYPE_BE = 3
+)
+
+func GetConstListProjectType() map[string]int {
+	list := make(map[string]int)
+	list["微服务"] = PROJECT_TYPE_SERVICE
+	list["前端"] = PROJECT_TYPE_FE
+	list["APP"] = PROJECT_TYPE_APP
+	list["后端"] = PROJECT_TYPE_BE
+
+	return list
+}
+
+//var APP_TYPE_MAP = map[int]string{
+//	APP_TYPE_SERVICE: "service",
+//	APP_TYPE_FE:      "frontend",
+//	APP_TYPE_APP:     "app",
+//	APP_TYPE_BE:      "backend",
+//}
+
+
 type Project struct {
 	Id   int    `json:"id"`
 	Name string `json:"name"`

@@ -378,7 +378,7 @@ func (cicdManager *CicdManager) DeployOneServiceCICIConfig(newGitCodeDir string,
 	cicdManager.Option.Log.Info("read file:" + serviceSelfCICDConf)
 	serviceCICDConfig := ConfigServiceCICD{}
 	//读取项目自己的cicd配置文件，并映射到结构体中
-	err := util.ReadConfFile(serviceSelfCICDConf, &serviceCICDConfig)
+	err := util.ReadConfFileAutoExt(serviceSelfCICDConf, &serviceCICDConfig)
 	if err != nil {
 		return serviceCICDConfig, errors.New(err.Error())
 	}

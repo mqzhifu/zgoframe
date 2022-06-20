@@ -131,7 +131,7 @@ func (cicdManager *CicdManager)GetDeployConfig(deployTargetType int)ServiceDeplo
 		MasterDirName:     cicdManager.Option.Config.System.MasterDirName,
 		GitCloneTmpDirName: cicdManager.Option.Config.System.GitCloneTmpDirName,
 
-		CICDConfFileName:   "cicd.toml",//本项目的相关 脚本及配置
+		CICDConfFileName:   "cicd.toml",//本项目的相关 脚本及配置,这个是写死的，与程序员约定好，且里面的内容由程序DIY
 		CICDShellFileName:  "cicd.sh",//执行：git clone 代码，并获取当前git最新版本号
 	}
 	return serviceDeployConfig
@@ -283,7 +283,7 @@ func (cicdManager *CicdManager) DeployOneService(server util.Server, serviceDepl
 }
 func (cicdManager *CicdManager)SyncOneServiceToRemote(serviceDeployConfig ServiceDeployConfig,server util.Server,newGitCodeDir string )error{
 	//1 同步代码
-	syncCodeShellCommand := "rsync -avz --progress "+ serviceDeployConfig.FullPath + " rsync@"+server.OutIp+"::golang"
+	syncCodeShellCommand := "rsync -avz --progress "+ serviceDeployConfig.FullPath + " rsync@"+server.OutIp+"::www"
 	_,err := ExecShellCommand(syncCodeShellCommand,"")
 	util.MyPrint("SyncOneServiceToRemote:",syncCodeShellCommand , " err:",err)
 	//2 同步superVisor
@@ -313,7 +313,7 @@ func (cicdManager *CicdManager)Publish(id int,deployTargetType int)error{
 	}
 
 	//1 同步代码
-	syncCodeShellCommand := "rsync -avz --progress "+ serviceDeployConfig.FullPath + "/" + serviceDeployConfig.MasterDirName  + " rsync@"+server.OutIp+"::golang/"+ serviceDeployConfig.Name
+	syncCodeShellCommand := "rsync -avz --progress "+ serviceDeployConfig.FullPath + "/" + serviceDeployConfig.MasterDirName  + " rsync@"+server.OutIp+"::www/"+ serviceDeployConfig.Name
 	_,err = ExecShellCommand(syncCodeShellCommand,"")
 	util.MyPrint("SyncOneServiceToRemote:",syncCodeShellCommand , " err:",err)
 
@@ -373,7 +373,8 @@ func (cicdManager *CicdManager) DeployOneServiceGitCode(serviceDeployConfig Serv
 func (cicdManager *CicdManager) DeployOneServiceCICIConfig(newGitCodeDir string, serviceDeployConfig ServiceDeployConfig, server util.Server,gitLastCommitId string) (ConfigServiceCICD, error) {
 	cicdManager.Option.Log.Info("step 2:load service CICD config ")
 	//项目自带的CICD配置文件，这里有 服务启动脚本 和 依赖的环境
-	serviceSelfCICDConf := newGitCodeDir + util.DIR_SEPARATOR + serviceDeployConfig.OpDirName + util.DIR_SEPARATOR + serviceDeployConfig.CICDConfFileName
+	//serviceSelfCICDConf := newGitCodeDir + util.DIR_SEPARATOR + serviceDeployConfig.OpDirName + util.DIR_SEPARATOR + serviceDeployConfig.CICDConfFileName
+	serviceSelfCICDConf := newGitCodeDir  + util.DIR_SEPARATOR + serviceDeployConfig.CICDConfFileName
 	cicdManager.Option.Log.Info("read file:" + serviceSelfCICDConf)
 	serviceCICDConfig := ConfigServiceCICD{}
 	//读取项目自己的cicd配置文件，并映射到结构体中

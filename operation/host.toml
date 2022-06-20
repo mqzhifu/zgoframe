@@ -1,9 +1,12 @@
 [system]
 env=["local","dev","test","pre","online"]
 
-logDir="/data/logs/golang"
-workBaseDir= "/data/www/golang/cicd"
-remoteBaseDir = "/data/www/golang"
+#本机/远端，目录
+logDir="/data/logs/www"
+#本机进行cicd部署时的：根目录
+workBaseDir= "/data/www/cicd"
+#本地部署成功后，会往远端同步代码，这里是远端服务器存放代码的目录
+remoteBaseDir = "/data/www"
 
 masterDirName = "master"
 gitCloneTmpDirName="clone"

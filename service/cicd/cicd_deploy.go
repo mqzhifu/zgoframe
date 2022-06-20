@@ -210,10 +210,13 @@ func (cicdManager *CicdManager) DeployServiceCheck( serviceDeployConfig ServiceD
 func (cicdManager *CicdManager) DeployOneService(server util.Server, serviceDeployConfig ServiceDeployConfig, service util.Service) (int ,error) {
 	startTime := util.GetNowTimeSecondToInt()
 	//util.MyPrint("s_name------------------:",service.Name)
-	if service.Name != "Zgoframe"  { //测试代码,只部署：local Zgoframe
-		errMsg := "service name != Zgoframe"
-		util.MyPrint(errMsg)
-		return 0,errors.New(errMsg)
+	test_allow_project_name := []string{"Zwebuigo"}
+	for _,v := range test_allow_project_name{
+		if service.Name != v  { //测试代码,只部署：选择的项目
+			errMsg := "test_allow_project_name service name != " + v
+			util.MyPrint(errMsg)
+			return 0,errors.New(errMsg)
+		}
 	}
 
 	//if server.Env != 1 &&  server.Env != 4 { //测试代码,只部署：local Zgoframe

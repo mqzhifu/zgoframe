@@ -91,7 +91,7 @@ func Upload(c *gin.Context){
 	category ,_:= strconv.Atoi (c.PostForm("category") )
 	module  := c.PostForm("module")
 
-	fileUpload := GetUploadObj(category,module)
+	fileUpload := global.GetUploadObj(category,module)
 	uploadRs,err := fileUpload.UploadOne(header)
 
 	util.MyPrint("uploadRs:",uploadRs, " err:",err)
@@ -130,7 +130,7 @@ func UploadMulti(c *gin.Context){
 		return
 	}
 
-	fileUpload := GetUploadObj(category,module)
+	fileUpload := global.GetUploadObj(category,module)
 	// 获取所有图片
 	files := form.File["files"]
 	if len(files) < 1{
@@ -160,20 +160,3 @@ func UploadMulti(c *gin.Context){
 }
 
 
-func GetUploadObj(category int,module string)*util.FileUpload{
-	//projectId := request.GetProjectId(c)
-	fileUploadOption := util.FileUploadOption{
-		FilePrefix		: module,
-		MaxSize			: 8,
-		Category		: category,
-		FileHashType	: util.FILE_HASH_DAY,
-		Path			: global.C.Http.StaticPath + "/" + global.C.Upload.Path,
-		OssAccessKeyId	: global.C.Oss.AccessKeyId,
-		OssEndpoint		: global.C.Oss.Endpoint,
-		OssBucketName 	: global.C.Oss.Bucket,
-		OssAccessKeySecret: global.C.Oss.AccessKeySecret,
-	}
-
-	fileUpload := util.NewFileUpload( fileUploadOption )
-	return fileUpload
-}

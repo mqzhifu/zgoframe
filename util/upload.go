@@ -183,6 +183,7 @@ func   (fileUpload *FileUpload)UploadOne( header *multipart.FileHeader)(uploadRs
 	//}
 
 	localDiskDir , err := fileUpload.checkLocalDiskDir()
+	MyPrint("localDiskDir:",localDiskDir)
 	if err != nil{
 		return uploadRs,err
 	}

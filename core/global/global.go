@@ -37,7 +37,7 @@ type Global struct {
 	Process          *util.Process
 	Err              *util.ErrMsg
 	Email            *util.MyEmail
-
+	FileUpload		 *util.FileUpload
 	MyService        *service.Service//内部快捷服务
 
 	//Service          util.Service
@@ -72,4 +72,23 @@ func AutoCreateUpDbTable()map[string]string {
 
 	return sql
 	//util.ExitPrint("init done.")
+}
+
+
+func GetUploadObj(category int,module string)*util.FileUpload{
+	//projectId := request.GetProjectId(c)
+	fileUploadOption := util.FileUploadOption{
+		FilePrefix		: module,
+		MaxSize			: 8,
+		Category		: category,
+		FileHashType	: util.FILE_HASH_DAY,
+		Path			: C.Upload.Path,
+		OssAccessKeyId	: C.Oss.AccessKeyId,
+		OssEndpoint		: C.Oss.Endpoint,
+		OssBucketName 	: C.Oss.Bucket,
+		OssAccessKeySecret: C.Oss.AccessKeySecret,
+	}
+
+	fileUpload := util.NewFileUpload( fileUploadOption )
+	return fileUpload
 }

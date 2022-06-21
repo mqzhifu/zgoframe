@@ -393,10 +393,12 @@ func (cicdManager *CicdManager) DeployOneServiceGitCode(serviceDeployConfig Serv
 
 	//处理图片目录 的软件 连接
 	//_, err := util.FileExist(cicdManager.Option.UploadDiskPath)
+	cicdManager.Option.Log.Info("ln -s " + cicdManager.Option.Config.System.RemoteUploadDir + " " + cicdManager.Option.UploadDiskPath)
 	err = os.Symlink(cicdManager.Option.Config.System.RemoteUploadDir,cicdManager.Option.UploadDiskPath)
 	if err != nil{
 		return newGitCodeDir , projectDirName ,gitLastCommitId, errors.New("link file upload err:" + err.Error())
 	}
+	util.ExitPrint(33)
 
 	return newGitCodeDir , projectDirName ,gitLastCommitId, nil
 }

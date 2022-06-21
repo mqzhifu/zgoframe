@@ -367,7 +367,6 @@ func (cicdManager *CicdManager) DeployOneServiceGitCode(serviceDeployConfig Serv
 	//构建 shell 执行时所需 参数
 
 	shellArgc := service.Git + " " + serviceDeployConfig.ClonePath + " " + service.Name + " " + cicdManager.Option.Config.System.RemoteUploadDir + " " + cicdManager.Option.Config.System.UploadPath
-	util.ExitPrint(shellArgc)
 	//执行shell 脚本 后：service项目代码已被clone, git 版本号已知了
 
 	pwd, _ := os.Getwd() //当前路径]

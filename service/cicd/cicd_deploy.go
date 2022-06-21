@@ -366,7 +366,8 @@ func (cicdManager *CicdManager) DeployOneServiceGitCode(serviceDeployConfig Serv
 	//gitLastCommitId :=GitCloneAndGetLastCommitIdByShell(serviceGitClonePath,service.Name,service.Git)
 	//构建 shell 执行时所需 参数
 
-	shellArgc := service.Git + " " + serviceDeployConfig.ClonePath + " " + service.Name
+	shellArgc := service.Git + " " + serviceDeployConfig.ClonePath + " " + service.Name + " " + cicdManager.Option.Config.System.RemoteUploadDir + " " + cicdManager.Option.Config.System.UploadPath
+	util.ExitPrint(shellArgc)
 	//执行shell 脚本 后：service项目代码已被clone, git 版本号已知了
 
 	pwd, _ := os.Getwd() //当前路径]
@@ -393,12 +394,12 @@ func (cicdManager *CicdManager) DeployOneServiceGitCode(serviceDeployConfig Serv
 
 	//处理图片目录 的软件 连接
 	//_, err := util.FileExist(cicdManager.Option.UploadDiskPath)
-	cicdManager.Option.Log.Info("ln -s " + cicdManager.Option.Config.System.RemoteUploadDir + " " + cicdManager.Option.UploadDiskPath)
-	err = os.Symlink(cicdManager.Option.Config.System.RemoteUploadDir,cicdManager.Option.UploadDiskPath)
-	if err != nil{
-		return newGitCodeDir , projectDirName ,gitLastCommitId, errors.New("link file upload err:" + err.Error())
-	}
-	util.ExitPrint(33)
+	//cicdManager.Option.Log.Info("ln -s " + cicdManager.Option.Config.System.RemoteUploadDir + " " + cicdManager.Option.UploadDiskPath)
+	//err = os.Symlink(cicdManager.Option.Config.System.RemoteUploadDir,cicdManager.Option.UploadDiskPath)
+	//if err != nil{
+	//	return newGitCodeDir , projectDirName ,gitLastCommitId, errors.New("link file upload err:" + err.Error())
+	//}
+	//util.ExitPrint(33)
 
 	return newGitCodeDir , projectDirName ,gitLastCommitId, nil
 }

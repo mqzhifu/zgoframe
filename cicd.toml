@@ -9,6 +9,7 @@ command="go version;go env -w GO111MODULE=on;go env -w GOPROXY=https://goproxy.c
 configTmpFileName="config.toml.tmp"
 configFileName="config.toml"
 
+
 [depend]
 go="1.16"
 mysql="5.5"

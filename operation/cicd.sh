@@ -8,6 +8,8 @@ set -e
 PROJECT_GIT_URL=$1
 SERVICE_GIT_CLONE_PATH=$2
 SERVICE_NAME=$3
+RemoteUploadDir=$4
+UploadPath=$5
 
 cd $SERVICE_GIT_CLONE_PATH
 
@@ -35,5 +37,7 @@ cd $SERVICE_GIT_CLONE_PATH/$SERVICE_NAME
 CI_COMMIT_ID=$(git rev-parse --short HEAD)
 
 echo $CI_COMMIT_ID
+
+ln -s $RemoteUploadDir $UploadPath
 
 rm -rf .git

@@ -12,7 +12,7 @@ remoteUploadDir = "/data/file_upload"
 masterDirName = "master"
 gitCloneTmpDirName="clone"
 httpPort="4455"
-
+uploadPath="static/upload"
 
 [superVisor]
 rpcPort="9001"

@@ -35,6 +35,7 @@ type ConfigCicdSystem struct {
 	WorkBaseDir 		string
 	RemoteBaseDir		string
 	RemoteUploadDir		string
+	UploadPath			string
 	//ServiceDir 			string	//远程部署目录
 	//LocalServiceDir		string 	//本地部署目录
 	MasterDirName		string

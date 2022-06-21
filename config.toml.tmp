@@ -129,7 +129,7 @@ status  = "close"
 [configCenter]
 status  = "open"
 persistenceType = 3
-dataPath = "/data/www/golang/Zgoframe/master/static/data/config"
+dataPath = "/data/www/Zgoframe/master/static/data/config"
 
 [upload]
 path = "upload" #注意：这里是一个相对路径，具体绝对路径由构架初始化时确定

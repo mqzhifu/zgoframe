@@ -210,8 +210,8 @@ func (cicdManager *CicdManager) DeployServiceCheck( serviceDeployConfig ServiceD
 func (cicdManager *CicdManager) DeployOneService(server util.Server, serviceDeployConfig ServiceDeployConfig, service util.Project) (int ,error) {
 	startTime := util.GetNowTimeSecondToInt()
 	//util.MyPrint("s_name------------------:",service.Name)
-	test_allow_project_name := []string{"Zwebuigo"}
-	//test_allow_project_name := []string{"Zgoframe"}
+	//test_allow_project_name := []string{"Zwebuigo"}
+	test_allow_project_name := []string{"Zgoframe"}
 	//test_allow_project_name := []string{"Zwebuivue"}
 	for _,v := range test_allow_project_name{
 		if service.Name != v  { //测试代码,只部署：选择的项目
@@ -408,9 +408,11 @@ func (cicdManager *CicdManager) DeployOneServiceCICIConfig(newGitCodeDir string,
 	serviceCICDConfig.System.Build = strings.Replace(serviceCICDConfig.System.Build, "#service_name#", serviceDeployConfig.Name, -1)
 	serviceCICDConfig.System.Build = strings.Replace(serviceCICDConfig.System.Build, "#datetime#", strconv.Itoa(util.GetNowTimeSecondToInt()), -1)
 	serviceCICDConfig.System.Build = strings.Replace(serviceCICDConfig.System.Build, "#git_version#", gitLastCommitId, -1)
+	serviceCICDConfig.System.Build = strings.Replace(serviceCICDConfig.System.Build, "#master_path#", gitLastCommitId, -1)
 	//util.MyPrint(serviceCICDConfig.System.Build)
 	//util.ExitPrint(33)
 	serviceCICDConfig.System.Startup = strings.Replace(serviceCICDConfig.System.Startup, "#env#",strconv.Itoa( server.Env), -1)
+	util.ExitPrint(serviceCICDConfig.System.Startup)
 	//util.PrintStruct(serviceCICDConfig, ":")
 
 	return serviceCICDConfig, nil

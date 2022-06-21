@@ -2,11 +2,11 @@
 package service
 
 import (
-	"zgoframe/service/gamematch"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 	"os"
 	"zgoframe/service/cicd"
+	"zgoframe/service/gamematch"
 	"zgoframe/util"
 )
 
@@ -64,12 +64,14 @@ func NewService(options MyServiceOptions) *Service {
 		ProjectManager:     options.ProjectManager,
 		PersistenceType:    PERSISTENCE_TYPE_FILE,
 		PersistenceFileDir: options.ConfigCenterDataDir,
+		Log :options.Zap,
 	}
 	var err error
 	service.ConfigCenter, err = NewConfigCenter(configCenterOption)
 	if err != nil {
 		util.ExitPrint("NewConfigCenter err:" + err.Error())
 	}
+
 	//
 	////房间服务 - room要先实例化,math frame_sync 都强依赖room
 	//roomManagerOption := RoomManagerOption{
@@ -133,7 +135,7 @@ func NewService(options MyServiceOptions) *Service {
 }
 
 func InitCicd(gorm *gorm.DB,zap *zap.Logger,opDir string,ServiceList map[int]util.Service,httpPort string,projectList map[int]util.Project)(*cicd.CicdManager,error){
-	util.MyPrint(ServiceList)
+	//util.MyPrint(ServiceList)
 	/*依赖
 	host.toml cicd.sh
 	table:  project instance server cicd_publish
@@ -142,11 +144,11 @@ func InitCicd(gorm *gorm.DB,zap *zap.Logger,opDir string,ServiceList map[int]uti
 	opDirName := opDir
 	pwd , _ := os.Getwd()//当前路径]
 	opDirFull := pwd + "/" + opDirName
-	util.MyPrint(opDirFull,opDirName)
-
 	cicdConfig := cicd.ConfigCicd{}
 	//运维：服务器的配置信息
 	configFile := opDirFull + "/host" + "." +"toml"
+
+	//zap.Debug("InitCicd HostConfigFile:"+configFile)
 
 	//读取配置文件中的内容
 	err := util.ReadConfFile(configFile,&cicdConfig)
@@ -156,7 +158,9 @@ func InitCicd(gorm *gorm.DB,zap *zap.Logger,opDir string,ServiceList map[int]uti
 	cicdConfig.SuperVisor.ConfTemplateFileName = cicdConfig.SuperVisor.ConfTemplateFile
 	cicdConfig.SuperVisor.ConfTemplateFile = pwd + "/" + opDir  +  "/" + cicdConfig.SuperVisor.ConfTemplateFile
 
-	util.PrintStruct(cicdConfig , " : ")
+	zap.Debug("InitCicd HostConfigFile:"+configFile + " ConfTemplateFile:"+cicdConfig.SuperVisor.ConfTemplateFile)
+	//util.PrintStruct(cicdConfig , " : ")
+
 	//3方实例
 	instanceManager ,_:= util.NewInstanceManager(gorm )
 	//服务器列表

@@ -10,7 +10,6 @@ import (
 	"zgoframe/http/request"
 	httpresponse "zgoframe/http/response"
 	"zgoframe/model"
-	"zgoframe/util"
 )
 
 type JWT struct {
@@ -33,7 +32,7 @@ func (j *JWT) CreateToken(claims request.CustomClaims) (string, error) {
 
 //快捷函数，方便 回调
 func JWTAuth() gin.HandlerFunc {
-	util.MyPrint("im in jwtauth:")
+	global.V.Zap.Debug("im in jwtauth:")
 	return RealJWTAuth
 }
 

@@ -3,6 +3,7 @@ package service
 import (
 	"errors"
 	"github.com/spf13/viper"
+	"go.uber.org/zap"
 	"gorm.io/gorm"
 	"os"
 	"strconv"
@@ -41,6 +42,7 @@ type ConfigCenterOption struct {
 	ProjectManager     *util.ProjectManager
 	PersistenceType    int
 	PersistenceFileDir string
+	Log 		*zap.Logger
 }
 
 func NewConfigCenter(Option ConfigCenterOption) (*ConfigCenter, error) {
@@ -182,7 +184,7 @@ func (configCenter *ConfigCenter) InitPersistenceFile() error {
 		}
 
 		if os.IsNotExist(err) {
-			util.MyPrint(prefix + " mkdir:" + envDir)
+			configCenter.Option.Log.Info(prefix + " mkdir:" + envDir)
 			err = os.Mkdir(envDir, os.ModePerm)
 			if err != nil {
 				return errors.New(prefix + err.Error())
@@ -248,7 +250,7 @@ func (configCenter *ConfigCenter) InitPersistenceFile() error {
 					continue
 				}
 
-				util.MyPrint("file:" + fileInfo.Name)
+				configCenter.Option.Log.Info(prefix + "file:" + fileInfo.Name)
 
 				fileDir := projectDir + "/" + fileInfo.Name
 				myViper, err := configCenter.ViperRead(fileDir)

@@ -100,10 +100,10 @@ func (cicdManager *CicdManager) DeployAllService(deployTargetType int) {
 		for _, service := range cicdManager.Option.ProjectList {
 			publishId ,err := cicdManager.DeployOneService(server, serviceDeployConfig, service)
 			util.MyPrint("DeployOneService err:",err , " publishId:",publishId)
-			if err == nil{
-				err  = cicdManager.Publish(publishId,deployTargetType)
-				util.MyPrint("DeployOneService err:",err )
-			}
+			//if err == nil{
+			//	err  = cicdManager.Publish(publishId,deployTargetType)
+			//	util.MyPrint("DeployOneService err:",err )
+			//}
 
 			//if err != nil {
 			//	util.ExitPrint(err)
@@ -176,7 +176,7 @@ func (cicdManager *CicdManager) DeployServiceCheck( serviceDeployConfig ServiceD
 	//本机部分编译，要把远程部署多出一层： 服务器IP目录->服务目录
 	if serviceDeployConfig.DeployTargetType == DEPLOY_TARGET_TYPE_REMOTE{
 		newBaseDir := serviceDeployConfig.BaseDir + "/" + server.OutIp
-		_, err := util.PathExists(newBaseDir)
+		_, err = util.PathExists(newBaseDir)
 		if err != nil{
 			if os.IsNotExist(err) {
 				util.MyPrint("DEPLOY_TARGET_TYPE_LOCAL create dir:",newBaseDir)
@@ -210,9 +210,9 @@ func (cicdManager *CicdManager) DeployServiceCheck( serviceDeployConfig ServiceD
 func (cicdManager *CicdManager) DeployOneService(server util.Server, serviceDeployConfig ServiceDeployConfig, service util.Project) (int ,error) {
 	startTime := util.GetNowTimeSecondToInt()
 	//util.MyPrint("s_name------------------:",service.Name)
-	//test_allow_project_name := []string{"Zwebuigo"}
+	test_allow_project_name := []string{"Zwebuigo"}
 	//test_allow_project_name := []string{"Zgoframe"}
-	test_allow_project_name := []string{"Zwebuivue"}
+	//test_allow_project_name := []string{"Zwebuivue"}
 	for _,v := range test_allow_project_name{
 		if service.Name != v  { //测试代码,只部署：选择的项目
 			errMsg := "test_allow_project_name service name != " + v
@@ -284,6 +284,7 @@ func (cicdManager *CicdManager) DeployOneService(server util.Server, serviceDepl
 	e.ExecTime = execTime
 	cicdManager.Option.PublicManager.UpInfo(e)
 
+
 	return publish.Id,nil
 }
 func (cicdManager *CicdManager)SyncOneServiceToRemote(serviceDeployConfig ServiceDeployConfig,server util.Server,newGitCodeDir string,project util.Project )error{
@@ -348,7 +349,6 @@ func (cicdManager *CicdManager)Publish(id int,deployTargetType int)error{
 //step 1
 func (cicdManager *CicdManager) DeployOneServiceGitCode(serviceDeployConfig ServiceDeployConfig, service util.Project) (string, string,string, error) {
 	cicdManager.Option.Log.Info("step 1 : git clone project code and get git commit id.")
-
 	//FullPath 一个服务的根目录，大部分操作都在这个目录下(除了superVisor)
 	//servicePath := serviceDeployConfig.BaseDir + DIR_SEPARATOR +  service.Name
 	//serviceDeployConfig.FullPath = servicePath
@@ -411,7 +411,7 @@ func (cicdManager *CicdManager) DeployOneServiceCICIConfig(newGitCodeDir string,
 	//util.MyPrint(serviceCICDConfig.System.Build)
 	//util.ExitPrint(33)
 	serviceCICDConfig.System.Startup = strings.Replace(serviceCICDConfig.System.Startup, "#env#",strconv.Itoa( server.Env), -1)
-	util.PrintStruct(serviceCICDConfig, ":")
+	//util.PrintStruct(serviceCICDConfig, ":")
 
 	return serviceCICDConfig, nil
 }
@@ -506,21 +506,23 @@ func (cicdManager *CicdManager) DeployOneServiceCommand(newGitCodeDir string, se
 	output1 := ""
 	output2 := ""
 	if serviceCICDConfig.System.Command != "" {
-		cicdManager.Option.Log.Info("step 5.1 : System.Command: " + serviceCICDConfig.System.Command)
+		command := ExecShellCommandPre+serviceCICDConfig.System.Command
+		cicdManager.Option.Log.Info("step 5.1 : System.Command: " + command)
 		output1, err = ExecShellCommand(ExecShellCommandPre+serviceCICDConfig.System.Command, "")
 		if err != nil {
-			return output, errors.New("ExecShellCommand err " + err.Error())
+			return output, errors.New("ExecShellCommand "+command+" err " + err.Error())
 		}
-		util.MyPrint(output)
+		//util.MyPrint(output)
 	}
 	//编译项目代码
 	if serviceCICDConfig.System.Build != "" {
-		cicdManager.Option.Log.Info("step 5.2 : project build command :" + serviceCICDConfig.System.Build)
-		output2, err = ExecShellCommand(ExecShellCommandPre+serviceCICDConfig.System.Build, "")
+		command := ExecShellCommandPre+serviceCICDConfig.System.Build
+		cicdManager.Option.Log.Info("step 5.2 : project build command :" + command)
+		output2, err = ExecShellCommand(command, "")
 		if err != nil {
-			return output, errors.New("ExecShellCommand err " + err.Error())
+			return output, errors.New("ExecShellCommand "+command + "  err " + err.Error())
 		}
-		util.MyPrint(output)
+		//util.MyPrint(output)
 	}
 
 	return output1 + " <br/> " + output2, nil

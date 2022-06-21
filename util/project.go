@@ -98,7 +98,7 @@ func (projectManager *ProjectManager) AddOne(project Project) {
 
 func (projectManager *ProjectManager) GetById(id int) (Project, bool) {
 	one, ok := projectManager.Pool[id]
-	MyPrint("GetById : ",one ,ok)
+	//MyPrint("GetById : ",one ,ok)
 	if ok {
 		return one, false
 	}

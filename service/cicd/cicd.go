@@ -566,15 +566,20 @@ func ExecShellCommand(command string, argc string) (string, error) {
 	c := exec.Command("bash", "-c", command)
 
 	output, err := c.CombinedOutput()
-	util.MyPrint("ExecShellCommand output:",string(output),err)
-	if err != nil {
-		fmt.Println("exec.Command err:", err)
-		return "", err
+	strOutput := string(output)
+	if err != nil{
+		util.MyPrint("ExecShellCommand : <" +command+"> ,  has error , output:",strOutput,err.Error())
+	}else{
+		util.MyPrint("ExecShellCommand : <" +command+"> ,  success , output:",strOutput)
 	}
-	outStr := string(output)
+	//if err != nil {
+	//	fmt.Println("exec.Command err:", err)
+	//	return "", err
+	//}
+	//outStr := string(output)
 	//outArr := strings.Split(outStr,"\n")
 	//return outArr[1],nil
-	return outStr, nil
+	return strOutput, nil
 }
 
 //这里有一条简单的操作，80端口基本上都得用，测试服务器状态，用ping curl 也可以.

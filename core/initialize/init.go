@@ -230,6 +230,7 @@ func (initialize *Initialize) Start() error {
 			return err
 		}
 	}
+
 	//websocket
 	//if global.C.Websocket.Status == global.CONFIG_STATUS_OPEN{
 	//	if global.C.Http.Status != global.CONFIG_STATUS_OPEN{
@@ -271,6 +272,7 @@ func (initialize *Initialize) Start() error {
 		//global.V.AlertHook.Alert("Aaaa")
 		//util.ExitPrint(123123123)
 	}
+
 	//var netWayOption util.NetWayOption
 	//if global.C.Gateway.Status == global.CONFIG_STATUS_OPEN {
 	//	netWayOption = InitGateway()

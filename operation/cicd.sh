@@ -13,7 +13,8 @@ cd $SERVICE_GIT_CLONE_PATH
 
 rm -rf ./*
 
-#echo "clone $PROJECT_GIT_URL $SERVICE_NAME"
+#echo "in cicd.sh exec shell script ,follow:"
+#echo "git clone $PROJECT_GIT_URL $SERVICE_NAME"
 git clone $PROJECT_GIT_URL $SERVICE_NAME
 
 #echo "cd $SERVICE_GIT_CLONE_PATH/$SERVICE_NAME"
@@ -32,8 +33,6 @@ cd $SERVICE_GIT_CLONE_PATH/$SERVICE_NAME
 #APP_NAME_FULL="$CI_COMMIT_TIME_FORMATTED-$CI_COMMIT_ID"
 
 CI_COMMIT_ID=$(git rev-parse --short HEAD)
-
-
 
 echo $CI_COMMIT_ID
 

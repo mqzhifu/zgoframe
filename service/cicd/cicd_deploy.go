@@ -105,9 +105,9 @@ func (cicdManager *CicdManager) DeployAllService(deployTargetType int) {
 				util.MyPrint("DeployOneService err:",err )
 			}
 
-			if err != nil {
-				util.ExitPrint(err)
-			}
+			//if err != nil {
+			//	util.ExitPrint(err)
+			//}
 		}
 	}
 }

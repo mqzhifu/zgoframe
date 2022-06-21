@@ -118,6 +118,7 @@ type CicdManagerOption struct {
 	Log             *zap.Logger
 	OpDirName       string
 	TestServerList 	[]string
+	UploadDiskPath 	string
 }
 
 

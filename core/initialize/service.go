@@ -28,6 +28,7 @@ func InitMyService( redisGo *util.MyRedisGo){
 		Metrics			: global.V.Metric,
 		ServiceDiscovery: global.V.ServiceDiscovery,
 		ProjectId 		: global.C.System.ProjectId,
+		UploadDiskPath  : global.V.RootDir + "/" + global.C.Upload.Path,
 	}
 
 	global.V.MyService = service.NewService(MyServiceOptions)

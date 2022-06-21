@@ -389,6 +389,15 @@ func (cicdManager *CicdManager) DeployOneServiceGitCode(serviceDeployConfig Serv
 		return newGitCodeDir, "", "",errors.New("serviceCodeGitClonePath os.Rename err:" + err.Error())
 	}
 	cicdManager.Option.Log.Info("step 1 finish , newGitCodeDir :  " + newGitCodeDir + " , gitLastCommitId:" + gitLastCommitId)
+
+
+	//处理图片目录 的软件 连接
+	//_, err := util.FileExist(cicdManager.Option.UploadDiskPath)
+	err = os.Symlink(cicdManager.Option.Config.System.RemoteUploadDir,cicdManager.Option.UploadDiskPath)
+	if err != nil{
+		return newGitCodeDir , projectDirName ,gitLastCommitId, errors.New("link file upload err:" + err.Error())
+	}
+
 	return newGitCodeDir , projectDirName ,gitLastCommitId, nil
 }
 

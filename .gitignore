@@ -9,4 +9,4 @@ vendor
 .DS_Store
 desktop.ini
 docs
-static/upload/*
+static/upload

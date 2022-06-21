@@ -132,7 +132,9 @@ persistenceType = 3
 dataPath = "/data/www/Zgoframe/master/static/data/config"
 
 [upload]
-path = "static/upload" #注意：这里是一个相对路径，具体绝对路径由构架初始化时确定
+#注意：这里是一个相对路径，具体绝对路径由构架初始化时确定
+#注意：结尾不要加/，CICD部署的时候，会删除这个软连接
+path = "static/upload"
 
 [oss]
 accessKeyId = "#oss_user#"

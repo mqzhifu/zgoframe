@@ -37,6 +37,7 @@ type MyServiceOptions struct {
 	ConfigCenterDataDir string
 	ConfigCenterPersistenceType	int
 	OpDirName 		string
+	UploadDiskPath	string
 	ServiceList 	map[int]util.Service
 	HttpPort 		string
 	GatewayStatus 	string
@@ -111,7 +112,7 @@ func NewService(options MyServiceOptions) *Service {
 	//	gateway.MyService = service
 	//}
 	//
-	service.Cicd ,err = InitCicd(options.Gorm,options.Zap,options.OpDirName,options.ServiceList,options.HttpPort,options.ProjectManager.Pool)
+	service.Cicd ,err = InitCicd(options.Gorm,options.Zap,options.OpDirName,options.ServiceList,options.HttpPort,options.ProjectManager.Pool,options.UploadDiskPath)
 	//
 	//
 	//gameMatchOption :=  gamematch.GamematchOption{
@@ -134,7 +135,7 @@ func NewService(options MyServiceOptions) *Service {
 	return service
 }
 
-func InitCicd(gorm *gorm.DB,zap *zap.Logger,opDir string,ServiceList map[int]util.Service,httpPort string,projectList map[int]util.Project)(*cicd.CicdManager,error){
+func InitCicd(gorm *gorm.DB,zap *zap.Logger,opDir string,ServiceList map[int]util.Service,httpPort string,projectList map[int]util.Project, UploadDiskPath string)(*cicd.CicdManager,error){
 	//util.MyPrint(ServiceList)
 	/*依赖
 	host.toml cicd.sh
@@ -180,6 +181,7 @@ func InitCicd(gorm *gorm.DB,zap *zap.Logger,opDir string,ServiceList map[int]uti
 		PublicManager 	: publicManager,
 		Log				: zap,
 		OpDirName		: opDirName,
+		UploadDiskPath	: UploadDiskPath,
 	}
 
 	cicd ,err := cicd.NewCicdManager(op)

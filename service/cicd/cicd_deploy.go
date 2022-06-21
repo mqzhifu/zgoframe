@@ -100,14 +100,14 @@ func (cicdManager *CicdManager) DeployAllService(deployTargetType int) {
 		for _, service := range cicdManager.Option.ProjectList {
 			publishId ,err := cicdManager.DeployOneService(server, serviceDeployConfig, service)
 			util.MyPrint("DeployOneService err:",err , " publishId:",publishId)
-			//if err == nil{
-			//	err  = cicdManager.Publish(publishId,deployTargetType)
-			//	util.MyPrint("DeployOneService err:",err )
-			//}
+			if err == nil{
+				err  = cicdManager.Publish(publishId,deployTargetType)
+				util.MyPrint("DeployOneService err:",err )
+			}
 
-			//if err != nil {
-			//	util.ExitPrint(err)
-			//}
+			if err != nil {
+				util.ExitPrint(err)
+			}
 		}
 	}
 }

@@ -414,7 +414,7 @@ func (cicdManager *CicdManager) DeployOneServiceCICIConfig(newGitCodeDir string,
 	serviceCICDConfig.System.Startup = strings.Replace(serviceCICDConfig.System.Startup, "#master_path#", serviceDeployConfig.RemoteBaseDir + "/" + serviceDeployConfig.Name + "/" + serviceDeployConfig.MasterDirName, -1)
 	serviceCICDConfig.System.Startup = strings.Replace(serviceCICDConfig.System.Startup, "#service_name#", serviceDeployConfig.Name, -1)
 
-	util.ExitPrint(serviceCICDConfig.System.Startup)
+	//util.ExitPrint(serviceCICDConfig.System.Startup)
 	//util.PrintStruct(serviceCICDConfig, ":")
 
 	return serviceCICDConfig, nil

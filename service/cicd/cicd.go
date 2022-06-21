@@ -579,7 +579,7 @@ func ExecShellCommand(command string, argc string) (string, error) {
 	//outStr := string(output)
 	//outArr := strings.Split(outStr,"\n")
 	//return outArr[1],nil
-	return strOutput, nil
+	return strOutput, err
 }
 
 //这里有一条简单的操作，80端口基本上都得用，测试服务器状态，用ping curl 也可以.

@@ -24,6 +24,7 @@ type Server struct {
 	Env      int `json:"env"`
 	Status   int    `json:"status"` //1正常2关闭
 	PingStatus int 	`json:"ping_status"`//1正常2异常
+	SuperVisorStatus int `json:"super_visor_status"`
 }
 
 type ServerManager struct {

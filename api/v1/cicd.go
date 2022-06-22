@@ -29,6 +29,22 @@ func CicdSuperVisorList(c *gin.Context) {
 }
 
 // @Tags Cicd
+// @Summary 本地编译-同步远端
+// @Description 本地编译
+// @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
+// @Param X-Project-Id header string true "项目ID" default(6)
+// @Param X-Access header string true "访问KEY" default(imzgoframe)
+// @Produce  application/json
+// @Success 200 {object} util.Service
+// @Router /cicd/local/all/server/service/list [get]
+func CicdLocalAllServerServiceList(c *gin.Context) {
+	list,_ := global.V.MyService.Cicd.LocalAllServerServiceList()
+	httpresponse.OkWithAll(list, "成功", c)
+}
+
+
+
+// @Tags Cicd
 // @Summary 服务 列表
 // @Description 在当前服务器上，从<部署目录>中检索出每个服务（目录名），分析出：哪些服务~已经部署
 // @Param X-Source-Type header string true "来源" Enums(11,12,21,22)

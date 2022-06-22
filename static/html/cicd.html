@@ -130,8 +130,8 @@ instance table list:<br/>
                 }
                 serverList =  backData.data;
                 ProcessList("table_server_list",serverList)
-                ajaxProcessServerService();
-                ajaxProcessRemoteServerService();
+                // ajaxProcessServerService();
+                // ajaxProcessRemoteServerService();
             }
         });
     });
@@ -158,21 +158,6 @@ instance table list:<br/>
         });
     });
 
-
-
-
-    // $(document).ready(function(){
-    //     $.ajax({
-    //         type: "GET",
-    //         contentType: "application/json;charset=utf-8",
-    //         url: "/getInstanceList",
-    //         success: function(backData){
-    //             instanceList = $.parseJSON(backData)
-    //             ProcessList("table_instance_list",instanceList)
-    //         }
-    //     });
-    // });
-    //
     $(document).ready(function(){
         $.ajax({
             headers: {
@@ -193,19 +178,7 @@ instance table list:<br/>
             }
         });
     });
-    //
-    // $(document).ready(function(){
-    //     $.ajax({
-    //         type: "GET",
-    //         contentType: "application/json;charset=utf-8",
-    //         url: "/getServiceList",
-    //         success: function(backData){
-    //             serviceList =  $.parseJSON(backData)
-    //             ProcessServiceList("table_service_list",serviceList)
-    //         }
-    //     });
-    // });
-    //
+
     function ajaxProcessServerService(){
         $(document).ready(function(){
             $.ajax({
@@ -643,6 +616,39 @@ instance table list:<br/>
     function test(){
         optDeployService(4,6,2);
     }
+
+
+
+
+
+
+
+    // $(document).ready(function(){
+    //     $.ajax({
+    //         type: "GET",
+    //         contentType: "application/json;charset=utf-8",
+    //         url: "/getInstanceList",
+    //         success: function(backData){
+    //             instanceList = $.parseJSON(backData)
+    //             ProcessList("table_instance_list",instanceList)
+    //         }
+    //     });
+    // });
+
+
+    //
+    // $(document).ready(function(){
+    //     $.ajax({
+    //         type: "GET",
+    //         contentType: "application/json;charset=utf-8",
+    //         url: "/getServiceList",
+    //         success: function(backData){
+    //             serviceList =  $.parseJSON(backData)
+    //             ProcessServiceList("table_service_list",serviceList)
+    //         }
+    //     });
+    // });
+    //
 
 
 </script>

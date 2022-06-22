@@ -1,15 +1,10 @@
 package core
 
-import (
-	"zgoframe/core/global"
-	"zgoframe/test"
-)
-
 func DoMySelf(testFlag string) {
 
-	if global.C.Cicd.Status == "open"{
-		test.Cicd()
-	}
+	//if global.C.Cicd.Status == "open"{
+	//	test.Cicd()
+	//}
 
 
 

@@ -65,9 +65,12 @@ func(superVisor *SuperVisor) InitXMLRpc()error{
 	if superVisor.Option.Ip == "" || superVisor.Option.RpcPort == ""{
 		return errors.New("ip or port empty")
 	}
+
 	dns := "http://" + superVisor.Option.Ip + ":" + superVisor.Option.RpcPort + "/RPC2"
 	MyPrint("InitXMLRpc: " + dns)
-	c, err := supervisord.NewClient(dns)
+
+	//supervisord.optio
+	c, err := supervisord.NewClient(dns,supervisord.WithAuthentication("user","123"))
 	if err != nil{
 		MyPrint("superVisor init err:",err)
 		return err

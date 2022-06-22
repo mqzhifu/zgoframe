@@ -31,6 +31,8 @@ func InitCicdRouter(Router *gin.RouterGroup) {
 
 		CicdRouter.POST("superVisor/process", v1.CicdSuperVisorProcess)
 
+		CicdRouter.GET("local/all/server/service/list", v1.CicdLocalAllServerServiceList)
+
 
 
 	}

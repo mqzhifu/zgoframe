@@ -86,6 +86,11 @@ type ServerServiceSuperVisorList struct {
 	ServerServiceSuperVisor map[int][]MyProcessInfo `json:"server_service_super_visor"`
 }
 
+type LocalServerServiceList struct {
+	ServerList            map[int]util.Server	`json:"server_list"`
+	ServiceList            map[int]util.Project `json:"service_list"`
+}
+
 type MyProcessInfo struct {
 	ServiceId int			`json:"service_id"`
 	MasterSrc	string 	`json:"master_src"`
@@ -194,9 +199,9 @@ func (cicdManager *CicdManager) GetServerList( ) map[int]util.Server{
 	list := make(map[int]util.Server)
 	for k, server := range cicdManager.Option.ServerList {
 		//这里是测试代码，不然PING太慢
-		if !cicdManager.CheckInTestServer(server.OutIp){
-			server.PingStatus = 2
-		}else{
+		//if !cicdManager.CheckInTestServer(server.OutIp){
+		//	server.PingStatus = 2
+		//}else{
 			argsmap:=map[string]interface{}{}
 			p:= util.NewPingOption()
 			//host := "127.0.0.1"
@@ -208,13 +213,14 @@ func (cicdManager *CicdManager) GetServerList( ) map[int]util.Server{
 			}else{
 				server.PingStatus = 1
 			}
-		}
+		//}
 		list[k] = server
 	}
 
 	return list
 
 }
+
 
 //获取所有3方服务列表
 func (cicdManager *CicdManager) GetInstanceList(c *gin.Context) {
@@ -282,7 +288,71 @@ func (cicdManager *CicdManager) SuperVisorProcess( form request.CicdSuperVisor)(
 
 	return err
 }
+func (cicdManager *CicdManager)LocalAllServerServiceList()(list LocalServerServiceList , err error){
+	list.ServiceList = make(map[int]util.Project)
+	list.ServerList = make(map[int]util.Server)
+	if len(cicdManager.Option.ServerList) == 0 {
+		//服务器 为空
+		errMsg := "GetSuperVisorList err:ServerList is empty"
+		//util.MyPrint()
+		return list,errors.New(errMsg)
+	}
 
+	if len(cicdManager.Option.ServiceList) == 0 {
+		//服务为空
+		errMsg := "GetSuperVisorList err:ServiceList is empty"
+		//util.MyPrint(errMsg)
+		return list,errors.New(errMsg)
+	}
+	//list := LocalServerServiceList{}
+	for _, server := range cicdManager.Option.ServerList {
+		//先ping 一下，确实该服务器网络正常
+		argsmap:=map[string]interface{}{}
+		p:= util.NewPingOption()
+		err  = p.Ping3(server.OutIp,argsmap)
+		//util.MyPrint("Ping3 rs:",err)
+		if err != nil{
+			server.PingStatus = util.SERVER_PING_FAIL
+			list.ServerList[server.Id] = server
+			continue
+		}else{
+			server.PingStatus = util.SERVER_PING_OK
+		}
+
+
+		//再测试下无端的superVisor是否正常
+		//superVisorStatus := make(map[int]int)
+		//创建实例
+		superVisorOption := util.SuperVisorOption{
+			Ip:               server.OutIp,
+			RpcPort:          cicdManager.Option.Config.SuperVisor.RpcPort,
+		}
+		serviceSuperVisor, err := util.NewSuperVisor(superVisorOption)
+		if err != nil {
+			util.MyPrint("NewSuperVisor err:", err)
+			//superVisorStatus[server.Id ] = util.SV_ERROR_INIT
+			server.SuperVisorStatus = util.SERVER_PING_FAIL
+			list.ServerList[server.Id] = server
+			continue
+		}
+		//建立 XMLRpc
+		err = serviceSuperVisor.InitXMLRpc()
+		if err != nil {
+			util.MyPrint("serviceSuperVisor InitXMLRpc err:", err)
+			server.SuperVisorStatus = util.SERVER_PING_FAIL
+			list.ServerList[server.Id] = server
+			continue
+		}
+		server.SuperVisorStatus = util.SERVER_PING_OK
+		list.ServerList[server.Id] = server
+
+		for _, service := range cicdManager.Option.ProjectList {
+			list.ServiceList[service.Id] = service
+		}
+	}
+
+	return list,nil
+}
 
 //每台服务器上 都会启动一个superVisor进程
 //列出每台机器上的：superVisor进程 的所有服务进程的状态信息

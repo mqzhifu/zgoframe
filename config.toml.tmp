@@ -109,6 +109,7 @@ host    = "#email_stmp#"
 port    = "#email_stmp_port#"
 from    = "#email_from#"
 ps      = "#email_ps#"
+authCode = "#email_auth_code#"
 
 [pushGateway]
 status  = "close"

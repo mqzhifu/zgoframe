@@ -184,6 +184,7 @@ type Email struct {
 	Ps     string
 	Port   string
 	From   string
+	AuthCode string
 }
 
 type Gateway struct {

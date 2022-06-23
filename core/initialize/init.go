@@ -259,6 +259,7 @@ func (initialize *Initialize) Start() error {
 			Port:      global.C.Email.Port,
 			FromEmail: global.C.Email.From,
 			Password:  global.C.Email.Ps,
+			AuthCode : global.C.Email.AuthCode,
 			Log:       global.V.Zap,
 		}
 

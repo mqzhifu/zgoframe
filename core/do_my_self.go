@@ -1,7 +1,11 @@
 package core
 
+import "zgoframe/test"
+
 func DoMySelf(testFlag string) {
 
+
+	test.Email()
 	//if global.C.Cicd.Status == "open"{
 	//	test.Cicd()
 	//}

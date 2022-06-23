@@ -604,6 +604,9 @@ func (cicdManager *CicdManager) ReplaceInstance(content string, serviceName stri
 		key := separator + v + "_" + "ip" + separator
 		content = strings.Replace(content, key, instance.Host, -1)
 
+		key = separator + v + "_" + "host" + separator
+		content = strings.Replace(content, key, instance.Host, -1)
+
 		key = separator + v + "_" + "port" + separator
 		content = strings.Replace(content, key, instance.Port, -1)
 
@@ -612,6 +615,16 @@ func (cicdManager *CicdManager) ReplaceInstance(content string, serviceName stri
 
 		key = separator + v + "_" + "ps" + separator
 		content = strings.Replace(content, key, instance.Ps, -1)
+
+		key = separator + v + "_" + "password" + separator
+		content = strings.Replace(content, key, instance.Ps, -1)
+
+		key = separator + v + "_" + "from" + separator
+		content = strings.Replace(content, key, instance.Host, -1)
+
+		key = separator + v + "_" + "auth_code" + separator
+		content = strings.Replace(content, key, instance.Host, -1)
+
 
 		//}
 	}

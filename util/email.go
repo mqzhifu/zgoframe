@@ -13,7 +13,7 @@ type EmailOption struct {
 	FromEmail string
 	Password  string
 	Log       *zap.Logger
-	AuthCode	string
+	AuthCode string
 }
 
 type MyEmail struct {
@@ -23,8 +23,7 @@ type MyEmail struct {
 
 func NewMyEmail(emailOption EmailOption) *MyEmail {
 	myEmail := new(MyEmail)
-	//MyPrint("email authCode:",emailOption.AuthCode)
-	//ExitPrint(33)
+
 	port, _ := strconv.Atoi(emailOption.Port)
 	myEmail.Dialer = gomail.NewDialer(emailOption.Host, port, emailOption.FromEmail, emailOption.Password)
 	auth := smtp.PlainAuth("", emailOption.FromEmail, emailOption.AuthCode, emailOption.Host)
@@ -37,6 +36,8 @@ func NewMyEmail(emailOption EmailOption) *MyEmail {
 
 //同步 - 发送一封邮件
 func (myEmail *MyEmail) SendOneEmailSync(to string, Subject string, msg string) error {
+
+	MyPrint(myEmail.EmailOption.Host, myEmail.EmailOption.Port, myEmail.EmailOption.FromEmail, myEmail.EmailOption.Password ,myEmail.EmailOption.AuthCode)
 
 	m := myEmail.GetInitSendOneEmailInfo(to, Subject, msg)
 	err := myEmail.Dialer.DialAndSend(m)

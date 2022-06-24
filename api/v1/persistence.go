@@ -108,6 +108,52 @@ func Upload(c *gin.Context){
 }
 
 // @Tags persistence
+// @Summary 大文件下载
+// @Description 大文件走NGINX不现实，而且，中间断了后，无法续传
+// @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
+// @Param X-Project-Id header string true "项目ID" default(6)
+// @Param X-Access header string true "访问KEY" default(imzgoframe)
+// @Param path formData string false "文件相对路径"
+// @Accept multipart/form-data
+// @Produce  application/json
+// @Success 200 {object} httpresponse.HttpUploadRs "下载结果"
+// @Router /persistence/file/big/download [get]
+func FileBigDownload(c *gin.Context){
+	//_, header, err := c.Request.FormFile("file")
+	//if err != nil {
+	//	util.MyPrint("err1:", err.Error())
+	//	return
+	//}
+	//
+	//category ,_:= strconv.Atoi (c.PostForm("category") )
+	//module  := c.PostForm("module")
+
+	fileUpload := global.GetUploadObj(1,"")
+
+	//filePath := c.PostForm("path")
+	//filePath := c.Query("path")
+	filePath := "1.jpg"
+	util.MyPrint("FileBigDownload filePath:",filePath)
+
+	//c.String(200,"111")
+	//return
+
+	err := fileUpload.DownloadBig(filePath,c)
+	util.MyPrint(" fileUpload.DownloadBig return err:",err)
+	//if err != nil{
+	//	httpresponse.FailWithMessage(err.Error(),c)
+	//}else{
+	//	httpUploadRs := httpresponse.HttpUploadRs{}
+	//	httpUploadRs.UploadRs = uploadRs
+	//	httpUploadRs.OssUlr = fileUpload.GetOssUrl(uploadRs,global.C.Oss.Bucket,global.C.Oss.Endpoint)
+	//	httpUploadRs.LocalUrl = fileUpload.GetLocalUrl(uploadRs,global.C.Upload.Path)
+	//	httpresponse.OkWithAll( httpUploadRs, "已上传", c)
+	//}
+
+}
+
+
+// @Tags persistence
 // @Summary 上传多文件
 // @Description 目前是本地存一份，同步到OSS一份，目录结构是根据天做hash，注：form enctype=multipart/form-data
 // @Param X-Source-Type header string true "来源" Enums(11,12,21,22)

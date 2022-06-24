@@ -5,8 +5,10 @@ import (
 	"encoding/hex"
 	"errors"
 	"github.com/aliyun/aliyun-oss-go-sdk/oss"
+	"github.com/gin-gonic/gin"
 	"io"
 	"io/ioutil"
+	"math"
 	"mime/multipart"
 	"net/http"
 	"os"
@@ -162,6 +164,69 @@ type UploadRs struct {
 	Filename string		//文件名
 	RelativePath string	//相对路径
 	LocalPath string	//本地硬盘存储的路径
+}
+//文件下载
+//正常普通的小文件，直接走nginx+static+cdn 即可，能调用此方法的肯定是文件过大的，得分片处理
+func   (fileUpload *FileUpload)DownloadBig(fileRelativePath string,c *gin.Context)error{
+	if fileRelativePath == ""{
+		return errors.New("fileRelativePath is empty")
+	}
+	//分成多少片
+	pieceNum := 10
+	//文件大小触发 分片阀值
+	maxMb := 5
+	fileSizeSizeLimit := maxMb * 1024  * 1024 //10M
+	//fileSizeSizeLimit := 10485760 //10M
+
+	localDiskDir , _ := fileUpload.checkLocalDiskDir()
+	fileDiskDir := localDiskDir + "/" +fileRelativePath
+	MyPrint("fileDiskDir:",fileDiskDir)
+	fileInfo ,err  := FileExist(fileDiskDir)
+	if err != nil{
+		return err
+	}
+	//c.String(200,"11")
+	//return nil
+	c.Header("Transfer-Encoding", "chunked")
+	c.Header("Content-Type", "image/jpeg")
+	MyPrint("fileInfo.Size:",fileInfo.Size()," fileSizeSizeLimit:",fileSizeSizeLimit)
+	if fileInfo.Size() < int64(fileSizeSizeLimit){
+		return errors.New("小于"+strconv.Itoa(maxMb)+" mb ，请走正常接口即可")
+	}else{
+		//每片大小
+		perPieceSize := int ( math.Ceil( float64(   fileInfo.Size() / int64(pieceNum)  ) ) )
+		MyPrint("perPieceSize:",perPieceSize)
+		fd ,err := os.OpenFile(fileDiskDir,os.O_RDONLY,6)
+		if err != nil{//&& err != io.EOF
+			return errors.New("file open err:"+err.Error())
+		}
+		MyPrint("OpenFile enter for earch:")
+		buffer := make([]byte, perPieceSize)
+		for{
+			readDataLen, err := fd.Read(buffer)// len：读取文件中的数据长度
+			if err == io.EOF{
+				MyPrint("in eof.")
+				break
+			}
+			if err != nil {
+				MyPrint("err not nil")
+				MyPrint(err)
+				break
+			}
+			MyPrint("once readDataLen:",readDataLen)
+			if readDataLen == perPieceSize{
+				MyPrint("nomal read and push http")
+				c.String(200,string(buffer))
+			}else{
+				MyPrint("last read readDataLen:",readDataLen)
+				s := buffer[0:readDataLen]
+				c.String(200,string(s))
+			}
+		}
+	}
+
+	return nil
+
 }
 //func   (fileUpload *FileUpload)UploadOne(file multipart.File,header *multipart.FileHeader)(relativePathFileName string ,err error){
 func   (fileUpload *FileUpload)UploadOne( header *multipart.FileHeader)(uploadRs UploadRs ,err error){

@@ -68,6 +68,23 @@ func ReadLine(fileName string) ([]string, error) {
 	}
 	return result, nil
 }
+func UrlAppendIpHost(protocol string ,url string ,ip string,port string)string{
+	fullUrl := protocol + "://" + ip
+	if port != ""{
+		fullUrl += ":" + port
+	}
+	fullUrl += "/" +  url
+	return fullUrl
+}
+
+func UrlAppendDomain(protocol string ,url string ,domain string,port string)string{
+	fullUrl := protocol + "://" + domain
+	if port != ""{
+		fullUrl += ":" + port
+	}
+	fullUrl += "/" +  url
+	return fullUrl
+}
 
 //打开一个文件，并按照换行符 读取到一个数组中
 func ReadString(fileName string) (string, error) {

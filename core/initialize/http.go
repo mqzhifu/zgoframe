@@ -95,6 +95,7 @@ func RegGinHttpRoute() {
 	global.V.Gin.Use( httpmiddleware.Limiter() ). Use(httpmiddleware.Record()).Use(httpmiddleware.Header())
 	//设置非登陆可访问API，但是头里要加基础认证的信息
 	PublicGroup := global.V.Gin.Group("")
+	//PublicGroup.Use(httpmiddleware.Cors())
 	PublicGroup.Use(httpmiddleware.HeaderAuth())
 	{
 		router.InitBaseRouter(PublicGroup)
@@ -103,6 +104,8 @@ func RegGinHttpRoute() {
 		router.InitConfigCenterRouter(PublicGroup)
 		router.InitGameMatchRouter(PublicGroup)
 		router.InitPersistenceRouter(PublicGroup)
+		router.InitFileRouter(PublicGroup)
+
 	}
 	PrivateGroup := global.V.Gin.Group("")
 	//设置正常API（需要验证）

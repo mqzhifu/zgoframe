@@ -209,6 +209,7 @@ type Upload struct{
 type Oss struct{
 	AccessKeyId string
 	AccessKeySecret string
-	Endpoint string
-	Bucket string
+	Endpoint 	string
+	Bucket 		string
+	LocalDomain	string
 }

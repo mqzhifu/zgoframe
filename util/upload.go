@@ -2,13 +2,12 @@ package util
 
 import (
 	"bytes"
+	"encoding/base64"
 	"encoding/hex"
 	"errors"
 	"github.com/aliyun/aliyun-oss-go-sdk/oss"
-	"github.com/gin-gonic/gin"
 	"io"
 	"io/ioutil"
-	"math"
 	"mime/multipart"
 	"net/http"
 	"os"
@@ -23,24 +22,46 @@ const (
 	FILE_TYPE_DOC = 3
 	FILE_TYEP_VIDEO = 4
 )
+//上伟文件成功后，返回的数据
+type UploadRs struct {
+	Filename 		string	`json:"filename"`		//文件名
+	RelativePath	string	`json:"relative_path"`		//相对路径：用户自定义的前缀目录 + hash目录名
+	UploadDir 		string	`json:"upload_dir"`		//存储上传图片的目录名
+	StaticDir 		string	`json:"static_dir"`		//存储表态文件的目录名，它是UploadDir的上一级
+	LocalDiskPath 	string	`json:"local_disk_path"`//本地硬盘存储的路径
+	LocalIpUrl 		string 	`json:"local_ip_url"`	//访问本地文件IP-URL地址
+	LocalDomainUrl 	string 	`json:"local_domain_url"`//访问本地文件DOMAIN-URL地址
+	OssLocalUrl 	string 	`json:"oss_local_url"`	//自己的域名绑定在阿里OSS上
+	OssUrl			string 	`json:"oss_url"`		//阿里云的地址
+}
 
+//类
 type FileUpload struct {
 	FileTypeMap sync.Map
 	Option FileUploadOption
 }
 
-
 type FileUploadOption struct {
-	Path 				string	//文件存储位置
-	Category 			int		//扩展名分类,上传的文件类型，1全部2图片3文档,后端会根据类型做验证
-	FileHashType		int		//存储目录hash类型
+	//Path 				string	//文件存储位置
+	UploadDir 			string	//存储上传图片的目录名
+	StaticDir 			string	//存储表态文件的目录名，它是UploadDir的上一级
+	ProjectRootPath		string	//当前项目的绝对路径，它是StaticDir的上一级
+	LocalDirPath 		string 	//最终的：文件上传->本地硬盘路径
+	Category 			int		//上传的文件类型(扩展名分类):1全部2图片3文档,后端会根据类型做验证
+	FileHashType		int		//文件存储时，添加前缀目录：hash类型
+	MaxSize 			int 	//文件最大：MB
+	FilePrefix 			string 	//模块/业务名，可用于给文件名加前缀目录
+	//阿里云-OSS相关
 	OssAccessKeyId		string
 	OssAccessKeySecret	string
 	OssEndpoint			string
 	OssBucketName		string
-	MaxSize 			int 	//文件最大：MB
-	FilePrefix 			string 	//模块/业务名，可用于给文件名加前缀目录
+	OssLocalDomain		string
 }
+
+var imgs = []string{"jpg","jpeg","png","gif","x-png","png","bmp","pjpeg","x-icon"}
+var docs = []string{"txt","doc","docx","dotx","json","cvs","xls","xlsx","sql","msword","pptx","pdf","wps","vsd"}
+var video = []string{"mp3","mp4","avi","rm","mkv","wmv","mov","flv","rmvb"}
 
 func NewFileUpload(Option FileUploadOption )*FileUpload{
 	fileUpload := new(FileUpload)
@@ -49,7 +70,74 @@ func NewFileUpload(Option FileUploadOption )*FileUpload{
 	//fileUpload.InitMap()
 	return fileUpload
 }
+//上传一个文件
+func   (fileUpload *FileUpload)UploadOne( header *multipart.FileHeader)(uploadRs UploadRs ,err error){
+	//验证扩展名是否合法
+	fileExtName ,err := fileUpload.GetExtName(header.Filename)
+	if err != nil{
+		return uploadRs,err
+	}
+	//获取当前文件的大小
+	fileSizeMB := Round(   float64 (header.Size ) / 1024 / 1024 ,4)
+	//MyPrint("fileSizeMB:",fileSizeMB)
+	if fileUpload.Option.MaxSize > 0 && fileSizeMB > float64( fileUpload.Option.MaxSize){
+		return  uploadRs ,errors.New("大于限制："+strconv.Itoa(fileUpload.Option.MaxSize) + " m")
+	}
 
+	MyPrint("UploadOne fileExtName:",fileExtName  , " header size bytes:",header.Size , " mb:",fileSizeMB)
+	////再次检查文件的类型是否正确
+	//err = fileUpload.checkFileContentType(header,fileExtName)
+	//if err != nil{
+	//	return "",err
+	//}
+	//获取文件存储的绝对路径
+	localDiskDir , relativePath, err := fileUpload.checkLocalDiskPath()
+	MyPrint("localDiskDir:",localDiskDir)
+	if err != nil{
+		return uploadRs,err
+	}
+	//文件名：文件类型_NowUnixStamp_文件扩展名
+	fileName := fileUpload.GetNewFileName(fileExtName)
+	//hashDir := fileUpload.GetHashDirName()//获取相对路径，只是return时有用
+	//if fileUpload.Option.FilePrefix != ""{
+	//	hashDir =   fileUpload.Option.FilePrefix + "/" + hashDir
+	//}
+
+	newFileName := localDiskDir + "/" + fileName
+	MyPrint("uploadOne file:",newFileName)
+	//把用户上传的文件(内存中)，转移到本机的硬盘上
+	out, err := os.Create(newFileName)
+	if err != nil {
+		return uploadRs,err
+	}
+	defer out.Close()
+	file, err := header.Open()
+	_, err = io.Copy(out, file)
+	if err != nil {
+		return uploadRs,err
+	}
+	//同步到阿里云
+	err = fileUpload.UploadAliOSS(newFileName,relativePath,fileName)
+	if err != nil{
+		return uploadRs,err
+	}
+
+	uploadRs.RelativePath 	= relativePath
+	uploadRs.StaticDir 		= fileUpload.Option.StaticDir
+	uploadRs.UploadDir 		= fileUpload.Option.UploadDir
+	uploadRs.Filename 		= fileName
+	uploadRs.LocalDiskPath 	= localDiskDir
+	uploadRs.LocalIpUrl 	= fileUpload.GetLocalIpUrl(uploadRs)
+	uploadRs.LocalDomainUrl = fileUpload.GetLocalDomainUrl(uploadRs)
+	uploadRs.OssUrl 		= fileUpload.GetOssUrl(uploadRs)
+	uploadRs.OssLocalUrl 	= fileUpload.GetOssLocalUrl(uploadRs)
+
+	return uploadRs,nil
+}
+func   (fileUpload *FileUpload)GetNewFileName(fileExtName string)string{
+	return strconv.Itoa(fileUpload.Option.Category) + "_" + strconv.Itoa(GetNowTimeSecondToInt()) + "." +fileExtName
+}
+//撮当前上传目录的：hash前缀目录
 func   (fileUpload *FileUpload)  GetHashDirName( )string{
 	dirName := ""
 	switch fileUpload.Option.FileHashType {
@@ -65,15 +153,18 @@ func   (fileUpload *FileUpload)  GetHashDirName( )string{
 
 	return dirName;
 }
-
-
+//将本地文件上传到阿里云-OSS
 func   (fileUpload *FileUpload)UploadAliOSS(localFilePath string , relativePath , FileName string)error{
+	//这里阿里云有个小BUG，所有的路径不能以反斜杠(/)开头
+	if relativePath[0:1] == "/"{
+		relativePath = relativePath[1:]
+	}
 	AccessKeyId := fileUpload.Option.OssAccessKeyId
 	AccessKeySecret := fileUpload.Option.OssAccessKeySecret
 	endpoint :=fileUpload.Option.OssEndpoint
 
 	client ,err := oss.New(endpoint,AccessKeyId,AccessKeySecret)
-	MyPrint("oss New:",client,err)
+	//MyPrint("oss New:",client,err)
 	if err != nil{
 		return err
 	}
@@ -81,17 +172,21 @@ func   (fileUpload *FileUpload)UploadAliOSS(localFilePath string , relativePath 
 	relativePathFile := relativePath + "/" + FileName
 
 	bucketName := fileUpload.Option.OssBucketName
+
+	MyPrint("oss endpoint:",endpoint, " AccessKeyId:",AccessKeyId , " AccessKeySecret:",AccessKeySecret," bucketName:",bucketName )
+
 	bucket , err := client.Bucket(bucketName)
 	if err != nil{
 		return err
 	}
-
-	MyPrint("bucket:",bucket,err)
+	//MyPrint("bucket:",bucket,err)
+	MyPrint("oss localFilePath:",localFilePath, " relativePathFile:",relativePathFile)
 	err = bucket.PutObjectFromFile(relativePathFile,localFilePath)
 	MyPrint("PutObjectFromFile:",err)
 	return err
 
 }
+//根据文件名(字符串)，取文件的扩展名，同时验证该扩展名是否合法
 func   (fileUpload *FileUpload)GetExtName( fileName string)(extName string ,err error){
 	uploadFileName := strings.TrimSpace(fileName)
 	if uploadFileName == ""{
@@ -111,7 +206,7 @@ func   (fileUpload *FileUpload)GetExtName( fileName string)(extName string ,err 
 
 	return fileExtName,nil
 }
-
+//检查文件的内容，是否合法
 func   (fileUpload *FileUpload)checkFileContentType(header *multipart.FileHeader,fileExtName string)error{
 	f,_ := header.Open()
 	fSrc, _ := ioutil.ReadAll(f)
@@ -137,167 +232,192 @@ func   (fileUpload *FileUpload)checkFileContentType(header *multipart.FileHeader
 
 	return nil;
 }
-func   (fileUpload *FileUpload)checkLocalDiskDir()(localDiskDir string ,err error){
+//检查本地硬盘文件存储路径
+func   (fileUpload *FileUpload)checkLocalDiskPath()(localDiskDir string ,relativePath string ,err error){
 	//硬盘上存储的目录
-	localDiskDir = fileUpload.Option.Path
+	localDiskDir = fileUpload.Option.ProjectRootPath + "/" + fileUpload.Option.StaticDir + "/" + fileUpload.Option.UploadDir
 	if fileUpload.Option.FilePrefix != ""{
 		localDiskDir += "/" + fileUpload.Option.FilePrefix
+		relativePath += fileUpload.Option.FilePrefix
 	}
 	localDiskDir += "/" + fileUpload.GetHashDirName()
+	relativePath += fileUpload.GetHashDirName()
 	_,err = PathExists(localDiskDir)
 	if err != nil {
 		if os.IsNotExist(err){
 			MyPrint("dir not exist ,mkdir:"+localDiskDir)
 			err = os.MkdirAll(localDiskDir,0666)
 			if err != nil{
-				return "" , errors.New("mkdir err:"+err.Error())
+				return "" ,"", errors.New("mkdir err:"+err.Error())
 			}
 		}else{
-			return "",err
+			return "","",err
 		}
 	}else{
 		MyPrint("baseDir exist:"+localDiskDir)
 	}
-	return localDiskDir,nil
-}
-type UploadRs struct {
-	Filename string		//文件名
-	RelativePath string	//相对路径
-	LocalPath string	//本地硬盘存储的路径
-}
-//文件下载
-//正常普通的小文件，直接走nginx+static+cdn 即可，能调用此方法的肯定是文件过大的，得分片处理
-func   (fileUpload *FileUpload)DownloadBig(fileRelativePath string,c *gin.Context)error{
-	if fileRelativePath == ""{
-		return errors.New("fileRelativePath is empty")
-	}
-	//分成多少片
-	pieceNum := 10
-	//文件大小触发 分片阀值
-	maxMb := 5
-	fileSizeSizeLimit := maxMb * 1024  * 1024 //10M
-	//fileSizeSizeLimit := 10485760 //10M
 
-	localDiskDir , _ := fileUpload.checkLocalDiskDir()
-	fileDiskDir := localDiskDir + "/" +fileRelativePath
-	MyPrint("fileDiskDir:",fileDiskDir)
-	fileInfo ,err  := FileExist(fileDiskDir)
-	if err != nil{
-		return err
+	return localDiskDir,relativePath,nil
+}
+
+////文件下载
+////正常普通的小文件，直接走nginx+static+cdn 即可，能调用此方法的肯定是文件过大的，得分片处理
+//func   (fileUpload *FileUpload)DownloadBig(fileRelativePath string,c *gin.Context)error{
+//	if fileRelativePath == ""{
+//		return errors.New("fileRelativePath is empty")
+//	}
+//	//分成多少片
+//	pieceNum := 10
+//	//文件大小触发 分片阀值
+//	maxMb := 5
+//	fileSizeSizeLimit := maxMb * 1024  * 1024 //10M
+//	//fileSizeSizeLimit := 10485760 //10M
+//
+//	localDiskDir ,relativePath, _ := fileUpload.checkLocalDiskPath()
+//	fileDiskDir := localDiskDir + "/" +fileRelativePath
+//	MyPrint("fileDiskDir:",fileDiskDir)
+//	fileInfo ,err  := FileExist(fileDiskDir)
+//	if err != nil{
+//		return err
+//	}
+//	//c.String(200,"11")
+//	//return nil
+//	c.Header("Transfer-Encoding", "chunked")
+//	//c.Header("Content-Type", "image/jpeg")
+//	MyPrint("fileInfo.Size:",fileInfo.Size()," fileSizeSizeLimit:",fileSizeSizeLimit)
+//	if fileInfo.Size() < int64(fileSizeSizeLimit){
+//		return errors.New("小于"+strconv.Itoa(maxMb)+" mb ，请走正常接口即可")
+//	}else{
+//		//每片大小
+//		perPieceSize := int ( math.Ceil( float64(   fileInfo.Size() / int64(pieceNum)  ) ) )
+//		MyPrint("perPieceSize:",perPieceSize)
+//		fd ,err := os.OpenFile(fileDiskDir,os.O_RDONLY,6)
+//		if err != nil{//&& err != io.EOF
+//			return errors.New("file open err:"+err.Error())
+//		}
+//		MyPrint("OpenFile enter for earch:")
+//		buffer := make([]byte, perPieceSize)
+//		for{
+//			readDataLen, err := fd.Read(buffer)// len：读取文件中的数据长度
+//			if err == io.EOF{
+//				go c.String(200,"")
+//				MyPrint("in eof.")
+//				break
+//			}
+//			if err != nil {
+//				MyPrint("err not nil")
+//				MyPrint(err)
+//				break
+//			}
+//			MyPrint("once readDataLen:",readDataLen)
+//			if readDataLen == perPieceSize{
+//				MyPrint("nomal read and push http")
+//				c.String(200,string(buffer))
+//			}else{
+//				MyPrint("last read readDataLen:",readDataLen)
+//				s := buffer[0:readDataLen]
+//				go c.String(200,string(s))
+//			}
+//		}
+//	}
+//
+//	return nil
+//
+//}
+
+func   (fileUpload *FileUpload)UploadOneByStream(stream string,category int)(uploadRs UploadRs ,err error){
+	if category != FILE_TYPE_IMG{
+		return uploadRs, errors.New("目前category仅支持：图片流")
 	}
-	//c.String(200,"11")
-	//return nil
-	c.Header("Transfer-Encoding", "chunked")
-	c.Header("Content-Type", "image/jpeg")
-	MyPrint("fileInfo.Size:",fileInfo.Size()," fileSizeSizeLimit:",fileSizeSizeLimit)
-	if fileInfo.Size() < int64(fileSizeSizeLimit){
-		return errors.New("小于"+strconv.Itoa(maxMb)+" mb ，请走正常接口即可")
-	}else{
-		//每片大小
-		perPieceSize := int ( math.Ceil( float64(   fileInfo.Size() / int64(pieceNum)  ) ) )
-		MyPrint("perPieceSize:",perPieceSize)
-		fd ,err := os.OpenFile(fileDiskDir,os.O_RDONLY,6)
-		if err != nil{//&& err != io.EOF
-			return errors.New("file open err:"+err.Error())
+
+	base64TypePrefix := "data:"
+	base64TypeImgPrefix := "image/"
+	base64TypeImg := imgs
+
+	imgType := ""
+	imgTypePrefixStr := ""
+
+	if len(stream) < 100{
+		return uploadRs,errors.New("stream size < 100 bytes")
+	}
+
+	for _ ,v:= range base64TypeImg{
+		typeStr := base64TypePrefix + base64TypeImgPrefix + v
+		//取取stream前100个字节，进行匹配
+		if strings.Contains(stream[0:100], typeStr){
+			imgType = v
+			imgTypePrefixStr = typeStr
+			break
 		}
-		MyPrint("OpenFile enter for earch:")
-		buffer := make([]byte, perPieceSize)
-		for{
-			readDataLen, err := fd.Read(buffer)// len：读取文件中的数据长度
-			if err == io.EOF{
-				MyPrint("in eof.")
-				break
-			}
-			if err != nil {
-				MyPrint("err not nil")
-				MyPrint(err)
-				break
-			}
-			MyPrint("once readDataLen:",readDataLen)
-			if readDataLen == perPieceSize{
-				MyPrint("nomal read and push http")
-				c.String(200,string(buffer))
-			}else{
-				MyPrint("last read readDataLen:",readDataLen)
-				s := buffer[0:readDataLen]
-				c.String(200,string(s))
-			}
-		}
 	}
 
-	return nil
+	if imgType == "" {
+		return uploadRs,errors.New("no match , img type err.")
+	}
 
-}
-//func   (fileUpload *FileUpload)UploadOne(file multipart.File,header *multipart.FileHeader)(relativePathFileName string ,err error){
-func   (fileUpload *FileUpload)UploadOne( header *multipart.FileHeader)(uploadRs UploadRs ,err error){
-	fileExtName ,err := fileUpload.GetExtName(header.Filename)
+	if imgType == "jpeg"{
+		imgType = "jpg"
+	}
+
+	MyPrint("UploadOneByStream imgTypePrefixStr:",imgTypePrefixStr , " len:",len(imgTypePrefixStr))
+	streamData := stream[len(imgTypePrefixStr) + 8 :]
+	MyPrint("streamData:",streamData)
+	data,err := base64.StdEncoding.DecodeString(streamData)
+	if err != nil{
+		return uploadRs,errors.New("base64 DecodeString err:"+err.Error())
+	}
+
+	localDiskDir , relativePath, err := fileUpload.checkLocalDiskPath()
 	if err != nil{
 		return uploadRs,err
 	}
-	fileSizeMB := Round(   float64 (header.Size ) / 1024 / 1024 ,4)
-	MyPrint("fileSizeMB:",fileSizeMB)
-	if fileUpload.Option.MaxSize > 0 && fileSizeMB > float64( fileUpload.Option.MaxSize){
-		return  uploadRs ,errors.New("大于限制："+strconv.Itoa(fileUpload.Option.MaxSize) + " m")
-	}
-
-	MyPrint("UploadOne fileExtName:",fileExtName  , " header size:",header.Size , " mb:",fileSizeMB)
-	////再次检查文件的类型是否正确
-	//err = fileUpload.checkFileContentType(header,fileExtName)
-	//if err != nil{
-	//	return "",err
-	//}
-
-	localDiskDir , err := fileUpload.checkLocalDiskDir()
-	MyPrint("localDiskDir:",localDiskDir)
+	//文件名：文件类型_NowUnixStamp_文件扩展名
+	fileName := fileUpload.GetNewFileName(imgType)
+	localDiskDirFile := localDiskDir+"/"+fileName
+	MyPrint("localDiskDirFile:",localDiskDirFile)
+	fd , err := os.OpenFile(localDiskDirFile,os.O_CREATE|os.O_RDWR,os.ModePerm)
 	if err != nil{
-		return uploadRs,err
+		return uploadRs,errors.New("open file err:"+err.Error())
 	}
-	//ExitPrint("localDiskDir:",localDiskDir)
-	fileName := strconv.Itoa(fileUpload.Option.Category) + "_" + strconv.Itoa(GetNowTimeSecondToInt()) + "." +fileExtName
-	relativePath := fileUpload.GetHashDirName()
-	if fileUpload.Option.FilePrefix != ""{
-		relativePath =   fileUpload.Option.FilePrefix + "/" + relativePath
-	}
-
-	//relativePathFileName :=  relativePath + "/" + fileName
-
-	newFileName := localDiskDir + "/" + fileName
-	MyPrint("uploadOne file:",newFileName)
-	//把用户上传的文件(内存中)，转移到本机的硬盘上
-	out, err := os.Create(newFileName)
-	if err != nil {
-		return uploadRs,err
-	}
-	defer out.Close()
-	file, err := header.Open()
-	_, err = io.Copy(out, file)
-	if err != nil {
-		return uploadRs,err
-	}
-	//同步到阿里云
-	err = fileUpload.UploadAliOSS(newFileName,relativePath,fileName)
+	defer fd.Close()
+	_ ,err = fd.Write(data)
 	if err != nil{
-		return uploadRs,err
+		return uploadRs,errors.New("file write err:"+err.Error())
 	}
-	uploadRs.RelativePath = relativePath
-	uploadRs.Filename = fileName
-	uploadRs.LocalPath = localDiskDir
+
+	uploadRs.RelativePath 	= relativePath
+	uploadRs.StaticDir 		= fileUpload.Option.StaticDir
+	uploadRs.UploadDir 		= fileUpload.Option.UploadDir
+	uploadRs.Filename 		= fileName
+	uploadRs.LocalDiskPath 	= localDiskDir
+	uploadRs.LocalIpUrl 	= fileUpload.GetLocalIpUrl(uploadRs)
+	uploadRs.LocalDomainUrl = fileUpload.GetLocalDomainUrl(uploadRs)
+	uploadRs.OssUrl 		= fileUpload.GetOssUrl(uploadRs)
+	uploadRs.OssLocalUrl 	= fileUpload.GetOssLocalUrl(uploadRs)
 
 	return uploadRs,nil
 }
 
-func   (fileUpload *FileUpload)GetOssUrl(uploadRs UploadRs,bucketName string,endpoint string)string{
-	return bucketName + "." +endpoint + "/" + uploadRs.RelativePath + "/" + uploadRs.Filename
+func   (fileUpload *FileUpload)GetOssLocalUrl(uploadRs UploadRs )string{
+	return fileUpload.Option.OssLocalDomain + "/" + uploadRs.RelativePath + "/" + uploadRs.Filename
 }
 
-func   (fileUpload *FileUpload)GetLocalUrl(uploadRs UploadRs,uploadPath string)string{
-	return "/static/" + uploadPath + "/" + uploadRs.RelativePath + "/" + uploadRs.Filename
+
+
+func   (fileUpload *FileUpload)GetOssUrl(uploadRs UploadRs )string{
+	return fileUpload.Option.OssBucketName + "." +fileUpload.Option.OssEndpoint + "/" + uploadRs.RelativePath + "/" + uploadRs.Filename
+}
+//ip访问的话，目录前面会多一个 static
+func   (fileUpload *FileUpload)GetLocalIpUrl(uploadRs UploadRs)string{
+	return uploadRs.StaticDir + "/" + uploadRs.UploadDir + "/" +  uploadRs.RelativePath + "/" + uploadRs.Filename
+}
+//域名访问的话，少一个static
+func   (fileUpload *FileUpload)GetLocalDomainUrl(uploadRs UploadRs)string{
+	return uploadRs.UploadDir + "/" +  uploadRs.RelativePath + "/" + uploadRs.Filename
 }
 
 func   (fileUpload *FileUpload)GetAllowFileTypeList(category int)(rs []string,err error){
-	imgs := []string{"jpg","jpeg","png","gif","x-png","png","bmp","pjpeg"}
-	docs := []string{"txt","doc","docx","dotx","json","cvs","xls","xlsx","sql","msword","pptx","pdf","wps","vsd"}
-	video := []string{"mp3","mp4","avi","rm","mkv","wmv","mov","flv","rmvb"}
+
 
 	if category == FILE_TYPE_IMG{
 		return imgs,nil

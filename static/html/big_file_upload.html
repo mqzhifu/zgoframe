@@ -54,26 +54,30 @@
         var reader = response.body.getReader();
         var bytesReceived = 0;
         var cnt = 0;
-            reader.read().then(function processResult(result) {
-                cnt++;
-                console.log(result);
+        // var r_length = response.headers.get('Content-Length');
+        // console.log("r_length:",r_length);
 
-                console.log("cnt:",cnt);
-                // Result objects contain two properties:
-                // done  - true if the stream has already given you all its data.
-                // value - some data. Always undefined when done is true.
-                if (result.done) {
-                    console.log("Fetch complete");
-                    return;
-                }
+        reader.read().then(function processResult(result) {
+            cnt++;
+            console.log(result);
 
-                // result.value for fetch streams is a Uint8Array
-                bytesReceived += result.value.length;
-                console.log("Received", bytesReceived, "bytes of data so far");
 
-                // Read some more, and call this function again
-                return reader.read().then(processResult);
-            });
+            console.log("cnt:",cnt);
+            // Result objects contain two properties:
+            // done  - true if the stream has already given you all its data.
+            // value - some data. Always undefined when done is true.
+            if (result.done) {
+                console.log("Fetch complete");
+                return;
+            }
+
+            // result.value for fetch streams is a Uint8Array
+            bytesReceived += result.value.length;
+            console.log("Received", bytesReceived, "bytes of data so far");
+
+            // Read some more, and call this function again
+            return reader.read().then(processResult);
+        });
         }
     );
 

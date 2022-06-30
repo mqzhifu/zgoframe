@@ -58,7 +58,9 @@ var initializeVar *initialize.Initialize
 // @tag.name GameMatch
 // @tag.description 游戏匹配机制
 // @tag.name persistence
-// @tag.description 持久化(文件/日志收集)，注：文件上传目前仅支持HTTP协议，也就是form+multipart/form-data模式.不支持：分片传输，断点续传等功能
+// @tag.description 持久化(文件/日志收集
+// @tag.name file
+// @tag.description 文件系统，如：上传/下载文件，文件包括：图片、视频、文件流等. 注：文件上传目前仅支持HTTP协议，也就是form+multipart/form-data模式.不支持：分片传输，断点续传等功能
 // @tag.name ConfigCenter
 // @tag.description 配置中心，它有几个维度注意下： 环境->项目->文件->模块，项目这个维度http-header头中是公共的且已处理，余下3个请求的时候都要带上。目前仅支持：toml格式，后期可加ymal和ini
 // @securityDefinitions.apikey ApiKeyAuth

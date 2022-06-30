@@ -130,7 +130,7 @@ type StatisticsLogData struct {
 	ProjectId 	int    	`json:"project_id"`					//项目/服务/app- Id
 	Uid     	int 	`json:"uid" form:"uid"`				//用户ID
 	Category    int    	`json:"category" form:"category"`	//分类ID，保留字，暂不使用
-	Action 		string 	`json:"action" form:"action"`		//动作描述，如：user_client_a_button
+	Action 		string 	`json:"action" form:"action"`		//动作描述，如：user_client_a_button ,user_open_window ,  user_pay ,user_order
 	Msg       	string 	`json:"msg" form:"msg"`				//自定义消息体，算是对action的一种补充
 }
 

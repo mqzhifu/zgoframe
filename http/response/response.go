@@ -44,9 +44,9 @@ type Captcha struct {
 // @Description 上传图片结果
 type HttpUploadRs struct {
 	util.UploadRs
-	OssUlr string	//阿里OSS的访问地址
-	LocalUrl string	//本地存储的访问地址
-	Err string 		//上传图片是否发生错误，如果为空证明没有，此字段给上传多张图片使用
+	FullLocalIpUrl 		string 	`json:"full_local_ip_url"`		//本地存储的访问地址
+	FullLocalDomainUrl	string	`json:"full_local_domain_url"`
+	Err 				string 	`json:"err"`					//上传图片是否发生错误，如果为空证明没有，此字段给上传多张图片使用
 }
 
 //@description 常量信息

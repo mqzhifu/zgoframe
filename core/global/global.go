@@ -74,7 +74,7 @@ func AutoCreateUpDbTable()map[string]string {
 	//util.ExitPrint("init done.")
 }
 
-
+//文件公共处理类，做成公共，方便统一管理
 func GetUploadObj(category int,module string)*util.FileUpload{
 	//projectId := request.GetProjectId(c)
 	fileUploadOption := util.FileUploadOption{
@@ -82,11 +82,14 @@ func GetUploadObj(category int,module string)*util.FileUpload{
 		MaxSize			: 8,
 		Category		: category,
 		FileHashType	: util.FILE_HASH_DAY,
-		Path			: C.Upload.Path,
+		UploadDir		: C.Upload.Path,
+		StaticDir		: C.Http.StaticPath,
+		ProjectRootPath	: V.RootDir,
 		OssAccessKeyId	: C.Oss.AccessKeyId,
 		OssEndpoint		: C.Oss.Endpoint,
 		OssBucketName 	: C.Oss.Bucket,
 		OssAccessKeySecret: C.Oss.AccessKeySecret,
+		OssLocalDomain: C.Oss.LocalDomain,
 	}
 
 	fileUpload := util.NewFileUpload( fileUploadOption )

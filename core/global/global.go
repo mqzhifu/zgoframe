@@ -79,7 +79,7 @@ func GetUploadObj(category int,module string)*util.FileUpload{
 	//projectId := request.GetProjectId(c)
 	fileUploadOption := util.FileUploadOption{
 		FilePrefix		: module,
-		MaxSize			: 8,
+		MaxSize			: C.Upload.MaxSize,
 		Category		: category,
 		FileHashType	: util.FILE_HASH_DAY,
 		UploadDir		: C.Upload.Path,

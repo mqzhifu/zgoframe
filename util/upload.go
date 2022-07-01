@@ -1,15 +1,13 @@
 package util
 
 import (
-	"bytes"
 	"encoding/base64"
-	"encoding/hex"
 	"errors"
 	"github.com/aliyun/aliyun-oss-go-sdk/oss"
+	"github.com/gin-gonic/gin"
 	"io"
-	"io/ioutil"
+	"math"
 	"mime/multipart"
-	"net/http"
 	"os"
 	"strconv"
 	"strings"
@@ -49,7 +47,7 @@ type FileUploadOption struct {
 	LocalDirPath 		string 	//最终的：文件上传->本地硬盘路径
 	Category 			int		//上传的文件类型(扩展名分类):1全部2图片3文档,后端会根据类型做验证
 	FileHashType		int		//文件存储时，添加前缀目录：hash类型
-	MaxSize 			int 	//文件最大：MB
+	MaxSize 			int 	//文件最大：MB ,默认：nginx是10Mb ,golang是9mb，不建议太大，且修改要与NGINX同步改，不然无效。文件太大建议使用新方法做分片传输
 	FilePrefix 			string 	//模块/业务名，可用于给文件名加前缀目录
 	//阿里云-OSS相关
 	OssAccessKeyId		string
@@ -206,32 +204,6 @@ func   (fileUpload *FileUpload)GetExtName( fileName string)(extName string ,err 
 
 	return fileExtName,nil
 }
-//检查文件的内容，是否合法
-func   (fileUpload *FileUpload)checkFileContentType(header *multipart.FileHeader,fileExtName string)error{
-	f,_ := header.Open()
-	fSrc, _ := ioutil.ReadAll(f)
-	realFileType := fileUpload.GetFileType(fSrc[:10])
-
-	contentType := http.DetectContentType(fSrc[:512])
-	MyPrint("checkFileContentType realFileType:",realFileType , " http.DetectContentType:",contentType)
-
-	if realFileType != ""{
-		if !fileUpload.FilterByExtString(fileUpload.Option.Category,realFileType){
-			return errors.New("ext errors:"+fileUpload.GetAllowFileTypeListToStr(fileUpload.Option.Category))
-		}
-
-		if realFileType != fileExtName{
-			return errors.New("文件名中的扩展名与文件内容的类型不符")
-		}
-	}else{
-		//这里是证明无法从头里识别出具体类型，如:TXT 不同编辑类型，可能头内容不同，ANSI的更是没有头标识符
-		if fileExtName != "txt"{
-			return errors.New("文件类型非法:未识别出文件类型")
-		}
-	}
-
-	return nil;
-}
 //检查本地硬盘文件存储路径
 func   (fileUpload *FileUpload)checkLocalDiskPath()(localDiskDir string ,relativePath string ,err error){
 	//硬盘上存储的目录
@@ -260,71 +232,108 @@ func   (fileUpload *FileUpload)checkLocalDiskPath()(localDiskDir string ,relativ
 	return localDiskDir,relativePath,nil
 }
 
-////文件下载
-////正常普通的小文件，直接走nginx+static+cdn 即可，能调用此方法的肯定是文件过大的，得分片处理
-//func   (fileUpload *FileUpload)DownloadBig(fileRelativePath string,c *gin.Context)error{
-//	if fileRelativePath == ""{
-//		return errors.New("fileRelativePath is empty")
-//	}
-//	//分成多少片
-//	pieceNum := 10
-//	//文件大小触发 分片阀值
-//	maxMb := 5
-//	fileSizeSizeLimit := maxMb * 1024  * 1024 //10M
-//	//fileSizeSizeLimit := 10485760 //10M
-//
-//	localDiskDir ,relativePath, _ := fileUpload.checkLocalDiskPath()
-//	fileDiskDir := localDiskDir + "/" +fileRelativePath
-//	MyPrint("fileDiskDir:",fileDiskDir)
-//	fileInfo ,err  := FileExist(fileDiskDir)
-//	if err != nil{
-//		return err
-//	}
-//	//c.String(200,"11")
-//	//return nil
-//	c.Header("Transfer-Encoding", "chunked")
-//	//c.Header("Content-Type", "image/jpeg")
-//	MyPrint("fileInfo.Size:",fileInfo.Size()," fileSizeSizeLimit:",fileSizeSizeLimit)
-//	if fileInfo.Size() < int64(fileSizeSizeLimit){
-//		return errors.New("小于"+strconv.Itoa(maxMb)+" mb ，请走正常接口即可")
-//	}else{
-//		//每片大小
-//		perPieceSize := int ( math.Ceil( float64(   fileInfo.Size() / int64(pieceNum)  ) ) )
-//		MyPrint("perPieceSize:",perPieceSize)
-//		fd ,err := os.OpenFile(fileDiskDir,os.O_RDONLY,6)
-//		if err != nil{//&& err != io.EOF
-//			return errors.New("file open err:"+err.Error())
-//		}
-//		MyPrint("OpenFile enter for earch:")
-//		buffer := make([]byte, perPieceSize)
-//		for{
-//			readDataLen, err := fd.Read(buffer)// len：读取文件中的数据长度
-//			if err == io.EOF{
-//				go c.String(200,"")
-//				MyPrint("in eof.")
-//				break
-//			}
-//			if err != nil {
-//				MyPrint("err not nil")
-//				MyPrint(err)
-//				break
-//			}
-//			MyPrint("once readDataLen:",readDataLen)
-//			if readDataLen == perPieceSize{
-//				MyPrint("nomal read and push http")
-//				c.String(200,string(buffer))
-//			}else{
-//				MyPrint("last read readDataLen:",readDataLen)
-//				s := buffer[0:readDataLen]
-//				go c.String(200,string(s))
-//			}
-//		}
-//	}
-//
-//	return nil
-//
-//}
 
+type FileDownInfo struct {
+	PieceNum	int
+	PieceSize 	int
+	FileSize 	int64
+	FileRelativePath string
+	FileLocalPath string
+}
+
+func   (fileUpload *FileUpload)DownloadFileInfo(fileRelativePath string)(fileDownInfo FileDownInfo,err error){
+	if fileRelativePath == ""{
+		return fileDownInfo,errors.New("fileRelativePath is empty")
+	}
+	//分成多少片
+	//pieceNum := 10
+	//触发:分片阀值(文件大小)
+	maxMb := fileUpload.Option.MaxSize
+	fileSizeSizeLimit := maxMb * 1024  * 1024 //MB 转 bytes
+	//获取本地图片存储路径
+	localDiskDir , _ , _ := fileUpload.checkLocalDiskPath()
+	fileDiskDir := localDiskDir + "/" +fileRelativePath
+	MyPrint("fileDiskDir:",fileDiskDir)
+	//判断文件是否存在
+	fileInfo ,err  := FileExist(fileDiskDir)
+	if err != nil{
+		return fileDownInfo , err
+	}
+	//c.String(200,"11")
+	//return nil
+	//c.Header("Transfer-Encoding", "chunked")
+	//c.Header("Content-Type", "image/jpeg")
+	pieceNum := 0
+	MyPrint("fileInfo.Size:",fileInfo.Size()," fileSizeSizeLimit:",fileSizeSizeLimit)
+	if fileInfo.Size() < int64(fileSizeSizeLimit){
+		return fileDownInfo,errors.New("小于"+strconv.Itoa(maxMb)+" mb ，请走正常接口即可")
+	}else if  fileInfo.Size() < 100 * 1024  * 1024{//100MB 以内
+		pieceNum = 10
+	}else{//1Gb 以上的，就直接切分成100份了
+		pieceNum = 100
+	}
+	//每片大小
+	perPieceSize := int ( math.Ceil( float64(   fileInfo.Size() / int64(pieceNum)  ) ) )
+
+	fileDownInfo.FileSize = fileInfo.Size()
+	fileDownInfo.PieceNum = pieceNum
+	fileDownInfo.PieceSize = perPieceSize
+	fileDownInfo.FileLocalPath = localDiskDir
+
+
+	return fileDownInfo,nil
+}
+
+//文件下载
+//正常普通的小文件，直接走nginx+static+cdn 即可，能调用此方法的肯定是文件过大的，得分片处理
+func   (fileUpload *FileUpload)Download(fileRelativePath string,c *gin.Context)error{
+	fileDownInfo , err := fileUpload.DownloadFileInfo(fileRelativePath)
+	if err != nil{
+		return err
+	}
+	fileDiskDir := fileDownInfo.FileLocalPath + "/" + fileRelativePath
+	fd ,err := os.OpenFile(fileDiskDir,os.O_RDONLY,6)
+	if err != nil{//&& err != io.EOF
+		return errors.New("file open err:"+err.Error())
+	}
+	//设置响应头信息
+	c.Header("Content-Rang","bytes")
+	fd.Close()
+
+	//headerRange := c.Header("Range")
+
+
+	//MyPrint("OpenFile enter for earch:")
+	//buffer := make([]byte, perPieceSize)
+	//for{
+	//	readDataLen, err := fd.Read(buffer)// len：读取文件中的数据长度
+	//	if err == io.EOF{
+	//		go c.String(200,"")
+	//		MyPrint("in eof.")
+	//		break
+	//	}
+	//	if err != nil {
+	//		MyPrint("err not nil")
+	//		MyPrint(err)
+	//		break
+	//	}
+	//	MyPrint("once readDataLen:",readDataLen)
+	//	if readDataLen == perPieceSize{
+	//		MyPrint("nomal read and push http")
+	//		c.String(200,string(buffer))
+	//	}else{
+	//		MyPrint("last read readDataLen:",readDataLen)
+	//		s := buffer[0:readDataLen]
+	//		go c.String(200,string(s))
+	//	}
+	//}
+	//
+	return nil
+
+}
+
+
+//流的大小：不能小于100个字节，因为要截取出头部的100个字节，做类型匹配及查错
 func   (fileUpload *FileUpload)UploadOneByStream(stream string,category int)(uploadRs UploadRs ,err error){
 	if category != FILE_TYPE_IMG{
 		return uploadRs, errors.New("目前category仅支持：图片流")
@@ -452,105 +461,5 @@ func (fileUpload *FileUpload)FilterByExtString(category int,extName string)bool{
 		}
 	}
 	return false
-}
-
-func (fileUpload *FileUpload) InitMap() {
-	var fileTypeMap sync.Map
-
-	fileTypeMap.Store("ffd8ffe000104a464946", "jpg")  //JPEG (jpg)
-	fileTypeMap.Store("89504e470d0a1a0a0000", "png")  //PNG (png)
-	fileTypeMap.Store("47494638396126026f01", "gif")  //GIF (gif)
-	fileTypeMap.Store("49492a00227105008037", "tif")  //TIFF (tif)
-	fileTypeMap.Store("424d228c010000000000", "bmp")  //16色位图(bmp)
-	fileTypeMap.Store("424d8240090000000000", "bmp")  //24位位图(bmp)
-	fileTypeMap.Store("424d8e1b030000000000", "bmp")  //256色位图(bmp)
-	fileTypeMap.Store("41433130313500000000", "dwg")  //CAD (dwg)
-	fileTypeMap.Store("3c21444f435459504520", "html") //HTML (html)   3c68746d6c3e0  3c68746d6c3e0
-	fileTypeMap.Store("3c68746d6c3e0", "html")        //HTML (html)   3c68746d6c3e0  3c68746d6c3e0
-	fileTypeMap.Store("3c21646f637479706520", "htm")  //HTM (htm)
-	fileTypeMap.Store("48544d4c207b0d0a0942", "css")  //css
-	fileTypeMap.Store("696b2e71623d696b2e71", "js")   //js
-	fileTypeMap.Store("7b5c727466315c616e73", "rtf")  //Rich Text Format (rtf)
-	fileTypeMap.Store("38425053000100000000", "psd")  //Photoshop (psd)
-	fileTypeMap.Store("46726f6d3a203d3f6762", "eml")  //Email [Outlook Express 6] (eml)
-	fileTypeMap.Store("d0cf11e0a1b11ae10000", "doc")  //MS Excel 注意：word、msi 和 excel的文件头一样
-	fileTypeMap.Store("d0cf11e0a1b11ae10000", "vsd")  //Visio 绘图
-	fileTypeMap.Store("5374616E64617264204A", "mdb")  //MS Access (mdb)
-	fileTypeMap.Store("252150532D41646F6265", "ps")
-	fileTypeMap.Store("255044462d312e350d0a", "pdf")  //Adobe Acrobat (pdf)
-	fileTypeMap.Store("2e524d46000000120001", "rmvb") //rmvb/rm相同
-	fileTypeMap.Store("464c5601050000000900", "flv")  //flv与f4v相同
-	fileTypeMap.Store("00000020667479706d70", "mp4")
-	fileTypeMap.Store("49443303000000002176", "mp3")
-	fileTypeMap.Store("000001ba210001000180", "mpg") //
-	fileTypeMap.Store("3026b2758e66cf11a6d9", "wmv") //wmv与asf相同
-	fileTypeMap.Store("52494646e27807005741", "wav") //Wave (wav)
-	fileTypeMap.Store("52494646d07d60074156", "avi")
-	fileTypeMap.Store("4d546864000000060001", "mid") //MIDI (mid)
-	fileTypeMap.Store("504b0304140000000800", "zip")
-	fileTypeMap.Store("526172211a0700cf9073", "rar")
-	fileTypeMap.Store("235468697320636f6e66", "ini")
-	fileTypeMap.Store("504b03040a0000000000", "jar")
-	fileTypeMap.Store("4d5a9000030000000400", "exe")        //可执行文件
-	fileTypeMap.Store("3c25402070616765206c", "jsp")        //jsp文件
-	fileTypeMap.Store("4d616e69666573742d56", "mf")         //MF文件
-	fileTypeMap.Store("3c3f786d6c2076657273", "xml")        //xml文件
-	fileTypeMap.Store("494e5345525420494e54", "sql")        //xml文件
-	fileTypeMap.Store("7061636b616765207765", "java")       //java文件
-	fileTypeMap.Store("406563686f206f66660d", "bat")        //bat文件
-	fileTypeMap.Store("1f8b0800000000000000", "gz")         //gz文件
-	fileTypeMap.Store("6c6f67346a2e726f6f74", "properties") //bat文件
-	fileTypeMap.Store("cafebabe0000002e0041", "class")      //bat文件
-	fileTypeMap.Store("49545346030000006000", "chm")        //bat文件
-	fileTypeMap.Store("04000000010000001300", "mxp")        //bat文件
-	fileTypeMap.Store("504b0304140006000800", "docx")       //docx文件
-	fileTypeMap.Store("d0cf11e0a1b11ae10000", "wps")        //WPS文字wps、表格et、演示dps都是一样的
-	fileTypeMap.Store("6431303a637265617465", "torrent")
-	fileTypeMap.Store("6D6F6F76", "mov")         //Quicktime (mov)
-	fileTypeMap.Store("FF575043", "wpd")         //WordPerfect (wpd)
-	fileTypeMap.Store("CFAD12FEC5FD746F", "dbx") //Outlook Express (dbx)
-	fileTypeMap.Store("2142444E", "pst")         //Outlook (pst)
-	fileTypeMap.Store("AC9EBD8F", "qdf")         //Quicken (qdf)
-	fileTypeMap.Store("E3828596", "pwl")         //Windows Password (pwl)
-	fileTypeMap.Store("2E7261FD", "ram")         //Real Audio (ram)
-
-	fileUpload.FileTypeMap = fileTypeMap
-}
-
-// 获取前面结果字节的二进制
-func  (fileUpload *FileUpload) bytesToHexString(src []byte) string {
-	res := bytes.Buffer{}
-	if src == nil || len(src) <= 0 {
-		return ""
-	}
-	temp := make([]byte, 0)
-	for _, v := range src {
-		sub := v & 0xFF
-		hv := hex.EncodeToString(append(temp, sub))
-		if len(hv) < 2 {
-			res.WriteString(strconv.FormatInt(int64(0), 10))
-		}
-		res.WriteString(hv)
-	}
-	return res.String()
-}
-
-// 用文件前面几个字节来判断
-// fSrc: 文件字节流（就用前面几个字节）
-func  (fileUpload *FileUpload) GetFileType(fSrc []byte) string {
-	var fileType string
-	fileCode := fileUpload.bytesToHexString(fSrc)
-	MyPrint("fileCode:",fileCode)
-	fileUpload.FileTypeMap.Range(func(key, value interface{}) bool {
-		k := key.(string)
-		v := value.(string)
-		if strings.HasPrefix(fileCode, strings.ToLower(k)) ||
-			strings.HasPrefix(k, strings.ToLower(fileCode)) {
-			fileType = v
-			return false
-		}
-		return true
-	})
-	return fileType
 }
 

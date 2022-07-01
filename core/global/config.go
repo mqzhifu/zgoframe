@@ -204,6 +204,7 @@ type ConfigCenter struct {
 
 type Upload struct{
 	Path string
+	MaxSize int
 }
 
 type Oss struct{

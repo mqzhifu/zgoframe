@@ -2,6 +2,7 @@ package v1
 
 import (
 	"github.com/gin-gonic/gin"
+	"strconv"
 	"zgoframe/core/global"
 	httpresponse "zgoframe/http/response"
 	"zgoframe/util"
@@ -243,26 +244,42 @@ func FileUploadDocMulti(c *gin.Context){
 // @Tags file
 // @Summary 大文件下载
 // @Description 大文件走NGINX不现实，而且，中间断了后，无法续传
-// @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
-// @Param X-Project-Id header string true "项目ID" default(6)
-// @Param X-Access header string true "访问KEY" default(imzgoframe)
-// @Param path formData string false "文件相对路径"
-// @Accept multipart/form-data
-// @Produce  application/json
+// @Param 	X-Source-Type header string true "来源" Enums(11,12,21,22)
+// @Param 	X-Project-Id header string true "项目ID" default(6)
+// @Param 	X-Access header string true "访问KEY" default(imzgoframe)
+// @Param 	path formData string false "文件相对路径"
+// @Accept 	multipart/form-data
+// @Produce application/json
 // @Success 200 {object} httpresponse.HttpUploadRs "下载结果"
-// @Router /persistence/file/big/download [get]
+// @Router 	/file/big/download [post]
 func FileBigDownload(c *gin.Context){
 
-	//fileUpload := global.GetUploadObj(1,"")
-	//
-	////filePath := c.PostForm("path")
+	fileUpload := global.GetUploadObj(1,"")
+	//filePath := c.PostForm("path")
 	////filePath := c.Query("path")
-	//filePath := "1.jpg"
-	//util.MyPrint("FileBigDownload filePath:",filePath)
-	//
-	//err := fileUpload.DownloadBig(filePath,c)
-	//util.MyPrint(" fileUpload.DownloadBig return err:",err)
+	filePath := "1.jpg"
+	util.MyPrint("FileBigDownload filePath:",filePath)
 
+
+	err := fileUpload.Download(filePath,c)
+	util.MyPrint(" fileUpload.DownloadBig return err:",err)
+
+	//headerRange := c.Request.Header.Get("Range")
+	//c.Header("Content-Ranges","bytes 0-1023/1024")
+
+}
+
+func FileDownloadInfo(c *gin.Context){
+	filePath := c.PostForm("path")
+	fileUpload := global.GetUploadObj(1,"")
+	fileDownInfo ,err := fileUpload.DownloadFileInfo(filePath)
+	if err != nil{
+		httpresponse.FailWithMessage(err.Error(),c)
+		return
+	}
+
+	c.Header("Accept-Ranges","bytes")
+	c.Header("Content-Length",strconv.Itoa(int(fileDownInfo.FileSize)))
 }
 
 

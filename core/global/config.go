@@ -24,6 +24,7 @@ type Config struct {
 	Upload 		     Upload
 	Oss 			 Oss
 	Cicd 			 Cicd
+	Agora			 Agora
 }
 
 type Protobuf struct {
@@ -213,4 +214,9 @@ type Oss struct{
 	Endpoint 	string
 	Bucket 		string
 	LocalDomain	string
+}
+
+type Agora struct{
+	AppId			string
+	AppCertificate	string
 }

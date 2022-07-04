@@ -151,3 +151,7 @@ localDomain = "seedreality.com"
 
 [domain]
 static = "#domain_static_host#"
+
+[agora]
+appId           = "#app_id#"
+appCertificate  = "#app_certificate#"

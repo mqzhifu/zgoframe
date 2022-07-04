@@ -9,6 +9,7 @@ replace google.golang.org/grpc => google.golang.org/grpc v1.26.0
 //replace go.etcd.io/bbolt v1.3.4 => github.com/coreos/bbolt v1.3.4
 
 require (
+	github.com/AgoraIO/Tools/DynamicKey/AgoraDynamicKey/go/src v0.0.0-20220613103355-1d9a8d9e0214
 	github.com/abrander/go-supervisord v0.0.0-20210517172913-a5469a4c50e2
 	github.com/aliyun/aliyun-oss-go-sdk v2.2.4+incompatible
 	github.com/baiyubin/aliyun-sts-go-sdk v0.0.0-20180326062324-cfa1a18b161f // indirect

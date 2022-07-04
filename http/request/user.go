@@ -90,6 +90,10 @@ type SendSMS struct {
 	CaptchaId  string            `json:"captchaId"`   //获取验证码时拿到的Id
 }
 
+type TwinAgoraToken struct{
+	Username 	string `json:"username"`	//用户名 or 用户ID
+	Channel 	string `json:"channel"`		//频道名称，给rtc使用,RTM可为空
+}
 
 type Captcha struct{
 	Width int	`json:"width"` 	//图片宽度，默认：240，最大：1000

@@ -51,6 +51,8 @@ var initializeVar *initialize.Initialize
 // @tag.description 用户相关操作(需要登陆，头里加X-Token = jwt)
 // @tag.name System
 // @tag.description 系统管理(需要二次认证)，管理员使用，普通用户不要访问
+// @tag.name TwinAgora
+// @tag.description 数字孪生 - agora
 // @tag.name Cicd
 // @tag.description 自动化部署与持续集成
 // @tag.name Mail

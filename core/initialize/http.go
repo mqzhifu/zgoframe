@@ -105,6 +105,7 @@ func RegGinHttpRoute() {
 		router.InitGameMatchRouter(PublicGroup)
 		router.InitPersistenceRouter(PublicGroup)
 		router.InitFileRouter(PublicGroup)
+		router.InitTwinAgoraRouter(PublicGroup)
 
 	}
 	PrivateGroup := global.V.Gin.Group("")

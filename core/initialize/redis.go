@@ -18,6 +18,8 @@ func GetNewRedis(prefix string) (*util.MyRedis, error) {
 	pool["inc"] = util.RedisElement{KeyTemplate: "inc_{0}", Expire: 10, Index: "inc", Desc: "公共记数器(自增)"}
 	pool["limiter"] = util.RedisElement{KeyTemplate: "limiter_{0}", Expire: 10, Index: "limiter", Desc: "http 每秒限流"}
 	pool["jwt"] = util.RedisElement{KeyTemplate: "jwt_{0}_{1}", Expire: 10, Index: "jwt", Desc: "jwt_{sourceType}_{uid}，用户登陆凭证"}
+	pool["rtc_token"] = util.RedisElement{KeyTemplate: "rtc_token_{0}_{1}", Expire: 24 * 60 * 60, Index: "rtc_token", Desc: "rtc_token_{username}_{channel}，声网RTC-登陆凭证"}
+	pool["rtm_token"] = util.RedisElement{KeyTemplate: "rtm_token_{0}", Expire: 24 * 60 * 60, Index: "rtm_token", Desc: "rtm_token_{username}，声网RTm-登陆凭证"}
 
 	myRedisKeyOption := util.MyRedisOption{
 		Ip:          redisCfg.Ip,

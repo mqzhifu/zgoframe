@@ -70,7 +70,7 @@ func(superVisor *SuperVisor) InitXMLRpc()error{
 	MyPrint("InitXMLRpc: " + dns)
 
 	//supervisord.optio
-	c, err := supervisord.NewClient(dns,supervisord.WithAuthentication("user","123"))
+	c, err := supervisord.NewClient(dns,supervisord.WithAuthentication("ckadmin","ckckarar"))
 	if err != nil{
 		MyPrint("superVisor init err:",err)
 		return err

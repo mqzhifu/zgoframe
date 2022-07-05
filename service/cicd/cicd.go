@@ -14,7 +14,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-	"zgoframe/core/global"
 	"zgoframe/http/request"
 	"zgoframe/model"
 	"zgoframe/util"
@@ -306,7 +305,7 @@ func (cicdManager *CicdManager)LocalAllServerServiceList()(list LocalServerServi
 		return list,errors.New(errMsg)
 	}
 	//list := LocalServerServiceList{}
-	instanceManager ,_:= util.NewInstanceManager(global.V.Gorm)
+	instanceManager := cicdManager.Option.InstanceManager
 
 	for _, server := range cicdManager.Option.ServerList {
 		//先ping 一下，确实该服务器网络正常

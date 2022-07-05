@@ -335,14 +335,21 @@ func (cicdManager *CicdManager)LocalAllServerServiceList()(list LocalServerServi
 			list.ServerList[server.Id] = server
 			continue
 		}
-		//建立 XMLRpc
-		err = serviceSuperVisor.InitXMLRpc()
-		if err != nil {
-			util.MyPrint("serviceSuperVisor InitXMLRpc err:", err)
+		if server.Env != 5{
 			server.SuperVisorStatus = util.SERVER_PING_FAIL
 			list.ServerList[server.Id] = server
 			continue
+		}else{
+			//建立 XMLRpc
+			err = serviceSuperVisor.InitXMLRpc()
+			if err != nil {
+				util.MyPrint("serviceSuperVisor InitXMLRpc err:", err)
+				server.SuperVisorStatus = util.SERVER_PING_FAIL
+				list.ServerList[server.Id] = server
+				continue
+			}
 		}
+
 		server.SuperVisorStatus = util.SERVER_PING_OK
 		list.ServerList[server.Id] = server
 

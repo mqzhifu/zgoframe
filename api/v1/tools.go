@@ -224,7 +224,7 @@ func ConstInitTestDb(c *gin.Context) {
 }
 
 func CheckInAllowInstance(name string)bool{
-	allowInstance := []string{"mysql","redis","etcd","oss","http","grpc","ali_email","email","gateway","agora","domain","cdn","alert","sms"}
+	allowInstance := []string{"mysql","redis","etcd","oss","http","grpc","ali_email","email","gateway","agora","domain","cdn","alert","sms","super_visor"}
 	for _,v:= range allowInstance {
 		if v == name{
 			return true

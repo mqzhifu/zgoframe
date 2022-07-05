@@ -37,6 +37,8 @@ type SuperVisorReplace struct {
 type SuperVisorOption struct {
 	Ip					string
 	RpcPort 			string
+	Username	 		string
+	Password 			string
 	ConfTemplateFile 	string	//每个服务的superVisor 配置文件模型(需要后期替换占位符)
 	ServiceName			string	//服务名称
 	ConfDir 			string	//本机superVisor 的配置文件基目录(所有服务的superVisor配置文件均放在这个目录下面)
@@ -68,9 +70,14 @@ func(superVisor *SuperVisor) InitXMLRpc()error{
 
 	dns := "http://" + superVisor.Option.Ip + ":" + superVisor.Option.RpcPort + "/RPC2"
 	MyPrint("InitXMLRpc: " + dns)
+	var err error
+	var c *supervisord.Client
+	if superVisor.Option.Username != "" && superVisor.Option.Password != "" {
+		c, err = supervisord.NewClient(dns,supervisord.WithAuthentication(superVisor.Option.Username,superVisor.Option.Password))
+	}else{
+		c, err = supervisord.NewClient(dns)
+	}
 
-	//supervisord.optio
-	c, err := supervisord.NewClient(dns,supervisord.WithAuthentication("ckadmin","ckckarar"))
 	if err != nil{
 		MyPrint("superVisor init err:",err)
 		return err

@@ -14,6 +14,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"zgoframe/core/global"
 	"zgoframe/http/request"
 	"zgoframe/model"
 	"zgoframe/util"
@@ -305,6 +306,8 @@ func (cicdManager *CicdManager)LocalAllServerServiceList()(list LocalServerServi
 		return list,errors.New(errMsg)
 	}
 	//list := LocalServerServiceList{}
+	instanceManager ,_:= util.NewInstanceManager(global.V.Gorm)
+
 	for _, server := range cicdManager.Option.ServerList {
 		//先ping 一下，确实该服务器网络正常
 		argsmap:=map[string]interface{}{}
@@ -319,13 +322,19 @@ func (cicdManager *CicdManager)LocalAllServerServiceList()(list LocalServerServi
 			server.PingStatus = util.SERVER_PING_OK
 		}
 
-
+		instance ,empty := instanceManager.GetByEnvName(server.Env,"super_visor")
+		if empty{
+			return list,errors.New("not found super_visor instance")
+		}
 		//再测试下无端的superVisor是否正常
 		//superVisorStatus := make(map[int]int)
 		//创建实例
 		superVisorOption := util.SuperVisorOption{
 			Ip:               server.OutIp,
-			RpcPort:          cicdManager.Option.Config.SuperVisor.RpcPort,
+			//RpcPort:          cicdManager.Option.Config.SuperVisor.RpcPort,
+			RpcPort: instance.Port,
+			Username: instance.User,
+			Password: instance.Ps,
 		}
 		serviceSuperVisor, err := util.NewSuperVisor(superVisorOption)
 		if err != nil {

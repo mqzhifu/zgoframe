@@ -1,0 +1,79 @@
+<html>
+
+<head>
+
+    <script src="http://127.0.0.1:1111/static/js/jquery.min.js"></script>
+
+</head>
+
+<body>
+
+<input type="button" onclick="request_service()" value="发起跨域请求" />
+
+
+<img src="/Users/wangdongyan/Downloads/WX20220630-184511.png" id="my_pic" />
+
+
+</body>
+
+data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAHAAAABvCAYAAAA0YEQFAAAAAXNSR0IArs4c6QAAAYlJREFUeF7t0wENAAAIhEC/f2lz3IYJGPi7jjYwmj74KyD+BAUsIG4Ax2+BBcQN4PgtsIC4ARy/BRYQN4Djt8AC4gZw/BZYQNwAjt8CC4gbwPFbYAFxAzh+CywgbgDHb4EFxA3g+C2wgLgBHL8FFhA3gOO3wALiBnD8FlhA3ACO3wILiBvA8VtgAXEDOH4LLCBuAMdvgQXEDeD4LbCAuAEcvwUWEDeA47fAAuIGcPwWWEDcAI7fAguIG8DxW2ABcQM4fgssIG4Ax2+BBcQN4PgtsIC4ARy/BRYQN4Djt8AC4gZw/BZYQNwAjt8CC4gbwPFbYAFxAzh+CywgbgDHb4EFxA3g+C2wgLgBHL8FFhA3gOO3wALiBnD8FlhA3ACO3wILiBvA8VtgAXEDOH4LLCBuAMdvgQXEDeD4LbCAuAEcvwUWEDeA47fAAuIGcPwWWEDcAI7fAguIG8DxW2ABcQM4fgssIG4Ax2+BBcQN4PgtsIC4ARy/BRYQN4Djt8AC4gZw/BZYQNwAjv9bfABw9kXbrgAAAABJRU5ErkJggg==
+
+<script>
+
+    function request_service(){
+        // console.log("request_service resized_img:",resized_img);
+        var imgBase64Data = getImgData();
+        console.log(imgBase64Data);
+        // var form = new FormData();
+        // form.append("stream", resized_img.src, "a.jpg");
+        // // 后端公共HTTP接口-头信息
+        var header_X_Source_Type = "11";
+        var header_X_Project_Id = "6";
+        var header_X_Access = "imzgoframe";
+
+        $.ajax({
+            // dataType: "json",
+            // data: JSON.stringify({"path": "apache-tomcat-8.5.81-fulldocs.tar.gz"}),
+            // data:form,
+            // data :{"stream":""},
+            // url: "http://localhost:1111/persistence/file/upload/stream",
+            headers: {
+                "X-Source-Type": header_X_Source_Type,
+                "X-Project-Id": header_X_Project_Id,
+                "X-Access": header_X_Access,
+            },
+            type: "POST",
+            data :{"stream":imgBase64Data,"module":""},
+            // contentType: "application/json;charset=utf-8",
+               // http://127.0.0.1:1111/file/upload/img/one/stream/base64
+            url: "http://127.0.0.1:1111/file/upload/img/one/stream/base64",
+            success: function(backData){
+                // alert("ok");
+                console.log("backData:",backData);
+                backData = eval(   backData  );
+                if(backData.code != 200){
+                    return alert("ajax req back data err");
+                }
+
+            }
+        });
+    }
+
+    function getImgData(){
+        var img = document.getElementById("my_pic")
+        img.setAttribute("crossOrigin",'Anonymous')
+
+        console.log(img.width , " ", img.height)
+        var canvas = document.createElement("canvas");
+        canvas.width = img.width;
+        canvas.height = img.height;
+        var ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, img.width, img.height);
+        var dataURL = canvas.toDataURL("image/png");
+        return dataURL;
+    }
+
+</script>
+
+
+</html>

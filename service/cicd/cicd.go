@@ -343,7 +343,7 @@ func (cicdManager *CicdManager)LocalAllServerServiceList()(list LocalServerServi
 			list.ServerList[server.Id] = server
 			continue
 		}
-		if server.Env != 5{
+		if server.Env == 1{
 			server.SuperVisorStatus = util.SERVER_PING_FAIL
 			list.ServerList[server.Id] = server
 			continue

@@ -46,7 +46,7 @@ func TwinAgoraRTMGetToken(c *gin.Context) {
 	}
 	if err != redis.Nil &&  redisTokenStr != "" {
 		util.MyPrint("return old token")
-		httpresponse.OkWithAll(redisTokenStr,"成功",c)
+		httpresponse.OkWithAll(redisTokenStr,"RTM-"+form.Username+"-成功",c)
 		return
 	}
 
@@ -77,7 +77,7 @@ func TwinAgoraRTMGetToken(c *gin.Context) {
 		return
 	}
 
-	httpresponse.OkWithAll(result,"成功",c)
+	httpresponse.OkWithAll(result,"RTM-"+form.Username+"-成功",c)
 
 }
 
@@ -121,7 +121,7 @@ func TwinAgoraRTCGetToken(c *gin.Context) {
 	}
 	if err != redis.Nil &&  redisTokenStr != "" {
 		util.MyPrint("return old token")
-		httpresponse.OkWithAll(redisTokenStr,"成功",c)
+		httpresponse.OkWithAll(redisTokenStr,"RTC-"+form.Username+"-成功",c)
 		return
 	}
 
@@ -152,5 +152,5 @@ func TwinAgoraRTCGetToken(c *gin.Context) {
 		return
 	}
 
-	httpresponse.OkWithAll(result,"成功",c)
+	httpresponse.OkWithAll(result,"RTC-"+form.Username+"-成功",c)
 }

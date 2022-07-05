@@ -4,6 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"strconv"
 	"zgoframe/core/global"
+	"zgoframe/http/request"
 	httpresponse "zgoframe/http/response"
 	"zgoframe/util"
 )
@@ -12,10 +13,11 @@ import (
 // @Summary 上传一张图片
 // @Description 目前是:本地存一份，同步到OSS一份，目录结构是根据(天)做hash,注：form要加上属性 enctype=multipart/form-data
 // @Param	X-Source-Type header string true "来源" Enums(11,12,21,22)
-// @Param	X-Project-Id header string true "项目ID" default(6)
-// @Param	X-Access header string true "访问KEY" default(imzgoframe)
-// @Param	file formData file true "文件(html中的input的name)"
-// @Param	module formData string false "模块/业务名，可用于给文件名加前缀目录"
+// @Param	X-Project-Id  header string true "项目ID" default(6)
+// @Param	X-Access      header string true "访问KEY" default(imzgoframe)
+// @Param	file 		formData file 	true 	"文件(html中的input的name)"
+// @Param	module 		formData string false 	"模块/业务名，可用于给文件名加前缀目录"
+// @Param  	sync_oss 	formData int 	false 	"是否同步到云oss 1是2否" default(2)
 // @Accept 	multipart/form-data
 // @Produce	application/json
 // @Success 200 {object} httpresponse.HttpUploadRs "上传结果"
@@ -29,9 +31,9 @@ func FileUploadImgOne(c *gin.Context){
 
 	category := util.FILE_TYPE_IMG
 	module  := c.PostForm("module")
-
+	syncOss := c.PostForm("sync_oss")
 	fileUpload := global.GetUploadObj(category,module)
-	uploadRs,err := fileUpload.UploadOne(header)
+	uploadRs,err := fileUpload.UploadOne(header,util.Atoi(syncOss))
 
 	util.MyPrint("uploadRs:",uploadRs, " err:",err)
 	if err != nil{
@@ -50,11 +52,12 @@ func FileUploadImgOne(c *gin.Context){
 // @Tags file
 // @Summary 上传多张图片
 // @Description 目前是本地存一份，同步到OSS一份，目录结构是根据天做hash，注：form enctype=multipart/form-data
-// @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
-// @Param X-Project-Id header string true "项目ID" default(6)
-// @Param X-Access header string true "访问KEY" default(imzgoframe)
-// @Param files formData file true "文件(html中的input的name),注：multiple 属性"
-// @Param module formData string false "模块/业务名，可用于给文件名加前缀目录"
+// @Param	X-Source-Type header string true "来源" Enums(11,12,21,22)
+// @Param	X-Project-Id  header string true "项目ID" default(6)
+// @Param	X-Access      header string true "访问KEY" default(imzgoframe)
+// @Param	file 		formData file 	true 	"文件(html中的input的name)"
+// @Param	module 		formData string false 	"模块/业务名，可用于给文件名加前缀目录"
+// @Param  	sync_oss 	formData int 	false 	"是否同步到云oss 1是2否" default(2)
 // @Accept multipart/form-data
 // @Produce  application/json
 // @Success 200 {object} []httpresponse.HttpUploadRs "每个图片的上传结果"
@@ -69,7 +72,7 @@ func FileUploadImgMulti(c *gin.Context){
 		httpresponse.FailWithMessage(err.Error(),c)
 		return
 	}
-
+	syncOss := c.PostForm("sync_oss")
 	fileUpload := global.GetUploadObj(category,module)
 	// 获取所有图片
 	files := form.File["files"]
@@ -84,7 +87,7 @@ func FileUploadImgMulti(c *gin.Context){
 	for _, file := range files {
 		httpUploadRs := httpresponse.HttpUploadRs{}
 
-		uploadRs,err := fileUpload.UploadOne(file)
+		uploadRs,err := fileUpload.UploadOne(file,util.Atoi(syncOss))
 		errMsg := ""
 		if err != nil{
 			errMsg = err.Error()
@@ -101,36 +104,34 @@ func FileUploadImgMulti(c *gin.Context){
 
 // @Tags file
 // @Summary 上传图片 - 流模式 - base64
-// @Description 有时前端并没有具体文件，而是在与用户交互中：动态产生的文件流，如：截图(canvas)，这时候直接把文件流传输即可
-// @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
-// @Param X-Project-Id header string true "项目ID" default(6)
-// @Param X-Access header string true "访问KEY" default(imzgoframe)
-// @Param stream formData string false "文件流,例：data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAHgAAAB4CAMAAAAOus ......."
-// @Param	module formData string false "模块/业务名，可用于给文件名加前缀目录"
-// @Accept multipart/form-data
+// @Description 有时前端并没有具体文件，而是在与用户交互中：动态产生的文件(图片)流，如：截图(canvas)，这时候直接把文件流传输后端即可
+// @Param	X-Source-Type header string true "来源" Enums(11,12,21,22)
+// @Param	X-Project-Id  header string true "项目ID" default(6)
+// @Param	X-Access      header string true "访问KEY" default(imzgoframe)
+// @Param data body request.UploadFile true "基础信息"
+// @Accept application/json
 // @Produce  application/json
 // @Success 200 {object} httpresponse.HttpUploadRs "下载结果"
 // @Router /file/upload/img/one/stream/base64 [POST]
 func FileUploadImgOneStreamBase64(c *gin.Context){
-	//category ,_:= strconv.Atoi (c.PostForm("category") )
-	//if category  <= 0 {
-	//	httpresponse.FailWithMessage("category empty!!!",c)
-	//	return
-	//}
 	category := util.FILE_TYPE_IMG
+
 	fileUpload := global.GetUploadObj(category,"")
 
-	stream  := c.PostForm("stream")
-
-	util.MyPrint("stream:",stream)
-	if stream == ""{
+	//stream  := c.PostForm("stream")
+	//util.MyPrint("stream:",stream)
+	//if stream == ""{
+	//	httpresponse.FailWithMessage("stream empty!!!",c)
+	//	return
+	//}
+	var form request.UploadFile
+	c.ShouldBind(&form)
+	if form.Stream == ""{
 		httpresponse.FailWithMessage("stream empty!!!",c)
 		return
 	}
 
-	//stream ,_ = url.QueryUnescape(stream)
-
-	uploadRs ,err := fileUpload.UploadOneByStream(stream,category)
+	uploadRs ,err := fileUpload.UploadOneByStream(form.Stream,category,form.SyncOss)
 	if err != nil{
 		httpresponse.FailWithMessage(err.Error(),c)
 	}else{
@@ -142,8 +143,6 @@ func FileUploadImgOneStreamBase64(c *gin.Context){
 		httpresponse.OkWithAll( httpUploadRs, "已上传", c)
 	}
 
-
-
 }
 
 
@@ -151,10 +150,11 @@ func FileUploadImgOneStreamBase64(c *gin.Context){
 // @Summary 上传一个文档
 // @Description 目前是:本地存一份，同步到OSS一份，目录结构是根据(天)做hash,注：form要加上属性 enctype=multipart/form-data
 // @Param	X-Source-Type header string true "来源" Enums(11,12,21,22)
-// @Param	X-Project-Id header string true "项目ID" default(6)
-// @Param	X-Access header string true "访问KEY" default(imzgoframe)
-// @Param	file formData file true "文件(html中的input的name)"
-// @Param	module formData string false "模块/业务名，可用于给文件名加前缀目录"
+// @Param	X-Project-Id  header string true "项目ID" default(6)
+// @Param	X-Access      header string true "访问KEY" default(imzgoframe)
+// @Param	file 		formData file 	true 	"文件(html中的input的name)"
+// @Param	module 		formData string false 	"模块/业务名，可用于给文件名加前缀目录"
+// @Param  	sync_oss 	formData int 	false 	"是否同步到云oss 1是2否" default(2)
 // @Accept 	multipart/form-data
 // @Produce	application/json
 // @Success 200 {object} httpresponse.HttpUploadRs "上传结果"
@@ -168,9 +168,10 @@ func FileUploadDocOne(c *gin.Context){
 
 	category := util.FILE_TYPE_DOC
 	module  := c.PostForm("module")
+	syncOss := c.PostForm("sync_oss")
 
 	fileUpload := global.GetUploadObj(category,module)
-	uploadRs,err := fileUpload.UploadOne(header)
+	uploadRs,err := fileUpload.UploadOne(header,util.Atoi(syncOss))
 
 	util.MyPrint("uploadRs:",uploadRs, " err:",err)
 	if err != nil{
@@ -189,11 +190,12 @@ func FileUploadDocOne(c *gin.Context){
 // @Tags file
 // @Summary 上传多个文档
 // @Description 目前是本地存一份，同步到OSS一份，目录结构是根据天做hash，注：form enctype=multipart/form-data
-// @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
-// @Param X-Project-Id header string true "项目ID" default(6)
-// @Param X-Access header string true "访问KEY" default(imzgoframe)
-// @Param files formData file true "文件(html中的input的name),注：multiple 属性"
-// @Param module formData string false "模块/业务名，可用于给文件名加前缀目录"
+// @Param	X-Source-Type header string true "来源" Enums(11,12,21,22)
+// @Param	X-Project-Id  header string true "项目ID" default(6)
+// @Param	X-Access      header string true "访问KEY" default(imzgoframe)
+// @Param	file 		formData file 	true 	"文件(html中的input的name)"
+// @Param	module 		formData string false 	"模块/业务名，可用于给文件名加前缀目录"
+// @Param  	sync_oss 	formData int 	false 	"是否同步到云oss 1是2否" default(2)
 // @Accept multipart/form-data
 // @Produce  application/json
 // @Success 200 {object} []httpresponse.HttpUploadRs "每个图片的上传结果"
@@ -208,7 +210,7 @@ func FileUploadDocMulti(c *gin.Context){
 		httpresponse.FailWithMessage(err.Error(),c)
 		return
 	}
-
+	syncOss := c.PostForm("sync_oss")
 	fileUpload := global.GetUploadObj(category,module)
 	// 获取所有图片
 	files := form.File["files"]
@@ -223,7 +225,7 @@ func FileUploadDocMulti(c *gin.Context){
 	for _, file := range files {
 		httpUploadRs := httpresponse.HttpUploadRs{}
 
-		uploadRs,err := fileUpload.UploadOne(file)
+		uploadRs,err := fileUpload.UploadOne(file,util.Atoi(syncOss))
 		errMsg := ""
 		if err != nil{
 			errMsg = err.Error()
@@ -242,11 +244,11 @@ func FileUploadDocMulti(c *gin.Context){
 
 
 // @Tags file
-// @Summary 大文件下载
+// @Summary 大文件下载(暂未实现，后续补充)
 // @Description 大文件走NGINX不现实，而且，中间断了后，无法续传
-// @Param 	X-Source-Type header string true "来源" Enums(11,12,21,22)
-// @Param 	X-Project-Id header string true "项目ID" default(6)
-// @Param 	X-Access header string true "访问KEY" default(imzgoframe)
+// @Param	X-Source-Type header string true "来源" Enums(11,12,21,22)
+// @Param	X-Project-Id  header string true "项目ID" default(6)
+// @Param	X-Access      header string true "访问KEY" default(imzgoframe)
 // @Param 	path formData string false "文件相对路径"
 // @Accept 	multipart/form-data
 // @Produce application/json
@@ -268,7 +270,7 @@ func FileBigDownload(c *gin.Context){
 	//c.Header("Content-Ranges","bytes 0-1023/1024")
 
 }
-
+//分断续传，使用http header:ranges ，C端首次请求：获取文件基础信息
 func FileDownloadInfo(c *gin.Context){
 	filePath := c.PostForm("path")
 	fileUpload := global.GetUploadObj(1,"")

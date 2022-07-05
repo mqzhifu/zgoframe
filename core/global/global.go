@@ -13,8 +13,6 @@ import (
 )
 
 type Global struct {
-	//App        util.App
-	//AppMng		*util.AppManager
 	RootDir          string
 	Vip              *viper.Viper
 	Zap              *zap.Logger
@@ -40,11 +38,14 @@ type Global struct {
 	FileUpload		 *util.FileUpload
 	MyService        *service.Service//内部快捷服务
 
-	//Service          util.Service
+
 	ServiceManager   *util.ServiceManager   //管理已注册的服务
 	ServiceDiscovery *util.ServiceDiscovery //管理服务发现，会用到上面的ServiceManager
 
-	//ConnProtocol *util.ConnProtocol
+	//App        	util.App
+	//AppMng		*util.AppManager
+	//Service       util.Service
+	//ConnProtocol 	*util.ConnProtocol
 }
 
 func New() *Global {
@@ -89,7 +90,7 @@ func GetUploadObj(category int,module string)*util.FileUpload{
 		OssEndpoint		: C.Oss.Endpoint,
 		OssBucketName 	: C.Oss.Bucket,
 		OssAccessKeySecret: C.Oss.AccessKeySecret,
-		OssLocalDomain: C.Oss.LocalDomain,
+		OssLocalDomain: C.Oss.SelfDomain,
 	}
 
 	fileUpload := util.NewFileUpload( fileUploadOption )

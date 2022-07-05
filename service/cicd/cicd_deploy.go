@@ -581,7 +581,7 @@ func (cicdManager *CicdManager) DeployOneServiceFailed(publish model.CicdPublish
 	return cicdManager.MakeError(errMsg)
 }
 
-var ThirdInstance = []string{"mysql", "redis", "log", "email", "etcd", "rabbitmq", "kafka", "alert", "cdn", "consul", "sms", "prometheus", "es", "kibana", "grafana", "push_gateway","http","static","oss"}
+var ThirdInstance = []string{"mysql", "redis", "log", "email", "etcd", "rabbitmq", "kafka", "alert", "cdn", "consul", "sms", "prometheus", "es", "kibana", "grafana", "push_gateway","http","domain","oss","grpc","gateway","agora"}
 
 func (cicdManager *CicdManager) ReplaceInstance(content string, serviceName string, env int,serviceId int) string {
 	category := ThirdInstance
@@ -601,6 +601,32 @@ func (cicdManager *CicdManager) ReplaceInstance(content string, serviceName stri
 			//MyPrint("cicdManager.Option.InstanceManager.GetByEnvName is empty,",env,v)
 			continue
 		}
+
+		if v == "gateway"{
+			host := strings.Split(instance.Host,",")
+
+			key := separator + v + "_" + "listen_ip" + separator
+			content = strings.Replace(content, key, host[0], -1)
+
+			key = separator + v + "_" + "out_ip" + separator
+			content = strings.Replace(content, key, host[1], -1)
+
+
+			ports := strings.Split(instance.Port,",")
+
+			key = separator + v + "_" + "ws_port" + separator
+			content = strings.Replace(content, key, ports[0], -1)
+
+			key = separator + v + "_" + "tcp_port" + separator
+			content = strings.Replace(content, key, ports[1], -1)
+
+
+			key = separator + v + "_" + "ws_uri" + separator
+			content = strings.Replace(content, key, instance.User, -1)
+
+			continue
+		}
+
 		key := separator + v + "_" + "ip" + separator
 		content = strings.Replace(content, key, instance.Host, -1)
 

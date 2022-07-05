@@ -2,7 +2,7 @@ package model
 
 type Instance struct {
 	MODEL
-	Platform       string `json:"platform" form:"platform" db:"define:int;comment:平台类型1自有2阿里3腾讯4华为;defaultValue:0"`
+	Platform       string `json:"platform" form:"platform" db:"define:int;comment:平台类型1自有2阿里3腾讯4华为5声网;defaultValue:0"`
 	Name           string `json:"name" form:"name" db:"define:varchar(50);comment:名称;defaultValue:''"`
 	Host           string `json:"host" form:"host" db:"define:varchar(255);comment:主机地址;defaultValue:''"`
 	Port           string `json:"port" form:"port" db:"define:varchar(50);comment:主机端口号;defaultValue:''"`

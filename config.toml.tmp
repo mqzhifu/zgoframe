@@ -1,7 +1,10 @@
+#配置文件中有很多相对目录：大多是文件/图片相关(日志文件除外)，之所以用相对路径，且大部分在static下面，是因为：文件不跟着代码的版本走，每次代码更新，但是文件不能重新生成，CICD不好处理。
+#那：正常在服务器上有一个统一的位置存放静态资源，最终静态域名会指向该静态资源目录，而在项目中：则一个软连接目录
+
 [system]
 dbType       = "mysql"
 projectId    = #projectId#
-errorMsgFile = "/data/lang.txt"
+errorMsgFile = "/data/lang.txt"#这是个相对路径,在static下面
 opDirName    = "operation"
 
 [jwt]
@@ -32,7 +35,7 @@ status      = "open"
 db-number   = 1
 ip          = "#redis_ip#"
 port        = "#redis_port#"
-password    =  "#redis_ps#"
+password    = "#redis_ps#"
 
 [captcha]
 status       = "open"
@@ -45,12 +48,12 @@ imgHeight    = 80
 status          = "open"
 ip              = "#http_ip#"
 port            = "#http_port#"
-#staticPath      = "/data/www/golang/src/zgoframe/static" ，这里先改成相对路径
-staticPath      = "static"
+staticPath      = "static"#相对路径，在项目的根目录下
 reqLimitTimes   = 100
 
+#注：这里是一个二维数组，支持多mysql实例,但CICD目前只能处理一个mysql 变量替换
 [[mysql]]
-status = "open"
+status          = "open"
 ip              = "#mysql_ip#"
 port            = "#mysql_port#"
 config          = "charset=utf8mb4&parseTime=True&loc=Local"
@@ -63,16 +66,13 @@ logMode         = true
 logZap          = false
 masterSlave     = "master"
 
-[casbin]
-status      = "open"
-
 [etcd]
-status      = "open"
+status      = "close"
 ip          = "#etcd_ip#"
 port        = "#etcd_port#"
 username    = "#etcd_user#"
 password    = "#etcd_ps#"
-url         = ""
+url         = ""#通过http-url，动态获取etcd配置信息
 
 [alert]
 status  = "open"
@@ -91,25 +91,25 @@ uri     = "/ws"
 status                  = "open"
 ip                      = "#grpc_ip#"
 port                    = "#grpc_port#"
-servicePackagePrefix    = "pb"
+servicePackagePrefix    = "#grpc_user#"
 
 [protobuf]
-basePath        ="protobuf"
-pbServicePath   ="pbservice"
-protoPath       ="proto"
-idMapFileName   ="map.txt"
+basePath        = "protobuf" #相对路径，在static下面
+pbServicePath   = "pbservice"#相对路径，在static下面
+protoPath       = "proto"    #相对路径，在static下面
+idMapFileName   = "map.txt"
 
 [serviceDiscovery]
 status = "open"
 prefix = "/service"
 
 [email]
-status  = "open"
-host    = "#email_stmp#"
-port    = "#email_stmp_port#"
-from    = "#email_from#"
-ps      = "#email_ps#"
-authCode = "#email_auth_code#"
+status   = "open"
+host     = "#email_ip#"
+port     = "#email_port#"#目前用不到这个值
+from     = "#email_user#"
+ps       = "#email_ps#"
+authCode = "#email_port#" #验证码，腾讯的邮箱除了用户名密码外还要一个验证码机制
 
 [pushGateway]
 status  = "close"
@@ -117,20 +117,20 @@ ip      = "#push_gateway_ip#"
 port    = "#push_gateway_port#"
 
 [gateway]
-status  = "close"
-ListenIp = "127.0.0.1"
-OutIp    = "127.0.0.1"
-WsPort   = "4444"
-TcpPort  = "5555"
-WsUri    = "/ws"
+status   = "close"
+ListenIp = "#gateway_listen_ip#"
+OutIp    = "#gateway_out_ip#"
+WsPort   = "#gateway_ws_port#"
+TcpPort  = "#gateway_tcp_port#"
+WsUri    = "#gateway_ws_uri#"
 
 [cicd]
 status  = "close"
 
 [configCenter]
-status  = "open"
+status          = "open"
 persistenceType = 3
-dataPath = "/data/www/Zgoframe/master/static/data/config"
+dataPath        = "data/config" #相对路径，在static下面
 
 [upload]
 #注意：这里是一个相对路径，且没有：录层级，可以修改名字，但不可以增加层级（名字两边也不要加反斜杠）
@@ -138,20 +138,20 @@ dataPath = "/data/www/Zgoframe/master/static/data/config"
 #原因1：cicd 部署时：会自动创建该目录名（软连接），实际物理位置由CICD里的配置信息确定
 #原因2: 文件上传类，在本地存储文件时，得有个本机的目录，存储成功后，前端的请求是：一个host+ 相对目录名+文件名，如果host是直接指向此目录，那写绝对路径也行，但是如果host只是指向的是该目录的上一级目录（如：静态资源统一域名，不区分是否为上传/proto/js/等）,那么绝对路径肯定不行
 #此目录就在项目的根目录下，不需要你手动创建，CICD会帮忙处理，如果不使用CICD，需要手动创建(软连接)
-path = "upload"
+path = "upload" #相对路径，在static下面
 #上传文件大小，这个值最好别设置太大，同时要跟nginx同步修改不然不失效
 maxSize = 9
 
 [oss]
-accessKeyId = "#oss_user#"
+accessKeyId     = "#oss_user#"
 accessKeySecret = "#oss_ps#"
-endpoint = "#oss_ip#"
-bucket="#oss_port#"
-localDomain = "seedreality.com"
+endpoint        = "#oss_ip#"
+bucket          = "#oss_port#"
+selfDomain      = "ossservicebase.seedreality.com"
 
 [domain]
-static = "#domain_static_host#"
+static = "#domain_host#"
 
 [agora]
-appId           = "#app_id#"
-appCertificate  = "#app_certificate#"
+appId           = "#agora_user#"
+appCertificate  = "#agora_ps#"

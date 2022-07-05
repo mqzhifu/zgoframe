@@ -16,8 +16,8 @@ func InitMyService( redisGo *util.MyRedisGo){
 		NetWayOption 	: netWayOption,
 		GrpcManager 	: global.V.GrpcManager,
 		ProjectManager 	: global.V.ProjectMng,
-		//ConfigCenterDataDir :global.C.Http.StaticPath + global.C.ConfigCenter.DataPath,
-		ConfigCenterDataDir : global.C.ConfigCenter.DataPath,
+		ConfigCenterDataDir :global.C.Http.StaticPath + "/" +  global.C.ConfigCenter.DataPath,
+		//ConfigCenterDataDir : global.C.ConfigCenter.DataPath,
 		ConfigCenterPersistenceType	:global.C.ConfigCenter.PersistenceType,
 		OpDirName		: global.C.System.OpDirName,//用于CICD
 		ServiceList		: global.V.ServiceManager.Pool,

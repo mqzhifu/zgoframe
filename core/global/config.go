@@ -8,7 +8,7 @@ type Config struct {
 	Redis            Redis
 	System           System
 	Http             Http
-	Casbin           Casbin
+	//Casbin           Casbin
 	Viper            Viper
 	Etcd             Etcd
 	Alert            Alert
@@ -137,10 +137,10 @@ type Redis struct {
 	Password string
 }
 
-type Casbin struct {
-	Status    string
-	ModelPath string
-}
+//type Casbin struct {
+//	Status    string
+//	ModelPath string
+//}
 
 type Etcd struct {
 	Status   string
@@ -213,7 +213,7 @@ type Oss struct{
 	AccessKeySecret string
 	Endpoint 	string
 	Bucket 		string
-	LocalDomain	string
+	SelfDomain	string
 }
 
 type Agora struct{

@@ -181,38 +181,42 @@ func InitDbStructure(c *gin.Context) {
 // @Success 200 {string} string "sql script"
 // @Router /tools/test/init/db [get]
 func ConstInitTestDb(c *gin.Context) {
-	envList := util.GetConstListEnv()
-	//id := 1
-	ipList := make(map[int]string)
-	ipList[1] = "127.0.0.1"//本地
-	//ipList[2] = "1.1.1.1"//开发
-	//ipList[3] = "2.2.2.2"//测试
-	ipList[4] = "8.142.177.235"//预发布
-	//ipList[5] = "3.3.3.3"//线上
+	//envList := util.GetConstListEnv()
+	////id := 1
+	//ipList := make(map[int]string)
+	//ipList[1] = "127.0.0.1"//本地
+	////ipList[2] = "1.1.1.1"//开发
+	////ipList[3] = "2.2.2.2"//测试
+	//ipList[4] = "8.142.177.235"//预发布
+	////ipList[5] = "3.3.3.3"//线上
+	//
+	//serverSql := ""
+	//for k,v:=range envList{
+	//	serverInsertSql := "INSERT INTO `server` (`id`, `name`, `platform`, `out_ip`, `inner_ip`, `env`, `status`, `ext`, `charge_user_name`, `start_time`, `end_time`, `price`, `created_at`, `updated_at`, `deleted_at`,`state`) "
+	//	serverInsertSql += "VALUES  ("+strconv.Itoa(v)+",'"+k+"', 1,   '"+ipList[v]+"', '127.0.0.1', "+strconv.Itoa(v)+", '1', '', '小z', '1650006845', '1650006845', '100', '1650006845', '0', NULL,1);   "
+	//	serverSql += serverInsertSql
+	//}
 
-	serverSql := ""
-	for k,v:=range envList{
-		serverInsertSql := "INSERT INTO `server` (`id`, `name`, `platform`, `out_ip`, `inner_ip`, `env`, `status`, `ext`, `charge_user_name`, `start_time`, `end_time`, `price`, `created_at`, `updated_at`, `deleted_at`,`state`) "
-		serverInsertSql += "VALUES  ("+strconv.Itoa(v)+",'"+k+"', 1,   '"+ipList[v]+"', '127.0.0.1', "+strconv.Itoa(v)+", '1', '', '小z', '1650006845', '1650006845', '100', '1650006845', '0', NULL,1);   "
-		serverSql += serverInsertSql
-	}
+
+	serverMng, _ := util.NewServerManger(global.V.Gorm)
+	serverList := serverMng.Pool
 
 	instanceSql := ""
-	for _,envId:=range envList{
-		if envId == 1 || envId == 4 {
+	for _,server:=range serverList{
+		if server.Env != 5 {//正式环境，都已经配置好了，就不要随便再重新插入了
 			for _,instance := range cicd.ThirdInstance{
 				if !CheckInAllowInstance(instance){
 					continue
 				}
 				instanceInsertSql := "INSERT INTO `instance` (`id`, `platform`, `name`, `host`, `port`, `env`, `user`, `ps`, `ext`, `status`, `charge_user_name`, `start_time`, `end_time`, `price`, `created_at`, `updated_at`, `deleted_at`) "
-				instanceInsertSql += "VALUES                  (NULL, '1', '"+instance+"', '"+ipList[envId] +"', '3306', '"+strconv.Itoa(envId)+"', 'aaaa', 'bbbb', '', '1', '小z', '1650006845', '1650006845', '200', '1650006845', '0', NULL);"
+				instanceInsertSql += "VALUES                  (NULL, '1', '"+instance+"', '"+server.OutIp +"', '', '"+strconv.Itoa(server.Env)+"', 'aaaa', 'bbbb', '', '1', '小z', '1650006845', '1650006845', '200', '1650006845', '0', NULL);"
 				instanceSql += instanceInsertSql
 			}
 		}
 	}
 
 	rs := make(map[string]string)
-	rs["serverSql"] = serverSql
+	//rs["serverSql"] = serverSql
 	rs["instanceSql"] = instanceSql
 
 
@@ -220,7 +224,7 @@ func ConstInitTestDb(c *gin.Context) {
 }
 
 func CheckInAllowInstance(name string)bool{
-	allowInstance := []string{"mysql","redis","prometheus","kibana","grafana","etcd","es","http"}
+	allowInstance := []string{"mysql","redis","etcd","oss","http","grpc","ali_email","email","gateway","agora","domain","cdn","alert","sms"}
 	for _,v:= range allowInstance {
 		if v == name{
 			return true

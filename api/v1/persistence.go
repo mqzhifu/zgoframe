@@ -95,7 +95,7 @@ func LogPushFile(c *gin.Context) {
 	module  := "log"
 
 	fileUpload := global.GetUploadObj(category,module)
-	uploadRs,err := fileUpload.UploadOne(header)
+	uploadRs,err := fileUpload.UploadOne(header,2)
 	if err != nil{
 		util.MyPrint("fileUpload.UploadOne err:", err.Error())
 		return

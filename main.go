@@ -36,7 +36,8 @@ var initializeVar *initialize.Initialize
 // @description 注：所有 header 遵循HTTP标准，即：自定义的header中每个key 以大写X开头，单词以中划线分隔，每个单词首字母大写
 // @description 注：header的格式定义，参考结构：request.HeaderRequest，也可以调用调用接口获得:GET /tools/header/struct
 // @description 注：所有的请求都需要包含header+body,header主要用于：基础数据收集+基础数据验证
-// @description 注：99%的请求内容格式均是JSON(暂不支持兼容json+html)，只有上传文件例外(html+form)
+// @description 注：99%的请求内容格式均是JSON(暂不支持兼容json+html-form)，只有上传文件例外(html+form)
+// @description 注：所有接口均支持：跨域请求
 // @description 注：所有接口的响应格式均是json格式 ，包含3个值: code data msg ,具体参考 model.httpresponse.Response
 // @description 测试/开发人员：用户已上传的图片，查看，<a href="http://static.seedreality.com/upload/" target="_blank">点这里</a>
 // @description 测试/开发人员：配置中心的文件，查看，<a href="http://static.seedreality.com/data/config/" target="_blank">点这里</a>

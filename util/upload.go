@@ -69,7 +69,7 @@ func NewFileUpload(Option FileUploadOption )*FileUpload{
 	return fileUpload
 }
 //上传一个文件
-func   (fileUpload *FileUpload)UploadOne( header *multipart.FileHeader)(uploadRs UploadRs ,err error){
+func   (fileUpload *FileUpload)UploadOne( header *multipart.FileHeader,syncOss int)(uploadRs UploadRs ,err error){
 	//验证扩展名是否合法
 	fileExtName ,err := fileUpload.GetExtName(header.Filename)
 	if err != nil{
@@ -115,9 +115,11 @@ func   (fileUpload *FileUpload)UploadOne( header *multipart.FileHeader)(uploadRs
 		return uploadRs,err
 	}
 	//同步到阿里云
-	err = fileUpload.UploadAliOSS(newFileName,relativePath,fileName)
-	if err != nil{
-		return uploadRs,err
+	if syncOss == 1 {
+		err = fileUpload.UploadAliOSS(newFileName,relativePath,fileName)
+		if err != nil{
+			return uploadRs,err
+		}
 	}
 
 	uploadRs.RelativePath 	= relativePath
@@ -334,7 +336,7 @@ func   (fileUpload *FileUpload)Download(fileRelativePath string,c *gin.Context)e
 
 
 //流的大小：不能小于100个字节，因为要截取出头部的100个字节，做类型匹配及查错
-func   (fileUpload *FileUpload)UploadOneByStream(stream string,category int)(uploadRs UploadRs ,err error){
+func   (fileUpload *FileUpload)UploadOneByStream(stream string,category int,syncOss int)(uploadRs UploadRs ,err error){
 	if category != FILE_TYPE_IMG{
 		return uploadRs, errors.New("目前category仅支持：图片流")
 	}
@@ -392,6 +394,13 @@ func   (fileUpload *FileUpload)UploadOneByStream(stream string,category int)(upl
 	_ ,err = fd.Write(data)
 	if err != nil{
 		return uploadRs,errors.New("file write err:"+err.Error())
+	}
+
+	if syncOss == 1{
+		//err = fileUpload.UploadAliOSS(newFileName,relativePath,fileName)
+		//if err != nil{
+		//	return uploadRs,err
+		//}
 	}
 
 	uploadRs.RelativePath 	= relativePath

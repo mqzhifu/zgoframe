@@ -25,6 +25,7 @@ type Config struct {
 	Oss 			 Oss
 	Cicd 			 Cicd
 	Agora			 Agora
+	Domain			 Domain
 }
 
 type Protobuf struct {
@@ -219,4 +220,8 @@ type Oss struct{
 type Agora struct{
 	AppId			string
 	AppCertificate	string
+}
+
+type Domain struct {
+	Static string
 }

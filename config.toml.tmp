@@ -88,7 +88,7 @@ status  = "close"
 uri     = "/ws"
 
 [grpc]
-status                  = "open"
+status                  = "close"
 ip                      = "#grpc_ip#"
 port                    = "#grpc_port#"
 servicePackagePrefix    = "#grpc_user#"
@@ -100,7 +100,7 @@ protoPath       = "proto"    #相对路径，在static下面
 idMapFileName   = "map.txt"
 
 [serviceDiscovery]
-status = "open"
+status = "close"
 prefix = "/service"
 
 [email]

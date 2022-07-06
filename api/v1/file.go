@@ -43,7 +43,7 @@ func FileUploadImgOne(c *gin.Context){
 		httpUploadRs.UploadRs = uploadRs
 		ip , _:= util.GetLocalIp()
 		httpUploadRs.FullLocalIpUrl = util.UrlAppendIpHost("http",httpUploadRs.LocalIpUrl,ip,global.C.Http.Port)
-		httpUploadRs.FullLocalDomainUrl = util.UrlAppendDomain("http",httpUploadRs.LocalDomainUrl,"local.static.com","")
+		httpUploadRs.FullLocalDomainUrl = util.UrlAppendDomain("http",httpUploadRs.LocalDomainUrl,global.C.Domain.Static,"")
 		httpresponse.OkWithAll( httpUploadRs, "已上传", c)
 	}
 
@@ -94,7 +94,7 @@ func FileUploadImgMulti(c *gin.Context){
 		}
 		httpUploadRs.UploadRs = uploadRs
 		httpUploadRs.FullLocalIpUrl = util.UrlAppendIpHost("http",httpUploadRs.LocalIpUrl,ip,global.C.Http.Port)
-		httpUploadRs.FullLocalDomainUrl = util.UrlAppendDomain("http",httpUploadRs.LocalDomainUrl,"local.static.com","")
+		httpUploadRs.FullLocalDomainUrl = util.UrlAppendDomain("http",httpUploadRs.LocalDomainUrl,global.C.Domain.Static,"")
 		httpUploadRs.Err = errMsg
 		errList = append(errList, httpUploadRs  )
 	}
@@ -139,7 +139,7 @@ func FileUploadImgOneStreamBase64(c *gin.Context){
 		httpUploadRs.UploadRs = uploadRs
 		ip , _:= util.GetLocalIp()
 		httpUploadRs.FullLocalIpUrl = util.UrlAppendIpHost("http",httpUploadRs.LocalIpUrl,ip,global.C.Http.Port)
-		httpUploadRs.FullLocalDomainUrl = util.UrlAppendDomain("http",httpUploadRs.LocalDomainUrl,"local.static.com","")
+		httpUploadRs.FullLocalDomainUrl = util.UrlAppendDomain("http",httpUploadRs.LocalDomainUrl,global.C.Domain.Static,"")
 		httpresponse.OkWithAll( httpUploadRs, "已上传", c)
 	}
 
@@ -181,7 +181,7 @@ func FileUploadDocOne(c *gin.Context){
 		httpUploadRs.UploadRs = uploadRs
 		ip , _:= util.GetLocalIp()
 		httpUploadRs.FullLocalIpUrl = util.UrlAppendIpHost("http",httpUploadRs.LocalIpUrl,ip,global.C.Http.Port)
-		httpUploadRs.FullLocalDomainUrl = util.UrlAppendDomain("http",httpUploadRs.LocalDomainUrl,"local.static.com","")
+		httpUploadRs.FullLocalDomainUrl = util.UrlAppendDomain("http",httpUploadRs.LocalDomainUrl,global.C.Domain.Static,"")
 		httpresponse.OkWithAll( httpUploadRs, "已上传", c)
 	}
 
@@ -232,7 +232,7 @@ func FileUploadDocMulti(c *gin.Context){
 		}
 		httpUploadRs.UploadRs = uploadRs
 		httpUploadRs.FullLocalIpUrl = util.UrlAppendIpHost("http",httpUploadRs.LocalIpUrl,ip,global.C.Http.Port)
-		httpUploadRs.FullLocalDomainUrl = util.UrlAppendDomain("http",httpUploadRs.LocalDomainUrl,"local.static.com","")
+		httpUploadRs.FullLocalDomainUrl = util.UrlAppendDomain("http",httpUploadRs.LocalDomainUrl,global.C.Domain.Static,"")
 		httpUploadRs.Err = errMsg
 		errList = append(errList, httpUploadRs  )
 	}

@@ -89,8 +89,8 @@ func GetUploadObj(category int,module string)*util.FileUpload{
 		OssAccessKeyId	: C.Oss.AccessKeyId,
 		OssEndpoint		: C.Oss.Endpoint,
 		OssBucketName 	: C.Oss.Bucket,
+		OssLocalDomain	: C.Oss.SelfDomain,
 		OssAccessKeySecret: C.Oss.AccessKeySecret,
-		OssLocalDomain: C.Oss.SelfDomain,
 	}
 
 	fileUpload := util.NewFileUpload( fileUploadOption )

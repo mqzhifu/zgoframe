@@ -386,6 +386,15 @@ publish table list:<br/>
                     trTd += "<td>"+publishStatusDesc[data_list[key][key2]]+ "</td>";
                 }else if(key2 == "deploy_status"){
                     trTd += "<td>"+publishDeployStatusDesc[data_list[key][key2]]+ "</td>";
+                }else if(key2 == "created_at" || key2 == "created_at"){
+                    if (!key2){
+                        trTd += "<td>"+"--"+ "</td>";
+                    }else{
+                        var unixTimestamp = new Date(data_list[key][key2] * 1000);
+                        var timeform = unixTimestamp.toLocaleString()
+                        trTd += "<td>"+timeform+ "</td>";
+                    }
+
                 }else{
                     trTd += "<td>"+data_list[key][key2]+ "</td>";
                 }

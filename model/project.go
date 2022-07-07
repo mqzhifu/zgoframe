@@ -4,7 +4,7 @@ package model
 type Project struct {
 	MODEL
 	Name string `json:"name" form:"name" db:"define:varchar(50);comment:名称;defaultValue:''"`                                //名称
-	Type int    `json:"type" form:"type" db:"define:tinyint(1);comment:类型,1service 2frontend 3backend 4app;defaultValue:0"` //类型,1service 2frontend 3backend 4app
+	Type int    `json:"type" form:"type" db:"define:tinyint(1);comment:类型,1service 2frontend 3backend 4app;defaultValue:0"` //类型,1service 2frontend 3backend 4app 5 unity 6 cocos
 	Desc string `json:"desc" form:"desc" db:"define:varchar(255);comment:描述信息;defaultValue:''"`                            //描述信息
 
 	SecretKey string `json:"secret_key" form:"secret_key" db:"define:varchar(100);comment:密钥;defaultValue:''"`     		//密钥,用于一些需要加密的场景

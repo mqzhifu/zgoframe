@@ -31,9 +31,10 @@ type PageResult struct {
 
 // @Description 获取图片验证码
 type Captcha struct {
-	Id         string `json:"id"`			//使用(验证)时要带上这个ID，后端才能判断
-	PicContent string `json:"pic_content"` 	//图片内容,base64
+	Id         string `json:"id"`          //使用(验证)时要带上这个ID，后端才能判断
+	PicContent string `json:"pic_content"` //图片内容,base64
 }
+
 ////上传多张图片，处理结果
 //type UploadRs struct{
 //	Err 		string `json:"err"`			//上传图片是否发生错误，如果为空证明没有，此字段给上传多张图片使用
@@ -44,9 +45,9 @@ type Captcha struct {
 // @Description 上传图片结果
 type HttpUploadRs struct {
 	util.UploadRs
-	FullLocalIpUrl 		string 	`json:"full_local_ip_url"`		//本地存储的访问地址
-	FullLocalDomainUrl	string	`json:"full_local_domain_url"`
-	Err 				string 	`json:"err"`					//上传图片是否发生错误，如果为空证明没有，此字段给上传多张图片使用
+	FullLocalIpUrl     string `json:"full_local_ip_url"` //本地存储的访问地址
+	FullLocalDomainUrl string `json:"full_local_domain_url"`
+	Err                string `json:"err"` //上传图片是否发生错误，如果为空证明没有，此字段给上传多张图片使用
 }
 
 //@description 常量信息
@@ -58,7 +59,7 @@ type ConstInfo struct {
 
 func Result(code int, data interface{}, msg string, c *gin.Context) {
 	// 开始时间
-	myHeader,_ := request.GetMyHeader(c)
+	myHeader, _ := request.GetMyHeader(c)
 	//rid := c.GetHeader("request_id")
 	headerResponse := request.HeaderResponse{}
 
@@ -118,15 +119,16 @@ func FailWithAll(data interface{}, message string, c *gin.Context) {
 	global.V.Zap.Error("失败", zap.Any("err", message))
 	Result(ERROR, data, message, c)
 }
+
 var ErrManager = &util.ErrMsg{}
+
 // 一次请求，发生了一些错误，统一输出，但不停止，依然返回
-func ErrWithAllByCode(code int , c *gin.Context) error{
+func ErrWithAllByCode(code int, c *gin.Context) error {
 	errInfo := ErrManager.New(code)
 	//util.MyPrint("ErrWithAllByCode:",code,errInfo)
-	Result(code, nil , errInfo.Error(), c)
+	Result(code, errInfo.Error(), errInfo.Error(), c)
 	return errInfo
 }
-
 
 //快速响应-即有简单数据，也有复杂数据
 func NiuKeOkWithDetailed(data interface{}, message string, c *gin.Context) {

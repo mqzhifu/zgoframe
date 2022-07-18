@@ -15,7 +15,7 @@ import (
 func Header() gin.HandlerFunc {
 
 	return func(c *gin.Context) {
-		//global.V.Zap.Debug("middle Header start:")
+		global.V.Zap.Debug("middle Header start:")
 
 		//string header map 映射到 request.Header 结构体中
 		//util.MyPrint(c.Request.Header)
@@ -98,6 +98,7 @@ func HttpHeaderSureMapCovertSureStruct(inMap map[string][]string) request.Header
 		} else if fieldType.String() == "request.HeaderBaseInfo" {
 			hbi := request.HeaderBaseInfo{}
 			err := json.Unmarshal([]byte(headerOneVal), &hbi)
+			util.MyPrint("HeaderBaseInfo : err ", err, " hbi")
 			if err == nil {
 				ValueOfOutStruct.Elem().Field(i).Set(reflect.ValueOf(hbi))
 			}

@@ -43,11 +43,11 @@ func NewDbTool(gorm *gorm.DB) *DbTool {
 	return db
 }
 
-func (db *DbTool) CreateTable(tableStruct ...interface{}) map[string]string{
+func (db *DbTool) CreateTable(tableStruct ...interface{}) map[string]string {
 	sql_script := make(map[string]string)
 
 	for i := 0; i < len(tableStruct); i++ {
-		tableName , sql := db.processOneTable(tableStruct[i])
+		tableName, sql := db.processOneTable(tableStruct[i])
 		//ExitPrint(111)
 		sql_script[tableName] = sql
 	}
@@ -102,7 +102,7 @@ func (db *DbTool) mergeTwoArr(firstField []TableColumnOption, endField []TableCo
 	return newColumnsOption
 }
 
-func (db *DbTool) processOneTable(tableStruct interface{})(tableName string ,sql_script string) {
+func (db *DbTool) processOneTable(tableStruct interface{}) (tableName string, sql_script string) {
 	//MyPrint("processOneTable:", tableStruct)
 	//sqlMap := make(map[string]string)
 
@@ -120,7 +120,7 @@ func (db *DbTool) processOneTable(tableStruct interface{})(tableName string ,sql
 	if tableOption.Name == "" {
 		structFullName := ValueOfTableStruct.Elem().Type()
 		tableOption.Name = Lcfirst(structFullName.Name())
-		MyPrint("tableOption.Name:", tableOption.Name)
+		//MyPrint("tableOption.Name:", tableOption.Name)
 	} else {
 		MyPrint("err: tableOption.Name empty")
 	}
@@ -209,10 +209,10 @@ func (db *DbTool) processOneTable(tableStruct interface{})(tableName string ,sql
 	if tableOption.Comment != "" {
 		comment = "'" + tableOption.Comment + "'"
 	}
-	sql += " comment=" + comment + db.Br
+	sql += " comment=" + comment + ";" + db.Br
 
 	//sqlMap[tableOption.Name] = sql
-	MyPrint(sql)
+	//MyPrint(sql)
 	return tableOption.Name, sql
 }
 

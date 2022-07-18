@@ -5,12 +5,12 @@ import (
 	v1 "zgoframe/api/v1"
 )
 
-
 func InitPersistenceRouter(Router *gin.RouterGroup) {
 	persistenceRouter := Router.Group("persistence")
 	{
 		persistenceRouter.POST("log/push", v1.LogPush)
 		persistenceRouter.POST("log/push/file", v1.LogPushFile)
+		persistenceRouter.POST("log/push/file/json", v1.LogPushFileJson)
 	}
 }
 

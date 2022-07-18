@@ -10,3 +10,7 @@ ALTER TABLE `user_login` ADD `County` INT NOT NULL DEFAULT '0' COMMENT '县' ;
 ALTER TABLE `user_login` ADD `Town` INT NOT NULL DEFAULT '0' COMMENT '镇' ;
 ALTER TABLE `user_login` ADD `area_detail` VARCHAR(255) NOT NULL DEFAULT '' COMMENT '详细地址' ;
 
+
+
+
+user_reg os int =>String

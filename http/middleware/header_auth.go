@@ -11,31 +11,22 @@ import (
 func HeaderAuth() gin.HandlerFunc {
 	//res := httpresponse.Response{}
 	return func(c *gin.Context) {
-		//global.V.Zap.Debug("middle HeaderAuth start:")
-		header,_ := request.GetMyHeader(c)
+		global.V.Zap.Debug("middle HeaderAuth start:")
+		header, _ := request.GetMyHeader(c)
 		//验证SourceType
 		if !model.CheckConstInList(model.GetConstListPlatform(), header.SourceType) {
 			header.SourceType = model.PLATFORM_UNKNOW
-			//res.Code = 501
-			//res.Msg = "SourceType unknow"
-			//c.AbortWithStatusJSON(500, res)
-			ErrAbortWithResponse(5100,c)
+			ErrAbortWithResponse(5100, c)
 			return
 		}
 
 		if header.ProjectId <= 0 {
-			//res.Code = 502
-			//res.Msg = "ProjectId <= 0"
-			//c.AbortWithStatusJSON(500, res)
-			ErrAbortWithResponse(5101,c)
+			ErrAbortWithResponse(5101, c)
 			return
 		}
 
 		if header.Access == "" {
-			//res.Code = 503
-			//res.Msg = "ACCESS empty"
-			//c.AbortWithStatusJSON(500, res)
-			ErrAbortWithResponse(5102,c)
+			ErrAbortWithResponse(5102, c)
 			return
 		}
 
@@ -44,7 +35,7 @@ func HeaderAuth() gin.HandlerFunc {
 			//res.Code = 504
 			//res.Msg = "projectId  empty"
 			//c.AbortWithStatusJSON(500, res)
-			ErrAbortWithResponse(5103,c)
+			ErrAbortWithResponse(5103, c)
 			return
 		}
 		//fmt.Println(project.Access, " - ", header.Access)
@@ -52,9 +43,9 @@ func HeaderAuth() gin.HandlerFunc {
 			//res.Code = 505
 			//res.Msg = "ACCESS  error"
 			//c.AbortWithStatusJSON(500, res)
-			ErrAbortWithResponse(5104,c)
+			ErrAbortWithResponse(5104, c)
 			return
 		}
-		//global.V.Zap.Debug("middle HeaderAuth finish.")
+		global.V.Zap.Debug("middle HeaderAuth finish.")
 	}
 }

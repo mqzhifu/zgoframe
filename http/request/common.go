@@ -5,11 +5,28 @@ import "github.com/dgrijalva/jwt-go"
 
 //@description 解析token
 type ParserToken struct {
-	Token string `json:"token" form:"token"`	//需要解析的token字符串
+	Token string `json:"token" form:"token"` //需要解析的token字符串
 }
 type TestHeader struct {
-	HeaderRequest  HeaderRequest  `json:"header_request"`	//请求头-结构
-	HeaderResponse HeaderResponse `json:"header_response"`	//响应头-结构
+	HeaderRequest  HeaderRequest  `json:"header_request"`  //请求头-结构
+	HeaderResponse HeaderResponse `json:"header_response"` //响应头-结构
+}
+
+type ClientLogInfoStruct struct {
+	Ts      int64  `json:"ts"`
+	Pn      string `json:"pn"`
+	Uid     int    `json:"uid"`
+	Vn      string `json:"vn"`
+	Vc      string `json:"vc"`
+	Ct      string `json:"ct"`
+	Id      int    `json:"id"`
+	EventId string `json:"eventid"`
+}
+
+type ClientLogStruct struct {
+	Sn   string                `json:"sn"`
+	Sv   string                `json:"sv"`
+	Info []ClientLogInfoStruct `json:"info"`
 }
 
 //@description http客户端请求头
@@ -38,18 +55,18 @@ type HeaderResponse struct {
 }
 
 type UploadFile struct {
-	File 	string `json:"file" form:"file"`			//input file 控件的name
-	Stream	string `json:"stream" form:"stream"`		//文件流,例：data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAHgAAAB4CAMAAAAOus .......
-	Module 	string `json:"module" form:"module"`  		//模块/业务名，可用于给文件名加前缀目录
-	SyncOss int 	`json:"sync_oss" form:"sync_oss"`	//是否同步到云oss 1是2否
+	File    string `json:"file" form:"file"`         //input file 控件的name
+	Stream  string `json:"stream" form:"stream"`     //文件流,例：data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAHgAAAB4CAMAAAAOus .......
+	Module  string `json:"module" form:"module"`     //模块/业务名，可用于给文件名加前缀目录
+	SyncOss int    `json:"sync_oss" form:"sync_oss"` //是否同步到云oss 1是2否
 }
 
 //@description http客户端请求头-基础信息
 type HeaderBaseInfo struct {
-	Sn 			  string `json:"sn"`			 //每个自己的设置有一个编号
-	PackName 	  string `json:"pack_name"`		 //APP上传的包名
+	Sn            string `json:"sn"`             //每个自己的设置有一个编号
+	PackName      string `json:"pack_name"`      //APP上传的包名
 	AppVersion    string `json:"app_version"`    //app/前端/服务/项目 版本号
-	OS            int    `json:"os"`             //win mac android ios
+	OS            string `json:"os"`             //win mac android ios
 	OSVersion     string `json:"os_version"`     //win7 win9 mac10 android9
 	Device        string `json:"device"`         //ipad iphone huawei mi chrome firefox ie
 	DeviceVersion string `json:"device_version"` //mi8 hongmi7 ios8 ios9 ie8 ie9
@@ -88,26 +105,26 @@ type NiukeQuestionSearch struct {
 
 type CicdSuperVisor struct {
 	CicdDeploy
-	Command 	string `json:"command"`
+	Command string `json:"command"`
 }
 
 type CicdDeploy struct {
-	ServerId	int	`json:"server_id"`
-	ServiceId 	int	`json:"service_id"`
-	Flag 		int `json:"flag"`//1本地2远程
+	ServerId  int `json:"server_id"`
+	ServiceId int `json:"service_id"`
+	Flag      int `json:"flag"` //1本地2远程
 }
 
 type CicdSync struct {
-	ServerId	int	`json:"server_id"`
-	ServiceId 	int	`json:"service_id"`
-	VersionDir	string `json:"version_dir"`
+	ServerId   int    `json:"server_id"`
+	ServiceId  int    `json:"service_id"`
+	VersionDir string `json:"version_dir"`
 }
 
 //@description 3方登陆
 type RLoginThird struct {
 	Register
-	ThirdId      string	`json:"third_id"` 			//3方平台用户ID，此值必填
-	PlatformType int	`json:"platform_type"`    	//3方平台类型，如：微信、QQ、facebook、抖音，此值必填
+	ThirdId      string `json:"third_id"`      //3方平台用户ID，此值必填
+	PlatformType int    `json:"platform_type"` //3方平台类型，如：微信、QQ、facebook、抖音，此值必填
 }
 
 //@description 分页
@@ -115,7 +132,6 @@ type PageInfo struct {
 	Page     int `json:"page" form:"page"`         //当前页数
 	PageSize int `json:"pageSize" form:"pageSize"` //每页多少条记录
 }
-
 
 //空结构体，1给网关，请求参数泛类型 2给protobuf用 3给swag api工具使用
 type Empty struct{}
@@ -132,20 +148,19 @@ type CasbinInReceive struct {
 	CasbinInfos []CasbinInfo `json:"casbinInfos"`
 }
 
-
 type StatisticsLogData struct {
-	ProjectId 	int    	`json:"project_id"`					//项目/服务/app- Id
-	Uid     	int 	`json:"uid" form:"uid"`				//用户ID
-	Category    int    	`json:"category" form:"category"`	//分类ID，保留字，暂不使用
-	Action 		string 	`json:"action" form:"action"`		//动作描述，如：user_client_a_button ,user_open_window ,  user_pay ,user_order
-	Msg       	string 	`json:"msg" form:"msg"`				//自定义消息体，算是对action的一种补充
+	ProjectId int    `json:"project_id"`               //项目/服务/app- Id
+	Uid       int    `json:"uid" form:"uid"`           //用户ID
+	Category  int    `json:"category" form:"category"` //分类ID，保留字，暂不使用
+	Action    string `json:"action" form:"action"`     //动作描述，如：user_client_a_button ,user_open_window ,  user_pay ,user_order
+	Msg       string `json:"msg" form:"msg"`           //自定义消息体，算是对action的一种补充
 }
 
-type ConfigCenterOpt struct{
-	Env 		int 	`json:"env"` 	//环境变量
-	Module 		string `json:"module"` 	//模块/文件名
-	Key 		string 	`json:"key"` 	//文件中的key
-	Value 		string `json:"value"` 	//写入时，值
+type ConfigCenterOpt struct {
+	Env    int    `json:"env"`    //环境变量
+	Module string `json:"module"` //模块/文件名
+	Key    string `json:"key"`    //文件中的key
+	Value  string `json:"value"`  //写入时，值
 }
 
 //type ConfigCenterGetByKeyReq struct {

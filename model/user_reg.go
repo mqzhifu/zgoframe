@@ -16,7 +16,7 @@ type UserReg struct {
 	Town          int    `json:"town" db:"define:int;comment:project_id;defaultValue:0"`
 	AreaDetail    string `json:"area_detail"  db:"define:varchar(255);comment:页面来源;defaultValue:"`
 	AppVersion    string `json:"app_version" db:"define:varchar(50);comment:APP版本;defaultValue:''"`
-	Os            int    `json:"os" db:"define:tinyint(1);comment:操作系统;defaultValue:0"`
+	Os            string `json:"os" db:"define:string(50);comment:操作系统;defaultValue:0"`
 	OsVersion     string `json:"os_version"  db:"define:varchar(50);comment:操作系统版本;defaultValue:''"`
 	Device        string `json:"device" db:"define:varchar(50);comment:设备名称;defaultValue:''"`
 	DeviceVersion string `json:"device_version" db:"define:varchar(50);comment:设备版本;defaultValue:''"`

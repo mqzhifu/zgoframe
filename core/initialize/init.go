@@ -20,21 +20,21 @@ type Initialize struct {
 }
 
 type InitOption struct {
-	Env               int		`json:"env"`
-	Debug             int		`json:"debug"`
-	ConfigType        string	`json:"config_type"`
-	ConfigFileName    string	`json:"config_file_name"`
-	ConfigSourceType  string	`json:"config_source_type"`
-	EtcdConfigFindUrl string	`json:"etcd_config_find_url"`
-	RootDir           string	`json:"root_dir"`
-	RootDirName       string	`json:"root_dir_name"`
+	Env               int    `json:"env"`
+	Debug             int    `json:"debug"`
+	ConfigType        string `json:"config_type"`
+	ConfigFileName    string `json:"config_file_name"`
+	ConfigSourceType  string `json:"config_source_type"`
+	EtcdConfigFindUrl string `json:"etcd_config_find_url"`
+	RootDir           string `json:"root_dir"`
+	RootDirName       string `json:"root_dir_name"`
 
-	GoVersion 		  string 	`json:"go_version"`
-	Cpu				  string 	`json:"cpu"`
-	RootCtx           context.Context	`json:"-"`
-	RootCancelFunc    context.CancelFunc`json:"-"`
-	RootQuitFunc      func(source int)	`json:"-"`
-	TestFlag		string		`json:"-"`
+	GoVersion      string             `json:"go_version"`
+	Cpu            string             `json:"cpu"`
+	RootCtx        context.Context    `json:"-"`
+	RootCancelFunc context.CancelFunc `json:"-"`
+	RootQuitFunc   func(source int)   `json:"-"`
+	TestFlag       string             `json:"-"`
 }
 
 func NewInitialize(option InitOption) *Initialize {
@@ -46,7 +46,15 @@ func NewInitialize(option InitOption) *Initialize {
 //初始化-入口
 func (initialize *Initialize) Start() error {
 	//autoCreateUpDbTable() //自动创建表，根据MODEL- struct
-
+	if initialize.Option.TestFlag != "" {
+		sqlList := global.AutoCreateUpDbTable()
+		sqlStrings := ""
+		for _, v := range sqlList {
+			sqlStrings += v
+		}
+		util.MyPrint(sqlStrings)
+		util.ExitPrint("i want exit 2.")
+	}
 	prefix := "initialize ,"
 	//初始化 : 配置信息
 	viperOption := ViperOption{
@@ -101,7 +109,7 @@ func (initialize *Initialize) Start() error {
 	if err != nil {
 		return err
 	}
-	if len(global.V.GormList) <= 0{
+	if len(global.V.GormList) <= 0 {
 		return errors.New("至少有一个数据库需要被连接")
 	}
 	global.V.Gorm = global.V.GormList[0]
@@ -144,10 +152,10 @@ func (initialize *Initialize) Start() error {
 		redisGoOption := util.RedisGoOption{
 			Host: global.C.Redis.Ip,
 			Port: global.C.Redis.Port,
-			Ps	: global.C.Redis.Password,
-			Log : global.V.Zap,
+			Ps:   global.C.Redis.Password,
+			Log:  global.V.Zap,
 		}
-		redisGo , _ = util.NewRedisConnPool(redisGoOption)
+		redisGo, _ = util.NewRedisConnPool(redisGoOption)
 
 	}
 	//http server
@@ -259,7 +267,7 @@ func (initialize *Initialize) Start() error {
 			Port:      global.C.Email.Port,
 			FromEmail: global.C.Email.From,
 			Password:  global.C.Email.Ps,
-			AuthCode : global.C.Email.AuthCode,
+			AuthCode:  global.C.Email.AuthCode,
 			Log:       global.V.Zap,
 		}
 
@@ -295,14 +303,14 @@ func (initialize *Initialize) Start() error {
 	//_ ,cancelFunc := context.WithCancel(option.RootCtx)
 	//进程通信相关
 	ProcessPathFileName := "/tmp/" + global.V.Project.Name + ".pid"
-	global.V.Process = util.NewProcess(ProcessPathFileName, initialize.Option.RootCancelFunc, global.V.Zap, initialize.Option.RootQuitFunc,initialize.OutHttpGetBaseInfo)
+	global.V.Process = util.NewProcess(ProcessPathFileName, initialize.Option.RootCancelFunc, global.V.Zap, initialize.Option.RootQuitFunc, initialize.OutHttpGetBaseInfo)
 	global.V.Process.InitProcess()
 
 	return nil
 }
 
-func (initialize *Initialize)OutHttpGetBaseInfo()string{
-	optionStr,_ := json.Marshal( initialize.Option)
+func (initialize *Initialize) OutHttpGetBaseInfo() string {
+	optionStr, _ := json.Marshal(initialize.Option)
 	return string(optionStr)
 }
 

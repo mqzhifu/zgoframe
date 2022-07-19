@@ -8,36 +8,35 @@ import (
 	"gorm.io/gorm"
 	"net/http"
 	"zgoframe/model"
-	"zgoframe/util"
 	"zgoframe/service"
+	"zgoframe/util"
 )
 
 type Global struct {
-	RootDir          string
-	Vip              *viper.Viper
-	Zap              *zap.Logger
-	Redis            *util.MyRedis
-	Gin              *gin.Engine
-	Gorm             *gorm.DB		//多数据库模式下，有一个库肯定会被经常访问，这里加一个快捷链接
-	GormList 		 []*gorm.DB		//所有数据库，连接成功后的列表
-	Project          util.Project
-	ProjectMng       *util.ProjectManager
-	Etcd             *util.MyEtcd
-	HttpServer       *http.Server
-	Metric           *util.MyMetrics
-	GrpcManager      *util.GrpcManager
-	AlertPush        *util.AlertPush //报警推送： prometheus
-	AlertHook        *util.AlertHook //报警：邮件 手机
-	Websocket        *util.Websocket
-	ConnMng          *util.ConnManager
-	RecoverGo        *util.RecoverGo
-	ProtoMap         *util.ProtoMap
-	Process          *util.Process
-	Err              *util.ErrMsg
-	Email            *util.MyEmail
-	FileUpload		 *util.FileUpload
-	MyService        *service.Service//内部快捷服务
-
+	RootDir     string
+	Vip         *viper.Viper
+	Zap         *zap.Logger
+	Redis       *util.MyRedis
+	Gin         *gin.Engine
+	Gorm        *gorm.DB   //多数据库模式下，有一个库肯定会被经常访问，这里加一个快捷链接
+	GormList    []*gorm.DB //所有数据库，连接成功后的列表
+	Project     util.Project
+	ProjectMng  *util.ProjectManager
+	Etcd        *util.MyEtcd
+	HttpServer  *http.Server
+	Metric      *util.MyMetrics
+	GrpcManager *util.GrpcManager
+	AlertPush   *util.AlertPush //报警推送： prometheus
+	AlertHook   *util.AlertHook //报警：邮件 手机
+	Websocket   *util.Websocket
+	ConnMng     *util.ConnManager
+	RecoverGo   *util.RecoverGo
+	ProtoMap    *util.ProtoMap
+	Process     *util.Process
+	Err         *util.ErrMsg
+	Email       *util.MyEmail
+	FileUpload  *util.FileUpload
+	MyService   *service.Service //内部快捷服务
 
 	ServiceManager   *util.ServiceManager   //管理已注册的服务
 	ServiceDiscovery *util.ServiceDiscovery //管理服务发现，会用到上面的ServiceManager
@@ -64,10 +63,10 @@ const (
 	CONFIG_STATUS_OPEN = "open"
 )
 
-func AutoCreateUpDbTable()map[string]string {
+func AutoCreateUpDbTable() map[string]string {
 	mydb := util.NewDbTool(V.Gorm)
 	sql := mydb.CreateTable(&model.User{}, &model.UserReg{}, &model.UserLogin{},
-		&model.OperationRecord{}, &model.Project{},&model.StatisticsLog{},
+		&model.OperationRecord{}, &model.Project{}, &model.StatisticsLog{},
 		&model.CicdPublish{}, &model.Server{}, &model.Instance{},
 		&model.SmsRule{}, &model.SmsLog{}, &model.EmailRule{}, &model.EmailLog{}, &model.MailRule{}, &model.MailLog{}, &model.MailGroup{})
 
@@ -76,23 +75,28 @@ func AutoCreateUpDbTable()map[string]string {
 }
 
 //文件公共处理类，做成公共，方便统一管理
-func GetUploadObj(category int,module string)*util.FileUpload{
+func GetUploadObj(category int, module string) *util.FileUpload {
 	//projectId := request.GetProjectId(c)
 	fileUploadOption := util.FileUploadOption{
-		FilePrefix		: module,
-		MaxSize			: C.Upload.MaxSize,
-		Category		: category,
-		FileHashType	: util.FILE_HASH_DAY,
-		UploadDir		: C.Upload.Path,
-		StaticDir		: C.Http.StaticPath,
-		ProjectRootPath	: V.RootDir,
-		OssAccessKeyId	: C.Oss.AccessKeyId,
-		OssEndpoint		: C.Oss.Endpoint,
-		OssBucketName 	: C.Oss.Bucket,
-		OssLocalDomain	: C.Oss.SelfDomain,
+		FilePrefix:         module,
+		MaxSize:            C.Upload.MaxSize,
+		Category:           category,
+		FileHashType:       util.FILE_HASH_DAY,
+		UploadDir:          C.Upload.Path,
+		StaticDir:          C.Http.StaticPath,
+		ProjectRootPath:    V.RootDir,
+		OssAccessKeyId:     C.Oss.AccessKeyId,
+		OssEndpoint:        C.Oss.Endpoint,
+		OssBucketName:      C.Oss.Bucket,
+		OssLocalDomain:     C.Oss.SelfDomain,
 		OssAccessKeySecret: C.Oss.AccessKeySecret,
 	}
 
-	fileUpload := util.NewFileUpload( fileUploadOption )
+	fileUpload := util.NewFileUpload(fileUploadOption)
 	return fileUpload
+}
+
+func GetUtilUploadConst() map[string]int {
+	u := GetUploadObj(1, "")
+	return u.GetConstListFileUploadType()
 }

@@ -1,15 +1,82 @@
-INSERT INTO `project` (`id`, `name`, `secret_key`, `status`, `created_at`, `updated_at`, `deleted_at`, `type`, `desc`, `git`, `access`) VALUES
-(1, 'GameMatch', 'aaaaaa', 1, 0, 0, NULL, 1, '游戏匹配', 'git://github.com/mqzhifu/gamematch.git', 'imgamematch'),
-(2, 'FrameSync', 'bbbb', 1, 0, 0, NULL, 1, '游戏帧同步', 'git://github.com/mqzhifu/frame_sync.git', 'imframesync'),
-(3, 'LogSlave', 'ccccc', 1, 0, 0, NULL, 1, '日志接收', 'git://github.com/mqzhifu/log_slave.git', 'imlogsalve'),
-(6, 'Zgoframe', 'asdf  sdf', 1, 0, 0, NULL, 1, 'go框架测试', 'git://github.com/mqzhifu/zgoframe.git', 'imzgoframe'),
-(9, 'Gateway', 'adfasdf', 1, 0, 0, NULL, 1, '', 'git://github.com/mqzhifu/gateway.git', 'imgateway');
-
-
-
 INSERT INTO `project` (`id`, `name`, `type`, `desc`, `secret_key`, `status`, `access`, `lang`, `git`, `created_at`, `updated_at`, `deleted_at`) VALUES
-                                                                                                                                                    (6, 'Zgoframe', 1, 'go框架测试', 'ckZgoframe', 1, 'imzgoframe', 2, 'https://github.com/mqzhifu/zgoframe.git', 1650001049, 0, NULL),
-                                                                                                                                                    (10, 'Zwebuigo', 1, '后台管理系统', 'ckZwebuigo', 1, 'imzwebuigo', 2, 'https://github.com/mqzhifu/zwebuigo.git', 1650001049, 0, NULL),
-                                                                                                                                                    (11, 'Zwebuivue', 2, '后台管理系统-VUE', 'ckZwebuivue', 1, 'imzwebuivue', 4, 'https://github.com/mqzhifu/zwebuivue.git', 1650001049, 0, NULL),
-                                                                                                                                                    (12, 'TwinAgora', 2, '数据孪生-专家指导(声网)', 'ckTwinAgora', 1, 'imtwinagora', 4, 'https://github.com/mqzhifu/twin_agora.git', 1650001049, 0, NULL),
-                                                                                                                                                    (13, 'AgoraUnity', 5, '数据孪生-UNITY端', 'ckAgoraUnity', 1, 'imagoraunity', 7, 'http://192.168.1.22:40080/jiaxing.zhu/Agora.git', 1650001049, 0, NULL);
+    (1, 'GameMatch', 1, '小游戏-玩家匹配机制', 'ckgamematch', 0, 'imgamematch', 2, 'git://github.com/mqzhifu/gamematch.git', 1650001049, 1650001049, NULL),
+    (2, 'FrameSync', 1, '游戏-帧同步', 'ckframesync', 0, 'imframesync', 2, 'git://github.com/mqzhifu/frame_sync.git', 1650001049, 1650001049, NULL),
+    (6, 'Zgoframe', 1, 'go框架测试', 'ckZgoframe', 1, 'imzgoframe', 2, 'https://github.com/mqzhifu/zgoframe.git', 1650001049, 1650001049, NULL),
+    (9, 'Gateway', 1, '公共网关', 'ckgateway', 0, 'imgateway', 2, 'git://github.com/mqzhifu/gateway.git', 1650001049, 1650001049, NULL),
+    (10, 'Zwebuigo', 1, '后台管理系统', 'ckZwebuigo', 1, 'imzwebuigo', 2, 'https://github.com/mqzhifu/zwebuigo.git', 1650001049, 1650001049, NULL),
+    (11, 'Zwebuivue', 2, '后台管理系统-VUE', 'ckZwebuivue', 1, 'imzwebuivue', 4, 'https://github.com/mqzhifu/zwebuivue.git', 1650001049, 1650001049, NULL),
+    (12, 'TwinAgora', 2, '数据孪生-专家指导(声网)', 'ckTwinAgora', 1, 'imtwinagora', 4, 'https://github.com/mqzhifu/twin_agora.git', 1650001049, 1650001049, NULL),
+    (13, 'AgoraUnity', 5, '数据孪生-UNITY端', 'ckAgoraUnity', 1, 'imagoraunity', 7, 'http://192.168.1.22:40080/jiaxing.zhu/Agora.git', 1650001049, 1650001049, NULL);
+
+
+INSERT INTO `server` (`id`, `name`, `platform`, `out_ip`, `inner_ip`, `env`, `status`, `ext`, `charge_user_name`, `start_time`, `end_time`, `price`, `created_at`, `updated_at`, `deleted_at`) VALUES
+   (1, '本地', 1, '127.0.0.1', '127.0.0.1', 1, 1, '', '小z', 1650006845, 1650006845, 100, 1650006845, 0, NULL),
+   (2, '开发', 1, '192.168.1.21', '192.168.1.21', 2, 1, '', '小z', 1650006845, 1650006845, 100, 1650006845, 0, NULL),
+   (3, '测试', 1, '2.2.2.2', '127.0.0.1', 3, 2, '', '小z', 1650006845, 1650006845, 100, 1650006845, 0, NULL),
+   (4, '预发布', 1, '8.142.177.235', '172.27.198.210', 4, 1, '', '小z', 1650006845, 1650006845, 100, 1650006845, 0, NULL),
+   (5, '线上', 1, '8.142.161.156', '172.27.218.143', 5, 1, '', '小z', 1650006845, 1650006845, 100, 1650006845, 0, NULL);
+
+INSERT INTO `sms_rule` (`id`, `project_id`, `title`, `content`, `type`, `day_times`, `period`, `period_times`, `expire_time`, `memo`, `purpose`, `channel`, `third_back_info`, `third_template_id`, `third_status`, `third_reason`, `third_callback_info`, `third_callback_time`, `created_at`, `updated_at`, `deleted_at`) VALUES
+    (1, 0, '', '0', 0, 0, 10, 30, 0, '0', 0, 0, '短信注册', '1', 0, '', '{nickname},您好：欢迎注册本网站，验证码为：{auth_code},{auth_expire_time}秒后将失效，勿告诉他人，防止被骗', '1', 300, 0, 11),
+    (2, 0, '', '0', 0, 0, 10, 60, 0, '0', 0, 6, '短信登陆', '1', 0, '', '{nickname},您好：登陆验证码为：{auth_code},{auth_expire_time} 秒后将失效，勿告诉他人，防止被骗。', '1', 300, 0, 12),
+    (3, 0, '找加密码', '0', 0, 0, 10, 30, 0, '0', 0, 6, '找回密码', '1', 0, '', '找回密码', '1', 300, 0, 13);
+
+
+INSERT INTO `instance` (`id`, `platform`, `name`, `host`, `port`, `env`, `user`, `ps`, `ext`, `status`, `charge_user_name`, `start_time`, `end_time`, `price`, `created_at`, `updated_at`, `deleted_at`) VALUES
+     (1, 1, 'mysql', '127.0.0.1', '', 1, 'aaaa', 'bbbb', '', 1, '小z', 1650006845, 1650006845, 200, 1650006845, 0, NULL),
+     (2, 1, 'redis', '127.0.0.1', '', 1, 'aaaa', 'bbbb', '', 1, '小z', 1650006845, 1650006845, 200, 1650006845, 0, NULL),
+     (3, 1, 'email', '127.0.0.1', '', 1, 'aaaa', 'bbbb', '', 1, '小z', 1650006845, 1650006845, 200, 1650006845, 0, NULL),
+     (4, 1, 'etcd', '127.0.0.1', '', 1, 'aaaa', 'bbbb', '', 1, '小z', 1650006845, 1650006845, 200, 1650006845, 0, NULL),
+     (5, 1, 'alert', '127.0.0.1', '', 1, 'aaaa', 'bbbb', '', 1, '小z', 1650006845, 1650006845, 200, 1650006845, 0, NULL),
+     (6, 1, 'cdn', '127.0.0.1', '', 1, 'aaaa', 'bbbb', '', 1, '小z', 1650006845, 1650006845, 200, 1650006845, 0, NULL),
+     (7, 1, 'sms', '127.0.0.1', '', 1, 'aaaa', 'bbbb', '', 1, '小z', 1650006845, 1650006845, 200, 1650006845, 0, NULL),
+     (8, 1, 'http', '127.0.0.1', '1111', 1, 'aaaa', 'bbbb', '', 1, '小z', 1650006845, 1650006845, 200, 1650006845, 0, NULL),
+     (9, 1, 'domain', '127.0.0.1', '', 1, 'aaaa', 'bbbb', '', 1, '小z', 1650006845, 1650006845, 200, 1650006845, 0, NULL),
+     (10, 1, 'oss', '127.0.0.1', '', 1, 'aaaa', 'bbbb', '', 1, '小z', 1650006845, 1650006845, 200, 1650006845, 0, NULL),
+     (11, 1, 'grpc', '127.0.0.1', '', 1, 'aaaa', 'bbbb', '', 1, '小z', 1650006845, 1650006845, 200, 1650006845, 0, NULL),
+     (12, 1, 'gateway', '127.0.0.1', '', 1, 'aaaa', 'bbbb', '', 1, '小z', 1650006845, 1650006845, 200, 1650006845, 0, NULL),
+     (13, 1, 'agora', '127.0.0.1', '', 1, 'aaaa', 'bbbb', '', 1, '小z', 1650006845, 1650006845, 200, 1650006845, 0, NULL),
+     (14, 1, 'super_visor', '127.0.0.1', '9001', 1, '', '', '', 1, '小z', 1650006845, 1650006845, 200, 1650006845, 0, NULL),
+     (15, 1, 'mysql', '192.168.1.21', '', 2, 'aaaa', 'bbbb', '', 1, '小z', 1650006845, 1650006845, 200, 1650006845, 0, NULL),
+     (16, 1, 'redis', '192.168.1.21', '', 2, 'aaaa', 'bbbb', '', 1, '小z', 1650006845, 1650006845, 200, 1650006845, 0, NULL),
+     (17, 1, 'email', '192.168.1.21', '', 2, 'aaaa', 'bbbb', '', 1, '小z', 1650006845, 1650006845, 200, 1650006845, 0, NULL),
+     (18, 1, 'etcd', '192.168.1.21', '', 2, 'aaaa', 'bbbb', '', 1, '小z', 1650006845, 1650006845, 200, 1650006845, 0, NULL),
+     (19, 1, 'alert', '192.168.1.21', '', 2, 'aaaa', 'bbbb', '', 1, '小z', 1650006845, 1650006845, 200, 1650006845, 0, NULL),
+     (20, 1, 'cdn', '192.168.1.21', '', 2, 'aaaa', 'bbbb', '', 1, '小z', 1650006845, 1650006845, 200, 1650006845, 0, NULL),
+     (21, 1, 'sms', '192.168.1.21', '', 2, 'aaaa', 'bbbb', '', 1, '小z', 1650006845, 1650006845, 200, 1650006845, 0, NULL),
+     (22, 1, 'http', '192.168.1.21', '2222', 2, 'aaaa', 'bbbb', '', 1, '小z', 1650006845, 1650006845, 200, 1650006845, 0, NULL),
+     (23, 1, 'domain', '192.168.1.21', '', 2, 'aaaa', 'bbbb', '', 1, '小z', 1650006845, 1650006845, 200, 1650006845, 0, NULL),
+     (24, 1, 'oss', '192.168.1.21', '', 2, 'aaaa', 'bbbb', '', 1, '小z', 1650006845, 1650006845, 200, 1650006845, 0, NULL),
+     (25, 1, 'grpc', '192.168.1.21', '', 2, 'aaaa', 'bbbb', '', 1, '小z', 1650006845, 1650006845, 200, 1650006845, 0, NULL),
+     (26, 1, 'gateway', '192.168.1.21', '', 2, 'aaaa', 'bbbb', '', 1, '小z', 1650006845, 1650006845, 200, 1650006845, 0, NULL),
+     (27, 1, 'agora', '192.168.1.21', '', 2, 'aaaa', 'bbbb', '', 1, '小z', 1650006845, 1650006845, 200, 1650006845, 0, NULL),
+     (28, 1, 'super_visor', '192.168.1.21', '9002', 2, 'user', '123', '', 1, '小z', 1650006845, 1650006845, 200, 1650006845, 0, NULL),
+     (29, 1, 'mysql', '8.142.177.235', '', 4, 'aaaa', 'bbbb', '', 1, '小z', 1650006845, 1650006845, 200, 1650006845, 0, NULL),
+     (30, 1, 'redis', '8.142.177.235', '', 4, 'aaaa', 'bbbb', '', 1, '小z', 1650006845, 1650006845, 200, 1650006845, 0, NULL),
+     (31, 1, 'email', '8.142.177.235', '', 4, 'aaaa', 'bbbb', '', 1, '小z', 1650006845, 1650006845, 200, 1650006845, 0, NULL),
+     (32, 1, 'etcd', '8.142.177.235', '', 4, 'aaaa', 'bbbb', '', 1, '小z', 1650006845, 1650006845, 200, 1650006845, 0, NULL),
+     (33, 1, 'alert', '8.142.177.235', '', 4, 'aaaa', 'bbbb', '', 1, '小z', 1650006845, 1650006845, 200, 1650006845, 0, NULL),
+     (34, 1, 'cdn', '8.142.177.235', '', 4, 'aaaa', 'bbbb', '', 1, '小z', 1650006845, 1650006845, 200, 1650006845, 0, NULL),
+     (35, 1, 'sms', '8.142.177.235', '', 4, 'aaaa', 'bbbb', '', 1, '小z', 1650006845, 1650006845, 200, 1650006845, 0, NULL),
+     (36, 1, 'http', '8.142.177.235', '4444', 4, 'aaaa', 'bbbb', '', 1, '小z', 1650006845, 1650006845, 200, 1650006845, 0, NULL),
+     (37, 1, 'domain', '8.142.177.235', '', 4, 'aaaa', 'bbbb', '', 1, '小z', 1650006845, 1650006845, 200, 1650006845, 0, NULL),
+     (38, 1, 'oss', '8.142.177.235', '', 4, 'aaaa', 'bbbb', '', 1, '小z', 1650006845, 1650006845, 200, 1650006845, 0, NULL),
+     (39, 1, 'grpc', '8.142.177.235', '', 4, 'aaaa', 'bbbb', '', 1, '小z', 1650006845, 1650006845, 200, 1650006845, 0, NULL),
+     (40, 1, 'gateway', '8.142.177.235', '', 4, 'aaaa', 'bbbb', '', 1, '小z', 1650006845, 1650006845, 200, 1650006845, 0, NULL),
+     (41, 1, 'agora', '8.142.177.235', '', 4, 'aaaa', 'bbbb', '', 1, '小z', 1650006845, 1650006845, 200, 1650006845, 0, NULL),
+     (42, 1, 'super_visor', '8.142.177.235', '9001', 4, 'user', '123', '', 1, '小z', 1650006845, 1650006845, 200, 1650006845, 0, NULL),
+     (43, 1, 'redis', '127.0.0.1', '6375', 5, '', 'ckckarar', '', 1, '小z', 1650006845, 1650006845, 200, 1650006845, 0, NULL),
+     (44, 2, 'mysql', 'rm-8vb10pi2gz9rma8p8.mysql.zhangbei.rds.aliyuncs.com', '3306', 5, 'seed', 'willbeOK618', '', 1, '小z', 0, 0, 0, 0, 0, NULL),
+     (45, 1, 'http', '127.0.0.1', '5555', 5, '', '', '', 1, '小z', 0, 0, 0, 0, 0, NULL),
+     (46, 2, 'oss', 'oss-cn-beijing.aliyuncs.com', 'servicebase', 5, 'LTAI5tJbjZiWQ9Xn9N2brRFD', 'GcVCuaZA7KWxV0o7UyzzSXhg9zCQfm', '', 1, '小z', 0, 0, 0, 0, 0, NULL),
+     (47, 1, 'etcd', '127.0.0.1', '2379', 5, '', '', '', 1, '小z', 0, 0, 0, 0, 0, NULL),
+     (48, 1, 'grpc', '127.0.0.1', '5656', 5, 'pbservice', '', '', 1, '小z', 0, 0, 0, 0, 0, NULL),
+     (49, 3, 'email', 'smtp.exmail.qq.com', '2EGdKudfF6KvdosN', 5, 'xxxxxx@seedreality.com', 'xxxxx', '', 1, '小z', 0, 0, 0, 0, 0, NULL),
+     (50, 1, 'gateway', '0.0.0.0,127.0.0.1', '1122,2233', 5, '', '', '', 1, '小z', 0, 0, 0, 0, 0, NULL),
+     (51, 5, 'agora', '', '', 5, '8ff429463a234c7bae327d74941a5956', 'b58033d109354bce9205d5f2458900c9', '', 1, '小z', 0, 0, 0, 0, 0, NULL),
+     (52, 2, 'domain', 'static.seedreality.com', '', 5, '', '', '', 1, '小z', 0, 0, 0, 0, 0, NULL),
+     (53, 2, 'ali_email', '', '', 5, '', '', '', 1, '小z', 0, 0, 0, 0, 0, NULL),
+     (54, 2, 'cdn', '', '', 5, '', '', '', 1, '小z', 0, 0, 0, 0, 0, NULL),
+     (55, 1, 'alert', '', '', 5, '', '', '', 1, '小z', 0, 0, 0, 0, 0, NULL),
+     (56, 1, 'super_visor', '127.0.0.1', '9988', 5, 'ckadmin', 'ckckarar', '', 1, '小z', 0, 0, 0, 0, 0, NULL),
+     (57, 2, 'sms', '', '', 5, '', '', '', 1, '小z', 0, 0, 0, 0, 0, NULL);

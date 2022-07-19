@@ -1,5 +1,7 @@
 package model
 
+//import "zgoframe/util"
+
 func CheckConstInList(list map[string]int, value int) bool {
 	for _, v := range list {
 		if v == value {
@@ -80,6 +82,23 @@ func GetConstListAuthCodeStatus() map[string]int {
 	list["未使用"] = AUTH_CODE_STATUS_NORMAL
 	list["已失效"] = AUTH_CODE_STATUS_EXPIRE
 	list["已使用"] = AUTH_CODE_STATUS_OK
+
+	return list
+}
+
+const (
+	SEND_MSG_STATUS_OK   = 1
+	SEND_MSG_STATUS_FAIL = 2
+	SEND_MSG_STATUS_ING  = 3
+	SEND_MSG_STATUS_WAIT = 4
+)
+
+func GetConstListSendMsgStatus() map[string]int {
+	list := make(map[string]int)
+	list["成功"] = SEND_MSG_STATUS_OK
+	list["失败"] = SEND_MSG_STATUS_FAIL
+	list["发送中"] = SEND_MSG_STATUS_ING
+	list["等待发送"] = SEND_MSG_STATUS_WAIT
 
 	return list
 }
@@ -206,7 +225,7 @@ func GetConstListUserRobot() map[string]int {
 
 func GetConstListUserTest() map[string]int {
 	list := make(map[string]int)
-	list["是\""] = USER_TEST_TRUE
+	list["是"] = USER_TEST_TRUE
 	list["否"] = USER_TEST_FALSE
 
 	return list
@@ -261,9 +280,9 @@ func GetConstListServerPlatform() map[string]int {
 }
 
 const (
-	CICD_PUBLISH_DEPLOY_STATUS_ING  = 1
-	CICD_PUBLISH_DEPLOY_STATUS_FAIL = 2
-	CICD_PUBLISH_DEPLOY_STATUS_FINISH   = 3
+	CICD_PUBLISH_DEPLOY_STATUS_ING    = 1
+	CICD_PUBLISH_DEPLOY_STATUS_FAIL   = 2
+	CICD_PUBLISH_DEPLOY_STATUS_FINISH = 3
 )
 
 func GetConstListCicdPublishDeployStatus() map[string]int {
@@ -277,10 +296,10 @@ func GetConstListCicdPublishDeployStatus() map[string]int {
 }
 
 const (
-	CICD_PUBLISH_STATUS_WAIT_DEPLOY  = 1
-	CICD_PUBLISH_STATUS_WAIT_PUB  = 2
-	CICD_PUBLISH_DEPLOY_OK = 3
-	CICD_PUBLISH_DEPLOY_FAIL   =  4
+	CICD_PUBLISH_STATUS_WAIT_DEPLOY = 1
+	CICD_PUBLISH_STATUS_WAIT_PUB    = 2
+	CICD_PUBLISH_DEPLOY_OK          = 3
+	CICD_PUBLISH_DEPLOY_FAIL        = 4
 )
 
 func GetConstListCicdPublishStatus() map[string]int {
@@ -293,7 +312,6 @@ func GetConstListCicdPublishStatus() map[string]int {
 
 	return list
 }
-
 
 const (
 	PROJECT_STATUS_OPEN  = 1
@@ -325,9 +343,34 @@ func GetConstListProjectType() map[string]int {
 	return list
 }
 
-//var PROJECT_TYPE_MAP = map[int]string{
-//	PROJECT_TYPE_SERVICE: "service",
-//	PROJECT_TYPE_FE:      "frontend",
-//	PROJECT_TYPE_APP:     "app",
-//	PROJECT_TYPE_BE:      "backend",
+const (
+	PROJECT_LANG_PHP     = 1
+	PROJECT_LANG_GO      = 2
+	PROJECT_LANG_JAVA    = 3
+	PROJECT_LANG_JS      = 4
+	PROJECT_LANG_C_PLUS  = 5
+	PROJECT_LANG_C       = 6
+	PROJECT_LANG_C_SHARP = 7
+)
+
+func GetConstListProjectLanguage() map[string]int {
+	list := make(map[string]int)
+	list["php"] = PROJECT_LANG_PHP
+	list["golang"] = PROJECT_LANG_GO
+	list["java"] = PROJECT_LANG_JAVA
+	list["js"] = PROJECT_LANG_JS
+	list["c++"] = PROJECT_LANG_C_PLUS
+	list["c"] = PROJECT_LANG_C
+	list["c#"] = PROJECT_LANG_C_SHARP
+	return list
+}
+
+//func GetConstListFileHashType() map[string]int {
+//	list := make(map[string]int)
+//	list["关闭"] = util.FILE_HASH_NONE
+//	list["月"] = util.FILE_HASH_MONTH
+//	list["天"] = util.FILE_HASH_DAY
+//	list["小时"] = util.FILE_HASH_HOUR
+//
+//	return list
 //}

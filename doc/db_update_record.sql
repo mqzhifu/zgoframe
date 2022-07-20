@@ -14,3 +14,5 @@ ALTER TABLE `user_login` ADD `area_detail` VARCHAR(255) NOT NULL DEFAULT '' COMM
 
 
 user_reg os int =>String
+
+    cicd_publish add field step

@@ -21,9 +21,10 @@ import (
 	_ "zgoframe/docs"
 	"zgoframe/util"
 )
+
 //go build -ldflags "-X main.BuildGitVersion='1.0.9' -X 'main.BUILD_TIME=`date`' " -o zgo
 var (
-	BuildTime string
+	BuildTime       string
 	BuildGitVersion string
 )
 
@@ -72,12 +73,68 @@ var initializeVar *initialize.Initialize
 // @in header
 
 func main() {
-	util.MyPrint("BuildTime:",BuildTime , " BuildGitVersion:",BuildGitVersion)
-
+	//编译打进去的两个参数：BuildTime 编译时间，编译的git版本号
+	util.MyPrint("BuildTime:", BuildTime, " BuildGitVersion:", BuildGitVersion)
+	//日志前缀
 	prefix := "main "
+	//处理指令行的参数
+	cmdParameter := processCmdParameter(prefix)
+	imUser, _ := user.Current()
+	util.MyPrint(prefix + "exec script user info , name: " + imUser.Name + " uid: " + imUser.Uid + " , gid :" + imUser.Gid + " ,homeDir:" + imUser.HomeDir)
+	//当前脚本执行的路径
+	pwd, _ := os.Getwd()
+	util.MyPrint(prefix + "exec script pwd:" + pwd)
+	//开始初始化模块
+	//主协程的 context
+	util.MyPrint(prefix + "create cancel context")
+	mainCxt, mainCancelFunc := context.WithCancel(context.Background())
+
+	mainEnvironment := initialize.MainEnvironment{
+		RootDir:         pwd,
+		GoVersion:       runtime.Version(),
+		Cpu:             runtime.GOARCH,
+		RootCtx:         mainCxt,
+		RootCancelFunc:  mainCancelFunc,
+		RootQuitFunc:    QuitAll,
+		ExecUser:        imUser,
+		BuildTime:       BuildTime,
+		BuildGitVersion: BuildGitVersion,
+	}
+
+	//初始化模块需要的参数
+	initOption := initialize.InitOption{
+		CmdParameter:    cmdParameter,
+		MainEnvironment: mainEnvironment,
+	}
+	//开始正式全局初始化
+	initializeVar = initialize.NewInitialize(initOption)
+	err := initializeVar.Start()
+	if err != nil {
+		util.MyPrint(prefix+"initialize.Init err:", err)
+		panic(prefix + "initialize.Init err:" + err.Error())
+
+	}
+
+	//执行用户自己的一些功能
+	go core.DoMySelf()
+	//监听外部进程信号
+	go global.V.Process.DemonSignal()
+	util.MyPrint(prefix + "wait mainCxt.done...")
+	select {
+	case <-mainCxt.Done():
+		QuitAll(1)
+	}
+
+	util.MyPrint(prefix + "end.")
+}
+
+//处理指令行参数
+func processCmdParameter(prefix string) initialize.CmdParameter {
 	//获取<环境变量>枚举值
 	envList := util.GetConstListEnv()
 	envListStr := util.ConstListEnvToStr()
+	//当前环境,env:local test pre dev online
+	env := flag.Int("e", 0, "must require , "+envListStr)
 	//配置读取源类型，1 文件  2 etcd
 	configSourceType := flag.String("cs", global.DEFAULT_CONFIG_SOURCE_TYPE, "configSource:file or etcd")
 	//配置文件的类型
@@ -86,8 +143,6 @@ func main() {
 	configFileName := flag.String("cfn", global.DEFAULT_CONFIG_FILE_NAME, "configFileName")
 	//获取etcd 配置信息的URL
 	etcdUrl := flag.String("etl", "http://127.0.0.1/getEtcdCluster/Ip/Port", "get etcd config url")
-	//当前环境,env:local test pre dev online
-	env := flag.Int("e", 0, "must require , "+envListStr)
 	//DEBUG模式
 	debug := flag.Int("debug", 0, "startup debug mode level")
 	//是否为CICD模式
@@ -103,52 +158,17 @@ func main() {
 		panic(msg + strconv.Itoa(*env))
 	}
 
-	imUser, _ := user.Current()
-	util.MyPrint(prefix + "exec script user info , name: " + imUser.Name + " uid: " + imUser.Uid + " , gid :" + imUser.Gid + " ,homeDir:" + imUser.HomeDir)
-
-	pwd, _ := os.Getwd() //当前路径
-	util.MyPrint(prefix + "exec script pwd:" + pwd)
-	//开始初始化模块
-	//主协程的 context
-	util.MyPrint(prefix + "create cancel context")
-	mainCxt, mainCancelFunc := context.WithCancel(context.Background())
-
-	//初始化模块需要的参数
-	initOption := initialize.InitOption{
-		Env:               	*env,
-		Debug:             	*debug,
-		ConfigType:        	*configFileType,
-		ConfigFileName:    	*configFileName,
-		ConfigSourceType:  	*configSourceType,
-		EtcdConfigFindUrl: 	*etcdUrl,
-		RootDir:           	pwd,
-		GoVersion: 			runtime.Version(),
-		Cpu: 				runtime.GOARCH,
-		RootCtx:           	mainCxt,
-		RootCancelFunc:    	mainCancelFunc,
-		RootQuitFunc:      	QuitAll,
-		TestFlag:          	*testFlag,
-	}
-	//开始正式全局初始化
-	initializeVar = initialize.NewInitialize(initOption)
-	err := initializeVar.Start()
-	if err != nil {
-		util.MyPrint(prefix+"initialize.Init err:", err)
-		panic(prefix + "initialize.Init err:" + err.Error())
-
+	cmdParameter := initialize.CmdParameter{
+		Env:              *env,
+		ConfigSourceType: *configSourceType,
+		ConfigFileType:   *configFileType,
+		ConfigFileName:   *configFileName,
+		EtcdUrl:          *etcdUrl,
+		Debug:            *debug,
+		TestFlag:         *testFlag,
 	}
 
-	//执行用户自己的一些功能
-	go core.DoMySelf(*testFlag)
-	//监听外部进程信号
-	go global.V.Process.DemonSignal()
-	util.MyPrint(prefix + "wait mainCxt.done...")
-	select {
-	case <-mainCxt.Done():
-		QuitAll(1)
-	}
-
-	util.MyPrint(prefix + "end.")
+	return cmdParameter
 }
 
 func QuitAll(source int) {

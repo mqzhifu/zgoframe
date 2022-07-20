@@ -27,30 +27,30 @@ import (
 	系统脚本：依赖shell
 */
 
-
 //===============配置 结构体 开始===================
 type ConfigCicdSystem struct {
-	Env        			[]string
-	LogDir     			string
-	WorkBaseDir 		string
-	RemoteBaseDir		string
-	RemoteUploadDir		string
-	UploadPath			string
+	Env             []string
+	LogDir          string
+	WorkBaseDir     string
+	RemoteBaseDir   string
+	RemoteUploadDir string
+	UploadPath      string
+	RootDir         string
 	//ServiceDir 			string	//远程部署目录
 	//LocalServiceDir		string 	//本地部署目录
-	MasterDirName		string
-	GitCloneTmpDirName	string
-	HttpPort 			string
+	MasterDirName      string
+	GitCloneTmpDirName string
+	HttpPort           string
 }
 
 type ConfigServiceCICDSystem struct {
-	Startup        string
-	ListeningPorts string
-	TestUnit       string
-	Build          string
-	Command        string
+	Startup           string
+	ListeningPorts    string
+	TestUnit          string
+	Build             string
+	Command           string
 	ConfigTmpFileName string
-	ConfigFileName string
+	ConfigFileName    string
 }
 
 type ConfigServiceCICDDepend struct {
@@ -66,10 +66,10 @@ type ConfigServiceCICD struct {
 }
 
 type ConfigCicdSuperVisor struct {
-	RpcPort          		string
-	ConfTemplateFile 		string
-	ConfTemplateFileName 	string
-	ConfDir          		string
+	RpcPort              string
+	ConfTemplateFile     string
+	ConfTemplateFileName string
+	ConfDir              string
 }
 
 type ConfigCicd struct {
@@ -81,23 +81,23 @@ type ConfigCicd struct {
 
 //创建一个新的结构体,主要是给前端返回结果使用
 type ServerServiceSuperVisorList struct {
-	ServerPingStatus            map[int]int	`json:"server_ping_status"`
-	SuperVisorStatus            map[int]int `json:"super_visor_status"`
+	ServerPingStatus        map[int]int             `json:"server_ping_status"`
+	SuperVisorStatus        map[int]int             `json:"super_visor_status"`
 	ServerServiceSuperVisor map[int][]MyProcessInfo `json:"server_service_super_visor"`
 }
 
 type LocalServerServiceList struct {
-	ServerList            map[int]util.Server	`json:"server_list"`
-	ServiceList            map[int]util.Project `json:"service_list"`
+	ServerList  map[int]util.Server  `json:"server_list"`
+	ServiceList map[int]util.Project `json:"service_list"`
 }
 
 type MyProcessInfo struct {
-	ServiceId int			`json:"service_id"`
-	MasterSrc	string 	`json:"master_src"`
+	ServiceId int    `json:"service_id"`
+	MasterSrc string `json:"master_src"`
 	supervisord.ProcessInfo
 }
-//============================
 
+//============================
 
 type CicdPublish struct {
 	Id            int
@@ -114,24 +114,23 @@ type CicdManager struct {
 }
 
 type CicdManagerOption struct {
-	ServerList  map[int]util.Server  //所有服务器
-	ServiceList map[int]util.Service //所有项目/服务
-	ProjectList map[int]util.Project
+	ServerList      map[int]util.Server  //所有服务器
+	ServiceList     map[int]util.Service //所有项目/服务
+	ProjectList     map[int]util.Project
 	HttpPort        string
 	InstanceManager *util.InstanceManager
 	Config          ConfigCicd
 	PublicManager   *CICDPublicManager
 	Log             *zap.Logger
 	OpDirName       string
-	TestServerList 	[]string
-	UploadDiskPath 	string
+	TestServerList  []string
+	UploadDiskPath  string
 }
-
 
 func NewCicdManager(cicdManagerOption CicdManagerOption) (*CicdManager, error) {
 	cicdManager := new(CicdManager)
 
-	cicdManagerOption.TestServerList = []string{"127.0.0.1","8.142.177.235"}
+	cicdManagerOption.TestServerList = []string{"127.0.0.1", "8.142.177.235"}
 
 	cicdManager.Option = cicdManagerOption
 
@@ -163,21 +162,23 @@ func (cicdManager *CicdManager) MakeError(errMsg string) error {
 	cicdManager.Option.Log.Error(errMsg)
 	return errors.New(errMsg)
 }
+
 //发布|部署 一次 服务
 func (cicdManager *CicdManager) Ping(c *gin.Context) {
 
 	//str,_ := json.Marshal(cicdManager.Option.ServiceList)
 	//c.String(200,string(str))
 }
+
 //在当前服务器上，从<部署目录>中检索出每个服务（目录名），分析出：哪些服务~已经部署
-func (cicdManager *CicdManager) GetServiceList( ) map[int]util.Project {
+func (cicdManager *CicdManager) GetServiceList() map[int]util.Project {
 	list := make(map[int]util.Project)
 
 	for k, service := range cicdManager.Option.ProjectList {
 
 		server := cicdManager.Option.ServerList[service.Id]
 		localServiceDeployConfig := cicdManager.GetDeployConfig(DEPLOY_TARGET_TYPE_LOCAL)
-		localServiceDeployConfig ,_= cicdManager.DeployServiceCheck(localServiceDeployConfig,service,server)
+		localServiceDeployConfig, _ = cicdManager.DeployServiceCheck(localServiceDeployConfig, service, server)
 
 		//dirList := util.ForeachDir(localServiceDeployConfig.BaseDir)
 		//s := service
@@ -195,24 +196,24 @@ func (cicdManager *CicdManager) GetServiceList( ) map[int]util.Project {
 }
 
 //获取所有服务器列表，并做ping，确定状态
-func (cicdManager *CicdManager) GetServerList( ) map[int]util.Server{
+func (cicdManager *CicdManager) GetServerList() map[int]util.Server {
 	list := make(map[int]util.Server)
 	for k, server := range cicdManager.Option.ServerList {
 		//这里是测试代码，不然PING太慢
 		//if !cicdManager.CheckInTestServer(server.OutIp){
 		//	server.PingStatus = 2
 		//}else{
-			argsmap:=map[string]interface{}{}
-			p:= util.NewPingOption()
-			//host := "127.0.0.1"
-			//host := "111.1.34.56"
-			err  := p.Ping3(server.OutIp,argsmap)
-			//util.MyPrint("Ping3 rs:",err)
-			if err != nil{
-				server.PingStatus = 2
-			}else{
-				server.PingStatus = 1
-			}
+		argsmap := map[string]interface{}{}
+		p := util.NewPingOption()
+		//host := "127.0.0.1"
+		//host := "111.1.34.56"
+		err := p.Ping3(server.OutIp, argsmap)
+		//util.MyPrint("Ping3 rs:",err)
+		if err != nil {
+			server.PingStatus = 2
+		} else {
+			server.PingStatus = 1
+		}
 		//}
 		list[k] = server
 	}
@@ -220,7 +221,6 @@ func (cicdManager *CicdManager) GetServerList( ) map[int]util.Server{
 	return list
 
 }
-
 
 //获取所有3方服务列表
 func (cicdManager *CicdManager) GetInstanceList(c *gin.Context) {
@@ -237,7 +237,7 @@ func (cicdManager *CicdManager) GetInstanceList(c *gin.Context) {
 }
 
 //获取所有 部署发布 记录列表，ps:未加分页
-func (cicdManager *CicdManager) GetPublishList( ) map[int]model.CicdPublish{
+func (cicdManager *CicdManager) GetPublishList() map[int]model.CicdPublish {
 	listArr, _ := cicdManager.Option.PublicManager.GetList()
 	listMap := make(map[int]model.CicdPublish)
 	for _, v := range listArr {
@@ -247,18 +247,18 @@ func (cicdManager *CicdManager) GetPublishList( ) map[int]model.CicdPublish{
 	//str, _ := json.Marshal(listArr)
 	//c.String(200, string(str))
 }
-func (cicdManager *CicdManager) SuperVisorProcess( form request.CicdSuperVisor)(err error){
-	server,service,err := cicdManager.CheckCicdRequestForm(form.CicdDeploy)
-	if err != nil{
+func (cicdManager *CicdManager) SuperVisorProcess(form request.CicdSuperVisor) (err error) {
+	server, service, err := cicdManager.CheckCicdRequestForm(form.CicdDeploy)
+	if err != nil {
 		return err
 	}
-	if form.Command == ""{
+	if form.Command == "" {
 		return errors.New("command is empty")
 	}
 	//创建实例
 	superVisorOption := util.SuperVisorOption{
-		Ip:               server.OutIp,
-		RpcPort:          cicdManager.Option.Config.SuperVisor.RpcPort,
+		Ip:      server.OutIp,
+		RpcPort: cicdManager.Option.Config.SuperVisor.RpcPort,
 	}
 
 	serviceSuperVisor, err := util.NewSuperVisor(superVisorOption)
@@ -268,70 +268,70 @@ func (cicdManager *CicdManager) SuperVisorProcess( form request.CicdSuperVisor)(
 		return errors.New("serviceSuperVisor InitXMLRpc err:" + err.Error())
 	}
 
-	if form.Command == "startup"{
-		util.MyPrint("process service name :",service.Name)
-		err = serviceSuperVisor.Cli.StartProcess(service.Name,true)
+	if form.Command == "startup" {
+		util.MyPrint("process service name :", service.Name)
+		err = serviceSuperVisor.Cli.StartProcess(service.Name, true)
 		//err = serviceSuperVisor.StopProcess(service.Name,true)
 		util.ExitPrint(err)
-		err = serviceSuperVisor.Cli.StartProcess(service.Name,true)
-	}else if form.Command == "stop"{
+		err = serviceSuperVisor.Cli.StartProcess(service.Name, true)
+	} else if form.Command == "stop" {
 		name := service.Name + ":service_" + service.Name
-		util.MyPrint("name:",name)
-		err = serviceSuperVisor.Cli.StopProcess(name,true)
+		util.MyPrint("name:", name)
+		err = serviceSuperVisor.Cli.StopProcess(name, true)
 		//err = serviceSuperVisor.StopProcess(service.Name,true)
 		util.ExitPrint(err)
 		//err = serviceSuperVisor.Cli.StopProcess(service.Name,true)
-	}else if form.Command == "restart"{
-	}else{
+	} else if form.Command == "restart" {
+	} else {
 		return errors.New("command err")
 	}
 
 	return err
 }
-func (cicdManager *CicdManager)LocalAllServerServiceList()(list LocalServerServiceList , err error){
+func (cicdManager *CicdManager) LocalAllServerServiceList() (list LocalServerServiceList, err error) {
 	list.ServiceList = make(map[int]util.Project)
 	list.ServerList = make(map[int]util.Server)
 	if len(cicdManager.Option.ServerList) == 0 {
 		//服务器 为空
 		errMsg := "GetSuperVisorList err:ServerList is empty"
 		//util.MyPrint()
-		return list,errors.New(errMsg)
+		return list, errors.New(errMsg)
 	}
 
 	if len(cicdManager.Option.ServiceList) == 0 {
 		//服务为空
 		errMsg := "GetSuperVisorList err:ServiceList is empty"
 		//util.MyPrint(errMsg)
-		return list,errors.New(errMsg)
+		return list, errors.New(errMsg)
 	}
 	//list := LocalServerServiceList{}
 	instanceManager := cicdManager.Option.InstanceManager
 
 	for _, server := range cicdManager.Option.ServerList {
 		//先ping 一下，确实该服务器网络正常
-		argsmap:=map[string]interface{}{}
-		p:= util.NewPingOption()
-		err  = p.Ping3(server.OutIp,argsmap)
+		argsmap := map[string]interface{}{}
+		p := util.NewPingOption()
+		err = p.Ping3(server.OutIp, argsmap)
 		//util.MyPrint("Ping3 rs:",err)
-		if err != nil{
+		if err != nil {
 			server.PingStatus = util.SERVER_PING_FAIL
 			list.ServerList[server.Id] = server
 			continue
-		}else{
+		} else {
 			server.PingStatus = util.SERVER_PING_OK
 		}
 
-		instance ,empty := instanceManager.GetByEnvName(server.Env,"super_visor")
-		if empty{
-			return list,errors.New("not found super_visor instance")
+		instance, empty := instanceManager.GetByEnvName(server.Env, "super_visor")
+		if empty {
+			return list, errors.New("not found super_visor instance")
 		}
 		//再测试下无端的superVisor是否正常
 		//superVisorStatus := make(map[int]int)
 		//创建实例
 		superVisorOption := util.SuperVisorOption{
-			Ip:               server.OutIp,
+			Ip: server.OutIp,
 			//RpcPort:          cicdManager.Option.Config.SuperVisor.RpcPort,
-			RpcPort: instance.Port,
+			RpcPort:  instance.Port,
 			Username: instance.User,
 			Password: instance.Ps,
 		}
@@ -343,11 +343,11 @@ func (cicdManager *CicdManager)LocalAllServerServiceList()(list LocalServerServi
 			list.ServerList[server.Id] = server
 			continue
 		}
-		if server.Env == 1{
+		if server.Env == 1 {
 			server.SuperVisorStatus = util.SERVER_PING_FAIL
 			list.ServerList[server.Id] = server
 			continue
-		}else{
+		} else {
 			//建立 XMLRpc
 			err = serviceSuperVisor.InitXMLRpc()
 			if err != nil {
@@ -366,24 +366,24 @@ func (cicdManager *CicdManager)LocalAllServerServiceList()(list LocalServerServi
 		}
 	}
 
-	return list,nil
+	return list, nil
 }
 
 //每台服务器上 都会启动一个superVisor进程
 //列出每台机器上的：superVisor进程 的所有服务进程的状态信息
-func (cicdManager *CicdManager) GetSuperVisorList( )(list ServerServiceSuperVisorList , err error) {
+func (cicdManager *CicdManager) GetSuperVisorList() (list ServerServiceSuperVisorList, err error) {
 	if len(cicdManager.Option.ServerList) == 0 {
 		//服务器 为空
 		errMsg := "GetSuperVisorList err:ServerList is empty"
 		//util.MyPrint()
-		return list,errors.New(errMsg)
+		return list, errors.New(errMsg)
 	}
 
 	if len(cicdManager.Option.ServiceList) == 0 {
 		//服务为空
 		errMsg := "GetSuperVisorList err:ServiceList is empty"
 		//util.MyPrint(errMsg)
-		return list,errors.New(errMsg)
+		return list, errors.New(errMsg)
 	}
 
 	util.MyPrint("GetSuperVisorList serverList len:", len(cicdManager.Option.ServerList), " ServiceList len:", len(cicdManager.Option.ServiceList))
@@ -398,52 +398,52 @@ func (cicdManager *CicdManager) GetSuperVisorList( )(list ServerServiceSuperViso
 
 		dns := "http://" + server.OutIp + ":" + cicdManager.Option.HttpPort
 		//dns := "http://" + server.OutIp + ":9001"
-		if cicdManager.CheckInTestServer(server.OutIp){
+		if cicdManager.CheckInTestServer(server.OutIp) {
 			//ping 测试一下 对端服务器：是否开启了sdk HTTP
 			testServerRs := cicdManager.TestServerStateHttp(dns + "/cicd/ping")
 			if testServerRs == 0 {
 				util.MyPrint("")
 				serverStatus[server.Id] = util.SERVER_PING_FAIL
-				superVisorStatus[server.Id ] = util.SV_ERROR_INIT
+				superVisorStatus[server.Id] = util.SV_ERROR_INIT
 				continue
-			}else{
+			} else {
 				serverStatus[server.Id] = util.SERVER_PING_OK
 			}
-		}else{
-			superVisorStatus[server.Id ] = util.SV_ERROR_INIT
+		} else {
+			superVisorStatus[server.Id] = util.SV_ERROR_INIT
 			serverStatus[server.Id] = util.SERVER_PING_FAIL
 			continue
 		}
 		//创建实例
 		superVisorOption := util.SuperVisorOption{
-			Ip:               server.OutIp,
-			RpcPort:          cicdManager.Option.Config.SuperVisor.RpcPort,
+			Ip:      server.OutIp,
+			RpcPort: cicdManager.Option.Config.SuperVisor.RpcPort,
 		}
 		serviceSuperVisor, err := util.NewSuperVisor(superVisorOption)
 		if err != nil {
 			util.MyPrint("NewSuperVisor err:", err)
-			superVisorStatus[server.Id ] = util.SV_ERROR_INIT
+			superVisorStatus[server.Id] = util.SV_ERROR_INIT
 			continue
 		}
 		//建立 XMLRpc
 		err = serviceSuperVisor.InitXMLRpc()
 		if err != nil {
 			util.MyPrint("serviceSuperVisor InitXMLRpc err:", err)
-			superVisorStatus[server.Id ] =  util.SV_ERROR_CONN
+			superVisorStatus[server.Id] = util.SV_ERROR_CONN
 			continue
 		}
 		//获取当前机器上的superVisor 的所有 服务进程 状态
 		processInfoList, err := serviceSuperVisor.Cli.GetAllProcessInfo()
-		if err != nil{
-			superVisorStatus[server.Id ] =  util.SV_ERROR_CONN
-			util.MyPrint("SuperVisor GetAllProcessInfo err:"+err.Error())
+		if err != nil {
+			superVisorStatus[server.Id] = util.SV_ERROR_CONN
+			util.MyPrint("SuperVisor GetAllProcessInfo err:" + err.Error())
 			continue
-		}else{
+		} else {
 			//jsonStr,_  := json.Marshal(processInfoList)
 			//util.MyPrint(jsonStr)
 			//util.ExitPrint(string(jsonStr))
 		}
-		superVisorStatus[server.Id ] = util.SV_ERROR_NONE
+		superVisorStatus[server.Id] = util.SV_ERROR_NONE
 
 		for _, service := range cicdManager.Option.ProjectList {
 			//获取当前服务器，已部署的服务目录
@@ -456,8 +456,8 @@ func (cicdManager *CicdManager) GetSuperVisorList( )(list ServerServiceSuperViso
 			}
 
 			superVisorProcessInfo := MyProcessInfo{
-				ServiceId : service.Id,
-				ProcessInfo : defaultProcessInfo,
+				ServiceId:   service.Id,
+				ProcessInfo: defaultProcessInfo,
 			}
 			//search := 0
 			//var superVisorProcessInfo supervisord.ProcessInfo
@@ -466,17 +466,17 @@ func (cicdManager *CicdManager) GetSuperVisorList( )(list ServerServiceSuperViso
 				//rs := fmt.Sprintf("%+v",process)
 				//util.MyPrint(rs)
 				if process.Name == util.SUPER_VISOR_PROCESS_NAME_SERVICE_PREFIX+service.Name {
-					util.MyPrint(fmt.Sprintf("%+v",process))
+					util.MyPrint(fmt.Sprintf("%+v", process))
 					superVisorProcessInfo.ProcessInfo = process
 					//superVisorStatus[service.Id ] = util.SV_ERROR_NONE
 					//search = 1
 
 					serviceDeployConfig := cicdManager.GetDeployConfig(DEPLOY_TARGET_TYPE_LOCAL)
-					serviceDeployConfig ,_= cicdManager.DeployServiceCheck(serviceDeployConfig,service,server)
+					serviceDeployConfig, _ = cicdManager.DeployServiceCheck(serviceDeployConfig, service, server)
 					//path := serviceDeployConfig.MasterPath + "/" + serviceDeployConfig.OpDirName
 					//masterSrc,_ := ExecShellFile2(path + "/" + "get_soft_link_src.sh",serviceDeployConfig.MasterPath)
-					masterSrcPath ,_ := filepath.EvalSymlinks(serviceDeployConfig.MasterPath)
-					masterSrcPathArr := strings.Split(masterSrcPath,"/")
+					masterSrcPath, _ := filepath.EvalSymlinks(serviceDeployConfig.MasterPath)
+					masterSrcPathArr := strings.Split(masterSrcPath, "/")
 					superVisorProcessInfo.MasterSrc = masterSrcPathArr[len(masterSrcPathArr)-1]
 					break
 				}
@@ -493,58 +493,58 @@ func (cicdManager *CicdManager) GetSuperVisorList( )(list ServerServiceSuperViso
 	}
 
 	list = ServerServiceSuperVisorList{
-		ServerPingStatus		: serverStatus,
-		SuperVisorStatus		: superVisorStatus,
-		ServerServiceSuperVisor	: serverServiceSuperVisor,
+		ServerPingStatus:        serverStatus,
+		SuperVisorStatus:        superVisorStatus,
+		ServerServiceSuperVisor: serverServiceSuperVisor,
 	}
-	return list,nil
+	return list, nil
 }
 
-func (cicdManager *CicdManager)LocalSyncTarget(form request.CicdSync)error{
+func (cicdManager *CicdManager) LocalSyncTarget(form request.CicdSync) error {
 	sFrom := request.CicdDeploy{
-		ServerId: form.ServerId,
+		ServerId:  form.ServerId,
 		ServiceId: form.ServiceId,
-		Flag:DEPLOY_TARGET_TYPE_LOCAL,
+		Flag:      DEPLOY_TARGET_TYPE_LOCAL,
 	}
-	server,service,err := cicdManager.CheckCicdRequestForm(sFrom)
-	if err != nil{
+	server, service, err := cicdManager.CheckCicdRequestForm(sFrom)
+	if err != nil {
 		return err
 	}
 
-	if form.VersionDir == ""{
+	if form.VersionDir == "" {
 		return errors.New("VersionDir empty")
 	}
 
 	targetServiceDeployConfig := cicdManager.GetDeployConfig(DEPLOY_TARGET_TYPE_LOCAL)
-	targetServiceDeployConfig ,_= cicdManager.DeployServiceCheck(targetServiceDeployConfig,service,server)
+	targetServiceDeployConfig, _ = cicdManager.DeployServiceCheck(targetServiceDeployConfig, service, server)
 	targetDir := targetServiceDeployConfig.FullPath
 
 	localServiceDeployConfig := cicdManager.GetDeployConfig(DEPLOY_TARGET_TYPE_REMOTE)
-	localServiceDeployConfig ,_= cicdManager.DeployServiceCheck(localServiceDeployConfig,service,server)
-	localDir := localServiceDeployConfig.FullPath+ "/" + form.VersionDir
+	localServiceDeployConfig, _ = cicdManager.DeployServiceCheck(localServiceDeployConfig, service, server)
+	localDir := localServiceDeployConfig.FullPath + "/" + form.VersionDir
 
 	//scp local_file remote_username@remote_ip:remote_folder
 	//shellArgc := " -r " + localDir + " root@"+server.OutIp + ":" + targetDir
 	//util.ExitPrint("scp "+ shellArgc)
 	//ExecShellCommand("scp",shellArgc)
 
-	shellArgc := "scp  -r " + localDir + " root@"+server.OutIp + ":" + targetDir
+	shellArgc := "scp  -r " + localDir + " root@" + server.OutIp + ":" + targetDir
 	util.MyPrint(shellArgc)
-	ExecShellCommand(shellArgc ,"")
+	ExecShellCommand(shellArgc, "")
 	return nil
 }
 
-func (cicdManager *CicdManager)GetHasDeployService()map[int]map[int][]string{
+func (cicdManager *CicdManager) GetHasDeployService() map[int]map[int][]string {
 	list := make(map[int]map[int][]string)
-	for _,server := range cicdManager.Option.ServerList{
+	for _, server := range cicdManager.Option.ServerList {
 		serverDirList := make(map[int][]string)
-		for _,service:= range cicdManager.Option.ServiceList{
+		for _, service := range cicdManager.Option.ServiceList {
 			form := request.CicdDeploy{
 				ServiceId: service.Id,
-				ServerId: server.Id,
-				Flag: DEPLOY_TARGET_TYPE_REMOTE,
+				ServerId:  server.Id,
+				Flag:      DEPLOY_TARGET_TYPE_REMOTE,
 			}
-			dirList , _  := cicdManager.GetHasDeployServiceDirList(form)
+			dirList, _ := cicdManager.GetHasDeployServiceDirList(form)
 			serverDirList[service.Id] = dirList
 		}
 
@@ -553,43 +553,44 @@ func (cicdManager *CicdManager)GetHasDeployService()map[int]map[int][]string{
 	//util.ExitPrint(list)
 	return list
 }
+
 //获取当前服务器上的，已部署过的，服务的，目录列表
-func (cicdManager *CicdManager)GetHasDeployServiceDirList(form request.CicdDeploy)([]string,error){
+func (cicdManager *CicdManager) GetHasDeployServiceDirList(form request.CicdDeploy) ([]string, error) {
 	list := []string{}
 
-	server,service,err := cicdManager.CheckCicdRequestForm(form)
-	if err != nil{
-		return nil,err
+	server, service, err := cicdManager.CheckCicdRequestForm(form)
+	if err != nil {
+		return nil, err
 	}
 	serviceDeployConfig := cicdManager.GetDeployConfig(DEPLOY_TARGET_TYPE_REMOTE)
-	serviceDeployConfig ,err = cicdManager.DeployServiceCheck(serviceDeployConfig,service,server)
-	if err != nil{
-		return list,err
+	serviceDeployConfig, err = cicdManager.DeployServiceCheck(serviceDeployConfig, service, server)
+	if err != nil {
+		return list, err
 	}
 
-	_,err = util.PathExists(serviceDeployConfig.FullPath)
-	if err != nil{
-		return list,err
+	_, err = util.PathExists(serviceDeployConfig.FullPath)
+	if err != nil {
+		return list, err
 	}
-
 
 	dirList := util.ForeachDir(serviceDeployConfig.FullPath)
 
 	//util.MyPrint("lis len:",len(list) , " FullPath:",serviceDeployConfig.FullPath," list:",dirList)
-	for _,v:= range dirList{
-		if v.Cate == "file"{
+	for _, v := range dirList {
+		if v.Cate == "file" {
 			continue
 		}
 
-		if util.CheckServiceDeployDirName(v.Name){
+		if util.CheckServiceDeployDirName(v.Name) {
 			//util.MyPrint(111111,"===========")
-			list = append(list,v.Name)
+			list = append(list, v.Name)
 		}
 	}
 	//util.MyPrint(list)
-	return list,nil
+	return list, nil
 
 }
+
 //如果一个路径不存在
 func pathNotExistCreate(path string) error {
 	_, err := util.PathExists(path)
@@ -655,10 +656,10 @@ func ExecShellCommand(command string, argc string) (string, error) {
 
 	output, err := c.CombinedOutput()
 	strOutput := string(output)
-	if err != nil{
-		util.MyPrint("ExecShellCommand : <" +command+"> ,  has error , output:",strOutput,err.Error())
-	}else{
-		util.MyPrint("ExecShellCommand : <" +command+"> ,  success , output:",strOutput)
+	if err != nil {
+		util.MyPrint("ExecShellCommand : <"+command+"> ,  has error , output:", strOutput, err.Error())
+	} else {
+		util.MyPrint("ExecShellCommand : <"+command+"> ,  success , output:", strOutput)
 	}
 	//if err != nil {
 	//	fmt.Println("exec.Command err:", err)
@@ -673,14 +674,14 @@ func ExecShellCommand(command string, argc string) (string, error) {
 //这里有一条简单的操作，80端口基本上都得用，测试服务器状态，用ping curl 也可以.
 func (cicdManager *CicdManager) TestServerStateHttp(hostUri string) int {
 	client := &http.Client{
-		Timeout:  1 * time.Second,
+		Timeout: 1 * time.Second,
 	}
 	//提交请求
 	reqest, err := http.NewRequest("GET", hostUri, nil)
 	if err != nil {
 		return 0
 	}
-	util.MyPrint("TestServerStateHttp uri:"+hostUri)
+	util.MyPrint("TestServerStateHttp uri:" + hostUri)
 	//增加header选项
 	reqest.Header.Add("X-Source-Type", "11")
 	reqest.Header.Add("X-Project-Id", "6")
@@ -688,24 +689,21 @@ func (cicdManager *CicdManager) TestServerStateHttp(hostUri string) int {
 	//处理返回结果
 	response, err := client.Do(reqest)
 	//defer response.Body.Close()
-	if  err != nil{
+	if err != nil {
 		return 0
 	}
 
 	util.MyPrint("TestServerStateHttp http status:", response.Status)
 
-
-
 	return 1
 
 }
 
-func (cicdManager *CicdManager) CheckInTestServer(ip string)bool{
-	for _ , v := range cicdManager.Option.TestServerList{
+func (cicdManager *CicdManager) CheckInTestServer(ip string) bool {
+	for _, v := range cicdManager.Option.TestServerList {
 		if ip == v {
 			return true
 		}
 	}
 	return false
 }
-

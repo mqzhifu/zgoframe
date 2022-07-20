@@ -4,7 +4,6 @@ package service
 import (
 	"go.uber.org/zap"
 	"gorm.io/gorm"
-	"os"
 	"zgoframe/service/cicd"
 	"zgoframe/service/gamematch"
 	"zgoframe/util"
@@ -12,39 +11,40 @@ import (
 
 type Service struct {
 	User           *User
-	Sms        *Sms
-	Email      *Email
+	Sms            *Sms
+	Email          *Email
 	RoomManage     *RoomManager
 	FrameSync      *FrameSync
 	Gateway        *Gateway
-	Match      *Match
+	Match          *Match
 	ConfigCenter   *ConfigCenter
-	Cicd 		*cicd.CicdManager
+	Cicd           *cicd.CicdManager
 	ProjectManager *util.ProjectManager
-	Mail 		*Mail
-	GameMatch 	*gamematch.Gamematch
+	Mail           *Mail
+	GameMatch      *gamematch.Gamematch
 }
 
 type MyServiceOptions struct {
-	Gorm 			*gorm.DB
-	Zap 			*zap.Logger
-	MyEmail 		*util.MyEmail
-	MyRedis 		*util.MyRedis
-	MyRedisGo 		*util.MyRedisGo
-	NetWayOption 	util.NetWayOption
-	GrpcManager 	*util.GrpcManager
-	ProjectManager 	*util.ProjectManager
-	ConfigCenterDataDir string
-	ConfigCenterPersistenceType	int
-	OpDirName 		string
-	UploadDiskPath	string
-	ServiceList 	map[int]util.Service
-	HttpPort 		string
-	GatewayStatus 	string
-	Etcd 			*util.MyEtcd
-	Metrics 		*util.MyMetrics
-	ProjectId 		int
-	ServiceDiscovery *util.ServiceDiscovery
+	Gorm                        *gorm.DB
+	Zap                         *zap.Logger
+	MyEmail                     *util.MyEmail
+	MyRedis                     *util.MyRedis
+	MyRedisGo                   *util.MyRedisGo
+	NetWayOption                util.NetWayOption
+	GrpcManager                 *util.GrpcManager
+	ProjectManager              *util.ProjectManager
+	ConfigCenterDataDir         string
+	ConfigCenterPersistenceType int
+	OpDirName                   string
+	UploadDiskPath              string
+	ServiceList                 map[int]util.Service
+	HttpPort                    string
+	GatewayStatus               string
+	Etcd                        *util.MyEtcd
+	Metrics                     *util.MyMetrics
+	ProjectId                   int
+	ServiceDiscovery            *util.ServiceDiscovery
+	RootDir                     string
 }
 
 func NewService(options MyServiceOptions) *Service {
@@ -52,7 +52,7 @@ func NewService(options MyServiceOptions) *Service {
 	//用户服务
 	service.User = NewUser(options.Gorm, options.MyRedis)
 	//站内信服务
-	service.Mail = NewMail(options.Gorm,options.Zap)
+	service.Mail = NewMail(options.Gorm, options.Zap)
 	//短信服务
 	service.Sms = NewSms(options.Gorm)
 	//电子邮件服务
@@ -65,7 +65,7 @@ func NewService(options MyServiceOptions) *Service {
 		ProjectManager:     options.ProjectManager,
 		PersistenceType:    PERSISTENCE_TYPE_FILE,
 		PersistenceFileDir: options.ConfigCenterDataDir,
-		Log :options.Zap,
+		Log:                options.Zap,
 	}
 	var err error
 	service.ConfigCenter, err = NewConfigCenter(configCenterOption)
@@ -112,7 +112,7 @@ func NewService(options MyServiceOptions) *Service {
 	//	gateway.MyService = service
 	//}
 	//
-	service.Cicd ,err = InitCicd(options.Gorm,options.Zap,options.OpDirName,options.ServiceList,options.HttpPort,options.ProjectManager.Pool,options.UploadDiskPath)
+	service.Cicd, err = InitCicd(options)
 	//
 	//
 	//gameMatchOption :=  gamematch.GamematchOption{
@@ -131,64 +131,61 @@ func NewService(options MyServiceOptions) *Service {
 	//}
 	//service.GameMatch = myGamematch
 
-
 	return service
 }
 
-func InitCicd(gorm *gorm.DB,zap *zap.Logger,opDir string,ServiceList map[int]util.Service,httpPort string,projectList map[int]util.Project, UploadDiskPath string)(*cicd.CicdManager,error){
+func InitCicd(option MyServiceOptions) (*cicd.CicdManager, error) {
 	//util.MyPrint(ServiceList)
 	/*依赖
 	host.toml cicd.sh
 	table:  project instance server cicd_publish
 	*/
 
-	opDirName := opDir
-	pwd , _ := os.Getwd()//当前路径]
-	opDirFull := pwd + "/" + opDirName
+	opDirName := option.OpDirName
+	opDirFull := option.RootDir + "/" + opDirName
 	cicdConfig := cicd.ConfigCicd{}
+	cicdConfig.System.RootDir = option.RootDir
 	//运维：服务器的配置信息
-	configFile := opDirFull + "/host" + "." +"toml"
-
-	//zap.Debug("InitCicd HostConfigFile:"+configFile)
+	configFile := opDirFull + "/host" + "." + "toml"
 
 	//读取配置文件中的内容
-	err := util.ReadConfFile(configFile,&cicdConfig)
-	if err != nil{
+	err := util.ReadConfFile(configFile, &cicdConfig)
+	if err != nil {
 		util.ExitPrint(err.Error())
 	}
 	cicdConfig.SuperVisor.ConfTemplateFileName = cicdConfig.SuperVisor.ConfTemplateFile
-	cicdConfig.SuperVisor.ConfTemplateFile = pwd + "/" + opDir  +  "/" + cicdConfig.SuperVisor.ConfTemplateFile
+	cicdConfig.SuperVisor.ConfTemplateFile = option.RootDir + "/" + opDirName + "/" + cicdConfig.SuperVisor.ConfTemplateFile
 
-	zap.Debug("InitCicd HostConfigFile:"+configFile + " ConfTemplateFile:"+cicdConfig.SuperVisor.ConfTemplateFile)
+	option.Zap.Debug("InitCicd HostConfigFile:" + configFile + " ConfTemplateFile:" + cicdConfig.SuperVisor.ConfTemplateFile)
 	//util.PrintStruct(cicdConfig , " : ")
 
 	//3方实例
-	instanceManager ,_:= util.NewInstanceManager(gorm )
+	instanceManager, _ := util.NewInstanceManager(option.Gorm)
 	//服务器列表
-	serverManger,_ := util.NewServerManger( gorm )
+	serverManger, _ := util.NewServerManger(option.Gorm)
 	serverList := serverManger.Pool
 	//发布管理
-	publicManager := cicd.NewCICDPublicManager(gorm )
+	publicManager := cicd.NewCICDPublicManager(option.Gorm)
 
 	//util.ExitPrint(22)
 	op := cicd.CicdManagerOption{
-		HttpPort		: httpPort,
-		ServerList 		: serverList,
-		Config			: cicdConfig,
-		ServiceList		: ServiceList,
-		ProjectList 	: projectList,
-		InstanceManager : instanceManager,
-		PublicManager 	: publicManager,
-		Log				: zap,
-		OpDirName		: opDirName,
-		UploadDiskPath	: UploadDiskPath,
+		HttpPort:        option.HttpPort,
+		ServerList:      serverList,
+		Config:          cicdConfig,
+		ServiceList:     option.ServiceList,
+		ProjectList:     option.ProjectManager.Pool,
+		InstanceManager: instanceManager,
+		PublicManager:   publicManager,
+		Log:             option.Zap,
+		OpDirName:       opDirName,
+		UploadDiskPath:  option.UploadDiskPath,
 	}
 
-	cicd ,err := cicd.NewCicdManager(op)
-	if err != nil{
+	cicd, err := cicd.NewCicdManager(op)
+	if err != nil {
 		util.ExitPrint(err)
 	}
-	return cicd,err
+	return cicd, err
 	//生成 filebeat 配置文件
 	//cicd.GenerateAllFilebeat()
 	//cicd.GetSuperVisorList()

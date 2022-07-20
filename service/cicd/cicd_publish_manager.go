@@ -21,20 +21,21 @@ func NewCICDPublicManager(gorm *gorm.DB) *CICDPublicManager {
 	return cICDPublicManager
 }
 
-func (CICDPublicManager *CICDPublicManager) InsertOne(service util.Project, server util.Server,DeployType int) model.CicdPublish {
+func (CICDPublicManager *CICDPublicManager) InsertOne(service util.Project, server util.Server, DeployType int) (model.CicdPublish, error) {
 	serviceInfo, _ := json.Marshal(service)
 	serverInfo, _ := json.Marshal(server)
 	data := model.CicdPublish{
-		Status:      model.CICD_PUBLISH_STATUS_WAIT_DEPLOY,
+		Status:       model.CICD_PUBLISH_STATUS_WAIT_DEPLOY,
 		DeployStatus: model.CICD_PUBLISH_DEPLOY_STATUS_ING,
-		DeployType: DeployType,
-		ServiceId:   service.Id,
-		ServerId:    server.Id,
-		ServiceInfo: string(serviceInfo),
-		ServerInfo:  string(serverInfo),
+		DeployType:   DeployType,
+		ServiceId:    service.Id,
+		ServerId:     server.Id,
+		ServiceInfo:  string(serviceInfo),
+		ServerInfo:   string(serverInfo),
+		Step:         0,
 	}
-	CICDPublicManager.Db.Create(&data)
-	return data
+	err := CICDPublicManager.Db.Create(&data).Error
+	return data, err
 }
 
 func (CICDPublicManager *CICDPublicManager) UpDeployStatus(m model.CicdPublish, status int) {
@@ -49,19 +50,19 @@ func (CICDPublicManager *CICDPublicManager) UpStatus(m model.CicdPublish, status
 	//db.Model(&Food{}).Update("price", 25)
 }
 
-func (CICDPublicManager *CICDPublicManager) UpInfo(m model.CicdPublish ) {
+func (CICDPublicManager *CICDPublicManager) UpInfo(m model.CicdPublish) {
 	util.MyPrint("CICDPublicManager UpInfo publishId:", m.Id)
 	err := CICDPublicManager.Db.Updates(m).Error
-	if err != nil{
-		util.MyPrint("UpInfo err:"+err.Error())
+	if err != nil {
+		util.MyPrint("UpInfo err:" + err.Error())
 	}
 	//db.Model(&Food{}).Update("price", 25)
 }
 
-func (CICDPublicManager *CICDPublicManager) GetById(id int)(model.CicdPublish , error) {
+func (CICDPublicManager *CICDPublicManager) GetById(id int) (model.CicdPublish, error) {
 	var m model.CicdPublish
-	err  := CICDPublicManager.Db.First(&m,id).Error
-	return m,err
+	err := CICDPublicManager.Db.First(&m, id).Error
+	return m, err
 }
 
 func (CICDPublicManager *CICDPublicManager) GetList() ([]model.CicdPublish, error) {

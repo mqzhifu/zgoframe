@@ -9,7 +9,9 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+	"os/user"
 	"strings"
+	"zgoframe/core"
 	"zgoframe/core/global"
 	"zgoframe/model"
 	"zgoframe/util"
@@ -19,22 +21,49 @@ type Initialize struct {
 	Option InitOption
 }
 
-type InitOption struct {
-	Env               int    `json:"env"`
-	Debug             int    `json:"debug"`
-	ConfigType        string `json:"config_type"`
-	ConfigFileName    string `json:"config_file_name"`
-	ConfigSourceType  string `json:"config_source_type"`
-	EtcdConfigFindUrl string `json:"etcd_config_find_url"`
-	RootDir           string `json:"root_dir"`
-	RootDirName       string `json:"root_dir_name"`
+type MainEnvironment struct {
+	RootDir     string `json:"root_dir"`
+	RootDirName string `json:"root_dir_name"`
 
-	GoVersion      string             `json:"go_version"`
-	Cpu            string             `json:"cpu"`
-	RootCtx        context.Context    `json:"-"`
-	RootCancelFunc context.CancelFunc `json:"-"`
-	RootQuitFunc   func(source int)   `json:"-"`
-	TestFlag       string             `json:"-"`
+	GoVersion       string             `json:"go_version"`
+	ExecUser        *user.User         `json:"-"`
+	Cpu             string             `json:"cpu"`
+	RootCtx         context.Context    `json:"-"`
+	RootCancelFunc  context.CancelFunc `json:"-"`
+	RootQuitFunc    func(source int)   `json:"-"`
+	BuildTime       string
+	BuildGitVersion string
+}
+
+type CmdParameter struct {
+	Env              int    `json:"env"`
+	ConfigSourceType string `json:"config_source_type"`
+	ConfigFileType   string `json:"config_file_type"`
+	ConfigFileName   string `json:"config_file_name"`
+	EtcdUrl          string `json:"etcd_url"`
+	Debug            int    `json:"debug"`
+	TestFlag         string `json:"test_flag"`
+}
+
+type InitOption struct {
+	CmdParameter
+	MainEnvironment
+	//Env               int    `json:"env"`
+	//Debug             int    `json:"debug"`
+	//ConfigType        string `json:"config_type"`
+	//ConfigFileName    string `json:"config_file_name"`
+	//ConfigSourceType  string `json:"config_source_type"`
+	//EtcdConfigFindUrl string `json:"etcd_config_find_url"`
+	//TestFlag          string `json:"-"`
+
+	//RootDir     string `json:"root_dir"`
+	//RootDirName string `json:"root_dir_name"`
+	//
+	//GoVersion      string             `json:"go_version"`
+	//Cpu            string             `json:"cpu"`
+	//RootCtx        context.Context    `json:"-"`
+	//RootCancelFunc context.CancelFunc `json:"-"`
+	//RootQuitFunc   func(source int)   `json:"-"`
 }
 
 func NewInitialize(option InitOption) *Initialize {
@@ -45,23 +74,13 @@ func NewInitialize(option InitOption) *Initialize {
 
 //初始化-入口
 func (initialize *Initialize) Start() error {
-	//autoCreateUpDbTable() //自动创建表，根据MODEL- struct
-	if initialize.Option.TestFlag != "" {
-		sqlList := global.AutoCreateUpDbTable()
-		sqlStrings := ""
-		for _, v := range sqlList {
-			sqlStrings += v
-		}
-		util.MyPrint(sqlStrings)
-		util.ExitPrint("i want exit 2.")
-	}
 	prefix := "initialize ,"
 	//初始化 : 配置信息
 	viperOption := ViperOption{
 		ConfigFileName: initialize.Option.ConfigFileName,
-		ConfigFileType: initialize.Option.ConfigType,
+		ConfigFileType: initialize.Option.ConfigFileType,
 		SourceType:     initialize.Option.ConfigSourceType,
-		EtcdUrl:        initialize.Option.EtcdConfigFindUrl,
+		EtcdUrl:        initialize.Option.EtcdUrl,
 		ENV:            initialize.Option.Env,
 		PrintPrefix:    prefix,
 	}
@@ -305,6 +324,11 @@ func (initialize *Initialize) Start() error {
 	ProcessPathFileName := "/tmp/" + global.V.Project.Name + ".pid"
 	global.V.Process = util.NewProcess(ProcessPathFileName, initialize.Option.RootCancelFunc, global.V.Zap, initialize.Option.RootQuitFunc, initialize.OutHttpGetBaseInfo)
 	global.V.Process.InitProcess()
+
+	if initialize.Option.TestFlag != "" {
+		core.DoTestAction(initialize.Option.TestFlag)
+		return nil
+	}
 
 	return nil
 }

@@ -1,29 +1,42 @@
 package core
 
-func DoMySelf(testFlag string) {
+import (
+	"zgoframe/core/global"
+	"zgoframe/test"
+	"zgoframe/util"
+)
 
+func DoMySelf() {
 
-	//test.Email()
-	//if global.C.Cicd.Status == "open"{
-	//	test.Cicd()
-	//}
+}
 
+//test_command()
+//Gateway()
+func DoTestAction(flag string) {
+	switch flag {
+	case "db_table":
+		sqlList := global.AutoCreateUpDbTable()
+		sqlStrings := ""
+		for _, v := range sqlList {
+			sqlStrings += v
+		}
+		util.MyPrint(sqlStrings)
+		util.ExitPrint("i want exit 2.")
+	case "email":
+		test.Email()
+	case "cicd":
+		test.Cicd()
+	case "alert_push":
+		global.V.AlertPush.Push(1, "error", "test push alert info.")
+	case "grpc":
+		test.Grpc()
+	case "super_visor":
+		test.Test_command()
+		test.Test_supervisor()
+	case "gateway":
+		//test.gateway()
+	default:
+		util.ExitPrint("DoTestAction flag no hit , flag:" + flag)
+	}
 
-
-	//global.V.AlertPush.Push(1,"error","test push alert info.")
-	//time.Sleep(time.Second * 1)
-	//util.ExitPrint(22)
-	//测试
-	//test.Index()
-	//if global.C.System.ProjectId == 3 {
-	//	test.LogSlave()
-	//} else {
-	//test.Grpc()
-	//go test.Gateway()
-	//test.Cicd()
-	//test.Email()
-	//}
-	//u := 22345678901
-	//rs := util.CheckUnixStampSecondRule(u)
-	//util.ExitPrint(u, rs)
 }

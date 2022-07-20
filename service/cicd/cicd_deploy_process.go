@@ -93,10 +93,10 @@ func (deploy *Deploy) DeployOneServiceGitCode(serviceDeployConfig ServiceDeployC
 	shellArgc := service.Git + " " + serviceDeployConfig.ClonePath + " " + service.Name + " " + deploy.Option.Config.System.RemoteUploadDir + " " + deploy.Option.Config.System.UploadPath
 	CICDShellFileName := ""
 	//执行shell 脚本 后：service项目代码已被clone, git 版本号已知了
-	if service.Type == util.PROJECT_TYPE_FE {
-		CICDShellFileName = "cicd_fe.sh"
-	} else {
+	if service.Name == "Zgoframe" {
 		CICDShellFileName = serviceDeployConfig.CICDShellFileName
+	} else {
+		CICDShellFileName = "cicd_fe.sh"
 	}
 
 	gitLastCommitId, err := ExecShellFile(serviceDeployConfig.FullOpDirName+"/"+CICDShellFileName, shellArgc)

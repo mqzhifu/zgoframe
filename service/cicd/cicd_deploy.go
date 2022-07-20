@@ -172,11 +172,11 @@ func (deploy *Deploy) CheckTest(server util.Server, serviceDeployConfig ServiceD
 	//if server.OutIp != ""{
 	//	return errors.New("CheckTest is err outIp != ''")
 	//}
-	//if server.Env != 1 &&  server.Env != 4 { //测试代码,只部署：local Zgoframe
-	//	errMsg := " server.Env != 1 "
-	//	util.MyPrint(errMsg)
-	//	return errors.New(errMsg)
-	//}
+	if server.Env != 5 { //测试代码,只部署：正式
+		errMsg := " server.Env != 5 "
+		util.MyPrint(errMsg)
+		return errors.New(errMsg)
+	}
 
 	test_allow_project_name := []string{"Zgoframe"}
 	//test_allow_project_name := []string{"Zwebuivue"}

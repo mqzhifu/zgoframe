@@ -293,6 +293,7 @@ func (deploy *Deploy) OneService(server util.Server, serviceDeployConfig Service
 	e.Id = publish.Id
 	e.ExecTime = execTime
 	e.Log = deployOneServiceFlowRecord.ToString()
+	e.Step = deployOneServiceFlowRecord.Step
 	deploy.Option.PublicManager.UpInfo(e)
 
 	deployOneServiceFlowRecord.EndTime = endTime
@@ -315,7 +316,7 @@ func (deploy *Deploy) Publish(id int, deployTargetType int) error {
 	server := deploy.Option.ServerList[publishRecord.ServerId]
 	service := deploy.Option.ProjectList[publishRecord.ServiceId]
 	serviceDeployConfig, _ = deploy.DeployServiceCheck(serviceDeployConfig, service, server)
-	//将master软链 指向 上面刚刚clone下的最新代码上
+	//step 8 将master软链 指向 上面刚刚clone下的最新代码上
 	err = deploy.DeployOneServiceLinkMaster(publishRecord.CodeDir, serviceDeployConfig)
 	if err != nil {
 		deploy.Option.PublicManager.UpStatus(publishRecord, model.CICD_PUBLISH_DEPLOY_FAIL)

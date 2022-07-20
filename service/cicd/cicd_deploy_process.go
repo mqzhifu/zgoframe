@@ -11,6 +11,7 @@ import (
 
 //step 1
 func (deploy *Deploy) DeployServiceCheck(serviceDeployConfig ServiceDeployConfig, service util.Project, server util.Server) (ServiceDeployConfig, error) {
+	deploy.Option.Log.Info("step 1 : DeployServiceCheck ")
 	if service.Git == "" {
 		errMsg := "service.Git is empty~" + service.Name
 		return serviceDeployConfig, errors.New(errMsg)
@@ -148,7 +149,7 @@ func (deploy *Deploy) DeployOneServiceCICIConfig(newGitCodeDir string, serviceDe
 
 //step 4 生成该服务的，superVisor 配置文件
 func (deploy *Deploy) DeployOneServiceSuperVisor(serviceDeployConfig ServiceDeployConfig, configServiceCICD ConfigServiceCICD, newGitCodeDir string) error {
-	deploy.Option.Log.Info("step 3 : create superVisor conf file.")
+	deploy.Option.Log.Info("step 4 : create superVisor conf file.")
 	superVisorOption := util.SuperVisorOption{
 		ConfDir:     deploy.Option.Config.SuperVisor.ConfDir,
 		ServiceName: serviceDeployConfig.Name,
@@ -197,7 +198,7 @@ func (deploy *Deploy) DeployOneServiceSuperVisor(serviceDeployConfig ServiceDepl
 
 //step 5
 func (deploy *Deploy) DeployOneServiceProjectConfig(newGitCodeDir string, server util.Server, serviceDeployConfig ServiceDeployConfig, configServiceCICD ConfigServiceCICD, service util.Project) (string, string, error) {
-	deploy.Option.Log.Info("step 4 : create project self conf file.")
+	deploy.Option.Log.Info("step 5 : create project self conf file.")
 	//读取该服务自己的配置文件 config.toml
 	serviceSelfConfigTmpFileDir := newGitCodeDir + util.DIR_SEPARATOR + configServiceCICD.System.ConfigTmpFileName
 	_, err := util.FileExist(serviceSelfConfigTmpFileDir)
@@ -227,13 +228,13 @@ func (deploy *Deploy) DeployOneServiceProjectConfig(newGitCodeDir string, server
 
 //step 6
 func (deploy *Deploy) DeployOneServiceCommand(newGitCodeDir string, serviceDeployConfig ServiceDeployConfig, serviceCICDConfig ConfigServiceCICD) (command string, build string, output string, err error) {
-	deploy.Option.Log.Info("step 5 : DeployOneServiceCommand.")
+	deploy.Option.Log.Info("step 6 : DeployOneServiceCommand.")
 	ExecShellCommandPre := "cd " + newGitCodeDir + "  ; pwd ; "
 	output1 := ""
 	output2 := ""
 	if serviceCICDConfig.System.Command != "" {
 		command = ExecShellCommandPre + serviceCICDConfig.System.Command
-		deploy.Option.Log.Info("step 5.1 : System.Command: " + command)
+		deploy.Option.Log.Info("step 6.1 : System.Command: " + command)
 		output1, err = ExecShellCommand(ExecShellCommandPre+serviceCICDConfig.System.Command, "")
 		if err != nil {
 			return command, build, output, errors.New("ExecShellCommand " + command + " err " + err.Error())
@@ -242,7 +243,7 @@ func (deploy *Deploy) DeployOneServiceCommand(newGitCodeDir string, serviceDeplo
 	//编译项目代码
 	if serviceCICDConfig.System.Build != "" {
 		build = ExecShellCommandPre + serviceCICDConfig.System.Build
-		deploy.Option.Log.Info("step 5.2 : project build command :" + build)
+		deploy.Option.Log.Info("step 6.2 : project build command :" + build)
 		output2, err = ExecShellCommand(build, "")
 		if err != nil {
 			return command, build, output, errors.New("ExecShellCommand " + command + "  err " + err.Error())
@@ -278,7 +279,7 @@ func (deploy *Deploy) SyncOneServiceToRemote(serviceDeployConfig ServiceDeployCo
 
 //step 8
 func (deploy *Deploy) DeployOneServiceLinkMaster(newGitCodeDir string, serviceDeployConfig ServiceDeployConfig) error {
-	deploy.Option.Log.Info("step 6 : master dir softLink , os.Symlink:" + newGitCodeDir + " to " + serviceDeployConfig.MasterPath)
+	deploy.Option.Log.Info("step 8 : master dir softLink , os.Symlink:" + newGitCodeDir + " to " + serviceDeployConfig.MasterPath)
 	_, err := util.PathExists(serviceDeployConfig.MasterPath)
 	if err == nil {
 		deploy.Option.Log.Info("master path exist , so need del ." + serviceDeployConfig.MasterPath)

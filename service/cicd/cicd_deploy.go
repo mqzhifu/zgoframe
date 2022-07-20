@@ -245,8 +245,8 @@ func (deploy *Deploy) OneService(server util.Server, serviceDeployConfig Service
 	if err != nil {
 		return publish.Id, deployOneServiceFlowRecord, deploy.DeployOneServiceFailed(publish, err.Error())
 	}
-	deployOneServiceFlowRecord.ShowDeployOneServiceRecord()
-	util.ExitPrint(22)
+	//deployOneServiceFlowRecord.ShowDeployOneServiceRecord()
+	//util.ExitPrint(22)
 
 	deployOneServiceFlowRecord.ServiceSelfCicdFile = serviceSelfCICDConf
 	deployOneServiceFlowRecord.Step = 4

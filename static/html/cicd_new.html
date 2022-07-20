@@ -381,7 +381,7 @@ publish table list:<br/>
             var trTd = "<tr>";
             for(let key2  in data_list[key]){
                 if (checkExceptFields(key2)){
-                    trTd += "<td>&nbsp;</td>";
+                    // trTd += "<td>&nbsp;</td>";
                     continue;
                 }
                 if(key2 == "status"){
@@ -409,6 +409,8 @@ publish table list:<br/>
                 trTd += "<td><a href='#' onclick='optPublishService("+data_list[key].id+")'>发布</a></td></tr>"
             }else  if ( data_list[key].status ==  3){
                 trTd += "<td><a href='#' onclick='optPublishService("+data_list[key].id+")'>重新发布</a></td></tr>"
+            }else{
+                trTd += "<td>&nbsp;</td></tr>";
             }
 
 

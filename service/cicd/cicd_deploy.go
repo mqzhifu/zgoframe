@@ -178,7 +178,7 @@ func (deploy *Deploy) CheckTest(server util.Server, serviceDeployConfig ServiceD
 		return errors.New(errMsg)
 	}
 	//目前仅允许这3个项目部署，3个全开放，是给HTTP使用，指令行测试，把下面两个打开即可
-	test_allow_project_name := []string{"Zgoframe", "Zwebuivue", "Zwebuivgo"}
+	test_allow_project_name := []string{"Zgoframe", "Zwebuivue", "Zwebuigo"}
 	//test_allow_project_name := []string{"Zwebuivue"}
 	//test_allow_project_name := []string{"Zwebuivgo"}
 	search := 0

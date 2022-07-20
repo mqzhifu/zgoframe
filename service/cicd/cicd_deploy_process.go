@@ -91,9 +91,15 @@ func (deploy *Deploy) DeployOneServiceGitCode(serviceDeployConfig ServiceDeployC
 	pathNotExistCreate(serviceDeployConfig.ClonePath)
 	//构建 shell 执行时所需 参数
 	shellArgc := service.Git + " " + serviceDeployConfig.ClonePath + " " + service.Name + " " + deploy.Option.Config.System.RemoteUploadDir + " " + deploy.Option.Config.System.UploadPath
+	CICDShellFileName := ""
 	//执行shell 脚本 后：service项目代码已被clone, git 版本号已知了
+	if service.Type == util.PROJECT_TYPE_FE {
+		CICDShellFileName = "cicd_fe.sh"
+	} else {
+		CICDShellFileName = serviceDeployConfig.CICDShellFileName
+	}
 
-	gitLastCommitId, err := ExecShellFile(serviceDeployConfig.FullOpDirName+"/"+serviceDeployConfig.CICDShellFileName, shellArgc)
+	gitLastCommitId, err := ExecShellFile(serviceDeployConfig.FullOpDirName+"/"+CICDShellFileName, shellArgc)
 	if err != nil {
 		return "", "", "", errors.New("ExecShellFile err:" + err.Error())
 	}

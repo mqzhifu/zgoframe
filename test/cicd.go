@@ -5,8 +5,6 @@ import (
 	"zgoframe/service/cicd"
 )
 
-func Cicd(){
-	global.V.MyService.Cicd.DeployAllService(cicd.DEPLOY_TARGET_TYPE_REMOTE)
+func Cicd() {
+	global.V.MyService.Cicd.Deploy.AllService(cicd.DEPLOY_TARGET_TYPE_REMOTE)
 }
-
-

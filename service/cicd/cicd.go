@@ -111,6 +111,7 @@ type CicdPublish struct {
 
 type CicdManager struct {
 	Option CicdManagerOption
+	Deploy *Deploy
 }
 
 type CicdManagerOption struct {
@@ -133,34 +134,29 @@ func NewCicdManager(cicdManagerOption CicdManagerOption) (*CicdManager, error) {
 	cicdManagerOption.TestServerList = []string{"127.0.0.1", "8.142.177.235"}
 
 	cicdManager.Option = cicdManagerOption
-
+	cicdManager.Deploy = NewDeploy(cicdManagerOption)
 	//_, err := util.PathExists(cicdManagerOption.Config.System.ServiceDir) //service 根目录
 	_, err := util.PathExists(cicdManagerOption.Config.System.WorkBaseDir)
 	if err != nil {
-		return cicdManager, cicdManager.MakeError("Option.Config.System.ServiceDir :" + err.Error())
+		return cicdManager, cicdManager.Deploy.MakeError("Option.Config.System.ServiceDir :" + err.Error())
 	}
 	//SuperVisor 模板文件
 	_, err = util.FileExist(cicdManager.Option.Config.SuperVisor.ConfTemplateFile) //superVisor 模板文件
 	if err != nil {
-		return cicdManager, cicdManager.MakeError("SuperVisor.ConfTemplateFile :" + err.Error())
+		return cicdManager, cicdManager.Deploy.MakeError("SuperVisor.ConfTemplateFile :" + err.Error())
 	}
 	//SuperVisor 配置文件统一放置目录
 	_, err = util.PathExists(cicdManager.Option.Config.SuperVisor.ConfDir) //superVisor 配置文件统一放置目录
 	if err != nil {
-		return cicdManager, cicdManager.MakeError("SuperVisor.ConfDir :" + err.Error())
+		return cicdManager, cicdManager.Deploy.MakeError("SuperVisor.ConfDir :" + err.Error())
 	}
 	//日志统一放置目录
 	_, err = util.PathExists(cicdManager.Option.Config.System.LogDir)
 	if err != nil {
-		return cicdManager, cicdManager.MakeError("System.LogDir :" + err.Error())
+		return cicdManager, cicdManager.Deploy.MakeError("System.LogDir :" + err.Error())
 	}
 
 	return cicdManager, nil
-}
-
-func (cicdManager *CicdManager) MakeError(errMsg string) error {
-	cicdManager.Option.Log.Error(errMsg)
-	return errors.New(errMsg)
 }
 
 //发布|部署 一次 服务
@@ -177,8 +173,8 @@ func (cicdManager *CicdManager) GetServiceList() map[int]util.Project {
 	for k, service := range cicdManager.Option.ProjectList {
 
 		server := cicdManager.Option.ServerList[service.Id]
-		localServiceDeployConfig := cicdManager.GetDeployConfig(DEPLOY_TARGET_TYPE_LOCAL)
-		localServiceDeployConfig, _ = cicdManager.DeployServiceCheck(localServiceDeployConfig, service, server)
+		localServiceDeployConfig := cicdManager.Deploy.GetDeployConfig(DEPLOY_TARGET_TYPE_LOCAL)
+		localServiceDeployConfig, _ = cicdManager.Deploy.DeployServiceCheck(localServiceDeployConfig, service, server)
 
 		//dirList := util.ForeachDir(localServiceDeployConfig.BaseDir)
 		//s := service
@@ -248,7 +244,7 @@ func (cicdManager *CicdManager) GetPublishList() map[int]model.CicdPublish {
 	//c.String(200, string(str))
 }
 func (cicdManager *CicdManager) SuperVisorProcess(form request.CicdSuperVisor) (err error) {
-	server, service, err := cicdManager.CheckCicdRequestForm(form.CicdDeploy)
+	server, service, err := cicdManager.Deploy.CheckCicdRequestForm(form.CicdDeploy)
 	if err != nil {
 		return err
 	}
@@ -471,8 +467,8 @@ func (cicdManager *CicdManager) GetSuperVisorList() (list ServerServiceSuperViso
 					//superVisorStatus[service.Id ] = util.SV_ERROR_NONE
 					//search = 1
 
-					serviceDeployConfig := cicdManager.GetDeployConfig(DEPLOY_TARGET_TYPE_LOCAL)
-					serviceDeployConfig, _ = cicdManager.DeployServiceCheck(serviceDeployConfig, service, server)
+					serviceDeployConfig := cicdManager.Deploy.GetDeployConfig(DEPLOY_TARGET_TYPE_LOCAL)
+					serviceDeployConfig, _ = cicdManager.Deploy.DeployServiceCheck(serviceDeployConfig, service, server)
 					//path := serviceDeployConfig.MasterPath + "/" + serviceDeployConfig.OpDirName
 					//masterSrc,_ := ExecShellFile2(path + "/" + "get_soft_link_src.sh",serviceDeployConfig.MasterPath)
 					masterSrcPath, _ := filepath.EvalSymlinks(serviceDeployConfig.MasterPath)
@@ -506,7 +502,7 @@ func (cicdManager *CicdManager) LocalSyncTarget(form request.CicdSync) error {
 		ServiceId: form.ServiceId,
 		Flag:      DEPLOY_TARGET_TYPE_LOCAL,
 	}
-	server, service, err := cicdManager.CheckCicdRequestForm(sFrom)
+	server, service, err := cicdManager.Deploy.CheckCicdRequestForm(sFrom)
 	if err != nil {
 		return err
 	}
@@ -515,12 +511,12 @@ func (cicdManager *CicdManager) LocalSyncTarget(form request.CicdSync) error {
 		return errors.New("VersionDir empty")
 	}
 
-	targetServiceDeployConfig := cicdManager.GetDeployConfig(DEPLOY_TARGET_TYPE_LOCAL)
-	targetServiceDeployConfig, _ = cicdManager.DeployServiceCheck(targetServiceDeployConfig, service, server)
+	targetServiceDeployConfig := cicdManager.Deploy.GetDeployConfig(DEPLOY_TARGET_TYPE_LOCAL)
+	targetServiceDeployConfig, _ = cicdManager.Deploy.DeployServiceCheck(targetServiceDeployConfig, service, server)
 	targetDir := targetServiceDeployConfig.FullPath
 
-	localServiceDeployConfig := cicdManager.GetDeployConfig(DEPLOY_TARGET_TYPE_REMOTE)
-	localServiceDeployConfig, _ = cicdManager.DeployServiceCheck(localServiceDeployConfig, service, server)
+	localServiceDeployConfig := cicdManager.Deploy.GetDeployConfig(DEPLOY_TARGET_TYPE_REMOTE)
+	localServiceDeployConfig, _ = cicdManager.Deploy.DeployServiceCheck(localServiceDeployConfig, service, server)
 	localDir := localServiceDeployConfig.FullPath + "/" + form.VersionDir
 
 	//scp local_file remote_username@remote_ip:remote_folder
@@ -558,12 +554,12 @@ func (cicdManager *CicdManager) GetHasDeployService() map[int]map[int][]string {
 func (cicdManager *CicdManager) GetHasDeployServiceDirList(form request.CicdDeploy) ([]string, error) {
 	list := []string{}
 
-	server, service, err := cicdManager.CheckCicdRequestForm(form)
+	server, service, err := cicdManager.Deploy.CheckCicdRequestForm(form)
 	if err != nil {
 		return nil, err
 	}
-	serviceDeployConfig := cicdManager.GetDeployConfig(DEPLOY_TARGET_TYPE_REMOTE)
-	serviceDeployConfig, err = cicdManager.DeployServiceCheck(serviceDeployConfig, service, server)
+	serviceDeployConfig := cicdManager.Deploy.GetDeployConfig(DEPLOY_TARGET_TYPE_REMOTE)
+	serviceDeployConfig, err = cicdManager.Deploy.DeployServiceCheck(serviceDeployConfig, service, server)
 	if err != nil {
 		return list, err
 	}

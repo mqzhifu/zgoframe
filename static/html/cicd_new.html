@@ -75,6 +75,7 @@ publish table list:<br/>
     var server_ping_status_desc = {1:"正常",2:"失败"};
     var super_visor_status_desc = {0:"正常",1:"初始化失败",2:"XMLRpc连接失败"}
     var deployStatus = {0:"否",1:"是"};
+    var deployTypeDesc =  {1:"本地部署",1:"远程部署"};
     var envDesc = {1:"本地",2:"开发",3:"测试",4:"预发布",5:"线上"}
     // var lbTypeDesc = {1:"轮询",2:"固定分子hash"}
 
@@ -384,6 +385,8 @@ publish table list:<br/>
                 }
                 if(key2 == "status"){
                     trTd += "<td>"+publishStatusDesc[data_list[key][key2]]+ "</td>";
+                }else if(key2 == "deploy_type"){
+                    trTd += "<td>"+deployTypeDesc[data_list[key][key2]]+ "</td>";
                 }else if(key2 == "deploy_status"){
                     trTd += "<td>"+publishDeployStatusDesc[data_list[key][key2]]+ "</td>";
                 }else if(key2 == "created_at" || key2 == "updated_at"){

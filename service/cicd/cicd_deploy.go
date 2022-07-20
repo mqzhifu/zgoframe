@@ -18,7 +18,7 @@ import (
 */
 
 const (
-	DEPLOY_TARGET_TYPE_LOCAL  = 1 //本要部署
+	DEPLOY_TARGET_TYPE_LOCAL  = 1 //本地部署
 	DEPLOY_TARGET_TYPE_REMOTE = 2 //远程部署，并同步到了本机
 
 	DEPLOY_TARGET_TYPE_LOCAL_NAME  = "local"

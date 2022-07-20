@@ -381,6 +381,7 @@ publish table list:<br/>
             var trTd = "<tr>";
             for(let key2  in data_list[key]){
                 if (checkExceptFields(key2)){
+                    trTd += "<td>&nbsp;</td>";
                     continue;
                 }
                 if(key2 == "status"){

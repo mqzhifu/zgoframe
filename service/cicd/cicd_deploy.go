@@ -181,12 +181,18 @@ func (deploy *Deploy) CheckTest(server util.Server, serviceDeployConfig ServiceD
 	test_allow_project_name := []string{"Zgoframe", "Zwebuivue", "Zwebuivgo"}
 	//test_allow_project_name := []string{"Zwebuivue"}
 	//test_allow_project_name := []string{"Zwebuivgo"}
+	search := 0
 	for _, v := range test_allow_project_name {
-		if service.Name != v { //测试代码,只部署：选择的项目
-			errMsg := "test_allow_project_name service name != " + v
-			util.MyPrint(errMsg)
-			return errors.New(errMsg)
+		if service.Name == v { //测试代码,只部署：选择的项目
+			search = 1
+
 		}
+	}
+
+	if search == 0 {
+		errMsg := "test_allow_project_name service name no search : " + service.Name
+		util.MyPrint(errMsg)
+		return errors.New(errMsg)
 	}
 
 	return nil

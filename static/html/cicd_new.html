@@ -162,7 +162,7 @@ publish table list:<br/>
             serviceTableBody += "<tr><td>id</td><td>name</td><td>opt</td>"
                 // <a href='#' onclick='optDeployService("+serverId+","+serviceId+",1,this)'>部署</a>&nbsp;"
             for(let serviceId  in serviceList) {//服务器
-                serviceTableBody += "<tr><td>"+serviceList[serviceId].id+"</td><td>"+serviceList[serviceId].name+"</td><td><a href='#' onclick='optDeployService("+serverId+","+serviceId+",1,this);'>部署</a></td></tr>";
+                serviceTableBody += "<tr><td>"+serviceList[serviceId].id+"</td><td>"+serviceList[serviceId].name+"</td><td><a href='#' onclick='optDeployService("+serverId+","+serviceId+",2,this);'>部署</a></td></tr>";
             }
 
             serviceTableBody += "</table>";

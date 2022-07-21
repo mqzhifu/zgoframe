@@ -300,7 +300,7 @@ publish table list:<br/>
             type: "GET",
             // data: JSON.stringify({"server_id": serverId, "service_id": serviceId}),
             contentType: "application/json;charset=utf-8",
-            url: "/cicd/service/publish/"+publishId + "/1",
+            url: "/cicd/service/publish/"+publishId + "/2",
             success: function(backData){
                 backData = eval(   backData  );
                 if(backData.code != 200){

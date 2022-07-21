@@ -112,7 +112,6 @@ func CicdServicePublish(c *gin.Context) {
 	}
 
 	flag, _ := strconv.Atoi(flagStr)
-
 	err = global.V.MyService.Cicd.Deploy.Publish(id, flag)
 	if err != nil {
 		httpresponse.FailWithMessage(err.Error(), c)

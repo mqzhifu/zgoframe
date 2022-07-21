@@ -137,12 +137,14 @@ func CicdServiceDeploy(c *gin.Context) {
 	c.ShouldBind(&form)
 
 	util.MyPrint("CicdServiceDeploy form:", form)
-	err := global.V.MyService.Cicd.Deploy.ApiDeployOneService(form)
-	if err != nil {
-		httpresponse.FailWithMessage(err.Error(), c)
-	} else {
-		httpresponse.OkWithAll("aaaa", "成功", c)
-	}
+	//这里因为是HTTP连接，而后端处理一次时间接近1分钟，HTTP可能多次重复请求，开个协程
+	go global.V.MyService.Cicd.Deploy.ApiDeployOneService(form)
+	httpresponse.OkWithAll("aaaa", "成功", c)
+	//if err != nil {
+	//	httpresponse.FailWithMessage(err.Error(), c)
+	//} else {
+	//	httpresponse.OkWithAll("aaaa", "成功", c)
+	//}
 
 }
 

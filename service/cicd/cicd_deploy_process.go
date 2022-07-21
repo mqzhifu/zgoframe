@@ -189,10 +189,8 @@ func (deploy *Deploy) DeployOneServiceSuperVisor(serviceDeployConfig ServiceDepl
 		}
 	}
 
-	//util.PrintStruct(superVisorReplace,":")
 	//替换配置文件中的动态值，并生成配置文件
 	serviceConfFileContent, _ := serviceSuperVisor.ReplaceConfTemplate(superVisorReplace)
-	//util.ExitPrint(serviceConfFileContent)
 	//将已替换好的文件，生成一个新的配置文件
 	err = serviceSuperVisor.CreateServiceConfFile(serviceConfFileContent, newGitCodeDir)
 	if err != nil {

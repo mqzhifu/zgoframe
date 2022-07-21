@@ -313,7 +313,7 @@ publish table list:<br/>
 
     function GetBnt(superVisorState,serverId,serviceId ){
         console.log("GetBnt serverId:",serverId , " serviceId:",serviceId);
-        var optBnt = "<a href='#' onclick='optDeployService("+serverId+","+serviceId+",1,this)'>部署</a>&nbsp;";
+        var optBnt = "<a href='#' onclick='optDeployService("+serverId+","+serviceId+",2,this)'>部署</a>&nbsp;";
         if (superVisorState == 999){
             return optBnt;
         }else if (superVisorState === 0 || superVisorState == 30 || superVisorState == 100 || superVisorState == 200){

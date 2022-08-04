@@ -25,8 +25,8 @@ type RegisterSms struct {
 	Mobile      string `json:"mobile"`        //手机号
 	SmsAuthCode string `json:"sms_auth_code"` //短信验证码
 	SmsRuleId   int    `json:"sms_rule_id"`   //短信类型，登陆/注册
-	Captcha     string `json:"captcha"`		//图片验证码
-	CaptchaId   string `json:"captchaId"`	//图片验证码ID
+	Captcha     string `json:"captcha"`       //图片验证码
+	CaptchaId   string `json:"captchaId"`     //图片验证码ID
 }
 
 //@descriptionw 绑定手机号
@@ -64,11 +64,11 @@ type Login struct {
 //@description 短信登陆
 type LoginSMS struct {
 	//Code        string `json:"code"`
-	Captcha     string `json:"captcha"`		//图片验证码
-	CaptchaId   string `json:"captchaId"`	//图片验证码ID
-	Mobile      string `json:"mobile"`		//手机号
-	SmsAuthCode string `json:"sms_auth_code"`//手机验证码
-	SmsRuleId   int    `json:"sms_rule_id"` //短信类型，登陆/注册
+	Captcha     string `json:"captcha"`       //图片验证码
+	CaptchaId   string `json:"captchaId"`     //图片验证码ID
+	Mobile      string `json:"mobile"`        //手机号
+	SmsAuthCode string `json:"sms_auth_code"` //手机验证码
+	SmsRuleId   int    `json:"sms_rule_id"`   //短信类型，登陆/注册
 }
 
 //@description  3方平台登陆
@@ -90,14 +90,20 @@ type SendSMS struct {
 	CaptchaId  string            `json:"captchaId"`   //获取验证码时拿到的Id
 }
 
-type TwinAgoraToken struct{
-	Username 	string `json:"username"`	//用户名 or 用户ID
-	Channel 	string `json:"channel"`		//频道名称，给rtc使用,RTM可为空
+type TwinAgoraToken struct {
+	Username string `json:"username"` //用户名 or 用户ID
+	Channel  string `json:"channel"`  //频道名称，给rtc使用,RTM可为空
 }
 
-type Captcha struct{
-	Width int	`json:"width"` 	//图片宽度，默认：240，最大：1000
-	Height int 	`json:"height"`	//图片高度，默认：80，最大：1000
+type TwinAgoraAcquireStruct struct {
+	Cname         string            `json:"cname"`         //频道
+	Uid           string            `json:"uid"`           //uid
+	ClientRequest map[string]string `json:"clientRequest"` //这个不是下划线模式，主要是对端的agora就这么定义的
+}
+
+type Captcha struct {
+	Width  int `json:"width"`  //图片宽度，默认：240，最大：1000
+	Height int `json:"height"` //图片高度，默认：80，最大：1000
 }
 
 //@description 发送邮件
@@ -117,24 +123,24 @@ type SendMail struct {
 	Receiver   string            `json:"receiver"`   //接收者: uid or grpuId or tagId or uids
 	SendUid    int               `json:"send_uid"`   //发送者ID，管理员是9999，未知8888
 	SendIp     string            `json:"send_ip"`    //发送者IP，如为空系统默认取：请求方的IP,最好给真实的，一但被刷，会使用此值
-	SendTime   int 				 `json:"send_time"` //定时发送，unixStamp 必须大于当前时间
+	SendTime   int               `json:"send_time"`  //定时发送，unixStamp 必须大于当前时间
 }
+
 //@description 站内信列表
-type MailList  struct {
-	BoxType 		int		`json:"box_type"`		//1收件箱2发件箱4全部
-	ReceiverRead 	int		`json:"receiver_read"`	//1接收者已读2接收者未读
-	ReceiverDel		int 	`json:"receiver_del"`	//1接收者已删除2接收者未删除
-	Expire 			int 	`json:"expire"`			//1消息已过期2消息未过期
-	PageInfo										//分页
+type MailList struct {
+	BoxType      int `json:"box_type"`      //1收件箱2发件箱4全部
+	ReceiverRead int `json:"receiver_read"` //1接收者已读2接收者未读
+	ReceiverDel  int `json:"receiver_del"`  //1接收者已删除2接收者未删除
+	Expire       int `json:"expire"`        //1消息已过期2消息未过期
+	PageInfo         //分页
 }
 
 //@description 站内信一条消息详情
-type MailInfo  struct {
-	Id int `json:"id"`
-	AutoReceiverRead 	int		`json:"auto_receiver_read"`	//自动更新为：接收者已读
-	AutoReceiverDel 	int		`json:"auto_receiver_del"`	//自动更新为：接收者已删除
+type MailInfo struct {
+	Id               int `json:"id"`
+	AutoReceiverRead int `json:"auto_receiver_read"` //自动更新为：接收者已读
+	AutoReceiverDel  int `json:"auto_receiver_del"`  //自动更新为：接收者已删除
 }
-
 
 //@description 设置/修改密码
 type SetPassword struct {
@@ -152,8 +158,6 @@ type RestPasswordSms struct {
 	NewPassword        string `json:"newPassword"`          //新密码
 	NewPasswordConfirm string `json:"new_password_confirm"` //新密码确认
 }
-
-
 
 type CheckMobileExist struct {
 	Mobile  string `json:"mobile"`  //手机号

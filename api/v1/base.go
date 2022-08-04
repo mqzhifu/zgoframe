@@ -13,6 +13,7 @@ import (
 	"zgoframe/service"
 	"zgoframe/util"
 )
+
 //图片验证码使用，主要是图片的ID得保存在内存(store)中
 var store = base64Captcha.DefaultMemStore
 
@@ -31,12 +32,11 @@ func Captcha(c *gin.Context) {
 	var form request.Captcha
 	c.ShouldBind(&form)
 
-	util.MyPrint(c.Request.Host,c.Request.URL)
+	util.MyPrint(c.Request.Host, c.Request.URL)
 
-
-	imgWidth :=global.C.Captcha.ImgWidth
+	imgWidth := global.C.Captcha.ImgWidth
 	imgHeight := global.C.Captcha.ImgHeight
-	if ( form.Width > 0 && form.Width < 1000 )  && ( form.Height > 0 && form.Height < 1000){
+	if (form.Width > 0 && form.Width < 1000) && (form.Height > 0 && form.Height < 1000) {
 		imgWidth = form.Width
 		imgHeight = form.Height
 	}
@@ -49,8 +49,9 @@ func Captcha(c *gin.Context) {
 		httpresponse.FailWithMessage("验证码获取失败", c)
 	} else {
 		httpresponse.OkWithAll(httpresponse.Captcha{
-			Id:         id,
-			PicContent: b64s,
+			Id:            id,
+			PicContent:    b64s,
+			ContentLength: global.C.Captcha.NumberLength,
 		}, "验证码获取成功", c)
 	}
 }
@@ -76,7 +77,6 @@ func SendSms(c *gin.Context) {
 	//	response.FailWithMessage(err.Error(), c)
 	//	return
 	//}
-
 
 	projectId, _ := request.GetProjectId(c)
 	dbNewId, err := global.V.MyService.Sms.Send(projectId, sendSMSForm)
@@ -175,8 +175,8 @@ func Register(c *gin.Context) {
 		return
 	}
 
-	header , _ :=  request.GetMyHeader(c)
-	err, userInfo := global.V.MyService.User.RegisterByUsername(R,header)
+	header, _ := request.GetMyHeader(c)
+	err, userInfo := global.V.MyService.User.RegisterByUsername(R, header)
 	if err != nil {
 		//global.V.Zap.Error("注册失败", zap.Any("err", err))
 		httpresponse.FailWithAll(userInfo, "注册失败:"+err.Error(), c)
@@ -211,7 +211,7 @@ func RegisterSms(c *gin.Context) {
 		httpresponse.FailWithMessage(err.Error(), c)
 		return
 	}
-	header , _ :=  request.GetMyHeader(c)
+	header, _ := request.GetMyHeader(c)
 	err, userInfo := global.V.MyService.User.Register(user, header, service.UserRegInfo{})
 	if err != nil {
 		//global.V.Zap.Error("注册失败", zap.Any("err", err))
@@ -359,7 +359,7 @@ func ParserToken(c *gin.Context) {
 	j := httpmiddleware.NewJWT()
 	claims, err := j.ParseToken(p.Token)
 	if err != nil {
-		httpresponse.FailWithAll(claims,"解析失败:"+err.Error(), c)
+		httpresponse.FailWithAll(claims, "解析失败:"+err.Error(), c)
 		return
 	} else {
 		httpresponse.OkWithAll(claims, "解析成功", c)
@@ -394,7 +394,7 @@ func Login(c *gin.Context) {
 		//DB比较OK，开始做JWT处理
 		loginResponse, err := tokenNext(c, user, loginType)
 		if err != nil {
-			httpresponse.FailWithAll(loginResponse,err.Error(), c)
+			httpresponse.FailWithAll(loginResponse, err.Error(), c)
 		} else {
 			loginResponse.User = user
 			httpresponse.OkWithAll(loginResponse, "登录成功", c)
@@ -434,7 +434,7 @@ func LoginSms(c *gin.Context) {
 	//DB比较OK，开始做JWT处理
 	loginResponse, err := tokenNext(c, user, model.USER_REG_TYPE_MOBILE)
 	if err != nil {
-		httpresponse.FailWithAll(loginResponse,err.Error()+",(短信已使用，请重新发送一条)", c)
+		httpresponse.FailWithAll(loginResponse, err.Error()+",(短信已使用，请重新发送一条)", c)
 	} else {
 		loginResponse.User = user
 		httpresponse.OkWithAll(loginResponse, "登录成功", c)
@@ -468,8 +468,8 @@ func LoginThird(c *gin.Context) {
 	//if store.Verify(L.CaptchaId, L.Captcha, true) {
 	//先从DB中做比对
 	//U := &model.User{ThirdId: L.Code}
-	header ,_ :=  request.GetMyHeader(c)
-	user, newReg, err := global.V.MyService.User.LoginThird(L,header)
+	header, _ := request.GetMyHeader(c)
+	user, newReg, err := global.V.MyService.User.LoginThird(L, header)
 	if err != nil {
 		httpresponse.FailWithMessage("用户名不存在或者密码错误 ,err:"+err.Error(), c)
 	} else {
@@ -477,7 +477,7 @@ func LoginThird(c *gin.Context) {
 		loginResponse, err := tokenNext(c, user, L.PlatformType)
 		loginResponse.IsNewReg = newReg
 		if err != nil {
-			httpresponse.FailWithAll(loginResponse,err.Error(), c)
+			httpresponse.FailWithAll(loginResponse, err.Error(), c)
 		} else {
 			loginResponse.User = user
 			httpresponse.OkWithAll(loginResponse, "登录成功", c)

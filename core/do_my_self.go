@@ -13,6 +13,8 @@ func DoMySelf() {
 //test_command()
 //Gateway()
 func DoTestAction(flag string) {
+	util.GetHTTPBaseAuth()
+
 	switch flag {
 	case "db_table":
 		sqlList := global.AutoCreateUpDbTable()

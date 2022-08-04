@@ -10,6 +10,6 @@ func InitTwinAgoraRouter(Router *gin.RouterGroup) {
 	{
 		TwinAgora.POST("rtc/get/token", v1.TwinAgoraRTCGetToken) // 设置/修改密码
 		TwinAgora.POST("rtm/get/token", v1.TwinAgoraRTMGetToken) // 设置/修改密码
+		TwinAgora.POST("rtc/get/cloud/record/acquire", v1.TwinAgoraRTCGetCloudRecordAcquire)
 	}
 }
-

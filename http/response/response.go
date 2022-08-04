@@ -31,8 +31,9 @@ type PageResult struct {
 
 // @Description 获取图片验证码
 type Captcha struct {
-	Id         string `json:"id"`          //使用(验证)时要带上这个ID，后端才能判断
-	PicContent string `json:"pic_content"` //图片内容,base64
+	Id            string `json:"id"`             //使用(验证)时要带上这个ID，后端才能判断
+	PicContent    string `json:"pic_content"`    //图片内容,base64
+	ContentLength int    `json:"content_length"` //数字的总长度
 }
 
 ////上传多张图片，处理结果

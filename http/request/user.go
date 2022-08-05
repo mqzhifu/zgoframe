@@ -96,9 +96,33 @@ type TwinAgoraToken struct {
 }
 
 type TwinAgoraAcquireStruct struct {
-	Cname         string            `json:"cname"`         //频道
-	Uid           string            `json:"uid"`           //uid
-	ClientRequest map[string]string `json:"clientRequest"` //这个不是下划线模式，主要是对端的agora就这么定义的
+	Cname         string                 `json:"cname"`         //频道
+	Uid           string                 `json:"uid"`           //uid,如果是申请rid，最好用类似：99999，不能用视频中的UID
+	ClientRequest map[string]interface{} `json:"clientRequest"` //这个不是下划线模式，主要是对端的agora就这么定义的
+}
+
+type TwinAgoraRecordStartStruct struct {
+	Cname         string                 `json:"cname"`         //频道
+	Uid           string                 `json:"uid"`           //uid
+	ClientRequest map[string]interface{} `json:"clientRequest"` //这个不是下划线模式，主要是对端的agora就这么定义的
+	ResourceId    string                 `json:"resource_id"`
+}
+
+type TwinAgoraRecordStopStruct struct {
+	Cname         string                 `json:"cname"`         //频道
+	Uid           string                 `json:"uid"`           //uid
+	ClientRequest map[string]interface{} `json:"clientRequest"` //这个不是下划线模式，主要是对端的agora就这么定义的
+	ResourceId    string                 `json:"resource_id"`
+	Sid           string
+}
+
+type TwinAgoraStorageConfig struct {
+	AccessKey      string   `json:"accessKey"`
+	Region         int      `json:"region"`
+	Bucket         string   `json:"bucket"`
+	SecretKey      string   `json:"secretKey"`
+	Vendor         int      `json:"vendor"`
+	FileNamePrefix []string `json:"fileNamePrefix"`
 }
 
 type Captcha struct {

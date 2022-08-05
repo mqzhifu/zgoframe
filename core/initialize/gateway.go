@@ -19,7 +19,7 @@ func InitGateway() (netWayOption util.NetWayOption) {
 
 		WsPort:  global.C.Gateway.WsPort,  //监听端口号
 		TcpPort: global.C.Gateway.TcpPort, //监听端口号
-		//UdpPort				: "3333",		//UDP端口号
+		UdpPort: global.C.Gateway.UdpPort, //UDP端口号
 
 		WsUri:               global.C.Gateway.WsUri, //接HOST的后面的URL地址
 		DefaultProtocolType: GateDefaultProtocol,    //兼容协议：ws tcp udp
@@ -41,5 +41,6 @@ func InitGateway() (netWayOption util.NetWayOption) {
 		//CloseChan 			chan int		`json:"-"`
 		FPS: 10,
 	}
+
 	return netWayOption
 }

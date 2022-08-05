@@ -343,12 +343,17 @@ func (netWay *NetWay) Login(requestLogin pb.Login, conn *Conn) (customClaims req
 		netWay.Option.Log.Error(msg)
 		return customClaims, errors.New(msg)
 	}
+	MyPrint("gateway_netway Login requestLogin.token:", requestLogin.Token)
 	token := ""
 	if netWay.Option.LoginAuthType == "jwt" {
 		token = requestLogin.Token
 		tokenParseWithClaims, err := jwt.ParseWithClaims(token, &request.CustomClaims{}, func(token *jwt.Token) (i interface{}, e error) {
 			return []byte(netWay.Option.LoginAuthSecretKey), nil
 		})
+		if err != nil {
+			MyPrint("gateway_netway Login jwt.ParseWithClaims err:  ", err.Error())
+			return customClaims, err
+		}
 		claims, _ := tokenParseWithClaims.Claims.(*request.CustomClaims)
 		//jwtData, err := ParseJwtToken(netWay.Option.LoginAuthSecretKey, token)
 		return *claims, err

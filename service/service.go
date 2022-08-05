@@ -73,44 +73,42 @@ func NewService(options MyServiceOptions) *Service {
 		util.ExitPrint("NewConfigCenter err:" + err.Error())
 	}
 
-	//
-	////房间服务 - room要先实例化,math frame_sync 都强依赖room
-	//roomManagerOption := RoomManagerOption{
-	//	Log:          options.Zap,
-	//	ReadyTimeout: 60,
-	//	RoomPeople:   4,
-	//}
-	//service.RoomManage = NewRoomManager(roomManagerOption)
-	////匹配服务
-	//matchOption := MatchOption{
-	//	Log:         options.Zap,
-	//	RoomManager: service.RoomManage,
-	//	//MatchSuccessChan chan *Room
-	//}
-	//service.Match = NewMatch(matchOption)
-	//syncOption := FrameSyncOption{
-	//	Log:        options.Zap,
-	//	RoomManage: service.RoomManage,
-	//}
-	////帧同步服务 - 强-依赖room
-	//service.FrameSync = NewFrameSync(syncOption)
-	//
-	//service.RoomManage.SetFrameSync(service.FrameSync)
-	////他们3个的关系：
-	////room -> match , match -> room ,room ->frame sync ， frame sync -> room
-	//
-	//
-	//if options.GatewayStatus == "open"{
-	//	gateway := NewGateway(options.GrpcManager, options.Zap)
-	//	var netway *util.NetWay
-	//	netway, err = gateway.StartSocket(options.NetWayOption)
-	//	if err != nil {
-	//		util.ExitPrint("InitGateway err:" + err.Error())
-	//	}
-	//
-	//	service.FrameSync.SetNetway(netway)
-	//	gateway.MyService = service
-	//}
+	//房间服务 - room要先实例化,math frame_sync 都强依赖room
+	roomManagerOption := RoomManagerOption{
+		Log:          options.Zap,
+		ReadyTimeout: 60,
+		RoomPeople:   4,
+	}
+	service.RoomManage = NewRoomManager(roomManagerOption)
+	//匹配服务
+	matchOption := MatchOption{
+		Log:         options.Zap,
+		RoomManager: service.RoomManage,
+		//MatchSuccessChan chan *Room
+	}
+	service.Match = NewMatch(matchOption)
+	syncOption := FrameSyncOption{
+		Log:        options.Zap,
+		RoomManage: service.RoomManage,
+	}
+	//帧同步服务 - 强-依赖room
+	service.FrameSync = NewFrameSync(syncOption)
+
+	service.RoomManage.SetFrameSync(service.FrameSync)
+	//他们3个的关系：
+	//room -> match , match -> room ,room ->frame sync ， frame sync -> room
+
+	if options.GatewayStatus == "open" {
+		gateway := NewGateway(options.GrpcManager, options.Zap)
+		var netway *util.NetWay
+		netway, err = gateway.StartSocket(options.NetWayOption)
+		if err != nil {
+			util.ExitPrint("InitGateway err:" + err.Error())
+		}
+
+		service.FrameSync.SetNetway(netway)
+		gateway.MyService = service
+	}
 	//
 	service.Cicd, err = InitCicd(options)
 	//

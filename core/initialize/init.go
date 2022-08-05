@@ -256,14 +256,19 @@ func (initialize *Initialize) Start() error {
 			util.MyPrint("GetNewViper err:", err)
 			return err
 		}
+		//util.ExitPrint(global.V.ProtoMap.ServiceFuncMap)
 	}
 
 	//websocket
-	//if global.C.Websocket.Status == global.CONFIG_STATUS_OPEN{
-	//	if global.C.Http.Status != global.CONFIG_STATUS_OPEN{
+	//if global.C.Websocket.Status == global.CONFIG_STATUS_OPEN {
+	//	if global.C.Http.Status != global.CONFIG_STATUS_OPEN {
 	//		return errors.New("Websocket need gin open!")
 	//	}
-	//	initSocket()
+	//
+	//	netwayOption := InitGateway()
+	//	//	gateway := util.NewGateway(global.V.GrpcManager, global.V.Zap)
+	//
+	//	util.NewNetWay(netWayOption)
 	//}
 
 	//grpc
@@ -304,11 +309,12 @@ func (initialize *Initialize) Start() error {
 	//var netWayOption util.NetWayOption
 	//if global.C.Gateway.Status == global.CONFIG_STATUS_OPEN {
 	//	netWayOption = InitGateway()
-	//	//	global.V.Gateway, err = InitGateway()
-	//	//	if err != nil {
-	//	//		global.V.Zap.Error(prefix + "InitGateway err:" + err.Error())
-	//	//		return err
-	//	//	}
+	//	netWay, err := util.NewNetWay(netWayOption)
+	//	if err != nil {
+	//		util.MyPrint("int Gateway err:", err)
+	//		return err
+	//	}
+	//	global.V.NetWay = netWay
 	//}
 	InitMyService(redisGo)
 

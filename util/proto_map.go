@@ -1,7 +1,6 @@
 package util
 
 import (
-	"errors"
 	"go.uber.org/zap"
 	"strconv"
 	"strings"
@@ -107,12 +106,14 @@ func (protoMap *ProtoMap) loadingActionMapConfigFile(fileName string) (map[int]P
 		funcIdStr := contentArr[0][2:]
 		funcId, _ := strconv.Atoi(funcIdStr)
 
+		//这里有BUG，回头处理
 		//map txt 里都是首字节大写，这里转成小写
 		//lowServiceName :=StrFirstToLower(serviceName)
-		_, empty := protoMap.ProjectManager.GetByName(serviceName)
-		if empty {
-			return nil, errors.New("serviceName not in project list :" + serviceName)
-		}
+		//_, empty := protoMap.ProjectManager.GetByName(serviceName)
+
+		//if empty {
+		//	return nil, errors.New("serviceName not in project list :" + serviceName)
+		//}
 
 		//id ,_:= strconv.Atoi(contentArr[0])
 		actionMap := ProtoServiceFunc{

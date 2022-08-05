@@ -4,9 +4,6 @@ import (
 	"encoding/json"
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis/v8"
-	"io/ioutil"
-	"net/http"
-	"strings"
 	"zgoframe/core/global"
 	"zgoframe/http/request"
 	httpresponse "zgoframe/http/response"
@@ -15,7 +12,7 @@ import (
 
 // @Tags TwinAgora
 // @Summary 申请录屏资源Id
-// @Description 录屏时，要先申请一个资源ID，才能开始
+// @Description 录屏时，要先申请一个资源ID，才能开始（声网限制：每秒最多请求10次）
 // @accept application/json
 // @Param X-Source-Type header string true "来源" default(11)
 // @Param X-Project-Id header string true "项目ID"  default(6)
@@ -25,43 +22,97 @@ import (
 // @Success 200 {boolean} boolean "true:成功 false:否"
 // @Router /twin/agora/rtc/get/cloud/record/acquire [POST]
 func TwinAgoraRTCGetCloudRecordAcquire(c *gin.Context) {
-	client := &http.Client{}
-	//var data = request.TwinAgoraAcquireStruct{
-	//	Cname:         "ckck",
-	//	Uid:           "999999",
-	//	ClientRequest: make(map[string]string),
-	//}
+	//client := &http.Client{}
 	var formData request.TwinAgoraAcquireStruct
-	formData.ClientRequest = make(map[string]string)
+	formData.ClientRequest = make(map[string]interface{})
+	formData.Uid = "99999" //如果是申请rid，最好用类似：99999，不能用视频中的UID
 	c.ShouldBind(&formData)
 
-	dataStrByte, _ := json.Marshal(formData)
-	base64Credentials := util.GetHTTPBaseAuth()
-	util.MyPrint("base64Credentials:", base64Credentials, " data:", formData, " dataStr:", string(dataStrByte))
-	url := "https://api.agora.io/v1/apps/8ff429463a234c7bae327d74941a5956/cloud_recording/acquire"
-	request, _ := http.NewRequest("POST", url, strings.NewReader(string(dataStrByte)))
+	url := global.C.Agora.Domain + global.C.Agora.AppId + "/cloud_recording/acquire"
+	httpCurl := util.NewHttpCurl(url, GetAgoraCommonHTTPHeader())
+	res, _ := httpCurl.PostJson(formData)
+	agoraRecord := httpresponse.AgoraRecord{}
+	err := json.Unmarshal([]byte(res), &agoraRecord)
+	if err != nil {
+		util.MyPrint("json.Unmarshal err:", err)
+	}
+	util.MyPrint("agoraRecord:", agoraRecord)
+	httpresponse.OkWithAll(agoraRecord, "RTC-acquire-成功", c)
 
-	request.Header.Add("Content-Type", "application/json;charset=utf-8")
-	request.Header.Add("Authorization", "Basic "+base64Credentials)
+}
 
-	response, err := client.Do(request)
-	defer response.Body.Close()
+// @Tags TwinAgora
+// @Summary 开始录屏
+// @Description 根据上一步获取到的ResourceId，开始录屏，其数据会推送到3方的OSS上
+// @accept application/json
+// @Param X-Source-Type header string true "来源" default(11)
+// @Param X-Project-Id header string true "项目ID"  default(6)
+// @Param X-Access header string true "访问KEY" default(imzgoframe)
+// @Param data body request.TwinAgoraRecordStartStruct false "基础信息"
+// @Produce application/json
+// @Success 200 {boolean} boolean "true:成功 false:否"
+// @Router /twin/agora/rtc/cloud/record/start [POST]
+func TwinAgoraRTCCloudRecordStart(c *gin.Context) {
 
-	util.MyPrint("response:", response.Body, " err:", err)
-	b, err := ioutil.ReadAll(response.Body)
-	bodyStr := string(b)
-	util.MyPrint("response read body:", bodyStr, " err:", err)
+	var formData request.TwinAgoraRecordStartStruct
+	formData.ClientRequest = make(map[string]interface{})
+	c.ShouldBind(&formData)
 
-	type ResourceIdAgora struct {
-		ResourceId string `json:"resourceId"`
+	storageConfig := request.TwinAgoraStorageConfig{
+		AccessKey:      global.C.Oss.AccessKeyId,
+		Region:         0,
+		Bucket:         global.C.Oss.Bucket,
+		SecretKey:      global.C.Oss.AccessKeySecret,
+		Vendor:         2,
+		FileNamePrefix: []string{"imagora"},
+	}
+	formData.ClientRequest["storageConfig"] = storageConfig
+
+	url := global.C.Agora.Domain + global.C.Agora.AppId + "/cloud_recording/resourceid/" + formData.ResourceId + "/mode/individual/start"
+	httpCurl := util.NewHttpCurl(url, GetAgoraCommonHTTPHeader())
+	res, _ := httpCurl.PostJson(formData)
+	agoraRecord := httpresponse.AgoraRecord{}
+	err := json.Unmarshal([]byte(res), &agoraRecord)
+	if err != nil {
+		util.MyPrint("json.Unmarshal err:", err)
+	}
+	util.MyPrint("agoraRecord:", agoraRecord)
+
+	httpresponse.OkWithAll(agoraRecord, "RTC-acquire-成功", c)
+}
+
+// @Tags TwinAgora
+// @Summary 停止录屏
+// @Description 各种异常情况都最好调一下stop，不然OSS要一直花钱呐....~~~~~
+// @accept application/json
+// @Param X-Source-Type header string true "来源" default(11)
+// @Param X-Project-Id header string true "项目ID"  default(6)
+// @Param X-Access header string true "访问KEY" default(imzgoframe)
+// @Param data body request.TwinAgoraRecordStopStruct false "基础信息"
+// @Produce application/json
+// @Success 200 {boolean} boolean "true:成功 false:否"
+// @Router /twin/agora/rtc/cloud/record/stop [POST]
+func TwinAgoraRTCCloudRecordStop(c *gin.Context) {
+	var formData request.TwinAgoraRecordStopStruct
+	formData.ClientRequest = make(map[string]interface{})
+	c.ShouldBind(&formData)
+
+	twinAgoraAcquireStruct := request.TwinAgoraAcquireStruct{}
+	twinAgoraAcquireStruct.ClientRequest = make(map[string]interface{})
+	twinAgoraAcquireStruct.Uid = formData.Uid
+	twinAgoraAcquireStruct.Cname = formData.Cname
+	//twinAgoraAcquireStruct["clientRequest"] = false
+
+	url := global.C.Agora.Domain + global.C.Agora.AppId + "/cloud_recording/resourceid/" + formData.ResourceId + "/sid/" + formData.Sid + "/mode/individual/stop"
+	httpCurl := util.NewHttpCurl(url, GetAgoraCommonHTTPHeader())
+	res, _ := httpCurl.PostJson(twinAgoraAcquireStruct)
+	resourceIdAgora := httpresponse.AgoraRecord{}
+	err := json.Unmarshal([]byte(res), &resourceIdAgora)
+	if err != nil {
+		util.MyPrint("json.Unmarshal err:", err)
 	}
 
-	resourceIdAgora := ResourceIdAgora{}
-	json.Unmarshal(b, &resourceIdAgora)
-	util.MyPrint("resourceIdAgora:", resourceIdAgora)
-
-	httpresponse.OkWithAll(resourceIdAgora.ResourceId, "RTC-acquire-成功", c)
-
+	httpresponse.OkWithAll(resourceIdAgora, "RTC-acquire-成功", c)
 }
 
 // @Tags TwinAgora
@@ -206,4 +257,11 @@ func TwinAgoraRTCGetToken(c *gin.Context) {
 	}
 
 	httpresponse.OkWithAll(result, "RTC-"+form.Username+"-成功", c)
+}
+
+func GetAgoraCommonHTTPHeader() map[string]string {
+	headers := make(map[string]string)
+	headers["Content-Type"] = "application/json;charset=utf-8"
+	headers["Authorization"] = "Basic " + util.GetHTTPBaseAuth()
+	return headers
 }

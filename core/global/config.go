@@ -1,13 +1,13 @@
 package global
 
 type Config struct {
-	Mysql            []Mysql
-	Jwt              Jwt
-	Zap              Zap
-	Captcha          Captcha
-	Redis            Redis
-	System           System
-	Http             Http
+	Mysql   []Mysql
+	Jwt     Jwt
+	Zap     Zap
+	Captcha Captcha
+	Redis   Redis
+	System  System
+	Http    Http
 	//Casbin           Casbin
 	Viper            Viper
 	Etcd             Etcd
@@ -20,16 +20,16 @@ type Config struct {
 	ServiceDiscovery ServiceDiscovery
 	PushGateway      PushGateway
 	Gateway          Gateway
-	ConfigCenter 	 ConfigCenter
-	Upload 		     Upload
-	Oss 			 Oss
-	Cicd 			 Cicd
-	Agora			 Agora
-	Domain			 Domain
+	ConfigCenter     ConfigCenter
+	Upload           Upload
+	Oss              Oss
+	Cicd             Cicd
+	Agora            Agora
+	Domain           Domain
 }
 
 type Protobuf struct {
-	Status       string
+	Status        string
 	BasePath      string
 	PbServicePath string
 	ProtoPath     string
@@ -48,11 +48,11 @@ type Mysql struct {
 	MaxOpenConns int
 	LogMode      bool
 	LogZap       bool
-	MasterSlave	 string
+	MasterSlave  string
 }
 
 type Cicd struct {
-	Status       string
+	Status string
 }
 
 //type MysqlConfig struct {
@@ -69,12 +69,12 @@ type Cicd struct {
 //}
 
 type Http struct {
-	Status        	string
-	Ip            	string
-	Port          	string
-	StaticPath    	string
-	ReqLimitTimes 	int
-	DiskStaticPath 	string
+	Status         string
+	Ip             string
+	Port           string
+	StaticPath     string
+	ReqLimitTimes  int
+	DiskStaticPath string
 }
 
 type PushGateway struct {
@@ -91,7 +91,7 @@ type System struct {
 	DbType       string
 	ENV          int
 	ErrorMsgFile string
-	OpDirName	string
+	OpDirName    string
 }
 
 type Jwt struct {
@@ -181,11 +181,11 @@ type Grpc struct {
 }
 
 type Email struct {
-	Status string
-	Host   string
-	Ps     string
-	Port   string
-	From   string
+	Status   string
+	Host     string
+	Ps       string
+	Port     string
+	From     string
 	AuthCode string
 }
 
@@ -195,31 +195,33 @@ type Gateway struct {
 	OutIp    string
 	WsPort   string
 	TcpPort  string
+	UdpPort  string
 	WsUri    string
 }
 
 type ConfigCenter struct {
-	Status   string
+	Status          string
 	PersistenceType int
-	DataPath    string
+	DataPath        string
 }
 
-type Upload struct{
-	Path string
+type Upload struct {
+	Path    string
 	MaxSize int
 }
 
-type Oss struct{
-	AccessKeyId string
+type Oss struct {
+	AccessKeyId     string
 	AccessKeySecret string
-	Endpoint 	string
-	Bucket 		string
-	SelfDomain	string
+	Endpoint        string
+	Bucket          string
+	SelfDomain      string
 }
 
-type Agora struct{
-	AppId			string
-	AppCertificate	string
+type Agora struct {
+	AppId          string
+	AppCertificate string
+	Domain         string
 }
 
 type Domain struct {

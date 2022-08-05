@@ -29,6 +29,28 @@ type PageResult struct {
 	PageSize int         `json:"pageSize"`
 }
 
+type AgoraRecord struct {
+	Code           int                       `json:"code"`
+	Reason         string                    `json:"reason"`
+	ResourceId     string                    `json:"resourceId"`
+	Sid            string                    `json:"sid"`
+	ServerResponse AgoraRecordServerResponse `json:"serverResponse"`
+}
+type AgoraRecordServerResponse struct {
+	FileListMode    string          `json:"fileListMode"`
+	UploadingStatus string          `json:"uploadingStatus"`
+	FileList        []AgoraFileList `json:"fileList"`
+}
+
+type AgoraFileList struct {
+	FileName       string `json:"fileName"`
+	TrackType      string `json:"trackType"`
+	Uid            int    `json:"uid"`
+	MixedAllUser   bool   `json:"mixedAllUser"`
+	IsPlayable     bool   `json:"isPlayable"`
+	SliceStartTime int64  `json:"sliceStartTime"`
+}
+
 // @Description 获取图片验证码
 type Captcha struct {
 	Id            string `json:"id"`             //使用(验证)时要带上这个ID，后端才能判断

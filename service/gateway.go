@@ -117,7 +117,7 @@ func (gateway *Gateway) RouterServiceSync(msg pb.Msg, conn *util.Conn) (data []b
 	requestPlayerResumeGame := pb.PlayerResumeGame{}
 	requestPlayerReady := pb.PlayerReady{}
 	requestPlayerOver := pb.PlayerOver{}
-	requestRoomHistory := pb.RoomHistory{}
+	requestRoomHistory := pb.ReqRoomHistory{}
 	requestRoomBaseInfo := pb.RoomBaseInfo{}
 	requestPlayerMatchSign := pb.PlayerMatchSign{}
 	requestPlayerMatchSignCancel := pb.PlayerMatchSignCancel{}
@@ -150,13 +150,17 @@ func (gateway *Gateway) RouterServiceSync(msg pb.Msg, conn *util.Conn) (data []b
 
 	switch protoServiceFunc.FuncName {
 	case "CS_PlayerOperations":
+		err = gateway.MyService.FrameSync.ReceivePlayerOperation(requestLogicFrame, conn)
 	case "CS_PlayerResumeGame":
+		err = gateway.MyService.FrameSync.PlayerResumeGame(requestPlayerResumeGame, conn)
 	case "CS_PlayerReady":
+		err = gateway.MyService.FrameSync.PlayerReady(requestPlayerReady, conn)
 	case "CS_PlayerOver":
+		err = gateway.MyService.FrameSync.PlayerOver(requestPlayerOver, conn)
 	case "CS_RoomHistory":
+		err = gateway.MyService.FrameSync.RoomHistory(requestRoomHistory, conn)
 	case "CS_RoomBaseInfo":
-	case "CS_PlayerMatchSign":
-	case "CS_PlayerMatchSignCancel":
+		err = gateway.MyService.RoomManage.GetRoom(requestRoomBaseInfo, conn)
 	default:
 		gateway.Netway.Option.Log.Error("RouterServiceGateway Router err:")
 		return data, errors.New("RouterServiceGateway Router err")

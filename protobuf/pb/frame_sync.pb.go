@@ -680,8 +680,8 @@ func (m *EnterBattle) GetPlayerIds() []int32 {
 type LogicFrame struct {
 	Id                   int32        `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
 	RoomId               string       `protobuf:"bytes,2,opt,name=room_id,json=roomId,proto3" json:"room_id,omitempty"`
-	SequenceNumber       int32        `protobuf:"varint,3,opt,name=sequence_number,json=sequenceNumber,proto3" json:"sequence_number,omitempty"`
-	Operations           []*Operation `protobuf:"bytes,4,rep,name=operations,proto3" json:"operations,omitempty"`
+	SequenceNumber       int32        `protobuf:"varint,3,opt,name=sequence_number,json=sequenceNumber,proto3" json:"sequence_number"`
+	Operations           []*Operation `protobuf:"bytes,4,rep,name=operations,proto3" json:"operations"`
 	XXX_NoUnkeyedLiteral struct{}     `json:"-"`
 	XXX_unrecognized     []byte       `json:"-"`
 	XXX_sizecache        int32        `json:"-"`

@@ -1,7 +1,6 @@
 package service
 
 import (
-	"context"
 	"go.uber.org/zap"
 	"strconv"
 	"time"
@@ -72,6 +71,9 @@ func (match *Match) AddOnePlayer(requestPlayerMatchSign pb.PlayerMatchSign, conn
 		match.matchSignErrAndSend(msg, conn)
 		return
 	}
+
+	util.MyPrint("match AddOnePlayer ok , uid:", requestPlayerMatchSign.PlayerId)
+
 	newPlayerSign := PlayerSign{PlayerId: conn.UserId, AddTime: int32(util.GetNowTimeSecondToInt()), Conn: conn}
 	signPlayerPool = append(signPlayerPool, newPlayerSign)
 	return
@@ -85,6 +87,7 @@ func (match *Match) matchSignErrAndSend(msg string, conn *util.Conn) {
 		PlayerId: conn.UserId,
 		Msg:      msg,
 	}
+	util.MyPrint("playerMatchSignFailed:", playerMatchSignFailed)
 	conn.SendMsgCompressByUid(conn.UserId, "playerMatchSignFailed", &playerMatchSignFailed)
 }
 
@@ -107,13 +110,15 @@ func (match *Match) CancelOnePlayer(requestCancelSign pb.PlayerMatchSignCancel, 
 func (match *Match) Shutdown() {
 	match.Close <- 1
 }
-func (match *Match) Start(ctx context.Context) {
+func (match *Match) Start() {
 	for {
 		select {
 		case <-match.Close:
 			goto end
 		default:
+
 			//计算：当前池子里的人数，是否满足可以开启一局游戏
+			//util.MyPrint("match.Option.RoomManager.Option.RoomPeople:", match.Option.RoomManager.Option.RoomPeople, " len(signPlayerPool):", len(signPlayerPool))
 			if int32(len(signPlayerPool)) < match.Option.RoomManager.Option.RoomPeople {
 				//不满足即睡眠等待500毫秒
 				time.Sleep(time.Millisecond * 500)

@@ -25,45 +25,29 @@ type MainEnvironment struct {
 	RootDir     string `json:"root_dir"`
 	RootDirName string `json:"root_dir_name"`
 
-	GoVersion       string             `json:"go_version"`
-	ExecUser        *user.User         `json:"-"`
-	Cpu             string             `json:"cpu"`
-	RootCtx         context.Context    `json:"-"`
-	RootCancelFunc  context.CancelFunc `json:"-"`
-	RootQuitFunc    func(source int)   `json:"-"`
-	BuildTime       string
-	BuildGitVersion string
+	GoVersion       string             `json:"go_version"` //当前go版本
+	ExecUser        *user.User         `json:"-"`          //执行该脚本的用户信息
+	Cpu             string             `json:"cpu"`        //cpu信息
+	RootCtx         context.Context    `json:"-"`          //main的上下文，级别最高
+	RootCancelFunc  context.CancelFunc `json:"-"`          //main的取消函数，该管理如果能读出值，main会主动退出
+	RootQuitFunc    func(source int)   `json:"-"`          //这是个函数，子级可直接驱动：退出MAIN
+	BuildTime       string             //编译时：时间
+	BuildGitVersion string             //编译时：git版本号
 }
 
 type CmdParameter struct {
-	Env              int    `json:"env"`
-	ConfigSourceType string `json:"config_source_type"`
-	ConfigFileType   string `json:"config_file_type"`
-	ConfigFileName   string `json:"config_file_name"`
-	EtcdUrl          string `json:"etcd_url"`
-	Debug            int    `json:"debug"`
-	TestFlag         string `json:"test_flag"`
+	Env              int    `json:"env"`                //当前环境
+	ConfigSourceType string `json:"config_source_type"` //文件 | etcd
+	ConfigFileType   string `json:"config_file_type"`   //项目的配置：文件名
+	ConfigFileName   string `json:"config_file_name"`   //项目的配置：文件名
+	EtcdUrl          string `json:"etcd_url"`           //etcd get url
+	Debug            int    `json:"debug"`              //debug 模式
+	TestFlag         string `json:"test_flag"`          //是否为测试状态
 }
 
 type InitOption struct {
 	CmdParameter
 	MainEnvironment
-	//Env               int    `json:"env"`
-	//Debug             int    `json:"debug"`
-	//ConfigType        string `json:"config_type"`
-	//ConfigFileName    string `json:"config_file_name"`
-	//ConfigSourceType  string `json:"config_source_type"`
-	//EtcdConfigFindUrl string `json:"etcd_config_find_url"`
-	//TestFlag          string `json:"-"`
-
-	//RootDir     string `json:"root_dir"`
-	//RootDirName string `json:"root_dir_name"`
-	//
-	//GoVersion      string             `json:"go_version"`
-	//Cpu            string             `json:"cpu"`
-	//RootCtx        context.Context    `json:"-"`
-	//RootCancelFunc context.CancelFunc `json:"-"`
-	//RootQuitFunc   func(source int)   `json:"-"`
 }
 
 func NewInitialize(option InitOption) *Initialize {
@@ -72,7 +56,7 @@ func NewInitialize(option InitOption) *Initialize {
 	return initialize
 }
 
-//初始化-入口
+//框架-初始化-入口
 func (initialize *Initialize) Start() error {
 	prefix := "initialize ,"
 	//初始化 : 配置信息
@@ -94,7 +78,6 @@ func (initialize *Initialize) Start() error {
 		util.MyPrint(prefix+"GetNewViper err:", err)
 		return err
 	}
-	//util.MyPrint(prefix + "read config info to assignment GlobalVariable , finish. ")
 	global.V.Vip = myViper //全局变量管理者
 	global.C = config      //全局变量
 	//---config end -----

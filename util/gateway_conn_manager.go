@@ -113,18 +113,19 @@ func (connManager *ConnManager) CreateOneConn(connFd FDAdapter, netWay *NetWay) 
 	now := int32(GetNowTimeSecondToInt())
 
 	myConn = &Conn{
-		Conn:         connFd,
-		UserId:       0,
-		AddTime:      now,
-		UpTime:       now,
-		Status:       CONN_STATUS_INIT,
-		ConnManager:  connManager,
-		RTT:          0,
-		SessionId:    "",
-		ContentType:  connManager.Option.DefaultContentType,
-		ProtocolType: connManager.Option.DefaultProtocolType,
-		MsgInChan:    make(chan pb.Msg, 5000), //从底层FD中读出消息后，存储此处，等待其它协程接收
-		netWay:       netWay,
+		Conn:           connFd,
+		UserId:         0,
+		AddTime:        now,
+		UpTime:         now,
+		Status:         CONN_STATUS_INIT, //CONN status
+		ConnManager:    connManager,
+		RTT:            0,
+		SessionId:      "",
+		ContentType:    connManager.Option.DefaultContentType,
+		ProtocolType:   connManager.Option.DefaultProtocolType,
+		MsgInChan:      make(chan pb.Msg, 5000), //从底层FD中读出消息后，存储此处，等待其它协程接收
+		netWay:         netWay,
+		UserPlayStatus: PLAYER_STATUS_ONLINE,
 		//CloseChan 		chan int
 	}
 
@@ -617,7 +618,8 @@ func (conn *Conn) SendMsg(action string, content []byte) {
 	//获取协议号结构体
 	actionMap, empty := conn.ConnManager.Option.ProtoMap.GetServiceFuncByFuncName(action)
 	if empty {
-		conn.ConnManager.Option.Log.Error("GetActionId empty:" + action)
+		MyPrint(conn.ConnManager.Option.ProtoMap.ServiceFuncMap)
+		conn.ConnManager.Option.Log.Error("GetActionId is  empty:" + action)
 		return
 	}
 

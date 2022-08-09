@@ -67,6 +67,7 @@ func NewService(options MyServiceOptions) *Service {
 		PersistenceFileDir: options.ConfigCenterDataDir,
 		Log:                options.Zap,
 	}
+	//配置中心 - 服务
 	var err error
 	service.ConfigCenter, err = NewConfigCenter(configCenterOption)
 	if err != nil {
@@ -77,10 +78,10 @@ func NewService(options MyServiceOptions) *Service {
 	roomManagerOption := RoomManagerOption{
 		Log:          options.Zap,
 		ReadyTimeout: 60,
-		RoomPeople:   4,
+		RoomPeople:   2,
 	}
 	service.RoomManage = NewRoomManager(roomManagerOption)
-	//匹配服务
+	//匹配服务 , 依赖 RoomManage
 	matchOption := MatchOption{
 		Log:         options.Zap,
 		RoomManager: service.RoomManage,
@@ -90,14 +91,16 @@ func NewService(options MyServiceOptions) *Service {
 	syncOption := FrameSyncOption{
 		Log:        options.Zap,
 		RoomManage: service.RoomManage,
+		FPS:        options.NetWayOption.FPS,
+		MapSize:    options.NetWayOption.MapSize,
 	}
+	go service.Match.Start()
+	//user -> sign ->Match -> Room -> Rsync
 	//帧同步服务 - 强-依赖room
 	service.FrameSync = NewFrameSync(syncOption)
 
 	service.RoomManage.SetFrameSync(service.FrameSync)
-	//他们3个的关系：
-	//room -> match , match -> room ,room ->frame sync ， frame sync -> room
-
+	//网关
 	if options.GatewayStatus == "open" {
 		gateway := NewGateway(options.GrpcManager, options.Zap)
 		var netway *util.NetWay
@@ -108,6 +111,7 @@ func NewService(options MyServiceOptions) *Service {
 
 		service.FrameSync.SetNetway(netway)
 		gateway.MyService = service
+		service.Gateway = gateway
 	}
 	//
 	service.Cicd, err = InitCicd(options)

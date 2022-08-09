@@ -79,6 +79,7 @@ func main() {
 	prefix := "main "
 	//处理指令行的参数
 	cmdParameter := processCmdParameter(prefix)
+	//获取当前脚本执行用户信息
 	imUser, _ := user.Current()
 	util.MyPrint(prefix + "exec script user info , name: " + imUser.Name + " uid: " + imUser.Uid + " , gid :" + imUser.Gid + " ,homeDir:" + imUser.HomeDir)
 	//当前脚本执行的路径
@@ -137,16 +138,14 @@ func processCmdParameter(prefix string) initialize.CmdParameter {
 	env := flag.Int("e", 0, "must require , "+envListStr)
 	//配置读取源类型，1 文件  2 etcd
 	configSourceType := flag.String("cs", global.DEFAULT_CONFIG_SOURCE_TYPE, "configSource:file or etcd")
-	//配置文件的类型
+	//配置文件的类型:toml yaml
 	configFileType := flag.String("ct", global.DEFAULT_CONFIT_TYPE, "configFileType")
 	//配置文件的名称
 	configFileName := flag.String("cfn", global.DEFAULT_CONFIG_FILE_NAME, "configFileName")
-	//获取etcd 配置信息的URL
+	//获取etcd 配置信息的URL,也可以把配置文件中的信息存于ETCD中，通过URL请求ETCD获取
 	etcdUrl := flag.String("etl", "http://127.0.0.1/getEtcdCluster/Ip/Port", "get etcd config url")
 	//DEBUG模式
 	debug := flag.Int("debug", 0, "startup debug mode level")
-	//是否为CICD模式
-	//deploy 				:= flag.String("dep", "", "deploy")//部署模式下，启动程序只是为了测试脚本正常，因为之后，要立刻退出
 	//开启自动测试模式
 	testFlag := flag.String("t", "", "testFlag:empty or 1")
 	//解析命令行参数

@@ -6,31 +6,26 @@ import (
 	"zgoframe/model"
 )
 
-
-const(
+const (
 	PROJECT_TYPE_SERVICE = 1
-	PROJECT_TYPE_FE = 2
-	PROJECT_TYPE_APP = 4
-	PROJECT_TYPE_BE = 3
+	PROJECT_TYPE_FE      = 2
+	PROJECT_TYPE_APP     = 4
+	PROJECT_TYPE_BE      = 3
+
+	PROJECT_STATUS_OPEN  = 1
+	PROJECT_STATUS_CLOSE = 2
 )
 
-func GetConstListProjectType() map[string]int {
-	list := make(map[string]int)
-	list["微服务"] = PROJECT_TYPE_SERVICE
-	list["前端"] = PROJECT_TYPE_FE
-	list["APP"] = PROJECT_TYPE_APP
-	list["后端"] = PROJECT_TYPE_BE
-
-	return list
-}
-
-//var APP_TYPE_MAP = map[int]string{
-//	APP_TYPE_SERVICE: "service",
-//	APP_TYPE_FE:      "frontend",
-//	APP_TYPE_APP:     "app",
-//	APP_TYPE_BE:      "backend",
+//此函数在model const 里重新定义了
+//func GetConstListProjectType() map[string]int {
+//	list := make(map[string]int)
+//	list["微服务"] = PROJECT_TYPE_SERVICE
+//	list["前端"] = PROJECT_TYPE_FE
+//	list["APP"] = PROJECT_TYPE_APP
+//	list["后端"] = PROJECT_TYPE_BE
+//
+//	return list
 //}
-
 
 type Project struct {
 	Id   int    `json:"id"`
@@ -59,15 +54,25 @@ func NewProjectManager(gorm *gorm.DB) (*ProjectManager, error) {
 	return projectManager, err
 }
 
-func (projectManager *ProjectManager) initAppPool() error {
-	//appManager.GetTestData()
-	return projectManager.GetFromDb()
+//初始化，会从MYSQL中读取数据，而没有监听MYSQL数据的变化，可重新再加载一次
+func (projectManager *ProjectManager) DataReload() {
+	projectManager.initAppPool()
 }
 
-func (projectManager *ProjectManager) GetFromDb() error {
+func (projectManager *ProjectManager) initAppPool() error {
+	//appManager.GetTestData()
+	return projectManager.GetDataFromDb()
+}
+
+func (projectManager *ProjectManager) cleanPool() {
+	projectManager.Pool = make(map[int]Project)
+}
+
+func (projectManager *ProjectManager) GetDataFromDb() error {
+	projectManager.cleanPool() //清空原数据，重新从DB中读取
 	db := projectManager.Gorm.Model(&model.Project{})
 	var projectList []model.Project
-	err := db.Where(" status = ? ", 1).Find(&projectList).Error
+	err := db.Where(" status = ? ", PROJECT_STATUS_OPEN).Find(&projectList).Error
 	if err != nil {
 		return err
 	}
@@ -113,60 +118,3 @@ func (projectManager *ProjectManager) GetByName(name string) (project Project, e
 	}
 	return project, true
 }
-
-//func (projectManager *ProjectManager) GetTypeName(typeValue int) string {
-//	v, _ := PROJECT_TYPE_MAP[typeValue]
-//	return v
-//}
-
-func BasePathPlusTypeStr(basePath string, typeStr string) string {
-	return basePath + "/" + typeStr + "/"
-}
-
-//func (appManager *AppManager)GetTestData(){
-//	app := App{
-//		Id:        1,
-//		Name:      "gamematch",
-//		Type:      APP_TYPE_SERVICE,
-//		Desc:      "游戏匹配",
-//		Key:       "gamematch",
-//		SecretKey: "123456",
-//	}
-//	appManager.AddOne(app)
-//	app = App{
-//		Id:        2,
-//		Name:      "frame_sync",
-//		Type:      APP_TYPE_SERVICE,
-//		Desc:      "帧同步",
-//		Key:       "frame_sync",
-//		SecretKey: "123456",
-//	}
-//	appManager.AddOne(app)
-//	app = App{
-//		Id:        3,
-//		Name:      "logslave",
-//		Type:      APP_TYPE_SERVICE,
-//		Desc:      "日志收集器",
-//		Key:       "logslave",
-//		SecretKey: "123456",
-//	}
-//	appManager.AddOne(app)
-//	app = App{
-//		Id:        4,
-//		Name:      "frame_sync_fe",
-//		Type:      APP_TYPE_FE,
-//		Desc:      "帧同步-前端",
-//		Key:       "frame_sync_fe",
-//		SecretKey: "123456",
-//	}
-//	appManager.AddOne(app)
-//	app = App{
-//		Id:        5,
-//		Name:      "zgoframe",
-//		Type:      APP_TYPE_SERVICE,
-//		Desc:      "测试-框架端",
-//		Key:       "test_frame",
-//		SecretKey: "123456",
-//	}
-//	appManager.AddOne(app)
-//}

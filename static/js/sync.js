@@ -113,8 +113,8 @@ function Sync (playerId,token,data,DomIdPreObj,contentType,protocolType,playerIn
         if (contentTypeDesc[self.contentType] == "json"){
             content = contentObj.toObject();
             content = JSON.stringify(content);
-
-            if(action == "playerOperations"){
+            //这里有个坑，注意下
+            if(action == "CS_PlayerOperations"){
                 console.log(content);
                 content = content.replace("operationsList","operations");
                 console.log(content);
@@ -314,27 +314,27 @@ function Sync (playerId,token,data,DomIdPreObj,contentType,protocolType,playerIn
             self.rLoginRes(content);
         }else if( action == 'SC_Ping'){//获取一个当前玩家的状态，如：是否有历史未结束的游戏
             self.rServerPing(content);
-        }else if ( action == 'startBattle' ){
+        }else if ( action == 'SC_StartBattle' ){
             self.rStartBattle(content);
-        }else if ( action == 'pushRoomInfo' ){
+        }else if ( action == 'SC_RoomBaseInfo' ){
             self.rPushRoomInfo(content);
-        }else if ( action == 'otherPlayerOffline' ){
+        }else if ( action == 'SC_OtherPlayerOffline' ){
             self.rOtherPlayerOffline(content);
-        }else if ( action == 'enterBattle' ){
+        }else if ( action == 'SC_EnterBattle' ){
             self.rEnterBattle(content);
-        }else if( "gameOver" == action){
+        }else if( "SC_GameOver" == action){
             self.rGameOver(content);
-        }else if( "kickOff" == action){
+        }else if( "SC_KickOff" == action){
             self.rKickOff(content);
-        }else if( "pushLogicFrame" == action){
+        }else if( "SC_LogicFrame" == action){
             self.rPushLogicFrame(content,"router")
-        }else if( "readyTimeout" == action){
+        }else if( "SC_ReadyTimeout" == action){
             self.rReadyTimeout(content)
         }else if( "SC_Pong" == action){
             self.rServerPong(content)
-        }else if( "otherPlayerResumeGame" == action){
+        }else if( "SC_OtherPlayerResumeGame" == action){
             self.rOtherPlayerResumeGame(content)
-        }else if( "pushRoomHistory" == action){
+        }else if( "SC_RoomHistory" == action){
             self.rPushRoomHistory(content);
             // alert("接收到，玩家-房间-历史操作记录~");
         }else{
@@ -470,7 +470,10 @@ function Sync (playerId,token,data,DomIdPreObj,contentType,protocolType,playerIn
         $("#"+self.domIdObj.seqId).html(self.sequenceNumber);
 
         self.playerCommandPushLock = 0;
-
+        if (!operations || typeof (operations) == "undefined" ){
+            console.log("empty opt!!!");
+            return false;
+        }
         console.log("rPushLogicFrame ,sequenceNumber:"+self.sequenceNumber+ ", operationsLen:" +  operations.length);
         for(var i=0;i<operations.length;i++){
             playerId= operations[i].playerId;
@@ -529,7 +532,9 @@ function Sync (playerId,token,data,DomIdPreObj,contentType,protocolType,playerIn
         // }
     };
     this.rEnterBattle = function(logicFrame){
+        console.log("rEnterBattle logicFrame:",logicFrame , " self.contentType:",self.contentType)
         if(contentTypeDesc[self.contentType] =="protobuf"){
+            console.log("rEnterBattle in protobuf ")
             logicFrame.playerList = logicFrame.playerListList;
         }
 
@@ -554,8 +559,9 @@ function Sync (playerId,token,data,DomIdPreObj,contentType,protocolType,playerIn
     this.initLocalGlobalVar = function(logicFrame){
         var pre = self.descPre;
         console.log("initLocalGlobalVar:",logicFrame)
-        for(var i=0;i<logicFrame.playerList.length;i++){
-            self.playerLocation[""+logicFrame.playerList[i].id+""] = "empty"
+        console.log("initLocalGlobalVar logicFrame.playerIds:",logicFrame.playerIds)
+        for(var i=0;i<logicFrame.playerIds.length;i++){
+            self.playerLocation[""+logicFrame.playerIds[i]+""] = "empty"
         }
         // return 1;
         self.randSeek  = logicFrame.randSeek;
@@ -626,7 +632,7 @@ function Sync (playerId,token,data,DomIdPreObj,contentType,protocolType,playerIn
         self.upOptBntHref(cancelBntId,hrefBody,self.cancelSign);
     };
     this.move = function ( dirObj ){
-
+        console.log("in move")
         if (self.otherPlayerOffline){
             return alert("其它玩家掉线了，请等待一下...");
         }

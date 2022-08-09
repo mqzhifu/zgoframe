@@ -37,17 +37,15 @@ type FrameSyncOption struct {
 	FPS        int32 `json:"fps"`      //frame pre second
 	LockMode   int32 `json:"lockMode"` //锁模式，乐观|悲观
 	MapSize    int32 `json:"mapSize"`  //地址大小，给前端初始化使用
-	Store      int32 `json:"store"`
+	Store      int32 `json:"store"`    //持久化，暂未使用
 	Log        *zap.Logger
-	RoomManage *RoomManager
-	Netway     *util.NetWay
+	RoomManage *RoomManager //外部指针-房间服务
+	Netway     *util.NetWay //网关 - 连接层 -  消息收发
 }
 
 //断点调试
 var debugBreakPoint int
 
-//索引表，PlayerId=>RoomId
-//var mySyncPlayerRoom map[int32]string
 //同步 - 逻辑中的自增ID - 默认值
 var logicFrameMsgDefaultId int32
 
@@ -67,41 +65,36 @@ func NewFrameSync(Option FrameSyncOption) *FrameSync {
 	//统计
 	//RoomSyncMetricsPool = make(map[string]RoomSyncMetrics)
 
-	if sync.Option.FPS > 1000 {
-		Option.Log.Error("fps > 1000 ms")
+	if sync.Option.FPS > 1000 { //1秒一帧，太慢
+		Option.Log.Error("fps/t > 1000 ms")
 	}
-
-	//sync.initPool()
+	//用于关闭
 	sync.CloseChan = make(chan int)
 	return sync
 }
 
+//设置：父类
 func (sync *FrameSync) SetNetway(netway *util.NetWay) {
 	sync.Option.Netway = netway
 }
 
-//func (sync *FrameSync) initPool() {
-//	if sync.Option.Store == 1 {
-//
-//	}
-//}
-
-//进入战后，场景渲染完后，进入准确状态
-func (sync *FrameSync) PlayerReady(requestPlayerReady pb.PlayerReady, conn *util.Conn) {
+//进入战场后，场景渲染完后，进入准确状态
+func (sync *FrameSync) PlayerReady(requestPlayerReady pb.PlayerReady, conn *util.Conn) error {
 	//roomId := myPlayerManager.GetRoomIdByPlayerId(requestPlayerReady.PlayerId)
 	roomId := conn.RoomId
 	sync.Option.Log.Debug(" roomId :" + roomId)
 	room, empty := sync.Option.RoomManage.GetById(roomId)
 	if empty {
-		sync.Option.Log.Error("playerReady getPoolElementById empty:" + roomId)
-		return
+		errMsg := "playerReady getPoolElementById empty:" + roomId
+		sync.Option.Log.Error(errMsg)
+		return errors.New(errMsg)
 	}
-	room.PlayersReadyListRWLock.Lock()
+	room.PlayersReadyListRWLock.Lock() //写锁
 	room.PlayersReadyList[requestPlayerReady.PlayerId] = PLAYER_HAS_READY
 	room.PlayersReadyListRWLock.Unlock()
 	playerReadyCnt := 0
 	//sync.Option.Log.Info("room.PlayersReadyList:", room.PlayersReadyList)
-	room.PlayersReadyListRWLock.RLock()
+	room.PlayersReadyListRWLock.RLock() //读锁
 	for _, v := range room.PlayersReadyList {
 		if v == PLAYER_HAS_READY {
 			playerReadyCnt++
@@ -110,25 +103,28 @@ func (sync *FrameSync) PlayerReady(requestPlayerReady pb.PlayerReady, conn *util
 	room.PlayersReadyListRWLock.RUnlock()
 
 	if playerReadyCnt < len(room.PlayersReadyList) {
-		sync.Option.Log.Error("now ready cnt :" + strconv.Itoa(playerReadyCnt) + " ,so please wait other players...")
-		return
+		errMsg := "now ready cnt :" + strconv.Itoa(playerReadyCnt) + " ,so please wait other players..."
+		sync.Option.Log.Error(errMsg)
+		return errors.New(errMsg)
 	}
 	responseStartBattle := pb.StartBattle{
 		SequenceNumberStart: int32(0),
 	}
-	sync.boardCastFrameInRoom(room.Id, "startBattle", &responseStartBattle)
+	sync.boardCastFrameInRoom(room.Id, "SC_StartBattle", &responseStartBattle)
 	room.UpStatus(ROOM_STATUS_EXECING)
 	room.StartTime = int32(util.GetNowTimeSecondToInt())
 
 	//RoomSyncMetricsPool[roomId] = RoomSyncMetrics{}
 
 	sync.testFirstLogicFrame(room)
-	room.ReadyCloseChan <- 1
+	room.ReadyCloseChan <- 1 //关闭轮询：玩家准备 协程
 	//开启定时器，推送逻辑帧
 	go sync.logicFrameLoop(room)
+	return nil
 
 }
 
+//匹配成功后，会通知房间服务，房间服务会检查人是否满 了，如果满了，会调用此函数，等待所有玩家确认
 func (sync *FrameSync) StartOne(room *Room) {
 	sync.Option.Log.Warn("start a new game:")
 
@@ -143,7 +139,15 @@ func (sync *FrameSync) StartOne(room *Room) {
 		UdpPort:        sync.Option.Netway.Option.UdpPort,
 	}
 
-	sync.boardCastInRoom(room.Id, "enterBattle", &responseClientInitRoomData)
+	for _, playerId := range room.PlayerIds {
+		room.PlayersReadyList[playerId] = PLAYER_NO_READY
+	}
+
+	if sync.Option.Store == 1 {
+		//推送房间信息
+	}
+
+	sync.boardCastInRoom(room.Id, "SC_EnterBattle", &responseClientInitRoomData)
 	go sync.checkReadyTimeout(room)
 }
 
@@ -160,7 +164,7 @@ func (sync *FrameSync) checkReadyTimeout(room *Room) {
 				requestReadyTimeout := pb.ReadyTimeout{
 					RoomId: room.Id,
 				}
-				sync.boardCastInRoom(room.Id, "readyTimeout", &requestReadyTimeout)
+				sync.boardCastInRoom(room.Id, "SC_ReadyTimeout", &requestReadyTimeout)
 				sync.roomEnd(room.Id, 0)
 				goto end
 			}
@@ -210,7 +214,7 @@ end:
 func (sync *FrameSync) logicFrameLoopReal(room *Room, fpsTime int32) int32 {
 	queue := room.PlayersOperationQueue
 	end := queue.Len()
-	//mylog.Debug("logicFrameLoopReal len:",end)
+	sync.Option.Log.Debug("logicFrameLoopReal len:" + strconv.Itoa(end))
 	if end <= 0 {
 		return fpsTime
 	}
@@ -271,12 +275,15 @@ func (sync *FrameSync) logicFrameLoopReal(room *Room, fpsTime int32) int32 {
 
 	util.MyPrint("operations:", operations)
 	logicFrame.Operations = operations
-	sync.boardCastFrameInRoom(room.Id, "pushLogicFrame", &logicFrame)
+	//sync.boardCastFrameInRoom(room.Id, "SC_PushLogicFrame", &logicFrame)
+	sync.boardCastFrameInRoom(room.Id, "SC_LogicFrame", &logicFrame)
+
 	return fpsTime
 }
 
 //定时，接收玩家的操作记录
-func (sync *FrameSync) ReceivePlayerOperation(logicFrame pb.LogicFrame, conn *util.Conn, content string) {
+func (sync *FrameSync) ReceivePlayerOperation(logicFrame pb.LogicFrame, conn *util.Conn) error {
+	util.MyPrint("sync ReceivePlayerOperation :", logicFrame)
 	//mylog.Debug(logicFrame)
 	room, empty := sync.Option.RoomManage.GetById(logicFrame.RoomId)
 	if empty {
@@ -284,29 +291,33 @@ func (sync *FrameSync) ReceivePlayerOperation(logicFrame pb.LogicFrame, conn *ut
 	}
 	err := sync.checkReceiveOperation(room, logicFrame, conn)
 	if err != nil {
-		sync.Option.Log.Error("receivePlayerOperation check error:" + err.Error())
-		return
+		errMsg := "receivePlayerOperation check error:" + err.Error()
+		sync.Option.Log.Error(errMsg)
+		return errors.New(errMsg)
 	}
 	if len(logicFrame.Operations) < 0 {
-		sync.Option.Log.Error("len(logicFrame.Operations) < 0")
-		return
+		errMsg := "len(logicFrame.Operations) < 0"
+		sync.Option.Log.Error(errMsg)
+		return errors.New(errMsg)
 	}
 	//roomSyncMetrics := roomSyncMetricsPool[logicFrame.RoomId]
 	//roomSyncMetrics.InputNum ++
 	//roomSyncMetrics.InputSize = roomSyncMetrics.InputSize + len(content)
 
 	logicFrameStr, _ := json.Marshal(logicFrame.Operations)
+	util.MyPrint("PushBack")
 	room.PlayersOperationQueue.PushBack(string(logicFrameStr))
 	room.PlayersAckListRWLock.Lock()
 	room.PlayersAckList[conn.UserId] = 1
 	room.PlayersAckListRWLock.Unlock()
+	return nil
 }
 
-//检测玩家发送的操作是否合规
+//检测玩家发送的:操作(每一帧)是否合规
 func (sync *FrameSync) checkReceiveOperation(room *Room, logicFrame pb.LogicFrame, conn *util.Conn) error {
-	if room.Status == ROOM_STATUS_INIT {
+	if room.Status == ROOM_STATUS_INIT { //房间并未开始，还是初始化阶段
 		return errors.New("room status err is  ROOM_STATUS_INIT  " + strconv.Itoa(int(room.Status)))
-	} else if room.Status == ROOM_STATUS_END {
+	} else if room.Status == ROOM_STATUS_END { //该房间的游戏已经结束
 		return errors.New("room status err is ROOM_STATUS_END  " + strconv.Itoa(int(room.Status)))
 	} else if room.Status == ROOM_STATUS_PAUSE {
 		//暂时状态，囚徒模式下
@@ -319,7 +330,7 @@ func (sync *FrameSync) checkReceiveOperation(room *Room, logicFrame pb.LogicFram
 			//只有掉线的玩家，最后这一帧的数据没有发出来，才会到这个条件里
 			//但，其它正常玩家如果还是一直不停的在发 这一帧，QUEUE 就爆了
 			room.PlayersAckListRWLock.RLock()
-			defer room.PlayersAckListRWLock.Unlock()
+			defer room.PlayersAckListRWLock.RUnlock()
 			if room.PlayersAckList[conn.UserId] == 1 {
 				msg := "(offline) last frame Players has ack ,don'send... "
 				sync.Option.Log.Error(msg)
@@ -334,7 +345,7 @@ func (sync *FrameSync) checkReceiveOperation(room *Room, logicFrame pb.LogicFram
 			return errors.New(msg)
 		}
 
-	} else if room.Status == ROOM_STATUS_EXECING {
+	} else if room.Status == ROOM_STATUS_EXECING { //游戏进行中
 
 	} else {
 		return errors.New("room status num error.  " + strconv.Itoa(int(room.Status)))
@@ -394,17 +405,18 @@ func (sync *FrameSync) GameOver(requestGameOver pb.GameOver, conn *util.Conn) {
 		SequenceNumber: requestGameOver.SequenceNumber,
 		Result:         requestGameOver.Result,
 	}
-	sync.boardCastInRoom(requestGameOver.RoomId, "gameOver", &responseGameOver)
+	sync.boardCastInRoom(requestGameOver.RoomId, "SC_gameOver", &responseGameOver)
 
 	sync.roomEnd(requestGameOver.RoomId, 1)
 }
 
 //玩家触发了该角色死亡
-func (sync *FrameSync) PlayerOver(requestGameOver pb.PlayerOver, conn *util.Conn) {
+func (sync *FrameSync) PlayerOver(requestGameOver pb.PlayerOver, conn *util.Conn) error {
 	//roomId := mySyncPlayerRoom[requestGameOver.PlayerId]
 	roomId := conn.RoomId
 	responseOtherPlayerOver := pb.PlayerOver{PlayerId: requestGameOver.PlayerId}
-	sync.boardCastInRoom(roomId, "otherPlayerOver", &responseOtherPlayerOver)
+	sync.boardCastInRoom(roomId, "SC_OtherPlayerOver", &responseOtherPlayerOver)
+	return nil
 }
 
 //更新一个逻辑帧的确认状态
@@ -466,7 +478,7 @@ func (sync *FrameSync) CloseOne(conn *util.Conn) {
 				responseOtherPlayerOffline := pb.OtherPlayerOffline{
 					PlayerId: conn.UserId,
 				}
-				sync.boardCastInRoom(roomId, "otherPlayerOffline", &responseOtherPlayerOffline)
+				sync.boardCastInRoom(roomId, "SC_OtherPlayerOffline", &responseOtherPlayerOffline)
 			}
 		}
 	} else {
@@ -507,7 +519,7 @@ func (sync *FrameSync) boardCastInRoom(roomId string, action string, contentStru
 
 //给一个副本里的所有玩家广播数据，且该数据必须得有C端ACK
 func (sync *FrameSync) boardCastFrameInRoom(roomId string, action string, contentStruct interface{}) {
-	sync.Option.Log.Warn("boardCastFrameInRoom:" + roomId + action)
+	sync.Option.Log.Warn("boardCastFrameInRoom , roomId:" + roomId + " action:" + action)
 	syncRoomPoolElement, empty := sync.Option.RoomManage.GetById(roomId)
 	if empty {
 		sync.Option.Log.Panic("syncRoomPoolElement is empty!!!")
@@ -522,10 +534,11 @@ func (sync *FrameSync) boardCastFrameInRoom(roomId string, action string, conten
 	PlayersAckList := make(map[int32]int32)
 	for _, player := range syncRoomPoolElement.PlayerList {
 		PlayersAckList[player.UserId] = 0
-		if player.Status == PLAYER_STATUS_OFFLINE {
+		if player.UserPlayStatus == PLAYER_STATUS_OFFLINE {
 			sync.Option.Log.Error("player offline")
 			continue
 		}
+		util.MyPrint("boardCastFrameInRoom contentStruct:", contentStruct)
 		player.SendMsgCompressByUid(player.UserId, action, contentStruct)
 
 	}
@@ -553,20 +566,22 @@ func (sync *FrameSync) addOneRoomHistory(room *Room, action, content string) {
 }
 
 //一个房间的玩家的所有操作记录，一般用于C端断线重连时，恢复
-func (sync *FrameSync) RoomHistory(requestRoomHistory pb.ReqRoomHistory, conn *util.Conn) {
+func (sync *FrameSync) RoomHistory(requestRoomHistory pb.ReqRoomHistory, conn *util.Conn) error {
 	roomId := requestRoomHistory.RoomId
 	room, _ := sync.Option.RoomManage.GetById(roomId)
 	responsePushRoomHistory := pb.RoomHistoryList{}
 	responsePushRoomHistory.List = room.LogicFrameHistory
-	conn.SendMsgCompressByUid(conn.UserId, "pushRoomHistory", &responsePushRoomHistory)
+	conn.SendMsgCompressByUid(conn.UserId, "SC_RoomHistory", &responsePushRoomHistory)
+	return nil
 }
 
 //玩家掉线了，重新连接后，恢复游戏了~这个时候，要通知另外的玩家
-func (sync *FrameSync) PlayerResumeGame(requestPlayerResumeGame pb.PlayerResumeGame, conn *util.Conn) {
+func (sync *FrameSync) PlayerResumeGame(requestPlayerResumeGame pb.PlayerResumeGame, conn *util.Conn) error {
 	room, empty := sync.Option.RoomManage.GetById(requestPlayerResumeGame.RoomId)
 	if empty {
-		sync.Option.Log.Error("playerResumeGame get room empty")
-		return
+		errMsg := "playerResumeGame get room empty"
+		sync.Option.Log.Error(errMsg)
+		return errors.New(errMsg)
 	}
 	var restartGame = 0
 	var playerIds []int32
@@ -586,14 +601,15 @@ func (sync *FrameSync) PlayerResumeGame(requestPlayerResumeGame pb.PlayerResumeG
 		SequenceNumber: requestPlayerResumeGame.SequenceNumber,
 		RoomId:         requestPlayerResumeGame.RoomId,
 	}
-	sync.boardCastInRoom(room.Id, "otherPlayerResumeGame", &responseOtherPlayerResumeGame)
+	sync.boardCastInRoom(room.Id, "SC_OtherPlayerResumeGame", &responseOtherPlayerResumeGame)
 	if restartGame == 1 {
 		responseRestartGame := pb.RestartGame{
 			RoomId:    requestPlayerResumeGame.RoomId,
 			PlayerIds: playerIds,
 		}
-		sync.boardCastInRoom(room.Id, "restartGame", &responseRestartGame)
+		sync.boardCastInRoom(room.Id, "SC_RestartGame", &responseRestartGame)
 	}
+	return nil
 
 }
 
@@ -617,6 +633,6 @@ func (sync *FrameSync) testFirstLogicFrame(room *Room) {
 			SequenceNumber: int32(room.SequenceNumber),
 			Operations:     operations,
 		}
-		sync.boardCastInRoom(room.Id, "pushLogicFrame", &logicFrameMsg)
+		sync.boardCastInRoom(room.Id, "SC_LogicFrame", &logicFrameMsg)
 	}
 }

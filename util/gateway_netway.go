@@ -45,7 +45,7 @@ type NetWayOption struct {
 	//HttpPort 			string 		`json:"httpPort"`		//短连接端口号
 
 	//以下都是帧同步的配置信息：
-	//MapSize			int32		`json:"mapSize"`		//地址大小，给前端初始化使用
+	MapSize int32 `json:"mapSize"` //地址大小，给前端初始化使用，测试使用
 	//RoomPeople		int32		`json:"roomPeople"`		//一局游戏包含几个玩家
 	//RoomTimeout 		int32 		`json:"roomTimeout"`	//一个房间超时时间
 	OffLineWaitTime int32 `json:"offLineWaitTime"` //lockStep 玩家掉线后，其它玩家等待最长时间

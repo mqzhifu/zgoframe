@@ -39,7 +39,8 @@ func InitGateway() (netWayOption util.NetWayOption) {
 		//两种快速关闭方式，也可以直接调用shutdown函数
 		//OutCxt 				context.Context `json:"-"`			//调用方的CTX，用于所有协程的退出操作
 		//CloseChan 			chan int		`json:"-"`
-		FPS: 10,
+		FPS:     10,
+		MapSize: 10,
 	}
 
 	return netWayOption

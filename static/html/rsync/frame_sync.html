@@ -13,7 +13,7 @@
         height:30px;
     }
 </style>
-<div  >
+<div >
     <table id="server_config_table" style="display:inline" >
 
     </table>
@@ -28,7 +28,7 @@
 <!--这里用到了两个.proto文件，1.网关(长连接，封/拆包) 2. 帧同步-->
 <script src="/static/js/pb/gateway_pb.js" type="text/javascript"></script>
 <script src="/static/js/pb/frame_sync_pb.js?r=1" type="text/javascript"></script>
-
+<script src="/static/js/pb/game_match_pb.js?r=1" type="text/javascript"></script>
 
 
 <!--玩家列表 开始-->
@@ -58,19 +58,22 @@
     var contentTypeDesc = {1:"json",2:"protobuf"};
     var protocolTypeDesc = {1:"tcp",2:"websocket",3:"udp"};
 
-    //后端HTTP URL 相关
+    //后端HTTP 域名
     var domain = window.location.host;
-    //S端配置信息,IP 端口 协议类型
+    //S端URL - 配置信息,IP 端口 协议类型
     var serverHostUri = "http://"+domain + "/gateway/config";
-    //通讯协议的协议号
+    //S端URL - 通讯协议的协议号
     var actionMapHostUri = "http://"+domain + "/gateway/action/map";
+    //S端URL - 登陆接口
     var loginUrl = "http://"+domain + "/base/login"
     //用户名公共前缀
     var playerNamePrefix = "frame_sync_"
+    // var playerNumber = 1;
     //一共几个玩家参与到游戏中
     var playerMax = 4;
 
-    var playerList ={
+    var playerList = {
+        //注：ID字段是用于给DIV取名的，写死1 2 3 4 ，不能动，后端用的UID，也得写死成1 2 3 4 .
         "frame_sync_1":{id:1,"username":"frame_sync_1","pawword":"123456","info":{},"token":"","roomId":""},
         "frame_sync_2":{id:2,"username":"frame_sync_2","pawword":"123456","info":{},"token":"","roomId":""},
         "frame_sync_3":{id:3,"username":"frame_sync_3","pawword":"123456","info":{},"token":"","roomId":""},
@@ -289,6 +292,7 @@
 
                 var username = data.data.user.username;
                 playerList[username].info = data.data.user;
+                // playerList[username].id = data.data.id;
                 playerList[username].token = data.data.token;
 
             }

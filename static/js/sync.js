@@ -120,6 +120,12 @@ function Sync (playerId,token,data,DomIdPreObj,contentType,protocolType,playerIn
                 console.log(content);
             }
 
+
+
+
+
+
+
             var contentLenByte = intToByte4( content.length);
             var contentTypeByte = intToOneByteArr(contentType);
             var protocolTypeByte = intToOneByteArr(protocolType);

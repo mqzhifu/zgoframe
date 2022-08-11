@@ -229,6 +229,19 @@ func (sync *FrameSync) logicFrameLoopReal(room *Room, fpsTime int32) int32 {
 		}
 		room.PlayersAckListRWLock.RUnlock()
 		if ack < len(room.PlayersAckList) {
+			logicFrameWaitTime := util.GetNowMillisecond() - room.LogicFrameWaitTime
+			if logicFrameWaitTime > 1000 {
+				/*一秒内依然没有收齐所有玩家的当前帧，这里有可能：
+				1. 有玩家丢帧了，网络波动造成：网络包丢失
+				2. 也可能是玩家掉线了，{连接关闭}事件未发出，S端也暂未收到，连接未断
+				3. 也可能是网络卡顿，造成RTT过长，连接未断
+				解决：
+				1. RTT 值过高，直接断开连接
+				2. (1)给这些玩家发消息，让该玩家重新再发一帧，并新设定一个定时器，如果S端连续3次：补帧未收到C端响应，断开连接，其余玩家继续游戏
+				   (2)跳帧，可以跳的话，直接将该帧发出去，客户端做容错(少帧的客户端直接插值+回滚上一帧)...这好像就是乐观锁了，且不等待，那谁的网速快，谁就厉害
+				   (2)不可以跳，如果是关键帧，那还得按上面的方法1处理
+				*/
+			}
 			sync.Option.Log.Error("还有玩家未发送操作记录,当前确认人数:" + strconv.Itoa(ack))
 			return fpsTime
 		}
@@ -271,6 +284,7 @@ func (sync *FrameSync) logicFrameLoopReal(room *Room, fpsTime int32) int32 {
 
 		i++
 	}
+	room.LogicFrameWaitTime = util.GetNowMillisecond() //每帧的等待时间清0，因为走到这里证明所有玩家本帧数据均已经收齐了
 	sync.upSyncRoomPoolElementPlayersAckStatus(room.Id, PLAYERS_ACK_STATUS_OK)
 
 	util.MyPrint("operations:", operations)

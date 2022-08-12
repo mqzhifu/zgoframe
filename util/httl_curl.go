@@ -39,6 +39,7 @@ func (httpCurl *HttpCurl) Post(data string) (res string, err error) {
 
 func (httpCurl *HttpCurl) PostJson(data interface{}) (res string, err error) {
 	dataBytes, err := json.Marshal(data)
+	//MyPrint("dataBytes:", string(dataBytes))
 	if err != nil {
 		MyPrint(httpCurl.Prefix + "json.Marshal err:")
 		return res, err

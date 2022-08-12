@@ -37,9 +37,17 @@ type AgoraRecord struct {
 	ServerResponse AgoraRecordServerResponse `json:"serverResponse"`
 }
 type AgoraRecordServerResponse struct {
-	FileListMode    string          `json:"fileListMode"`
-	UploadingStatus string          `json:"uploadingStatus"`
-	FileList        []AgoraFileList `json:"fileList"`
+	FileListMode         string                           `json:"fileListMode"`
+	UploadingStatus      string                           `json:"uploadingStatus"`
+	FileList             []AgoraFileList                  `json:"fileList"`
+	Command              string                           `json:"command"`
+	SubscribeModeBitmask int                              `json:"subscribeModeBitmask"`
+	Vid                  string                           `json:"vid"`
+	Payload              AgoraRecordServerPayloadResponse `json:"payload"`
+}
+
+type AgoraRecordServerPayloadResponse struct {
+	Message string `json:"message"`
 }
 
 type AgoraFileList struct {

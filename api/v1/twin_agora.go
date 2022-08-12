@@ -2,6 +2,7 @@ package v1
 
 import (
 	"encoding/json"
+	"errors"
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis/v8"
 	"zgoframe/core/global"
@@ -25,8 +26,9 @@ func TwinAgoraRTCGetCloudRecordAcquire(c *gin.Context) {
 	//client := &http.Client{}
 	var formData request.TwinAgoraAcquireStruct
 	formData.ClientRequest = make(map[string]interface{})
-	formData.Uid = "99999" //如果是申请rid，最好用类似：99999，不能用视频中的UID
 	c.ShouldBind(&formData)
+
+	//formData.Uid = "99999" //如果是申请rid，最好用类似：99999，不能用视频中的UID
 
 	url := global.C.Agora.Domain + global.C.Agora.AppId + "/cloud_recording/acquire"
 	httpCurl := util.NewHttpCurl(url, GetAgoraCommonHTTPHeader())
@@ -58,6 +60,13 @@ func TwinAgoraRTCCloudRecordStart(c *gin.Context) {
 	formData.ClientRequest = make(map[string]interface{})
 	c.ShouldBind(&formData)
 
+	var form request.TwinAgoraToken
+	form.Username = formData.Uid
+	form.Channel = "ckck"
+	//util.MyPrint(form)
+	token, _ := GetRtcToken(form)
+	//util.ExitPrint(token)
+	formData.Token = token
 	storageConfig := request.TwinAgoraStorageConfig{
 		AccessKey:      global.C.Oss.AccessKeyId,
 		Region:         0,
@@ -134,25 +143,31 @@ func TwinAgoraRTMGetToken(c *gin.Context) {
 		httpresponse.FailWithMessage("username is empty", c)
 		return
 	}
+	result, err := GetRtmToken(form)
+	if err != nil {
+		httpresponse.FailWithMessage(err.Error(), c)
+	} else {
+		httpresponse.OkWithAll(result, "RTM-"+form.Username+"-成功", c)
+	}
 
+}
+
+func GetRtmToken(form request.TwinAgoraToken) (token string, err error) {
 	//从redis中获取缓存的token
 	redisElement, err := global.V.Redis.GetElementByIndex("rtm_token", form.Username)
 	if err != nil {
-		httpresponse.FailWithMessage("GetElementByIndex <rtm_token> err:"+err.Error(), c)
-		return
+		return token, errors.New("GetElementByIndex <rtm_token> err:" + err.Error())
 	}
 	util.MyPrint("rtm redisElement:", redisElement)
 
 	redisTokenStr, err := global.V.Redis.Get(redisElement)
 	util.MyPrint("rtm Redis.Get :", redisTokenStr, err)
 	if err != nil && err != redis.Nil {
-		httpresponse.FailWithMessage("redis get err:"+err.Error(), c)
-		return
+		return token, errors.New("redis get err:" + err.Error())
 	}
 	if err != redis.Nil && redisTokenStr != "" {
 		util.MyPrint("return old token")
-		httpresponse.OkWithAll(redisTokenStr, "RTM-"+form.Username+"-成功", c)
-		return
+		return redisTokenStr, nil
 	}
 
 	util.MyPrint("create new token.")
@@ -163,8 +178,7 @@ func TwinAgoraRTMGetToken(c *gin.Context) {
 	result, err := util.RTMBuildToken(appID, appCertificate, form.Username, util.RoleRtmUser, expiredTs)
 
 	if err != nil {
-		httpresponse.FailWithMessage("BuildToken err:"+err.Error(), c)
-		return
+		return token, errors.New("BuildToken err:" + err.Error())
 	}
 	util.MyPrint(result)
 
@@ -177,12 +191,53 @@ func TwinAgoraRTMGetToken(c *gin.Context) {
 
 	_, err = global.V.Redis.SetEX(redisElement, result, 0)
 	if err != nil {
-		httpresponse.FailWithMessage("redis set err:"+err.Error(), c)
-		return
+		return token, errors.New("redis set err:" + err.Error())
+	}
+	return result, nil
+}
+func GetRtcToken(form request.TwinAgoraToken) (token string, err error) {
+	//从redis中获取缓存的token
+	redisElement, err := global.V.Redis.GetElementByIndex("rtc_token", form.Username, form.Channel)
+	if err != nil {
+		return token, errors.New("GetElementByIndex <rtc_token> err:" + err.Error())
+	}
+	util.MyPrint("rtc redisElement:", redisElement)
+
+	redisTokenStr, err := global.V.Redis.Get(redisElement)
+	util.MyPrint("rtc Redis.Get :", redisTokenStr, err)
+	if err != nil && err != redis.Nil {
+		return token, errors.New("redis get err:" + err.Error())
+	}
+	if err != redis.Nil && redisTokenStr != "" {
+		util.MyPrint("return old token")
+		return redisTokenStr, nil
 	}
 
-	httpresponse.OkWithAll(result, "RTM-"+form.Username+"-成功", c)
+	util.MyPrint("create new token.")
 
+	appID := global.C.Agora.AppId
+	appCertificate := global.C.Agora.AppCertificate
+	expiredTs := uint32(util.GetNowTimeSecondToInt() + redisElement.Expire)
+	result, err := util.RTCBuildTokenWithUserAccount(appID, appCertificate, form.Channel, form.Username, util.RoleRtmUser, expiredTs)
+
+	if err != nil {
+		return token, errors.New("BuildToken err:" + err.Error())
+	}
+	//token := util.AccessToken{}
+	//token.FromString(result)
+	//if token.Message[util.KJoinChannel] != expiredTs {
+	//	errors.New("no kJoinChannel ts")
+	//}
+	//
+	//if token.Message[util.KPublishVideoStream] != 0 {
+	//	errors.New("should not have publish video stream privilege")
+	//}
+
+	_, err = global.V.Redis.SetEX(redisElement, result, 0)
+	if err != nil {
+		return token, errors.New("BuildToken err:" + err.Error())
+	}
+	return result, nil
 }
 
 // @Tags TwinAgora
@@ -209,59 +264,19 @@ func TwinAgoraRTCGetToken(c *gin.Context) {
 		httpresponse.FailWithMessage("channel is empty", c)
 		return
 	}
-	//从redis中获取缓存的token
-	redisElement, err := global.V.Redis.GetElementByIndex("rtc_token", form.Username, form.Channel)
+	result, err := GetRtcToken(form)
 	if err != nil {
-		httpresponse.FailWithMessage("GetElementByIndex <rtc_token> err:"+err.Error(), c)
-		return
-	}
-	util.MyPrint("rtc redisElement:", redisElement)
-
-	redisTokenStr, err := global.V.Redis.Get(redisElement)
-	util.MyPrint("rtc Redis.Get :", redisTokenStr, err)
-	if err != nil && err != redis.Nil {
-		httpresponse.FailWithMessage("redis get err:"+err.Error(), c)
-		return
-	}
-	if err != redis.Nil && redisTokenStr != "" {
-		util.MyPrint("return old token")
-		httpresponse.OkWithAll(redisTokenStr, "RTC-"+form.Username+"-成功", c)
-		return
+		httpresponse.FailWithMessage(err.Error(), c)
+	} else {
+		httpresponse.OkWithAll(result, "RTC-"+form.Username+"-成功", c)
 	}
 
-	util.MyPrint("create new token.")
-
-	appID := global.C.Agora.AppId
-	appCertificate := global.C.Agora.AppCertificate
-	expiredTs := uint32(util.GetNowTimeSecondToInt() + redisElement.Expire)
-	result, err := util.RTCBuildTokenWithUserAccount(appID, appCertificate, form.Channel, form.Username, util.RoleRtmUser, expiredTs)
-
-	if err != nil {
-		httpresponse.FailWithMessage("BuildToken err:"+err.Error(), c)
-		return
-	}
-	//token := util.AccessToken{}
-	//token.FromString(result)
-	//if token.Message[util.KJoinChannel] != expiredTs {
-	//	errors.New("no kJoinChannel ts")
-	//}
-	//
-	//if token.Message[util.KPublishVideoStream] != 0 {
-	//	errors.New("should not have publish video stream privilege")
-	//}
-
-	_, err = global.V.Redis.SetEX(redisElement, result, 0)
-	if err != nil {
-		httpresponse.FailWithMessage("redis set err:"+err.Error(), c)
-		return
-	}
-
-	httpresponse.OkWithAll(result, "RTC-"+form.Username+"-成功", c)
 }
 
 func GetAgoraCommonHTTPHeader() map[string]string {
 	headers := make(map[string]string)
 	headers["Content-Type"] = "application/json;charset=utf-8"
-	headers["Authorization"] = "Basic " + util.GetHTTPBaseAuth()
+
+	headers["Authorization"] = "Basic " + util.GetHTTPBaseAuth(global.C.Agora.HttpKey, global.C.Agora.HttpSecret)
 	return headers
 }

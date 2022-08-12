@@ -102,8 +102,9 @@ type TwinAgoraAcquireStruct struct {
 }
 
 type TwinAgoraRecordStartStruct struct {
-	Cname         string                 `json:"cname"`         //频道
-	Uid           string                 `json:"uid"`           //uid
+	Cname         string                 `json:"cname"` //频道
+	Uid           string                 `json:"uid"`   //uid
+	Token         string                 `json:"token"`
 	ClientRequest map[string]interface{} `json:"clientRequest"` //这个不是下划线模式，主要是对端的agora就这么定义的
 	ResourceId    string                 `json:"resource_id"`
 }

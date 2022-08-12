@@ -13,7 +13,7 @@ func DoMySelf() {
 //test_command()
 //Gateway()
 func DoTestAction(flag string) {
-	util.GetHTTPBaseAuth()
+	//util.GetHTTPBaseAuth()
 
 	switch flag {
 	case "db_table":

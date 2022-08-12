@@ -222,6 +222,8 @@ type Agora struct {
 	AppId          string
 	AppCertificate string
 	Domain         string
+	HttpKey        string
+	HttpSecret     string
 }
 
 type Domain struct {

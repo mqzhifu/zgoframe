@@ -5,11 +5,11 @@ import (
 )
 
 // 基于 Golang 实现的 HTTP 基本认证示例，使用 RTC 的服务端 RESTful API
-func GetHTTPBaseAuth() string {
+func GetHTTPBaseAuth(customerKey string, customerSecret string) string {
 	// 客户 ID
-	customerKey := "8449e4b11fa64709a222e2cec9c3480d"
+	//customerKey :=
 	// 客户密钥
-	customerSecret := "8bad888f68734907910f99cd894d9bbf"
+	//customerSecret := "a8b9fd618edb4061a7d8abd8f734ccaf"
 
 	// 拼接客户 ID 和客户密钥并使用 base64 进行编码
 	plainCredentials := customerKey + ":" + customerSecret

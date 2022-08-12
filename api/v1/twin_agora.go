@@ -174,7 +174,7 @@ func GetRtmToken(form request.TwinAgoraToken) (token string, err error) {
 
 	appID := global.C.Agora.AppId
 	appCertificate := global.C.Agora.AppCertificate
-	expiredTs := uint32(1446455471)
+	expiredTs := uint32(util.GetNowTimeSecondToInt() + redisElement.Expire)
 	result, err := util.RTMBuildToken(appID, appCertificate, form.Username, util.RoleRtmUser, expiredTs)
 
 	if err != nil {

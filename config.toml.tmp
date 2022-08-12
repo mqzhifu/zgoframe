@@ -155,3 +155,6 @@ static = "#domain_host#"
 [agora]
 appId           = "#agora_user#"
 appCertificate  = "#agora_ps#"
+HttpKey = "#agora_aaa#"
+HttpSecret = "#agora_bbb#"
+domain  = "https://api.agora.io/v1/apps/"

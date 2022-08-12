@@ -44,6 +44,40 @@ func TwinAgoraRTCGetCloudRecordAcquire(c *gin.Context) {
 }
 
 // @Tags TwinAgora
+// @Summary 录屏查询
+// @Description 根据上一步获取到的ResourceId，
+// @accept application/json
+// @Param X-Source-Type header string true "来源" default(11)
+// @Param X-Project-Id header string true "项目ID"  default(6)
+// @Param X-Access header string true "访问KEY" default(imzgoframe)
+// @Param data body request.TwinAgoraRecordStopStruct false "基础信息"
+// @Produce application/json
+// @Success 200 {boolean} boolean "true:成功 false:否"
+// @Router /twin/agora/rtc/cloud/record/query [POST]
+func TwinAgoraRTCCloudRecordQuery(c *gin.Context) {
+	var formData request.TwinAgoraRecordStopStruct
+	formData.ClientRequest = make(map[string]interface{})
+	c.ShouldBind(&formData)
+
+	twinAgoraAcquireStruct := request.TwinAgoraAcquireStruct{}
+	twinAgoraAcquireStruct.ClientRequest = make(map[string]interface{})
+	twinAgoraAcquireStruct.Uid = formData.Uid
+	twinAgoraAcquireStruct.Cname = formData.Cname
+	//twinAgoraAcquireStruct["clientRequest"] = false
+
+	url := global.C.Agora.Domain + global.C.Agora.AppId + "/cloud_recording/resourceid/" + formData.ResourceId + "/sid/" + formData.Sid + "/mode/individual/query"
+	httpCurl := util.NewHttpCurl(url, GetAgoraCommonHTTPHeader())
+	res, _ := httpCurl.Get()
+	//resourceIdAgora := httpresponse.AgoraRecord{}
+	//err := json.Unmarshal([]byte(res), &resourceIdAgora)
+	//if err != nil {
+	//	util.MyPrint("json.Unmarshal err:", err)
+	//}
+
+	httpresponse.OkWithAll(res, "RTC-query-成功", c)
+}
+
+// @Tags TwinAgora
 // @Summary 开始录屏
 // @Description 根据上一步获取到的ResourceId，开始录屏，其数据会推送到3方的OSS上
 // @accept application/json
@@ -64,18 +98,50 @@ func TwinAgoraRTCCloudRecordStart(c *gin.Context) {
 	form.Username = formData.Uid
 	form.Channel = "ckck"
 	//util.MyPrint(form)
-	token, _ := GetRtcToken(form)
 	//util.ExitPrint(token)
-	formData.Token = token
+	//formData.Token = token
 	storageConfig := request.TwinAgoraStorageConfig{
 		AccessKey:      global.C.Oss.AccessKeyId,
-		Region:         0,
+		Region:         3,
 		Bucket:         global.C.Oss.Bucket,
 		SecretKey:      global.C.Oss.AccessKeySecret,
 		Vendor:         2,
 		FileNamePrefix: []string{"imagora"},
 	}
+
 	formData.ClientRequest["storageConfig"] = storageConfig
+	token, _ := GetRtcToken(form)
+	formData.ClientRequest["token"] = token
+
+	//"maxIdleTime": 30,
+	//	"streamTypes": 0,
+	//	"streamMode": "original",
+	//	"channelType": 0,
+	//	"videoStreamType": 0,
+
+	TwinAgoraRecordingConfig := request.TwinAgoraRecordingConfig{}
+	TwinAgoraRecordingConfig.VideoStreamType = 0
+	TwinAgoraRecordingConfig.MaxIdleTime = 300
+	//TwinAgoraRecordingConfig.StreamMode = "default"
+	TwinAgoraRecordingConfig.StreamMode = "standard"
+	//TwinAgoraRecordingConfig.StreamMode = "original"
+	TwinAgoraRecordingConfig.StreamTypes = 2
+	TwinAgoraRecordingConfig.ChannelType = 0
+	//TwinAgoraRecordingConfig.SubscribeVideoUids = []string{"44446", "33311"}
+	//TwinAgoraRecordingConfig.SubscribeAudioUids = []string{"44446", "33311"}
+	TwinAgoraRecordingConfig.SubscribeUidGroup = 0
+
+	//TwinAgoraRecordingConfigTranscodingConfig := request.TwinAgoraRecordingConfigTranscodingConfig{
+	//	Height:           640,
+	//	Width:            360,
+	//	Bitrate:          500,
+	//	Fps:              15,
+	//	MixedVideoLayout: 1,
+	//	BackgroundColor:  "#FF0000",
+	//}
+	//TwinAgoraRecordingConfig.TranscodingConfig = TwinAgoraRecordingConfigTranscodingConfig
+
+	formData.ClientRequest["recordingConfig"] = TwinAgoraRecordingConfig
 
 	url := global.C.Agora.Domain + global.C.Agora.AppId + "/cloud_recording/resourceid/" + formData.ResourceId + "/mode/individual/start"
 	httpCurl := util.NewHttpCurl(url, GetAgoraCommonHTTPHeader())

@@ -13,6 +13,7 @@ func InitTwinAgoraRouter(Router *gin.RouterGroup) {
 		TwinAgora.POST("rtc/get/cloud/record/acquire", v1.TwinAgoraRTCGetCloudRecordAcquire)
 		TwinAgora.POST("rtc/cloud/record/start", v1.TwinAgoraRTCCloudRecordStart)
 		TwinAgora.POST("rtc/cloud/record/stop", v1.TwinAgoraRTCCloudRecordStop)
+		TwinAgora.POST("rtc/cloud/record/query", v1.TwinAgoraRTCCloudRecordQuery)
 
 	}
 }

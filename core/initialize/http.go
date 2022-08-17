@@ -19,7 +19,7 @@ import (
 
 func StartHttpGin(option InitOption) {
 	dns := global.C.Http.Ip + ":" + global.C.Http.Port
-	global.V.Zap.Debug("http gin dns:"+dns)
+	global.V.Zap.Debug("http gin dns:" + dns)
 	server := &http.Server{
 		Addr:           dns,
 		Handler:        global.V.Gin,
@@ -33,8 +33,8 @@ func StartHttpGin(option InitOption) {
 	global.V.HttpServer = server
 	go func() {
 		err := server.ListenAndServe()
-		if err != nil{
-			if strings.Contains(err.Error(), "bind: address already in use" )  {
+		if err != nil {
+			if strings.Contains(err.Error(), "bind: address already in use") {
 				util.MyPrint("server.ListenAndServe() err: bind port failed , ", err.Error())
 				option.RootQuitFunc(-5)
 				option.RootCancelFunc()
@@ -62,8 +62,7 @@ func GetNewHttpGIN(zapLog *zap.Logger, prefix string) (*gin.Engine, error) {
 	staticFSUriName := "/static"
 	swaggerUri := "/swagger/*any"
 
-
-	staticPath := global.V.RootDir  + "/" + global.C.Http.StaticPath
+	staticPath := global.V.RootDir + "/" + global.C.Http.StaticPath
 	//保存一下，给外部使用，主要是给HTTP获取配置信息时，使用
 	global.C.Http.DiskStaticPath = staticPath
 	zapLog.Info(prefix + "GetNewHttpGIN static config , uri: " + staticFSUriName + " , diskPath: " + staticPath)
@@ -92,7 +91,12 @@ func GetNewHttpGIN(zapLog *zap.Logger, prefix string) (*gin.Engine, error) {
 func RegGinHttpRoute() {
 	httpresponse.ErrManager = global.V.Err
 
-	global.V.Gin.Use( httpmiddleware.Limiter() ). Use(httpmiddleware.Record()).Use(httpmiddleware.Header())
+	global.V.Gin.Use(httpmiddleware.Limiter()).Use(httpmiddleware.Record()).Use(httpmiddleware.Header())
+	CallbackGroup := global.V.Gin.Group("")
+	CallbackGroup.Use(httpmiddleware.Callback())
+	{
+		router.CallbackRouter(CallbackGroup)
+	}
 	//设置非登陆可访问API，但是头里要加基础认证的信息
 	PublicGroup := global.V.Gin.Group("")
 	//PublicGroup.Use(httpmiddleware.Cors())
@@ -111,7 +115,7 @@ func RegGinHttpRoute() {
 	PrivateGroup := global.V.Gin.Group("")
 	//设置正常API（需要验证）
 	//httpmiddleware.CasbinHandler()
-	PrivateGroup.Use( httpmiddleware.JWTAuth())
+	PrivateGroup.Use(httpmiddleware.JWTAuth())
 	{
 		router.InitUserRouter(PrivateGroup)
 		router.InitSysRouter(PrivateGroup)
@@ -119,7 +123,7 @@ func RegGinHttpRoute() {
 	}
 
 	GatewayGroup := global.V.Gin.Group("")
-	GatewayGroup. Use( )
+	GatewayGroup.Use()
 	{
 		router.InitGatewayRouter(GatewayGroup)
 	}

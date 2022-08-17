@@ -95,74 +95,8 @@ type TwinAgoraToken struct {
 	Channel  string `json:"channel"`  //频道名称，给rtc使用,RTM可为空
 }
 
-type TwinAgoraAcquireStruct struct {
-	Cname         string                 `json:"cname"`         //频道
-	Uid           string                 `json:"uid"`           //uid,如果是申请rid，最好用类似：99999，不能用视频中的UID
-	ClientRequest map[string]interface{} `json:"clientRequest"` //这个不是下划线模式，主要是对端的agora就这么定义的
-}
-
-type TwinAgoraRecordStartStruct struct {
-	Cname string `json:"cname"` //频道
-	Uid   string `json:"uid"`   //uid
-	//Token         string                 `json:"token"`
-	ClientRequest map[string]interface{} `json:"clientRequest"` //这个不是下划线模式，主要是对端的agora就这么定义的
-	ResourceId    string                 `json:"resource_id"`
-}
-
-type TwinAgoraRecordStopStruct struct {
-	Cname         string                 `json:"cname"`         //频道
-	Uid           string                 `json:"uid"`           //uid
-	ClientRequest map[string]interface{} `json:"clientRequest"` //这个不是下划线模式，主要是对端的agora就这么定义的
-	ResourceId    string                 `json:"resource_id"`
-	Sid           string
-}
-
-//"recordingConfig": {
-//	"maxIdleTime": 30,
-//		"streamTypes": 2,
-//		"streamMode": "standard",
-//		"channelType": 0,
-//		"videoStreamType": 0,
-//		"subscribeVideoUids": [
-//		"123",
-//		"456"
-//		],
-//		"subscribeAudioUids": [
-//		"123",
-//		"456"
-//		],
-//		"subscribeUidGroup": 0
-//},
-
-type TwinAgoraRecordingConfig struct {
-	//Token              string   `json:"token"`
-	MaxIdleTime       int    `json:"maxIdleTime"`
-	StreamMode        string `json:"streamMode"`
-	StreamTypes       int    `json:"streamTypes"`
-	ChannelType       int    `json:"channelType"`
-	SubscribeUidGroup int    `json:"subscribeUidGroup"`
-	VideoStreamType   int    `json:"videoStreamType"`
-	//SubscribeVideoUids []string `json:"subscribeVideoUids"`
-	//SubscribeAudioUids []string `json:"subscribeAudioUids"`
-	//TranscodingConfig  TwinAgoraRecordingConfigTranscodingConfig `json:"transcodingConfig"`
-}
-
-type TwinAgoraRecordingConfigTranscodingConfig struct {
-	Height           int    `json:"height"`
-	Width            int    `json:"width"`
-	Bitrate          int    `json:"bitrate"`
-	Fps              int    `json:"fps"`
-	MixedVideoLayout int    `json:"mixedVideoLayout"`
-	BackgroundColor  string `json:"backgroundColor"`
-}
-
-type TwinAgoraStorageConfig struct {
-	AccessKey      string   `json:"accessKey"`
-	Region         int      `json:"region"`
-	Bucket         string   `json:"bucket"`
-	SecretKey      string   `json:"secretKey"`
-	Vendor         int      `json:"vendor"`
-	FileNamePrefix []string `json:"fileNamePrefix"`
+type TwinAgoraReq struct {
+	RecordId int `json:"record_id"`
 }
 
 type Captcha struct {

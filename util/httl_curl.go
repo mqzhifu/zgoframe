@@ -5,6 +5,7 @@ import (
 	"errors"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 	"strings"
 )
 
@@ -69,7 +70,16 @@ func (httpCurl *HttpCurl) Curl(method int, data string) (res string, err error) 
 	if err != nil {
 		return res, errors.New(httpCurl.Prefix + err.Error())
 	}
+	MyPrint(httpCurl.Prefix + " res status code:" + strconv.Itoa(response.StatusCode))
+	//if response.StatusCode != 200 {
+	//	return res, errors.New("status != 200")
+	//}
+
 	bodyBytes, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		return res, errors.New("ioutil.ReadAll(response.Body) err:" + err.Error())
+	}
+
 	res = string(bodyBytes)
 	MyPrint(httpCurl.Prefix+" response read body:", res, " err:", err)
 

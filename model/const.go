@@ -365,6 +365,21 @@ func GetConstListProjectLanguage() map[string]int {
 	return list
 }
 
+const (
+	AGORA_CLOUD_RECORD_STATUS_RESOURCE = 1
+	AGORA_CLOUD_RECORD_STATUS_START    = 2
+	AGORA_CLOUD_RECORD_STATUS_END      = 3
+)
+
+func GetConstListAgoraCloudRecordStatus() map[string]int {
+	list := make(map[string]int)
+	list["已获取资源ID"] = AGORA_CLOUD_RECORD_STATUS_RESOURCE
+	list["已开始"] = AGORA_CLOUD_RECORD_STATUS_START
+	list["已结束"] = AGORA_CLOUD_RECORD_STATUS_END
+
+	return list
+}
+
 //func GetConstListFileHashType() map[string]int {
 //	list := make(map[string]int)
 //	list["关闭"] = util.FILE_HASH_NONE

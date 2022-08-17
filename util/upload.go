@@ -165,6 +165,35 @@ func (fileUpload *FileUpload) GetHashDirName() string {
 	return dirName
 }
 
+func (fileUpload *FileUpload) OssLs() error {
+	AccessKeyId := fileUpload.Option.OssAccessKeyId
+	AccessKeySecret := fileUpload.Option.OssAccessKeySecret
+	endpoint := fileUpload.Option.OssEndpoint
+
+	client, err := oss.New(endpoint, AccessKeyId, AccessKeySecret)
+	//MyPrint("oss New:",client,err)
+	if err != nil {
+		return err
+	}
+
+	bucketName := fileUpload.Option.OssBucketName
+
+	MyPrint("oss endpoint:", endpoint, " AccessKeyId:", AccessKeyId, " AccessKeySecret:", AccessKeySecret, " bucketName:", bucketName)
+
+	bucket, err := client.Bucket(bucketName)
+	if err != nil {
+		return err
+	}
+
+	listObjectsResult, err := bucket.ListObjects(oss.Prefix("agoraRecord/ckck/1660644031/"))
+	//MyPrint("ListObjectsResult:", listObjectsResult, " err:", err)
+	for k, v := range listObjectsResult.Objects {
+		MyPrint(k, v)
+	}
+	ExitPrint(33)
+	return nil
+}
+
 //将本地文件上传到阿里云-OSS
 func (fileUpload *FileUpload) UploadAliOSS(localFilePath string, relativePath, FileName string) error {
 	//这里阿里云有个小BUG，所有的路径不能以反斜杠(/)开头

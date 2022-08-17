@@ -3,7 +3,6 @@ package v1
 import (
 	"encoding/json"
 	"github.com/gin-gonic/gin"
-	"io/ioutil"
 	"strconv"
 	"zgoframe/core/global"
 	httpresponse "zgoframe/http/response"
@@ -21,13 +20,14 @@ type AgoraCloudCallbackPayloadDetailReq struct {
 }
 
 type AgoraCloudCallbackPayloadReq struct {
-	Cname       string                             `json:"cname"`
-	Sendts      int64                              `json:"sendts"`
-	Sequence    int                                `json:"sequence"`
-	ServiceType int                                `json:"serviceType"`
-	Sid         string                             `json:"sid"`
-	Uid         string                             `json:"uid"`
-	Details     AgoraCloudCallbackPayloadDetailReq `json:"details"`
+	Cname        string                             `json:"cname"`
+	Sendts       int64                              `json:"sendts"`
+	Sequence     int                                `json:"sequence"`
+	ServiceType  int                                `json:"serviceType"`
+	Sid          string                             `json:"sid"`
+	Uid          string                             `json:"uid"`
+	ServiceScene string                             `json:"serviceScene"`
+	Details      AgoraCloudCallbackPayloadDetailReq `json:"details"`
 }
 
 type AgoraCloudCallbackReq struct {
@@ -65,17 +65,17 @@ type AgoraRtcCallbackReq struct {
 // @Success 200 {string} string "成功"
 // @Router /callback/agora/rtc [post]
 func AgoraCallbackRTC(c *gin.Context) {
-	prefix := "AgoraCallbackRTC "
-	for k, v := range c.Request.Header {
-		util.MyPrint(prefix, "header ", k, v)
-	}
-	util.MyPrint("=======================")
-	util.MyPrint(prefix, "url:", c.Request.URL)
-	bodyBytes, err := ioutil.ReadAll(c.Request.Body)
-	util.MyPrint(prefix, "ReadAll body:", string(bodyBytes), " err:", err)
+	//prefix := "AgoraCallbackRTC "
+	//for k, v := range c.Request.Header {
+	//	util.MyPrint(prefix, "header ", k, v)
+	//}
+	//util.MyPrint("=======================")
+	//util.MyPrint(prefix, "url:", c.Request.URL)
+	//bodyBytes, err := ioutil.ReadAll(c.Request.Body)
+	//util.MyPrint(prefix, "ReadAll body:", string(bodyBytes), " err:", err)
 
 	var form AgoraRtcCallbackReq
-	err = c.ShouldBind(&form)
+	err := c.ShouldBind(&form)
 	util.MyPrint("form:", form, " err:", err)
 
 	NotifyMsStr := strconv.FormatInt(form.NotifyMs, 10)
@@ -104,17 +104,17 @@ func AgoraCallbackRTC(c *gin.Context) {
 // @Router /callback/agora/cloud [post]
 func AgoraCallbackCloud(c *gin.Context) {
 	//录制需要注意的，eventType-id: 1 2 3 11 30 31 32 40 41 80 81 90 1001
-	prefix := "AgoraCallbackCloud "
-	for k, v := range c.Request.Header {
-		util.MyPrint(prefix, "header ", k, v)
-	}
-	util.MyPrint("=======================")
-	util.MyPrint(prefix, "url:", c.Request.URL)
-	bodyBytes, err := ioutil.ReadAll(c.Request.Body)
-	util.MyPrint(prefix, "ReadAll body:", string(bodyBytes), " err:", err)
+	//prefix := "AgoraCallbackCloud "
+	//for k, v := range c.Request.Header {
+	//	util.MyPrint(prefix, "header ", k, v)
+	//}
+	//util.MyPrint("=======================")
+	//util.MyPrint(prefix, "url:", c.Request.URL)
+	//bodyBytes, err := ioutil.ReadAll(c.Request.Body)
+	//util.MyPrint(prefix, "ReadAll body:", string(bodyBytes), " err:", err)
 
 	var form AgoraCloudCallbackReq
-	err = c.ShouldBind(&form)
+	err := c.ShouldBind(&form)
 	util.MyPrint("form:", form, " err:", err)
 
 	NotifyMsStr := strconv.FormatInt(form.NotifyMs, 10)

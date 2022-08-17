@@ -165,7 +165,7 @@ func (fileUpload *FileUpload) GetHashDirName() string {
 	return dirName
 }
 
-func (fileUpload *FileUpload) OssLs() error {
+func (fileUpload *FileUpload) OssLs(dirPrefix string) (listObjectsResult oss.ListObjectsResult, err error) {
 	AccessKeyId := fileUpload.Option.OssAccessKeyId
 	AccessKeySecret := fileUpload.Option.OssAccessKeySecret
 	endpoint := fileUpload.Option.OssEndpoint
@@ -173,7 +173,7 @@ func (fileUpload *FileUpload) OssLs() error {
 	client, err := oss.New(endpoint, AccessKeyId, AccessKeySecret)
 	//MyPrint("oss New:",client,err)
 	if err != nil {
-		return err
+		return listObjectsResult, err
 	}
 
 	bucketName := fileUpload.Option.OssBucketName
@@ -182,16 +182,19 @@ func (fileUpload *FileUpload) OssLs() error {
 
 	bucket, err := client.Bucket(bucketName)
 	if err != nil {
-		return err
+		return listObjectsResult, err
 	}
 
-	listObjectsResult, err := bucket.ListObjects(oss.Prefix("agoraRecord/ckck/1660644031/"))
-	//MyPrint("ListObjectsResult:", listObjectsResult, " err:", err)
-	for k, v := range listObjectsResult.Objects {
-		MyPrint(k, v)
-	}
-	ExitPrint(33)
-	return nil
+	listObjectsResult, err = bucket.ListObjects(oss.Prefix(dirPrefix))
+	MyPrint("ListObjectsResult:", listObjectsResult, " err:", err)
+	//if len(listObjectsResult.Objects) == 0 {
+	//
+	//}
+	//for k, v := range listObjectsResult.Objects {
+	//	MyPrint(k, v)
+	//}
+	//ExitPrint(33)
+	return listObjectsResult, err
 }
 
 //将本地文件上传到阿里云-OSS

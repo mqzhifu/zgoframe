@@ -11,12 +11,24 @@ import (
 )
 
 type AgoraCloudCallbackPayloadDetailReq struct {
-	ErrorCode  int    `json:"errorCode"`
-	ErrorLevel int    `json:"errorLevel"`
-	ErrorMsg   string `json:"errorMsg"`
-	Module     int    `json:"module"`
-	MsgName    string `json:"msgName"`
-	Stat       int    `json:"stat"`
+	ErrorCode  int         `json:"errorCode"`
+	ErrorLevel int         `json:"errorLevel"`
+	ErrorMsg   string      `json:"errorMsg"`
+	Module     int         `json:"module"`
+	MsgName    string      `json:"msgName"`
+	Stat       int         `json:"stat"`
+	Status     int         `json:"status"`
+	FileList   []AgoraFile `json:"fileList"`
+	ExitStatus int         `json:"exitStatus"`
+	LeaveCode  int         `json:"leaveCode"`
+}
+type AgoraFile struct {
+	FileName       string `json:"fileName"`
+	TrackType      string `json:"trackType"`
+	Uid            string `json:"uid"`
+	MixedAllUser   bool   `json:"mixedAllUser"`
+	IsPlayable     bool   `json:"isPlayable"`
+	SliceStartTime int64  `json:"sliceStartTime"`
 }
 
 type AgoraCloudCallbackPayloadReq struct {

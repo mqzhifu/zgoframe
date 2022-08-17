@@ -44,10 +44,9 @@ func GetUtilAgora() *util.MyAgora {
 func TwinAgoraCloudRecordCreateAcquire(c *gin.Context) {
 	//GetUtilAgora().ExecBGOssFile()
 	//util.ExitPrint(33)
-
-	oss := global.GetUploadObj(111, "")
-	oss.OssLs()
-	util.ExitPrint(1111)
+	//oss := global.GetUploadObj(111, "")
+	//oss.OssLs()
+	//util.ExitPrint(1111)
 
 	var formData util.AgoraAcquireReq
 	c.ShouldBind(&formData)
@@ -142,13 +141,13 @@ func TwinAgoraCloudRecordStart(c *gin.Context) {
 	token, _ := GetRtcToken(form)
 
 	var formData util.AgoraRecordStartReq
-	formData.ClientRequest = make(map[string]interface{})
-	formData.ClientRequest["token"] = token
+	//formData.ClientRequest = make(map[string]interface{})
+	formData.ClientRequest.Token = token
 
 	formData.Uid = strconv.Itoa(record.ListenerAgoraUid)
 	formData.Cname = record.ChannelName
 	formData.ResourceId = record.ResourceId
-	agoraCloudRecordRes, err := GetUtilAgora().CloudRecordSingleStreamDelayTranscoding(formData)
+	agoraCloudRecordRes, agoraCloudRecordResBack, err := GetUtilAgora().CloudRecordSingleStreamDelayTranscoding(formData)
 	if err != nil {
 		httpresponse.FailWithAll(err.Error(), "失败", c)
 		return
@@ -157,11 +156,19 @@ func TwinAgoraCloudRecordStart(c *gin.Context) {
 		httpresponse.FailWithAll(agoraCloudRecordRes, "失败", c)
 		return
 	}
-
+	//storageConfig, err1 := agoraCloudRecordResBack.ClientRequest["storageConfig"].(util.AgoraStorageConfig)
+	//recordingConfig, err2 := agoraCloudRecordResBack.ClientRequest["recordingConfig"].(util.AgoraRecordingConfig)
+	//storageConfigBytes, err3 := json.Marshal(storageConfig)
+	//recordingConfigBytes, err4 := json.Marshal(recordingConfig)
+	//util.MyPrint("CloudRecordSingleStreamDelayTranscoding storageConfigStr:", string(storageConfigBytes), " recordingConfigStr", string(recordingConfigBytes), " errList:", err1, err2, err3, err4)
+	//ClientRequestArray := []string{string(storageConfigBytes), string(recordingConfigBytes)}
+	//ClientRequestBytes, err := json.Marshal(ClientRequestArray)
+	ClientRequestBytes, err := json.Marshal(agoraCloudRecordResBack.ClientRequest)
 	var agoraCloudRecord = model.AgoraCloudRecord{
-		SessionId: agoraCloudRecordRes.Sid,
-		StartTime: util.GetNowTimeSecondToInt(),
-		Status:    model.AGORA_CLOUD_RECORD_STATUS_START,
+		SessionId:  agoraCloudRecordRes.Sid,
+		StartTime:  util.GetNowTimeSecondToInt(),
+		Status:     model.AGORA_CLOUD_RECORD_STATUS_START,
+		ConfigInfo: string(ClientRequestBytes),
 	}
 	//agoraCloudRecord.Id = formData.RecordId
 	err = global.V.Gorm.Where(" id = ?", userFormData.RecordId).Updates(&agoraCloudRecord).Error
@@ -241,10 +248,12 @@ func TwinAgoraCloudRecordStop(c *gin.Context) {
 	}
 
 	agoraCloudRecordRes, err := GetUtilAgora().CloudRecordStop(strconv.Itoa(record.ListenerAgoraUid), record.ChannelName, record.ResourceId, record.SessionId)
-
+	ServerResponseBytes, err := json.Marshal(agoraCloudRecordRes.ServerResponse)
+	util.MyPrint("stop ServerResponseBytes:", string(ServerResponseBytes), " err:", err)
 	var agoraCloudRecord = model.AgoraCloudRecord{
-		EndTime: util.GetNowTimeSecondToInt(),
-		Status:  model.AGORA_CLOUD_RECORD_STATUS_END,
+		EndTime:     util.GetNowTimeSecondToInt(),
+		Status:      model.AGORA_CLOUD_RECORD_STATUS_END,
+		StopResInfo: string(ServerResponseBytes),
 	}
 	err = global.V.Gorm.Where(" id = ?", recordId).Updates(&agoraCloudRecord).Error
 	if err != nil {
@@ -385,6 +394,60 @@ func TwinAgoraRTCGetToken(c *gin.Context) {
 		httpresponse.FailWithMessage(err.Error(), c)
 	} else {
 		httpresponse.OkWithAll(result, "RTC-"+form.Username+"-成功", c)
+	}
+
+}
+
+// @Tags TwinAgora
+// @Summary 处理阿里云OSS上的录屏文件
+// @Description 将小文件，合并成一个大文件
+// @accept application/json
+// @Param X-Source-Type header string true "来源" default(11)
+// @Param X-Project-Id header string true "项目ID"  default(6)
+// @Param X-Access header string true "访问KEY" default(imzgoframe)
+// @Param rid path string true "rid"
+// @Produce application/json
+// @Success 200 {boolean} boolean "true:成功 false:否"
+// @Router /twin/agora/cloud/record/oss/files/{rid} [GET]
+func TwinAgoraCloudRecordOssFiles(c *gin.Context) {
+	recordId := util.Atoi(c.Param("rid"))
+	if recordId <= 0 {
+		httpresponse.FailWithMessage("RecordId <= 0", c)
+		return
+	}
+
+	var record model.AgoraCloudRecord
+	err := global.V.Gorm.First(&record, recordId).Error
+	if err != nil {
+		errInfo := "db not found recordId:" + strconv.Itoa(recordId)
+		httpresponse.FailWithMessage(errInfo, c)
+		return
+	}
+
+	if record.Status != model.AGORA_CLOUD_RECORD_STATUS_END {
+		httpresponse.FailWithMessage("record db status != AGORA_CLOUD_RECORD_STATUS_END", c)
+		return
+	}
+	clientRequestStart := util.ClientRequestStart{}
+	err = json.Unmarshal([]byte(record.ConfigInfo), &clientRequestStart)
+	if err != nil {
+		util.MyPrint("record.ConfigInfo Unmarshal err:", err)
+	}
+	pathPrefix := "/"
+	for _, v := range clientRequestStart.StorageConfig.FileNamePrefix {
+		pathPrefix += v + "/"
+	}
+
+	util.MyPrint(pathPrefix)
+	upload := global.GetUploadObj(1, "")
+	listObjectsResult, err := upload.OssLs(pathPrefix)
+	if len(listObjectsResult.Objects) <= 0 {
+		httpresponse.FailWithMessage("path:"+pathPrefix+" is  empty,no files.", c)
+		return
+	}
+
+	for _, v := range listObjectsResult.Objects {
+		util.MyPrint(v)
 	}
 
 }

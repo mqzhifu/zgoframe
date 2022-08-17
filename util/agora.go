@@ -24,11 +24,18 @@ type AgoraAcquireClientReq struct {
 
 //开始录制
 type AgoraRecordStartReq struct {
-	Cname         string                 `json:"cname"`         //频道
-	Uid           string                 `json:"uid"`           //uid
-	ClientRequest map[string]interface{} `json:"clientRequest"` //
-	ResourceId    string                 `json:"resource_id"`
-	RecordId      int                    `json:"record_id"` //平台自己生成和自增ID，上一步获取中得到的
+	Cname         string             `json:"cname"`         //频道
+	Uid           string             `json:"uid"`           //uid
+	ClientRequest ClientRequestStart `json:"clientRequest"` //
+	ResourceId    string             `json:"resource_id"`
+	RecordId      int                `json:"record_id"` //平台自己生成和自增ID，上一步获取中得到的
+	//ClientRequest map[string]interface{} `json:"clientRequest"` //
+}
+
+type ClientRequestStart struct {
+	RecordingConfig AgoraRecordingConfig `json:"recordingConfig"`
+	StorageConfig   AgoraStorageConfig   `json:"storageConfig"`
+	Token           string               `json:"token"`
 }
 
 //所有请求声网的返回结果集合
@@ -235,7 +242,7 @@ func (myAgora *MyAgora) GetHTTPBaseAuth(customerKey string, customerSecret strin
 }
 
 //单流录制
-func (myAgora *MyAgora) CloudRecordSingleStreamDelayTranscoding(formData AgoraRecordStartReq) (agoraCloudRecordRes AgoraCloudRecordRes, err error) {
+func (myAgora *MyAgora) CloudRecordSingleStreamDelayTranscoding(formData AgoraRecordStartReq) (agoraCloudRecordRes AgoraCloudRecordRes, agoraRecordStartReq AgoraRecordStartReq, err error) {
 
 	TwinAgoraRecordingConfig := AgoraRecordingConfig{}
 	TwinAgoraRecordingConfig.VideoStreamType = 0
@@ -261,9 +268,9 @@ func (myAgora *MyAgora) CloudRecordSingleStreamDelayTranscoding(formData AgoraRe
 	//TwinAgoraRecordingConfig.TranscodingConfig = TwinAgoraRecordingConfigTranscodingConfig
 
 	//持久化配置
-	formData.ClientRequest["storageConfig"] = myAgora.CloudRecordGetStorageConfig(formData.Cname)
+	formData.ClientRequest.StorageConfig = myAgora.CloudRecordGetStorageConfig(formData.Cname)
 	//录屏 - 配置
-	formData.ClientRequest["recordingConfig"] = TwinAgoraRecordingConfig
+	formData.ClientRequest.RecordingConfig = TwinAgoraRecordingConfig
 	//如需使用延时转码，则将 combinationPolicy 字段设置为 postpone_transcoding。设置该场景后，录制服务会在录制后 24 小时内对录制文件进行转码生成 MP4 文件，并将 MP4 文件上传至你指定的第三方云存储（不支持七牛云）。
 	//twinAgoraRecordingConfigAppsCollection := AgoraRecordingConfigAppsCollection{
 	//	CombinationPolicy: "postpone_transcoding",
@@ -278,10 +285,11 @@ func (myAgora *MyAgora) CloudRecordSingleStreamDelayTranscoding(formData AgoraRe
 	httpCurl := NewHttpCurl(url, myAgora.GetCommonHTTPHeader())
 	res, err := httpCurl.PostJson(formData)
 	if err != nil {
-		return agoraCloudRecordRes, errors.New("httpCurl err:" + err.Error())
+		return agoraCloudRecordRes, agoraRecordStartReq, errors.New("httpCurl err:" + err.Error())
 	}
 
-	return myAgora.FormatAgoraRes(res)
+	agoraCloudRecordRes, err = myAgora.FormatAgoraRes(res)
+	return agoraCloudRecordRes, formData, err
 }
 func (myAgora *MyAgora) ExecBGOssFile() {
 	ossUtilCommand := "/data/www/golang/ossutilmac64 --endpoint " + myAgora.Option.OssEndpoint + "  --access-key-id " + myAgora.Option.OssAccessKeyId + " --access-key-secret " + myAgora.Option.OssAccessKeySecret + "   ls oss://" + myAgora.Option.OssBucket + "/agoraRecord"

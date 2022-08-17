@@ -12,6 +12,7 @@ type AgoraCloudRecord struct {
 	EndTime          int    `json:"end_time" form:"end_time" db:"define:int;comment:结束录制时间时间;defaultValue:0"`
 	ConfigInfo       string `json:"config_info" form:"config_info" db:"define:text;comment:请求声网,开始录制时设置的配置信息"`
 	AcquireConfig    string `json:"acquire_config" form:"acquire_config" db:"define:varchar(255);comment:获取RID时的配置信息;defaultValue:''"`
+	StopResInfo      string `json:"stop_res_info" form:"stop_res_info" db:"define:text;comment:请求声网,停止录制时返回的文件信息"`
 	VideoUrl         string `json:"video_url" form:"video_url" db:"define:varchar(255);comment:最终录制好的视频的URL地址;defaultValue:''"`
 	ErrLog           string `json:"err_log" form:"err_log" db:"define:text;comment:请求3方返回的错误信息"`
 }

@@ -58,9 +58,10 @@ type AgoraRtcCallbackReq struct {
 // @Tags Callback
 // @Summary 声网 - 回调
 // @Description 订阅什么事件就回调什么事件
-// @Security ApiKeyAuth
-// @Param data body request.SystemConfig true "用户名/密码"
-// @Produce  application/json
+// @Param Agora-Signature header string true "签名" default(26a4fa1ec3df450caad3d8a4b907efe5476124da)
+// @Param Agora-Signature-V2 header string true "签名" default(60216b719ca4a21701fcea43373370671d1401e4a8e408e2a550aa1a041fbe1c)
+// @Produce application/json
+// @Param data body AgoraRtcCallbackReq true " "
 // @Success 200 {string} string "成功"
 // @Router /callback/agora/rtc [post]
 func AgoraCallbackRTC(c *gin.Context) {
@@ -73,20 +74,37 @@ func AgoraCallbackRTC(c *gin.Context) {
 	bodyBytes, err := ioutil.ReadAll(c.Request.Body)
 	util.MyPrint(prefix, "ReadAll body:", string(bodyBytes), " err:", err)
 
+	var form AgoraRtcCallbackReq
+	err = c.ShouldBind(&form)
+	util.MyPrint("form:", form, " err:", err)
+
+	NotifyMsStr := strconv.FormatInt(form.NotifyMs, 10)
+	payloadBytes, _ := json.Marshal(form.Payload)
+	util.MyPrint("NotifyMsStr:", NotifyMsStr, " payloadBytes:", string(payloadBytes))
+	agoraCallbackRecord := model.AgoraCallbackRecord{
+		EventType: form.EventType,
+		NoticeId:  form.NoticeId,
+		ProductId: form.ProductId,
+		NotifyMs:  NotifyMsStr,
+		Payload:   string(payloadBytes),
+	}
+	global.V.Gorm.Create(&agoraCallbackRecord)
+
 	httpresponse.OkWithAll("回调成功", "ok", c)
 }
 
 // @Tags Callback
 // @Summary 声网 - 云端录制 - 回调
 // @Description 订阅什么事件就回调什么事件
-// @Security ApiKeyAuth
-// @Param data body request.SystemConfig true "用户名/密码"
-// @Produce  application/json
+// @Param Agora-Signature header string true "签名" default(26a4fa1ec3df450caad3d8a4b907efe5476124da)
+// @Param Agora-Signature-V2 header string true "签名" default(60216b719ca4a21701fcea43373370671d1401e4a8e408e2a550aa1a041fbe1c)
+// @Produce application/json
+// @Param data body AgoraCloudCallbackReq true " "
 // @Success 200 {string} string "成功"
 // @Router /callback/agora/cloud [post]
 func AgoraCallbackCloud(c *gin.Context) {
 	//录制需要注意的，eventType-id: 1 2 3 11 30 31 32 40 41 80 81 90 1001
-	prefix := "AgoraCallbackRTC "
+	prefix := "AgoraCallbackCloud "
 	for k, v := range c.Request.Header {
 		util.MyPrint(prefix, "header ", k, v)
 	}
@@ -95,50 +113,9 @@ func AgoraCallbackCloud(c *gin.Context) {
 	bodyBytes, err := ioutil.ReadAll(c.Request.Body)
 	util.MyPrint(prefix, "ReadAll body:", string(bodyBytes), " err:", err)
 
-	httpresponse.OkWithAll("回调成功", "ok", c)
-}
-
-// @Tags Callback
-// @Summary 声网 - 模拟/测试回调
-// @Description  模拟/测试回调
-// @Param Agora-Signature header string true "签名" default(26a4fa1ec3df450caad3d8a4b907efe5476124da)
-// @Param Agora-Signature-V2 header string true "签名" default(60216b719ca4a21701fcea43373370671d1401e4a8e408e2a550aa1a041fbe1c)
-// @Produce application/json
-// @Param data body AgoraRtcCallbackReq true " "
-// @Success 200 {string} string "成功"
-// @Router /callback/agora/rtc/test [post]
-func AgoraCallbackRTCTest(c *gin.Context) {
-	var form AgoraRtcCallbackReq
-	c.ShouldBind(&form)
-	util.MyPrint("form:", form)
-
-	NotifyMsStr := strconv.FormatInt(form.NotifyMs, 10)
-	payloadBytes, _ := json.Marshal(form.Payload)
-	util.MyPrint("NotifyMsStr:", NotifyMsStr, " payloadBytes:", string(payloadBytes))
-	agoraCallbackRecord := model.AgoraCallbackRecord{
-		EventType: form.EventType,
-		NoticeId:  form.NoticeId,
-		ProductId: form.ProductId,
-		NotifyMs:  NotifyMsStr,
-		Payload:   string(payloadBytes),
-	}
-	global.V.Gorm.Create(&agoraCallbackRecord)
-
-}
-
-// @Tags Callback
-// @Summary 声网 - 模拟/测试回调
-// @Description  模拟/测试回调
-// @Param Agora-Signature header string true "签名" default(26a4fa1ec3df450caad3d8a4b907efe5476124da)
-// @Param Agora-Signature-V2 header string true "签名" default(60216b719ca4a21701fcea43373370671d1401e4a8e408e2a550aa1a041fbe1c)
-// @Produce application/json
-// @Param data body AgoraRtcCallbackReq true " "
-// @Success 200 {string} string "成功"
-// @Router /callback/agora/cloud/test [post]
-func AgoraCallbackCloudTest(c *gin.Context) {
 	var form AgoraCloudCallbackReq
-	c.ShouldBind(&form)
-	util.MyPrint("form:", form)
+	err = c.ShouldBind(&form)
+	util.MyPrint("form:", form, " err:", err)
 
 	NotifyMsStr := strconv.FormatInt(form.NotifyMs, 10)
 	payloadBytes, _ := json.Marshal(form.Payload)
@@ -152,4 +129,5 @@ func AgoraCallbackCloudTest(c *gin.Context) {
 	}
 	global.V.Gorm.Create(&agoraCallbackRecord)
 
+	httpresponse.OkWithAll("回调成功", "ok", c)
 }

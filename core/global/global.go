@@ -66,7 +66,7 @@ const (
 func AutoCreateUpDbTable() map[string]string {
 	mydb := util.NewDbTool(V.Gorm)
 	sql := mydb.CreateTable(&model.User{}, &model.UserReg{}, &model.UserLogin{},
-		&model.AgoraCloudRecord{},
+		&model.AgoraCloudRecord{}, &model.AgoraCallbackRecord{},
 		&model.OperationRecord{}, &model.Project{}, &model.StatisticsLog{},
 		&model.CicdPublish{}, &model.Server{}, &model.Instance{},
 		&model.SmsRule{}, &model.SmsLog{}, &model.EmailRule{}, &model.EmailLog{}, &model.MailRule{}, &model.MailLog{}, &model.MailGroup{})

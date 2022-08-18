@@ -132,15 +132,17 @@ status          = "open"
 persistenceType = 3
 dataPath        = "data/config" #相对路径，在static下面
 
-[upload]
+[fileManager]
 #注意：这里是一个相对路径，且没有：录层级，可以修改名字，但不可以增加层级（名字两边也不要加反斜杠）
 #两个地方会用到它：1. cicd 2. 文件上传
 #原因1：cicd 部署时：会自动创建该目录名（软连接），实际物理位置由CICD里的配置信息确定
 #原因2: 文件上传类，在本地存储文件时，得有个本机的目录，存储成功后，前端的请求是：一个host+ 相对目录名+文件名，如果host是直接指向此目录，那写绝对路径也行，但是如果host只是指向的是该目录的上一级目录（如：静态资源统一域名，不区分是否为上传/proto/js/等）,那么绝对路径肯定不行
 #此目录就在项目的根目录下，不需要你手动创建，CICD会帮忙处理，如果不使用CICD，需要手动创建(软连接)
-path = "upload" #相对路径，在static下面
+uploadPath = "upload" #相对路径，在static下面
 #上传文件大小，这个值最好别设置太大，同时要跟nginx同步修改不然不失效
-maxSize = 9
+uploadMaxSize = 9
+downloadPath = "download"
+downloadMaxSize = 100
 
 [oss]
 accessKeyId     = "#oss_user#"

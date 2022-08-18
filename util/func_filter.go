@@ -16,6 +16,12 @@ func CheckEmailRule(email string) bool {
 	return reg.MatchString(email)
 }
 
+func CheckFileName(name string) bool { //判断文件名合法
+	pattern := `^[a-zA-Z0-9_-]{1,100}\.[\w]{1,10}$`
+	reg := regexp.MustCompile(pattern)
+	return reg.MatchString(name)
+}
+
 func CheckIp4Rule(ip string) bool {
 	pattern := `((25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(25[0-5]|2[0-4]\d|[01]?\d\d?)`
 	reg := regexp.MustCompile(pattern)
@@ -51,7 +57,7 @@ func CheckIdNumberRule(idNumber string) bool {
 
 }
 
-func CheckServiceDeployDirName(name string)bool{
+func CheckServiceDeployDirName(name string) bool {
 	pattern := `^\d{10,13}_[A-Za-z0-9]{6,10}$`
 	reg := regexp.MustCompile(pattern)
 	return reg.MatchString(name)

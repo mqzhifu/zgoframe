@@ -2,7 +2,6 @@ package v1
 
 import (
 	"github.com/gin-gonic/gin"
-	"strconv"
 	"zgoframe/core/global"
 	"zgoframe/http/request"
 	httpresponse "zgoframe/http/response"
@@ -22,7 +21,7 @@ import (
 // @Produce	application/json
 // @Success 200 {object} httpresponse.HttpUploadRs "上传结果"
 // @Router 	/file/upload/img/one [POST]
-func FileUploadImgOne(c *gin.Context){
+func FileUploadImgOne(c *gin.Context) {
 	_, header, err := c.Request.FormFile("file")
 	if err != nil {
 		util.MyPrint("err1:", err.Error())
@@ -30,21 +29,21 @@ func FileUploadImgOne(c *gin.Context){
 	}
 
 	category := util.FILE_TYPE_IMG
-	module  := c.PostForm("module")
-	syncOss := c.PostForm("sync_oss")
-	fileUpload := global.GetUploadObj(category,module)
-	uploadRs,err := fileUpload.UploadOne(header,util.Atoi(syncOss))
+	module := c.PostForm("module")
+	//syncOss := c.PostForm("sync_oss")
+	fileUpload := global.GetUploadObj(category, module)
+	uploadRs, err := fileUpload.UploadOne(header)
 
-	util.MyPrint("uploadRs:",uploadRs, " err:",err)
-	if err != nil{
-		httpresponse.FailWithMessage(err.Error(),c)
-	}else{
+	util.MyPrint("uploadRs:", uploadRs, " err:", err)
+	if err != nil {
+		httpresponse.FailWithMessage(err.Error(), c)
+	} else {
 		httpUploadRs := httpresponse.HttpUploadRs{}
 		httpUploadRs.UploadRs = uploadRs
-		ip , _:= util.GetLocalIp()
-		httpUploadRs.FullLocalIpUrl = util.UrlAppendIpHost("http",httpUploadRs.LocalIpUrl,ip,global.C.Http.Port)
-		httpUploadRs.FullLocalDomainUrl = util.UrlAppendDomain("http",httpUploadRs.LocalDomainUrl,global.C.Domain.Static,"")
-		httpresponse.OkWithAll( httpUploadRs, "已上传", c)
+		ip, _ := util.GetLocalIp()
+		httpUploadRs.FullLocalIpUrl = util.UrlAppendIpHost("http", httpUploadRs.LocalIpUrl, ip, global.C.Http.Port)
+		httpUploadRs.FullLocalDomainUrl = util.UrlAppendDomain("http", httpUploadRs.LocalDomainUrl, global.C.Domain.Static, "")
+		httpresponse.OkWithAll(httpUploadRs, "已上传", c)
 	}
 
 }
@@ -62,44 +61,44 @@ func FileUploadImgOne(c *gin.Context){
 // @Produce  application/json
 // @Success 200 {object} []httpresponse.HttpUploadRs "每个图片的上传结果"
 // @Router /file/upload/img/multi [post]
-func FileUploadImgMulti(c *gin.Context){
+func FileUploadImgMulti(c *gin.Context) {
 	//category ,_:= strconv.Atoi (c.PostForm("category") )
 	category := util.FILE_TYPE_IMG
-	module  := c.PostForm("module")
+	module := c.PostForm("module")
 
 	form, err := c.MultipartForm()
 	if err != nil {
-		httpresponse.FailWithMessage(err.Error(),c)
+		httpresponse.FailWithMessage(err.Error(), c)
 		return
 	}
-	syncOss := c.PostForm("sync_oss")
-	fileUpload := global.GetUploadObj(category,module)
+	//syncOss := c.PostForm("sync_oss")
+	fileUpload := global.GetUploadObj(category, module)
 	// 获取所有图片
 	files := form.File["files"]
-	if len(files) < 1{
-		httpresponse.FailWithMessage("请至少上传一个文件.",c)
+	if len(files) < 1 {
+		httpresponse.FailWithMessage("请至少上传一个文件.", c)
 		return
 	}
-	util.MyPrint("files len:",len(files))
+	util.MyPrint("files len:", len(files))
 
-	ip , _:= util.GetLocalIp()
+	ip, _ := util.GetLocalIp()
 	errList := []httpresponse.HttpUploadRs{}
 	for _, file := range files {
 		httpUploadRs := httpresponse.HttpUploadRs{}
 
-		uploadRs,err := fileUpload.UploadOne(file,util.Atoi(syncOss))
+		uploadRs, err := fileUpload.UploadOne(file)
 		errMsg := ""
-		if err != nil{
+		if err != nil {
 			errMsg = err.Error()
 		}
 		httpUploadRs.UploadRs = uploadRs
-		httpUploadRs.FullLocalIpUrl = util.UrlAppendIpHost("http",httpUploadRs.LocalIpUrl,ip,global.C.Http.Port)
-		httpUploadRs.FullLocalDomainUrl = util.UrlAppendDomain("http",httpUploadRs.LocalDomainUrl,global.C.Domain.Static,"")
+		httpUploadRs.FullLocalIpUrl = util.UrlAppendIpHost("http", httpUploadRs.LocalIpUrl, ip, global.C.Http.Port)
+		httpUploadRs.FullLocalDomainUrl = util.UrlAppendDomain("http", httpUploadRs.LocalDomainUrl, global.C.Domain.Static, "")
 		httpUploadRs.Err = errMsg
-		errList = append(errList, httpUploadRs  )
+		errList = append(errList, httpUploadRs)
 	}
 
-	httpresponse.OkWithAll(errList,"ok",c)
+	httpresponse.OkWithAll(errList, "ok", c)
 }
 
 // @Tags file
@@ -113,10 +112,10 @@ func FileUploadImgMulti(c *gin.Context){
 // @Produce  application/json
 // @Success 200 {object} httpresponse.HttpUploadRs "下载结果"
 // @Router /file/upload/img/one/stream/base64 [POST]
-func FileUploadImgOneStreamBase64(c *gin.Context){
+func FileUploadImgOneStreamBase64(c *gin.Context) {
 	category := util.FILE_TYPE_IMG
 
-	fileUpload := global.GetUploadObj(category,"")
+	fileUpload := global.GetUploadObj(category, "")
 
 	//stream  := c.PostForm("stream")
 	//util.MyPrint("stream:",stream)
@@ -126,25 +125,24 @@ func FileUploadImgOneStreamBase64(c *gin.Context){
 	//}
 	var form request.UploadFile
 	c.ShouldBind(&form)
-	if form.Stream == ""{
-		httpresponse.FailWithMessage("stream empty!!!",c)
+	if form.Stream == "" {
+		httpresponse.FailWithMessage("stream empty!!!", c)
 		return
 	}
 
-	uploadRs ,err := fileUpload.UploadOneByStream(form.Stream,category,form.SyncOss)
-	if err != nil{
-		httpresponse.FailWithMessage(err.Error(),c)
-	}else{
+	uploadRs, err := fileUpload.UploadOneByStream(form.Stream, category)
+	if err != nil {
+		httpresponse.FailWithMessage(err.Error(), c)
+	} else {
 		httpUploadRs := httpresponse.HttpUploadRs{}
 		httpUploadRs.UploadRs = uploadRs
-		ip , _:= util.GetLocalIp()
-		httpUploadRs.FullLocalIpUrl = util.UrlAppendIpHost("http",httpUploadRs.LocalIpUrl,ip,global.C.Http.Port)
-		httpUploadRs.FullLocalDomainUrl = util.UrlAppendDomain("http",httpUploadRs.LocalDomainUrl,global.C.Domain.Static,"")
-		httpresponse.OkWithAll( httpUploadRs, "已上传", c)
+		ip, _ := util.GetLocalIp()
+		httpUploadRs.FullLocalIpUrl = util.UrlAppendIpHost("http", httpUploadRs.LocalIpUrl, ip, global.C.Http.Port)
+		httpUploadRs.FullLocalDomainUrl = util.UrlAppendDomain("http", httpUploadRs.LocalDomainUrl, global.C.Domain.Static, "")
+		httpresponse.OkWithAll(httpUploadRs, "已上传", c)
 	}
 
 }
-
 
 // @Tags file
 // @Summary 上传一个文档
@@ -159,7 +157,7 @@ func FileUploadImgOneStreamBase64(c *gin.Context){
 // @Produce	application/json
 // @Success 200 {object} httpresponse.HttpUploadRs "上传结果"
 // @Router 	/file/upload/doc/one [POST]
-func FileUploadDocOne(c *gin.Context){
+func FileUploadDocOne(c *gin.Context) {
 	_, header, err := c.Request.FormFile("file")
 	if err != nil {
 		util.MyPrint("err1:", err.Error())
@@ -167,22 +165,22 @@ func FileUploadDocOne(c *gin.Context){
 	}
 
 	category := util.FILE_TYPE_DOC
-	module  := c.PostForm("module")
-	syncOss := c.PostForm("sync_oss")
+	module := c.PostForm("module")
+	//syncOss := c.PostForm("sync_oss")
 
-	fileUpload := global.GetUploadObj(category,module)
-	uploadRs,err := fileUpload.UploadOne(header,util.Atoi(syncOss))
+	fileUpload := global.GetUploadObj(category, module)
+	uploadRs, err := fileUpload.UploadOne(header)
 
-	util.MyPrint("uploadRs:",uploadRs, " err:",err)
-	if err != nil{
-		httpresponse.FailWithMessage(err.Error(),c)
-	}else{
+	util.MyPrint("uploadRs:", uploadRs, " err:", err)
+	if err != nil {
+		httpresponse.FailWithMessage(err.Error(), c)
+	} else {
 		httpUploadRs := httpresponse.HttpUploadRs{}
 		httpUploadRs.UploadRs = uploadRs
-		ip , _:= util.GetLocalIp()
-		httpUploadRs.FullLocalIpUrl = util.UrlAppendIpHost("http",httpUploadRs.LocalIpUrl,ip,global.C.Http.Port)
-		httpUploadRs.FullLocalDomainUrl = util.UrlAppendDomain("http",httpUploadRs.LocalDomainUrl,global.C.Domain.Static,"")
-		httpresponse.OkWithAll( httpUploadRs, "已上传", c)
+		ip, _ := util.GetLocalIp()
+		httpUploadRs.FullLocalIpUrl = util.UrlAppendIpHost("http", httpUploadRs.LocalIpUrl, ip, global.C.Http.Port)
+		httpUploadRs.FullLocalDomainUrl = util.UrlAppendDomain("http", httpUploadRs.LocalDomainUrl, global.C.Domain.Static, "")
+		httpresponse.OkWithAll(httpUploadRs, "已上传", c)
 	}
 
 }
@@ -200,48 +198,45 @@ func FileUploadDocOne(c *gin.Context){
 // @Produce  application/json
 // @Success 200 {object} []httpresponse.HttpUploadRs "每个图片的上传结果"
 // @Router /file/upload/doc/multi [post]
-func FileUploadDocMulti(c *gin.Context){
+func FileUploadDocMulti(c *gin.Context) {
 	//category ,_:= strconv.Atoi (c.PostForm("category") )
 	category := util.FILE_TYPE_IMG
-	module  := c.PostForm("module")
+	module := c.PostForm("module")
 
 	form, err := c.MultipartForm()
 	if err != nil {
-		httpresponse.FailWithMessage(err.Error(),c)
+		httpresponse.FailWithMessage(err.Error(), c)
 		return
 	}
-	syncOss := c.PostForm("sync_oss")
-	fileUpload := global.GetUploadObj(category,module)
+	//syncOss := c.PostForm("sync_oss")
+	fileUpload := global.GetUploadObj(category, module)
 	// 获取所有图片
 	files := form.File["files"]
-	if len(files) < 1{
-		httpresponse.FailWithMessage("请至少上传一个文件.",c)
+	if len(files) < 1 {
+		httpresponse.FailWithMessage("请至少上传一个文件.", c)
 		return
 	}
-	util.MyPrint("files len:",len(files))
+	util.MyPrint("files len:", len(files))
 
-	ip , _:= util.GetLocalIp()
+	ip, _ := util.GetLocalIp()
 	errList := []httpresponse.HttpUploadRs{}
 	for _, file := range files {
 		httpUploadRs := httpresponse.HttpUploadRs{}
 
-		uploadRs,err := fileUpload.UploadOne(file,util.Atoi(syncOss))
+		uploadRs, err := fileUpload.UploadOne(file)
 		errMsg := ""
-		if err != nil{
+		if err != nil {
 			errMsg = err.Error()
 		}
 		httpUploadRs.UploadRs = uploadRs
-		httpUploadRs.FullLocalIpUrl = util.UrlAppendIpHost("http",httpUploadRs.LocalIpUrl,ip,global.C.Http.Port)
-		httpUploadRs.FullLocalDomainUrl = util.UrlAppendDomain("http",httpUploadRs.LocalDomainUrl,global.C.Domain.Static,"")
+		httpUploadRs.FullLocalIpUrl = util.UrlAppendIpHost("http", httpUploadRs.LocalIpUrl, ip, global.C.Http.Port)
+		httpUploadRs.FullLocalDomainUrl = util.UrlAppendDomain("http", httpUploadRs.LocalDomainUrl, global.C.Domain.Static, "")
 		httpUploadRs.Err = errMsg
-		errList = append(errList, httpUploadRs  )
+		errList = append(errList, httpUploadRs)
 	}
 
-	httpresponse.OkWithAll(errList,"ok",c)
+	httpresponse.OkWithAll(errList, "ok", c)
 }
-
-
-
 
 // @Tags file
 // @Summary 大文件下载(暂未实现，后续补充)
@@ -254,34 +249,32 @@ func FileUploadDocMulti(c *gin.Context){
 // @Produce application/json
 // @Success 200 {object} httpresponse.HttpUploadRs "下载结果"
 // @Router 	/file/big/download [post]
-func FileBigDownload(c *gin.Context){
+func FileBigDownload(c *gin.Context) {
 
-	fileUpload := global.GetUploadObj(1,"")
-	//filePath := c.PostForm("path")
-	////filePath := c.Query("path")
-	filePath := "1.jpg"
-	util.MyPrint("FileBigDownload filePath:",filePath)
-
-
-	err := fileUpload.Download(filePath,c)
-	util.MyPrint(" fileUpload.DownloadBig return err:",err)
-
-	//headerRange := c.Request.Header.Get("Range")
-	//c.Header("Content-Ranges","bytes 0-1023/1024")
+	//fileUpload := global.GetUploadObj(1, "")
+	////filePath := c.PostForm("path")
+	//////filePath := c.Query("path")
+	//filePath := "1.jpg"
+	//util.MyPrint("FileBigDownload filePath:", filePath)
+	//
+	//err := fileUpload.Download(filePath, c)
+	//util.MyPrint(" fileUpload.DownloadBig return err:", err)
+	//
+	////headerRange := c.Request.Header.Get("Range")
+	////c.Header("Content-Ranges","bytes 0-1023/1024")
 
 }
+
 //分断续传，使用http header:ranges ，C端首次请求：获取文件基础信息
-func FileDownloadInfo(c *gin.Context){
-	filePath := c.PostForm("path")
-	fileUpload := global.GetUploadObj(1,"")
-	fileDownInfo ,err := fileUpload.DownloadFileInfo(filePath)
-	if err != nil{
-		httpresponse.FailWithMessage(err.Error(),c)
-		return
-	}
-
-	c.Header("Accept-Ranges","bytes")
-	c.Header("Content-Length",strconv.Itoa(int(fileDownInfo.FileSize)))
+func FileDownloadInfo(c *gin.Context) {
+	//filePath := c.PostForm("path")
+	//fileUpload := global.GetUploadObj(1, "")
+	//fileDownInfo, err := fileUpload.DownloadFileInfo(filePath)
+	//if err != nil {
+	//	httpresponse.FailWithMessage(err.Error(), c)
+	//	return
+	//}
+	//
+	//c.Header("Accept-Ranges", "bytes")
+	//c.Header("Content-Length", strconv.Itoa(int(fileDownInfo.FileSize)))
 }
-
-

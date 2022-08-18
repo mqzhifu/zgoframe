@@ -21,11 +21,12 @@ type Config struct {
 	PushGateway      PushGateway
 	Gateway          Gateway
 	ConfigCenter     ConfigCenter
-	Upload           Upload
-	Oss              Oss
-	Cicd             Cicd
-	Agora            Agora
-	Domain           Domain
+	//Upload           Upload
+	FileManager FileManager
+	Oss         Oss
+	Cicd        Cicd
+	Agora       Agora
+	Domain      Domain
 }
 
 type Protobuf struct {
@@ -205,10 +206,17 @@ type ConfigCenter struct {
 	DataPath        string
 }
 
-type Upload struct {
-	Path    string
-	MaxSize int
+type FileManager struct {
+	UploadPath      string
+	UploadMaxSize   int
+	DownloadPath    string
+	DownloadMaxSize int
 }
+
+//type Upload struct {
+//	Path    string
+//	MaxSize int
+//}
 
 type Oss struct {
 	AccessKeyId     string

@@ -35,7 +35,7 @@ type Global struct {
 	Process          *util.Process
 	Err              *util.ErrMsg
 	Email            *util.MyEmail
-	FileUpload       *util.FileUpload
+	FileUpload       *util.FileManager
 	MyService        *service.Service //内部快捷服务
 	NetWay           *util.NetWay
 	ServiceManager   *util.ServiceManager   //管理已注册的服务
@@ -76,25 +76,43 @@ func AutoCreateUpDbTable() map[string]string {
 }
 
 //文件公共处理类，做成公共，方便统一管理
-func GetUploadObj(category int, module string) *util.FileUpload {
+func GetUploadObj(category int, module string) *util.FileManager {
 	//projectId := request.GetProjectId(c)
-	fileUploadOption := util.FileUploadOption{
-		FilePrefix:         module,
-		MaxSize:            C.Upload.MaxSize,
-		Category:           category,
-		FileHashType:       util.FILE_HASH_DAY,
-		UploadDir:          C.Upload.Path,
-		StaticDir:          C.Http.StaticPath,
-		ProjectRootPath:    V.RootDir,
-		OssAccessKeyId:     C.Oss.AccessKeyId,
-		OssEndpoint:        C.Oss.Endpoint,
-		OssBucketName:      C.Oss.Bucket,
-		OssLocalDomain:     C.Oss.SelfDomain,
-		OssAccessKeySecret: C.Oss.AccessKeySecret,
+	fileUploadOption := util.FileManagerOption{
+		FilePrefix:       module,
+		UploadDir:        C.FileManager.UploadPath,
+		UploadMaxSize:    C.FileManager.UploadMaxSize,
+		UploadStoreLocal: util.UPLOAD_STORE_LOCAL_OPEN,
+		UploadStoreOSS:   util.UPLOAD_STORE_OSS_ALI,
+		DownloadDir:      C.FileManager.DownloadPath,
+		DownloadMaxSize:  C.FileManager.DownloadMaxSize,
+		Category:         category,
+		FileHashType:     util.FILE_HASH_DAY,
+		StaticDir:        C.Http.StaticPath,
+		ProjectRootPath:  V.RootDir,
+		AliOss:           GetAliOss(),
+		//UploadDir:          C.Upload.Path,
+		//MaxSize:            C.Upload.MaxSize,
+		//OssAccessKeyId:     C.Oss.AccessKeyId,
+		//OssEndpoint:        C.Oss.Endpoint,
+		//OssBucketName:  C.Oss.Bucket,
+		//OssLocalDomain: C.Oss.SelfDomain,
+		//OssAccessKeySecret: C.Oss.AccessKeySecret,
 	}
 
-	fileUpload := util.NewFileUpload(fileUploadOption)
+	fileUpload := util.NewFileManagerUpload(fileUploadOption)
 	return fileUpload
+}
+
+func GetAliOss() *util.AliOss {
+	op := util.AliOssOptions{
+		AccessKeyId:     C.Oss.AccessKeyId,
+		AccessKeySecret: C.Oss.AccessKeySecret,
+		Endpoint:        C.Oss.Endpoint,
+		BucketName:      C.Oss.Bucket,
+		LocalDomain:     C.Oss.SelfDomain,
+	}
+	return util.NewAliOss(op)
 }
 
 func GetUtilUploadConst() map[string]int {

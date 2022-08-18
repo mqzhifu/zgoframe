@@ -433,10 +433,11 @@ func TwinAgoraCloudRecordOssFiles(c *gin.Context) {
 	if err != nil {
 		util.MyPrint("record.ConfigInfo Unmarshal err:", err)
 	}
-	pathPrefix := "/"
+	pathPrefix := ""
 	for _, v := range clientRequestStart.StorageConfig.FileNamePrefix {
 		pathPrefix += v + "/"
 	}
+	//pathPrefix := "agoraRecord/ckck/1660733248/"
 
 	util.MyPrint(pathPrefix)
 	upload := global.GetUploadObj(1, "")
@@ -447,7 +448,8 @@ func TwinAgoraCloudRecordOssFiles(c *gin.Context) {
 	}
 
 	for _, v := range listObjectsResult.Objects {
-		util.MyPrint(v)
+		util.MyPrint("Size:", v.Size, ", key:", v.Key)
+
 	}
 
 }

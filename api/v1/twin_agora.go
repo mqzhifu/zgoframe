@@ -410,46 +410,46 @@ func TwinAgoraRTCGetToken(c *gin.Context) {
 // @Success 200 {boolean} boolean "true:成功 false:否"
 // @Router /twin/agora/cloud/record/oss/files/{rid} [GET]
 func TwinAgoraCloudRecordOssFiles(c *gin.Context) {
-	recordId := util.Atoi(c.Param("rid"))
-	if recordId <= 0 {
-		httpresponse.FailWithMessage("RecordId <= 0", c)
-		return
-	}
-
-	var record model.AgoraCloudRecord
-	err := global.V.Gorm.First(&record, recordId).Error
-	if err != nil {
-		errInfo := "db not found recordId:" + strconv.Itoa(recordId)
-		httpresponse.FailWithMessage(errInfo, c)
-		return
-	}
-
-	if record.Status != model.AGORA_CLOUD_RECORD_STATUS_END {
-		httpresponse.FailWithMessage("record db status != AGORA_CLOUD_RECORD_STATUS_END", c)
-		return
-	}
-	clientRequestStart := util.ClientRequestStart{}
-	err = json.Unmarshal([]byte(record.ConfigInfo), &clientRequestStart)
-	if err != nil {
-		util.MyPrint("record.ConfigInfo Unmarshal err:", err)
-	}
-	pathPrefix := ""
-	for _, v := range clientRequestStart.StorageConfig.FileNamePrefix {
-		pathPrefix += v + "/"
-	}
-	//pathPrefix := "agoraRecord/ckck/1660733248/"
-
-	util.MyPrint(pathPrefix)
-	upload := global.GetUploadObj(1, "")
-	listObjectsResult, err := upload.OssLs(pathPrefix)
-	if len(listObjectsResult.Objects) <= 0 {
-		httpresponse.FailWithMessage("path:"+pathPrefix+" is  empty,no files.", c)
-		return
-	}
-
-	for _, v := range listObjectsResult.Objects {
-		util.MyPrint("Size:", v.Size, ", key:", v.Key)
-
-	}
+	//recordId := util.Atoi(c.Param("rid"))
+	//if recordId <= 0 {
+	//	httpresponse.FailWithMessage("RecordId <= 0", c)
+	//	return
+	//}
+	//
+	//var record model.AgoraCloudRecord
+	//err := global.V.Gorm.First(&record, recordId).Error
+	//if err != nil {
+	//	errInfo := "db not found recordId:" + strconv.Itoa(recordId)
+	//	httpresponse.FailWithMessage(errInfo, c)
+	//	return
+	//}
+	//
+	//if record.Status != model.AGORA_CLOUD_RECORD_STATUS_END {
+	//	httpresponse.FailWithMessage("record db status != AGORA_CLOUD_RECORD_STATUS_END", c)
+	//	return
+	//}
+	//clientRequestStart := util.ClientRequestStart{}
+	//err = json.Unmarshal([]byte(record.ConfigInfo), &clientRequestStart)
+	//if err != nil {
+	//	util.MyPrint("record.ConfigInfo Unmarshal err:", err)
+	//}
+	//pathPrefix := ""
+	//for _, v := range clientRequestStart.StorageConfig.FileNamePrefix {
+	//	pathPrefix += v + "/"
+	//}
+	////pathPrefix := "agoraRecord/ckck/1660733248/"
+	//
+	//util.MyPrint(pathPrefix)
+	//upload := global.GetUploadObj(1, "")
+	//listObjectsResult, err := upload.OssLs(pathPrefix)
+	//if len(listObjectsResult.Objects) <= 0 {
+	//	httpresponse.FailWithMessage("path:"+pathPrefix+" is  empty,no files.", c)
+	//	return
+	//}
+	//
+	//for _, v := range listObjectsResult.Objects {
+	//	util.MyPrint("Size:", v.Size, ", key:", v.Key)
+	//
+	//}
 
 }

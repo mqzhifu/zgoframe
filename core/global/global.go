@@ -79,10 +79,11 @@ func AutoCreateUpDbTable() map[string]string {
 func GetUploadObj(category int, module string) *util.FileManager {
 	//projectId := request.GetProjectId(c)
 	fileUploadOption := util.FileManagerOption{
-		FilePrefix:       module,
-		UploadDir:        C.FileManager.UploadPath,
-		UploadMaxSize:    C.FileManager.UploadMaxSize,
-		UploadStoreLocal: util.UPLOAD_STORE_LOCAL_OPEN,
+		FilePrefix:    module,
+		UploadDir:     C.FileManager.UploadPath,
+		UploadMaxSize: C.FileManager.UploadMaxSize,
+		//UploadStoreLocal: util.UPLOAD_STORE_LOCAL_OPEN,
+		UploadStoreLocal: util.UPLOAD_STORE_LOCAL_OFF,
 		UploadStoreOSS:   util.UPLOAD_STORE_OSS_ALI,
 		DownloadDir:      C.FileManager.DownloadPath,
 		DownloadMaxSize:  C.FileManager.DownloadMaxSize,

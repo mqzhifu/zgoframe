@@ -1,45 +1,45 @@
 package util
 
 import (
+	"bytes"
 	"encoding/hex"
+	"errors"
 	"io/ioutil"
 	"mime/multipart"
 	"net/http"
 	"strconv"
-	"sync"
-	"errors"
-	"bytes"
 	"strings"
+	"sync"
 )
 
 //检查文件的内容，是否合法
-func   (fileUpload *FileUpload)checkFileContentType(header *multipart.FileHeader,fileExtName string)error{
-	f,_ := header.Open()
+func (fileManager *FileManager) checkFileContentType(header *multipart.FileHeader, fileExtName string) error {
+	f, _ := header.Open()
 	fSrc, _ := ioutil.ReadAll(f)
-	realFileType := fileUpload.GetFileType(fSrc[:10])
+	realFileType := fileManager.GetFileType(fSrc[:10])
 
 	contentType := http.DetectContentType(fSrc[:512])
-	MyPrint("checkFileContentType realFileType:",realFileType , " http.DetectContentType:",contentType)
+	MyPrint("checkFileContentType realFileType:", realFileType, " http.DetectContentType:", contentType)
 
-	if realFileType != ""{
-		if !fileUpload.FilterByExtString(fileUpload.Option.Category,realFileType){
-			return errors.New("ext errors:"+fileUpload.GetAllowFileTypeListToStr(fileUpload.Option.Category))
+	if realFileType != "" {
+		if !fileManager.FilterByExtString(fileManager.Option.Category, realFileType) {
+			return errors.New("ext errors:" + fileManager.GetAllowFileTypeListToStr(fileManager.Option.Category))
 		}
 
-		if realFileType != fileExtName{
+		if realFileType != fileExtName {
 			return errors.New("文件名中的扩展名与文件内容的类型不符")
 		}
-	}else{
+	} else {
 		//这里是证明无法从头里识别出具体类型，如:TXT 不同编辑类型，可能头内容不同，ANSI的更是没有头标识符
-		if fileExtName != "txt"{
+		if fileExtName != "txt" {
 			return errors.New("文件类型非法:未识别出文件类型")
 		}
 	}
 
-	return nil;
+	return nil
 }
 
-func (fileUpload *FileUpload) InitMap() {
+func (fileManager *FileManager) InitMap() {
 	var fileTypeMap sync.Map
 
 	fileTypeMap.Store("ffd8ffe000104a464946", "jpg")  //JPEG (jpg)
@@ -99,11 +99,11 @@ func (fileUpload *FileUpload) InitMap() {
 	fileTypeMap.Store("E3828596", "pwl")         //Windows Password (pwl)
 	fileTypeMap.Store("2E7261FD", "ram")         //Real Audio (ram)
 
-	fileUpload.FileTypeMap = fileTypeMap
+	fileManager.FileTypeMap = fileTypeMap
 }
 
 // 获取前面结果字节的二进制
-func  (fileUpload *FileUpload) bytesToHexString(src []byte) string {
+func (fileManager *FileManager) bytesToHexString(src []byte) string {
 	res := bytes.Buffer{}
 	if src == nil || len(src) <= 0 {
 		return ""
@@ -122,11 +122,11 @@ func  (fileUpload *FileUpload) bytesToHexString(src []byte) string {
 
 // 用文件前面几个字节来判断
 // fSrc: 文件字节流（就用前面几个字节）
-func  (fileUpload *FileUpload) GetFileType(fSrc []byte) string {
+func (fileManager *FileManager) GetFileType(fSrc []byte) string {
 	var fileType string
-	fileCode := fileUpload.bytesToHexString(fSrc)
-	MyPrint("fileCode:",fileCode)
-	fileUpload.FileTypeMap.Range(func(key, value interface{}) bool {
+	fileCode := fileManager.bytesToHexString(fSrc)
+	MyPrint("fileCode:", fileCode)
+	fileManager.FileTypeMap.Range(func(key, value interface{}) bool {
 		k := key.(string)
 		v := value.(string)
 		if strings.HasPrefix(fileCode, strings.ToLower(k)) ||
@@ -138,5 +138,3 @@ func  (fileUpload *FileUpload) GetFileType(fSrc []byte) string {
 	})
 	return fileType
 }
-
-

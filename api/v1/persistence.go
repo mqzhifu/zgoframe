@@ -96,7 +96,7 @@ func LogPushFile(c *gin.Context) {
 	module := "log"
 
 	fileUpload := global.GetUploadObj(category, module)
-	uploadRs, err := fileUpload.UploadOne(header, 2)
+	uploadRs, err := fileUpload.UploadOne(header)
 	if err != nil {
 		util.MyPrint("fileUpload.UploadOne err:", err.Error())
 		return
@@ -177,7 +177,7 @@ func LogPushFileJson(c *gin.Context) {
 	module := "log"
 
 	fileUpload := global.GetUploadObj(category, module)
-	uploadRs, err := fileUpload.UploadOne(header, 2)
+	uploadRs, err := fileUpload.UploadOne(header)
 	if err != nil {
 		util.MyPrint("fileUpload.UploadOne err:", err.Error())
 		httpresponse.FailWithMessage("fileUpload.UploadOne err:"+err.Error(), c)

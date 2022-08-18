@@ -29,7 +29,7 @@ func InitMyService(redisGo *util.MyRedisGo) {
 		Metrics:                     global.V.Metric,
 		ServiceDiscovery:            global.V.ServiceDiscovery,
 		ProjectId:                   global.C.System.ProjectId,
-		UploadDiskPath:              global.V.RootDir + "/" + global.C.Upload.Path,
+		UploadDiskPath:              global.V.RootDir + "/" + global.C.FileManager.UploadPath,
 		RootDir:                     global.V.RootDir,
 	}
 

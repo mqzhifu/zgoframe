@@ -29,8 +29,8 @@ func InitMyService(redisGo *util.MyRedisGo) {
 		Metrics:                     global.V.Metric,
 		ServiceDiscovery:            global.V.ServiceDiscovery,
 		ProjectId:                   global.C.System.ProjectId,
-		UploadDiskPath:              fm.GetLocalDiskDownloadBasePath(),
-		DownloadDiskPath:            fm.GetLocalDiskUploadBasePath(),
+		UploadDiskPath:              fm.GetLocalDiskUploadBasePath(),
+		DownloadDiskPath:            fm.GetLocalDiskDownloadBasePath(),
 		RootDir:                     global.V.RootDir,
 	}
 

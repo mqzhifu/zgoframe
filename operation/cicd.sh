@@ -12,6 +12,7 @@ RemoteUploadDir=$4
 UploadPath=$5
 RemoteDownloadDir=$6
 DownloadPath=$7
+
 cd $SERVICE_GIT_CLONE_PATH
 
 rm -rf ./*

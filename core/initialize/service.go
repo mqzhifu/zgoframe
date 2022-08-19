@@ -9,7 +9,7 @@ import (
 //内部服务，按说：一个项目里最多也就1-2个服务，其它的服务应该在其它项目，并且访问的时候通过HTTP/TCP，这里方便使用，先统计把其它服务当成一个类使用
 func InitMyService(redisGo *util.MyRedisGo) {
 	netWayOption := InitGateway()
-	fm := global.GetUploadObj(1, "")
+	//fm := global.GetUploadObj(1, "")
 	MyServiceOptions := service.MyServiceOptions{
 		Gorm:                        global.V.Gorm,
 		Zap:                         global.V.Zap,
@@ -29,8 +29,8 @@ func InitMyService(redisGo *util.MyRedisGo) {
 		Metrics:                     global.V.Metric,
 		ServiceDiscovery:            global.V.ServiceDiscovery,
 		ProjectId:                   global.C.System.ProjectId,
-		UploadDiskPath:              fm.GetLocalDiskUploadBasePath(),
-		DownloadDiskPath:            fm.GetLocalDiskDownloadBasePath(),
+		UploadDiskPath:              global.C.Http.StaticPath + "/" + global.C.FileManager.UploadPath,
+		DownloadDiskPath:            global.C.Http.StaticPath + "/" + global.C.FileManager.DownloadPath,
 		RootDir:                     global.V.RootDir,
 	}
 

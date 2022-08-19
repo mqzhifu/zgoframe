@@ -37,6 +37,7 @@ type MyServiceOptions struct {
 	ConfigCenterPersistenceType int
 	OpDirName                   string
 	UploadDiskPath              string
+	DownloadDiskPath            string
 	ServiceList                 map[int]util.Service
 	HttpPort                    string
 	GatewayStatus               string
@@ -171,16 +172,17 @@ func InitCicd(option MyServiceOptions) (*cicd.CicdManager, error) {
 
 	//util.ExitPrint(22)
 	op := cicd.CicdManagerOption{
-		HttpPort:        option.HttpPort,
-		ServerList:      serverList,
-		Config:          cicdConfig,
-		ServiceList:     option.ServiceList,
-		ProjectList:     option.ProjectManager.Pool,
-		InstanceManager: instanceManager,
-		PublicManager:   publicManager,
-		Log:             option.Zap,
-		OpDirName:       opDirName,
-		UploadDiskPath:  option.UploadDiskPath,
+		HttpPort:         option.HttpPort,
+		ServerList:       serverList,
+		Config:           cicdConfig,
+		ServiceList:      option.ServiceList,
+		ProjectList:      option.ProjectManager.Pool,
+		InstanceManager:  instanceManager,
+		PublicManager:    publicManager,
+		Log:              option.Zap,
+		OpDirName:        opDirName,
+		UploadDiskPath:   option.UploadDiskPath,
+		DownloadDiskPath: option.DownloadDiskPath,
 	}
 
 	cicd, err := cicd.NewCicdManager(op)

@@ -29,13 +29,15 @@ import (
 
 //===============配置 结构体 开始===================
 type ConfigCicdSystem struct {
-	Env             []string
-	LogDir          string
-	WorkBaseDir     string
-	RemoteBaseDir   string
-	RemoteUploadDir string
-	UploadPath      string
-	RootDir         string
+	Env               []string
+	LogDir            string
+	WorkBaseDir       string
+	RemoteBaseDir     string
+	RemoteUploadDir   string
+	RemoteDownloadDir string
+	//UploadPath      string
+	//DownloadPath string
+	RootDir string
 	//ServiceDir 			string	//远程部署目录
 	//LocalServiceDir		string 	//本地部署目录
 	MasterDirName      string
@@ -115,17 +117,18 @@ type CicdManager struct {
 }
 
 type CicdManagerOption struct {
-	ServerList      map[int]util.Server  //所有服务器
-	ServiceList     map[int]util.Service //所有项目/服务
-	ProjectList     map[int]util.Project
-	HttpPort        string
-	InstanceManager *util.InstanceManager
-	Config          ConfigCicd
-	PublicManager   *CICDPublicManager
-	Log             *zap.Logger
-	OpDirName       string
-	TestServerList  []string
-	UploadDiskPath  string
+	ServerList       map[int]util.Server  //所有服务器
+	ServiceList      map[int]util.Service //所有项目/服务
+	ProjectList      map[int]util.Project
+	HttpPort         string
+	InstanceManager  *util.InstanceManager
+	Config           ConfigCicd
+	PublicManager    *CICDPublicManager
+	Log              *zap.Logger
+	OpDirName        string
+	TestServerList   []string
+	UploadDiskPath   string
+	DownloadDiskPath string
 }
 
 func NewCicdManager(cicdManagerOption CicdManagerOption) (*CicdManager, error) {

@@ -377,8 +377,12 @@ func (fileManager *FileManager) UploadOneByStream(stream string, category int) (
 //
 //}
 
-func (fileManager *FileManager) GetLocalDiskBasePath() string {
+func (fileManager *FileManager) GetLocalDiskUploadBasePath() string {
 	return fileManager.Option.ProjectRootPath + "/" + fileManager.Option.StaticDir + "/" + fileManager.Option.UploadDir
+}
+
+func (fileManager *FileManager) GetLocalDiskDownloadBasePath() string {
+	return fileManager.Option.ProjectRootPath + "/" + fileManager.Option.StaticDir + "/" + fileManager.Option.DownloadDir
 }
 
 func (fileManager *FileManager) GetOssLocalUrl(uploadRs UploadRs) string {
@@ -478,7 +482,7 @@ func (fileManager *FileManager) GetExtName(fileName string) (extName string, err
 //检查本地硬盘文件存储路径
 func (fileManager *FileManager) checkLocalDiskPath() (localDiskDir string, relativePath string, err error) {
 	//硬盘上存储的目录
-	localDiskDir = fileManager.GetLocalDiskBasePath()
+	localDiskDir = fileManager.GetLocalDiskUploadBasePath()
 	if fileManager.Option.FilePrefix != "" {
 		localDiskDir += "/" + fileManager.Option.FilePrefix
 		relativePath += fileManager.Option.FilePrefix

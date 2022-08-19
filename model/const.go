@@ -380,6 +380,23 @@ func GetConstListAgoraCloudRecordStatus() map[string]int {
 	return list
 }
 
+const (
+	AGORA_CLOUD_RECORD_SERVER_STATUS_UNDO = 1
+	AGORA_CLOUD_RECORD_SERVER_STATUS_ING  = 2
+	AGORA_CLOUD_RECORD_SERVER_STATUS_OK   = 3
+	AGORA_CLOUD_RECORD_SERVER_STATUS_ERR  = 4
+)
+
+func GetConstListAgoraCloudRecordServerStatus() map[string]int {
+	list := make(map[string]int)
+	list["未处理"] = AGORA_CLOUD_RECORD_SERVER_STATUS_UNDO
+	list["处理中"] = AGORA_CLOUD_RECORD_SERVER_STATUS_ING
+	list["处理成功"] = AGORA_CLOUD_RECORD_SERVER_STATUS_OK
+	list["处理异常"] = AGORA_CLOUD_RECORD_SERVER_STATUS_ERR
+
+	return list
+}
+
 //func GetConstListFileHashType() map[string]int {
 //	list := make(map[string]int)
 //	list["关闭"] = util.FILE_HASH_NONE

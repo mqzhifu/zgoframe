@@ -30,26 +30,26 @@ func NewHttpCurl(url string, header map[string]string) *HttpCurl {
 	return httpCurl
 }
 
-func (httpCurl *HttpCurl) Get() (res string, err error) {
+func (httpCurl *HttpCurl) Get() (httpCode int, body string, err error) {
 	return httpCurl.Curl(2, "")
 }
 
-func (httpCurl *HttpCurl) Post(data string) (res string, err error) {
+func (httpCurl *HttpCurl) Post(data string) (httpCode int, body string, err error) {
 	return httpCurl.Curl(1, data)
 }
 
-func (httpCurl *HttpCurl) PostJson(data interface{}) (res string, err error) {
+func (httpCurl *HttpCurl) PostJson(data interface{}) (httpCode int, body string, err error) {
 	dataBytes, err := json.Marshal(data)
 	//MyPrint("dataBytes:", string(dataBytes))
 	if err != nil {
 		MyPrint(httpCurl.Prefix + "json.Marshal err:")
-		return res, err
+		return httpCode, body, err
 	}
 	dataStr := string(dataBytes)
 	return httpCurl.Curl(1, dataStr)
 }
 
-func (httpCurl *HttpCurl) Curl(method int, data string) (res string, err error) {
+func (httpCurl *HttpCurl) Curl(method int, data string) (httpCode int, body string, err error) {
 	MyPrint(httpCurl.Prefix+" url:", httpCurl.Url, " data:", data)
 	client := &http.Client{}
 	var request *http.Request
@@ -68,7 +68,7 @@ func (httpCurl *HttpCurl) Curl(method int, data string) (res string, err error) 
 	response, err := client.Do(request)
 	defer response.Body.Close()
 	if err != nil {
-		return res, errors.New(httpCurl.Prefix + err.Error())
+		return httpCode, body, errors.New(httpCurl.Prefix + err.Error())
 	}
 	MyPrint(httpCurl.Prefix + " res status code:" + strconv.Itoa(response.StatusCode))
 	//if response.StatusCode != 200 {
@@ -77,11 +77,11 @@ func (httpCurl *HttpCurl) Curl(method int, data string) (res string, err error) 
 
 	bodyBytes, err := ioutil.ReadAll(response.Body)
 	if err != nil {
-		return res, errors.New("ioutil.ReadAll(response.Body) err:" + err.Error())
+		return response.StatusCode, body, errors.New("ioutil.ReadAll(response.Body) err:" + err.Error())
 	}
 
-	res = string(bodyBytes)
-	MyPrint(httpCurl.Prefix+" response read body:", res, " err:", err)
+	body = string(bodyBytes)
+	MyPrint(httpCurl.Prefix+" response read body:", body, " err:", err)
 
-	return res, nil
+	return response.StatusCode, body, nil
 }

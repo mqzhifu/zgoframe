@@ -92,11 +92,7 @@ func RegGinHttpRoute() {
 	httpresponse.ErrManager = global.V.Err
 
 	global.V.Gin.Use(httpmiddleware.Limiter()).Use(httpmiddleware.Record()).Use(httpmiddleware.Header())
-	CallbackGroup := global.V.Gin.Group("")
-	CallbackGroup.Use(httpmiddleware.Callback())
-	{
-		router.CallbackRouter(CallbackGroup)
-	}
+
 	//设置非登陆可访问API，但是头里要加基础认证的信息
 	PublicGroup := global.V.Gin.Group("")
 	//PublicGroup.Use(httpmiddleware.Cors())
@@ -109,23 +105,23 @@ func RegGinHttpRoute() {
 		router.InitGameMatchRouter(PublicGroup)
 		router.InitPersistenceRouter(PublicGroup)
 		router.InitFileRouter(PublicGroup)
-		router.InitTwinAgoraRouter(PublicGroup)
 
 	}
 	PrivateGroup := global.V.Gin.Group("")
 	//设置正常API（需要验证）
-	//httpmiddleware.CasbinHandler()
 	PrivateGroup.Use(httpmiddleware.JWTAuth())
 	{
+		router.InitTwinAgoraRouter(PrivateGroup)
 		router.InitUserRouter(PrivateGroup)
 		router.InitSysRouter(PrivateGroup)
 		router.InitMailRouter(PrivateGroup)
 	}
 
-	GatewayGroup := global.V.Gin.Group("")
-	GatewayGroup.Use()
+	nobodyGroup := global.V.Gin.Group("")
+	nobodyGroup.Use()
 	{
-		router.InitGatewayRouter(GatewayGroup)
+		router.CallbackRouter(nobodyGroup)
+		router.InitGatewayRouter(nobodyGroup)
 	}
 
 }

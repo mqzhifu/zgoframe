@@ -57,16 +57,17 @@ type ServiceDeployConfig struct {
 
 //公共变量
 type DeployOption struct {
-	ServerList      map[int]util.Server  //所有服务器
-	ServiceList     map[int]util.Service //所有项目/服务
-	ProjectList     map[int]util.Project
-	InstanceManager *util.InstanceManager
-	Config          ConfigCicd
-	PublicManager   *CICDPublicManager
-	Log             *zap.Logger
-	OpDirName       string
-	TestServerList  []string
-	UploadDiskPath  string
+	ServerList       map[int]util.Server  //所有服务器
+	ServiceList      map[int]util.Service //所有项目/服务
+	ProjectList      map[int]util.Project
+	InstanceManager  *util.InstanceManager
+	Config           ConfigCicd
+	PublicManager    *CICDPublicManager
+	Log              *zap.Logger
+	OpDirName        string
+	TestServerList   []string
+	UploadDiskPath   string
+	DownloadDiskPath string
 }
 
 type Deploy struct {

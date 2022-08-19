@@ -8,11 +8,11 @@ workBaseDir= "/data/www/cicd"
 #本地部署成功后，会往远端同步代码，这里是远端服务器存放代码的目录
 remoteBaseDir = "/data/www"
 remoteUploadDir = "/data/file_upload"
+remoteDownloadDir = "/data/file_download"
 
 masterDirName = "master"
 gitCloneTmpDirName="clone"
 httpPort="4455"
-uploadPath="static/upload"
 
 [superVisor]
 rpcPort="9001"

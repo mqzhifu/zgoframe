@@ -15,6 +15,7 @@ func InitTwinAgoraRouter(Router *gin.RouterGroup) {
 		TwinAgora.GET("cloud/record/stop/:rid", v1.TwinAgoraCloudRecordStop)
 		TwinAgora.GET("cloud/record/query/:rid", v1.TwinAgoraCloudRecordQuery)
 		TwinAgora.GET("cloud/record/oss/files/:rid", v1.TwinAgoraCloudRecordOssFiles)
+		TwinAgora.POST("cloud/record/list", v1.TwinAgoraCloudRecordList)
 
 	}
 }

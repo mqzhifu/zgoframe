@@ -40,11 +40,12 @@ type ClientRequestStart struct {
 
 //所有请求声网的返回结果集合
 type AgoraCloudRecordRes struct {
-	Id             int                       `json:"id"`
-	Code           int                       `json:"code"`
-	Reason         string                    `json:"reason"`
-	ResourceId     string                    `json:"resourceId"`
-	Sid            string                    `json:"sid"`
+	Id             int                       `json:"id"`             //自己平台生成的ID，大部分接口都需要用到
+	HttpCode       int                       `json:"httpCode"`       //请求声网的http影响状态码
+	Code           int                       `json:"code"`           //请求声网的具体的业务状态码
+	Reason         string                    `json:"reason"`         //这里有值，证明头部验证失败了
+	ResourceId     string                    `json:"resourceId"`     //声网返回的资源ID
+	Sid            string                    `json:"sid"`            //声网返回的SESSION-ID
 	Message        string                    `json:"message"`        //这里有值，证明头部验证失败了
 	ServerResponse AgoraRecordServerResponse `json:"serverResponse"` //给query接口使用
 }
@@ -171,21 +172,22 @@ func (myAgora *MyAgora) GetCommTokenExpire(expire int) (int, error) {
 	return expire, nil
 }
 
-func (myAgora *MyAgora) FormatAgoraRes(res string) (agoraCloudRecordRes AgoraCloudRecordRes, err error) {
+func (myAgora *MyAgora) FormatAgoraRes(res string, httpCode int) (agoraCloudRecordRes AgoraCloudRecordRes, err error) {
 	err = json.Unmarshal([]byte(res), &agoraCloudRecordRes)
 	if err != nil {
 		return agoraCloudRecordRes, err
 	}
+	agoraCloudRecordRes.HttpCode = httpCode
 	return agoraCloudRecordRes, nil
 }
 func (myAgora *MyAgora) CreateAcquire(agoraAcquireReq AgoraAcquireReq) (agoraCloudRecordRes AgoraCloudRecordRes, err error) {
 	url := myAgora.Option.Domain + myAgora.Option.AppId + "/cloud_recording/acquire"
 	httpCurl := NewHttpCurl(url, myAgora.GetCommonHTTPHeader())
-	res, err := httpCurl.PostJson(agoraAcquireReq)
+	httpCode, body, err := httpCurl.PostJson(agoraAcquireReq)
 	if err != nil {
 		return agoraCloudRecordRes, err
 	}
-	return myAgora.FormatAgoraRes(res)
+	return myAgora.FormatAgoraRes(body, httpCode)
 }
 
 func (myAgora *MyAgora) GetRtcToken(username string, channel string, expire int) (token string, err error) {
@@ -283,12 +285,12 @@ func (myAgora *MyAgora) CloudRecordSingleStreamDelayTranscoding(formData AgoraRe
 	//3. web: web页面,
 	url := myAgora.Option.Domain + myAgora.Option.AppId + "/cloud_recording/resourceid/" + formData.ResourceId + "/mode/individual/start"
 	httpCurl := NewHttpCurl(url, myAgora.GetCommonHTTPHeader())
-	res, err := httpCurl.PostJson(formData)
+	httpCode, body, err := httpCurl.PostJson(formData)
 	if err != nil {
 		return agoraCloudRecordRes, agoraRecordStartReq, errors.New("httpCurl err:" + err.Error())
 	}
 
-	agoraCloudRecordRes, err = myAgora.FormatAgoraRes(res)
+	agoraCloudRecordRes, err = myAgora.FormatAgoraRes(body, httpCode)
 	return agoraCloudRecordRes, formData, err
 }
 func (myAgora *MyAgora) ExecBGOssFile() {
@@ -320,11 +322,11 @@ func (myAgora *MyAgora) CloudRecordGetStorageConfig(channelName string) AgoraSto
 func (myAgora *MyAgora) CloudRecordQuery(ResourceId string, SessionId string) (agoraCloudRecordRes AgoraCloudRecordRes, err error) {
 	url := myAgora.Option.Domain + myAgora.Option.AppId + "/cloud_recording/resourceid/" + ResourceId + "/sid/" + SessionId + "/mode/individual/query"
 	httpCurl := NewHttpCurl(url, myAgora.GetCommonHTTPHeader())
-	res, err := httpCurl.Get()
+	httpCode, body, err := httpCurl.Get()
 	if err != nil {
 		return agoraCloudRecordRes, err
 	}
-	return myAgora.FormatAgoraRes(res)
+	return myAgora.FormatAgoraRes(body, httpCode)
 }
 
 func (myAgora *MyAgora) CloudRecordStop(uid string, channel string, ResourceId string, SessionId string) (agoraCloudRecordRes AgoraCloudRecordRes, err error) {
@@ -340,9 +342,9 @@ func (myAgora *MyAgora) CloudRecordStop(uid string, channel string, ResourceId s
 
 	url := myAgora.Option.Domain + myAgora.Option.AppId + "/cloud_recording/resourceid/" + ResourceId + "/sid/" + SessionId + "/mode/individual/stop"
 	httpCurl := NewHttpCurl(url, myAgora.GetCommonHTTPHeader())
-	res, err := httpCurl.PostJson(formData)
+	httpCode, body, err := httpCurl.PostJson(formData)
 	if err != nil {
 		return agoraCloudRecordRes, err
 	}
-	return myAgora.FormatAgoraRes(res)
+	return myAgora.FormatAgoraRes(body, httpCode)
 }

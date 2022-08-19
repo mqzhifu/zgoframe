@@ -63,26 +63,26 @@ func (aliOss *AliOss) UploadOneByStream(reader io.Reader, relativePath, FileName
 	if relativePath[0:1] == "/" {
 		relativePath = relativePath[1:]
 	}
-	AccessKeyId := aliOss.Op.AccessKeyId
-	AccessKeySecret := aliOss.Op.AccessKeySecret
-	endpoint := aliOss.Op.Endpoint
 
-	client, err := oss.New(endpoint, AccessKeyId, AccessKeySecret)
+	_, bucket, err := aliOss.GetClientBucket()
+	if err != nil {
+		return err
+	}
+	//AccessKeyId := aliOss.Op.AccessKeyId
+	//AccessKeySecret := aliOss.Op.AccessKeySecret
+	//endpoint := aliOss.Op.Endpoint
+	//client, err := oss.New(endpoint, AccessKeyId, AccessKeySecret)
 	//MyPrint("oss New:",client,err)
-	if err != nil {
-		return err
-	}
-
+	//if err != nil {
+	//	return err
+	//}
 	relativePathFile := relativePath + "/" + FileName
-
-	bucketName := aliOss.Op.BucketName
-
-	MyPrint("oss endpoint:", endpoint, " AccessKeyId:", AccessKeyId, " AccessKeySecret:", AccessKeySecret, " bucketName:", bucketName)
-
-	bucket, err := client.Bucket(bucketName)
-	if err != nil {
-		return err
-	}
+	//bucketName := aliOss.Op.BucketName
+	//MyPrint("oss endpoint:", endpoint, " AccessKeyId:", AccessKeyId, " AccessKeySecret:", AccessKeySecret, " bucketName:", bucketName)
+	//bucket, err := client.Bucket(bucketName)
+	//if err != nil {
+	//	return err
+	//}
 	//MyPrint("bucket:",bucket,err)
 	MyPrint("oss localFilePath:", reader, " relativePathFile:", relativePathFile)
 	err = bucket.PutObject(relativePathFile, reader)
@@ -90,35 +90,58 @@ func (aliOss *AliOss) UploadOneByStream(reader io.Reader, relativePath, FileName
 	return err
 
 }
+func (aliOss *AliOss) GetClientBucket() (client *oss.Client, bucket *oss.Bucket, err error) {
+	AccessKeyId := aliOss.Op.AccessKeyId
+	AccessKeySecret := aliOss.Op.AccessKeySecret
+	endpoint := aliOss.Op.Endpoint
+
+	client, err = oss.New(endpoint, AccessKeyId, AccessKeySecret)
+	//MyPrint("oss New:",client,err)
+	if err != nil {
+		return client, bucket, err
+	}
+
+	bucketName := aliOss.Op.BucketName
+
+	MyPrint("oss endpoint:", endpoint, " AccessKeyId:", AccessKeyId, " AccessKeySecret:", AccessKeySecret, " bucketName:", bucketName)
+
+	bucket, err = client.Bucket(bucketName)
+	if err != nil {
+		return client, bucket, err
+	}
+	return client, bucket, err
+}
 
 func (aliOss *AliOss) OssLs(dirPrefix string) (listObjectsResult oss.ListObjectsResult, err error) {
-	//AccessKeyId := fileUpload.Option.OssAccessKeyId
-	//AccessKeySecret := fileUpload.Option.OssAccessKeySecret
-	//endpoint := fileUpload.Option.OssEndpoint
-	//
-	//client, err := oss.New(endpoint, AccessKeyId, AccessKeySecret)
-	////MyPrint("oss New:",client,err)
-	//if err != nil {
-	//	return listObjectsResult, err
-	//}
-	//
-	//bucketName := fileUpload.Option.OssBucketName
-	//
-	//MyPrint("oss endpoint:", endpoint, " AccessKeyId:", AccessKeyId, " AccessKeySecret:", AccessKeySecret, " bucketName:", bucketName)
-	//
-	//bucket, err := client.Bucket(bucketName)
-	//if err != nil {
-	//	return listObjectsResult, err
-	//}
-	//
-	//listObjectsResult, err = bucket.ListObjects(oss.Prefix(dirPrefix))
+	//这里阿里云有个小BUG，所有的路径不能以反斜杠(/)开头
+	if dirPrefix[0:1] == "/" {
+		dirPrefix = dirPrefix[1:]
+	}
+
+	_, bucket, err := aliOss.GetClientBucket()
+	if err != nil {
+		return listObjectsResult, err
+	}
+	listObjectsResult, err = bucket.ListObjects(oss.Prefix(dirPrefix))
 	//MyPrint("ListObjectsResult:", listObjectsResult, " err:", err)
-	////if len(listObjectsResult.Objects) == 0 {
-	////
-	////}
-	////for k, v := range listObjectsResult.Objects {
-	////	MyPrint(k, v)
-	////}
-	////ExitPrint(33)
 	return listObjectsResult, err
+}
+
+func (aliOss *AliOss) DownloadFile(ossPathFile string, localPathFile string) error {
+	MyPrint("ossPathFile:", ossPathFile, " localPathFile:", localPathFile)
+	//这里阿里云有个小BUG，所有的路径不能以反斜杠(/)开头
+	if ossPathFile[0:1] == "/" {
+		ossPathFile = ossPathFile[1:]
+	}
+	_, bucket, err := aliOss.GetClientBucket()
+	if err != nil {
+		return err
+	}
+
+	err = bucket.GetObjectToFile(ossPathFile, localPathFile)
+	MyPrint("DownloadFile err:", err)
+	if err != nil {
+		return err
+	}
+	return nil
 }

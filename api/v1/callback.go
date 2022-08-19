@@ -94,11 +94,12 @@ func AgoraCallbackRTC(c *gin.Context) {
 	payloadBytes, _ := json.Marshal(form.Payload)
 	util.MyPrint("NotifyMsStr:", NotifyMsStr, " payloadBytes:", string(payloadBytes))
 	agoraCallbackRecord := model.AgoraCallbackRecord{
-		EventType: form.EventType,
-		NoticeId:  form.NoticeId,
-		ProductId: form.ProductId,
-		NotifyMs:  NotifyMsStr,
-		Payload:   string(payloadBytes),
+		EventType:   form.EventType,
+		NoticeId:    form.NoticeId,
+		ProductId:   form.ProductId,
+		NotifyMs:    NotifyMsStr,
+		ChannelName: form.Payload.ChannelName,
+		Payload:     string(payloadBytes),
 	}
 	global.V.Gorm.Create(&agoraCallbackRecord)
 
@@ -133,11 +134,13 @@ func AgoraCallbackCloud(c *gin.Context) {
 	payloadBytes, _ := json.Marshal(form.Payload)
 	util.MyPrint("NotifyMsStr:", NotifyMsStr, " payloadBytes:", string(payloadBytes))
 	agoraCallbackRecord := model.AgoraCallbackRecord{
-		EventType: form.EventType,
-		NoticeId:  form.NoticeId,
-		ProductId: form.ProductId,
-		NotifyMs:  NotifyMsStr,
-		Payload:   string(payloadBytes),
+		EventType:   form.EventType,
+		NoticeId:    form.NoticeId,
+		ProductId:   form.ProductId,
+		NotifyMs:    NotifyMsStr,
+		ChannelName: form.Payload.Cname,
+		SessionId:   form.Payload.Sid,
+		Payload:     string(payloadBytes),
 	}
 	global.V.Gorm.Create(&agoraCallbackRecord)
 

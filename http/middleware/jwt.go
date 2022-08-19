@@ -43,20 +43,20 @@ func (j *JWT) ParseToken(tokenString string) (customClaims request.CustomClaims,
 		return j.SigningKey, nil
 	})
 	//util.MyPrint(token.Header, " ", token.Valid, "  ", token.Signature, " ", token.Method.Alg(), " ", err)
-	if err != nil {//发生错误
+	if err != nil { //发生错误
 		global.V.Zap.Debug("jwt.ParseWithClaims err:" + err.Error())
 
 		if ve, ok := err.(*jwt.ValidationError); ok { //
 			if ve.Errors&(jwt.ValidationErrorExpired|jwt.ValidationErrorNotValidYet) != 0 {
 				replaceMap := global.V.Err.MakeOneStringReplace(err.Error())
-				err = global.V.Err.NewReplace(5201,replaceMap )
-				return customClaims,err
+				err = global.V.Err.NewReplace(5201, replaceMap)
+				return customClaims, err
 			}
 		}
 
 		replaceMap := global.V.Err.MakeOneStringReplace(err.Error())
-		err = global.V.Err.NewReplace(5202,replaceMap )
-		return customClaims,err
+		err = global.V.Err.NewReplace(5202, replaceMap)
+		return customClaims, err
 
 	}
 	//if claims, ok := token.Claims.(*request.CustomClaims); ok && token.Valid {
@@ -73,13 +73,14 @@ func (j *JWT) ParseToken(tokenString string) (customClaims request.CustomClaims,
 	}
 
 }
+
 //给中间件使用
 func RealJWTAuth(c *gin.Context) {
-	header , _ := request.GetMyHeader(c)
+	header, _ := request.GetMyHeader(c)
 	user, customClaims, err := CheckToken(header)
 	if err != nil {
-		code , msg ,_ := global.V.Err.SplitMsg(err.Error())
-		httpresponse.Result(code,nil,msg,c)
+		code, msg, _ := global.V.Err.SplitMsg(err.Error())
+		httpresponse.Result(code, nil, msg, c)
 		//ErrAbortWithResponse()
 		//httpresponse.FailWithAll(gin.H{"reload": true}, err.Error(), c)
 		c.Abort()
@@ -97,6 +98,7 @@ func RealJWTAuth(c *gin.Context) {
 	c.Next()
 
 }
+
 //检查一个token (解析token)
 func CheckToken(myHeader request.HeaderRequest) (u model.User, customClaims request.CustomClaims, err error) {
 	//登录时回返回token信息 这里前端需要把token存储到cookie或者本地localStorage中 不过需要跟后端协商过期时间 可以约定刷新令牌或者重新登录
@@ -108,12 +110,12 @@ func CheckToken(myHeader request.HeaderRequest) (u model.User, customClaims requ
 		//	return u, customClaims, errors.New("授权已过期")
 		//}
 		//return u, customClaims, errors.New(err.Error())
-		return u, customClaims,err
+		return u, customClaims, err
 	}
 
 	if claims.ProjectId <= 0 || claims.Id <= 0 || claims.SourceType <= 0 {
 		//return u, customClaims, errors.New("ProjectId or claims.Id or claims.SourceType : is null")
-		return u, customClaims,global.V.Err.New(5204)
+		return u, customClaims, global.V.Err.New(5204)
 	}
 	//请求头里的来源类型要与jwt里的对上
 	//if claims.SourceType != parserTokenData.SourceType {
@@ -136,12 +138,12 @@ func CheckToken(myHeader request.HeaderRequest) (u model.User, customClaims requ
 	//}
 	if err == redis.Nil {
 		//return u, customClaims, errors.New("token 不在redis 中，也可能已失效")
-		return u, customClaims,global.V.Err.New(5205)
+		return u, customClaims, global.V.Err.New(5205)
 	}
 
 	if err != nil || jwtStr == "" || err == redis.Nil {
 		//return u, customClaims, errors.New("redis 读取token 为空 , 失败:" + err.Error())
-		return u, customClaims,global.V.Err.New(5206)
+		return u, customClaims, global.V.Err.New(5206)
 	}
 
 	//if claims.ExpiresAt-time.Now().Unix() < claims.BufferTime {
@@ -157,8 +159,8 @@ func CheckToken(myHeader request.HeaderRequest) (u model.User, customClaims requ
 	err = global.V.Gorm.Where("id = ? ", claims.Id).First(&user).Error
 	if err != nil {
 		//return u, customClaims, errors.New("uid not in db :" + strconv.Itoa(claims.Id))
-		replaceMap := global.V.Err.MakeOneStringReplace(err.Error()+ " " +strconv.Itoa(claims.Id))
-		return u, customClaims,global.V.Err.NewReplace(5207,replaceMap )
+		replaceMap := global.V.Err.MakeOneStringReplace(err.Error() + " " + strconv.Itoa(claims.Id))
+		return u, customClaims, global.V.Err.NewReplace(5207, replaceMap)
 	}
 	//if errors.Is(global.V.Gorm.Where("id = ? ", claims.Id).First(&user).Error, gorm.ErrRecordNotFound) {
 	//	return u, customClaims, errors.New("uid not in db :" + strconv.Itoa(claims.Id))

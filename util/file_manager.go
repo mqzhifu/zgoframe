@@ -12,10 +12,10 @@ import (
 )
 
 const (
-	FILE_TYPE_ALL   = 1
+	//FILE_TYPE_ALL   = 1
 	FILE_TYPE_IMG   = 2
 	FILE_TYPE_DOC   = 3
-	FILE_TYEP_VIDEO = 4
+	FILE_TYPE_VIDEO = 4
 
 	UPLOAD_STORE_LOCAL_OFF  = 1
 	UPLOAD_STORE_LOCAL_OPEN = 2
@@ -24,13 +24,13 @@ const (
 	UPLOAD_STORE_OSS_ALI = 1
 )
 
-type FileDownInfo struct {
-	PieceNum         int
-	PieceSize        int
-	FileSize         int64
-	FileRelativePath string
-	FileLocalPath    string
-}
+//type FileDownInfo struct {
+//	PieceNum         int
+//	PieceSize        int
+//	FileSize         int64
+//	FileRelativePath string
+//	FileLocalPath    string
+//}
 
 //上伟文件成功后，返回的数据
 type UploadRs struct {
@@ -52,47 +52,39 @@ type FileManager struct {
 }
 
 type FileManagerOption struct {
-	UploadDir        string //存储上传图片的目录名
-	UploadMaxSize    int    //文件最大：MB ,默认：nginx是10Mb ,golang是9mb，不建议太大，且修改要与NGINX同步改，不然无效。文件太大建议使用新方法做分片传输
-	UploadStoreLocal int    //上传的文件，是否存储本地
-	UploadStoreOSS   int    //上传的文件，是否存储到3方OSS网盘
+	UploadDir        string  //上传文件的存储：目录名
+	UploadMaxSize    int     //文件最大：MB ,默认：nginx是10Mb ,golang是9mb，不建议太大，且修改要与NGINX同步改，不然无效。文件太大建议使用新方法做分片传输
+	UploadStoreLocal int     //上传的文件，是否存储本地
+	UploadStoreOSS   int     //上传的文件，是否存储到3方OSS网盘
+	DownloadDir      string  //从3方下载的文件，存储目录位置
+	DownloadMaxSize  int     //从3方下载的文件，最大限制
+	StaticDir        string  //存储表态文件的目录名，它是UploadDir的上一级
+	ProjectRootPath  string  //当前项目的绝对路径，它是StaticDir的上一级
+	AliOss           *AliOss //上传文件，存储到3方平台
+	Category         int     //上传的文件类型(扩展名分类):1全部2图片3文档,后端会根据类型做验证
+	FileHashType     int     //文件存储时，添加前缀目录：hash类型
+	//FilePrefix       string  //模块/业务名，可用于给文件名加前缀目录
 
-	DownloadDir     string
-	DownloadMaxSize int
-
-	StaticDir       string //存储表态文件的目录名，它是UploadDir的上一级
-	ProjectRootPath string //当前项目的绝对路径，它是StaticDir的上一级
-	LocalDirPath    string //最终的：文件上传->本地硬盘路径
-	Category        int    //上传的文件类型(扩展名分类):1全部2图片3文档,后端会根据类型做验证
-	FileHashType    int    //文件存储时，添加前缀目录：hash类型
-	FilePrefix      string //模块/业务名，可用于给文件名加前缀目录
-	AliOss          *AliOss
 	//Path 				string	//文件存储位置
-	//阿里云-OSS相关
-	//OssAccessKeyId     string
-	//OssAccessKeySecret string
-	//OssEndpoint        string
-	//OssBucketName      string
-	//OssLocalDomain     string
+	//LocalDirPath    string //最终的：文件上传->本地硬盘路径
 }
 
 var imgs = []string{"jpg", "jpeg", "png", "gif", "x-png", "png", "bmp", "pjpeg", "x-icon"}
-var docs = []string{"txt", "doc", "docx", "dotx", "json", "cvs", "xls", "xlsx", "sql", "msword", "pptx", "pdf", "wps", "vsd"}
+var docs = []string{"txt", "doc", "docx", "dotx", "json", "cvs", "xls", "xlsx", "sql", "msword", "pptx", "pdf", "wps", "vsd", "m3u8", "webm", "ts"}
 var video = []string{"mp3", "mp4", "avi", "rm", "mkv", "wmv", "mov", "flv", "rmvb"}
 
 func NewFileManagerUpload(Option FileManagerOption) *FileManager {
 	fileManager := new(FileManager)
 	fileManager.Option = Option
 
-	//fileUpload.InitMap()
 	return fileManager
 }
 func (fileManager *FileManager) GetConstListFileUploadType() map[string]int {
 	list := make(map[string]int)
-	list["全部"] = FILE_TYPE_ALL
+	//list["全部"] = FILE_TYPE_ALL
 	list["图片"] = FILE_TYPE_IMG
 	list["文档"] = FILE_TYPE_DOC
-	list["视频"] = FILE_TYEP_VIDEO
+	list["视频"] = FILE_TYPE_VIDEO
 	return list
 }
 func (fileManager *FileManager) GetConstListFileUploadStoreLocal() map[string]int {
@@ -110,7 +102,7 @@ func (fileManager *FileManager) GetConstListFileUploadStoreOSS() map[string]int 
 }
 
 //上传一个文件
-func (fileManager *FileManager) UploadOne(header *multipart.FileHeader) (uploadRs UploadRs, err error) {
+func (fileManager *FileManager) UploadOne(header *multipart.FileHeader, module string) (uploadRs UploadRs, err error) {
 	//验证扩展名是否合法
 	fileExtName, err := fileManager.GetExtName(header.Filename)
 	if err != nil {
@@ -125,7 +117,7 @@ func (fileManager *FileManager) UploadOne(header *multipart.FileHeader) (uploadR
 
 	MyPrint("UploadOne fileExtName:", fileExtName, " header size bytes:", header.Size, " mb:", fileSizeMB)
 	//获取文件存储的绝对路径
-	localDiskDir, relativePath, err := fileManager.checkLocalDiskPath()
+	localDiskDir, relativePath, err := fileManager.checkLocalDiskPath(module)
 	MyPrint("localDiskDir:", localDiskDir)
 	if err != nil {
 		return uploadRs, err
@@ -183,7 +175,7 @@ func (fileManager *FileManager) RealUploadOne() {
 }
 
 //流的大小：不能小于100个字节，因为要截取出头部的100个字节，做类型匹配及校验
-func (fileManager *FileManager) UploadOneByStream(stream string, category int) (uploadRs UploadRs, err error) {
+func (fileManager *FileManager) UploadOneByStream(stream string, category int, module string) (uploadRs UploadRs, err error) {
 	if category != FILE_TYPE_IMG {
 		return uploadRs, errors.New("目前category仅支持：图片流")
 	}
@@ -234,7 +226,7 @@ func (fileManager *FileManager) UploadOneByStream(stream string, category int) (
 		return uploadRs, errors.New("大于限制：" + strconv.Itoa(fileManager.Option.UploadMaxSize) + "(mb)")
 	}
 	//获取文件存储的绝对路径
-	localDiskDir, relativePath, err := fileManager.checkLocalDiskPath()
+	localDiskDir, relativePath, err := fileManager.checkLocalDiskPath(module)
 	MyPrint("localDiskDir:", localDiskDir)
 	if err != nil {
 		return uploadRs, err
@@ -409,12 +401,12 @@ func (fileManager *FileManager) GetAllowFileTypeList(category int) (rs []string,
 		return imgs, nil
 	} else if category == FILE_TYPE_DOC {
 		return docs, nil
-	} else if category == FILE_TYEP_VIDEO {
+	} else if category == FILE_TYPE_VIDEO {
 		return video, nil
-	} else if category == FILE_TYPE_ALL {
-		all := append(imgs, docs...)
-		all = append(all, video...)
-		return all, nil
+		//} else if category == FILE_TYPE_ALL {
+		//	all := append(imgs, docs...)
+		//	all = append(all, video...)
+		//	return all, nil
 	} else {
 		return nil, errors.New("category err.")
 	}
@@ -466,7 +458,7 @@ func (fileManager *FileManager) GetHashDirName() string {
 //根据文件名(字符串)，取文件的扩展名，同时验证该扩展名是否合法
 func (fileManager *FileManager) GetExtName(fileName string) (extName string, err error) {
 	if !CheckFileName(fileName) {
-		return "", errors.New("文件名不合法：只允许大小写字母+(-_),且必须且只能出现一个:符号(.),最小3，最长111 ")
+		return "", errors.New("文件名不合法：只允许大小写字母+(-_),且必须且只能出现一个:符号(.),长度范围：3~111 ")
 	}
 	//根据.切割文件名字符串
 	extName = strings.Split(fileName, ".")[1]
@@ -480,12 +472,12 @@ func (fileManager *FileManager) GetExtName(fileName string) (extName string, err
 }
 
 //检查本地硬盘文件存储路径
-func (fileManager *FileManager) checkLocalDiskPath() (localDiskDir string, relativePath string, err error) {
+func (fileManager *FileManager) checkLocalDiskPath(FilePrefix string) (localDiskDir string, relativePath string, err error) {
 	//硬盘上存储的目录
 	localDiskDir = fileManager.GetLocalDiskUploadBasePath()
-	if fileManager.Option.FilePrefix != "" {
-		localDiskDir += "/" + fileManager.Option.FilePrefix
-		relativePath += fileManager.Option.FilePrefix
+	if FilePrefix != "" {
+		localDiskDir += "/" + FilePrefix
+		relativePath += FilePrefix
 	}
 	localDiskDir += "/" + fileManager.GetHashDirName()
 	relativePath += fileManager.GetHashDirName()

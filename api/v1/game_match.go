@@ -1,10 +1,7 @@
 package v1
 
 import (
-	"zgoframe/service/gamematch"
 	"github.com/gin-gonic/gin"
-	"zgoframe/core/global"
-	httpresponse "zgoframe/http/response"
 )
 
 // @Tags GameMatch
@@ -20,29 +17,29 @@ import (
 // @Success 200 {object} gamematch.Group
 // @Router /game/match/sign [get]
 func GameMatchSign(c *gin.Context) {
-	var form gamematch.HttpReqBusiness
-	c.ShouldBind(&form)
-
-	code,httpReqBusiness  := global.V.MyService.GameMatch.BusinessCheckData(form)
-	if code != 0{
-		err := global.V.Err.New(code)
-		httpresponse.FailWithMessage(err.Error(), c)
-		return
-	}
-
-	err := global.V.MyService.GameMatch.CheckHttpSignData(httpReqBusiness)
-	if err != nil{
-		httpresponse.FailWithMessage(err.Error(), c)
-		return
-	}
-
-	signRsData, err := global.V.MyService.GameMatch.Sign(httpReqBusiness)
-	if err != nil{
-		httpresponse.FailWithMessage(err.Error(), c)
-		return
-	}
-
-	httpresponse.OkWithAll(signRsData,"ok",c)
+	//var form gamematch.HttpReqBusiness
+	//c.ShouldBind(&form)
+	//
+	//code,httpReqBusiness  := global.V.MyService.GameMatch.BusinessCheckData(form)
+	//if code != 0{
+	//	err := global.V.Err.New(code)
+	//	httpresponse.FailWithMessage(err.Error(), c)
+	//	return
+	//}
+	//
+	//err := global.V.MyService.GameMatch.CheckHttpSignData(httpReqBusiness)
+	//if err != nil{
+	//	httpresponse.FailWithMessage(err.Error(), c)
+	//	return
+	//}
+	//
+	//signRsData, err := global.V.MyService.GameMatch.Sign(httpReqBusiness)
+	//if err != nil{
+	//	httpresponse.FailWithMessage(err.Error(), c)
+	//	return
+	//}
+	//
+	//httpresponse.OkWithAll(signRsData,"ok",c)
 }
 
 // @Tags GameMatch
@@ -58,31 +55,31 @@ func GameMatchSign(c *gin.Context) {
 // @Success 200 {boolean} true "true:成功 false:否"
 // @Router /game/match/sign/cancel [get]
 func GameMatchSignCancel(c *gin.Context) {
-	var form gamematch.HttpReqBusiness
-	c.ShouldBind(&form)
-
-	code,httpReqBusiness  := global.V.MyService.GameMatch.BusinessCheckData(form)
-	if code != 0{
-		err := global.V.Err.New(code)
-		httpresponse.FailWithMessage(err.Error(), c)
-		return
-	}
-
-	err :=  global.V.MyService.GameMatch.CheckHttpSignCancelData(httpReqBusiness)
-	if err != nil{
-		httpresponse.FailWithMessage(err.Error(), c)
-		return
-	}
-
-	signClass :=  global.V.MyService.GameMatch.GetContainerSignByRuleId(httpReqBusiness.RuleId)
-	global.V.Zap.Info("del by groupId")
-	err = signClass.CancelByGroupId(httpReqBusiness.GroupId)
-	if err != nil{
-		httpresponse.FailWithMessage(err.Error(), c)
-		return
-	}
-
-	httpresponse.OkWithAll("成功","ok",c)
+	//var form gamematch.HttpReqBusiness
+	//c.ShouldBind(&form)
+	//
+	//code, httpReqBusiness := global.V.MyService.GameMatch.BusinessCheckData(form)
+	//if code != 0 {
+	//	err := global.V.Err.New(code)
+	//	httpresponse.FailWithMessage(err.Error(), c)
+	//	return
+	//}
+	//
+	//err := global.V.MyService.GameMatch.CheckHttpSignCancelData(httpReqBusiness)
+	//if err != nil {
+	//	httpresponse.FailWithMessage(err.Error(), c)
+	//	return
+	//}
+	//
+	//signClass := global.V.MyService.GameMatch.GetContainerSignByRuleId(httpReqBusiness.RuleId)
+	//global.V.Zap.Info("del by groupId")
+	//err = signClass.CancelByGroupId(httpReqBusiness.GroupId)
+	//if err != nil {
+	//	httpresponse.FailWithMessage(err.Error(), c)
+	//	return
+	//}
+	//
+	//httpresponse.OkWithAll("成功", "ok", c)
 }
 
 //}else if uri == "/success/del"{//匹配成功记录，不想要了，删除一掉
@@ -102,5 +99,3 @@ func GameMatchSignCancel(c *gin.Context) {
 //}else if uri == "/tools/RedisStoreDb"{//html api
 //code,msg = httpd.RedisStoreDb()
 //}else if uri == "/tools/getHttpReqBusiness"{//html api
-
-

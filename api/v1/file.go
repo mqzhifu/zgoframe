@@ -28,11 +28,11 @@ func FileUploadImgOne(c *gin.Context) {
 		return
 	}
 
-	category := util.FILE_TYPE_IMG
+	//category := util.FILE_TYPE_IMG
 	module := c.PostForm("module")
 	//syncOss := c.PostForm("sync_oss")
-	fileUpload := global.GetUploadObj(category, module)
-	uploadRs, err := fileUpload.UploadOne(header)
+	//fileUpload := global.GetUploadObj(category, module)
+	uploadRs, err := global.V.ImgManager.UploadOne(header, module)
 
 	util.MyPrint("uploadRs:", uploadRs, " err:", err)
 	if err != nil {
@@ -63,7 +63,7 @@ func FileUploadImgOne(c *gin.Context) {
 // @Router /file/upload/img/multi [post]
 func FileUploadImgMulti(c *gin.Context) {
 	//category ,_:= strconv.Atoi (c.PostForm("category") )
-	category := util.FILE_TYPE_IMG
+	//category := util.FILE_TYPE_IMG
 	module := c.PostForm("module")
 
 	form, err := c.MultipartForm()
@@ -72,7 +72,7 @@ func FileUploadImgMulti(c *gin.Context) {
 		return
 	}
 	//syncOss := c.PostForm("sync_oss")
-	fileUpload := global.GetUploadObj(category, module)
+	//fileUpload := global.GetUploadObj(category, module)
 	// 获取所有图片
 	files := form.File["files"]
 	if len(files) < 1 {
@@ -86,7 +86,7 @@ func FileUploadImgMulti(c *gin.Context) {
 	for _, file := range files {
 		httpUploadRs := httpresponse.HttpUploadRs{}
 
-		uploadRs, err := fileUpload.UploadOne(file)
+		uploadRs, err := global.V.ImgManager.UploadOne(file, module)
 		errMsg := ""
 		if err != nil {
 			errMsg = err.Error()
@@ -115,7 +115,7 @@ func FileUploadImgMulti(c *gin.Context) {
 func FileUploadImgOneStreamBase64(c *gin.Context) {
 	category := util.FILE_TYPE_IMG
 
-	fileUpload := global.GetUploadObj(category, "")
+	//fileUpload := global.GetUploadObj(category, "")
 
 	//stream  := c.PostForm("stream")
 	//util.MyPrint("stream:",stream)
@@ -130,7 +130,7 @@ func FileUploadImgOneStreamBase64(c *gin.Context) {
 		return
 	}
 
-	uploadRs, err := fileUpload.UploadOneByStream(form.Stream, category)
+	uploadRs, err := global.V.ImgManager.UploadOneByStream(form.Stream, category, "")
 	if err != nil {
 		httpresponse.FailWithMessage(err.Error(), c)
 	} else {
@@ -164,12 +164,12 @@ func FileUploadDocOne(c *gin.Context) {
 		return
 	}
 
-	category := util.FILE_TYPE_DOC
+	//category := util.FILE_TYPE_DOC
 	module := c.PostForm("module")
 	//syncOss := c.PostForm("sync_oss")
 
-	fileUpload := global.GetUploadObj(category, module)
-	uploadRs, err := fileUpload.UploadOne(header)
+	//fileUpload := global.GetUploadObj(category, module)
+	uploadRs, err := global.V.DocsManager.UploadOne(header, module)
 
 	util.MyPrint("uploadRs:", uploadRs, " err:", err)
 	if err != nil {
@@ -200,7 +200,7 @@ func FileUploadDocOne(c *gin.Context) {
 // @Router /file/upload/doc/multi [post]
 func FileUploadDocMulti(c *gin.Context) {
 	//category ,_:= strconv.Atoi (c.PostForm("category") )
-	category := util.FILE_TYPE_IMG
+	//category := util.FILE_TYPE_IMG
 	module := c.PostForm("module")
 
 	form, err := c.MultipartForm()
@@ -209,7 +209,7 @@ func FileUploadDocMulti(c *gin.Context) {
 		return
 	}
 	//syncOss := c.PostForm("sync_oss")
-	fileUpload := global.GetUploadObj(category, module)
+	//fileUpload := global.V.DocsManager.GetUploadObj(category, module)
 	// 获取所有图片
 	files := form.File["files"]
 	if len(files) < 1 {
@@ -223,7 +223,7 @@ func FileUploadDocMulti(c *gin.Context) {
 	for _, file := range files {
 		httpUploadRs := httpresponse.HttpUploadRs{}
 
-		uploadRs, err := fileUpload.UploadOne(file)
+		uploadRs, err := global.V.DocsManager.UploadOne(file, module)
 		errMsg := ""
 		if err != nil {
 			errMsg = err.Error()

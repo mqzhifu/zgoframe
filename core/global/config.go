@@ -23,7 +23,7 @@ type Config struct {
 	ConfigCenter     ConfigCenter
 	//Upload           Upload
 	FileManager FileManager
-	Oss         Oss
+	AliOss      AliOss
 	Cicd        Cicd
 	Agora       Agora
 	Domain      Domain
@@ -85,12 +85,8 @@ type PushGateway struct {
 }
 
 type System struct {
-	Status    string
-	ProjectId int
-	//AppId int
-	//ServiceId int
+	ProjectId    int
 	DbType       string
-	ENV          int
 	ErrorMsgFile string
 	OpDirName    string
 }
@@ -218,7 +214,8 @@ type FileManager struct {
 //	MaxSize int
 //}
 
-type Oss struct {
+type AliOss struct {
+	Status          string
 	AccessKeyId     string
 	AccessKeySecret string
 	Endpoint        string

@@ -36,13 +36,13 @@ type ConfigCenter struct {
 }
 
 type ConfigCenterOption struct {
-	envList            map[string]int
+	EnvList            map[string]int
 	Gorm               *gorm.DB
 	Redis              *util.MyRedis
 	ProjectManager     *util.ProjectManager
 	PersistenceType    int
 	PersistenceFileDir string
-	Log 		*zap.Logger
+	Log                *zap.Logger
 }
 
 func NewConfigCenter(Option ConfigCenterOption) (*ConfigCenter, error) {
@@ -58,7 +58,7 @@ func NewConfigCenter(Option ConfigCenterOption) (*ConfigCenter, error) {
 }
 
 func (configCenter *ConfigCenter) Init() error {
-	if len(configCenter.Option.envList) <= 0 {
+	if len(configCenter.Option.EnvList) <= 0 {
 		return errors.New("env list  len <=0")
 	}
 
@@ -72,11 +72,12 @@ func (configCenter *ConfigCenter) Init() error {
 
 	return nil
 }
+
 //以模块(文件)为单位，获取该模块(文件)下的所有配置信息
 func (configCenter *ConfigCenter) GetByModule(env int, projectId int, module string) (data interface{}, err error) {
-	myViper ,err := configCenter.GetModuleInfo(env,projectId,module)
-	if err != nil{
-		return data,err
+	myViper, err := configCenter.GetModuleInfo(env, projectId, module)
+	if err != nil {
+		return data, err
 	}
 
 	data = myViper.AllSettings()
@@ -84,22 +85,22 @@ func (configCenter *ConfigCenter) GetByModule(env int, projectId int, module str
 
 }
 
-
 //以以模块(文件)+里面具体的key 为单位，获取配置信息
-func (configCenter *ConfigCenter) GetByKey(env int,projectId int, module string, key string) (data interface{}, err error) {
-	myViper ,err := configCenter.GetModuleInfo(env,projectId,module)
-	if err != nil{
-		return data,err
+func (configCenter *ConfigCenter) GetByKey(env int, projectId int, module string, key string) (data interface{}, err error) {
+	myViper, err := configCenter.GetModuleInfo(env, projectId, module)
+	if err != nil {
+		return data, err
 	}
 
 	data = myViper.Get(key)
 	return data, nil
 
 }
+
 //以模块(文件)+里面具体的key 为单位，设置置信息(如果存在，覆盖)
-func (configCenter *ConfigCenter) SetByKey(env int, projectId int,  module string, key string, value interface{}) (err error) {
-	myViper ,err := configCenter.GetModuleInfo(env,projectId,module)
-	if err != nil{
+func (configCenter *ConfigCenter) SetByKey(env int, projectId int, module string, key string, value interface{}) (err error) {
+	myViper, err := configCenter.GetModuleInfo(env, projectId, module)
+	if err != nil {
 		return err
 	}
 
@@ -107,11 +108,11 @@ func (configCenter *ConfigCenter) SetByKey(env int, projectId int,  module strin
 	e := myViper.WriteConfig()
 	return e
 }
-func (configCenter *ConfigCenter)GetModuleInfo(env int , projectId int,module string)(myViper *viper.Viper, err error){
-	util.MyPrint("GetModuleInfo ,  env:"+strconv.Itoa(env)  + " projectId:"+strconv.Itoa(projectId) + " module:"+ module)
-	project , empty := configCenter.Option.ProjectManager.GetById(projectId)
-	if empty{
-		return myViper,errors.New("projectId is empty")
+func (configCenter *ConfigCenter) GetModuleInfo(env int, projectId int, module string) (myViper *viper.Viper, err error) {
+	util.MyPrint("GetModuleInfo ,  env:" + strconv.Itoa(env) + " projectId:" + strconv.Itoa(projectId) + " module:" + module)
+	project, empty := configCenter.Option.ProjectManager.GetById(projectId)
+	if empty {
+		return myViper, errors.New("projectId is empty")
 	}
 	//util.MyPrint("ttt:===",configCenter.pool[env])
 	myViper, ok := configCenter.pool[env][project.Name][module]
@@ -119,23 +120,23 @@ func (configCenter *ConfigCenter)GetModuleInfo(env int , projectId int,module st
 		return myViper, errors.New("module is empty")
 	}
 
-	return myViper,nil
+	return myViper, nil
 }
 
-func (configCenter *ConfigCenter)CreateModule(env int , projectId int,module string)error{
-	_ , err := configCenter.GetByModule(env ,projectId,module)
-	if err == nil{
+func (configCenter *ConfigCenter) CreateModule(env int, projectId int, module string) error {
+	_, err := configCenter.GetByModule(env, projectId, module)
+	if err == nil {
 		return errors.New("文件存在，请不要重复创建")
 	}
 
-	if err.Error() == "module is empty"{
+	if err.Error() == "module is empty" {
 		project := configCenter.Option.ProjectManager.Pool[projectId]
 		envDir := configCenter.Option.PersistenceFileDir + "/" + util.GetConstListEnvStr()[env]
 		projectDir := envDir + "/" + project.Name
 		moduleDirFile := projectDir + "/" + module + ".toml"
-		util.MyPrint("create file:"+moduleDirFile)
-		_,err = os.Create(moduleDirFile)
-		if err != nil{
+		util.MyPrint("create file:" + moduleDirFile)
+		_, err = os.Create(moduleDirFile)
+		if err != nil {
 			return err
 		}
 
@@ -143,19 +144,18 @@ func (configCenter *ConfigCenter)CreateModule(env int , projectId int,module str
 		if err != nil {
 			return err
 		}
-		_ ,ok := configCenter.pool[env][project.Name]
-		if ok{
+		_, ok := configCenter.pool[env][project.Name]
+		if ok {
 			configCenter.pool[env][project.Name][module] = myViper
-		}else{
+		} else {
 			vipMap := make(map[string]*viper.Viper)
 			configCenter.pool[env][project.Name] = vipMap
 		}
 		//a , ok := configCenter.pool[env][project.Name]
 		//util.ExitPrint(a,ok)
 
-
 		return nil
-	}else{
+	} else {
 		return err
 	}
 }
@@ -172,7 +172,7 @@ func (configCenter *ConfigCenter) InitPersistenceFile() error {
 	}
 	//             map[env][projectName][fileName]myViper
 	envPool := make(map[int]map[string]map[string]*viper.Viper)
-	for _, env := range configCenter.Option.envList {
+	for _, env := range configCenter.Option.EnvList {
 		//envDir := configCenter.Option.PersistenceFileDir + "/" + strconv.Itoa(env)
 		envDir := configCenter.Option.PersistenceFileDir + "/" + util.GetConstListEnvStr()[env]
 		//util.MyPrint("envDir:" + envDir)
@@ -221,7 +221,7 @@ func (configCenter *ConfigCenter) InitPersistenceFile() error {
 				if !os.IsNotExist(err) {
 					//util.ExitPrint("err 1:",err)
 					return errors.New(prefix + err.Error())
-				}else{
+				} else {
 					err = os.Mkdir(projectDir, os.ModePerm)
 					if err != nil {
 						//util.ExitPrint("err 2:",err)

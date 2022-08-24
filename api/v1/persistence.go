@@ -92,11 +92,11 @@ func LogPushFile(c *gin.Context) {
 		return
 	}
 
-	category := util.FILE_TYPE_DOC
+	//category := util.FILE_TYPE_DOC
 	module := "log"
 
-	fileUpload := global.GetUploadObj(category, module)
-	uploadRs, err := fileUpload.UploadOne(header)
+	//fileUpload := global.GetUploadObj(category, module)
+	uploadRs, err := global.V.DocsManager.UploadOne(header, module)
 	if err != nil {
 		util.MyPrint("fileUpload.UploadOne err:", err.Error())
 		return
@@ -173,11 +173,11 @@ func LogPushFileJson(c *gin.Context) {
 		return
 	}
 
-	category := util.FILE_TYPE_DOC
+	//category := util.FILE_TYPE_DOC
 	module := "log"
 
-	fileUpload := global.GetUploadObj(category, module)
-	uploadRs, err := fileUpload.UploadOne(header)
+	//fileUpload := global.GetUploadObj(category, module)
+	uploadRs, err := global.V.DocsManager.UploadOne(header, module)
 	if err != nil {
 		util.MyPrint("fileUpload.UploadOne err:", err.Error())
 		httpresponse.FailWithMessage("fileUpload.UploadOne err:"+err.Error(), c)

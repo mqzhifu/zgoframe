@@ -24,11 +24,11 @@ func ConfigCenterGetByModule(c *gin.Context) {
 	c.ShouldBind(&form)
 
 	//moduleName  := c.Param("name")
-	configInfo , err := global.V.MyService.ConfigCenter.GetByModule(form.Env,projectId,form.Module)
-	if err != nil{
-		httpresponse.FailWithMessage(err.Error(),c)
-	}else{
-		httpresponse.OkWithAll(configInfo,"成功",c)
+	configInfo, err := global.V.MyService.ConfigCenter.GetByModule(form.Env, projectId, form.Module)
+	if err != nil {
+		httpresponse.FailWithMessage(err.Error(), c)
+	} else {
+		httpresponse.OkWithAll(configInfo, "成功", c)
 	}
 
 }
@@ -48,12 +48,12 @@ func ConfigCenterGetByModuleByKey(c *gin.Context) {
 	var form request.ConfigCenterOpt
 	c.ShouldBind(&form)
 
-	configInfo , err := global.V.MyService.ConfigCenter.GetByKey(global.C.System.ENV,projectId,form.Module,form.Key)
+	configInfo, err := global.V.MyService.ConfigCenter.GetByKey(global.MainCmdParameter.Env, projectId, form.Module, form.Key)
 	util.MyPrint(configInfo)
-	if err != nil{
-		httpresponse.FailWithMessage(err.Error(),c)
-	}else{
-		httpresponse.OkWithAll(configInfo,"成功",c)
+	if err != nil {
+		httpresponse.FailWithMessage(err.Error(), c)
+	} else {
+		httpresponse.OkWithAll(configInfo, "成功", c)
 	}
 }
 
@@ -74,11 +74,11 @@ func ConfigCenterSetByModuleByKey(c *gin.Context) {
 
 	//util.MyPrint("set key form:",form.Env,form.Module,form.Value)
 
-	err := global.V.MyService.ConfigCenter.SetByKey(form.Env,projectId,form.Module,form.Key,form.Value)
-	if err != nil{
-		httpresponse.FailWithMessage(err.Error(),c)
-	}else{
-		httpresponse.OkWithAll("ok","成功",c)
+	err := global.V.MyService.ConfigCenter.SetByKey(form.Env, projectId, form.Module, form.Key, form.Value)
+	if err != nil {
+		httpresponse.FailWithMessage(err.Error(), c)
+	} else {
+		httpresponse.OkWithAll("ok", "成功", c)
 	}
 }
 
@@ -97,14 +97,11 @@ func ConfigCenterCreateModule(c *gin.Context) {
 	var form request.ConfigCenterOpt
 	c.ShouldBind(&form)
 
-	err := global.V.MyService.ConfigCenter.CreateModule(form.Env,projectId,form.Module)
-	if err == nil{
-		httpresponse.OkWithMessage("已创建",c)
-	}else{
-		httpresponse.FailWithMessage(err.Error(),c)
+	err := global.V.MyService.ConfigCenter.CreateModule(form.Env, projectId, form.Module)
+	if err == nil {
+		httpresponse.OkWithMessage("已创建", c)
+	} else {
+		httpresponse.FailWithMessage(err.Error(), c)
 		return
 	}
 }
-
-
-

@@ -24,10 +24,10 @@ func GetUtilAgora() *util.MyAgora {
 		Domain:             global.C.Agora.Domain,
 		HttpKey:            global.C.Agora.HttpKey,
 		HttpSecret:         global.C.Agora.HttpSecret,
-		OssAccessKeyId:     global.C.Oss.AccessKeyId,
-		OssBucket:          global.C.Oss.Bucket,
-		OssAccessKeySecret: global.C.Oss.AccessKeySecret,
-		OssEndpoint:        global.C.Oss.Endpoint,
+		OssAccessKeyId:     global.C.AliOss.AccessKeyId,
+		OssBucket:          global.C.AliOss.Bucket,
+		OssAccessKeySecret: global.C.AliOss.AccessKeySecret,
+		OssEndpoint:        global.C.AliOss.Endpoint,
 	}
 	agora := util.NewMyAgora(op)
 	return agora
@@ -465,10 +465,10 @@ func TwinAgoraCloudRecordOssFiles(c *gin.Context) {
 	}
 	//pathPrefix := "agoraRecord/ckck/1660733248/"
 
-	fileManager := global.GetUploadObj(1, "")
-	localDiskPath := fileManager.GetLocalDiskDownloadBasePath() + "/" + pathPrefix
+	//fileManager := global.GetUploadObj(1, "")
+	localDiskPath := global.V.DocsManager.GetLocalDiskDownloadBasePath() + "/" + pathPrefix
 	util.MyPrint("pathPrefix:", pathPrefix, " , localDiskPath:", localDiskPath)
-	listObjectsResult, err := fileManager.Option.AliOss.OssLs(pathPrefix)
+	listObjectsResult, err := global.V.DocsManager.Option.AliOss.OssLs(pathPrefix)
 	if len(listObjectsResult.Objects) <= 0 {
 		httpresponse.FailWithMessage("path:"+pathPrefix+" is  empty,no files.", c)
 		return
@@ -525,7 +525,7 @@ func TwinAgoraCloudRecordOssFiles(c *gin.Context) {
 		}
 
 		util.MyPrint("fileName:", fileName, " , fileExtName:", fileExtName, " , sid:", sid, " , cname:", cname, " , uid:", uid, " , fileCategory:", fileCategory, " fileIndex:", fileIndex)
-		fileManager.Option.AliOss.DownloadFile(v.Key, localDiskPath+fileName)
+		global.V.DocsManager.Option.AliOss.DownloadFile(v.Key, localDiskPath+fileName)
 	}
 	//util.MyPrint(processFileInfoList)
 	for _, v := range processFileInfoList {

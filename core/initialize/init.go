@@ -1,15 +1,13 @@
 //全局初始化
 package initialize
 
+import "C"
 import (
-	"context"
-	"encoding/json"
 	"errors"
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
-	"os/user"
 	"strings"
 	"zgoframe/core"
 	"zgoframe/core/global"
@@ -17,42 +15,10 @@ import (
 	"zgoframe/util"
 )
 
-type Initialize struct {
-	Option InitOption
-}
+type Initialize struct{}
 
-type MainEnvironment struct {
-	RootDir     string `json:"root_dir"`
-	RootDirName string `json:"root_dir_name"`
-
-	GoVersion       string             `json:"go_version"` //当前go版本
-	ExecUser        *user.User         `json:"-"`          //执行该脚本的用户信息
-	Cpu             string             `json:"cpu"`        //cpu信息
-	RootCtx         context.Context    `json:"-"`          //main的上下文，级别最高
-	RootCancelFunc  context.CancelFunc `json:"-"`          //main的取消函数，该管理如果能读出值，main会主动退出
-	RootQuitFunc    func(source int)   `json:"-"`          //这是个函数，子级可直接驱动：退出MAIN
-	BuildTime       string             //编译时：时间
-	BuildGitVersion string             //编译时：git版本号
-}
-
-type CmdParameter struct {
-	Env              int    `json:"env"`                //当前环境
-	ConfigSourceType string `json:"config_source_type"` //文件 | etcd
-	ConfigFileType   string `json:"config_file_type"`   //项目的配置：文件名
-	ConfigFileName   string `json:"config_file_name"`   //项目的配置：文件名
-	EtcdUrl          string `json:"etcd_url"`           //etcd get url
-	Debug            int    `json:"debug"`              //debug 模式
-	TestFlag         string `json:"test_flag"`          //是否为测试状态
-}
-
-type InitOption struct {
-	CmdParameter
-	MainEnvironment
-}
-
-func NewInitialize(option InitOption) *Initialize {
+func NewInitialize() *Initialize {
 	initialize := new(Initialize)
-	initialize.Option = option
 	return initialize
 }
 
@@ -61,17 +27,17 @@ func (initialize *Initialize) Start() error {
 	prefix := "initialize ,"
 	//初始化 : 配置信息
 	viperOption := ViperOption{
-		ConfigFileName: initialize.Option.ConfigFileName,
-		ConfigFileType: initialize.Option.ConfigFileType,
-		SourceType:     initialize.Option.ConfigSourceType,
-		EtcdUrl:        initialize.Option.EtcdUrl,
-		ENV:            initialize.Option.Env,
+		ConfigFileName: global.MainCmdParameter.ConfigFileName,
+		ConfigFileType: global.MainCmdParameter.ConfigFileType,
+		SourceType:     global.MainCmdParameter.ConfigSourceType,
+		EtcdUrl:        global.MainCmdParameter.EtcdUrl,
+		ENV:            global.MainCmdParameter.Env,
 		PrintPrefix:    prefix,
 	}
 
-	util.MyPrint(prefix + "start CoreInitialize : config option~~ ")
-	util.PrintStruct(initialize.Option, ":")
-	util.MyPrint("-------")
+	//util.MyPrint(prefix + "start CoreInitialize : config option~~ ")
+	//util.PrintStruct(initialize.Option, ":")
+	//util.MyPrint("-------")
 
 	myViper, config, err := GetNewViper(viperOption)
 	if err != nil {
@@ -97,13 +63,6 @@ func (initialize *Initialize) Start() error {
 		return err
 	}
 	global.V.Zap = mailZap
-	//初始化：mysql
-	//原单库连接可以判断，现改成框架可以多库连接，判断 就意义了，数据结构还麻烦，只是多了一个status字段
-	//PS:并不一定所有项目都用MYSQL，但基于<多APP/SERVICE>，强依赖 project_id，另外，日志也需要
-	//if global.C.Mysql.Status != global.CONFIG_STATUS_OPEN {
-	//	errMsg := "please open mysql db Module, because need project_id from read db."
-	//	return errors.New(errMsg)
-	//}
 	//这个变量，主要是给gorm做日志使用，也就是DB的日志，最终也交由zap来接管
 	util.LoggerZap = global.V.Zap
 	//实例化gorm db
@@ -126,14 +85,14 @@ func (initialize *Initialize) Start() error {
 	//gorm 和 project 初始化(成功)完成后，给main日志增加公共输出项：projectId
 	global.V.Zap = LoggerWithProject(global.V.Zap, global.V.Project.Id)
 	//项目目录名，必须跟PROJECT里的key相同(key由驼峰转为下划线模式)
-	initialize.Option.RootDirName, err = InitPath(initialize.Option.RootDir)
+	_, err = InitPath(global.MainEnv.RootDir)
 	if err != nil {
 		global.V.Zap.Error(prefix + err.Error())
 		return err
 	}
 	//项目的根目录
-	global.V.RootDir = initialize.Option.RootDir
-	global.V.Zap.Info(prefix + "global.V.RootDir: " + global.V.RootDir)
+	//global.V.RootDir = initialize.Option.RootDir
+	global.V.Zap.Info(prefix + "global.V.RootDir: " + global.MainEnv.RootDir)
 	//错误码 文案 管理（还未用起来，后期优化）
 	global.V.Err, err = util.NewErrMsg(global.V.Zap, global.C.Http.StaticPath+global.C.System.ErrorMsgFile)
 	if err != nil {
@@ -143,7 +102,7 @@ func (initialize *Initialize) Start() error {
 	//基础类：用于恢复一个挂了的协程,避免主进程被panic fatal 带挂了，同时有重度次数控制
 	global.V.RecoverGo = util.NewRecoverGo(global.V.Zap, 3)
 	//redis
-	var redisGo *util.MyRedisGo
+	//var redisGo *util.MyRedisGo
 	if global.C.Redis.Status == global.CONFIG_STATUS_OPEN {
 		global.V.Redis, err = GetNewRedis(prefix)
 		if err != nil {
@@ -157,7 +116,7 @@ func (initialize *Initialize) Start() error {
 			Ps:   global.C.Redis.Password,
 			Log:  global.V.Zap,
 		}
-		redisGo, _ = util.NewRedisConnPool(redisGoOption)
+		global.V.RedisGo, _ = util.NewRedisConnPool(redisGoOption)
 
 	}
 	//http server
@@ -181,7 +140,7 @@ func (initialize *Initialize) Start() error {
 	}
 	//etcd
 	if global.C.Etcd.Status == global.CONFIG_STATUS_OPEN {
-		global.V.Etcd, err = GetNewEtcd(initialize.Option.Env, configZapReturn, prefix)
+		global.V.Etcd, err = GetNewEtcd(global.MainCmdParameter.Env, configZapReturn, prefix)
 		if err != nil {
 			global.V.Zap.Error(prefix + "GetNewEtcd err:" + err.Error())
 			return err
@@ -212,7 +171,7 @@ func (initialize *Initialize) Start() error {
 			Log:         global.V.Zap,
 			NameSpace:   global.V.Project.Name,
 			PushGateway: myPushGateway,
-			Env:         global.C.System.ENV,
+			Env:         global.MainCmdParameter.Env,
 		}
 		global.V.Metric = util.NewMyMetrics(myMetricsOption)
 
@@ -231,7 +190,7 @@ func (initialize *Initialize) Start() error {
 		//global.V.Metric.Test()
 	}
 	//初始化-protobuf 映射文件
-	dir := initialize.Option.RootDir + "/" + global.C.Protobuf.BasePath + "/" + global.C.Protobuf.PbServicePath
+	dir := global.MainEnv.RootDir + "/" + global.C.Protobuf.BasePath + "/" + global.C.Protobuf.PbServicePath
 	//将rpc service 中的方法，转化成ID（由PHP生成 的ID map）
 	if global.C.Protobuf.Status == global.CONFIG_STATUS_OPEN {
 		global.V.ProtoMap, err = util.NewProtoMap(global.V.Zap, dir, global.C.Protobuf.IdMapFileName, global.V.ProjectMng)
@@ -241,19 +200,6 @@ func (initialize *Initialize) Start() error {
 		}
 		//util.ExitPrint(global.V.ProtoMap.ServiceFuncMap)
 	}
-
-	//websocket
-	//if global.C.Websocket.Status == global.CONFIG_STATUS_OPEN {
-	//	if global.C.Http.Status != global.CONFIG_STATUS_OPEN {
-	//		return errors.New("Websocket need gin open!")
-	//	}
-	//
-	//	netwayOption := InitGateway()
-	//	//	gateway := util.NewGateway(global.V.GrpcManager, global.V.Zap)
-	//
-	//	util.NewNetWay(netWayOption)
-	//}
-
 	//grpc
 	if global.C.Grpc.Status == global.CONFIG_STATUS_OPEN {
 		grpcManagerOption := util.GrpcManagerOption{
@@ -288,7 +234,16 @@ func (initialize *Initialize) Start() error {
 		//global.V.AlertHook.Alert("Aaaa")
 		//util.ExitPrint(123123123)
 	}
-
+	if global.C.AliOss.Status == global.CONFIG_STATUS_OPEN {
+		op := util.AliOssOptions{
+			AccessKeyId:     global.C.AliOss.AccessKeyId,
+			AccessKeySecret: global.C.AliOss.AccessKeySecret,
+			Endpoint:        global.C.AliOss.Endpoint,
+			BucketName:      global.C.AliOss.Bucket,
+			LocalDomain:     global.C.AliOss.SelfDomain,
+		}
+		global.V.AliOss = util.NewAliOss(op)
+	}
 	//var netWayOption util.NetWayOption
 	//if global.C.Gateway.Status == global.CONFIG_STATUS_OPEN {
 	//	netWayOption = InitGateway()
@@ -299,23 +254,24 @@ func (initialize *Initialize) Start() error {
 	//	}
 	//	global.V.NetWay = netWay
 	//}
-	InitMyService(redisGo)
+	InitFileManager()
+	global.V.MyService = global.NewMyService()
 
-	global.C.System.ENV = initialize.Option.Env
+	//global.C.System.ENV = initialize.Option.Env
 	//启动http
 	if global.C.Http.Status == global.CONFIG_STATUS_OPEN {
 		RegGinHttpRoute() //这里注册项目自己的http 路由策略
-		StartHttpGin(initialize.Option)
+		StartHttpGin()
 	}
 
 	//_ ,cancelFunc := context.WithCancel(option.RootCtx)
 	//进程通信相关
 	ProcessPathFileName := "/tmp/" + global.V.Project.Name + ".pid"
-	global.V.Process = util.NewProcess(ProcessPathFileName, initialize.Option.RootCancelFunc, global.V.Zap, initialize.Option.RootQuitFunc, initialize.OutHttpGetBaseInfo)
+	global.V.Process = util.NewProcess(ProcessPathFileName, global.MainEnv.RootCancelFunc, global.V.Zap, global.MainEnv.RootQuitFunc, initialize.OutHttpGetBaseInfo)
 	global.V.Process.InitProcess()
 
-	if initialize.Option.TestFlag != "" {
-		core.DoTestAction(initialize.Option.TestFlag)
+	if global.MainCmdParameter.TestFlag != "" {
+		core.DoTestAction(global.MainCmdParameter.TestFlag)
 		return nil
 	}
 
@@ -323,8 +279,9 @@ func (initialize *Initialize) Start() error {
 }
 
 func (initialize *Initialize) OutHttpGetBaseInfo() string {
-	optionStr, _ := json.Marshal(initialize.Option)
-	return string(optionStr)
+	//optionStr, _ := json.Marshal(initialize.Option)
+	//return string(optionStr)
+	return "img OutHttpGetBaseInfo"
 }
 
 func (initialize *Initialize) Quit() {

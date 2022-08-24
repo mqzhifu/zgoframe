@@ -145,6 +145,7 @@ downloadPath = "download"
 downloadMaxSize = 100
 
 [oss]
+status  = "open"
 accessKeyId     = "#oss_user#"
 accessKeySecret = "#oss_ps#"
 endpoint        = "#oss_ip#"

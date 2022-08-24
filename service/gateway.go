@@ -9,12 +9,18 @@ import (
 	"zgoframe/util"
 )
 
+type MyServiceList struct {
+	Match      *Match
+	FrameSync  *FrameSync
+	RoomManage *RoomManager
+}
+
 type Gateway struct {
-	GrpcManager  *util.GrpcManager
-	Log          *zap.Logger
-	NetWayOption util.NetWayOption
-	Netway       *util.NetWay
-	MyService    *Service
+	GrpcManager   *util.GrpcManager
+	Log           *zap.Logger
+	NetWayOption  util.NetWayOption
+	Netway        *util.NetWay
+	MyServiceList *MyServiceList
 }
 
 //网关，目前主要是分为2部分
@@ -99,9 +105,9 @@ func (gateway *Gateway) RouterServiceGameMatch(msg pb.Msg, conn *util.Conn) (dat
 
 	switch protoServiceFunc.FuncName {
 	case "CS_PlayerMatchSign":
-		gateway.MyService.Match.AddOnePlayer(requestPlayerMatchSign, conn)
+		gateway.MyServiceList.Match.AddOnePlayer(requestPlayerMatchSign, conn)
 	case "CS_PlayerMatchSignCancel":
-		gateway.MyService.Match.CancelOnePlayer(requestPlayerMatchSignCancel, conn)
+		gateway.MyServiceList.Match.CancelOnePlayer(requestPlayerMatchSignCancel, conn)
 
 	default:
 		gateway.Netway.Option.Log.Error("RouterServiceGateway Router err:")
@@ -150,17 +156,17 @@ func (gateway *Gateway) RouterServiceSync(msg pb.Msg, conn *util.Conn) (data []b
 
 	switch protoServiceFunc.FuncName {
 	case "CS_PlayerOperations":
-		err = gateway.MyService.FrameSync.ReceivePlayerOperation(requestLogicFrame, conn)
+		err = gateway.MyServiceList.FrameSync.ReceivePlayerOperation(requestLogicFrame, conn)
 	case "CS_PlayerResumeGame":
-		err = gateway.MyService.FrameSync.PlayerResumeGame(requestPlayerResumeGame, conn)
+		err = gateway.MyServiceList.FrameSync.PlayerResumeGame(requestPlayerResumeGame, conn)
 	case "CS_PlayerReady":
-		err = gateway.MyService.FrameSync.PlayerReady(requestPlayerReady, conn)
+		err = gateway.MyServiceList.FrameSync.PlayerReady(requestPlayerReady, conn)
 	case "CS_PlayerOver":
-		err = gateway.MyService.FrameSync.PlayerOver(requestPlayerOver, conn)
+		err = gateway.MyServiceList.FrameSync.PlayerOver(requestPlayerOver, conn)
 	case "CS_RoomHistory":
-		err = gateway.MyService.FrameSync.RoomHistory(requestRoomHistory, conn)
+		err = gateway.MyServiceList.FrameSync.RoomHistory(requestRoomHistory, conn)
 	case "CS_RoomBaseInfo":
-		err = gateway.MyService.RoomManage.GetRoom(requestRoomBaseInfo, conn)
+		err = gateway.MyServiceList.RoomManage.GetRoom(requestRoomBaseInfo, conn)
 	default:
 		gateway.Netway.Option.Log.Error("RouterServiceGateway Router err:")
 		return data, errors.New("RouterServiceGateway Router err")

@@ -76,11 +76,14 @@ var initializeVar *initialize.Initialize
 
 func main() {
 	//编译打进去的两个参数：BuildTime 编译时间，编译的git版本号
-	util.MyPrint("BuildTime:", BuildTime, " BuildGitVersion:", BuildGitVersion)
+	util.MyPrint("code , BuildTime:", BuildTime, " BuildGitVersion:", BuildGitVersion)
 	//日志前缀
 	prefix := "main "
 	//处理指令行的参数
 	cmdParameter := processCmdParameter(prefix)
+	util.MyPrint("cmdParameter")
+	util.PrintStruct(cmdParameter, ":")
+	//util.MyPrint(prefix+" cmd parameter:", cmdParameter)
 	//获取当前脚本执行用户信息
 	imUser, _ := user.Current()
 	util.MyPrint(prefix + "exec script user info , name: " + imUser.Name + " uid: " + imUser.Uid + " , gid :" + imUser.Gid + " ,homeDir:" + imUser.HomeDir)
@@ -88,11 +91,11 @@ func main() {
 	pwd, _ := os.Getwd()
 	util.MyPrint(prefix + "exec script pwd:" + pwd)
 	//开始初始化模块
-	//主协程的 context
+	//main主协程的 context
 	util.MyPrint(prefix + "create cancel context")
 	mainCxt, mainCancelFunc := context.WithCancel(context.Background())
 
-	mainEnvironment := initialize.MainEnvironment{
+	mainEnvironment := global.MainEnvironment{
 		RootDir:         pwd,
 		GoVersion:       runtime.Version(),
 		Cpu:             runtime.GOARCH,
@@ -103,19 +106,14 @@ func main() {
 		BuildTime:       BuildTime,
 		BuildGitVersion: BuildGitVersion,
 	}
-
-	//初始化模块需要的参数
-	initOption := initialize.InitOption{
-		CmdParameter:    cmdParameter,
-		MainEnvironment: mainEnvironment,
-	}
+	global.MainEnv = mainEnvironment
+	global.MainCmdParameter = cmdParameter
 	//开始正式全局初始化
-	initializeVar = initialize.NewInitialize(initOption)
+	initializeVar = initialize.NewInitialize()
 	err := initializeVar.Start()
 	if err != nil {
 		util.MyPrint(prefix+"initialize.Init err:", err)
 		panic(prefix + "initialize.Init err:" + err.Error())
-
 	}
 
 	//执行用户自己的一些功能
@@ -124,7 +122,7 @@ func main() {
 	go global.V.Process.DemonSignal()
 	util.MyPrint(prefix + "wait mainCxt.done...")
 	select {
-	case <-mainCxt.Done():
+	case <-mainCxt.Done(): //阻塞
 		QuitAll(1)
 	}
 
@@ -132,7 +130,7 @@ func main() {
 }
 
 //处理指令行参数
-func processCmdParameter(prefix string) initialize.CmdParameter {
+func processCmdParameter(prefix string) global.CmdParameter {
 	//获取<环境变量>枚举值
 	envList := util.GetConstListEnv()
 	envListStr := util.ConstListEnvToStr()
@@ -159,7 +157,7 @@ func processCmdParameter(prefix string) initialize.CmdParameter {
 		panic(msg + strconv.Itoa(*env))
 	}
 
-	cmdParameter := initialize.CmdParameter{
+	cmdParameter := global.CmdParameter{
 		Env:              *env,
 		ConfigSourceType: *configSourceType,
 		ConfigFileType:   *configFileType,

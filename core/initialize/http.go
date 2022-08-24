@@ -17,7 +17,7 @@ import (
 	"zgoframe/util"
 )
 
-func StartHttpGin(option InitOption) {
+func StartHttpGin() {
 	dns := global.C.Http.Ip + ":" + global.C.Http.Port
 	global.V.Zap.Debug("http gin dns:" + dns)
 	server := &http.Server{
@@ -36,8 +36,8 @@ func StartHttpGin(option InitOption) {
 		if err != nil {
 			if strings.Contains(err.Error(), "bind: address already in use") {
 				util.MyPrint("server.ListenAndServe() err: bind port failed , ", err.Error())
-				option.RootQuitFunc(-5)
-				option.RootCancelFunc()
+				global.MainEnv.RootQuitFunc(-5)
+				global.MainEnv.RootCancelFunc()
 			}
 		}
 		util.MyPrint("server.ListenAndServe() err:", err)
@@ -62,7 +62,7 @@ func GetNewHttpGIN(zapLog *zap.Logger, prefix string) (*gin.Engine, error) {
 	staticFSUriName := "/static"
 	swaggerUri := "/swagger/*any"
 
-	staticPath := global.V.RootDir + "/" + global.C.Http.StaticPath
+	staticPath := global.MainEnv.RootDir + "/" + global.C.Http.StaticPath
 	//保存一下，给外部使用，主要是给HTTP获取配置信息时，使用
 	global.C.Http.DiskStaticPath = staticPath
 	zapLog.Info(prefix + "GetNewHttpGIN static config , uri: " + staticFSUriName + " , diskPath: " + staticPath)

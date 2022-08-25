@@ -21,7 +21,7 @@ func NewCICDPublicManager(gorm *gorm.DB) *CICDPublicManager {
 	return cICDPublicManager
 }
 
-func (CICDPublicManager *CICDPublicManager) InsertOne(service util.Project, server util.Server, DeployType int) (model.CicdPublish, error) {
+func (CICDPublicManager *CICDPublicManager) InsertOne(service model.Project, server util.Server, DeployType int) (model.CicdPublish, error) {
 	serviceInfo, _ := json.Marshal(service)
 	serverInfo, _ := json.Marshal(server)
 	data := model.CicdPublish{

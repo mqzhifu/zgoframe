@@ -1,5 +1,6 @@
 package model
 
+//@description 用户3方登陆日志
 type UserThird struct {
 	MODEL
 	Uid          int    `json:"uid" db:"define:int;comment:用户ID;defaultValue:0"`

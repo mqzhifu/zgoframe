@@ -1,5 +1,6 @@
 package model
 
+//@description 声网回调存储
 type AgoraCallbackRecord struct {
 	MODEL
 	NoticeId    string `json:"notice_id" form:"notice_id" db:"define:varchar(255);comment:通知 ID，标识来自业务服务器的一次事件通知;defaultValue:''"`

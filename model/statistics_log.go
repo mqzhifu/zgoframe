@@ -1,5 +1,6 @@
 package model
 
+//@description 眼镜日志收集
 type StatisticsLog struct {
 	MODEL
 	HeaderCommon  string `json:"header_common" db:"define:text;comment:http公共请求头信息"`                  //http公共请求头信息

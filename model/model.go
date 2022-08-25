@@ -12,5 +12,4 @@ type MODEL struct {
 	DeletedAt gorm.DeletedAt `json:"deleted_at" gorm:"index" json:"-" db:"comment:是否删除;define:bigint;index:true;defaultValue:null"`        //是否删除
 }
 
-
-var Db *gorm.DB
+//var Db *gorm.DB

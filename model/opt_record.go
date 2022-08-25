@@ -1,6 +1,6 @@
 package model
 
-// 日志记录，主要是HTTP请求，正常有日志，且用MYSQL存也不太合适，所以正常不用
+//@description 日志记录，主要是HTTP请求，正常有日志，且用MYSQL存也不太合适，所以正常不用
 type OperationRecord struct {
 	MODEL
 	Ip           string `json:"ip" form:"ip" db:"define:varchar(50);comment:ip;defaultValue:''"`

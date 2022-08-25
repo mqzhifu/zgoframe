@@ -1,5 +1,6 @@
 package model
 
+//@description 代码部署与发布
 type CicdPublish struct {
 	MODEL
 	ServiceId    int    `json:"service_id" form:"service_id" db:"define:int;comment:服务ID;defaultValue:0"`

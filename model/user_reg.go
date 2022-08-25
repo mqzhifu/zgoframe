@@ -1,5 +1,6 @@
 package model
 
+//@description 用户注册日志
 type UserReg struct {
 	MODEL
 	ProjectId     int    `json:"project_id" db:"define:int;comment:project_id;defaultValue:0"  `

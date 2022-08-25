@@ -15,25 +15,12 @@ import (
 )
 
 // @Tags Tools
-// @Summary 帧同步 - js
-// @Description demo
-// @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
-// @Param X-Project-Id header string true "项目ID" default(6)
-// @Param X-Access header string true "访问KEY" default(imzgoframe)
-// @Param id path int true "项目ID"
-// @Produce  application/json
-// @Success 200 {object} model.Project
-// @Router /tools/frame/sync/js/demo [get]
-func FrameSyncJsDemo(c *gin.Context) {
-	httpresponse.OkWithAll("aaaa", "成功", c)
-}
-
-// @Tags Tools
 // @Summary 一个项目的详细信息
 // @Description 用于开发工具测试
+// @Security ApiKeyAuth
 // @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
-// @Param X-Project-Id header string true "项目ID" default(6)
-// @Param X-Access header string true "访问KEY" default(imzgoframe)
+// @Param X-Second-Auth-Uname header string true "二次验证-用户名" default(aaaa)
+// @Param X-Second-Auth-Ps header string true "二次验证-密码" default(bbbb)
 // @Param id path int true "项目ID"
 // @Produce  application/json
 // @Success 200 {object} model.Project
@@ -42,17 +29,29 @@ func ProjectOneInfo(c *gin.Context) {
 	var a model.Project
 	c.ShouldBind(&a)
 
-	rs := global.V.ProjectMng.Pool
+	id := util.Atoi(c.Param("id"))
+	if id <= 0 {
+		httpresponse.FailWithMessage("id <= 0", c)
+		return
+	}
 
-	httpresponse.OkWithAll(rs, "成功", c)
+	info, empty := global.V.ProjectMng.GetById(id)
+	if empty {
+		httpresponse.FailWithMessage("id not found in db.", c)
+		return
+	} else {
+		httpresponse.OkWithAll(info, "成功", c)
+	}
+
 }
 
 // @Tags Tools
 // @Summary 项目列表
 // @Description 每个项目的详细信息
+// @Security ApiKeyAuth
 // @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
-// @Param X-Project-Id header string true "项目ID" default(6)
-// @Param X-Access header string true "访问KEY" default(imzgoframe)
+// @Param X-Second-Auth-Uname header string true "二次验证-用户名" default(aaaa)
+// @Param X-Second-Auth-Ps header string true "二次验证-密码" default(bbbb)
 // @Produce  application/json
 // @Success 200 {object} []model.Project
 // @Router /tools/project/list [post]
@@ -68,9 +67,10 @@ func ProjectList(c *gin.Context) {
 // @Tags Tools
 // @Summary 所有常量列表
 // @Description 所有常量列表，方便调用与调试
+// @Security ApiKeyAuth
 // @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
-// @Param X-Project-Id header string true "项目ID" default(6)
-// @Param X-Access header string true "访问KEY" default(imzgoframe)
+// @Param X-Second-Auth-Uname header string true "二次验证-用户名" default(aaaa)
+// @Param X-Second-Auth-Ps header string true "二次验证-密码" default(bbbb)
 // @Produce  application/json
 // @Success 200 {object} []httpresponse.ConstInfo "常量列表"
 // @Router /tools/const/list [get]
@@ -78,7 +78,6 @@ func ConstList(c *gin.Context) {
 	var a model.Project
 	c.ShouldBind(&a)
 
-	//list := global.V.MyService.User.GetConstList()
 	list := GetConstList()
 
 	httpresponse.OkWithAll(list, "成功", c)

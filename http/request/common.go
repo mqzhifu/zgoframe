@@ -40,6 +40,8 @@ type HeaderRequest struct {
 	AutoIp            string         `json:"auto_ip"`             //请求方没有IP时，系统自动获取生成,供后端/业务层使用
 	ClientReqTime     int            `json:"client_req_time"`     //客户端请求时间  unixtime
 	ServerReceiveTime int            `json:"server_receive_time"` //服务端接收到请求的时间 unixtime
+	SecondAuthUname   string         `json:"second_auth_uname"`   //有些API是给管理员使用，除了TOKEN验证外，还得进行二次验证
+	SecondAuthPs      string         `json:"second_auth_ps"`      //有些API是给管理员使用，除了TOKEN验证外，还得进行二次验证
 	BaseInfo          HeaderBaseInfo `json:"base_info"`           //收集客户端的一些基础信息，json格式，参考：HeaderBaseInfo 结构体
 }
 

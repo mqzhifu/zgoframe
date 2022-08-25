@@ -95,25 +95,32 @@ func RegGinHttpRoute() {
 
 	//设置非登陆可访问API，但是头里要加基础认证的信息
 	PublicGroup := global.V.Gin.Group("")
+	//开启跨域，NGINX做了配置暂时可以先不用打开
 	//PublicGroup.Use(httpmiddleware.Cors())
 	PublicGroup.Use(httpmiddleware.HeaderAuth())
 	{
 		router.InitBaseRouter(PublicGroup)
-		router.InitToolsRouter(PublicGroup)
-		router.InitCicdRouter(PublicGroup)
 		router.InitConfigCenterRouter(PublicGroup)
 		router.InitGameMatchRouter(PublicGroup)
 		router.InitPersistenceRouter(PublicGroup)
 		router.InitFileRouter(PublicGroup)
 
 	}
+	//给 管理员/开发/运维 使用，正常需要登陆一次并获取TOKEN，还需要二次验证
+	SystemGroup := global.V.Gin.Group("")
+	SystemGroup.Use(httpmiddleware.JWTAuth()).Use(httpmiddleware.SecondAuth())
+	{
+		router.InitToolsRouter(SystemGroup)
+		router.InitCicdRouter(SystemGroup)
+		router.InitSysRouter(SystemGroup)
+	}
+
 	PrivateGroup := global.V.Gin.Group("")
 	//设置正常API（需要验证）
 	PrivateGroup.Use(httpmiddleware.JWTAuth())
 	{
 		router.InitTwinAgoraRouter(PrivateGroup)
 		router.InitUserRouter(PrivateGroup)
-		router.InitSysRouter(PrivateGroup)
 		router.InitMailRouter(PrivateGroup)
 	}
 

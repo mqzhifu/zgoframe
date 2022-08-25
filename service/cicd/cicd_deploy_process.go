@@ -6,11 +6,12 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"zgoframe/model"
 	"zgoframe/util"
 )
 
 //step 1
-func (deploy *Deploy) DeployServiceCheck(serviceDeployConfig ServiceDeployConfig, service util.Project, server util.Server) (ServiceDeployConfig, error) {
+func (deploy *Deploy) DeployServiceCheck(serviceDeployConfig ServiceDeployConfig, service model.Project, server util.Server) (ServiceDeployConfig, error) {
 	deploy.Option.Log.Info("step 1 : DeployServiceCheck ")
 	if service.Git == "" {
 		errMsg := "service.Git is empty~" + service.Name
@@ -82,7 +83,7 @@ func (deploy *Deploy) DeployServiceCheck(serviceDeployConfig ServiceDeployConfig
 }
 
 //step 2
-func (deploy *Deploy) DeployOneServiceGitCode(serviceDeployConfig ServiceDeployConfig, service util.Project) (string, string, string, error) {
+func (deploy *Deploy) DeployOneServiceGitCode(serviceDeployConfig ServiceDeployConfig, service model.Project) (string, string, string, error) {
 	deploy.Option.Log.Info("step 2 : git clone project code and get git commit id.")
 	//FullPath 一个服务的根目录，大部分操作都在这个目录下(除了superVisor)
 	//查看服务根目录是否存在，不存在即新创建
@@ -201,7 +202,7 @@ func (deploy *Deploy) DeployOneServiceSuperVisor(serviceDeployConfig ServiceDepl
 }
 
 //step 5
-func (deploy *Deploy) DeployOneServiceProjectConfig(newGitCodeDir string, server util.Server, serviceDeployConfig ServiceDeployConfig, configServiceCICD ConfigServiceCICD, service util.Project) (string, string, error) {
+func (deploy *Deploy) DeployOneServiceProjectConfig(newGitCodeDir string, server util.Server, serviceDeployConfig ServiceDeployConfig, configServiceCICD ConfigServiceCICD, service model.Project) (string, string, error) {
 	deploy.Option.Log.Info("step 5 : create project self conf file.")
 	//读取该服务自己的配置文件 config.toml
 	serviceSelfConfigTmpFileDir := newGitCodeDir + util.DIR_SEPARATOR + configServiceCICD.System.ConfigTmpFileName
@@ -258,8 +259,8 @@ func (deploy *Deploy) DeployOneServiceCommand(newGitCodeDir string, serviceDeplo
 }
 
 //本机部署均已完成，需要将本地代码同步到远端
-func (deploy *Deploy) SyncOneServiceToRemote(serviceDeployConfig ServiceDeployConfig, server util.Server, newGitCodeDir string, project util.Project) (syncCodeShellCommand string, syncSuperVisorShellCommand string, err error) {
-	if project.Type == util.PROJECT_TYPE_SERVICE {
+func (deploy *Deploy) SyncOneServiceToRemote(serviceDeployConfig ServiceDeployConfig, server util.Server, newGitCodeDir string, project model.Project) (syncCodeShellCommand string, syncSuperVisorShellCommand string, err error) {
+	if project.Type == model.PROJECT_TYPE_SERVICE {
 		//1 同步代码
 		syncCodeShellCommand = GetRsyncCommandPre() + " --exclude=master " + serviceDeployConfig.FullPath + " rsync@" + server.OutIp + "::www"
 		_, err := ExecShellCommand(syncCodeShellCommand, "")
@@ -268,7 +269,7 @@ func (deploy *Deploy) SyncOneServiceToRemote(serviceDeployConfig ServiceDeployCo
 		syncSuperVisorShellCommand = GetRsyncCommandPre() + newGitCodeDir + "/" + serviceDeployConfig.Name + ".ini" + " rsync@" + server.OutIp + "::super_visor"
 		_, err = ExecShellCommand(syncSuperVisorShellCommand, "")
 		util.MyPrint("syncSuperVisorShellCommand:", syncSuperVisorShellCommand, " err:", err)
-	} else if project.Type == util.PROJECT_TYPE_FE {
+	} else if project.Type == model.PROJECT_TYPE_FE {
 		//util.MyPrint(serviceDeployConfig)
 		syncCodeShellCommand = GetRsyncCommandPre() + " --exclude=node_modules " + newGitCodeDir + " rsync@" + server.OutIp + "::www/" + serviceDeployConfig.Name
 		//util.ExitPrint(syncCodeShellCommand)

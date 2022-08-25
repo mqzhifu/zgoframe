@@ -38,6 +38,12 @@ func GetNewZapLog(alert *util.AlertPush, configZap global.Zap) (logger *zap.Logg
 		level = zap.InfoLevel
 	}
 
+	if configZap.AutoAlert {
+		if alert == nil {
+			return logger, configZapReturn, errors.New("AutoAlert is open ,but AlertPush is nil")
+		}
+	}
+
 	configZap.LevelInt8 = int8(level)
 	//每次输出日志后，回调钩子，主要用来报警
 	hook := zap.Hooks(func(entry zapcore.Entry) error {

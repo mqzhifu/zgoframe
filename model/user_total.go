@@ -1,5 +1,6 @@
 package model
 
+//@description 用户各种数据汇总
 type UserTotal struct {
 	MODEL
 	Uid        int `json:"uid" db:"define:int;comment:uid;defaultValue:0"`

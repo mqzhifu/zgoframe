@@ -1,5 +1,6 @@
 package model
 
+//@description 短信日志
 type SmsLog struct {
 	MODEL
 	ProjectId  int    `json:"project_id" db:"define:int;comment:项目ID;defaultValue:0"`      //项目ID

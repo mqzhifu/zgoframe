@@ -11,7 +11,6 @@ import (
 	"strings"
 	"zgoframe/core"
 	"zgoframe/core/global"
-	"zgoframe/model"
 	"zgoframe/util"
 )
 
@@ -24,30 +23,16 @@ func NewInitialize() *Initialize {
 
 //框架-初始化-入口
 func (initialize *Initialize) Start() error {
+	//---read config file start -----
 	prefix := "initialize ,"
-	//初始化 : 配置信息
-	viperOption := ViperOption{
-		ConfigFileName: global.MainCmdParameter.ConfigFileName,
-		ConfigFileType: global.MainCmdParameter.ConfigFileType,
-		SourceType:     global.MainCmdParameter.ConfigSourceType,
-		EtcdUrl:        global.MainCmdParameter.EtcdUrl,
-		ENV:            global.MainCmdParameter.Env,
-		PrintPrefix:    prefix,
-	}
-
-	//util.MyPrint(prefix + "start CoreInitialize : config option~~ ")
-	//util.PrintStruct(initialize.Option, ":")
-	//util.MyPrint("-------")
-
-	myViper, config, err := GetNewViper(viperOption)
+	myViper, config, err := GetNewViper(prefix)
 	if err != nil {
 		util.MyPrint(prefix+"GetNewViper err:", err)
 		return err
 	}
 	global.V.Vip = myViper //全局变量管理者
 	global.C = config      //全局变量
-	//---config end -----
-
+	//---read config file end -----
 	//预/报警->推送器，这里是推送到3方，如：prometheus
 	//ps:这个要优先zap日志类优化处理，因为zap里的<钩子>有用到,主要是日志里自动触发报警，略方便
 	if global.C.Alert.Status == global.CONFIG_STATUS_OPEN {
@@ -57,12 +42,12 @@ func (initialize *Initialize) Start() error {
 	configZap := global.C.Zap
 	configZap.FileName = "main"
 	configZap.ModuleName = "main"
-	mailZap, configZapReturn, err := GetNewZapLog(global.V.AlertPush, configZap)
+	mainZap, configZapReturn, err := GetNewZapLog(global.V.AlertPush, configZap)
 	if err != nil {
 		util.MyPrint("GetNewZapLog err:", err)
 		return err
 	}
-	global.V.Zap = mailZap
+	global.V.Zap = mainZap
 	//这个变量，主要是给gorm做日志使用，也就是DB的日志，最终也交由zap来接管
 	util.LoggerZap = global.V.Zap
 	//实例化gorm db
@@ -75,7 +60,7 @@ func (initialize *Initialize) Start() error {
 	}
 	global.V.Gorm = global.V.GormList[0]
 	//DB 快捷变量
-	model.Db = global.V.Gorm
+	//model.Db = global.V.Gorm
 	//初始化APP信息，所有项目都需要有AppId或serviceId，因为要做验证，同时目录名也包含在里面
 	err = InitProject(prefix)
 	if err != nil {
@@ -102,14 +87,13 @@ func (initialize *Initialize) Start() error {
 	//基础类：用于恢复一个挂了的协程,避免主进程被panic fatal 带挂了，同时有重度次数控制
 	global.V.RecoverGo = util.NewRecoverGo(global.V.Zap, 3)
 	//redis
-	//var redisGo *util.MyRedisGo
 	if global.C.Redis.Status == global.CONFIG_STATUS_OPEN {
 		global.V.Redis, err = GetNewRedis(prefix)
 		if err != nil {
 			global.V.Zap.Error(prefix + " GetRedis " + err.Error())
 			return err
 		}
-
+		//这个是另外一个redis sdk库，算是备用吧
 		redisGoOption := util.RedisGoOption{
 			Host: global.C.Redis.Ip,
 			Port: global.C.Redis.Port,
@@ -117,7 +101,6 @@ func (initialize *Initialize) Start() error {
 			Log:  global.V.Zap,
 		}
 		global.V.RedisGo, _ = util.NewRedisConnPool(redisGoOption)
-
 	}
 	//http server
 	if global.C.Http.Status == global.CONFIG_STATUS_OPEN {
@@ -367,12 +350,12 @@ func GetNewEtcd(env int, configZapReturn global.Zap, prefix string) (myEtcd *uti
 
 func GetNewServiceDiscovery() (serviceDiscovery *util.ServiceDiscovery, err error) {
 	serviceOption := util.ServiceDiscoveryOption{
-		Log:  global.V.Zap,
-		Etcd: global.V.Etcd,
-		//Prefix	: "/service",
+		Log:            global.V.Zap,
+		Etcd:           global.V.Etcd,
 		Prefix:         global.C.ServiceDiscovery.Prefix,
 		DiscoveryType:  util.SERVICE_DISCOVERY_ETCD,
 		ServiceManager: global.V.ServiceManager,
+		//Prefix	: "/service",
 	}
 	serviceDiscovery, err = util.NewServiceDiscovery(serviceOption)
 	return serviceDiscovery, err

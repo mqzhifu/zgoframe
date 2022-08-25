@@ -1,5 +1,6 @@
 package model
 
+//@description 服务列表，注：并没有这张表，此结构与project相同
 type Service struct {
 	MODEL
 	Name      string `json:"name" form:"name" db:"define:varchar(50);comment:名称;defaultValue:''"`

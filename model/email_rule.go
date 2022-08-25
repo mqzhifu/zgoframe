@@ -1,5 +1,6 @@
 package model
 
+//@description 电子邮件 - 发送规则
 type EmailRule struct {
 	MODEL
 	ProjectId   int    `json:"app_id" db:"define:tinyint(1);comment:项目ID;defaultValue:0"`           //项目ID

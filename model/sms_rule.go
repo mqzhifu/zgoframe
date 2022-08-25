@@ -1,5 +1,6 @@
 package model
 
+//@description 短信配置规则
 type SmsRule struct {
 	MODEL
 	ProjectId         int    `json:"app_id" db:"define:tinyint(1);comment:项目ID;defaultValue:0"`                    //项目ID

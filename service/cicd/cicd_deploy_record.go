@@ -2,6 +2,7 @@ package cicd
 
 import (
 	"encoding/json"
+	"zgoframe/model"
 	"zgoframe/util"
 )
 
@@ -10,7 +11,7 @@ type DeployOneServiceFlowRecord struct {
 	ServiceDeployConfig    ServiceDeployConfig `json:"service_deploy_config"`
 	NewServiceDeployConfig ServiceDeployConfig `json:"new_service_deploy_config"`
 	Server                 util.Server         `json:"-"` //mysql里有存这个字段
-	service                util.Project        `json:"-"` //mysql里有存这个字段
+	service                model.Project       `json:"-"` //mysql里有存这个字段
 
 	StartTime                   int    `json:"start_time"`
 	EndTime                     int    `json:"end_time"`

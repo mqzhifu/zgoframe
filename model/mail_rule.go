@@ -1,6 +1,6 @@
 package model
 
-//站内信
+//@description 站内信 - 配置规则
 type MailRule struct {
 	MODEL
 	ProjectId   int    `json:"app_id" db:"define:tinyint(1);comment:项目ID;defaultValue:0"`           //项目ID

@@ -59,7 +59,7 @@ type ServiceDeployConfig struct {
 type DeployOption struct {
 	ServerList       map[int]util.Server  //所有服务器
 	ServiceList      map[int]util.Service //所有项目/服务
-	ProjectList      map[int]util.Project
+	ProjectList      map[int]model.Project
 	InstanceManager  *util.InstanceManager
 	Config           ConfigCicd
 	PublicManager    *CICDPublicManager
@@ -95,7 +95,7 @@ func (deploy *Deploy) ApiDeployOneService(form request.CicdDeploy) error {
 	return err
 }
 
-func (deploy *Deploy) CheckCicdRequestForm(form request.CicdDeploy) (server util.Server, service util.Project, err error) {
+func (deploy *Deploy) CheckCicdRequestForm(form request.CicdDeploy) (server util.Server, service model.Project, err error) {
 	server, ok := deploy.Option.ServerList[form.ServerId]
 	if !ok {
 		return server, service, errors.New("serviceId not in list")
@@ -169,7 +169,7 @@ func (deploy *Deploy) GetDeployConfig(deployTargetType int) ServiceDeployConfig 
 }
 
 //部署时，如果是测试，指定一些参数即可，不用全部署
-func (deploy *Deploy) CheckTest(server util.Server, serviceDeployConfig ServiceDeployConfig, service util.Project) error {
+func (deploy *Deploy) CheckTest(server util.Server, serviceDeployConfig ServiceDeployConfig, service model.Project) error {
 	//if server.OutIp != ""{
 	//	return errors.New("CheckTest is err outIp != ''")
 	//}
@@ -200,7 +200,7 @@ func (deploy *Deploy) CheckTest(server util.Server, serviceDeployConfig ServiceD
 }
 
 //部署一个服务
-func (deploy *Deploy) OneService(server util.Server, serviceDeployConfig ServiceDeployConfig, service util.Project) (publishId int, deployOneServiceFlowRecord DeployOneServiceFlowRecord, err error) {
+func (deploy *Deploy) OneService(server util.Server, serviceDeployConfig ServiceDeployConfig, service model.Project) (publishId int, deployOneServiceFlowRecord DeployOneServiceFlowRecord, err error) {
 	startTime := util.GetNowTimeSecondToInt()
 	checkTestRs := deploy.CheckTest(server, serviceDeployConfig, service)
 	if checkTestRs != nil {
@@ -324,12 +324,12 @@ func (deploy *Deploy) Publish(id int, deployTargetType int) error {
 		return err
 		//return cicdManager.DeployOneServiceFailed(publish, err.Error())
 	}
-	if service.Type == util.PROJECT_TYPE_SERVICE {
+	if service.Type == model.PROJECT_TYPE_SERVICE {
 		//1 同步代码
 		syncCodeShellCommand := GetRsyncCommandPre() + serviceDeployConfig.FullPath + "/" + serviceDeployConfig.MasterDirName + " rsync@" + server.OutIp + "::www/" + serviceDeployConfig.Name
 		_, err = ExecShellCommand(syncCodeShellCommand, "")
 		util.MyPrint("SyncOneServiceToRemote:", syncCodeShellCommand, " err:", err)
-	} else if service.Type == util.PROJECT_TYPE_FE {
+	} else if service.Type == model.PROJECT_TYPE_FE {
 		syncCodeShellCommand := GetRsyncCommandPre() + serviceDeployConfig.FullPath + "/" + serviceDeployConfig.MasterDirName + " rsync@" + server.OutIp + "::www/" + serviceDeployConfig.Name
 		_, err = ExecShellCommand(syncCodeShellCommand, "")
 		util.MyPrint("SyncOneServiceToRemote:", syncCodeShellCommand, " err:", err)

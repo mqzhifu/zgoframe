@@ -89,8 +89,8 @@ type ServerServiceSuperVisorList struct {
 }
 
 type LocalServerServiceList struct {
-	ServerList  map[int]util.Server  `json:"server_list"`
-	ServiceList map[int]util.Project `json:"service_list"`
+	ServerList  map[int]util.Server   `json:"server_list"`
+	ServiceList map[int]model.Project `json:"service_list"`
 }
 
 type MyProcessInfo struct {
@@ -119,7 +119,7 @@ type CicdManager struct {
 type CicdManagerOption struct {
 	ServerList       map[int]util.Server  //所有服务器
 	ServiceList      map[int]util.Service //所有项目/服务
-	ProjectList      map[int]util.Project
+	ProjectList      map[int]model.Project
 	HttpPort         string
 	InstanceManager  *util.InstanceManager
 	Config           ConfigCicd
@@ -170,8 +170,8 @@ func (cicdManager *CicdManager) Ping(c *gin.Context) {
 }
 
 //在当前服务器上，从<部署目录>中检索出每个服务（目录名），分析出：哪些服务~已经部署
-func (cicdManager *CicdManager) GetServiceList() map[int]util.Project {
-	list := make(map[int]util.Project)
+func (cicdManager *CicdManager) GetServiceList() map[int]model.Project {
+	list := make(map[int]model.Project)
 
 	for k, service := range cicdManager.Option.ProjectList {
 
@@ -288,7 +288,7 @@ func (cicdManager *CicdManager) SuperVisorProcess(form request.CicdSuperVisor) (
 	return err
 }
 func (cicdManager *CicdManager) LocalAllServerServiceList() (list LocalServerServiceList, err error) {
-	list.ServiceList = make(map[int]util.Project)
+	list.ServiceList = make(map[int]model.Project)
 	list.ServerList = make(map[int]util.Server)
 	if len(cicdManager.Option.ServerList) == 0 {
 		//服务器 为空

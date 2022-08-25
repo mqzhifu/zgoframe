@@ -1,5 +1,6 @@
 package model
 
+//@description 声网录制屏幕记录
 type AgoraCloudRecord struct {
 	MODEL
 	Uid              int    `json:"uid" form:"uid" db:"define:int;comment:用户ID;defaultValue:0"`

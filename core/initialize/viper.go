@@ -32,7 +32,17 @@ type ViperOption struct {
 }
 
 //读取配置文件：目前权支持文件，ETCD只写了一半
-func GetNewViper(viperOption ViperOption) (myViper *viper.Viper, config global.Config, err error) {
+func GetNewViper(prefix string) (myViper *viper.Viper, config global.Config, err error) {
+	//初始化 : 配置信息
+	viperOption := ViperOption{
+		ConfigFileName: global.MainCmdParameter.ConfigFileName,
+		ConfigFileType: global.MainCmdParameter.ConfigFileType,
+		SourceType:     global.MainCmdParameter.ConfigSourceType,
+		EtcdUrl:        global.MainCmdParameter.EtcdUrl,
+		ENV:            global.MainCmdParameter.Env,
+		PrintPrefix:    prefix,
+	}
+
 	//util.MyPrint("SourceType:",viperOption.SourceType, " ConfigFileType:",viperOption.ConfigFileType ," , ConfigFileName:",viperOption.ConfigFileName)
 	myViper = viper.New()
 

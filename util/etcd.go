@@ -110,7 +110,7 @@ func NewMyEtcdSdk(etcdOption EtcdOption) (myEtcd *MyEtcd, errs error) {
 
 	myEtcd.cli = cli
 	myEtcd.option = etcdOption
-	//获取自己项目想着的配置信息
+	//获取自己项目想着的配置信息，如果：项目的配置信息是以文件形式存到项目代码中，这个功能就有点多余
 	err = myEtcd.initProjectConf()
 	return myEtcd, err
 }

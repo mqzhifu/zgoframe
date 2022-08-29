@@ -19,28 +19,28 @@ var (
 	SetUserAuthorityVerify = Rules{"AuthorityId": {NotEmpty()}}
 )
 
-.use-motion {
-  if (hexo-config('motion.transition.post_block')) {
-    .post-block, .pagination, .comments {
-      opacity: 0;
-    }
-  }
-
-  if (hexo-config('motion.transition.post_header')) {
-    .post-header {
-      opacity: 0;
-    }
-  }
-
-  if (hexo-config('motion.transition.post_body')) {
-    .post-body {
-      opacity: 0;
-    }
-  }
-
-  if (hexo-config('motion.transition.coll_header')) {
-    .collection-header {
-      opacity: 0;
-    }
-  }
-}
+//.use-motion {
+//  if (hexo-config('motion.transition.post_block')) {
+//    .post-block, .pagination, .comments {
+//      opacity: 0;
+//    }
+//  }
+//
+//  if (hexo-config('motion.transition.post_header')) {
+//    .post-header {
+//      opacity: 0;
+//    }
+//  }
+//
+//  if (hexo-config('motion.transition.post_body')) {
+//    .post-body {
+//      opacity: 0;
+//    }
+//  }
+//
+//  if (hexo-config('motion.transition.coll_header')) {
+//    .collection-header {
+//      opacity: 0;
+//    }
+//  }
+//}

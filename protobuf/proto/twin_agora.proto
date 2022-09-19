@@ -1,0 +1,41 @@
+syntax = "proto3";
+
+package pb;
+option go_package ="./;pb";
+
+import "common.proto";
+
+service TwinAgora {
+    rpc CS_CallPeople          (CallPeopleReq)           returns (Empty) {}//呼叫某人，加入一个房间，进行：音视频通话
+    rpc SC_CallPeople          (CallPeopleRes)           returns (Empty) {}//呼叫某人，加入一个房间，进行：音视频通话
+    rpc SC_PeopleEntry         (PeopleEntryRes)          returns (Empty) {}//某人进入了一个房间/频道，通知给C端
+    rpc SC_PushMsg             (PushMsgRes)          returns (Empty) {}//某人进入了一个房间/频道，通知给C端
+}
+//呼叫某人，加入一个房间，进行：音视频通话
+message CallPeopleReq{
+	int32   uid 	        = 1;//发起者UID,长连接其实已经确定了UID，这里不写也行
+	int32   target_uid      = 2;//希望指定用户，进行音视频-通话
+	string  channel 	    = 3;//双方进入某个特定的频道(可以为空,由后端随机生成一个,能发送给双方)
+	int32  people_type 	    = 4;//呼叫人群类型：1专家
+}
+
+message CallPeopleRes{
+	string  receive_uid 	= 1;//已接收呼叫的用户ID
+	string  channel 	    = 2;//双方进入某个特定的频道(可以为空,由后端随机生成一个,能发送给双方)
+	int32   err_code        = 3;//0,没有错误，1所有专家均不在线，请等待一会，重新呼叫
+	string  err_msg 	    = 4;//错误消息
+}
+//某人进入了一个房间/频道，通知给C端
+message PeopleEntryRes{
+	int32   uid 	        = 1;//发起者UID,长连接其实已经确定了UID，这里不写也行
+	string  channel 	    = 3;//双方进入某个特定的频道(可以为空,由后端随机生成一个,能发送给双方)
+	string  people_type 	= 4;//呼叫人群类型：1专家
+}
+//给某人推送一条消息
+message PushMsgRes{
+	int32   send_uid 	    = 1;//发起者UID，如果是系统发送：uid=99999
+	int32   target_uid      = 2;//收消息的UID
+	string  content 	    = 3;//消息具体的内容，这里可以自定义成json格式
+	int32  msg_type 	    = 4;//消息分类
+}
+

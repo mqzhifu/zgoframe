@@ -19,6 +19,7 @@ type User struct {
 	Test      int    `json:"test" db:"define:tinyint(1);comment:是否测试,1是2否;defaultValue:0"`                        //是否测试,1是2否
 	Recommend string `json:"recommend" db:"define:varchar(50);comment:推荐人;defaultValue:''"`                       //推荐人
 	HeaderImg string `json:"headerImg" gorm:"" db:"define:varchar(50);comment:头像url地址;defaultValue:''"`           //头像url地址
+	Role      int    `json:"role" db:"define:tinyint(1);comment:角色1护士2专家;defaultValue:0"`                         //角色1护士2专家
 	//ThirdId   string `json:"third_id" db:"define:varchar(50);comment:三方平台(登陆)用户ID;defaultValue:''"`
 	//AuthorityId string       `json:"authority_id" db:"define:varchar(50);comment:用户角色ID(后台使用);defaultValue:''"`
 	//Authority   SysAuthority `json:"authority" gorm:"foreignKey:AuthorityId;references:AuthorityId;" db:"define:varchar(50);comment:用户角色(后台使用);defaultValue:''"`

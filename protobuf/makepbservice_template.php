@@ -163,9 +163,9 @@ EOF;
 class DB{
     function getConn(){
         $host = "8.142.177.235";
-        $username = "root";
-        $ps = "mqzhifu";
-        $db = "test";
+        $username = "php";
+        $ps = "!QAZ2wsx#EDC3";
+        $db = "seed_pre";
         $conn = mysqli_connect($host,$username,$ps,$db);
 //        var_dump(mysqli_connect_error());exit;
 //        var_dump($conn);exit;

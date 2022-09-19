@@ -29,6 +29,9 @@
 90114|Gateway|SC_Heartbeat|Heartbeat|Empty|心跳
 90116|Gateway|SC_KickOff|KickOff|Empty|该玩家在其它地方登陆，踢掉了当前连接
 90118|Gateway|SC_ProjectPush|ProjectPush|ProjectPush|service通知网关，给某些用户推送消息
-30100|LogSlave|Push|SlavePushMsg|Empty|前端推送日志
+12100|TwinAgora|CS_CallPeople|CallPeopleReq|Empty|呼叫某人，加入一个房间，进行：音视频通话
+12102|TwinAgora|SC_CallPeople|CallPeopleRes|Empty|呼叫某人，加入一个房间，进行：音视频通话
+12104|TwinAgora|SC_PeopleEntry|PeopleEntryRes|Empty|某人进入了一个房间/频道，通知给C端
+12106|TwinAgora|SC_PushMsg|PushMsgRes|Empty|某人进入了一个房间/频道，通知给C端
 60100|Zgoframe|SayHello|RequestUser|ResponseUser|测试5
 60102|Zgoframe|Comm|RequestUser|ResponseUser|测试6

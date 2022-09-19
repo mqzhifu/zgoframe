@@ -7,6 +7,14 @@ message Empty {
 
 }
 
+service GameMatch {
+
+    rpc CS_TestCommon        ( Common)        returns (Empty) {}//玩家匹配报名
+    rpc SC_TestCommon   ( CommonHeader) returns (Empty) {}//玩家报名(匹配)失败
+}
+
+
+
 message Common{
     string request_id  = 1 ;
     string trace_id  = 2 ;

@@ -36,14 +36,14 @@ func (grpcManager *GrpcManager)GetGatewayClient(name string,balanceFactor string
 
     return client.(pb.GatewayClient),nil
 }
-//获取一个服务的grpc client : LogSlave
-func (grpcManager *GrpcManager)GetLogSlaveClient(name string,balanceFactor string)(pb.LogSlaveClient,error){
+//获取一个服务的grpc client : TwinAgora
+func (grpcManager *GrpcManager)GetTwinAgoraClient(name string,balanceFactor string)(pb.TwinAgoraClient,error){
     client, err := grpcManager.GetClientByLoadBalance(name,balanceFactor)
     if err != nil{
         return nil,err
     }
 
-    return client.(pb.LogSlaveClient),nil
+    return client.(pb.TwinAgoraClient),nil
 }
 //获取一个服务的grpc client : Zgoframe
 func (grpcManager *GrpcManager)GetZgoframeClient(name string,balanceFactor string)(pb.ZgoframeClient,error){
@@ -66,8 +66,8 @@ func  (myGrpcClient *MyGrpcClient)GetGrpcClientByServiceName(serviceName string,
         incClient = pb.NewGameMatchClient(myGrpcClient.ClientConn)
     case "Gateway":
         incClient = pb.NewGatewayClient(myGrpcClient.ClientConn)
-    case "LogSlave":
-        incClient = pb.NewLogSlaveClient(myGrpcClient.ClientConn)
+    case "TwinAgora":
+        incClient = pb.NewTwinAgoraClient(myGrpcClient.ClientConn)
     case "Zgoframe":
         incClient = pb.NewZgoframeClient(myGrpcClient.ClientConn)
 
@@ -341,23 +341,44 @@ func (grpcManager *GrpcManager) CallServiceFuncGateway(funcName string,balanceFa
     }
     return data,err
 }
-//动态调用服务的函数 : LogSlave
-func (grpcManager *GrpcManager) CallServiceFuncLogSlave(funcName string,balanceFactor string,postData []byte)( data interface{},err error){
+//动态调用服务的函数 : TwinAgora
+func (grpcManager *GrpcManager) CallServiceFuncTwinAgora(funcName string,balanceFactor string,postData []byte)( data interface{},err error){
     //获取GRPC一个连接
-    grpcClient,err := grpcManager.GetLogSlaveClient("LogSlave",balanceFactor)
+    grpcClient,err := grpcManager.GetTwinAgoraClient("TwinAgora",balanceFactor)
     if err != nil{
         return data,err
     }
 
     ctx := context.Background()
     switch funcName {
-    case "Push":
-        request := pb.SlavePushMsg{}
+    case "CS_CallPeople":
+        request := pb.CallPeopleReq{}
         err := json.Unmarshal(postData,&request)
         if err != nil{
             return data,err
         }
-        data ,err = grpcClient.Push(ctx,&request)
+        data ,err = grpcClient.CS_CallPeople(ctx,&request)
+    case "SC_CallPeople":
+        request := pb.CallPeopleRes{}
+        err := json.Unmarshal(postData,&request)
+        if err != nil{
+            return data,err
+        }
+        data ,err = grpcClient.SC_CallPeople(ctx,&request)
+    case "SC_PeopleEntry":
+        request := pb.PeopleEntryRes{}
+        err := json.Unmarshal(postData,&request)
+        if err != nil{
+            return data,err
+        }
+        data ,err = grpcClient.SC_PeopleEntry(ctx,&request)
+    case "SC_PushMsg":
+        request := pb.PushMsgRes{}
+        err := json.Unmarshal(postData,&request)
+        if err != nil{
+            return data,err
+        }
+        data ,err = grpcClient.SC_PushMsg(ctx,&request)
 
     default:
             return data,errors.New("func name router failed.")
@@ -403,8 +424,8 @@ func (grpcManager *GrpcManager) CallGrpc(serviceName string,funcName string,bala
         resData , err = grpcManager.CallServiceFuncGameMatch(funcName,balanceFactor,requestData)
     case "Gateway":
         resData , err = grpcManager.CallServiceFuncGateway(funcName,balanceFactor,requestData)
-    case "LogSlave":
-        resData , err = grpcManager.CallServiceFuncLogSlave(funcName,balanceFactor,requestData)
+    case "TwinAgora":
+        resData , err = grpcManager.CallServiceFuncTwinAgora(funcName,balanceFactor,requestData)
     case "Zgoframe":
         resData , err = grpcManager.CallServiceFuncZgoframe(funcName,balanceFactor,requestData)
 

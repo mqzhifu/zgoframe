@@ -69,6 +69,10 @@ foreach ($protoPathFileList as $k=>$fileName){
     if ( $fileArr[1] != "proto" ) {
         exit("file exit name must = .proto");
     }
+     if ( $fileArr[0] == "common" ) {
+        echo "ignore common service\n";
+        continue;
+     }
     //编译proto生成pb 文件
     #compileProtoFile($compileCommand,$fileName);
     //开始具体处理一个文件里的内容，做:编译、分析等处理，注：一个文件里可能包括多个服务

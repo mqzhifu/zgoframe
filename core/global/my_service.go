@@ -14,6 +14,7 @@ type MyService struct {
 	FrameSync    *service.FrameSync    //帧同步服务
 	Gateway      *service.Gateway      //网关服务
 	Match        *service.Match        //匹配服务
+	TwinAgora    *service.TwinAgora    //广播120远程专家指导
 	ConfigCenter *service.ConfigCenter //配置中心
 	Cicd         *cicd.CicdManager     //自动部署
 	Mail         *service.Mail         //站内信
@@ -61,6 +62,9 @@ func NewMyService() *MyService {
 		RoomManager: myService.RoomManage,
 		//MatchSuccessChan chan *Room
 	}
+
+	myService.TwinAgora = service.NewTwinAgora(V.Gorm)
+
 	//长连接通信 - 配置
 	netWayOption := util.NetWayOption{
 		ListenIp: C.Gateway.ListenIp, //程序启动时监听的IP
@@ -117,6 +121,7 @@ func NewMyService() *MyService {
 		gateway.MyServiceList.FrameSync = myService.FrameSync
 		gateway.MyServiceList.Match = myService.Match
 		gateway.MyServiceList.RoomManage = myService.RoomManage
+		gateway.MyServiceList.TwinAgora = myService.TwinAgora
 		myService.Gateway = gateway
 	}
 	myService.Cicd, err = InitCicd()
@@ -198,7 +203,7 @@ func InitCicd() (*cicd.CicdManager, error) {
 	//部署所有机器上的所有服务项目
 	//cicd.DeployAllService()
 	//go cicd.StartHttp(global.C.Http.StaticPath)
-	
+
 	return cicd, err
 
 }

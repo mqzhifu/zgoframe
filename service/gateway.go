@@ -13,6 +13,7 @@ type MyServiceList struct {
 	Match      *Match
 	FrameSync  *FrameSync
 	RoomManage *RoomManager
+	TwinAgora  *TwinAgora
 }
 
 type Gateway struct {
@@ -80,11 +81,40 @@ func (gateway *Gateway) Router(msg pb.Msg, conn *util.Conn) (data interface{}, e
 		data, err = gateway.RouterServiceSync(msg, conn)
 	case "GameMatch":
 		data, err = gateway.RouterServiceGameMatch(msg, conn)
+	case "ArRoom":
+		data, err = gateway.RouterServiceArRoom(msg, conn)
 	default:
 		gateway.Netway.Option.Log.Error("netWay Router err.")
 	}
 	return data, err
 }
+
+func (gateway *Gateway) RouterServiceArRoom(msg pb.Msg, conn *util.Conn) (data []byte, err error) {
+	requestCallPeopleReq := pb.CallPeopleReq{}
+	protoServiceFunc, _ := gateway.Netway.Option.ProtoMap.GetServiceFuncById(int(msg.SidFid))
+	switch protoServiceFunc.FuncName {
+	case "CS_CallPeople":
+		err = gateway.Netway.ProtocolManager.ParserContentMsg(msg, &requestCallPeopleReq, conn.UserId)
+	default:
+		gateway.Netway.Option.Log.Error("RouterServiceGateway Router err:")
+		return data, errors.New("RouterServiceGateway Router err")
+	}
+
+	if err != nil {
+		return data, err
+	}
+
+	switch protoServiceFunc.FuncName {
+	case "CS_CallPeople":
+		gateway.MyServiceList.TwinAgora.CallPeople(requestCallPeopleReq, conn)
+	default:
+		gateway.Netway.Option.Log.Error("RouterServiceGateway Router err:")
+		return data, errors.New("RouterServiceGateway Router err")
+	}
+
+	return data, err
+}
+
 func (gateway *Gateway) RouterServiceGameMatch(msg pb.Msg, conn *util.Conn) (data []byte, err error) {
 	requestPlayerMatchSign := pb.PlayerMatchSign{}
 	requestPlayerMatchSignCancel := pb.PlayerMatchSignCancel{}

@@ -62,7 +62,7 @@ func NewMyService() *MyService {
 		RoomManager: myService.RoomManage,
 		//MatchSuccessChan chan *Room
 	}
-
+	//远程呼叫专家
 	myService.TwinAgora = service.NewTwinAgora(V.Gorm)
 
 	//长连接通信 - 配置
@@ -95,7 +95,7 @@ func NewMyService() *MyService {
 		FPS:     10,
 		MapSize: 10,
 	}
-	//匹配
+	//匹配服务
 	myService.Match = service.NewMatch(matchOption)
 	syncOption := service.FrameSyncOption{
 		Log:        V.Zap,

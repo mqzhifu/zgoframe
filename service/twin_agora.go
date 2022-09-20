@@ -100,12 +100,12 @@ func (twinAgora *TwinAgora) MoveAndStore(RTCRoom RTCRoom) {
 	delete(twinAgora.RTCRoomPool, RTCRoom.Channel)
 }
 
-func (twinAgora *TwinAgora) ConnCloseCallback(conn *util.Conn, source int) {
+func (twinAgora *TwinAgora) ConnCloseCallback(closeUid int, randConn *util.Conn) {
 	hasSearch := 0
 	//已结束的会从map中删除，已超时的也会从map中删除
 	for _, RTCRoomInfo := range twinAgora.RTCRoomPool {
 		for _, uid := range RTCRoomInfo.Uids {
-			if uid == int(conn.UserId) {
+			if uid == closeUid {
 				hasSearch = 1
 			}
 		}
@@ -118,15 +118,19 @@ func (twinAgora *TwinAgora) ConnCloseCallback(conn *util.Conn, source int) {
 		RTCRoomInfo.EndStatus = RTC_ROOM_END_STATUS_QUIT
 
 		for _, u := range RTCRoomInfo.Uids {
-			if u == int(conn.UserId) {
+			if u == closeUid {
 				//不要再给自己发了，因为：它已要断开连接了，发也是失败
 				continue
 			}
 			callPeopleReq := pb.CallPeopleReq{}
-			callPeopleReq.Uid = conn.UserId
+			callPeopleReq.Uid = int32(closeUid)
 			callPeopleReq.Channel = RTCRoomInfo.Channel
-			conn.SendMsgCompressByUid(int32(u), "SC_PeopleLeave", callPeopleReq)
+			randConn.SendMsgCompressByUid(int32(u), "SC_PeopleLeave", callPeopleReq)
 		}
+
+		//目前是1v1视频，只要有一个人拒绝，即结束，这里后期优化一下吧
+		RTCRoomInfo.Status = RTC_ROOM_STATUS_END
+		RTCRoomInfo.EndStatus = RTC_ROOM_END_STATUS_QUIT
 	}
 
 }
@@ -156,20 +160,23 @@ func (twinAgora *TwinAgora) StoreHistory(RTCRoom RTCRoom) {
 	}
 }
 func (twinAgora *TwinAgora) CallPeople(callPeopleReq pb.CallPeopleReq, conn *util.Conn) {
+	util.MyPrint("in func CallPeople:")
 	RTCRoomInfo, ok := twinAgora.RTCRoomPool[callPeopleReq.Channel]
 	callPeopleRes := pb.CallPeopleRes{}
 	if ok {
 		if RTCRoomInfo.Status == RTC_ROOM_STATUS_CALLING {
 			callPeopleRes.ErrCode = 520
 			callPeopleRes.ErrMsg = "已经存在一条记录：发起呼叫，请不要重复发起，或等待超时"
-			conn.SendMsgCompressByUid(callPeopleReq.Uid, "SC_CallPeople", callPeopleReq)
+			util.MyPrint(callPeopleRes.ErrMsg)
+			conn.SendMsgCompressByUid(callPeopleReq.Uid, "SC_CallPeople", callPeopleRes)
 			return
 		}
 
 		if RTCRoomInfo.Status == RTC_ROOM_STATUS_EXECING {
 			callPeopleRes.ErrCode = 521
 			callPeopleRes.ErrMsg = "已经存在一条记录：正常通话中...，不能再发起CALL了"
-			conn.SendMsgCompressByUid(callPeopleReq.Uid, "SC_CallPeople", callPeopleReq)
+			util.MyPrint(callPeopleRes.ErrMsg)
+			conn.SendMsgCompressByUid(callPeopleReq.Uid, "SC_CallPeople", callPeopleRes)
 			return
 		}
 
@@ -181,29 +188,33 @@ func (twinAgora *TwinAgora) CallPeople(callPeopleReq pb.CallPeopleReq, conn *uti
 	if callPeopleReq.Uid <= 0 {
 		callPeopleRes.ErrCode = 501
 		callPeopleRes.ErrMsg = "callPeopleReq.Uid <= 0"
-		conn.SendMsgCompressByUid(callPeopleReq.Uid, "SC_CallPeople", callPeopleReq)
+		util.MyPrint(callPeopleRes.ErrMsg)
+		conn.SendMsgCompressByUid(callPeopleReq.Uid, "SC_CallPeople", callPeopleRes)
 		return
 	}
 
 	if callPeopleReq.PeopleType != int32(USER_DOCTOR) {
 		callPeopleRes.ErrCode = 502
-		callPeopleRes.ErrMsg = "callPeopleReq.PeopleType != 1 "
-		conn.SendMsgCompressByUid(callPeopleReq.Uid, "SC_CallPeople", callPeopleReq)
+		callPeopleRes.ErrMsg = "callPeopleReq.PeopleType !=  " + strconv.Itoa(USER_DOCTOR)
+		util.MyPrint(callPeopleRes.ErrMsg)
+		conn.SendMsgCompressByUid(callPeopleReq.Uid, "SC_CallPeople", callPeopleRes)
 		return
 	}
 	var userDoctorList []model.User
 	err := twinAgora.Gorm.Where(" role =  ?", USER_DOCTOR).Find(&userDoctorList).Error
 	if err != nil {
 		callPeopleRes.ErrCode = 503
-		callPeopleRes.ErrMsg = "get user by db is empty"
-		conn.SendMsgCompressByUid(callPeopleReq.Uid, "SC_CallPeople", callPeopleReq)
+		callPeopleRes.ErrMsg = "get user(doctor) by db: is empty"
+		util.MyPrint(callPeopleRes.ErrMsg)
+		conn.SendMsgCompressByUid(callPeopleReq.Uid, "SC_CallPeople", callPeopleRes)
 		return
 	}
 
 	if callPeopleReq.TargetUid > 0 {
 		callPeopleRes.ErrCode = 504
 		callPeopleRes.ErrMsg = "暂时不支持 TargetUid > 0 的情况"
-		conn.SendMsgCompressByUid(callPeopleReq.Uid, "SC_CallPeople", callPeopleReq)
+		util.MyPrint(callPeopleRes.ErrMsg)
+		conn.SendMsgCompressByUid(callPeopleReq.Uid, "SC_CallPeople", callPeopleRes)
 		return
 	}
 
@@ -219,8 +230,9 @@ func (twinAgora *TwinAgora) CallPeople(callPeopleReq pb.CallPeopleReq, conn *uti
 
 	if len(onlineUserDoctorList) <= 0 {
 		callPeopleRes.ErrCode = 510
-		callPeopleRes.ErrMsg = "onlineUserDoctorList is empty"
-		conn.SendMsgCompressByUid(callPeopleReq.Uid, "SC_CallPeople", callPeopleReq)
+		callPeopleRes.ErrMsg = "所有专家，均不在线"
+		util.MyPrint(callPeopleRes.ErrMsg)
+		conn.SendMsgCompressByUid(callPeopleReq.Uid, "SC_CallPeople", callPeopleRes)
 		return
 	}
 

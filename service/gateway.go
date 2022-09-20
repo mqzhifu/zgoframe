@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"go.uber.org/zap"
+	"time"
 	"zgoframe/protobuf/pb"
 	"zgoframe/util"
 )
@@ -31,6 +32,7 @@ func NewGateway(grpcManager *util.GrpcManager, log *zap.Logger) *Gateway {
 	gateway := new(Gateway)
 	gateway.GrpcManager = grpcManager
 	gateway.Log = log
+	gateway.MyServiceList = &MyServiceList{}
 	return gateway
 }
 
@@ -49,11 +51,31 @@ func (gateway *Gateway) HttpCallGrpc(serviceName string, funcName string, balanc
 	//return resJsonStr,err
 }
 
+func (gateway *Gateway) ListenCloseEvent() {
+	for {
+		select {
+		case uid := <-gateway.Netway.ConnManager.CloseEventQueue:
+			//随便取一个conn，给到下层服务，因为：下层服务可能还要继续给其它人发消息
+			var randConn *util.Conn
+			for _, v := range gateway.Netway.ConnManager.Pool {
+				randConn = v
+			}
+			gateway.MyServiceList.TwinAgora.ConnCloseCallback(int(uid), randConn)
+		default:
+			time.Sleep(time.Millisecond * 100)
+		}
+	}
+
+}
+
 func (gateway *Gateway) StartSocket(netWayOption util.NetWayOption) (*util.NetWay, error) {
 	netWayOption.RouterBack = gateway.Router
 	gateway.NetWayOption = netWayOption
 	netWay, err := util.NewNetWay(netWayOption)
 	gateway.Netway = netWay
+
+	go gateway.ListenCloseEvent()
+
 	return netWay, err
 	//if err != nil {
 	//	//errMsg := "NewNetWay err:" + err.Error()
@@ -81,15 +103,15 @@ func (gateway *Gateway) Router(msg pb.Msg, conn *util.Conn) (data interface{}, e
 		data, err = gateway.RouterServiceSync(msg, conn)
 	case "GameMatch":
 		data, err = gateway.RouterServiceGameMatch(msg, conn)
-	case "ArRoom":
-		data, err = gateway.RouterServiceArRoom(msg, conn)
+	case "TwinAgora":
+		data, err = gateway.RouterServiceTwinAgora(msg, conn)
 	default:
 		gateway.Netway.Option.Log.Error("netWay Router err.")
 	}
 	return data, err
 }
 
-func (gateway *Gateway) RouterServiceArRoom(msg pb.Msg, conn *util.Conn) (data []byte, err error) {
+func (gateway *Gateway) RouterServiceTwinAgora(msg pb.Msg, conn *util.Conn) (data []byte, err error) {
 	requestCallPeopleReq := pb.CallPeopleReq{}
 	protoServiceFunc, _ := gateway.Netway.Option.ProtoMap.GetServiceFuncById(int(msg.SidFid))
 	switch protoServiceFunc.FuncName {

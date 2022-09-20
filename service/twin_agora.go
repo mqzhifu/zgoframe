@@ -100,7 +100,8 @@ func (twinAgora *TwinAgora) MoveAndStore(RTCRoom RTCRoom) {
 	delete(twinAgora.RTCRoomPool, RTCRoom.Channel)
 }
 
-func (twinAgora *TwinAgora) ConnCloseCallback(closeUid int, randConn *util.Conn) {
+func (twinAgora *TwinAgora) ConnCloseCallback(closeUid int, connManager *util.ConnManager) {
+	util.MyPrint("TwinAgora ConnCloseCallback uid:", closeUid)
 	hasSearch := 0
 	//已结束的会从map中删除，已超时的也会从map中删除
 	for _, RTCRoomInfo := range twinAgora.RTCRoomPool {
@@ -117,6 +118,7 @@ func (twinAgora *TwinAgora) ConnCloseCallback(closeUid int, randConn *util.Conn)
 		RTCRoomInfo.Status = RTC_ROOM_STATUS_END
 		RTCRoomInfo.EndStatus = RTC_ROOM_END_STATUS_QUIT
 
+		util.MyPrint("RTCRoomInfo.Channel ", RTCRoomInfo.Channel, " , RTCRoomInfo.Uids:", RTCRoomInfo.Uids)
 		for _, u := range RTCRoomInfo.Uids {
 			if u == closeUid {
 				//不要再给自己发了，因为：它已要断开连接了，发也是失败
@@ -125,7 +127,11 @@ func (twinAgora *TwinAgora) ConnCloseCallback(closeUid int, randConn *util.Conn)
 			callPeopleReq := pb.CallPeopleReq{}
 			callPeopleReq.Uid = int32(closeUid)
 			callPeopleReq.Channel = RTCRoomInfo.Channel
-			randConn.SendMsgCompressByUid(int32(u), "SC_PeopleLeave", callPeopleReq)
+
+			conn, ok := connManager.Pool[int32(u)]
+			if ok {
+				conn.SendMsgCompressByUid(int32(u), "SC_PeopleLeave", callPeopleReq)
+			}
 		}
 
 		//目前是1v1视频，只要有一个人拒绝，即结束，这里后期优化一下吧
@@ -235,28 +241,40 @@ func (twinAgora *TwinAgora) CallPeople(callPeopleReq pb.CallPeopleReq, conn *uti
 		conn.SendMsgCompressByUid(callPeopleReq.Uid, "SC_CallPeople", callPeopleRes)
 		return
 	}
-
 	var receiveUids []int
+	receiveUidsStr := ""
 	for _, user := range onlineUserDoctorList {
+		receiveUidsStr += strconv.Itoa(user.Id) + ","
 		receiveUids = append(receiveUids, user.Id)
-		pushMsgRes := pb.PushMsgRes{}
-		pushMsgRes.MsgType = 1
-		pushMsgRes.Content = strconv.Itoa(int(callPeopleReq.Uid)) + " 呼叫 视频连接...请进入频道:" + callPeopleReq.Channel
-		conn.SendMsgCompressByUid(int32(user.Id), "SC_PushMsg", pushMsgRes)
+		callReply := pb.CallReply{}
+		//pushMsgRes.MsgType = callPeopleReq.
+		callReply.Content = strconv.Itoa(int(callPeopleReq.Uid)) + " 呼叫 视频连接...请进入频道:" + callPeopleReq.Channel
+		conn.SendMsgCompressByUid(int32(user.Id), "SC_CallReply", callReply)
 	}
 	twinAgora.CreateRTCRoom(callPeopleReq, receiveUids)
+	//先给呼叫者返回消息，告知已成功请等待专家响应
+	callPeopleRes.ErrCode = 200
+	callPeopleRes.ErrMsg = "请求等待专家响应"
+	callPeopleRes.ReceiveUid = receiveUidsStr[0 : len(receiveUidsStr)-1]
+	util.MyPrint(callPeopleRes.ErrMsg)
+	conn.SendMsgCompressByUid(callPeopleReq.Uid, "SC_CallPeople", callPeopleRes)
+
 	return
 }
 
 //这里假设验证都成功了，不做二次验证了
 func (twinAgora *TwinAgora) CreateRTCRoom(callPeopleReq pb.CallPeopleReq, receiveUserIds []int) {
+	uids := []int{int(callPeopleReq.Uid)}
+	for _, v := range receiveUserIds {
+		uids = append(uids, v)
+	}
 	RTCRoomOne := RTCRoom{
 		AddTime: util.GetNowTimeSecondToInt(),
 		//Timeout:     util.GetNowTimeSecondToInt() + 60,
 		CallUid:     int(callPeopleReq.Uid),
 		Status:      RTC_ROOM_STATUS_CALLING,
 		ReceiveUids: receiveUserIds,
-		Uids:        []int{int(callPeopleReq.Uid)},
+		Uids:        uids,
 	}
 	twinAgora.RTCRoomPool[callPeopleReq.Channel] = RTCRoomOne
 }

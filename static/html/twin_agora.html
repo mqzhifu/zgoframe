@@ -72,8 +72,8 @@
     // var playerMax = 4;
 
     var playerList = {
-        "calluser":{id:9,"username":"calluser","password":"123456","info":{},"token":"","roomId":"","channel":"ckck"},
         "doctor"  :{id:10,"username"  :"doctor"  ,"password":"123456","info":{},"token":"","roomId":"","channel":"ckck"},
+        "calluser":{id:9,"username":"calluser","password":"123456","info":{},"token":"","roomId":"","channel":"ckck"},
     }
 
     var contentType = 1;//长连接 - 传输内容类型
@@ -107,6 +107,12 @@
         //     var playerInfo = playerList[GetPlayerNameByIndex(i)];
         //     initPlayer(playerInfo,"p"+i,ServerConfig);
         // }
+
+        var player =  playerList["doctor"];
+        var wsObj = new TwinAgoraPlayer(player.info.id , player.token, ServerConfig, null , contentType,protocolType,player);
+        wsObj.create();
+
+
         var player =  playerList["calluser"];
         var wsObj = new TwinAgoraPlayer(player.info.id , player.token, ServerConfig, null , contentType,protocolType,player);
         wsObj.create();

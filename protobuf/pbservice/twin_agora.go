@@ -47,7 +47,7 @@ func (twinAgora *TwinAgora)CS_CallPeopleDeny(ctx context.Context,callPeopleReq *
     empty := &pb.Empty{}
     return empty,nil
 }
-func (twinAgora *TwinAgora)SC_PushMsg(ctx context.Context,pushMsgRes *pb.PushMsgRes) (*pb.Empty,error){
+func (twinAgora *TwinAgora)SC_CallReply(ctx context.Context,callReply *pb.CallReply) (*pb.Empty,error){
     empty := &pb.Empty{}
     return empty,nil
 }

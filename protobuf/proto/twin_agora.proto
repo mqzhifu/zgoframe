@@ -16,8 +16,7 @@ service TwinAgora {
     rpc SC_PeopleLeave         (PeopleLeaveRes)      returns (Empty) {}//告知房间里的人：有人离开了一个房间/频道
     rpc CS_CallPeopleAccept    (CallPeopleReq)       returns (Empty) {}//被呼叫者-接收此次请求
     rpc CS_CallPeopleDeny      (CallPeopleReq)       returns (Empty) {}//被呼叫者-拒绝此次请求
-
-    rpc SC_PushMsg             (PushMsgRes)          returns (Empty) {}//广播/通知推送消息给C端
+    rpc SC_CallReply             (CallReply)          returns (Empty) {}//通知专家端，做出应答/选择
 
 }
 //呼叫某人，加入一个房间，进行：音视频通话
@@ -47,7 +46,7 @@ message PeopleLeaveRes{
 	string  people_type 	= 4;//呼叫人群类型：1专家
 }
 //给某人推送一条消息
-message PushMsgRes{
+message CallReply{
 	int32   send_uid 	    = 1;//发起者UID，如果是系统发送：uid=99999
 	int32   target_uid      = 2;//收消息的UID
 	string  content 	    = 3;//消息具体的内容，这里可以自定义成json格式

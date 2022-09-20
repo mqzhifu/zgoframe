@@ -421,13 +421,13 @@ func (grpcManager *GrpcManager) CallServiceFuncTwinAgora(funcName string,balance
             return data,err
         }
         data ,err = grpcClient.CS_CallPeopleDeny(ctx,&request)
-    case "SC_PushMsg":
-        request := pb.PushMsgRes{}
+    case "SC_CallReply":
+        request := pb.CallReply{}
         err := json.Unmarshal(postData,&request)
         if err != nil{
             return data,err
         }
-        data ,err = grpcClient.SC_PushMsg(ctx,&request)
+        data ,err = grpcClient.SC_CallReply(ctx,&request)
 
     default:
             return data,errors.New("func name router failed.")

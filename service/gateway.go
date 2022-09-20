@@ -55,12 +55,9 @@ func (gateway *Gateway) ListenCloseEvent() {
 	for {
 		select {
 		case uid := <-gateway.Netway.ConnManager.CloseEventQueue:
+			util.MyPrint("ListenCloseEvent......========")
 			//随便取一个conn，给到下层服务，因为：下层服务可能还要继续给其它人发消息
-			var randConn *util.Conn
-			for _, v := range gateway.Netway.ConnManager.Pool {
-				randConn = v
-			}
-			gateway.MyServiceList.TwinAgora.ConnCloseCallback(int(uid), randConn)
+			gateway.MyServiceList.TwinAgora.ConnCloseCallback(int(uid), gateway.Netway.ConnManager)
 		default:
 			time.Sleep(time.Millisecond * 100)
 		}

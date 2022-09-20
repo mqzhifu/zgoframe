@@ -322,8 +322,8 @@ function TwinAgoraPlayer (playerId,token,data,DomIdPreObj,contentType,protocolTy
             self.rServerPing(content);
         }else if ( action == 'SC_CallPeople' ){
             console.log("接收到呼叫返回的信息(SC_CallPeople)",content)
-        // }else if ( action == 'SC_RoomBaseInfo' ){
-        //     self.rPushRoomInfo(content);
+        }else if ( action == 'SC_CallReply' ){
+            console.log("有人呼叫我，需要做出应答(SC_CallReply)",content)
         // }else if ( action == 'SC_OtherPlayerOffline' ){
         //     self.rOtherPlayerOffline(content);
         // }else if ( action == 'SC_EnterBattle' ){

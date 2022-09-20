@@ -24,6 +24,7 @@ cd $base_dir/protobuf/pb/js
 browserify exports_frame_sync.js > exports_frame_sync_pb.js
 browserify exports_gateway.js > exports_gateway_pb.js
 browserify exports_game_match.js > exports_game_match_pb.js
+browserify exports_twin_agora.js > exports_twin_agora_pb.js
 
 mv exports_frame_sync_pb.js $base_dir/static/js/pb/frame_sync_pb.js
 mv exports_gateway_pb.js $base_dir/static/js/pb/gateway_pb.js

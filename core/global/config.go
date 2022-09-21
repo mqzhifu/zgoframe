@@ -203,6 +203,7 @@ type ConfigCenter struct {
 }
 
 type FileManager struct {
+	Status          string
 	UploadPath      string
 	UploadMaxSize   int
 	DownloadPath    string
@@ -224,6 +225,7 @@ type AliOss struct {
 }
 
 type Agora struct {
+	Status         string
 	AppId          string
 	AppCertificate string
 	Domain         string

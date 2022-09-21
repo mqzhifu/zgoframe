@@ -133,6 +133,7 @@ persistenceType = 3
 dataPath        = "data/config" #相对路径，在static下面
 
 [fileManager]
+status  = "open"
 #注意：这里是一个相对路径，且没有：录层级，可以修改名字，但不可以增加层级（名字两边也不要加反斜杠）
 #两个地方会用到它：1. cicd 2. 文件上传
 #原因1：cicd 部署时：会自动创建该目录名（软连接），实际物理位置由CICD里的配置信息确定
@@ -144,7 +145,7 @@ uploadMaxSize = 9
 downloadPath = "download"
 downloadMaxSize = 100
 
-[oss]
+[aliOss]
 status  = "open"
 accessKeyId     = "#oss_user#"
 accessKeySecret = "#oss_ps#"
@@ -156,6 +157,7 @@ selfDomain      = "ossservicebase.seedreality.com"
 static = "#domain_host#"
 
 [agora]
+status  = "open"
 appId           = "#agora_user#"
 appCertificate  = "#agora_ps#"
 HttpKey = "#agora_aaa#"

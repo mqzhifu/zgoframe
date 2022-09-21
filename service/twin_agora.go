@@ -31,13 +31,15 @@ type TwinAgora struct {
 	RTCRoomPool map[string]RTCRoom
 	CancelFunc  context.CancelFunc
 	CancelCtx   context.Context
-	Timeout     int
+	CallTimeout int //一次呼叫，超时时间
+	ExecTimeout int //一次通话，超时时间
 	Separate    string
 }
 
 type RTCRoom struct {
 	Channel           string
 	AddTime           int
+	Uptime            int
 	Status            int   //1发起呼叫，2正常通话中，3已结束
 	EndStatus         int   //结束的状态：(1)超时，(2)某一方退出,(3)某一方拒绝(4)发起方主动取消呼叫
 	CallUid           int   //发起通话的UID
@@ -51,7 +53,8 @@ type RTCRoom struct {
 func NewTwinAgora(Gorm *gorm.DB) *TwinAgora {
 	twinAgora := new(TwinAgora)
 	twinAgora.Gorm = Gorm
-	twinAgora.Timeout = 60
+	twinAgora.CallTimeout = 8
+	twinAgora.ExecTimeout = 10
 	twinAgora.Separate = "##"
 	twinAgora.RTCRoomPool = make(map[string]RTCRoom)
 	twinAgora.CancelCtx, twinAgora.CancelFunc = context.WithCancel(context.Background())
@@ -72,7 +75,14 @@ func (twinAgora *TwinAgora) CheckTimeout() {
 						continue
 					}
 
-					if util.GetNowTimeSecondToInt() > v.AddTime+twinAgora.Timeout && v.Status == RTC_ROOM_STATUS_CALLING {
+					if util.GetNowTimeSecondToInt() > v.AddTime+twinAgora.CallTimeout && v.Status == RTC_ROOM_STATUS_CALLING {
+						v.Status = RTC_ROOM_STATUS_END
+						v.EndStatus = RTC_ROOM_END_STATUS_TIMEOUT
+						twinAgora.MoveAndStore(v)
+						continue
+					}
+
+					if util.GetNowTimeSecondToInt() > v.Uptime+twinAgora.ExecTimeout && v.Status == RTC_ROOM_STATUS_EXECING {
 						v.Status = RTC_ROOM_STATUS_END
 						v.EndStatus = RTC_ROOM_END_STATUS_TIMEOUT
 						twinAgora.MoveAndStore(v)
@@ -80,7 +90,7 @@ func (twinAgora *TwinAgora) CheckTimeout() {
 					}
 				}
 			}
-			time.Sleep(time.Second * 1)
+			time.Sleep(time.Millisecond * 100)
 		}
 	}
 end:

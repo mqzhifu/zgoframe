@@ -267,7 +267,8 @@ func TwinAgoraCloudRecordStop(c *gin.Context) {
 	}
 
 	agoraCloudRecordRes, err := GetUtilAgora().CloudRecordStop(strconv.Itoa(record.ListenerAgoraUid), record.ChannelName, record.ResourceId, record.SessionId)
-	if agoraCloudRecordRes.Code > 0 || agoraCloudRecordRes.HttpCode != 200 {
+	//if agoraCloudRecordRes.Code > 0 || agoraCloudRecordRes.HttpCode != 200 {
+	if agoraCloudRecordRes.Code > 0 {
 		httpresponse.FailWithAll(agoraCloudRecordRes, "失败", c)
 		return
 	}
@@ -437,27 +438,60 @@ func TwinAgoraRTCGetToken(c *gin.Context) {
 // @Router /twin/agora/cloud/record/oss/files/{rid} [GET]
 func TwinAgoraCloudRecordOssFiles(c *gin.Context) {
 	recordId := util.Atoi(c.Param("rid"))
-	if recordId <= 0 {
-		httpresponse.FailWithMessage("RecordId <= 0", c)
+	err := GenerateCloudVideo(recordId)
+	if err != nil {
+		httpresponse.FailWithMessage(err.Error(), c)
 		return
+	}
+	httpresponse.OkWithAll(true, "成功", c)
+}
+
+func GetCloudRecordById(rid int) (record model.AgoraCloudRecord, err error) {
+	if rid <= 0 {
+		return record, errors.New("RecordId <= 0")
+	}
+
+	err = global.V.Gorm.First(&record, rid).Error
+	if err != nil {
+		errInfo := "db not found recordId:" + strconv.Itoa(rid)
+		return record, errors.New(errInfo)
+	}
+	return record, nil
+}
+
+// GenerateCloudVideo 生成云端录制文件，并重新上传oss
+func GenerateCloudVideo(recordId int) (err error) {
+	if recordId <= 0 {
+		return errors.New("RecordId <= 0")
+	}
+
+	updateRes := global.V.Gorm.Where("id = ? and status = ? and server_status = ? and video_url = ''",
+		recordId, model.AGORA_CLOUD_RECORD_STATUS_END, model.AGORA_CLOUD_RECORD_SERVER_STATUS_UNDO).
+		Updates(&model.AgoraCloudRecord{
+			ServerStatus: model.AGORA_CLOUD_RECORD_SERVER_STATUS_ING,
+		})
+	if updateRes.RowsAffected == 0 {
+		return errors.New("recordId illegal:" + strconv.Itoa(recordId))
 	}
 
 	var record model.AgoraCloudRecord
-	err := global.V.Gorm.First(&record, recordId).Error
-	if err != nil {
-		errInfo := "db not found recordId:" + strconv.Itoa(recordId)
-		httpresponse.FailWithMessage(errInfo, c)
-		return
+	if err := global.V.Gorm.First(&record, recordId).Error; err != nil {
+		return err
 	}
 
-	if record.Status != model.AGORA_CLOUD_RECORD_STATUS_END {
-		httpresponse.FailWithMessage("record db status != AGORA_CLOUD_RECORD_STATUS_END", c)
-		return
-	}
+	// 错误处理时，将server_status改为4处理异常
+	defer func() {
+		if err != nil {
+			_ = global.V.Gorm.Where("id = ?", recordId).Updates(&model.AgoraCloudRecord{
+				ServerStatus: model.AGORA_CLOUD_RECORD_SERVER_STATUS_ERR,
+			}).Error
+		}
+	}()
+
 	clientRequestStart := util.ClientRequestStart{}
 	err = json.Unmarshal([]byte(record.ConfigInfo), &clientRequestStart)
 	if err != nil {
-		util.MyPrint("record.ConfigInfo Unmarshal err:", err)
+		return err
 	}
 	pathPrefix := ""
 	for _, v := range clientRequestStart.StorageConfig.FileNamePrefix {
@@ -470,16 +504,14 @@ func TwinAgoraCloudRecordOssFiles(c *gin.Context) {
 	util.MyPrint("pathPrefix:", pathPrefix, " , localDiskPath:", localDiskPath)
 	listObjectsResult, err := global.V.DocsManager.Option.AliOss.OssLs(pathPrefix)
 	if len(listObjectsResult.Objects) <= 0 {
-		httpresponse.FailWithMessage("path:"+pathPrefix+" is  empty,no files.", c)
-		return
+		return errors.New("path:" + pathPrefix + " is  empty,no files.")
 	}
 
 	_, err = util.PathExists(localDiskPath)
 	if err != nil {
 		err = os.MkdirAll(localDiskPath, 0666)
 		if err != nil {
-			util.MyPrint("Mkdir:", localDiskPath, " err:", err)
-			return
+			return errors.New("Mkdir:" + localDiskPath + " err:" + err.Error())
 		}
 	}
 	type ProcessFileInfo struct {
@@ -497,6 +529,9 @@ func TwinAgoraCloudRecordOssFiles(c *gin.Context) {
 		fileName := filePathArr[len(filePathArr)-1]
 		fileNameSplitArr := strings.Split(fileName, ".")
 		fileExtName := fileNameSplitArr[1]
+		if fileExtName == "mkv" {
+			continue
+		}
 		fileNameArr := strings.Split(fileNameSplitArr[0], "_")
 		sid := fileNameArr[0]
 		cname := fileNameArr[1]
@@ -525,34 +560,42 @@ func TwinAgoraCloudRecordOssFiles(c *gin.Context) {
 		}
 
 		util.MyPrint("fileName:", fileName, " , fileExtName:", fileExtName, " , sid:", sid, " , cname:", cname, " , uid:", uid, " , fileCategory:", fileCategory, " fileIndex:", fileIndex)
-		global.V.DocsManager.Option.AliOss.DownloadFile(v.Key, localDiskPath+fileName)
+		if err := global.V.DocsManager.Option.AliOss.DownloadFile(v.Key, localDiskPath+fileName); err != nil {
+			return err
+		}
 	}
 	//util.MyPrint(processFileInfoList)
+	lastFiles := make(map[string]string)
+	pathPrefix = pathPrefix[:len(pathPrefix)-1] // 去掉最后的/
 	for _, v := range processFileInfoList {
-		newFileName := v.LocalDiskPath + v.Uid + "_" + v.ExtName + ".mkv"
-		command := "ffmpeg -i " + v.LocalDiskPath + v.FileName + " -c copy " + newFileName
+		newFileName := v.Uid + "_" + v.ExtName + ".mkv"
+		newFileFullName := v.LocalDiskPath + newFileName
+		command := "ffmpeg -i " + v.LocalDiskPath + v.FileName + " -c copy " + newFileFullName + " -y"
 		util.MyPrint(command)
 		ctx := exec.Command("bash", "-c", command)
 
 		output, err := ctx.CombinedOutput()
 		strOutput := string(output)
 		if err != nil {
-			util.MyPrint("ExecShellCommand : <"+command+"> ,  has error , output:", strOutput, err.Error())
-		} else {
-			util.MyPrint("ExecShellCommand : <"+command+"> ,  success , output:", strOutput)
+			return errors.New("ExecShellCommand : <" + command + "> ,  has error , output:" + strOutput + err.Error())
 		}
+		// 重新上传至oss
+		if err = global.V.DocsManager.Option.AliOss.UploadOneByFile(newFileFullName, pathPrefix, newFileName); err != nil {
+			return err
+		}
+		lastFiles[newFileName] = global.V.DocsManager.Option.AliOss.Op.LocalDomain + "/" + pathPrefix + "/" + newFileName
 	}
 
-}
-func GetCloudRecordById(rid int) (record model.AgoraCloudRecord, err error) {
-	if rid <= 0 {
-		return record, errors.New("RecordId <= 0")
+	// 更新数据库
+	lastFilesJson, err := json.Marshal(lastFiles)
+	util.MyPrint("lastFilesJson:", string(lastFilesJson), " err:", err)
+	var agoraCloudRecord = model.AgoraCloudRecord{
+		ServerStatus: model.AGORA_CLOUD_RECORD_SERVER_STATUS_OK,
+		VideoUrl:     string(lastFilesJson),
 	}
-
-	err = global.V.Gorm.First(&record, rid).Error
+	err = global.V.Gorm.Where(" id = ? and video_url = ''", recordId).Updates(&agoraCloudRecord).Error
 	if err != nil {
-		errInfo := "db not found recordId:" + strconv.Itoa(rid)
-		return record, errors.New(errInfo)
+		return err
 	}
-	return record, nil
+	return nil
 }

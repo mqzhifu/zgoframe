@@ -144,5 +144,16 @@ func AgoraCallbackCloud(c *gin.Context) {
 	}
 	global.V.Gorm.Create(&agoraCallbackRecord)
 
+	if form.EventType == model.CallbackEventAllUploaded {
+		go func() {
+			var record model.AgoraCloudRecord
+			err := global.V.Gorm.First(&record).Where("session_id = ?", form.Payload.Sid).Error
+			if err != nil {
+				return
+			}
+			_ = GenerateCloudVideo(record.Id)
+		}()
+	}
+
 	httpresponse.OkWithAll("回调成功", "ok", c)
 }

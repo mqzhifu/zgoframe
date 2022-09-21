@@ -406,3 +406,8 @@ func GetConstListAgoraCloudRecordServerStatus() map[string]int {
 //
 //	return list
 //}
+
+const (
+	CallbackEventAllUploaded = 31
+)
+

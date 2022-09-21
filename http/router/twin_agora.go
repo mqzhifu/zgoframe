@@ -12,9 +12,9 @@ func InitTwinAgoraRouter(Router *gin.RouterGroup) {
 		TwinAgora.POST("rtm/get/token", v1.TwinAgoraRTMGetToken) // 设置/修改密码
 		TwinAgora.POST("cloud/record/create/acquire", v1.TwinAgoraCloudRecordCreateAcquire)
 		TwinAgora.POST("cloud/record/start", v1.TwinAgoraCloudRecordStart)
-		TwinAgora.GET("cloud/record/stop/:rid", v1.TwinAgoraCloudRecordStop)
+		TwinAgora.POST("cloud/record/stop/:rid", v1.TwinAgoraCloudRecordStop)
 		TwinAgora.GET("cloud/record/query/:rid", v1.TwinAgoraCloudRecordQuery)
-		TwinAgora.GET("cloud/record/oss/files/:rid", v1.TwinAgoraCloudRecordOssFiles)
+		TwinAgora.POST("cloud/record/oss/files/:rid", v1.TwinAgoraCloudRecordOssFiles)
 		TwinAgora.POST("cloud/record/list", v1.TwinAgoraCloudRecordList)
 
 	}

@@ -104,7 +104,7 @@ func RegGinHttpRoute() {
 		router.InitGameMatchRouter(PublicGroup)
 		router.InitPersistenceRouter(PublicGroup)
 		router.InitFileRouter(PublicGroup)
-		router.InitCicdRouter(SystemGroup)
+		router.InitCicdRouter(PublicGroup)
 
 	}
 	//给 管理员/开发/运维 使用，正常需要登陆一次并获取TOKEN，还需要二次验证

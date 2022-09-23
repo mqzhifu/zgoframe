@@ -1,18 +1,9 @@
 package test
 
-import (
-	"context"
-	"fmt"
-	"zgoframe/core/global"
-	"zgoframe/protobuf/pb"
-	"zgoframe/util"
-)
-
-func Grpc(){
+func Grpc() {
 	Client()
 	//Service()
 }
-
 
 //func Service()error{
 //	//包前缀 + 服务名
@@ -64,20 +55,19 @@ func Grpc(){
 //	return nil
 //}
 
-func  Client()error{
+func Client() error {
 	//serviceName :=  global.V.Service.Key
 	//zgoframeClient ,err := global.V.GrpcManager.GetZgoframeClient(serviceName,"")
-	client,err := global.V.GrpcManager.GetLogSlaveClient("LogSlave","")
-	if err != nil{
-		util.ExitPrint("GetLogSlaveClient err:",err.Error())
-	}
-
-	slavePushMsg := pb.SlavePushMsg{}
-	slavePushMsg.Title = "testMsg"
-	slavePushMsg.Content = "im want test pb log slave service push msg"
-	res ,err:= client.Push(context.Background(),&slavePushMsg)
-	fmt.Println("server back info :",res,err)
-
+	//client,err := global.V.GrpcManager.GetLogSlaveClient("LogSlave","")
+	//if err != nil{
+	//	util.ExitPrint("GetLogSlaveClient err:",err.Error())
+	//}
+	//
+	//slavePushMsg := pb.SlavePushMsg{}
+	//slavePushMsg.Title = "testMsg"
+	//slavePushMsg.Content = "im want test pb log slave service push msg"
+	//res ,err:= client.Push(context.Background(),&slavePushMsg)
+	//fmt.Println("server back info :",res,err)
 
 	//serviceNode ,err := global.V.ServiceDiscovery.GetLoadBalanceServiceNodeByServiceName(serviceName,"")
 	//if err != nil{
@@ -107,14 +97,14 @@ func  Client()error{
 	return nil
 }
 
-func client2()error{
+func client2() error {
 
 	go clientSend()
 
 	return nil
 }
 
-func clientSend(){
+func clientSend() {
 	//for{
 	//	serviceName :=  global.V.Service.Name
 	//	grpcClientConn, err := global.V.Grpc.GetClientByLoadBalance(serviceName,0)
@@ -135,7 +125,6 @@ func clientSend(){
 	//}
 }
 
-
 //===================================================
 //var ip = "127.0.0.1"
 //var port = "1111"
@@ -150,7 +139,7 @@ func clientSend(){
 //	grpcClass.GetServer()
 //}
 
-func TestGrpcClient(){
+func TestGrpcClient() {
 	//grpcOption := GrpcOption{
 	//	AppId: 1,
 	//	ListenIp:ip,
@@ -201,4 +190,3 @@ func TestGrpcClient(){
 	//MyPrint("FINAL:",r.Rs)
 
 }
-

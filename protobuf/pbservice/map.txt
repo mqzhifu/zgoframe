@@ -20,15 +20,16 @@
 10104|GameMatch|SC_PlayerMatchSignFailed|PlayerMatchSignFailed|Empty|玩家报名(匹配)失败
 10106|GameMatch|SC_PlayerMatchingFailed|PlayerMatchingFailed|Empty|玩家匹配失败(可能超时，可能人不够组团)
 90100|Gateway|CS_Login|Login|LoginRes|登陆
-90102|Gateway|CS_Ping|Ping|Pong|客户端PING服务端
-90104|Gateway|CS_Pong|Pong|Pong|C端响应S端PIN
+90102|Gateway|CS_Ping|PingReq|PongRes|客户端PING服务端
+90104|Gateway|CS_Pong|PongRes|PingReq|C端响应S端PIN
 90106|Gateway|CS_Heartbeat|Heartbeat|Empty|心跳
 90108|Gateway|SC_Login|LoginRes|Empty|登陆
-90110|Gateway|SC_Ping|Ping|Pong|S端测试RTT
-90112|Gateway|SC_Pong|Pong|Pong|S端测试RTT
+90110|Gateway|SC_Ping|PingReq|PongRes|S端测试RTT
+90112|Gateway|SC_Pong|PongRes|PingReq|S端测试RTT
 90114|Gateway|SC_Heartbeat|Heartbeat|Empty|心跳
 90116|Gateway|SC_KickOff|KickOff|Empty|该玩家在其它地方登陆，踢掉了当前连接
-90118|Gateway|SC_ProjectPush|ProjectPush|ProjectPush|service通知网关，给某些用户推送消息
+90118|Gateway|SC_ProjectPush|ProjectPushMsg|Empty|service通知网关，给某些用户推送消息
+90120|Gateway|FdClose|FDCloseEvent|Empty|C端长连接关闭，这个并不是C端发起的请求，而是网关获取事件，直接推送到后端服务的
 12100|TwinAgora|CS_CallPeople|CallPeopleReq|Empty|呼叫某人/某些人，进行：音视频通话
 12102|TwinAgora|SC_CallPeople|CallPeopleRes|Empty|返回：呼叫者，刚刚呼叫的结果
 12104|TwinAgora|CS_CancelCallPeople|CallPeopleReq|Empty|之前，呼叫某人/某些人，进行：音视频通话，突然放弃了
@@ -40,5 +41,3 @@
 12116|TwinAgora|CS_CallPeopleAccept|CallPeopleReq|Empty|被呼叫者-接收此次请求
 12118|TwinAgora|CS_CallPeopleDeny|CallPeopleReq|Empty|被呼叫者-拒绝此次请求
 12120|TwinAgora|SC_CallReply|CallReply|Empty|通知专家端，做出应答/选择
-60100|Zgoframe|SayHello|RequestUser|ResponseUser|测试5
-60102|Zgoframe|Comm|RequestUser|ResponseUser|测试6

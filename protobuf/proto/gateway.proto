@@ -5,65 +5,23 @@ import "common.proto";
 package pb;
 option go_package ="./;pb";
 
-
 service Gateway {
 
     rpc CS_Login             (Login)        returns (LoginRes) {}//登陆
-    rpc CS_Ping              (Ping)         returns (Pong) {}//客户端PING服务端
-    rpc CS_Pong              (Pong)         returns (Pong) {}//C端响应S端PIN
+    rpc CS_Ping              (PingReq)         returns (PongRes) {}//客户端PING服务端
+    rpc CS_Pong              (PongRes)         returns (PingReq) {}//C端响应S端PIN
     rpc CS_Heartbeat         (Heartbeat)    returns (Empty) {}//心跳
 
     rpc SC_Login             (LoginRes)     returns (Empty) {}//登陆
-    rpc SC_Ping              (Ping)         returns (Pong) {}//S端测试RTT
-    rpc SC_Pong              (Pong)         returns (Pong) {}//S端测试RTT
+    rpc SC_Ping              (PingReq)         returns (PongRes) {}//S端测试RTT
+    rpc SC_Pong              (PongRes)         returns (PingReq) {}//S端测试RTT
     rpc SC_Heartbeat         (Heartbeat)    returns (Empty) {}//心跳
     rpc SC_KickOff           (KickOff)      returns (Empty) {}//该玩家在其它地方登陆，踢掉了当前连接
 
-    rpc SC_ProjectPush       (ProjectPush)  returns (ProjectPush) {}//service通知网关，给某些用户推送消息
+    rpc SC_ProjectPush       (ProjectPushMsg)  returns (Empty) {}//service通知网关，给某些用户推送消息
 
-}
+    rpc FdClose             (FDCloseEvent)    returns (Empty) {}//C端长连接关闭，这个并不是C端发起的请求，而是网关获取事件，直接推送到后端服务的
 
-
-message Heartbeat{
-    int64 time = 1;
-}
-
-message ProjectPush{
-    string  project_id  = 1;
-    string  service_id  = 2;
-    string  func_id     = 3;
-    string  target_uids = 4;
-    string  msg         = 5;
-}
-
-message Login{
-    string token = 1;
-}
-
-message Ping{
-    int64 add_time                = 1;
-    int64 client_receive_time     = 2;
-    int64 server_response_time    = 3;
-    int64 rtt_timeout             = 4;
-    int32 rtt_times               = 5;
-}
-
-message Pong{
-    int64 add_time              = 1;
-    int64 client_receive_time   = 2;
-    int64 server_response_time  = 3;
-    int64 rtt_timeout           = 4;
-    int32 rtt_times             = 5;
-}
-
-message LoginRes{
-    int32   code        = 1;
-    string  errMsg      = 2;
-    int32   uid         = 3;
-}
-
-message KickOff{
-    int64 time = 1;
 }
 
 //长连接传输内容：一条标准的内容
@@ -80,10 +38,27 @@ message Msg{
     string  end_char         =10;//包结束字符，用于TCP粘包，无实际作用，只是保证消息完整性
 }
 
+message Login{
+    string token = 1;
+}
 
+message LoginRes{
+    int32   code        = 1;
+    string  errMsg      = 2;
+    int32   uid         = 3;
+}
 
+message ProjectPushMsg{
+    string  project_id  = 1;
+    string  service_id  = 2;
+    string  func_id     = 3;
+    string  target_uids = 4;
+    string  msg         = 5;
+}
 
-
+message KickOff{
+    int64 time = 1;
+}
 
 message CfgServer{
     	string  ListenIp            = 1;

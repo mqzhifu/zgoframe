@@ -38,26 +38,6 @@ func (grpcManager *GrpcManager) GetGatewayClient(name string, balanceFactor stri
 	return client.(pb.GatewayClient), nil
 }
 
-//获取一个服务的grpc client : LogSlave
-func (grpcManager *GrpcManager) GetLogSlaveClient(name string, balanceFactor string) (pb.LogSlaveClient, error) {
-	client, err := grpcManager.GetClientByLoadBalance(name, balanceFactor)
-	if err != nil {
-		return nil, err
-	}
-
-	return client.(pb.LogSlaveClient), nil
-}
-
-//获取一个服务的grpc client : Zgoframe
-func (grpcManager *GrpcManager) GetZgoframeClient(name string, balanceFactor string) (pb.ZgoframeClient, error) {
-	client, err := grpcManager.GetClientByLoadBalance(name, balanceFactor)
-	if err != nil {
-		return nil, err
-	}
-
-	return client.(pb.ZgoframeClient), nil
-}
-
 //根据服务名获取一个GRPC-CLIENT 连接(c端使用)
 func (myGrpcClient *MyGrpcClient) GetGrpcClientByServiceName(serviceName string, clientConn *grpc.ClientConn) (interface{}, error) {
 	var incClient interface{}
@@ -68,10 +48,6 @@ func (myGrpcClient *MyGrpcClient) GetGrpcClientByServiceName(serviceName string,
 		incClient = pb.NewGameMatchClient(myGrpcClient.ClientConn)
 	case "Gateway":
 		incClient = pb.NewGatewayClient(myGrpcClient.ClientConn)
-	case "LogSlave":
-		incClient = pb.NewLogSlaveClient(myGrpcClient.ClientConn)
-	case "Zgoframe":
-		incClient = pb.NewZgoframeClient(myGrpcClient.ClientConn)
 
 	default:
 		return incClient, errors.New("service name router failed.")
@@ -278,14 +254,14 @@ func (grpcManager *GrpcManager) CallServiceFuncGateway(funcName string, balanceF
 		}
 		data, err = grpcClient.CS_Login(ctx, &request)
 	case "CS_Ping":
-		request := pb.Ping{}
+		request := pb.PingReq{}
 		err := json.Unmarshal(postData, &request)
 		if err != nil {
 			return data, err
 		}
 		data, err = grpcClient.CS_Ping(ctx, &request)
 	case "CS_Pong":
-		request := pb.Pong{}
+		request := pb.PongRes{}
 		err := json.Unmarshal(postData, &request)
 		if err != nil {
 			return data, err
@@ -306,14 +282,14 @@ func (grpcManager *GrpcManager) CallServiceFuncGateway(funcName string, balanceF
 		}
 		data, err = grpcClient.SC_Login(ctx, &request)
 	case "SC_Ping":
-		request := pb.Ping{}
+		request := pb.PingReq{}
 		err := json.Unmarshal(postData, &request)
 		if err != nil {
 			return data, err
 		}
 		data, err = grpcClient.SC_Ping(ctx, &request)
 	case "SC_Pong":
-		request := pb.Pong{}
+		request := pb.PongRes{}
 		err := json.Unmarshal(postData, &request)
 		if err != nil {
 			return data, err
@@ -334,67 +310,12 @@ func (grpcManager *GrpcManager) CallServiceFuncGateway(funcName string, balanceF
 		}
 		data, err = grpcClient.SC_KickOff(ctx, &request)
 	case "SC_ProjectPush":
-		request := pb.ProjectPush{}
+		request := pb.ProjectPushMsg{}
 		err := json.Unmarshal(postData, &request)
 		if err != nil {
 			return data, err
 		}
 		data, err = grpcClient.SC_ProjectPush(ctx, &request)
-
-	default:
-		return data, errors.New("func name router failed.")
-	}
-	return data, err
-}
-
-//动态调用服务的函数 : LogSlave
-func (grpcManager *GrpcManager) CallServiceFuncLogSlave(funcName string, balanceFactor string, postData []byte) (data interface{}, err error) {
-	//获取GRPC一个连接
-	grpcClient, err := grpcManager.GetLogSlaveClient("LogSlave", balanceFactor)
-	if err != nil {
-		return data, err
-	}
-
-	ctx := context.Background()
-	switch funcName {
-	case "Push":
-		request := pb.SlavePushMsg{}
-		err := json.Unmarshal(postData, &request)
-		if err != nil {
-			return data, err
-		}
-		data, err = grpcClient.Push(ctx, &request)
-
-	default:
-		return data, errors.New("func name router failed.")
-	}
-	return data, err
-}
-
-//动态调用服务的函数 : Zgoframe
-func (grpcManager *GrpcManager) CallServiceFuncZgoframe(funcName string, balanceFactor string, postData []byte) (data interface{}, err error) {
-	//获取GRPC一个连接
-	grpcClient, err := grpcManager.GetZgoframeClient("Zgoframe", balanceFactor)
-	if err != nil {
-		return data, err
-	}
-
-	ctx := context.Background()
-	switch funcName {
-	case "SayHello":
-		request := pb.RequestUser{}
-		err := json.Unmarshal(postData, &request)
-		if err != nil {
-			return data, err
-		}
-		data, err = grpcClient.SayHello(ctx, &request)
-	case "Comm":
-		request := pb.RequestUser{}
-		err := json.Unmarshal(postData, &request)
-		if err != nil {
-			return data, err
-		}
-		data, err = grpcClient.Comm(ctx, &request)
 
 	default:
 		return data, errors.New("func name router failed.")
@@ -411,10 +332,6 @@ func (grpcManager *GrpcManager) CallGrpc(serviceName string, funcName string, ba
 		resData, err = grpcManager.CallServiceFuncGameMatch(funcName, balanceFactor, requestData)
 	case "Gateway":
 		resData, err = grpcManager.CallServiceFuncGateway(funcName, balanceFactor, requestData)
-	case "LogSlave":
-		resData, err = grpcManager.CallServiceFuncLogSlave(funcName, balanceFactor, requestData)
-	case "Zgoframe":
-		resData, err = grpcManager.CallServiceFuncZgoframe(funcName, balanceFactor, requestData)
 
 	default:
 		return requestData, errors.New("service name router failed.")

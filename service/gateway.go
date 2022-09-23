@@ -4,12 +4,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/golang/protobuf/proto"
 	"go.uber.org/zap"
 	"time"
 	"zgoframe/protobuf/pb"
 	"zgoframe/util"
 )
 
+//这是个快捷变量，目前所有代码均在一起，直接挂在这个变量上即可，后期所有服务分拆出去，网关没那么多附加功能此变量就没用了
 type MyServiceList struct {
 	Match      *Match
 	FrameSync  *FrameSync
@@ -26,8 +28,9 @@ type Gateway struct {
 }
 
 //网关，目前主要是分为2部分
-//1. http 代理 grpc
-//2. 长连接代理，这里才是重点
+//1. http 代理 grpc(中等)
+//2. 长连接代理(重点)
+//3. http 代理 http(鸡肋)
 func NewGateway(grpcManager *util.GrpcManager, log *zap.Logger) *Gateway {
 	gateway := new(Gateway)
 	gateway.GrpcManager = grpcManager
@@ -36,6 +39,7 @@ func NewGateway(grpcManager *util.GrpcManager, log *zap.Logger) *Gateway {
 	return gateway
 }
 
+//balanceFactor:负载均衡 方法
 func (gateway *Gateway) HttpCallGrpc(serviceName string, funcName string, balanceFactor string, requestData []byte) (resJsonStr string, err error) {
 	fmt.Print("HttpCallGrpc :", serviceName, funcName, balanceFactor, requestData)
 	//gateway.Log.Info("HttpCallGrpc:")
@@ -51,20 +55,7 @@ func (gateway *Gateway) HttpCallGrpc(serviceName string, funcName string, balanc
 	//return resJsonStr,err
 }
 
-func (gateway *Gateway) ListenCloseEvent() {
-	for {
-		select {
-		case uid := <-gateway.Netway.ConnManager.CloseEventQueue:
-			util.MyPrint("ListenCloseEvent......========")
-			//随便取一个conn，给到下层服务，因为：下层服务可能还要继续给其它人发消息
-			gateway.MyServiceList.TwinAgora.ConnCloseCallback(int(uid), gateway.Netway.ConnManager)
-		default:
-			time.Sleep(time.Millisecond * 100)
-		}
-	}
-
-}
-
+//开启长连接监听
 func (gateway *Gateway) StartSocket(netWayOption util.NetWayOption) (*util.NetWay, error) {
 	netWayOption.RouterBack = gateway.Router
 	gateway.NetWayOption = netWayOption
@@ -88,7 +79,66 @@ func (gateway *Gateway) StartSocket(netWayOption util.NetWayOption) (*util.NetWa
 
 }
 
-//总路由器，这里分成了两类：gateway 自解析 和 代理后方的请求
+//监听长连接 - 关闭事件
+func (gateway *Gateway) ListenCloseEvent() {
+	for {
+		select {
+		case connCloseEvent := <-gateway.Netway.ConnManager.CloseEventQueue:
+			util.MyPrint("ListenCloseEvent......========")
+			//随便取一个conn，给到下层服务，因为：下层服务可能还要继续给其它人发消息
+			msg := gateway.MakeMsgCloseEventInfo(connCloseEvent)
+			gateway.BroadcastService(msg, nil)
+		default:
+			time.Sleep(time.Millisecond * 100)
+		}
+	}
+}
+
+//网关自己创建一条长连接消息，发送给service
+func (gateway *Gateway) MakeMsgCloseEventInfo(connCloseEvent util.ConnCloseEvent) pb.Msg {
+	msg := pb.Msg{}
+	msg.ServiceId = 90
+	msg.FuncId = 120
+	msg.SidFid = 90120
+
+	FDCloseEvent := pb.FDCloseEvent{}
+	FDCloseEvent.UserId = connCloseEvent.UserId
+	FDCloseEvent.Source = int32(connCloseEvent.Source)
+	FDCloseEventStr, _ := proto.Marshal(&FDCloseEvent)
+	msg.Content = string(FDCloseEventStr)
+	return msg
+}
+
+//网关自己创建一条长连接消息，发送给service
+func (gateway *Gateway) MakeMsgHeartbeat(requestClientHeartbeat pb.Heartbeat, conn *util.Conn) pb.Msg {
+	msg := pb.Msg{}
+	msg.ServiceId = 90
+	msg.ContentType = conn.ContentType
+	msg.ContentType = conn.ProtocolType
+	msg.FuncId = 106
+	msg.SidFid = 90106
+
+	var requestClientHeartbeatStr string
+	if msg.ContentType == util.CONTENT_TYPE_PROTOBUF {
+		requestClientHeartbeatStrByte, _ := proto.Marshal(&requestClientHeartbeat)
+		requestClientHeartbeatStr = string(requestClientHeartbeatStrByte)
+	} else {
+		requestClientHeartbeatStrByte, _ := json.Marshal(requestClientHeartbeat)
+		requestClientHeartbeatStr = string(requestClientHeartbeatStrByte)
+	}
+
+	msg.Content = requestClientHeartbeatStr
+	return msg
+}
+
+//广播给所有服务，如：心跳 PING PONG 关闭事件
+func (gateway *Gateway) BroadcastService(msg pb.Msg, conn *util.Conn) {
+	gateway.RouterServiceSync(msg, conn)
+	gateway.RouterServiceGameMatch(msg, conn)
+	gateway.RouterServiceTwinAgora(msg, conn)
+}
+
+//总路由器，这里分成了两类：gateway 自解析 和 代理后方服务的请求
 func (gateway *Gateway) Router(msg pb.Msg, conn *util.Conn) (data interface{}, err error) {
 	actionInfo, _ := gateway.NetWayOption.ProtoMap.GetServiceFuncById(int(msg.SidFid))
 	gateway.Log.Info("service gateway router:" + actionInfo.ServiceName + " " + actionInfo.FuncName)
@@ -109,26 +159,39 @@ func (gateway *Gateway) Router(msg pb.Msg, conn *util.Conn) (data interface{}, e
 }
 
 func (gateway *Gateway) RouterServiceTwinAgora(msg pb.Msg, conn *util.Conn) (data []byte, err error) {
+	//util.MyPrint(msg, "==============")
 	requestCallPeopleReq := pb.CallPeopleReq{}
+	requestFDCloseEvent := pb.FDCloseEvent{}
+	reqHeartbeat := pb.Heartbeat{}
 	protoServiceFunc, _ := gateway.Netway.Option.ProtoMap.GetServiceFuncById(int(msg.SidFid))
 	switch protoServiceFunc.FuncName {
 	case "CS_CallPeople":
 		err = gateway.Netway.ProtocolManager.ParserContentMsg(msg, &requestCallPeopleReq, conn.UserId)
+	case "FDClose":
+		err = gateway.Netway.ProtocolManager.ParserContentMsg(msg, &requestFDCloseEvent, conn.UserId)
+	case "CS_Heartbeat":
+		err = gateway.Netway.ProtocolManager.ParserContentMsg(msg, &reqHeartbeat, conn.UserId)
 	default:
-		gateway.Netway.Option.Log.Error("RouterServiceGateway Router err:")
-		return data, errors.New("RouterServiceGateway Router err")
+		gateway.Netway.Option.Log.Error("RouterServiceTwinAgora Router err-1:")
+		return data, errors.New("RouterServiceTwinAgora Router err-1")
 	}
 
 	if err != nil {
+		util.MyPrint(err)
+		//util.ExitPrint(err)
 		return data, err
 	}
-
+	//util.MyPrint("=======2,", reqHeartbeat)
 	switch protoServiceFunc.FuncName {
 	case "CS_CallPeople":
 		gateway.MyServiceList.TwinAgora.CallPeople(requestCallPeopleReq, conn)
+	case "CS_Heartbeat":
+		gateway.MyServiceList.TwinAgora.Heartbeat(reqHeartbeat, conn)
+	case "FDClose":
+		gateway.MyServiceList.TwinAgora.ConnCloseCallback(requestFDCloseEvent, gateway.Netway.ConnManager)
 	default:
-		gateway.Netway.Option.Log.Error("RouterServiceGateway Router err:")
-		return data, errors.New("RouterServiceGateway Router err")
+		gateway.Netway.Option.Log.Error("RouterServiceTwinAgora Router err-2:")
+		return data, errors.New("RouterServiceTwinAgora Router err-2")
 	}
 
 	return data, err
@@ -144,8 +207,8 @@ func (gateway *Gateway) RouterServiceGameMatch(msg pb.Msg, conn *util.Conn) (dat
 	case "CS_PlayerMatchSignCancel":
 		err = gateway.Netway.ProtocolManager.ParserContentMsg(msg, &requestPlayerMatchSignCancel, conn.UserId)
 	default:
-		gateway.Netway.Option.Log.Error("RouterServiceGateway Router err:")
-		return data, errors.New("RouterServiceGateway Router err")
+		gateway.Netway.Option.Log.Error("RouterServiceGameMatch Router err:")
+		return data, errors.New("RouterServiceGameMatch Router err")
 	}
 
 	if err != nil {
@@ -159,8 +222,8 @@ func (gateway *Gateway) RouterServiceGameMatch(msg pb.Msg, conn *util.Conn) (dat
 		gateway.MyServiceList.Match.CancelOnePlayer(requestPlayerMatchSignCancel, conn)
 
 	default:
-		gateway.Netway.Option.Log.Error("RouterServiceGateway Router err:")
-		return data, errors.New("RouterServiceGateway Router err")
+		gateway.Netway.Option.Log.Error("RouterServiceGameMatch Router err:")
+		return data, errors.New("RouterServiceGameMatch Router err")
 	}
 
 	return data, err
@@ -196,8 +259,8 @@ func (gateway *Gateway) RouterServiceSync(msg pb.Msg, conn *util.Conn) (data []b
 	case "CS_PlayerMatchSignCancel":
 		err = gateway.Netway.ProtocolManager.ParserContentMsg(msg, &requestPlayerMatchSignCancel, conn.UserId)
 	default:
-		gateway.Netway.Option.Log.Error("RouterServiceGateway Router err:")
-		return data, errors.New("RouterServiceGateway Router err")
+		gateway.Netway.Option.Log.Error("RouterServiceSync Router err:")
+		return data, errors.New("RouterServiceSync Router err")
 	}
 	if err != nil {
 		return data, err
@@ -217,8 +280,8 @@ func (gateway *Gateway) RouterServiceSync(msg pb.Msg, conn *util.Conn) (data []b
 	case "CS_RoomBaseInfo":
 		err = gateway.MyServiceList.RoomManage.GetRoom(requestRoomBaseInfo, conn)
 	default:
-		gateway.Netway.Option.Log.Error("RouterServiceGateway Router err:")
-		return data, errors.New("RouterServiceGateway Router err")
+		gateway.Netway.Option.Log.Error("RouterServiceSync Router err:")
+		return data, errors.New("RouterServiceSync Router err")
 	}
 
 	return data, err
@@ -227,8 +290,8 @@ func (gateway *Gateway) RouterServiceSync(msg pb.Msg, conn *util.Conn) (data []b
 //网关自解析的路由
 func (gateway *Gateway) RouterServiceGateway(msg pb.Msg, conn *util.Conn) (data interface{}, err error) {
 	requestLogin := pb.Login{}
-	requestClientPong := pb.Pong{}
-	requestClientPing := pb.Ping{}
+	requestClientPong := pb.PongRes{}
+	requestClientPing := pb.PingReq{}
 	requestClientHeartbeat := pb.Heartbeat{}
 
 	protoServiceFunc, _ := gateway.Netway.Option.ProtoMap.GetServiceFuncById(int(msg.SidFid))
@@ -259,11 +322,13 @@ func (gateway *Gateway) RouterServiceGateway(msg pb.Msg, conn *util.Conn) (data 
 		gateway.ClientPong(requestClientPong, conn)
 	case "CS_Heartbeat":
 		gateway.heartbeat(requestClientHeartbeat, conn)
+		msg := gateway.MakeMsgHeartbeat(requestClientHeartbeat, conn)
+		gateway.BroadcastService(msg, conn)
 	}
 	return data, err
 }
 
-func (gateway *Gateway) ClientPong(requestClientPong pb.Pong, conn *util.Conn) {
+func (gateway *Gateway) ClientPong(requestClientPong pb.PongRes, conn *util.Conn) {
 
 }
 
@@ -278,13 +343,12 @@ func (gateway *Gateway) heartbeat(requestClientHeartbeat pb.Heartbeat, conn *uti
 	conn.SendMsgCompressByUid(conn.UserId, "SC_Headerbeat", &responseHeartbeat)
 }
 
-func (gateway *Gateway) clientPing(pingRTT pb.Ping, conn *util.Conn) {
-	responseServerPong := pb.Pong{
-		AddTime:            pingRTT.AddTime,
-		ClientReceiveTime:  pingRTT.ClientReceiveTime,
+func (gateway *Gateway) clientPing(ping pb.PingReq, conn *util.Conn) {
+	responseServerPong := pb.PongRes{
+		ClientReqTime:      ping.ClientReqTime,
+		ClientReceiveTime:  ping.ClientReceiveTime,
+		ServerReceiveTime:  util.GetNowMillisecond(),
 		ServerResponseTime: util.GetNowMillisecond(),
-		RttTimes:           pingRTT.RttTimes,
-		RttTimeout:         pingRTT.RttTimeout,
 	}
 	conn.SendMsgCompressByUid(conn.UserId, "SC_Pong", &responseServerPong)
 }

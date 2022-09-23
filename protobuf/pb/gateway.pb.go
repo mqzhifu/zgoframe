@@ -24,391 +24,6 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
 
-type Heartbeat struct {
-	Time                 int64    `protobuf:"varint,1,opt,name=time,proto3" json:"time,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
-}
-
-func (m *Heartbeat) Reset()         { *m = Heartbeat{} }
-func (m *Heartbeat) String() string { return proto.CompactTextString(m) }
-func (*Heartbeat) ProtoMessage()    {}
-func (*Heartbeat) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f1a937782ebbded5, []int{0}
-}
-
-func (m *Heartbeat) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_Heartbeat.Unmarshal(m, b)
-}
-func (m *Heartbeat) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_Heartbeat.Marshal(b, m, deterministic)
-}
-func (m *Heartbeat) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_Heartbeat.Merge(m, src)
-}
-func (m *Heartbeat) XXX_Size() int {
-	return xxx_messageInfo_Heartbeat.Size(m)
-}
-func (m *Heartbeat) XXX_DiscardUnknown() {
-	xxx_messageInfo_Heartbeat.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_Heartbeat proto.InternalMessageInfo
-
-func (m *Heartbeat) GetTime() int64 {
-	if m != nil {
-		return m.Time
-	}
-	return 0
-}
-
-type ProjectPush struct {
-	ProjectId            string   `protobuf:"bytes,1,opt,name=project_id,json=projectId,proto3" json:"project_id,omitempty"`
-	ServiceId            string   `protobuf:"bytes,2,opt,name=service_id,json=serviceId,proto3" json:"service_id,omitempty"`
-	FuncId               string   `protobuf:"bytes,3,opt,name=func_id,json=funcId,proto3" json:"func_id,omitempty"`
-	TargetUids           string   `protobuf:"bytes,4,opt,name=target_uids,json=targetUids,proto3" json:"target_uids,omitempty"`
-	Msg                  string   `protobuf:"bytes,5,opt,name=msg,proto3" json:"msg,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
-}
-
-func (m *ProjectPush) Reset()         { *m = ProjectPush{} }
-func (m *ProjectPush) String() string { return proto.CompactTextString(m) }
-func (*ProjectPush) ProtoMessage()    {}
-func (*ProjectPush) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f1a937782ebbded5, []int{1}
-}
-
-func (m *ProjectPush) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_ProjectPush.Unmarshal(m, b)
-}
-func (m *ProjectPush) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_ProjectPush.Marshal(b, m, deterministic)
-}
-func (m *ProjectPush) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ProjectPush.Merge(m, src)
-}
-func (m *ProjectPush) XXX_Size() int {
-	return xxx_messageInfo_ProjectPush.Size(m)
-}
-func (m *ProjectPush) XXX_DiscardUnknown() {
-	xxx_messageInfo_ProjectPush.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_ProjectPush proto.InternalMessageInfo
-
-func (m *ProjectPush) GetProjectId() string {
-	if m != nil {
-		return m.ProjectId
-	}
-	return ""
-}
-
-func (m *ProjectPush) GetServiceId() string {
-	if m != nil {
-		return m.ServiceId
-	}
-	return ""
-}
-
-func (m *ProjectPush) GetFuncId() string {
-	if m != nil {
-		return m.FuncId
-	}
-	return ""
-}
-
-func (m *ProjectPush) GetTargetUids() string {
-	if m != nil {
-		return m.TargetUids
-	}
-	return ""
-}
-
-func (m *ProjectPush) GetMsg() string {
-	if m != nil {
-		return m.Msg
-	}
-	return ""
-}
-
-type Login struct {
-	Token                string   `protobuf:"bytes,1,opt,name=token,proto3" json:"token,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
-}
-
-func (m *Login) Reset()         { *m = Login{} }
-func (m *Login) String() string { return proto.CompactTextString(m) }
-func (*Login) ProtoMessage()    {}
-func (*Login) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f1a937782ebbded5, []int{2}
-}
-
-func (m *Login) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_Login.Unmarshal(m, b)
-}
-func (m *Login) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_Login.Marshal(b, m, deterministic)
-}
-func (m *Login) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_Login.Merge(m, src)
-}
-func (m *Login) XXX_Size() int {
-	return xxx_messageInfo_Login.Size(m)
-}
-func (m *Login) XXX_DiscardUnknown() {
-	xxx_messageInfo_Login.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_Login proto.InternalMessageInfo
-
-func (m *Login) GetToken() string {
-	if m != nil {
-		return m.Token
-	}
-	return ""
-}
-
-type Ping struct {
-	AddTime              int64    `protobuf:"varint,1,opt,name=add_time,json=addTime,proto3" json:"add_time,omitempty"`
-	ClientReceiveTime    int64    `protobuf:"varint,2,opt,name=client_receive_time,json=clientReceiveTime,proto3" json:"client_receive_time,omitempty"`
-	ServerResponseTime   int64    `protobuf:"varint,3,opt,name=server_response_time,json=serverResponseTime,proto3" json:"server_response_time,omitempty"`
-	RttTimeout           int64    `protobuf:"varint,4,opt,name=rtt_timeout,json=rttTimeout,proto3" json:"rtt_timeout,omitempty"`
-	RttTimes             int32    `protobuf:"varint,5,opt,name=rtt_times,json=rttTimes,proto3" json:"rtt_times,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
-}
-
-func (m *Ping) Reset()         { *m = Ping{} }
-func (m *Ping) String() string { return proto.CompactTextString(m) }
-func (*Ping) ProtoMessage()    {}
-func (*Ping) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f1a937782ebbded5, []int{3}
-}
-
-func (m *Ping) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_Ping.Unmarshal(m, b)
-}
-func (m *Ping) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_Ping.Marshal(b, m, deterministic)
-}
-func (m *Ping) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_Ping.Merge(m, src)
-}
-func (m *Ping) XXX_Size() int {
-	return xxx_messageInfo_Ping.Size(m)
-}
-func (m *Ping) XXX_DiscardUnknown() {
-	xxx_messageInfo_Ping.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_Ping proto.InternalMessageInfo
-
-func (m *Ping) GetAddTime() int64 {
-	if m != nil {
-		return m.AddTime
-	}
-	return 0
-}
-
-func (m *Ping) GetClientReceiveTime() int64 {
-	if m != nil {
-		return m.ClientReceiveTime
-	}
-	return 0
-}
-
-func (m *Ping) GetServerResponseTime() int64 {
-	if m != nil {
-		return m.ServerResponseTime
-	}
-	return 0
-}
-
-func (m *Ping) GetRttTimeout() int64 {
-	if m != nil {
-		return m.RttTimeout
-	}
-	return 0
-}
-
-func (m *Ping) GetRttTimes() int32 {
-	if m != nil {
-		return m.RttTimes
-	}
-	return 0
-}
-
-type Pong struct {
-	AddTime              int64    `protobuf:"varint,1,opt,name=add_time,json=addTime,proto3" json:"add_time,omitempty"`
-	ClientReceiveTime    int64    `protobuf:"varint,2,opt,name=client_receive_time,json=clientReceiveTime,proto3" json:"client_receive_time,omitempty"`
-	ServerResponseTime   int64    `protobuf:"varint,3,opt,name=server_response_time,json=serverResponseTime,proto3" json:"server_response_time,omitempty"`
-	RttTimeout           int64    `protobuf:"varint,4,opt,name=rtt_timeout,json=rttTimeout,proto3" json:"rtt_timeout,omitempty"`
-	RttTimes             int32    `protobuf:"varint,5,opt,name=rtt_times,json=rttTimes,proto3" json:"rtt_times,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
-}
-
-func (m *Pong) Reset()         { *m = Pong{} }
-func (m *Pong) String() string { return proto.CompactTextString(m) }
-func (*Pong) ProtoMessage()    {}
-func (*Pong) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f1a937782ebbded5, []int{4}
-}
-
-func (m *Pong) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_Pong.Unmarshal(m, b)
-}
-func (m *Pong) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_Pong.Marshal(b, m, deterministic)
-}
-func (m *Pong) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_Pong.Merge(m, src)
-}
-func (m *Pong) XXX_Size() int {
-	return xxx_messageInfo_Pong.Size(m)
-}
-func (m *Pong) XXX_DiscardUnknown() {
-	xxx_messageInfo_Pong.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_Pong proto.InternalMessageInfo
-
-func (m *Pong) GetAddTime() int64 {
-	if m != nil {
-		return m.AddTime
-	}
-	return 0
-}
-
-func (m *Pong) GetClientReceiveTime() int64 {
-	if m != nil {
-		return m.ClientReceiveTime
-	}
-	return 0
-}
-
-func (m *Pong) GetServerResponseTime() int64 {
-	if m != nil {
-		return m.ServerResponseTime
-	}
-	return 0
-}
-
-func (m *Pong) GetRttTimeout() int64 {
-	if m != nil {
-		return m.RttTimeout
-	}
-	return 0
-}
-
-func (m *Pong) GetRttTimes() int32 {
-	if m != nil {
-		return m.RttTimes
-	}
-	return 0
-}
-
-type LoginRes struct {
-	Code                 int32    `protobuf:"varint,1,opt,name=code,proto3" json:"code,omitempty"`
-	ErrMsg               string   `protobuf:"bytes,2,opt,name=errMsg,proto3" json:"errMsg,omitempty"`
-	Uid                  int32    `protobuf:"varint,3,opt,name=uid,proto3" json:"uid,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
-}
-
-func (m *LoginRes) Reset()         { *m = LoginRes{} }
-func (m *LoginRes) String() string { return proto.CompactTextString(m) }
-func (*LoginRes) ProtoMessage()    {}
-func (*LoginRes) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f1a937782ebbded5, []int{5}
-}
-
-func (m *LoginRes) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_LoginRes.Unmarshal(m, b)
-}
-func (m *LoginRes) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_LoginRes.Marshal(b, m, deterministic)
-}
-func (m *LoginRes) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_LoginRes.Merge(m, src)
-}
-func (m *LoginRes) XXX_Size() int {
-	return xxx_messageInfo_LoginRes.Size(m)
-}
-func (m *LoginRes) XXX_DiscardUnknown() {
-	xxx_messageInfo_LoginRes.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_LoginRes proto.InternalMessageInfo
-
-func (m *LoginRes) GetCode() int32 {
-	if m != nil {
-		return m.Code
-	}
-	return 0
-}
-
-func (m *LoginRes) GetErrMsg() string {
-	if m != nil {
-		return m.ErrMsg
-	}
-	return ""
-}
-
-func (m *LoginRes) GetUid() int32 {
-	if m != nil {
-		return m.Uid
-	}
-	return 0
-}
-
-type KickOff struct {
-	Time                 int64    `protobuf:"varint,1,opt,name=time,proto3" json:"time,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
-}
-
-func (m *KickOff) Reset()         { *m = KickOff{} }
-func (m *KickOff) String() string { return proto.CompactTextString(m) }
-func (*KickOff) ProtoMessage()    {}
-func (*KickOff) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f1a937782ebbded5, []int{6}
-}
-
-func (m *KickOff) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_KickOff.Unmarshal(m, b)
-}
-func (m *KickOff) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_KickOff.Marshal(b, m, deterministic)
-}
-func (m *KickOff) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_KickOff.Merge(m, src)
-}
-func (m *KickOff) XXX_Size() int {
-	return xxx_messageInfo_KickOff.Size(m)
-}
-func (m *KickOff) XXX_DiscardUnknown() {
-	xxx_messageInfo_KickOff.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_KickOff proto.InternalMessageInfo
-
-func (m *KickOff) GetTime() int64 {
-	if m != nil {
-		return m.Time
-	}
-	return 0
-}
-
 //长连接传输内容：一条标准的内容
 type Msg struct {
 	Id                   int32    `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
@@ -430,7 +45,7 @@ func (m *Msg) Reset()         { *m = Msg{} }
 func (m *Msg) String() string { return proto.CompactTextString(m) }
 func (*Msg) ProtoMessage()    {}
 func (*Msg) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f1a937782ebbded5, []int{7}
+	return fileDescriptor_f1a937782ebbded5, []int{0}
 }
 
 func (m *Msg) XXX_Unmarshal(b []byte) error {
@@ -521,6 +136,210 @@ func (m *Msg) GetEndChar() string {
 	return ""
 }
 
+type Login struct {
+	Token                string   `protobuf:"bytes,1,opt,name=token,proto3" json:"token,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *Login) Reset()         { *m = Login{} }
+func (m *Login) String() string { return proto.CompactTextString(m) }
+func (*Login) ProtoMessage()    {}
+func (*Login) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f1a937782ebbded5, []int{1}
+}
+
+func (m *Login) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_Login.Unmarshal(m, b)
+}
+func (m *Login) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_Login.Marshal(b, m, deterministic)
+}
+func (m *Login) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Login.Merge(m, src)
+}
+func (m *Login) XXX_Size() int {
+	return xxx_messageInfo_Login.Size(m)
+}
+func (m *Login) XXX_DiscardUnknown() {
+	xxx_messageInfo_Login.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Login proto.InternalMessageInfo
+
+func (m *Login) GetToken() string {
+	if m != nil {
+		return m.Token
+	}
+	return ""
+}
+
+type LoginRes struct {
+	Code                 int32    `protobuf:"varint,1,opt,name=code,proto3" json:"code,omitempty"`
+	ErrMsg               string   `protobuf:"bytes,2,opt,name=errMsg,proto3" json:"errMsg,omitempty"`
+	Uid                  int32    `protobuf:"varint,3,opt,name=uid,proto3" json:"uid,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *LoginRes) Reset()         { *m = LoginRes{} }
+func (m *LoginRes) String() string { return proto.CompactTextString(m) }
+func (*LoginRes) ProtoMessage()    {}
+func (*LoginRes) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f1a937782ebbded5, []int{2}
+}
+
+func (m *LoginRes) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_LoginRes.Unmarshal(m, b)
+}
+func (m *LoginRes) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_LoginRes.Marshal(b, m, deterministic)
+}
+func (m *LoginRes) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_LoginRes.Merge(m, src)
+}
+func (m *LoginRes) XXX_Size() int {
+	return xxx_messageInfo_LoginRes.Size(m)
+}
+func (m *LoginRes) XXX_DiscardUnknown() {
+	xxx_messageInfo_LoginRes.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_LoginRes proto.InternalMessageInfo
+
+func (m *LoginRes) GetCode() int32 {
+	if m != nil {
+		return m.Code
+	}
+	return 0
+}
+
+func (m *LoginRes) GetErrMsg() string {
+	if m != nil {
+		return m.ErrMsg
+	}
+	return ""
+}
+
+func (m *LoginRes) GetUid() int32 {
+	if m != nil {
+		return m.Uid
+	}
+	return 0
+}
+
+type ProjectPushMsg struct {
+	ProjectId            string   `protobuf:"bytes,1,opt,name=project_id,json=projectId,proto3" json:"project_id,omitempty"`
+	ServiceId            string   `protobuf:"bytes,2,opt,name=service_id,json=serviceId,proto3" json:"service_id,omitempty"`
+	FuncId               string   `protobuf:"bytes,3,opt,name=func_id,json=funcId,proto3" json:"func_id,omitempty"`
+	TargetUids           string   `protobuf:"bytes,4,opt,name=target_uids,json=targetUids,proto3" json:"target_uids,omitempty"`
+	Msg                  string   `protobuf:"bytes,5,opt,name=msg,proto3" json:"msg,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *ProjectPushMsg) Reset()         { *m = ProjectPushMsg{} }
+func (m *ProjectPushMsg) String() string { return proto.CompactTextString(m) }
+func (*ProjectPushMsg) ProtoMessage()    {}
+func (*ProjectPushMsg) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f1a937782ebbded5, []int{3}
+}
+
+func (m *ProjectPushMsg) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_ProjectPushMsg.Unmarshal(m, b)
+}
+func (m *ProjectPushMsg) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_ProjectPushMsg.Marshal(b, m, deterministic)
+}
+func (m *ProjectPushMsg) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ProjectPushMsg.Merge(m, src)
+}
+func (m *ProjectPushMsg) XXX_Size() int {
+	return xxx_messageInfo_ProjectPushMsg.Size(m)
+}
+func (m *ProjectPushMsg) XXX_DiscardUnknown() {
+	xxx_messageInfo_ProjectPushMsg.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ProjectPushMsg proto.InternalMessageInfo
+
+func (m *ProjectPushMsg) GetProjectId() string {
+	if m != nil {
+		return m.ProjectId
+	}
+	return ""
+}
+
+func (m *ProjectPushMsg) GetServiceId() string {
+	if m != nil {
+		return m.ServiceId
+	}
+	return ""
+}
+
+func (m *ProjectPushMsg) GetFuncId() string {
+	if m != nil {
+		return m.FuncId
+	}
+	return ""
+}
+
+func (m *ProjectPushMsg) GetTargetUids() string {
+	if m != nil {
+		return m.TargetUids
+	}
+	return ""
+}
+
+func (m *ProjectPushMsg) GetMsg() string {
+	if m != nil {
+		return m.Msg
+	}
+	return ""
+}
+
+type KickOff struct {
+	Time                 int64    `protobuf:"varint,1,opt,name=time,proto3" json:"time,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *KickOff) Reset()         { *m = KickOff{} }
+func (m *KickOff) String() string { return proto.CompactTextString(m) }
+func (*KickOff) ProtoMessage()    {}
+func (*KickOff) Descriptor() ([]byte, []int) {
+	return fileDescriptor_f1a937782ebbded5, []int{4}
+}
+
+func (m *KickOff) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_KickOff.Unmarshal(m, b)
+}
+func (m *KickOff) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_KickOff.Marshal(b, m, deterministic)
+}
+func (m *KickOff) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_KickOff.Merge(m, src)
+}
+func (m *KickOff) XXX_Size() int {
+	return xxx_messageInfo_KickOff.Size(m)
+}
+func (m *KickOff) XXX_DiscardUnknown() {
+	xxx_messageInfo_KickOff.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_KickOff proto.InternalMessageInfo
+
+func (m *KickOff) GetTime() int64 {
+	if m != nil {
+		return m.Time
+	}
+	return 0
+}
+
 type CfgServer struct {
 	ListenIp             string   `protobuf:"bytes,1,opt,name=ListenIp,proto3" json:"ListenIp,omitempty"`
 	OutIp                string   `protobuf:"bytes,2,opt,name=OutIp,proto3" json:"OutIp,omitempty"`
@@ -555,7 +374,7 @@ func (m *CfgServer) Reset()         { *m = CfgServer{} }
 func (m *CfgServer) String() string { return proto.CompactTextString(m) }
 func (*CfgServer) ProtoMessage()    {}
 func (*CfgServer) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f1a937782ebbded5, []int{8}
+	return fileDescriptor_f1a937782ebbded5, []int{5}
 }
 
 func (m *CfgServer) XXX_Unmarshal(b []byte) error {
@@ -756,7 +575,7 @@ func (m *CfgProtoMap) Reset()         { *m = CfgProtoMap{} }
 func (m *CfgProtoMap) String() string { return proto.CompactTextString(m) }
 func (*CfgProtoMap) ProtoMessage()    {}
 func (*CfgProtoMap) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f1a937782ebbded5, []int{9}
+	return fileDescriptor_f1a937782ebbded5, []int{6}
 }
 
 func (m *CfgProtoMap) XXX_Unmarshal(b []byte) error {
@@ -809,7 +628,7 @@ func (m *CfgProtoServiceFunc) Reset()         { *m = CfgProtoServiceFunc{} }
 func (m *CfgProtoServiceFunc) String() string { return proto.CompactTextString(m) }
 func (*CfgProtoServiceFunc) ProtoMessage()    {}
 func (*CfgProtoServiceFunc) Descriptor() ([]byte, []int) {
-	return fileDescriptor_f1a937782ebbded5, []int{10}
+	return fileDescriptor_f1a937782ebbded5, []int{7}
 }
 
 func (m *CfgProtoServiceFunc) XXX_Unmarshal(b []byte) error {
@@ -887,14 +706,11 @@ func (m *CfgProtoServiceFunc) GetDemo() string {
 }
 
 func init() {
-	proto.RegisterType((*Heartbeat)(nil), "pb.Heartbeat")
-	proto.RegisterType((*ProjectPush)(nil), "pb.ProjectPush")
-	proto.RegisterType((*Login)(nil), "pb.Login")
-	proto.RegisterType((*Ping)(nil), "pb.Ping")
-	proto.RegisterType((*Pong)(nil), "pb.Pong")
-	proto.RegisterType((*LoginRes)(nil), "pb.LoginRes")
-	proto.RegisterType((*KickOff)(nil), "pb.KickOff")
 	proto.RegisterType((*Msg)(nil), "pb.Msg")
+	proto.RegisterType((*Login)(nil), "pb.Login")
+	proto.RegisterType((*LoginRes)(nil), "pb.LoginRes")
+	proto.RegisterType((*ProjectPushMsg)(nil), "pb.ProjectPushMsg")
+	proto.RegisterType((*KickOff)(nil), "pb.KickOff")
 	proto.RegisterType((*CfgServer)(nil), "pb.CfgServer")
 	proto.RegisterType((*CfgProtoMap)(nil), "pb.CfgProtoMap")
 	proto.RegisterMapType((map[int32]*CfgProtoServiceFunc)(nil), "pb.CfgProtoMap.ClientEntry")
@@ -905,77 +721,73 @@ func init() {
 func init() { proto.RegisterFile("gateway.proto", fileDescriptor_f1a937782ebbded5) }
 
 var fileDescriptor_f1a937782ebbded5 = []byte{
-	// 1120 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xd4, 0x56, 0xcd, 0x6e, 0xe4, 0x44,
-	0x10, 0xde, 0x99, 0x59, 0xcf, 0x4f, 0xcd, 0xe4, 0x67, 0x3b, 0x61, 0x63, 0x26, 0x84, 0x04, 0xf3,
-	0xa3, 0x68, 0x25, 0x06, 0x94, 0xe5, 0x80, 0xe0, 0x04, 0xd6, 0x86, 0x8c, 0x36, 0xb3, 0x19, 0xb5,
-	0x13, 0x45, 0xe2, 0x62, 0x39, 0x76, 0x8f, 0x63, 0x92, 0x71, 0x1b, 0xbb, 0x1d, 0x76, 0x78, 0x0b,
-	0x4e, 0x1c, 0xe1, 0x55, 0x78, 0x0b, 0x5e, 0x06, 0x09, 0x55, 0x75, 0x7b, 0x7e, 0xb2, 0x11, 0x20,
-	0xc4, 0x85, 0x5b, 0xd7, 0xf7, 0x7d, 0xdd, 0x5d, 0x55, 0x5d, 0x55, 0x36, 0xac, 0xc5, 0x81, 0x12,
-	0x3f, 0x04, 0xb3, 0x41, 0x96, 0x4b, 0x25, 0x59, 0x3d, 0xbb, 0xea, 0xf7, 0x42, 0x39, 0x9d, 0xca,
-	0x54, 0x23, 0xce, 0x3e, 0x74, 0x4e, 0x44, 0x90, 0xab, 0x2b, 0x11, 0x28, 0xc6, 0xe0, 0xb1, 0x4a,
-	0xa6, 0xc2, 0xae, 0x1d, 0xd4, 0x0e, 0x1b, 0x9c, 0xd6, 0xce, 0xcf, 0x35, 0xe8, 0x8e, 0x73, 0xf9,
-	0x9d, 0x08, 0xd5, 0xb8, 0x2c, 0xae, 0xd9, 0x1e, 0x40, 0xa6, 0x4d, 0x3f, 0x89, 0x48, 0xd9, 0xe1,
-	0x1d, 0x83, 0x0c, 0x23, 0xa4, 0x0b, 0x91, 0xdf, 0x25, 0xa1, 0x40, 0xba, 0xae, 0x69, 0x83, 0x0c,
-	0x23, 0xb6, 0x03, 0xad, 0x49, 0x99, 0x86, 0xc8, 0x35, 0x88, 0x6b, 0xa2, 0x39, 0x8c, 0xd8, 0x3e,
-	0x74, 0x55, 0x90, 0xc7, 0x42, 0xf9, 0x65, 0x12, 0x15, 0xf6, 0x63, 0x22, 0x41, 0x43, 0x17, 0x49,
-	0x54, 0xb0, 0x4d, 0x68, 0x4c, 0x8b, 0xd8, 0xb6, 0x88, 0xc0, 0xa5, 0xb3, 0x07, 0xd6, 0xa9, 0x8c,
-	0x93, 0x94, 0x6d, 0x83, 0xa5, 0xe4, 0x8d, 0x48, 0x8d, 0x37, 0xda, 0x70, 0x7e, 0xab, 0xc1, 0xe3,
-	0x71, 0x92, 0xc6, 0xec, 0x6d, 0x68, 0x07, 0x51, 0xe4, 0x2f, 0x45, 0xd6, 0x0a, 0xa2, 0xe8, 0x3c,
-	0x99, 0x0a, 0x36, 0x80, 0xad, 0xf0, 0x36, 0x11, 0xa9, 0xf2, 0x73, 0x11, 0x8a, 0xe4, 0x4e, 0x68,
-	0x55, 0x9d, 0x54, 0x4f, 0x34, 0xc5, 0x35, 0x43, 0xfa, 0x4f, 0x61, 0x1b, 0x63, 0x11, 0xb9, 0x9f,
-	0x8b, 0x22, 0x93, 0x69, 0x61, 0x36, 0x34, 0x68, 0x03, 0xd3, 0x1c, 0x37, 0x14, 0xed, 0xd8, 0x87,
-	0x6e, 0xae, 0x14, 0xa9, 0x64, 0xa9, 0x28, 0xae, 0x06, 0x87, 0x5c, 0xa9, 0x73, 0x8d, 0xb0, 0x5d,
-	0xe8, 0x54, 0x82, 0x82, 0xa2, 0xb3, 0x78, 0xdb, 0xd0, 0x85, 0x8e, 0x41, 0xfe, 0xbf, 0x63, 0x38,
-	0x81, 0x36, 0x3d, 0x13, 0x17, 0x05, 0x16, 0x58, 0x28, 0x23, 0x1d, 0x82, 0xc5, 0x69, 0xcd, 0x9e,
-	0x42, 0x53, 0xe4, 0xf9, 0xa8, 0x88, 0x4d, 0xb5, 0x18, 0x0b, 0x1f, 0xbc, 0x34, 0x65, 0x62, 0x71,
-	0x5c, 0x3a, 0x7b, 0xd0, 0x7a, 0x99, 0x84, 0x37, 0x67, 0x93, 0xc9, 0x83, 0x95, 0xfa, 0x6b, 0x1d,
-	0x1a, 0xb8, 0x71, 0x1d, 0xea, 0xa6, 0x32, 0x2d, 0x5e, 0x4f, 0xa8, 0xe6, 0x8a, 0x24, 0xf2, 0x27,
-	0xa6, 0x1e, 0x2d, 0xde, 0x2c, 0x92, 0xe8, 0x38, 0xa1, 0x9a, 0x8b, 0x02, 0x15, 0xf8, 0xb7, 0x22,
-	0x8d, 0xd5, 0xb5, 0xb9, 0x09, 0x10, 0x3a, 0x25, 0x84, 0xbd, 0x07, 0xbd, 0x50, 0xa6, 0x0a, 0x73,
-	0xab, 0x66, 0x99, 0xa0, 0xc8, 0x2d, 0xde, 0x35, 0xd8, 0xf9, 0x2c, 0x13, 0xec, 0x7d, 0x58, 0xa3,
-	0x46, 0x0a, 0xe5, 0xad, 0xd6, 0xe8, 0xf0, 0x7b, 0x15, 0x48, 0xa2, 0xd5, 0xa6, 0x68, 0x92, 0xe2,
-	0xe1, 0xa6, 0x68, 0x69, 0x07, 0x4d, 0x53, 0xf4, 0xa1, 0x9d, 0x0b, 0x7a, 0x90, 0xc8, 0x6e, 0x53,
-	0x72, 0xe6, 0x36, 0xb3, 0xa1, 0x65, 0xfc, 0xb0, 0x3b, 0x44, 0x55, 0x26, 0xd6, 0x8a, 0x48, 0x23,
-	0x3f, 0xbc, 0x0e, 0x72, 0x1b, 0x34, 0x25, 0xd2, 0xc8, 0xbd, 0x0e, 0x72, 0xe7, 0x0f, 0x0b, 0x3a,
-	0xee, 0x24, 0xf6, 0xe8, 0x8d, 0xf1, 0xf8, 0xd3, 0xa4, 0x50, 0x22, 0x1d, 0x66, 0xa6, 0x75, 0xe6,
-	0x36, 0xf6, 0xd4, 0x59, 0xa9, 0x86, 0x99, 0x79, 0x14, 0x6d, 0xb0, 0x0f, 0x60, 0xed, 0x44, 0xa9,
-	0x2c, 0xe2, 0x52, 0xaa, 0x71, 0x60, 0x72, 0xd6, 0xe1, 0xab, 0x20, 0x9e, 0x8b, 0xc0, 0x58, 0xe6,
-	0xca, 0x34, 0xf2, 0xdc, 0xc6, 0xd7, 0xbe, 0x2c, 0x88, 0xd1, 0x9d, 0x6c, 0x2c, 0x0c, 0xe7, 0x22,
-	0xd2, 0x5b, 0x9a, 0xda, 0x67, 0x63, 0xe2, 0x69, 0x63, 0x93, 0x4c, 0x93, 0x9e, 0xb9, 0x8d, 0x5e,
-	0x5e, 0x16, 0x17, 0x79, 0x62, 0xb2, 0xa3, 0x0d, 0x76, 0x00, 0x5d, 0x77, 0xf1, 0x44, 0x94, 0x1e,
-	0x8b, 0x2f, 0x43, 0x18, 0x07, 0xd5, 0xe4, 0x57, 0xa5, 0xba, 0x26, 0x8d, 0xce, 0xd3, 0x2a, 0xc8,
-	0x06, 0xc0, 0xe6, 0x80, 0x27, 0xc2, 0x5c, 0xa8, 0x97, 0x62, 0x66, 0x77, 0x49, 0xfa, 0x00, 0xc3,
-	0x9e, 0xc1, 0xe6, 0x28, 0x78, 0xed, 0x52, 0xc7, 0xb9, 0x32, 0x4d, 0x5f, 0x95, 0x53, 0xbb, 0x47,
-	0x97, 0xbf, 0x81, 0xa3, 0x07, 0xa3, 0x22, 0x36, 0x3e, 0x8d, 0x82, 0xd7, 0xf6, 0x1a, 0x09, 0x57,
-	0x41, 0xf6, 0x0e, 0x74, 0x86, 0x67, 0xa6, 0xcb, 0xec, 0x75, 0xaa, 0xf5, 0x05, 0x60, 0xe2, 0x4c,
-	0x2b, 0x7e, 0x63, 0x1e, 0x67, 0x05, 0x61, 0x56, 0x47, 0x41, 0xe6, 0x25, 0x3f, 0x0a, 0x7b, 0x93,
-	0xd8, 0xca, 0x64, 0xef, 0x02, 0x70, 0x29, 0xa7, 0x63, 0x21, 0xb3, 0x5b, 0x61, 0x3f, 0xd1, 0xa5,
-	0xbf, 0x40, 0xf0, 0x6c, 0xb4, 0xaa, 0xb3, 0x99, 0x3e, 0x7b, 0x09, 0x62, 0x87, 0xb0, 0x71, 0x36,
-	0x99, 0x9c, 0x26, 0xa9, 0xb8, 0x0c, 0x12, 0xea, 0x75, 0x7b, 0x8b, 0x54, 0xf7, 0x61, 0xaa, 0x33,
-	0x19, 0xde, 0x8c, 0xb0, 0xf3, 0xb7, 0xf5, 0x0b, 0x56, 0x36, 0x76, 0xf9, 0xf1, 0xd8, 0xb3, 0xdf,
-	0xd2, 0x5d, 0x7e, 0x3c, 0xf6, 0x30, 0x8b, 0x78, 0x0d, 0x17, 0x41, 0x34, 0xab, 0xae, 0x7f, 0xaa,
-	0xb3, 0x78, 0x1f, 0xc7, 0xf7, 0xf7, 0x94, 0xcc, 0x85, 0xbd, 0x43, 0x02, 0x6d, 0x60, 0xd4, 0xe7,
-	0xa1, 0xae, 0x25, 0x5b, 0xd7, 0x92, 0x31, 0x9d, 0x5f, 0xea, 0xd0, 0x75, 0x27, 0x31, 0xd5, 0xcf,
-	0x28, 0xc8, 0xd8, 0x73, 0x68, 0xea, 0x01, 0x69, 0xd7, 0x0e, 0x1a, 0x87, 0xdd, 0xa3, 0xdd, 0x41,
-	0x76, 0x35, 0x58, 0x12, 0x0c, 0xf4, 0xa3, 0xbd, 0x48, 0x55, 0x3e, 0xe3, 0x46, 0x8a, 0x9b, 0xf4,
-	0x90, 0xb4, 0xeb, 0x0f, 0x6f, 0xd2, 0xed, 0x65, 0x36, 0x69, 0x69, 0x9f, 0x43, 0x77, 0xe9, 0x2c,
-	0x0c, 0xfb, 0x46, 0xcc, 0xcc, 0x90, 0xc2, 0x25, 0xfb, 0x18, 0xac, 0xbb, 0xe0, 0xb6, 0xd4, 0x83,
-	0xbb, 0x7b, 0xb4, 0xb3, 0x7c, 0xa8, 0xa7, 0x47, 0xc5, 0x71, 0x99, 0x86, 0x5c, 0xab, 0xbe, 0xa8,
-	0x7f, 0x5e, 0xc3, 0x33, 0x97, 0xae, 0xfa, 0x4f, 0xce, 0x74, 0x7e, 0xaf, 0xc1, 0xd6, 0x03, 0x92,
-	0x37, 0x86, 0xea, 0xbf, 0xfd, 0xce, 0xef, 0x42, 0x87, 0x88, 0x34, 0x98, 0x8a, 0x6a, 0x38, 0x20,
-	0xf0, 0x2a, 0xd0, 0x85, 0x52, 0x7d, 0x93, 0xcc, 0x14, 0x98, 0xdb, 0xf8, 0xa8, 0xb9, 0xf8, 0xbe,
-	0x14, 0x85, 0xa2, 0x29, 0xd0, 0xe1, 0x95, 0x89, 0xdf, 0x82, 0x48, 0x14, 0xa1, 0x99, 0x01, 0xb4,
-	0xd6, 0xd8, 0x54, 0x9a, 0xd1, 0x48, 0xeb, 0xa3, 0x9f, 0x1a, 0xd0, 0xfa, 0x46, 0xff, 0x0e, 0xb1,
-	0x0f, 0xa1, 0xed, 0x7a, 0xbe, 0xfe, 0x7d, 0xe8, 0x60, 0x5a, 0x68, 0xd9, 0xef, 0xcd, 0x97, 0x5c,
-	0x14, 0xce, 0x23, 0xb6, 0x0f, 0x2d, 0xd7, 0xf3, 0xe9, 0x2f, 0xa2, 0x8d, 0x14, 0xae, 0xfa, 0x7a,
-	0x25, 0xd3, 0x78, 0x21, 0x90, 0x73, 0x81, 0xbc, 0x27, 0x78, 0x06, 0x3d, 0xd7, 0xf3, 0x17, 0xbf,
-	0x58, 0x6b, 0xc8, 0xcd, 0xcd, 0x3e, 0xdd, 0xfd, 0x62, 0x9a, 0xa9, 0x99, 0xf3, 0x08, 0x9d, 0xf2,
-	0x5c, 0xe3, 0xd4, 0x8a, 0x27, 0xab, 0xb2, 0x7d, 0x68, 0x79, 0xee, 0xdf, 0x38, 0x85, 0x82, 0xbf,
-	0x74, 0xca, 0x73, 0xff, 0xa1, 0x53, 0x1f, 0x01, 0x78, 0xae, 0x5f, 0x7d, 0x77, 0xbb, 0x48, 0x19,
-	0x63, 0x55, 0xf7, 0x19, 0xac, 0xe3, 0xa5, 0x4b, 0x7f, 0x8a, 0x1b, 0x74, 0xe3, 0x02, 0xe8, 0xdf,
-	0x07, 0x9c, 0x47, 0x5f, 0xb7, 0xbe, 0xb5, 0x06, 0x9f, 0x7c, 0x99, 0x5d, 0x5d, 0x35, 0xe9, 0x83,
-	0xf9, 0xfc, 0xcf, 0x00, 0x00, 0x00, 0xff, 0xff, 0xa4, 0x17, 0x2b, 0xbd, 0xb1, 0x0a, 0x00, 0x00,
+	// 1053 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x56, 0x5f, 0x73, 0xdb, 0x44,
+	0x10, 0xaf, 0xed, 0xfa, 0x8f, 0xd6, 0x4e, 0x1a, 0xae, 0xa5, 0x15, 0x2e, 0xa1, 0xc1, 0x50, 0x26,
+	0xd3, 0x19, 0xcc, 0xd0, 0xbe, 0x30, 0xf0, 0x04, 0x22, 0x26, 0x9e, 0xc6, 0x8d, 0x47, 0x4a, 0x26,
+	0x33, 0xbc, 0x68, 0x14, 0xdd, 0x59, 0x39, 0x62, 0xeb, 0x54, 0xe9, 0x14, 0x6a, 0x3e, 0x0a, 0x2f,
+	0xf0, 0x91, 0x78, 0xe4, 0xcb, 0x30, 0xc3, 0xec, 0xde, 0xc9, 0xb1, 0xd3, 0x3c, 0x64, 0x18, 0xde,
+	0xee, 0xf7, 0xdb, 0xdf, 0xed, 0xed, 0xed, 0xae, 0xf6, 0x04, 0x5b, 0x49, 0xa4, 0xc5, 0xaf, 0xd1,
+	0x72, 0x98, 0xe5, 0x4a, 0x2b, 0x56, 0xcf, 0xce, 0xfb, 0xbd, 0x58, 0x2d, 0x16, 0x2a, 0x35, 0xcc,
+	0xe0, 0xcf, 0x3a, 0x34, 0x26, 0x45, 0xc2, 0xb6, 0xa1, 0x2e, 0xb9, 0x5b, 0xdb, 0xab, 0xed, 0x37,
+	0xfd, 0xba, 0xe4, 0xec, 0x09, 0xb4, 0x0b, 0xc9, 0xc3, 0x99, 0xe4, 0x6e, 0x9d, 0xc8, 0x56, 0x21,
+	0xf9, 0x48, 0x72, 0xf6, 0x0c, 0xba, 0x3c, 0xd2, 0x51, 0x38, 0x17, 0x69, 0xa2, 0x2f, 0xdc, 0x06,
+	0x19, 0x01, 0xa9, 0x23, 0x62, 0xd8, 0xa7, 0xd0, 0x8b, 0x55, 0xaa, 0x45, 0xaa, 0x43, 0xbd, 0xcc,
+	0x84, 0x7b, 0x9f, 0x14, 0x5d, 0xcb, 0x9d, 0x2c, 0x33, 0xc1, 0x3e, 0x83, 0x2d, 0x3a, 0x3d, 0x56,
+	0x73, 0xa3, 0x69, 0x92, 0xa6, 0x57, 0x91, 0x24, 0xda, 0x05, 0x28, 0x44, 0x7e, 0x25, 0x63, 0x11,
+	0x4a, 0xee, 0xb6, 0x48, 0xe1, 0x58, 0x66, 0x4c, 0x01, 0xce, 0xca, 0x34, 0x46, 0x5b, 0xdb, 0x04,
+	0x88, 0x70, 0xcc, 0x59, 0x1f, 0x3a, 0xb9, 0x40, 0x9d, 0xe0, 0x6e, 0x67, 0xaf, 0xb6, 0xef, 0xf8,
+	0x2b, 0xcc, 0x5c, 0x68, 0xdb, 0x38, 0x5c, 0x87, 0x4c, 0x15, 0x64, 0x1f, 0x41, 0x47, 0xa4, 0x3c,
+	0x8c, 0x2f, 0xa2, 0xdc, 0x05, 0x63, 0x12, 0x29, 0xf7, 0x2e, 0xa2, 0x7c, 0xb0, 0x0b, 0xcd, 0x23,
+	0x95, 0xc8, 0x94, 0x3d, 0x82, 0xa6, 0x56, 0x97, 0x22, 0xa5, 0x34, 0x39, 0xbe, 0x01, 0x83, 0x43,
+	0xe8, 0x90, 0xd9, 0x17, 0x05, 0x63, 0x70, 0x3f, 0x56, 0x5c, 0xd8, 0x3c, 0xd2, 0x9a, 0x3d, 0x86,
+	0x96, 0xc8, 0xf3, 0x49, 0x91, 0x50, 0x22, 0x1d, 0xdf, 0x22, 0xb6, 0x03, 0x8d, 0x52, 0x72, 0x9b,
+	0x40, 0x5c, 0x0e, 0x7e, 0xaf, 0xc1, 0xf6, 0x34, 0x57, 0xbf, 0x88, 0x58, 0x4f, 0xcb, 0xe2, 0x02,
+	0x45, 0xbb, 0x00, 0x99, 0x61, 0x42, 0x5b, 0x1e, 0xc7, 0x77, 0x2c, 0x33, 0xe6, 0x37, 0x72, 0x64,
+	0xfc, 0xdf, 0x9e, 0xa3, 0x86, 0x39, 0xdb, 0xe6, 0xe8, 0x19, 0x74, 0x75, 0x94, 0x27, 0x42, 0x87,
+	0xa5, 0xe4, 0x05, 0x95, 0xc8, 0xf1, 0xc1, 0x50, 0xa7, 0x92, 0x17, 0x18, 0xdc, 0xa2, 0x48, 0xa8,
+	0x2e, 0x8e, 0x8f, 0xcb, 0xc1, 0x2e, 0xb4, 0x5f, 0xcb, 0xf8, 0xf2, 0x78, 0x36, 0xc3, 0x5b, 0x6a,
+	0xb9, 0x30, 0xb7, 0x6c, 0xf8, 0xb4, 0x1e, 0xfc, 0xd3, 0x04, 0xc7, 0x9b, 0x25, 0x01, 0xe6, 0x39,
+	0xc7, 0x1a, 0x1c, 0xc9, 0x42, 0x8b, 0x74, 0x9c, 0xd9, 0xa0, 0x57, 0x18, 0xb3, 0x78, 0x5c, 0xea,
+	0x71, 0x66, 0xc3, 0x35, 0x80, 0x7d, 0x0e, 0x5b, 0x87, 0x5a, 0x67, 0xdc, 0x57, 0x4a, 0x4f, 0x23,
+	0xdb, 0x58, 0x8e, 0xbf, 0x49, 0xa2, 0x5f, 0x24, 0xa6, 0x2a, 0xd7, 0x36, 0xe8, 0x15, 0xc6, 0x3c,
+	0x9f, 0x15, 0x64, 0x31, 0x51, 0x5b, 0x84, 0x35, 0x3f, 0xe5, 0x66, 0x4b, 0xcb, 0x14, 0xd6, 0x42,
+	0xf4, 0x36, 0xb5, 0x1d, 0x67, 0x7b, 0x68, 0x85, 0x31, 0xca, 0xb3, 0xe2, 0x34, 0x97, 0xb6, 0x85,
+	0x0c, 0x60, 0x7b, 0xd0, 0xf5, 0xae, 0xfb, 0x98, 0x7a, 0xa8, 0xe9, 0xaf, 0x53, 0x78, 0x0f, 0xea,
+	0x86, 0xef, 0x4b, 0x7d, 0x41, 0x1a, 0xd3, 0x4c, 0x9b, 0x24, 0x1b, 0x02, 0x5b, 0x11, 0x81, 0x88,
+	0x73, 0xa1, 0x5f, 0x8b, 0xa5, 0xdb, 0x25, 0xe9, 0x2d, 0x16, 0xf6, 0x02, 0x76, 0x26, 0xd1, 0x3b,
+	0x6f, 0x2e, 0x45, 0xaa, 0x3d, 0x95, 0xa6, 0x6f, 0xca, 0x85, 0xdb, 0xa3, 0xc3, 0xdf, 0xe3, 0x31,
+	0x82, 0x49, 0x91, 0xd8, 0x98, 0x26, 0xd1, 0x3b, 0x77, 0x8b, 0x84, 0x9b, 0x24, 0xfb, 0x18, 0x9c,
+	0xf1, 0xf1, 0x89, 0x5c, 0x08, 0x55, 0x6a, 0x77, 0x9b, 0x0a, 0x79, 0x4d, 0xd8, 0x7b, 0xa6, 0x95,
+	0xfd, 0xc1, 0xea, 0x9e, 0x15, 0x85, 0x59, 0x9d, 0x44, 0x59, 0x20, 0x7f, 0x13, 0xee, 0x0e, 0x59,
+	0x2b, 0xc8, 0x3e, 0x01, 0xf0, 0x95, 0x5a, 0x4c, 0x85, 0xca, 0xe6, 0xc2, 0xfd, 0xc0, 0xcc, 0x87,
+	0x6b, 0x06, 0x7d, 0x23, 0xaa, 0x7c, 0x33, 0xe3, 0x7b, 0x8d, 0x62, 0xfb, 0xf0, 0xe0, 0x78, 0x36,
+	0x3b, 0x92, 0xa9, 0x38, 0x8b, 0xa4, 0x46, 0xd6, 0x7d, 0x48, 0xaa, 0x9b, 0x34, 0xf5, 0x99, 0x8a,
+	0x2f, 0x27, 0xf8, 0xcd, 0x3d, 0x32, 0x15, 0xac, 0x30, 0xb6, 0xf0, 0x68, 0x1a, 0xb8, 0x1f, 0x9a,
+	0xef, 0x6b, 0x34, 0x0d, 0x30, 0x8b, 0x78, 0x8c, 0x2f, 0x22, 0xbe, 0xac, 0x8e, 0x7f, 0x6c, 0xb2,
+	0x78, 0x93, 0xc7, 0xfa, 0x07, 0x5a, 0xe5, 0xc2, 0x7d, 0x42, 0x02, 0x03, 0xf0, 0xd6, 0x27, 0xb1,
+	0xe9, 0x25, 0xd7, 0xf4, 0x92, 0x85, 0x83, 0x3f, 0xea, 0xd0, 0xf5, 0x66, 0x09, 0xf5, 0xcf, 0x24,
+	0xca, 0xd8, 0x2b, 0x68, 0xc5, 0x54, 0x16, 0xb7, 0xb6, 0xd7, 0xd8, 0xef, 0xbe, 0x7c, 0x3a, 0xcc,
+	0xce, 0x87, 0x6b, 0x82, 0xa1, 0x29, 0xda, 0x41, 0xaa, 0xf3, 0xa5, 0x6f, 0xa5, 0xb8, 0x89, 0x06,
+	0x55, 0xee, 0xd6, 0x6f, 0xdf, 0x64, 0x3e, 0x2f, 0xbb, 0xc9, 0x48, 0xfb, 0x3e, 0x74, 0xd7, 0x7c,
+	0xe1, 0xb5, 0x2f, 0xc5, 0xd2, 0x4e, 0x20, 0x5c, 0xb2, 0x2f, 0xa1, 0x79, 0x15, 0xcd, 0x4b, 0x41,
+	0x1f, 0x5c, 0xf7, 0xe5, 0x93, 0x75, 0xa7, 0x81, 0x99, 0x15, 0xa3, 0x32, 0x8d, 0x7d, 0xa3, 0xfa,
+	0xb6, 0xfe, 0x4d, 0x0d, 0x7d, 0xae, 0x1d, 0xf5, 0xbf, 0xf8, 0x1c, 0xfc, 0x5d, 0x83, 0x87, 0xb7,
+	0x48, 0xde, 0x7b, 0x79, 0xfe, 0xeb, 0x4c, 0x7b, 0x0a, 0x0e, 0x19, 0xd2, 0x68, 0x21, 0xaa, 0xe1,
+	0x80, 0xc4, 0x9b, 0xc8, 0x34, 0x4a, 0x2e, 0x8a, 0x4c, 0xa5, 0x85, 0xb0, 0x53, 0x60, 0x85, 0xb1,
+	0xa8, 0xb9, 0x78, 0x5b, 0x8a, 0x42, 0xd3, 0x14, 0x70, 0xfc, 0x0a, 0xe2, 0xa0, 0xe3, 0xa2, 0x88,
+	0xed, 0x0c, 0xa0, 0xb5, 0xe1, 0x16, 0xca, 0xbe, 0x1f, 0xb4, 0x7e, 0xf9, 0x57, 0x03, 0xda, 0x3f,
+	0x99, 0x87, 0x96, 0x3d, 0x87, 0x8e, 0x17, 0x84, 0xe6, 0xc1, 0x70, 0x30, 0x2d, 0xb4, 0xec, 0xf7,
+	0x56, 0x4b, 0x5f, 0x14, 0x83, 0x7b, 0xec, 0x39, 0xb4, 0xbd, 0x20, 0x9c, 0xca, 0x34, 0x61, 0x5d,
+	0x34, 0xe1, 0xca, 0x17, 0x6f, 0xfb, 0x06, 0x28, 0x04, 0x6b, 0x32, 0xb5, 0x92, 0x19, 0x4b, 0x7f,
+	0x7d, 0xcf, 0xe0, 0x1e, 0x7b, 0x01, 0x3d, 0x2f, 0x08, 0x0f, 0x45, 0x94, 0xeb, 0x73, 0x11, 0x69,
+	0xb6, 0x85, 0xe6, 0x15, 0xec, 0x53, 0x1c, 0x07, 0x8b, 0x4c, 0x2f, 0xc9, 0x65, 0x27, 0xf0, 0x6c,
+	0x80, 0x1b, 0x51, 0xdd, 0x94, 0xb5, 0x03, 0xef, 0x4e, 0x01, 0xa2, 0xec, 0x0e, 0x01, 0x06, 0xde,
+	0x1d, 0x03, 0xfc, 0x02, 0x20, 0xf0, 0xc2, 0xea, 0xb1, 0x21, 0x47, 0x16, 0x6c, 0xea, 0xbe, 0x86,
+	0x6d, 0x3c, 0xfa, 0xfa, 0xc1, 0x64, 0x8c, 0x0e, 0xdd, 0x78, 0x41, 0x37, 0xb7, 0xec, 0x43, 0x7b,
+	0xc4, 0xbd, 0xb9, 0x2a, 0x04, 0xdb, 0x41, 0x7e, 0xf4, 0x23, 0x81, 0x83, 0x2b, 0x91, 0x6e, 0x06,
+	0xf1, 0x43, 0xfb, 0xe7, 0xe6, 0xf0, 0xab, 0xef, 0xb2, 0xf3, 0xf3, 0x16, 0xfd, 0x94, 0xbc, 0xfa,
+	0x37, 0x00, 0x00, 0xff, 0xff, 0x02, 0x14, 0x05, 0x4b, 0x4a, 0x09, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -991,15 +803,16 @@ const _ = grpc.SupportPackageIsVersion4
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type GatewayClient interface {
 	CS_Login(ctx context.Context, in *Login, opts ...grpc.CallOption) (*LoginRes, error)
-	CS_Ping(ctx context.Context, in *Ping, opts ...grpc.CallOption) (*Pong, error)
-	CS_Pong(ctx context.Context, in *Pong, opts ...grpc.CallOption) (*Pong, error)
+	CS_Ping(ctx context.Context, in *PingReq, opts ...grpc.CallOption) (*PongRes, error)
+	CS_Pong(ctx context.Context, in *PongRes, opts ...grpc.CallOption) (*PingReq, error)
 	CS_Heartbeat(ctx context.Context, in *Heartbeat, opts ...grpc.CallOption) (*Empty, error)
 	SC_Login(ctx context.Context, in *LoginRes, opts ...grpc.CallOption) (*Empty, error)
-	SC_Ping(ctx context.Context, in *Ping, opts ...grpc.CallOption) (*Pong, error)
-	SC_Pong(ctx context.Context, in *Pong, opts ...grpc.CallOption) (*Pong, error)
+	SC_Ping(ctx context.Context, in *PingReq, opts ...grpc.CallOption) (*PongRes, error)
+	SC_Pong(ctx context.Context, in *PongRes, opts ...grpc.CallOption) (*PingReq, error)
 	SC_Heartbeat(ctx context.Context, in *Heartbeat, opts ...grpc.CallOption) (*Empty, error)
 	SC_KickOff(ctx context.Context, in *KickOff, opts ...grpc.CallOption) (*Empty, error)
-	SC_ProjectPush(ctx context.Context, in *ProjectPush, opts ...grpc.CallOption) (*ProjectPush, error)
+	SC_ProjectPush(ctx context.Context, in *ProjectPushMsg, opts ...grpc.CallOption) (*Empty, error)
+	FdClose(ctx context.Context, in *FDCloseEvent, opts ...grpc.CallOption) (*Empty, error)
 }
 
 type gatewayClient struct {
@@ -1019,8 +832,8 @@ func (c *gatewayClient) CS_Login(ctx context.Context, in *Login, opts ...grpc.Ca
 	return out, nil
 }
 
-func (c *gatewayClient) CS_Ping(ctx context.Context, in *Ping, opts ...grpc.CallOption) (*Pong, error) {
-	out := new(Pong)
+func (c *gatewayClient) CS_Ping(ctx context.Context, in *PingReq, opts ...grpc.CallOption) (*PongRes, error) {
+	out := new(PongRes)
 	err := c.cc.Invoke(ctx, "/pb.Gateway/CS_Ping", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -1028,8 +841,8 @@ func (c *gatewayClient) CS_Ping(ctx context.Context, in *Ping, opts ...grpc.Call
 	return out, nil
 }
 
-func (c *gatewayClient) CS_Pong(ctx context.Context, in *Pong, opts ...grpc.CallOption) (*Pong, error) {
-	out := new(Pong)
+func (c *gatewayClient) CS_Pong(ctx context.Context, in *PongRes, opts ...grpc.CallOption) (*PingReq, error) {
+	out := new(PingReq)
 	err := c.cc.Invoke(ctx, "/pb.Gateway/CS_Pong", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -1055,8 +868,8 @@ func (c *gatewayClient) SC_Login(ctx context.Context, in *LoginRes, opts ...grpc
 	return out, nil
 }
 
-func (c *gatewayClient) SC_Ping(ctx context.Context, in *Ping, opts ...grpc.CallOption) (*Pong, error) {
-	out := new(Pong)
+func (c *gatewayClient) SC_Ping(ctx context.Context, in *PingReq, opts ...grpc.CallOption) (*PongRes, error) {
+	out := new(PongRes)
 	err := c.cc.Invoke(ctx, "/pb.Gateway/SC_Ping", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -1064,8 +877,8 @@ func (c *gatewayClient) SC_Ping(ctx context.Context, in *Ping, opts ...grpc.Call
 	return out, nil
 }
 
-func (c *gatewayClient) SC_Pong(ctx context.Context, in *Pong, opts ...grpc.CallOption) (*Pong, error) {
-	out := new(Pong)
+func (c *gatewayClient) SC_Pong(ctx context.Context, in *PongRes, opts ...grpc.CallOption) (*PingReq, error) {
+	out := new(PingReq)
 	err := c.cc.Invoke(ctx, "/pb.Gateway/SC_Pong", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -1091,9 +904,18 @@ func (c *gatewayClient) SC_KickOff(ctx context.Context, in *KickOff, opts ...grp
 	return out, nil
 }
 
-func (c *gatewayClient) SC_ProjectPush(ctx context.Context, in *ProjectPush, opts ...grpc.CallOption) (*ProjectPush, error) {
-	out := new(ProjectPush)
+func (c *gatewayClient) SC_ProjectPush(ctx context.Context, in *ProjectPushMsg, opts ...grpc.CallOption) (*Empty, error) {
+	out := new(Empty)
 	err := c.cc.Invoke(ctx, "/pb.Gateway/SC_ProjectPush", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *gatewayClient) FdClose(ctx context.Context, in *FDCloseEvent, opts ...grpc.CallOption) (*Empty, error) {
+	out := new(Empty)
+	err := c.cc.Invoke(ctx, "/pb.Gateway/FdClose", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1103,15 +925,16 @@ func (c *gatewayClient) SC_ProjectPush(ctx context.Context, in *ProjectPush, opt
 // GatewayServer is the server API for Gateway service.
 type GatewayServer interface {
 	CS_Login(context.Context, *Login) (*LoginRes, error)
-	CS_Ping(context.Context, *Ping) (*Pong, error)
-	CS_Pong(context.Context, *Pong) (*Pong, error)
+	CS_Ping(context.Context, *PingReq) (*PongRes, error)
+	CS_Pong(context.Context, *PongRes) (*PingReq, error)
 	CS_Heartbeat(context.Context, *Heartbeat) (*Empty, error)
 	SC_Login(context.Context, *LoginRes) (*Empty, error)
-	SC_Ping(context.Context, *Ping) (*Pong, error)
-	SC_Pong(context.Context, *Pong) (*Pong, error)
+	SC_Ping(context.Context, *PingReq) (*PongRes, error)
+	SC_Pong(context.Context, *PongRes) (*PingReq, error)
 	SC_Heartbeat(context.Context, *Heartbeat) (*Empty, error)
 	SC_KickOff(context.Context, *KickOff) (*Empty, error)
-	SC_ProjectPush(context.Context, *ProjectPush) (*ProjectPush, error)
+	SC_ProjectPush(context.Context, *ProjectPushMsg) (*Empty, error)
+	FdClose(context.Context, *FDCloseEvent) (*Empty, error)
 }
 
 // UnimplementedGatewayServer can be embedded to have forward compatible implementations.
@@ -1121,10 +944,10 @@ type UnimplementedGatewayServer struct {
 func (*UnimplementedGatewayServer) CS_Login(ctx context.Context, req *Login) (*LoginRes, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CS_Login not implemented")
 }
-func (*UnimplementedGatewayServer) CS_Ping(ctx context.Context, req *Ping) (*Pong, error) {
+func (*UnimplementedGatewayServer) CS_Ping(ctx context.Context, req *PingReq) (*PongRes, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CS_Ping not implemented")
 }
-func (*UnimplementedGatewayServer) CS_Pong(ctx context.Context, req *Pong) (*Pong, error) {
+func (*UnimplementedGatewayServer) CS_Pong(ctx context.Context, req *PongRes) (*PingReq, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CS_Pong not implemented")
 }
 func (*UnimplementedGatewayServer) CS_Heartbeat(ctx context.Context, req *Heartbeat) (*Empty, error) {
@@ -1133,10 +956,10 @@ func (*UnimplementedGatewayServer) CS_Heartbeat(ctx context.Context, req *Heartb
 func (*UnimplementedGatewayServer) SC_Login(ctx context.Context, req *LoginRes) (*Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SC_Login not implemented")
 }
-func (*UnimplementedGatewayServer) SC_Ping(ctx context.Context, req *Ping) (*Pong, error) {
+func (*UnimplementedGatewayServer) SC_Ping(ctx context.Context, req *PingReq) (*PongRes, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SC_Ping not implemented")
 }
-func (*UnimplementedGatewayServer) SC_Pong(ctx context.Context, req *Pong) (*Pong, error) {
+func (*UnimplementedGatewayServer) SC_Pong(ctx context.Context, req *PongRes) (*PingReq, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SC_Pong not implemented")
 }
 func (*UnimplementedGatewayServer) SC_Heartbeat(ctx context.Context, req *Heartbeat) (*Empty, error) {
@@ -1145,8 +968,11 @@ func (*UnimplementedGatewayServer) SC_Heartbeat(ctx context.Context, req *Heartb
 func (*UnimplementedGatewayServer) SC_KickOff(ctx context.Context, req *KickOff) (*Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SC_KickOff not implemented")
 }
-func (*UnimplementedGatewayServer) SC_ProjectPush(ctx context.Context, req *ProjectPush) (*ProjectPush, error) {
+func (*UnimplementedGatewayServer) SC_ProjectPush(ctx context.Context, req *ProjectPushMsg) (*Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SC_ProjectPush not implemented")
+}
+func (*UnimplementedGatewayServer) FdClose(ctx context.Context, req *FDCloseEvent) (*Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method FdClose not implemented")
 }
 
 func RegisterGatewayServer(s *grpc.Server, srv GatewayServer) {
@@ -1172,7 +998,7 @@ func _Gateway_CS_Login_Handler(srv interface{}, ctx context.Context, dec func(in
 }
 
 func _Gateway_CS_Ping_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Ping)
+	in := new(PingReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -1184,13 +1010,13 @@ func _Gateway_CS_Ping_Handler(srv interface{}, ctx context.Context, dec func(int
 		FullMethod: "/pb.Gateway/CS_Ping",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(GatewayServer).CS_Ping(ctx, req.(*Ping))
+		return srv.(GatewayServer).CS_Ping(ctx, req.(*PingReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _Gateway_CS_Pong_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Pong)
+	in := new(PongRes)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -1202,7 +1028,7 @@ func _Gateway_CS_Pong_Handler(srv interface{}, ctx context.Context, dec func(int
 		FullMethod: "/pb.Gateway/CS_Pong",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(GatewayServer).CS_Pong(ctx, req.(*Pong))
+		return srv.(GatewayServer).CS_Pong(ctx, req.(*PongRes))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1244,7 +1070,7 @@ func _Gateway_SC_Login_Handler(srv interface{}, ctx context.Context, dec func(in
 }
 
 func _Gateway_SC_Ping_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Ping)
+	in := new(PingReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -1256,13 +1082,13 @@ func _Gateway_SC_Ping_Handler(srv interface{}, ctx context.Context, dec func(int
 		FullMethod: "/pb.Gateway/SC_Ping",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(GatewayServer).SC_Ping(ctx, req.(*Ping))
+		return srv.(GatewayServer).SC_Ping(ctx, req.(*PingReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _Gateway_SC_Pong_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Pong)
+	in := new(PongRes)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -1274,7 +1100,7 @@ func _Gateway_SC_Pong_Handler(srv interface{}, ctx context.Context, dec func(int
 		FullMethod: "/pb.Gateway/SC_Pong",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(GatewayServer).SC_Pong(ctx, req.(*Pong))
+		return srv.(GatewayServer).SC_Pong(ctx, req.(*PongRes))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1316,7 +1142,7 @@ func _Gateway_SC_KickOff_Handler(srv interface{}, ctx context.Context, dec func(
 }
 
 func _Gateway_SC_ProjectPush_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ProjectPush)
+	in := new(ProjectPushMsg)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -1328,7 +1154,25 @@ func _Gateway_SC_ProjectPush_Handler(srv interface{}, ctx context.Context, dec f
 		FullMethod: "/pb.Gateway/SC_ProjectPush",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(GatewayServer).SC_ProjectPush(ctx, req.(*ProjectPush))
+		return srv.(GatewayServer).SC_ProjectPush(ctx, req.(*ProjectPushMsg))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Gateway_FdClose_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(FDCloseEvent)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GatewayServer).FdClose(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/pb.Gateway/FdClose",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GatewayServer).FdClose(ctx, req.(*FDCloseEvent))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1376,6 +1220,10 @@ var _Gateway_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SC_ProjectPush",
 			Handler:    _Gateway_SC_ProjectPush_Handler,
+		},
+		{
+			MethodName: "FdClose",
+			Handler:    _Gateway_FdClose_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

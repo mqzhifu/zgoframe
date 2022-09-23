@@ -13,12 +13,17 @@ import (
 	"zgoframe/protobuf/pb"
 )
 
+type ConnCloseEvent struct {
+	UserId int32
+	Source int
+}
+
 //管理 CONN 的容器
 type ConnManager struct {
 	Pool              map[int32]*Conn // map[userId]*Conn FD 连接池
 	PoolRWLock        *sync.RWMutex
 	CloseCheckTimeout chan int
-	CloseEventQueue   chan int32
+	CloseEventQueue   chan ConnCloseEvent
 	Option            ConnManagerOption
 }
 
@@ -51,7 +56,7 @@ func NewConnManager(connManagerOption ConnManagerOption) *ConnManager {
 	connManager.CloseCheckTimeout = make(chan int) //连接超时 关闭信号
 	connManager.PoolRWLock = &sync.RWMutex{}
 
-	connManager.CloseEventQueue = make(chan int32, 100)
+	connManager.CloseEventQueue = make(chan ConnCloseEvent, 100)
 
 	if connManagerOption.MsgSeparator == "" {
 		//消息分隔符，主要是给TCP使用，一个字符，且最好不要用：\n，因为会与protobuf 冲突
@@ -515,8 +520,11 @@ func (conn *Conn) CloseOneConn(source int) {
 	if conn.Status == CONN_STATUS_CLOSE {
 		conn.ConnManager.Option.Log.Error("CloseOneConn error :Conn.Status == CLOSE")
 	}
-
-	conn.ConnManager.CloseEventQueue <- conn.UserId
+	connCloseEvent := ConnCloseEvent{
+		UserId: conn.UserId,
+		Source: source,
+	}
+	conn.ConnManager.CloseEventQueue <- connCloseEvent
 
 	//通知同步服务，先做构造处理
 	//mySync.CloseOne(conn)//这里可能还要再发消息

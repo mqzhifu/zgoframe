@@ -599,3 +599,21 @@ func GenerateCloudVideo(recordId int) (err error) {
 	}
 	return nil
 }
+
+// @Tags TwinAgora
+// @Summary 呼叫功能的，配置信息
+// @Description 将小文件，合并成一个大文件
+// @accept application/json
+// @Security ApiKeyAuth
+// @Param X-Source-Type header string true "来源" default(11)
+// @Param X-Access header string true "访问KEY" default(imzgoframe)
+// @Produce application/json
+// @Success 200 {boolean} boolean "true:成功 false:否"
+// @Router /twin/agora/config [GET]
+func TwinAgoraConfig(c *gin.Context) {
+	config := make(map[string]string)
+	config["call_timeout"] = strconv.Itoa(global.V.MyService.TwinAgora.CallTimeout)
+	config["exec_timeout"] = strconv.Itoa(global.V.MyService.TwinAgora.ExecTimeout)
+
+	httpresponse.OkWithAll(config, "Query-成功", c)
+}

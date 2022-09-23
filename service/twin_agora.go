@@ -110,13 +110,25 @@ func (twinAgora *TwinAgora) MoveAndStore(RTCRoom RTCRoom) {
 	delete(twinAgora.RTCRoomPool, RTCRoom.Channel)
 }
 
-func (twinAgora *TwinAgora) ConnCloseCallback(closeUid int, connManager *util.ConnManager) {
-	util.MyPrint("TwinAgora ConnCloseCallback uid:", closeUid)
+func (twinAgora *TwinAgora) Heartbeat(heartbeat pb.Heartbeat, conn *util.Conn) {
+	util.MyPrint("twinAgora Heartbeat data:", heartbeat)
+	for _, room := range twinAgora.RTCRoomPool {
+		for _, uid := range room.Uids {
+			if uid == int(conn.UserId) {
+				room.Uptime = util.GetNowTimeSecondToInt()
+				break
+			}
+		}
+	}
+}
+
+func (twinAgora *TwinAgora) ConnCloseCallback(connCloseEvent pb.FDCloseEvent, connManager *util.ConnManager) {
+	util.MyPrint("TwinAgora ConnCloseCallback :", connCloseEvent)
 	hasSearch := 0
 	//已结束的会从map中删除，已超时的也会从map中删除
 	for _, RTCRoomInfo := range twinAgora.RTCRoomPool {
 		for _, uid := range RTCRoomInfo.Uids {
-			if uid == closeUid {
+			if uid == int(connCloseEvent.UserId) {
 				hasSearch = 1
 			}
 		}
@@ -130,12 +142,12 @@ func (twinAgora *TwinAgora) ConnCloseCallback(closeUid int, connManager *util.Co
 
 		util.MyPrint("RTCRoomInfo.Channel ", RTCRoomInfo.Channel, " , RTCRoomInfo.Uids:", RTCRoomInfo.Uids)
 		for _, u := range RTCRoomInfo.Uids {
-			if u == closeUid {
+			if u == int(connCloseEvent.UserId) {
 				//不要再给自己发了，因为：它已要断开连接了，发也是失败
 				continue
 			}
 			callPeopleReq := pb.CallPeopleReq{}
-			callPeopleReq.Uid = int32(closeUid)
+			callPeopleReq.Uid = connCloseEvent.UserId
 			callPeopleReq.Channel = RTCRoomInfo.Channel
 
 			conn, ok := connManager.Pool[int32(u)]

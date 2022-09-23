@@ -25,6 +25,101 @@ var _ = math.Inf
 const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
 
 //呼叫某人，加入一个房间，进行：音视频通话
+type CancelCallPeopleReq struct {
+	Uid                  int32    `protobuf:"varint,1,opt,name=uid,proto3" json:"uid,omitempty"`
+	RoomId               string   `protobuf:"bytes,2,opt,name=room_id,json=roomId,proto3" json:"room_id,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *CancelCallPeopleReq) Reset()         { *m = CancelCallPeopleReq{} }
+func (m *CancelCallPeopleReq) String() string { return proto.CompactTextString(m) }
+func (*CancelCallPeopleReq) ProtoMessage()    {}
+func (*CancelCallPeopleReq) Descriptor() ([]byte, []int) {
+	return fileDescriptor_223ae5106ca5efe7, []int{0}
+}
+
+func (m *CancelCallPeopleReq) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_CancelCallPeopleReq.Unmarshal(m, b)
+}
+func (m *CancelCallPeopleReq) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_CancelCallPeopleReq.Marshal(b, m, deterministic)
+}
+func (m *CancelCallPeopleReq) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_CancelCallPeopleReq.Merge(m, src)
+}
+func (m *CancelCallPeopleReq) XXX_Size() int {
+	return xxx_messageInfo_CancelCallPeopleReq.Size(m)
+}
+func (m *CancelCallPeopleReq) XXX_DiscardUnknown() {
+	xxx_messageInfo_CancelCallPeopleReq.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_CancelCallPeopleReq proto.InternalMessageInfo
+
+func (m *CancelCallPeopleReq) GetUid() int32 {
+	if m != nil {
+		return m.Uid
+	}
+	return 0
+}
+
+func (m *CancelCallPeopleReq) GetRoomId() string {
+	if m != nil {
+		return m.RoomId
+	}
+	return ""
+}
+
+type CallVote struct {
+	Uid                  int32    `protobuf:"varint,1,opt,name=uid,proto3" json:"uid,omitempty"`
+	RoomId               string   `protobuf:"bytes,2,opt,name=room_id,json=roomId,proto3" json:"room_id,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *CallVote) Reset()         { *m = CallVote{} }
+func (m *CallVote) String() string { return proto.CompactTextString(m) }
+func (*CallVote) ProtoMessage()    {}
+func (*CallVote) Descriptor() ([]byte, []int) {
+	return fileDescriptor_223ae5106ca5efe7, []int{1}
+}
+
+func (m *CallVote) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_CallVote.Unmarshal(m, b)
+}
+func (m *CallVote) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_CallVote.Marshal(b, m, deterministic)
+}
+func (m *CallVote) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_CallVote.Merge(m, src)
+}
+func (m *CallVote) XXX_Size() int {
+	return xxx_messageInfo_CallVote.Size(m)
+}
+func (m *CallVote) XXX_DiscardUnknown() {
+	xxx_messageInfo_CallVote.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_CallVote proto.InternalMessageInfo
+
+func (m *CallVote) GetUid() int32 {
+	if m != nil {
+		return m.Uid
+	}
+	return 0
+}
+
+func (m *CallVote) GetRoomId() string {
+	if m != nil {
+		return m.RoomId
+	}
+	return ""
+}
+
+//呼叫某人，加入一个房间，进行：音视频通话
 type CallPeopleReq struct {
 	Uid                  int32    `protobuf:"varint,1,opt,name=uid,proto3" json:"uid,omitempty"`
 	TargetUid            int32    `protobuf:"varint,2,opt,name=target_uid,json=targetUid,proto3" json:"target_uid,omitempty"`
@@ -39,7 +134,7 @@ func (m *CallPeopleReq) Reset()         { *m = CallPeopleReq{} }
 func (m *CallPeopleReq) String() string { return proto.CompactTextString(m) }
 func (*CallPeopleReq) ProtoMessage()    {}
 func (*CallPeopleReq) Descriptor() ([]byte, []int) {
-	return fileDescriptor_223ae5106ca5efe7, []int{0}
+	return fileDescriptor_223ae5106ca5efe7, []int{2}
 }
 
 func (m *CallPeopleReq) XXX_Unmarshal(b []byte) error {
@@ -93,6 +188,7 @@ type CallPeopleRes struct {
 	Channel              string   `protobuf:"bytes,2,opt,name=channel,proto3" json:"channel,omitempty"`
 	ErrCode              int32    `protobuf:"varint,3,opt,name=err_code,json=errCode,proto3" json:"err_code,omitempty"`
 	ErrMsg               string   `protobuf:"bytes,4,opt,name=err_msg,json=errMsg,proto3" json:"err_msg,omitempty"`
+	RoomId               string   `protobuf:"bytes,5,opt,name=room_id,json=roomId,proto3" json:"room_id,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -102,7 +198,7 @@ func (m *CallPeopleRes) Reset()         { *m = CallPeopleRes{} }
 func (m *CallPeopleRes) String() string { return proto.CompactTextString(m) }
 func (*CallPeopleRes) ProtoMessage()    {}
 func (*CallPeopleRes) Descriptor() ([]byte, []int) {
-	return fileDescriptor_223ae5106ca5efe7, []int{1}
+	return fileDescriptor_223ae5106ca5efe7, []int{3}
 }
 
 func (m *CallPeopleRes) XXX_Unmarshal(b []byte) error {
@@ -151,11 +247,18 @@ func (m *CallPeopleRes) GetErrMsg() string {
 	return ""
 }
 
+func (m *CallPeopleRes) GetRoomId() string {
+	if m != nil {
+		return m.RoomId
+	}
+	return ""
+}
+
 //某人进入了一个房间/频道，通知给C端
 type PeopleEntry struct {
 	Uid                  int32    `protobuf:"varint,1,opt,name=uid,proto3" json:"uid,omitempty"`
-	Channel              string   `protobuf:"bytes,3,opt,name=channel,proto3" json:"channel,omitempty"`
-	PeopleType           string   `protobuf:"bytes,4,opt,name=people_type,json=peopleType,proto3" json:"people_type,omitempty"`
+	Channel              string   `protobuf:"bytes,2,opt,name=channel,proto3" json:"channel,omitempty"`
+	RoomId               string   `protobuf:"bytes,4,opt,name=room_id,json=roomId,proto3" json:"room_id,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -165,7 +268,7 @@ func (m *PeopleEntry) Reset()         { *m = PeopleEntry{} }
 func (m *PeopleEntry) String() string { return proto.CompactTextString(m) }
 func (*PeopleEntry) ProtoMessage()    {}
 func (*PeopleEntry) Descriptor() ([]byte, []int) {
-	return fileDescriptor_223ae5106ca5efe7, []int{2}
+	return fileDescriptor_223ae5106ca5efe7, []int{4}
 }
 
 func (m *PeopleEntry) XXX_Unmarshal(b []byte) error {
@@ -200,9 +303,9 @@ func (m *PeopleEntry) GetChannel() string {
 	return ""
 }
 
-func (m *PeopleEntry) GetPeopleType() string {
+func (m *PeopleEntry) GetRoomId() string {
 	if m != nil {
-		return m.PeopleType
+		return m.RoomId
 	}
 	return ""
 }
@@ -210,8 +313,8 @@ func (m *PeopleEntry) GetPeopleType() string {
 //某人进入了一个房间/频道，通知给C端
 type PeopleLeaveRes struct {
 	Uid                  int32    `protobuf:"varint,1,opt,name=uid,proto3" json:"uid,omitempty"`
-	Channel              string   `protobuf:"bytes,3,opt,name=channel,proto3" json:"channel,omitempty"`
-	PeopleType           string   `protobuf:"bytes,4,opt,name=people_type,json=peopleType,proto3" json:"people_type,omitempty"`
+	Channel              string   `protobuf:"bytes,2,opt,name=channel,proto3" json:"channel,omitempty"`
+	RoomId               string   `protobuf:"bytes,4,opt,name=room_id,json=roomId,proto3" json:"room_id,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -221,7 +324,7 @@ func (m *PeopleLeaveRes) Reset()         { *m = PeopleLeaveRes{} }
 func (m *PeopleLeaveRes) String() string { return proto.CompactTextString(m) }
 func (*PeopleLeaveRes) ProtoMessage()    {}
 func (*PeopleLeaveRes) Descriptor() ([]byte, []int) {
-	return fileDescriptor_223ae5106ca5efe7, []int{3}
+	return fileDescriptor_223ae5106ca5efe7, []int{5}
 }
 
 func (m *PeopleLeaveRes) XXX_Unmarshal(b []byte) error {
@@ -256,9 +359,9 @@ func (m *PeopleLeaveRes) GetChannel() string {
 	return ""
 }
 
-func (m *PeopleLeaveRes) GetPeopleType() string {
+func (m *PeopleLeaveRes) GetRoomId() string {
 	if m != nil {
-		return m.PeopleType
+		return m.RoomId
 	}
 	return ""
 }
@@ -269,6 +372,7 @@ type CallReply struct {
 	TargetUid            int32    `protobuf:"varint,2,opt,name=target_uid,json=targetUid,proto3" json:"target_uid,omitempty"`
 	Content              string   `protobuf:"bytes,3,opt,name=content,proto3" json:"content,omitempty"`
 	MsgType              int32    `protobuf:"varint,4,opt,name=msg_type,json=msgType,proto3" json:"msg_type,omitempty"`
+	RoomId               string   `protobuf:"bytes,5,opt,name=room_id,json=roomId,proto3" json:"room_id,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -278,7 +382,7 @@ func (m *CallReply) Reset()         { *m = CallReply{} }
 func (m *CallReply) String() string { return proto.CompactTextString(m) }
 func (*CallReply) ProtoMessage()    {}
 func (*CallReply) Descriptor() ([]byte, []int) {
-	return fileDescriptor_223ae5106ca5efe7, []int{4}
+	return fileDescriptor_223ae5106ca5efe7, []int{6}
 }
 
 func (m *CallReply) XXX_Unmarshal(b []byte) error {
@@ -327,7 +431,16 @@ func (m *CallReply) GetMsgType() int32 {
 	return 0
 }
 
+func (m *CallReply) GetRoomId() string {
+	if m != nil {
+		return m.RoomId
+	}
+	return ""
+}
+
 func init() {
+	proto.RegisterType((*CancelCallPeopleReq)(nil), "pb.CancelCallPeopleReq")
+	proto.RegisterType((*CallVote)(nil), "pb.CallVote")
 	proto.RegisterType((*CallPeopleReq)(nil), "pb.CallPeopleReq")
 	proto.RegisterType((*CallPeopleRes)(nil), "pb.CallPeopleRes")
 	proto.RegisterType((*PeopleEntry)(nil), "pb.PeopleEntry")
@@ -338,35 +451,39 @@ func init() {
 func init() { proto.RegisterFile("twin_agora.proto", fileDescriptor_223ae5106ca5efe7) }
 
 var fileDescriptor_223ae5106ca5efe7 = []byte{
-	// 444 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x54, 0xcf, 0x6b, 0xd4, 0x40,
-	0x14, 0x76, 0xb7, 0xdd, 0xc6, 0x79, 0xed, 0xd6, 0x76, 0x7a, 0x30, 0x16, 0xc4, 0x92, 0x53, 0xf1,
-	0x90, 0xa2, 0xa5, 0x27, 0x4f, 0x35, 0xf6, 0xa6, 0x20, 0x49, 0x7b, 0x29, 0xc8, 0x90, 0x1f, 0x8f,
-	0x18, 0x48, 0x66, 0xc6, 0xc9, 0xd8, 0x12, 0x05, 0xff, 0x2f, 0xff, 0x3b, 0x99, 0x49, 0xb3, 0x9b,
-	0xb8, 0xe2, 0x6e, 0xa0, 0xb7, 0xbc, 0x1f, 0xdf, 0xfb, 0xde, 0x37, 0xef, 0x23, 0x70, 0xa0, 0xef,
-	0x0b, 0xce, 0xe2, 0x5c, 0xa8, 0xd8, 0x97, 0x4a, 0x68, 0x41, 0xa7, 0x32, 0x39, 0xde, 0x4b, 0x45,
-	0x55, 0x09, 0xde, 0x66, 0xbc, 0x9f, 0x30, 0x0f, 0xe2, 0xb2, 0xfc, 0x8c, 0x42, 0x96, 0x18, 0xe2,
-	0x37, 0x7a, 0x00, 0x5b, 0xdf, 0x8b, 0xcc, 0x9d, 0x9c, 0x4c, 0x4e, 0x67, 0xa1, 0xf9, 0xa4, 0x2f,
-	0x01, 0x74, 0xac, 0x72, 0xd4, 0xcc, 0x14, 0xa6, 0xb6, 0x40, 0xda, 0xcc, 0x4d, 0x91, 0x51, 0x17,
-	0x9c, 0xf4, 0x6b, 0xcc, 0x39, 0x96, 0xee, 0xd6, 0xc9, 0xe4, 0x94, 0x84, 0x5d, 0x48, 0x5f, 0xc1,
-	0xae, 0xb4, 0x73, 0x99, 0x6e, 0x24, 0xba, 0xdb, 0x16, 0x09, 0x6d, 0xea, 0xba, 0x91, 0xe8, 0xfd,
-	0x1a, 0x92, 0xd7, 0x06, 0xa1, 0x30, 0xc5, 0xe2, 0x0e, 0x59, 0xb7, 0x04, 0x09, 0xe1, 0x21, 0xf5,
-	0x17, 0xd9, 0x74, 0x48, 0xf6, 0x02, 0x9e, 0xa2, 0x52, 0x2c, 0x15, 0x19, 0xda, 0x3d, 0x66, 0xa1,
-	0x83, 0x4a, 0x05, 0x22, 0x43, 0xfa, 0x1c, 0xcc, 0x27, 0xab, 0xea, 0xdc, 0xee, 0x40, 0xc2, 0x1d,
-	0x54, 0xea, 0x53, 0x9d, 0x7b, 0xb7, 0xb0, 0xdb, 0x72, 0x5f, 0x71, 0xad, 0x9a, 0x7f, 0x48, 0x1f,
-	0xa5, 0x8d, 0x0c, 0xb4, 0x7d, 0x81, 0xfd, 0x76, 0xf6, 0x47, 0x8c, 0xef, 0xac, 0xb8, 0x47, 0x1d,
-	0xff, 0x03, 0x88, 0x79, 0xba, 0x10, 0x65, 0xd9, 0x18, 0xed, 0x35, 0xf2, 0x8c, 0x2d, 0xc7, 0x3b,
-	0x26, 0xbe, 0xd9, 0xec, 0x78, 0x82, 0x6b, 0xe4, 0x7a, 0xb1, 0x41, 0x1b, 0x9a, 0x99, 0x55, 0x9d,
-	0xf7, 0x2f, 0xe7, 0x54, 0x75, 0x6e, 0xb8, 0xdf, 0xfe, 0xde, 0x06, 0x72, 0x7d, 0x5f, 0xf0, 0x4b,
-	0xe3, 0x2c, 0x7a, 0x06, 0xf3, 0x20, 0x62, 0xcb, 0x3b, 0xd2, 0x43, 0x5f, 0x26, 0xfe, 0xc0, 0x54,
-	0xc7, 0xc4, 0xa4, 0xae, 0x2a, 0xa9, 0x1b, 0xef, 0x89, 0x01, 0x44, 0xc1, 0x7f, 0x01, 0xf5, 0x10,
-	0x70, 0x01, 0x47, 0x96, 0x81, 0xa7, 0x58, 0x8e, 0xe0, 0xb9, 0x80, 0x23, 0xcb, 0x33, 0x12, 0xe6,
-	0xc3, 0x7e, 0x10, 0xb1, 0xbe, 0x2f, 0x9e, 0x99, 0x72, 0x2f, 0xb1, 0xd2, 0x1f, 0x05, 0x23, 0xfa,
-	0xdf, 0xf4, 0xe6, 0x5b, 0x6f, 0x50, 0xba, 0xec, 0xef, 0xcc, 0xb2, 0x02, 0x59, 0x50, 0x6c, 0x08,
-	0xe9, 0xde, 0xac, 0x93, 0x79, 0x99, 0xa6, 0x28, 0xf5, 0x5a, 0xf1, 0xe7, 0x70, 0x38, 0x80, 0x7d,
-	0x40, 0xde, 0xac, 0x05, 0xbd, 0x86, 0xbd, 0x87, 0x83, 0xb6, 0x76, 0x9c, 0x77, 0xfd, 0x36, 0x1c,
-	0xf4, 0xbe, 0x77, 0x6e, 0x67, 0xfe, 0xd9, 0x3b, 0x99, 0x24, 0x3b, 0xf6, 0xff, 0x73, 0xfe, 0x27,
-	0x00, 0x00, 0xff, 0xff, 0xe9, 0xa6, 0xf6, 0x72, 0xa5, 0x04, 0x00, 0x00,
+	// 504 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x54, 0x4f, 0x6f, 0xd3, 0x4e,
+	0x10, 0xfd, 0x39, 0x8d, 0xe3, 0x7a, 0x9a, 0xf4, 0xd7, 0x6e, 0x0f, 0x35, 0x95, 0x10, 0x55, 0x4e,
+	0x15, 0x07, 0x97, 0x3f, 0xe2, 0xd4, 0x0b, 0xc5, 0xf4, 0x80, 0x04, 0x12, 0x72, 0x1a, 0x0e, 0x5c,
+	0x56, 0x8e, 0x3d, 0x32, 0x96, 0xec, 0xdd, 0x65, 0xbd, 0x6d, 0x65, 0xf1, 0x31, 0x38, 0xf0, 0x61,
+	0xf8, 0x72, 0x68, 0xd7, 0x71, 0xe3, 0x6d, 0x68, 0x69, 0x11, 0x37, 0xcf, 0x78, 0xde, 0x7b, 0x33,
+	0x6f, 0xc6, 0x86, 0x1d, 0x75, 0x55, 0x30, 0x9a, 0xe4, 0x5c, 0x26, 0xa1, 0x90, 0x5c, 0x71, 0x32,
+	0x10, 0x8b, 0x83, 0x71, 0xca, 0xab, 0x8a, 0xb3, 0x36, 0x33, 0x7d, 0x0d, 0x7b, 0x51, 0xc2, 0x52,
+	0x2c, 0xa3, 0xa4, 0x2c, 0x3f, 0x22, 0x17, 0x25, 0xc6, 0xf8, 0x95, 0xec, 0xc0, 0xc6, 0x45, 0x91,
+	0x05, 0xce, 0xa1, 0x73, 0xe4, 0xc6, 0xfa, 0x91, 0xec, 0x83, 0x27, 0x39, 0xaf, 0x68, 0x91, 0x05,
+	0x83, 0x43, 0xe7, 0xc8, 0x8f, 0x47, 0x3a, 0x7c, 0x97, 0x4d, 0x5f, 0xc1, 0xa6, 0xc6, 0x7e, 0xe2,
+	0x0a, 0x1f, 0x02, 0xfb, 0x06, 0x93, 0x3f, 0x49, 0x3e, 0x06, 0x50, 0x89, 0xcc, 0x51, 0xd1, 0x8b,
+	0x25, 0xdc, 0x8d, 0xfd, 0x36, 0x33, 0x2f, 0x32, 0x12, 0x80, 0x97, 0x7e, 0x49, 0x18, 0xc3, 0x32,
+	0xd8, 0x30, 0xd4, 0x5d, 0x48, 0x9e, 0xc0, 0x96, 0x30, 0xbc, 0x54, 0x35, 0x02, 0x83, 0xa1, 0x41,
+	0x42, 0x9b, 0x3a, 0x6f, 0x04, 0x4e, 0x7f, 0x38, 0xb6, 0x7a, 0xad, 0x21, 0x12, 0x53, 0x2c, 0x2e,
+	0x91, 0x76, 0x5d, 0xf8, 0x31, 0x2c, 0x53, 0x37, 0xd4, 0x06, 0xb6, 0xda, 0x23, 0xd8, 0x44, 0x29,
+	0x69, 0xca, 0x33, 0x34, 0x8d, 0xb8, 0xb1, 0x87, 0x52, 0x46, 0x3c, 0x43, 0x3d, 0xbd, 0x7e, 0x55,
+	0xd5, 0xb9, 0x69, 0xc2, 0x8f, 0x47, 0x28, 0xe5, 0x87, 0x3a, 0xef, 0xdb, 0xe2, 0x5a, 0xb6, 0xc4,
+	0xb0, 0xd5, 0x36, 0x75, 0xc6, 0x94, 0x6c, 0x7e, 0x63, 0xca, 0xed, 0x7d, 0xf4, 0x38, 0x87, 0x16,
+	0xe7, 0x1c, 0xb6, 0x5b, 0xce, 0xf7, 0x98, 0x5c, 0x9a, 0x69, 0xff, 0x09, 0xed, 0x77, 0x07, 0x7c,
+	0x6d, 0x62, 0x8c, 0xa2, 0x6c, 0xb4, 0x0b, 0x35, 0xb2, 0x8c, 0xae, 0x78, 0x3d, 0x1d, 0xcf, 0xef,
+	0xb7, 0x47, 0xce, 0x14, 0x32, 0x75, 0xbd, 0xc7, 0x36, 0xd4, 0x9c, 0x55, 0x9d, 0xf7, 0x97, 0xe8,
+	0x55, 0x75, 0xae, 0x37, 0x78, 0xab, 0x81, 0x2f, 0x7e, 0x0e, 0xc1, 0x3f, 0xbf, 0x2a, 0xd8, 0xa9,
+	0x3e, 0x7b, 0x72, 0x0c, 0x93, 0x68, 0x46, 0x57, 0xab, 0x26, 0xbb, 0xa1, 0x58, 0x84, 0xd6, 0xe1,
+	0x1d, 0xf8, 0x3a, 0x75, 0x56, 0x09, 0xd5, 0x4c, 0xff, 0xd3, 0x80, 0x59, 0x74, 0x27, 0xa0, 0xb6,
+	0x01, 0x27, 0xb0, 0x67, 0x14, 0xec, 0x6f, 0x88, 0xec, 0xb7, 0xb0, 0xb5, 0x2f, 0x6b, 0x0d, 0x6c,
+	0xd4, 0xfe, 0x0a, 0x1c, 0xc2, 0x76, 0x34, 0xa3, 0xfd, 0x6b, 0xf9, 0x5f, 0xbf, 0xee, 0x25, 0xd6,
+	0xea, 0x67, 0xd1, 0x03, 0xea, 0x9f, 0xf7, 0xf8, 0xcd, 0xe5, 0x10, 0xb2, 0xaa, 0xef, 0x4e, 0x69,
+	0x0d, 0x72, 0x2d, 0x71, 0x4f, 0xc8, 0xb3, 0xa5, 0x7f, 0xdd, 0x98, 0xa7, 0x69, 0x8a, 0x42, 0x91,
+	0x71, 0x67, 0xbb, 0xfe, 0xaf, 0xdc, 0x9c, 0x63, 0xd7, 0x42, 0xbc, 0x45, 0xd6, 0xdc, 0x55, 0xff,
+	0x14, 0xc6, 0xcb, 0x95, 0xb6, 0x97, 0x3a, 0xe9, 0x4a, 0x4d, 0x68, 0xd5, 0xbe, 0xf1, 0x3e, 0xbb,
+	0xe1, 0xf1, 0x89, 0x58, 0x2c, 0x46, 0xe6, 0xf7, 0xf8, 0xf2, 0x57, 0x00, 0x00, 0x00, 0xff, 0xff,
+	0xa1, 0xc0, 0x09, 0x0b, 0x44, 0x05, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -383,14 +500,14 @@ const _ = grpc.SupportPackageIsVersion4
 type TwinAgoraClient interface {
 	CS_CallPeople(ctx context.Context, in *CallPeopleReq, opts ...grpc.CallOption) (*Empty, error)
 	SC_CallPeople(ctx context.Context, in *CallPeopleRes, opts ...grpc.CallOption) (*Empty, error)
-	CS_CancelCallPeople(ctx context.Context, in *CallPeopleReq, opts ...grpc.CallOption) (*Empty, error)
-	SC_CancelCallPeople(ctx context.Context, in *CallPeopleReq, opts ...grpc.CallOption) (*Empty, error)
+	CS_CancelCallPeople(ctx context.Context, in *CancelCallPeopleReq, opts ...grpc.CallOption) (*Empty, error)
+	SC_CancelCallPeople(ctx context.Context, in *CancelCallPeopleReq, opts ...grpc.CallOption) (*Empty, error)
 	CS_PeopleEntry(ctx context.Context, in *PeopleEntry, opts ...grpc.CallOption) (*Empty, error)
 	SC_PeopleEntry(ctx context.Context, in *PeopleEntry, opts ...grpc.CallOption) (*Empty, error)
 	CS_PeopleLeave(ctx context.Context, in *PeopleLeaveRes, opts ...grpc.CallOption) (*Empty, error)
 	SC_PeopleLeave(ctx context.Context, in *PeopleLeaveRes, opts ...grpc.CallOption) (*Empty, error)
-	CS_CallPeopleAccept(ctx context.Context, in *CallPeopleReq, opts ...grpc.CallOption) (*Empty, error)
-	CS_CallPeopleDeny(ctx context.Context, in *CallPeopleReq, opts ...grpc.CallOption) (*Empty, error)
+	CS_CallPeopleAccept(ctx context.Context, in *CallVote, opts ...grpc.CallOption) (*Empty, error)
+	CS_CallPeopleDeny(ctx context.Context, in *CallVote, opts ...grpc.CallOption) (*Empty, error)
 	SC_CallReply(ctx context.Context, in *CallReply, opts ...grpc.CallOption) (*Empty, error)
 }
 
@@ -420,7 +537,7 @@ func (c *twinAgoraClient) SC_CallPeople(ctx context.Context, in *CallPeopleRes, 
 	return out, nil
 }
 
-func (c *twinAgoraClient) CS_CancelCallPeople(ctx context.Context, in *CallPeopleReq, opts ...grpc.CallOption) (*Empty, error) {
+func (c *twinAgoraClient) CS_CancelCallPeople(ctx context.Context, in *CancelCallPeopleReq, opts ...grpc.CallOption) (*Empty, error) {
 	out := new(Empty)
 	err := c.cc.Invoke(ctx, "/pb.TwinAgora/CS_CancelCallPeople", in, out, opts...)
 	if err != nil {
@@ -429,7 +546,7 @@ func (c *twinAgoraClient) CS_CancelCallPeople(ctx context.Context, in *CallPeopl
 	return out, nil
 }
 
-func (c *twinAgoraClient) SC_CancelCallPeople(ctx context.Context, in *CallPeopleReq, opts ...grpc.CallOption) (*Empty, error) {
+func (c *twinAgoraClient) SC_CancelCallPeople(ctx context.Context, in *CancelCallPeopleReq, opts ...grpc.CallOption) (*Empty, error) {
 	out := new(Empty)
 	err := c.cc.Invoke(ctx, "/pb.TwinAgora/SC_CancelCallPeople", in, out, opts...)
 	if err != nil {
@@ -474,7 +591,7 @@ func (c *twinAgoraClient) SC_PeopleLeave(ctx context.Context, in *PeopleLeaveRes
 	return out, nil
 }
 
-func (c *twinAgoraClient) CS_CallPeopleAccept(ctx context.Context, in *CallPeopleReq, opts ...grpc.CallOption) (*Empty, error) {
+func (c *twinAgoraClient) CS_CallPeopleAccept(ctx context.Context, in *CallVote, opts ...grpc.CallOption) (*Empty, error) {
 	out := new(Empty)
 	err := c.cc.Invoke(ctx, "/pb.TwinAgora/CS_CallPeopleAccept", in, out, opts...)
 	if err != nil {
@@ -483,7 +600,7 @@ func (c *twinAgoraClient) CS_CallPeopleAccept(ctx context.Context, in *CallPeopl
 	return out, nil
 }
 
-func (c *twinAgoraClient) CS_CallPeopleDeny(ctx context.Context, in *CallPeopleReq, opts ...grpc.CallOption) (*Empty, error) {
+func (c *twinAgoraClient) CS_CallPeopleDeny(ctx context.Context, in *CallVote, opts ...grpc.CallOption) (*Empty, error) {
 	out := new(Empty)
 	err := c.cc.Invoke(ctx, "/pb.TwinAgora/CS_CallPeopleDeny", in, out, opts...)
 	if err != nil {
@@ -505,14 +622,14 @@ func (c *twinAgoraClient) SC_CallReply(ctx context.Context, in *CallReply, opts 
 type TwinAgoraServer interface {
 	CS_CallPeople(context.Context, *CallPeopleReq) (*Empty, error)
 	SC_CallPeople(context.Context, *CallPeopleRes) (*Empty, error)
-	CS_CancelCallPeople(context.Context, *CallPeopleReq) (*Empty, error)
-	SC_CancelCallPeople(context.Context, *CallPeopleReq) (*Empty, error)
+	CS_CancelCallPeople(context.Context, *CancelCallPeopleReq) (*Empty, error)
+	SC_CancelCallPeople(context.Context, *CancelCallPeopleReq) (*Empty, error)
 	CS_PeopleEntry(context.Context, *PeopleEntry) (*Empty, error)
 	SC_PeopleEntry(context.Context, *PeopleEntry) (*Empty, error)
 	CS_PeopleLeave(context.Context, *PeopleLeaveRes) (*Empty, error)
 	SC_PeopleLeave(context.Context, *PeopleLeaveRes) (*Empty, error)
-	CS_CallPeopleAccept(context.Context, *CallPeopleReq) (*Empty, error)
-	CS_CallPeopleDeny(context.Context, *CallPeopleReq) (*Empty, error)
+	CS_CallPeopleAccept(context.Context, *CallVote) (*Empty, error)
+	CS_CallPeopleDeny(context.Context, *CallVote) (*Empty, error)
 	SC_CallReply(context.Context, *CallReply) (*Empty, error)
 }
 
@@ -526,10 +643,10 @@ func (*UnimplementedTwinAgoraServer) CS_CallPeople(ctx context.Context, req *Cal
 func (*UnimplementedTwinAgoraServer) SC_CallPeople(ctx context.Context, req *CallPeopleRes) (*Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SC_CallPeople not implemented")
 }
-func (*UnimplementedTwinAgoraServer) CS_CancelCallPeople(ctx context.Context, req *CallPeopleReq) (*Empty, error) {
+func (*UnimplementedTwinAgoraServer) CS_CancelCallPeople(ctx context.Context, req *CancelCallPeopleReq) (*Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CS_CancelCallPeople not implemented")
 }
-func (*UnimplementedTwinAgoraServer) SC_CancelCallPeople(ctx context.Context, req *CallPeopleReq) (*Empty, error) {
+func (*UnimplementedTwinAgoraServer) SC_CancelCallPeople(ctx context.Context, req *CancelCallPeopleReq) (*Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SC_CancelCallPeople not implemented")
 }
 func (*UnimplementedTwinAgoraServer) CS_PeopleEntry(ctx context.Context, req *PeopleEntry) (*Empty, error) {
@@ -544,10 +661,10 @@ func (*UnimplementedTwinAgoraServer) CS_PeopleLeave(ctx context.Context, req *Pe
 func (*UnimplementedTwinAgoraServer) SC_PeopleLeave(ctx context.Context, req *PeopleLeaveRes) (*Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SC_PeopleLeave not implemented")
 }
-func (*UnimplementedTwinAgoraServer) CS_CallPeopleAccept(ctx context.Context, req *CallPeopleReq) (*Empty, error) {
+func (*UnimplementedTwinAgoraServer) CS_CallPeopleAccept(ctx context.Context, req *CallVote) (*Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CS_CallPeopleAccept not implemented")
 }
-func (*UnimplementedTwinAgoraServer) CS_CallPeopleDeny(ctx context.Context, req *CallPeopleReq) (*Empty, error) {
+func (*UnimplementedTwinAgoraServer) CS_CallPeopleDeny(ctx context.Context, req *CallVote) (*Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CS_CallPeopleDeny not implemented")
 }
 func (*UnimplementedTwinAgoraServer) SC_CallReply(ctx context.Context, req *CallReply) (*Empty, error) {
@@ -595,7 +712,7 @@ func _TwinAgora_SC_CallPeople_Handler(srv interface{}, ctx context.Context, dec 
 }
 
 func _TwinAgora_CS_CancelCallPeople_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CallPeopleReq)
+	in := new(CancelCallPeopleReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -607,13 +724,13 @@ func _TwinAgora_CS_CancelCallPeople_Handler(srv interface{}, ctx context.Context
 		FullMethod: "/pb.TwinAgora/CS_CancelCallPeople",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TwinAgoraServer).CS_CancelCallPeople(ctx, req.(*CallPeopleReq))
+		return srv.(TwinAgoraServer).CS_CancelCallPeople(ctx, req.(*CancelCallPeopleReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _TwinAgora_SC_CancelCallPeople_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CallPeopleReq)
+	in := new(CancelCallPeopleReq)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -625,7 +742,7 @@ func _TwinAgora_SC_CancelCallPeople_Handler(srv interface{}, ctx context.Context
 		FullMethod: "/pb.TwinAgora/SC_CancelCallPeople",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TwinAgoraServer).SC_CancelCallPeople(ctx, req.(*CallPeopleReq))
+		return srv.(TwinAgoraServer).SC_CancelCallPeople(ctx, req.(*CancelCallPeopleReq))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -703,7 +820,7 @@ func _TwinAgora_SC_PeopleLeave_Handler(srv interface{}, ctx context.Context, dec
 }
 
 func _TwinAgora_CS_CallPeopleAccept_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CallPeopleReq)
+	in := new(CallVote)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -715,13 +832,13 @@ func _TwinAgora_CS_CallPeopleAccept_Handler(srv interface{}, ctx context.Context
 		FullMethod: "/pb.TwinAgora/CS_CallPeopleAccept",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TwinAgoraServer).CS_CallPeopleAccept(ctx, req.(*CallPeopleReq))
+		return srv.(TwinAgoraServer).CS_CallPeopleAccept(ctx, req.(*CallVote))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _TwinAgora_CS_CallPeopleDeny_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CallPeopleReq)
+	in := new(CallVote)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -733,7 +850,7 @@ func _TwinAgora_CS_CallPeopleDeny_Handler(srv interface{}, ctx context.Context, 
 		FullMethod: "/pb.TwinAgora/CS_CallPeopleDeny",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TwinAgoraServer).CS_CallPeopleDeny(ctx, req.(*CallPeopleReq))
+		return srv.(TwinAgoraServer).CS_CallPeopleDeny(ctx, req.(*CallVote))
 	}
 	return interceptor(ctx, in, info, handler)
 }

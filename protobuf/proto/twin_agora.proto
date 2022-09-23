@@ -6,19 +6,30 @@ option go_package ="./;pb";
 import "common.proto";
 
 service TwinAgora {
-    rpc CS_CallPeople          (CallPeopleReq)      returns (Empty) {}//呼叫某人/某些人，进行：音视频通话
-    rpc SC_CallPeople          (CallPeopleRes)      returns (Empty) {}//返回：呼叫者，刚刚呼叫的结果
-    rpc CS_CancelCallPeople    (CallPeopleReq)      returns (Empty) {}//之前，呼叫某人/某些人，进行：音视频通话，突然放弃了
-    rpc SC_CancelCallPeople    (CallPeopleReq)      returns (Empty) {}//告知被呼叫者：之前的呼叫失效，有人突然放弃了
-    rpc CS_PeopleEntry         (PeopleEntry)        returns (Empty) {}//某人进入了一个房间/频道
-    rpc SC_PeopleEntry         (PeopleEntry)        returns (Empty) {}//某人进入了一个房间/频道，通知给C端
-    rpc CS_PeopleLeave         (PeopleLeaveRes)     returns (Empty) {}//某人离开了一个房间/频道
-    rpc SC_PeopleLeave         (PeopleLeaveRes)     returns (Empty) {}//告知房间里的人：有人离开了一个房间/频道
-    rpc CS_CallPeopleAccept    (CallPeopleReq)      returns (Empty) {}//被呼叫者-接收此次请求
-    rpc CS_CallPeopleDeny      (CallPeopleReq)      returns (Empty) {}//被呼叫者-拒绝此次请求
-    rpc SC_CallReply           (CallReply)          returns (Empty) {}//通知专家端，做出应答/选择
+    rpc CS_CallPeople          (CallPeopleReq)          returns (Empty) {}//呼叫某人/某些人，进行：音视频通话
+    rpc SC_CallPeople          (CallPeopleRes)          returns (Empty) {}//返回：呼叫者，刚刚呼叫的结果
+    rpc CS_CancelCallPeople    (CancelCallPeopleReq)    returns (Empty) {}//之前，呼叫某人/某些人，进行：音视频通话，突然放弃了
+    rpc SC_CancelCallPeople    (CancelCallPeopleReq)    returns (Empty) {}//告知被呼叫者：之前的呼叫失效，有人突然放弃了
+    rpc CS_PeopleEntry         (PeopleEntry)            returns (Empty) {}//某人进入了一个房间/频道
+    rpc SC_PeopleEntry         (PeopleEntry)            returns (Empty) {}//某人进入了一个房间/频道，通知给C端
+    rpc CS_PeopleLeave         (PeopleLeaveRes)         returns (Empty) {}//某人离开了一个房间/频道
+    rpc SC_PeopleLeave         (PeopleLeaveRes)         returns (Empty) {}//告知房间里的人：有人离开了一个房间/频道
+    rpc CS_CallPeopleAccept    (CallVote)          returns (Empty) {}//被呼叫者-接收此次请求
+    rpc CS_CallPeopleDeny      (CallVote)          returns (Empty) {}//被呼叫者-拒绝此次请求
+    rpc SC_CallReply           (CallReply)              returns (Empty) {}//通知专家端，做出应答/选择
 
 }
+//呼叫某人，加入一个房间，进行：音视频通话
+message CancelCallPeopleReq{
+	int32   uid 	        = 1;//发起者UID,长连接其实已经确定了UID，这里不写也行
+	string  room_id         = 2;//房间ID
+}
+
+message CallVote{
+	int32   uid 	        = 1;//发起者UID,长连接其实已经确定了UID，这里不写也行
+	string  room_id         = 2;//房间ID
+}
+
 //呼叫某人，加入一个房间，进行：音视频通话
 message CallPeopleReq{
 	int32   uid 	        = 1;//发起者UID,长连接其实已经确定了UID，这里不写也行
@@ -32,24 +43,26 @@ message CallPeopleRes{
 	string  channel 	    = 2;//双方进入某个特定的频道(可以为空,由后端随机生成一个,能发送给双方)
 	int32   err_code        = 3;//0,没有错误，1所有专家均不在线，请等待一会，重新呼叫
 	string  err_msg 	    = 4;//错误消息
+	string  room_id         = 5;//roomId,C端呼叫验证通过后会创建一个虚拟的房间号
 }
 //某人进入了一个房间/频道，通知给C端
 message PeopleEntry{
 	int32   uid 	        = 1;//发起者UID,长连接其实已经确定了UID，这里不写也行
-	string  channel 	    = 3;//双方进入某个特定的频道(可以为空,由后端随机生成一个,能发送给双方)
-	string  people_type 	= 4;//呼叫人群类型：1专家
+	string  channel 	    = 2;//双方进入某个特定的频道(可以为空,由后端随机生成一个,能发送给双方)
+	string  room_id         = 4;//房间ID
 }
 //某人进入了一个房间/频道，通知给C端
 message PeopleLeaveRes{
 	int32   uid 	        = 1;//发起者UID,长连接其实已经确定了UID，这里不写也行
-	string  channel 	    = 3;//双方进入某个特定的频道(可以为空,由后端随机生成一个,能发送给双方)
-	string  people_type 	= 4;//呼叫人群类型：1专家
+	string  channel 	    = 2;//双方进入某个特定的频道(可以为空,由后端随机生成一个,能发送给双方)
+	string  room_id         = 4;//房间ID
 }
 //给某人推送一条消息
 message CallReply{
 	int32   send_uid 	    = 1;//发起者UID，如果是系统发送：uid=99999
 	int32   target_uid      = 2;//收消息的UID
 	string  content 	    = 3;//消息具体的内容，这里可以自定义成json格式
-	int32  msg_type 	    = 4;//消息分类
+	int32   msg_type 	    = 4;//消息分类
+	string  room_id         = 5;//房间ID
 }
 

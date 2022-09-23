@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	uuid "github.com/satori/go.uuid"
 	"gorm.io/gorm"
 	"strconv"
 	"time"
@@ -28,6 +29,7 @@ const (
 
 type TwinAgora struct {
 	Gorm        *gorm.DB
+	RTCUserList map[int]RTCUser
 	RTCRoomPool map[string]RTCRoom
 	CancelFunc  context.CancelFunc
 	CancelCtx   context.Context
@@ -36,17 +38,25 @@ type TwinAgora struct {
 	Separate    string
 }
 
+type RTCUser struct {
+	Id     int
+	RoomId string
+	Uptime int
+}
+
 type RTCRoom struct {
-	Channel           string
-	AddTime           int
-	Uptime            int
-	Status            int   //1发起呼叫，2正常通话中，3已结束
-	EndStatus         int   //结束的状态：(1)超时，(2)某一方退出,(3)某一方拒绝(4)发起方主动取消呼叫
-	CallUid           int   //发起通话的UID
-	ReceiveUids       []int //被呼叫的用户IDS
-	ReceiveUidsAccept []int //被呼叫的用户IDS，接收了此次呼叫
-	ReceiveUidsDeny   []int //被呼叫的用户IDS，拒绝了此次呼叫
-	Uids              []int //ReceiveUidsAccept+CallUid
+	Id                string //唯一标识，UUID4
+	Channel           string //频道名
+	AddTime           int    //添加时间
+	Uptime            int    //最后更新时间
+	Status            int    //1发起呼叫，2正常通话中，3已结束
+	EndStatus         int    //结束的状态：(1)超时，(2)某一方退出,(3)某一方拒绝(4)发起方主动取消呼叫
+	CallUid           int    //发起通话的UID
+	ReceiveUids       []int  //被呼叫的用户(专家)IDS
+	ReceiveUidsAccept []int  //被呼叫的用户(专家)，接收了此次呼叫
+	ReceiveUidsDeny   []int  //被呼叫的用户(专家)，拒绝了此次呼叫
+	OnlineUids        []int  //当前在线/在房间通话的用户
+	Uids              []int  //所有进入过频道的用户
 	//Timeout           int   //超时
 }
 
@@ -57,6 +67,8 @@ func NewTwinAgora(Gorm *gorm.DB) *TwinAgora {
 	twinAgora.ExecTimeout = 10
 	twinAgora.Separate = "##"
 	twinAgora.RTCRoomPool = make(map[string]RTCRoom)
+	twinAgora.RTCUserList = make(map[int]RTCUser)
+
 	twinAgora.CancelCtx, twinAgora.CancelFunc = context.WithCancel(context.Background())
 
 	return twinAgora
@@ -107,6 +119,9 @@ func (twinAgora *TwinAgora) Quit() {
 
 func (twinAgora *TwinAgora) MoveAndStore(RTCRoom RTCRoom) {
 	twinAgora.StoreHistory(RTCRoom)
+	for _, uid := range RTCRoom.Uids {
+		delete(twinAgora.RTCUserList, uid)
+	}
 	delete(twinAgora.RTCRoomPool, RTCRoom.Channel)
 }
 
@@ -187,14 +202,27 @@ func (twinAgora *TwinAgora) StoreHistory(RTCRoom RTCRoom) {
 		util.MyPrint("StoreHistory to mysql err:", err)
 	}
 }
+
+//眼镜端发起呼叫
 func (twinAgora *TwinAgora) CallPeople(callPeopleReq pb.CallPeopleReq, conn *util.Conn) {
 	util.MyPrint("in func CallPeople:")
-	RTCRoomInfo, ok := twinAgora.RTCRoomPool[callPeopleReq.Channel]
 	callPeopleRes := pb.CallPeopleRes{}
-	if ok {
+
+	uid := int(conn.UserId)
+	myRTCUser, ok := twinAgora.RTCUserList[uid]
+	if ok && myRTCUser.RoomId != "" {
+		RTCRoomInfo, ok := twinAgora.RTCRoomPool[callPeopleReq.Channel]
+		if !ok {
+			callPeopleRes.ErrCode = 511
+			callPeopleRes.ErrMsg = "用户存在roomId,但是房间却不存在，可能程序有问题，请稍后重试"
+			util.MyPrint(callPeopleRes.ErrMsg)
+			conn.SendMsgCompressByUid(callPeopleReq.Uid, "SC_CallPeople", callPeopleRes)
+			return
+		}
+
 		if RTCRoomInfo.Status == RTC_ROOM_STATUS_CALLING {
 			callPeopleRes.ErrCode = 520
-			callPeopleRes.ErrMsg = "已经存在一条记录：发起呼叫，请不要重复发起，或等待超时"
+			callPeopleRes.ErrMsg = "已经存在一条记录：发起呼叫，请不要重复发起，或 等待超时 或 主动挂断"
 			util.MyPrint(callPeopleRes.ErrMsg)
 			conn.SendMsgCompressByUid(callPeopleReq.Uid, "SC_CallPeople", callPeopleRes)
 			return
@@ -202,13 +230,13 @@ func (twinAgora *TwinAgora) CallPeople(callPeopleReq pb.CallPeopleReq, conn *uti
 
 		if RTCRoomInfo.Status == RTC_ROOM_STATUS_EXECING {
 			callPeopleRes.ErrCode = 521
-			callPeopleRes.ErrMsg = "已经存在一条记录：正常通话中...，不能再发起CALL了"
+			callPeopleRes.ErrMsg = "已经存在一条记录：正在与其它人通话中...，不能再发起CALL了"
 			util.MyPrint(callPeopleRes.ErrMsg)
 			conn.SendMsgCompressByUid(callPeopleReq.Uid, "SC_CallPeople", callPeopleRes)
 			return
 		}
 
-		if RTCRoomInfo.Status == RTC_ROOM_STATUS_EXECING {
+		if RTCRoomInfo.Status == RTC_ROOM_STATUS_END {
 			twinAgora.MoveAndStore(RTCRoomInfo)
 		}
 	}
@@ -245,9 +273,8 @@ func (twinAgora *TwinAgora) CallPeople(callPeopleReq pb.CallPeopleReq, conn *uti
 		conn.SendMsgCompressByUid(callPeopleReq.Uid, "SC_CallPeople", callPeopleRes)
 		return
 	}
-
+	//寻找在线的专家
 	var onlineUserDoctorList []model.User
-
 	for _, userConn := range conn.ConnManager.Pool {
 		for _, user := range userDoctorList {
 			if userConn.UserId == int32(user.Id) && userConn.Status == util.CONN_STATUS_EXECING {
@@ -263,17 +290,21 @@ func (twinAgora *TwinAgora) CallPeople(callPeopleReq pb.CallPeopleReq, conn *uti
 		conn.SendMsgCompressByUid(callPeopleReq.Uid, "SC_CallPeople", callPeopleRes)
 		return
 	}
+	myRTCRoom := twinAgora.CreateRTCRoom(callPeopleReq)
+	//给所有在线的专家发送邀请通知
 	var receiveUids []int
 	receiveUidsStr := ""
 	for _, user := range onlineUserDoctorList {
 		receiveUidsStr += strconv.Itoa(user.Id) + ","
 		receiveUids = append(receiveUids, user.Id)
 		callReply := pb.CallReply{}
+		callReply.RoomId = myRTCRoom.Id
 		//pushMsgRes.MsgType = callPeopleReq.
 		callReply.Content = strconv.Itoa(int(callPeopleReq.Uid)) + " 呼叫 视频连接...请进入频道:" + callPeopleReq.Channel
 		conn.SendMsgCompressByUid(int32(user.Id), "SC_CallReply", callReply)
 	}
-	twinAgora.CreateRTCRoom(callPeopleReq, receiveUids)
+	myRTCRoom.ReceiveUids = receiveUids
+
 	//先给呼叫者返回消息，告知已成功请等待专家响应
 	callPeopleRes.ErrCode = 200
 	callPeopleRes.ErrMsg = "请求等待专家响应"
@@ -285,41 +316,59 @@ func (twinAgora *TwinAgora) CallPeople(callPeopleReq pb.CallPeopleReq, conn *uti
 }
 
 //这里假设验证都成功了，不做二次验证了
-func (twinAgora *TwinAgora) CreateRTCRoom(callPeopleReq pb.CallPeopleReq, receiveUserIds []int) {
+func (twinAgora *TwinAgora) CreateRTCRoom(callPeopleReq pb.CallPeopleReq) RTCRoom {
 	uids := []int{int(callPeopleReq.Uid)}
-	for _, v := range receiveUserIds {
-		uids = append(uids, v)
-	}
 	RTCRoomOne := RTCRoom{
 		AddTime: util.GetNowTimeSecondToInt(),
-		//Timeout:     util.GetNowTimeSecondToInt() + 60,
-		CallUid:     int(callPeopleReq.Uid),
-		Status:      RTC_ROOM_STATUS_CALLING,
-		ReceiveUids: receiveUserIds,
-		Uids:        uids,
+		CallUid: int(callPeopleReq.Uid),
+		Status:  RTC_ROOM_STATUS_CALLING,
+		Uids:    uids,
+		Id:      uuid.NewV4().String(),
 	}
+	myRTCUser, ok := twinAgora.RTCUserList[int(callPeopleReq.Uid)]
+	if ok {
+		myRTCUser.RoomId = RTCRoomOne.Id
+	} else {
+		newRTCUser := RTCUser{}
+		newRTCUser.RoomId = RTCRoomOne.Id
+		newRTCUser.Uptime = util.GetNowTimeSecondToInt()
+		twinAgora.RTCUserList[myRTCUser.Id] = newRTCUser
+	}
+
 	twinAgora.RTCRoomPool[callPeopleReq.Channel] = RTCRoomOne
+	return RTCRoomOne
 }
 
-func (twinAgora *TwinAgora) CancelCallPeople(callPeopleReq pb.CallPeopleReq, conn *util.Conn) error {
-	RTCRoomInfo, ok := twinAgora.RTCRoomPool[callPeopleReq.Channel]
+func (twinAgora *TwinAgora) CancelCallPeople(cancelCallPeopleReq pb.CancelCallPeopleReq, conn *util.Conn) error {
+	if cancelCallPeopleReq.Uid <= 0 {
+		return errors.New("cancelCallPeopleReq.Uid <= 0")
+	}
+
+	if cancelCallPeopleReq.RoomId == "" {
+		return errors.New("RoomId empty")
+	}
+	myRTCUser, ok := twinAgora.RTCUserList[int(cancelCallPeopleReq.Uid)]
 	if !ok {
-		return errors.New("channel 未找到rtcRoom-1")
+		return errors.New("myRTCUser is not in map")
+	}
+	RTCRoomInfo, ok := twinAgora.RTCRoomPool[cancelCallPeopleReq.RoomId]
+	if !ok {
+		return errors.New("roomId not in map")
 	}
 	//取消呼叫，只能由发起者自己取消
-	if RTCRoomInfo.CallUid != int(callPeopleReq.Uid) {
+	if RTCRoomInfo.CallUid != int(cancelCallPeopleReq.Uid) {
 		return errors.New("你不是发起呼叫者，不能取消操作")
 	}
 
 	if RTCRoomInfo.Status != RTC_ROOM_STATUS_CALLING {
 		return errors.New("房间状态错误：只能呼叫中才能取消")
 	}
-
+	//给所有专家端用户发送取消的消息
 	for _, uid := range RTCRoomInfo.ReceiveUids {
-		if int(callPeopleReq.Uid) == uid {
+		if int(cancelCallPeopleReq.Uid) == uid {
 			continue
 		}
-		conn.SendMsgCompressByUid(callPeopleReq.Uid, "SC_CancelCallPeople", callPeopleReq)
+		conn.SendMsgCompressByUid(cancelCallPeopleReq.Uid, "SC_CancelCallPeople", cancelCallPeopleReq)
 	}
 	RTCRoomInfo.Status = RTC_ROOM_STATUS_END
 	RTCRoomInfo.EndStatus = RTC_ROOM_END_STATUS_CANCEL
@@ -327,6 +376,15 @@ func (twinAgora *TwinAgora) CancelCallPeople(callPeopleReq pb.CallPeopleReq, con
 }
 
 func (twinAgora *TwinAgora) PeopleLeave(callPeopleReq pb.CallPeopleReq, conn *util.Conn) error {
+	myRTCUser, ok := twinAgora.RTCUserList[int(callPeopleReq.Uid)]
+	if !ok {
+
+	}
+	RTCRoomInfo, ok := twinAgora.RTCRoomPool[callPeopleReq.RoomId]
+	if !ok {
+		return errors.New("channel 未找到rtcRoom-1")
+	}
+
 	RTCRoomInfo, ok := twinAgora.RTCRoomPool[callPeopleReq.Channel]
 	if !ok {
 		return errors.New("channel 未找到rtcRoom-3")
@@ -365,14 +423,14 @@ func (twinAgora *TwinAgora) PeopleLeave(callPeopleReq pb.CallPeopleReq, conn *ut
 	return nil
 }
 
-func (twinAgora *TwinAgora) PeopleVote(callPeopleReq pb.CallPeopleReq) (error, RTCRoom) {
-	RTCRoomInfo, ok := twinAgora.RTCRoomPool[callPeopleReq.Channel]
+func (twinAgora *TwinAgora) PeopleVote(callVote pb.CallVote) (error, RTCRoom) {
+	RTCRoomInfo, ok := twinAgora.RTCRoomPool[callVote.RoomId]
 	if !ok {
 		return errors.New("channel 未找到rtcRoom-2"), RTCRoomInfo
 	}
 	hasSearch := 0
 	for _, uid := range RTCRoomInfo.ReceiveUids {
-		if int(callPeopleReq.Uid) == uid {
+		if int(callVote.Uid) == uid {
 			hasSearch = 1
 			break
 		}
@@ -384,7 +442,7 @@ func (twinAgora *TwinAgora) PeopleVote(callPeopleReq pb.CallPeopleReq) (error, R
 
 	hasVote := 0
 	for _, uid := range RTCRoomInfo.ReceiveUidsAccept {
-		if int(callPeopleReq.Uid) == uid {
+		if int(callVote.Uid) == uid {
 			hasVote = 1
 			break
 		}
@@ -396,7 +454,7 @@ func (twinAgora *TwinAgora) PeopleVote(callPeopleReq pb.CallPeopleReq) (error, R
 
 	hasVote = 0
 	for _, uid := range RTCRoomInfo.ReceiveUidsDeny {
-		if int(callPeopleReq.Uid) == uid {
+		if int(callVote.Uid) == uid {
 			hasVote = 1
 			break
 		}
@@ -409,8 +467,8 @@ func (twinAgora *TwinAgora) PeopleVote(callPeopleReq pb.CallPeopleReq) (error, R
 	return nil, RTCRoomInfo
 }
 
-func (twinAgora *TwinAgora) CallPeopleAccept(callPeopleReq pb.CallPeopleReq, conn *util.Conn) error {
-	err, RTCRoomInfo := twinAgora.PeopleVote(callPeopleReq)
+func (twinAgora *TwinAgora) CallPeopleAccept(callVote pb.CallVote, conn *util.Conn) error {
+	err, RTCRoomInfo := twinAgora.PeopleVote(callVote)
 	if err != nil {
 		return err
 	}
@@ -419,18 +477,18 @@ func (twinAgora *TwinAgora) CallPeopleAccept(callPeopleReq pb.CallPeopleReq, con
 		return errors.New("房间状态错误：只能呼叫中，才接接收")
 	}
 
-	RTCRoomInfo.ReceiveUidsAccept = append(RTCRoomInfo.ReceiveUidsAccept, int(callPeopleReq.Uid))
-	RTCRoomInfo.Uids = append(RTCRoomInfo.Uids, int(callPeopleReq.Uid))
+	RTCRoomInfo.ReceiveUidsAccept = append(RTCRoomInfo.ReceiveUidsAccept, int(callVote.Uid))
+	RTCRoomInfo.Uids = append(RTCRoomInfo.Uids, int(callVote.Uid))
 
-	conn.SendMsgCompressByUid(int32(RTCRoomInfo.CallUid), "SC_CallPeopleAccept", callPeopleReq)
+	conn.SendMsgCompressByUid(int32(RTCRoomInfo.CallUid), "SC_CallPeopleAccept", callVote)
 	//目前是1v1视频，只要有一个接收，即把房间状态标识为运行中，这里后期优化一下吧
 	RTCRoomInfo.Status = RTC_ROOM_STATUS_EXECING
 	return nil
 
 }
 
-func (twinAgora *TwinAgora) CallPeopleDeny(callPeopleReq pb.CallPeopleReq, conn *util.Conn) error {
-	err, RTCRoomInfo := twinAgora.PeopleVote(callPeopleReq)
+func (twinAgora *TwinAgora) CallPeopleDeny(callVote pb.CallVote, conn *util.Conn) error {
+	err, RTCRoomInfo := twinAgora.PeopleVote(callVote)
 	if err != nil {
 		return err
 	}
@@ -439,7 +497,7 @@ func (twinAgora *TwinAgora) CallPeopleDeny(callPeopleReq pb.CallPeopleReq, conn 
 		return errors.New("房间状态错误：只能呼叫中，才接拒绝")
 	}
 
-	conn.SendMsgCompressByUid(int32(RTCRoomInfo.CallUid), "SC_CallPeopleDeny", callPeopleReq)
+	conn.SendMsgCompressByUid(int32(RTCRoomInfo.CallUid), "SC_CallPeopleDeny", callVote)
 	//目前是1v1视频，只要有一个人拒绝，即结束，这里后期优化一下吧
 	RTCRoomInfo.Status = RTC_ROOM_STATUS_END
 	RTCRoomInfo.EndStatus = RTC_ROOM_END_STATUS_DENY

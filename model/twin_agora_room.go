@@ -3,6 +3,7 @@ package model
 //@description 声网回调存储
 type TwinAgoraRoom struct {
 	MODEL
+	RoomId            string `json:"room_id" form:"room_id" db:"define:varchar(255);comment:房间ID;defaultValue:''"`
 	Channel           string `json:"channel" form:"channel" db:"define:varchar(255);comment:频道;defaultValue:''"`
 	Status            int    `json:"status" form:"status" db:"define:int;comment:状态,1发起呼叫，2正常通话中，3已结束;defaultValue:0"`
 	EndStatus         int    `json:"end_status" form:"end_status" db:"define:int;comment:结束的状态：(1)超时，(2)某一方退出,(3)某一方拒绝(4)发起方主动取消呼叫;defaultValue:0"`

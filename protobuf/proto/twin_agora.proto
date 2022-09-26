@@ -35,7 +35,8 @@ message CallPeopleReq{
 	int32   uid 	        = 1;//发起者UID,长连接其实已经确定了UID，这里不写也行
 	int32   target_uid      = 2;//希望指定用户，进行音视频-通话
 	string  channel 	    = 3;//双方进入某个特定的频道(可以为空,由后端随机生成一个,能发送给双方)
-	int32   people_type 	= 4;//呼叫人群类型：1普通用户2专家3全部
+	int32   people_type 	= 4;//呼叫人群类型：1 呼叫所有人，2 按照<小组>呼叫 3 用户自己指定呼叫的人
+	int32   people_role 	= 5;//呼叫人群角色：1普通用户2专家
 }
 
 message CallPeopleRes{

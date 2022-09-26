@@ -14,8 +14,11 @@ service TwinAgora {
     rpc SC_PeopleEntry         (PeopleEntry)            returns (Empty) {}//某人进入了一个房间/频道，通知给C端
     rpc CS_PeopleLeave         (PeopleLeaveRes)         returns (Empty) {}//某人离开了一个房间/频道
     rpc SC_PeopleLeave         (PeopleLeaveRes)         returns (Empty) {}//告知房间里的人：有人离开了一个房间/频道
-    rpc CS_CallPeopleAccept    (CallVote)          returns (Empty) {}//被呼叫者-接收此次请求
-    rpc CS_CallPeopleDeny      (CallVote)          returns (Empty) {}//被呼叫者-拒绝此次请求
+    rpc CS_CallPeopleAccept    (CallVote)               returns (Empty) {}//被呼叫者-接收此次请求
+    rpc CS_CallPeopleDeny      (CallVote)               returns (Empty) {}//被呼叫者-拒绝此次请求
+    rpc SC_CallPeopleAccept    (CallVote)               returns (Empty) {}//告诉其它端，专家端已接收
+    rpc SC_CallPeopleDeny      (CallVote)               returns (Empty) {}//告诉其它端，专家端已拒绝
+
     rpc SC_CallReply           (CallReply)              returns (Empty) {}//通知专家端，做出应答/选择
 
 }

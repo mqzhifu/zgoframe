@@ -21,6 +21,7 @@ service Gateway {
     rpc SC_ProjectPush       (ProjectPushMsg)  returns (Empty) {}//service通知网关，给某些用户推送消息
 
     rpc FdClose             (FDCloseEvent)    returns (Empty) {}//C端长连接关闭，这个并不是C端发起的请求，而是网关获取事件，直接推送到后端服务的
+    rpc FdCreate            (FDCreateEvent)   returns (Empty) {}//C端建立了长连接，并已经登陆成功
 
 }
 

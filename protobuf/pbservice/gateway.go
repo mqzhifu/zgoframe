@@ -51,4 +51,8 @@ func (gateway *Gateway)FdClose(ctx context.Context,fDCloseEvent *pb.FDCloseEvent
     empty := &pb.Empty{}
     return empty,nil
 }
+func (gateway *Gateway)FdCreate(ctx context.Context,fDCreateEvent *pb.FDCreateEvent) (*pb.Empty,error){
+    empty := &pb.Empty{}
+    return empty,nil
+}
 

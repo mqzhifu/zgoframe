@@ -14,8 +14,10 @@ import (
 )
 
 type ConnCloseEvent struct {
-	UserId int32
-	Source int
+	UserId       int32
+	Source       int
+	ContentType  int
+	ProtocolType int
 }
 
 //管理 CONN 的容器
@@ -521,8 +523,10 @@ func (conn *Conn) CloseOneConn(source int) {
 		conn.ConnManager.Option.Log.Error("CloseOneConn error :Conn.Status == CLOSE")
 	}
 	connCloseEvent := ConnCloseEvent{
-		UserId: conn.UserId,
-		Source: source,
+		UserId:       conn.UserId,
+		Source:       source,
+		ContentType:  int(conn.ContentType),
+		ProtocolType: int(conn.ProtocolType),
 	}
 	conn.ConnManager.CloseEventQueue <- connCloseEvent
 

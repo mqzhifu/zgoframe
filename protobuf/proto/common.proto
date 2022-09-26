@@ -18,6 +18,10 @@ message FDCloseEvent {
     int32 source = 2;
 }
 
+message FDCreateEvent {
+    int32 user_id = 1;
+}
+
 message PingReq{
     string  request_id  = 1 ;
     string  trace_id  = 2 ;

@@ -15,11 +15,11 @@ func (twinAgora *TwinAgora)SC_CallPeople(ctx context.Context,callPeopleRes *pb.C
     empty := &pb.Empty{}
     return empty,nil
 }
-func (twinAgora *TwinAgora)CS_CancelCallPeople(ctx context.Context,callPeopleReq *pb.CallPeopleReq) (*pb.Empty,error){
+func (twinAgora *TwinAgora)CS_CancelCallPeople(ctx context.Context,cancelCallPeopleReq *pb.CancelCallPeopleReq) (*pb.Empty,error){
     empty := &pb.Empty{}
     return empty,nil
 }
-func (twinAgora *TwinAgora)SC_CancelCallPeople(ctx context.Context,callPeopleReq *pb.CallPeopleReq) (*pb.Empty,error){
+func (twinAgora *TwinAgora)SC_CancelCallPeople(ctx context.Context,cancelCallPeopleReq *pb.CancelCallPeopleReq) (*pb.Empty,error){
     empty := &pb.Empty{}
     return empty,nil
 }
@@ -39,11 +39,19 @@ func (twinAgora *TwinAgora)SC_PeopleLeave(ctx context.Context,peopleLeaveRes *pb
     empty := &pb.Empty{}
     return empty,nil
 }
-func (twinAgora *TwinAgora)CS_CallPeopleAccept(ctx context.Context,callPeopleReq *pb.CallPeopleReq) (*pb.Empty,error){
+func (twinAgora *TwinAgora)CS_CallPeopleAccept(ctx context.Context,callVote *pb.CallVote) (*pb.Empty,error){
     empty := &pb.Empty{}
     return empty,nil
 }
-func (twinAgora *TwinAgora)CS_CallPeopleDeny(ctx context.Context,callPeopleReq *pb.CallPeopleReq) (*pb.Empty,error){
+func (twinAgora *TwinAgora)CS_CallPeopleDeny(ctx context.Context,callVote *pb.CallVote) (*pb.Empty,error){
+    empty := &pb.Empty{}
+    return empty,nil
+}
+func (twinAgora *TwinAgora)SC_CallPeopleAccept(ctx context.Context,callVote *pb.CallVote) (*pb.Empty,error){
+    empty := &pb.Empty{}
+    return empty,nil
+}
+func (twinAgora *TwinAgora)SC_CallPeopleDeny(ctx context.Context,callVote *pb.CallVote) (*pb.Empty,error){
     empty := &pb.Empty{}
     return empty,nil
 }

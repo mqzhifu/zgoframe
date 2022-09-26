@@ -331,6 +331,13 @@ func (grpcManager *GrpcManager) CallServiceFuncGateway(funcName string,balanceFa
             return data,err
         }
         data ,err = grpcClient.FdClose(ctx,&request)
+    case "FdCreate":
+        request := pb.FDCreateEvent{}
+        err := json.Unmarshal(postData,&request)
+        if err != nil{
+            return data,err
+        }
+        data ,err = grpcClient.FdCreate(ctx,&request)
 
     default:
             return data,errors.New("func name router failed.")
@@ -362,14 +369,14 @@ func (grpcManager *GrpcManager) CallServiceFuncTwinAgora(funcName string,balance
         }
         data ,err = grpcClient.SC_CallPeople(ctx,&request)
     case "CS_CancelCallPeople":
-        request := pb.CallPeopleReq{}
+        request := pb.CancelCallPeopleReq{}
         err := json.Unmarshal(postData,&request)
         if err != nil{
             return data,err
         }
         data ,err = grpcClient.CS_CancelCallPeople(ctx,&request)
     case "SC_CancelCallPeople":
-        request := pb.CallPeopleReq{}
+        request := pb.CancelCallPeopleReq{}
         err := json.Unmarshal(postData,&request)
         if err != nil{
             return data,err
@@ -404,19 +411,33 @@ func (grpcManager *GrpcManager) CallServiceFuncTwinAgora(funcName string,balance
         }
         data ,err = grpcClient.SC_PeopleLeave(ctx,&request)
     case "CS_CallPeopleAccept":
-        request := pb.CallPeopleReq{}
+        request := pb.CallVote{}
         err := json.Unmarshal(postData,&request)
         if err != nil{
             return data,err
         }
         data ,err = grpcClient.CS_CallPeopleAccept(ctx,&request)
     case "CS_CallPeopleDeny":
-        request := pb.CallPeopleReq{}
+        request := pb.CallVote{}
         err := json.Unmarshal(postData,&request)
         if err != nil{
             return data,err
         }
         data ,err = grpcClient.CS_CallPeopleDeny(ctx,&request)
+    case "SC_CallPeopleAccept":
+        request := pb.CallVote{}
+        err := json.Unmarshal(postData,&request)
+        if err != nil{
+            return data,err
+        }
+        data ,err = grpcClient.SC_CallPeopleAccept(ctx,&request)
+    case "SC_CallPeopleDeny":
+        request := pb.CallVote{}
+        err := json.Unmarshal(postData,&request)
+        if err != nil{
+            return data,err
+        }
+        data ,err = grpcClient.SC_CallPeopleDeny(ctx,&request)
     case "SC_CallReply":
         request := pb.CallReply{}
         err := json.Unmarshal(postData,&request)

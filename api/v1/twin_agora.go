@@ -602,7 +602,7 @@ func GenerateCloudVideo(recordId int) (err error) {
 
 // @Tags TwinAgora
 // @Summary 呼叫功能的，配置信息
-// @Description 将小文件，合并成一个大文件
+// @Description 主要是超时时间的配置，C端需要使用
 // @accept application/json
 // @Security ApiKeyAuth
 // @Param X-Source-Type header string true "来源" default(11)
@@ -614,6 +614,24 @@ func TwinAgoraConfig(c *gin.Context) {
 	config := make(map[string]string)
 	config["call_timeout"] = strconv.Itoa(global.V.MyService.TwinAgora.CallTimeout)
 	config["exec_timeout"] = strconv.Itoa(global.V.MyService.TwinAgora.ExecTimeout)
+
+	httpresponse.OkWithAll(config, "Query-成功", c)
+}
+
+// @Tags TwinAgora
+// @Summary web-socket使用时，一些状态，
+// @Description 如：房间、用户连接状态等
+// @accept application/json
+// @Security ApiKeyAuth
+// @Param X-Source-Type header string true "来源" default(11)
+// @Param X-Access header string true "访问KEY" default(imzgoframe)
+// @Produce application/json
+// @Success 200 {boolean} boolean "true:成功 false:否"
+// @Router /twin/agora/socket/tools [GET]
+func TwinAgoraSocketTools(c *gin.Context) {
+	config := make(map[string]interface{})
+	config["rtc_room_pool"] = global.V.MyService.TwinAgora.RTCRoomPool
+	config["rtc_user_pool"] = global.V.MyService.TwinAgora.RTCUserPool
 
 	httpresponse.OkWithAll(config, "Query-成功", c)
 }

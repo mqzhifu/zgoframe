@@ -16,47 +16,31 @@ function TwinAgoraPlayer (playerId,token,data,DomIdPreObj,contentType,protocolTy
         9:"end",
         10:"close",
     };
+    this.TIMEOUT_CALLING = 0;
+    this.TIMEOUT_EXEC = 0;
     this.playerInfo = playerInfo;
     this.status = 1;//1初始化 2等待准备 3运行中  4结束
     this.playerId = playerId;//玩家ID
     this.matchGroupPeople = data.roomPeople;//一个副本的人数
     this.heartbeatLoopFunc = null;//心跳回调函数
-    this.offLineWaitTime = data.offLineWaitTime;//lockStep 玩家掉线后，其它玩家等待最长时间
-    //以上都是S端返回的一些配置值
-
-    this.token = token;//玩家的凭证
-    // this.tableMax = data.mapSize;//地址的表格大小
-    this.otherPlayerOffline = 0;//其它玩家调线
-    this.pushLogicFrameLoopFunc = null;//定时循环 - 推送玩家操作函数
-    this.playerOperationsQueue = [];//一个帧时间内，收集玩家的操作指令 队列
     this.closeFlag = 0;//关闭标识，0正常1手动关闭2后端关闭
-
-    // this.tableId = "";
+    this.offLineWaitTime = data.offLineWaitTime;//lockStep 玩家掉线后，其它玩家等待最长时间
+    this.token = token;//玩家的凭证
+    this.otherPlayerOffline = 0;//其它玩家调线
     this.domIdObj = DomIdPreObj ;
-    // this.playerLocation = new Object();//每个玩家的位置信息
-    // this.operationsInc = 0;//玩家操作指令自增ID
-    // this.logicFrameLoopTimeMs = 0;//毫秒，多少时间内收集一次玩家操作，推送到S端
-    // this.FPS = data.fps;//每秒多少逻辑帧
-    // this.playerCommandPushLock = 0;
-    //下面是帧同步初始化信息，是由S端供给
     this.roomId = "";
     this.actionMap = data.actionMap;
-    this.sequenceNumber = 0;
-    this.randSeek = 0;
-    this.sessionId = "";
     this.contentType = contentType;//protobuf|json
     this.protocolType = protocolType;//tcp|ws
     //入口函数，必须得先建立连接后，都有后续的所有操作
     this.create  = function(){
-        // console.log("entrance : create ws , this status :",self.status);
-        if (self.status != 1 && self.status != 10){
-            return alert(" status !=  init or close");
-        }
+        //// console.log("entrance : create ws , this status :",self.status);
+        // if (self.status != 1 && self.status != 10){
+        //     return alert(" status !=  init or close");
+        // }
         self.closeFlag = 0;//清空 关闭标识
-        //根据帧数，计算出 秒数
-        self.logicFrameLoopTimeMs = parseInt( 1000 / self.FPS);
 
-        console.log("create new WebSocket"+self.hostUri ," FPS:",self.FPS , " ms:",self.logicFrameLoopTimeMs, " contentType:",self.contentType, " protocolType:",self.protocolType)
+        console.log("create new WebSocket"+self.hostUri ,  " TIMEOUT_EXEC:",self.TIMEOUT_EXEC, " TIMEOUT_CALLING:",self.TIMEOUT_CALLING, " contentType:",self.contentType, " protocolType:",self.protocolType)
         //创建ws连接
         self.wsObj = new WebSocket(self.hostUri);
         //设置 关闭回调
@@ -79,9 +63,7 @@ function TwinAgoraPlayer (playerId,token,data,DomIdPreObj,contentType,protocolTy
     //连接成功后，会执行此函数
     this.wsOpen = function(){
         console.log("onOpen : ws connect server : Success  ");
-        this.upStatus(2);
-        //强依赖，proto 文件
-        // var requestLoginObj = new proto.pb.RequestLogin();
+        // this.upStatus(2);
         var requestLoginObj = new proto.pb.Login();
         requestLoginObj.setToken(self.token) ;
         this.sendMsg("CS_Login",requestLoginObj);
@@ -120,12 +102,6 @@ function TwinAgoraPlayer (playerId,token,data,DomIdPreObj,contentType,protocolTy
                 console.log(content);
             }
 
-
-
-
-
-
-
             var contentLenByte = intToByte4( content.length);
             var contentTypeByte = intToOneByteArr(contentType);
             var protocolTypeByte = intToOneByteArr(protocolType);
@@ -134,36 +110,10 @@ function TwinAgoraPlayer (playerId,token,data,DomIdPreObj,contentType,protocolTy
             var sessionByte = stringToUint8Array(session);
             var contentByte = stringToUint8Array(content);
 
-            // console.log("bbyte:",contentLenByte,contentTypeByte,protocolTypeByte,serviceIdByte,funcIdByte);
-            // concatenate(contentLenByte,contentTypeByte[3]);
-            // content =  concatenate(contentLenByte,contentTypeByte[3],protocolTypeByte[3],serviceIdByte[3],funcIdByte[3],sessionByte,contentByte);
             var endStr = new Uint8Array(1);
             endStr[0] = "\f";
             content =  concatenate(contentLenByte,contentTypeByte,protocolTypeByte,serviceIdByte,funcIdByte,sessionByte,contentByte,endStr)  ;
 
-            // content = contentLenByte +"" + contentTypeByte + "" + protocolTypeByte + "" +serviceIdByte + "" + funcIdByte +"" +sessionByte + contentByte+ "\f";
-
-            // var finalContent = contentLenByte + contentTypeByte +  "" + protocolTypeByte + serviceIdByte + "" +  funcIdByte + sessionByte + contentByte  + "\f";
-
-
-            // var protocolCtrl = contentType +  "" + protocolType + id;
-            // if (action == "login" ){
-            //     content = contentLen + protocolCtrl + content;
-            // }else{
-            //     content = contentLen + protocolCtrl + self.sessionId +  content;
-            // }
-            //下面未使用
-            // var contentTypeByte = contentType << 5;
-            // console.log("aLeftL:",aLeft);
-            // var firstbyte = contentTypeByte | protocolType;
-            // console.log("firstbyte:",firstbyte);
-            // var myArrayBuffer = new Uint8Array(1)
-            // var myIntToByte =  intToByte(firstbyte);
-            // myArrayBuffer[0] = firstbyte;
-            // var b_s = String.fromCharCode.apply(null, new Uint8Array(myArrayBuffer));
-            // console.log("myArrayBuffer:",myArrayBuffer,",b_s:",b_s);
-            // var emptyByte = intToByte(0);
-            // content =  b_s +emptyByte + content;
             console.log("<sendMsg final>",content);
 
             self.wsObj.send(content);
@@ -319,13 +269,14 @@ function TwinAgoraPlayer (playerId,token,data,DomIdPreObj,contentType,protocolTy
         // console.log("router:",action,content)
         if ( action == 'SC_Login' ) {
             self.rLoginRes(content);
+        }else if( action == 'SC_CallPeople'){//获取一个当前玩家的状态，如：是否有历史未结束的游戏
+            self.rCallPeopleRes(content);
         }else if( action == 'SC_Ping'){//获取一个当前玩家的状态，如：是否有历史未结束的游戏
             self.rServerPing(content);
-        }else if ( action == 'SC_CallPeople' ){
-            console.log("接收到呼叫返回的信息(SC_CallPeople)",content)
         }else if ( action == 'SC_CallReply' ){
-            console.log("有人呼叫我，需要做出应答(SC_CallReply)",content)
-        // }else if ( action == 'SC_OtherPlayerOffline' ){
+            self.rCallReply(content)
+        }else if ( action == 'SC_Heartbeat' ){
+            console.log("SC_Heartbeat......",content)
         //     self.rOtherPlayerOffline(content);
         // }else if ( action == 'SC_EnterBattle' ){
         //     self.rEnterBattle(content);
@@ -348,14 +299,26 @@ function TwinAgoraPlayer (playerId,token,data,DomIdPreObj,contentType,protocolTy
             return alert("action error."+action);
         }
     };
+
+    this.rCallReply = function(data){
+        console.log("rCallReply ， 接收到了服务端请求呼叫:",data);
+        var msg = "有人呼叫你，是否同意该请求?";
+        if (confirm(msg) ==  true){
+            // alert("您接收了该请求");
+            var reqCallVote = new proto.pb.CallVote()
+            reqCallVote.setUid(self.playerId);
+            reqCallVote.setRoomId(data.roomId);
+            self.sendMsg("CS_CallPeopleAccept",reqCallVote);
+            self.roomId = data.roomId;
+        }else{
+            var reqCallVote = new proto.pb.CallVote()
+            reqCallVote.setUid(self.playerId)
+            reqCallVote.setRoomId(data.roomId)
+            self.sendMsg("CS_CallPeopleDeny",reqCallVote);
+        }
+    };
+
     //=================== 以下都是 接收S端的处理函数========================================
-    // this.rOtherPlayerResumeGame = function(content){
-    //     if(content.playerId != self.playerId){
-    //         var tdId = self.tableId + "_" + self.playerLocation[content.playerId];
-    //         var tdObj = $("#"+tdId)
-    //         tdObj.css("background", "red");
-    //     }
-    // };
     this.rReadyTimeout= function(logicFrame){
         console.log("rReadyTimeout:",logicFrame);
 
@@ -393,6 +356,15 @@ function TwinAgoraPlayer (playerId,token,data,DomIdPreObj,contentType,protocolTy
         self.upOptBnt(bntContent, 1);
         $("#"+domId).click(clickCallback);
     };
+
+    this.rCallPeopleRes = function(data){
+        console.log("rCallPeopleRes, ",data);
+        if (data.errCode != 200) {
+            return alert("rCallPeopleRes err.");
+        }
+        console.log("更新roomId，等待专家端给予回复...... rCallPeopleRes:",data);
+        self.roomId = data.roomId;
+    };
     this.rLoginRes = function(logicFrame){
         if (logicFrame.code != 200) {
             this.upStatus(4);
@@ -401,7 +373,7 @@ function TwinAgoraPlayer (playerId,token,data,DomIdPreObj,contentType,protocolTy
         //定时心跳
         setInterval(self.heartbeat , 5000 )
 
-        console.log("登陆成功");
+        console.log("登陆成功:",self.playerId);
         if(this.playerInfo.info.role == 1){
             console.log("我是护士，开启呼叫...")
             var requestCall = new proto.pb.CallPeopleReq()
@@ -409,33 +381,12 @@ function TwinAgoraPlayer (playerId,token,data,DomIdPreObj,contentType,protocolTy
             requestCall.setTargetUid(0)
             requestCall.setChannel("ckck")
             requestCall.setPeopleType(2)
+            requestCall.setPeopleRole(2)
             this.sendMsg("CS_CallPeople",requestCall);
         }else{
-            console.log("我是专家我就不呼叫了...");
+            console.log("我是专家我就不呼叫了，等待眼镜端的发来请求吧...");
         }
 
-
-
-        // var now = Date.now();
-        // var requestClientPing = new proto.pb.Ping();
-        // requestClientPing.setAddTime(now);
-        // this.sendMsg("CS_Ping",requestClientPing);
-        // this.upStatus(3);
-        //
-        // //这里是有问题的，roomId我在外层写死了均为空，应该是动态从后端拿，且最好是短连接去取，回头优化
-        // if (this.playerInfo.roomId){
-        //     alert("检测出，有未结束的一局游戏，开始恢复中...,先获取房间信息:rooId:"+playerConnInfo.roomId);
-        //     var requestGetRoom = new proto.pb.RoomBaseInfo();
-        //     requestGetRoom.setRoomId(playerConnInfo.roomId);
-        //     requestGetRoom.setPlayerId(playerId);
-        //     self.sendMsg("CS_RoomBaseInfo",requestGetRoom);
-        //     //     var msg = {"roomId":playerConnInfo.roomId,"playerId":playerId};
-        // }else{
-        //     var matchSignBntId = "matchSign_"+self.playerId;
-        //     var hrefBody = "连接成功，匹配报名";
-        //
-        //     self.upOptBntHref(matchSignBntId,hrefBody,self.matchSign);
-        // }
     };
     this.rServerPong = function(logicFrame){
         console.log("rServerPong:",logicFrame)
@@ -451,173 +402,11 @@ function TwinAgoraPlayer (playerId,token,data,DomIdPreObj,contentType,protocolTy
         this.sendMsg("CS_Pong",requestClientPong);
         //     logicFrame.clientReceiveTime =  now
     };
-    // this.rStartBattle = function(logicFrame){
-    //     self.upStatus(8);
-    //     self.pushLogicFrameLoopFunc = setInterval(self.playerCommandPush,self.logicFrameLoopTimeMs);
-    //     var exceptionOffLineId = "exceptionOffLineId"+self.playerId;
-    //     var msg = "异常掉线";
-    //     self.upOptBntHref(exceptionOffLineId,msg,self.closeFD);
-    // };
-    // this.rPushRoomInfo = function(logicFrame){
-    //     if(contentTypeDesc[self.contentType] =="protobuf"){
-    //         logicFrame.playerList = logicFrame.playerListList;
-    //     }
-    //     self.initLocalGlobalVar(logicFrame);
-    //     var requestRoomHistory = new proto.pb.RoomHistory();
-    //     requestRoomHistory.setRoomId(self.roomId);
-    //     requestRoomHistory.setSequenceNumberstart(0);
-    //     requestRoomHistory.setSequenceNumberend(-1);
-    //     requestRoomHistory.setPlayerId(self.playerId);
-    //     // var history ={"roomId":self.roomId,"sequenceNumber":0,"playerId":self.playerId };
-    //     // self.sendMsg("getRoomHistory",history);
-    //     self.sendMsg("CS_RoomHistory",requestRoomHistory);
-    //
-    //     var readySignBntId = "ready_"+self.playerId;
-    //     var hrefBody = "匹配成功，准备";
-    //
-    //     self.upOptBntHref(readySignBntId,hrefBody,self.ready);
-    // };
-    // this.rPushLogicFrame = function(logicFrame,source){//接收S端逻辑帧
-    //     console.log("logicFrame:",logicFrame);
-    //     var pre = self.descPre;
-    //     if(contentTypeDesc[self.contentType] =="protobuf"){
-    //         if (source != "rPushRoomHistory"){
-    //             logicFrame.operations = logicFrame.operationsList;
-    //         }
-    //     }
-    //     var operations = logicFrame.operations;
-    //     self.sequenceNumber  = logicFrame.sequenceNumber;
-    //     $("#"+self.domIdObj.seqId).html(self.sequenceNumber);
-    //
-    //     self.playerCommandPushLock = 0;
-    //     if (!operations || typeof (operations) == "undefined" ){
-    //         console.log("empty opt!!!");
-    //         return false;
-    //     }
-    //     console.log("rPushLogicFrame ,sequenceNumber:"+self.sequenceNumber+ ", operationsLen:" +  operations.length);
-    //     for(var i=0;i<operations.length;i++){
-    //         playerId= operations[i].playerId;
-    //         var str = pre + " i=i , id: "+operations[i].id + " , event:"+operations[i].event + " , value:"+ operations[i].value + " , playerId:" + playerId;
-    //         console.log(str);
-    //         if (operations[i].event == "move"){
-    //             var LocationArr = operations[i].value.split(",");
-    //             var LocationStart = LocationArr[0];
-    //             var LocationEnd = LocationArr[1];
-    //
-    //             // var lightTd = "map"+id +"_"+LocationStart + "_"+LocationEnd;
-    //             var lightTd =self.getMapTdId(self.tableId,LocationStart,LocationEnd);
-    //             console.log(pre+"  "+lightTd);
-    //             var tdObj = $("#"+lightTd);
-    //             if(playerId == self.playerId){
-    //                 tdObj.css("background", "green");
-    //             }else{
-    //                 tdObj.css("background", "red");
-    //             }
-    //             var playerLocation = self.playerLocation;
-    //             if (playerLocation[playerId] == "empty"){
-    //                 //证明是第一次移动，没有之前的数据
-    //             }else{
-    //                 // playerLocation = getPlayerLocation(playerId);
-    //                 // alert(commands[i].playerId);
-    //                 var playerLocationArr = playerLocation[playerId].split("_");
-    //                 //非首次移动，这次移动后，要把之前所有位置清掉
-    //                 var lightTd = self.getMapTdId(self.tableId,playerLocationArr[0],playerLocationArr[1]);
-    //                 var tdObj = $("#"+lightTd);
-    //                 tdObj.css("background", "");
-    //             }
-    //             playerLocation[playerId] = LocationStart + "_"+LocationEnd;
-    //         }else if(operations[i].event == "empty"){
-    //
-    //         }
-    //     }
-    //     // self.sendPlayerLogicFrameAck( self.sequenceNumber)
-    // };
-    //
-    // this.rOtherPlayerOffline = function(logicFrame){
-    //     //房间内有其它玩家掉线了
-    //     console.log("in test:",logicFrame.playerId,logicFrame)
-    //     self.otherPlayerOffline = logicFrame.playerId;
-    //     alert("其它玩家掉线了："+logicFrame.playerId +"，略等："+self.offLineWaitTime +"秒");
-    //
-    //     var tdId = self.tableId + "_" + self.playerLocation[logicFrame.playerId];
-    //     var tdObj = $("#"+tdId)
-    //     tdObj.css("background", "#A9A9A9");
-    //     // var lightTd =self.getMapTdId(self.tableId,LocationStart,LocationEnd);
-    //     // console.log(pre+"  "+lightTd);
-    //     // var tdObj = $("#"+lightTd);
-    //     // if(commands[i].playerId == playerId){
-    //     //     tdObj.css("background", "green");
-    //     // }else{
-    //     //     tdObj.css("background", "red");
-    //     // }
-    // };
-    // this.rEnterBattle = function(logicFrame){
-    //     console.log("rEnterBattle logicFrame:",logicFrame , " self.contentType:",self.contentType)
-    //     if(contentTypeDesc[self.contentType] =="protobuf"){
-    //         console.log("rEnterBattle in protobuf ")
-    //         logicFrame.playerList = logicFrame.playerListList;
-    //     }
-    //
-    //     self.initLocalGlobalVar(logicFrame);
-    //
-    //     var readySignBntId = "ready_"+self.playerId;
-    //     var hrefBody = "匹配成功，准备";
-    //
-    //     self.upOptBntHref(readySignBntId,hrefBody,self.ready);
-    // };
-    // this.rGameOver = function(ev){
-    //     clearInterval(self.pushLogicFrameLoopFunc);
-    //     self.upOptBnt("游戏结束2",1)
-    //     return alert("have player game end...");
-    // };
+
     this.rKickOff = function(ev){
         return alert("您被踢下线喽~");
     };
 
-    //=================== 以上都是 接收S端的处理函数========================================
-    // this.initLocalGlobalVar = function(logicFrame){
-    //     var pre = self.descPre;
-    //     console.log("initLocalGlobalVar:",logicFrame)
-    //     console.log("initLocalGlobalVar logicFrame.playerIds:",logicFrame.playerIds)
-    //     for(var i=0;i<logicFrame.playerIds.length;i++){
-    //         self.playerLocation[""+logicFrame.playerIds[i]+""] = "empty"
-    //     }
-    //     // return 1;
-    //     self.randSeek  = logicFrame.randSeek;
-    //     $("#"+self.domIdObj.randSeekId).html(self.randSeek);
-    //
-    //
-    //     self.sequenceNumber  = logicFrame.sequenceNumber;
-    //     $("#"+self.domIdObj.seqId).html(self.sequenceNumber);
-    //
-    //     self.roomId = logicFrame.roomId;
-    //     $("#"+self.domIdObj.roomId).html(self.roomId);
-    //
-    //     var str =  pre+", roomId:" +logicFrame.roomId+ ", RandSeek:"+    self.randSeek +" , SequenceNumber"+    self.sequenceNumber ;
-    //     console.log(str);
-    // };
-    //
-    // this.getMap = function (tableId) {
-    //     // var tableDivPre = "map";
-    //     this.tableId = tableId;
-    //     var tableObj = $("#" + tableId);
-    //     var matrix = new Array();
-    //     var matrixSize = this.tableMax;
-    //     var inc = 0;
-    //     for (var i = 0; i < matrixSize; i++) {
-    //         matrix[i] = new Array();
-    //         var trTemp = $("<tr></tr>");
-    //         for (var j = 0; j < matrixSize; j++) {
-    //             // var tdId = tableId + "_" + i +"_" + j;
-    //             var tdId = this.getMapTdId(tableId,i,j);
-    //             matrix[i][j] = inc;
-    //             trTemp.append("<td id='"+tdId+"'>"+ i +","+j +"</td>");
-    //             inc++;
-    //         }
-    //         // alert(trTemp);
-    //         trTemp.appendTo(tableObj);
-    //     }
-    // };
     this.ready = function(){
         self.upStatus(7);
         var requestPlayerReady = new proto.pb.PlayerReady();
@@ -650,135 +439,6 @@ function TwinAgoraPlayer (playerId,token,data,DomIdPreObj,contentType,protocolTy
 
         self.upOptBntHref(cancelBntId,hrefBody,self.cancelSign);
     };
-    // this.move = function ( dirObj ){
-    //     console.log("in move")
-    //     if (self.otherPlayerOffline){
-    //         return alert("其它玩家掉线了，请等待一下...");
-    //     }
-    //
-    //     if (self.closeFlag > 0 ){
-    //         return alert("WS FD 已关闭...");
-    //     }
-    //
-    //     if (self.status != 8){
-    //         return alert("status err , != startBattle ， 游戏还未开始，请等待一下...");
-    //     }
-    //
-    //     var dir = dirObj.data;
-    //     var playerLocation = self.playerLocation;
-    //     var nowLocationStr = playerLocation[self.playerId]
-    //     var nowLocationArr = nowLocationStr.split("_");
-    //     var nowLocationLine =  nowLocationArr[0];
-    //     var nowLocationColumn = nowLocationArr[1];
-    //
-    //     nowLocationLine = Number(nowLocationLine)
-    //     nowLocationColumn = Number(nowLocationColumn)
-    //     var newLocation = "";
-    //     if(dir == "up"){
-    //         if(nowLocationLine == 0 ){
-    //             return alert("nowLocationLine == 0");
-    //         }
-    //         var newLocationLine =  nowLocationLine - 1;
-    //         newLocation = newLocationLine + "," + nowLocationColumn;
-    //     }else if(dir == "down"){
-    //         if(nowLocationLine == self.tableMax - 1 ){
-    //             return alert("nowLocationLine == "+ self.tableMax);
-    //         }
-    //         var newLocationLine =  nowLocationLine + 1;
-    //         newLocation = newLocationLine + "," + nowLocationColumn;
-    //     }else if(dir == "left"){
-    //         if(nowLocationColumn == 0 ){
-    //             return alert("nowLocationColumn == 0");
-    //         }
-    //         var newLocationColumn =  nowLocationColumn - 1;
-    //         newLocation = nowLocationLine + "," + newLocationColumn;
-    //     }else if(dir == "right"){
-    //         if(nowLocationColumn ==  self.tableMax - 1 ){
-    //             return alert("nowLocationColumn == "+ self.tableMax);
-    //         }
-    //         var newLocationColumn =  nowLocationColumn + 1;
-    //         newLocation = nowLocationLine + "," + newLocationColumn;
-    //     }else {
-    //         return alert("move dir error."+dir);
-    //     }
-    //
-    //     var localNewLocation = newLocation.replace(',','_');
-    //     for(let key  in playerLocation){
-    //         // alert(playerLocation[key]);
-    //         if(playerLocation[key] == localNewLocation){
-    //              return self.gameOverAndClear()
-    //         }
-    //     }
-    //
-    //     console.log("dir:"+dir+"oldLocation"+nowLocationStr+" , newLocation:"+newLocation);
-    //     self.playerOperationsQueue.push({"id":self.operationsInc,"event":"move","value":newLocation,"playerId":self.playerId});
-    //     self.operationsInc++;
-    //     var playerLocationArr = playerLocation[self.playerId].split("_");
-    //     var lightTd = self.getMapTdId(self.tableId,playerLocationArr[0],playerLocationArr[1]);
-    //     var tdObj = $("#"+lightTd);
-    //     tdObj.css("background", "");
-    // }
-    // this.playerCommandPush = function (){
-    //     var requestPlayerOperations = new proto.pb.LogicFrame();
-    //     requestPlayerOperations.setId(3);
-    //     requestPlayerOperations.setRoomId(self.roomId);
-    //     requestPlayerOperations.setSequenceNumber(self.sequenceNumber);
-    //
-    //     if(self.playerCommandPushLock == 1){
-    //         console.log("send msg lock...please wait server back login frame");
-    //         return
-    //     }
-    //     if (self.playerOperationsQueue.length > 0){
-    //         // {"id":self.operationsInc,"event":"move","value":newLocation,"playerId":self.playerId}
-    //         var operations = new Array(self.playerOperationsQueue.length)
-    //         for(var i=0;i<self.playerOperationsQueue.length;i++){
-    //             var operation = new proto.pb.Operation();
-    //             operation.setId(self.playerOperationsQueue[i].id);
-    //             operation.setEvent(self.playerOperationsQueue[i].event);
-    //             operation.setValue(self.playerOperationsQueue[i].value);
-    //             operation.setPlayerId(self.playerId),
-    //             // operations.push(operation);
-    //             operations[i] = operation;
-    //         }
-    //         requestPlayerOperations.setOperationsList(operations);
-    //         // loginFrame.operations = self.playerOperationsQueue;
-    //         self.playerOperationsQueue = [];//将当前队列里的，当前帧的数据，清空
-    //     }else{
-    //         // window.clearInterval(self.pushLogicFrameLoopFunc);
-    //
-    //         var operations = new Array(1);
-    //         var operation = new proto.pb.Operation();
-    //         operation.setId(1);
-    //         operation.setEvent("empty");
-    //         operation.setValue("-1");
-    //         operation.setPlayerId(self.playerId),
-    //         // operations.push(operation);
-    //         operations[0] = operation;
-    //         // console.log(operations)
-    //         requestPlayerOperations.setOperationsList(operations);
-    //         // var emptyCommand = [{"id":1,"event":"empty","value":"-1","playerId":self.playerId}];
-    //         // loginFrame.operations = emptyCommand;
-    //     }
-    //     self.sendMsg("CS_PlayerOperations",requestPlayerOperations);
-    //     self.playerCommandPushLock = 1;
-    //     // self.sendMsg("playerOperations",loginFrame);
-    // };
-    //
-    // //两个玩家，位移碰撞了，触发了游戏结束
-    // this.gameOverAndClear = function(){
-    //     this.upStatus(9);
-    //
-    //     var requestGameOver = new proto.pb.GameOver()
-    //     requestGameOver.setRoomId(self.roomId);
-    //     requestGameOver.setSequenceNumber(self.sequenceNumber);
-    //     requestGameOver.setResult("ccccccWin");
-    //     this.sendMsg("CS_GameOver", requestGameOver);
-    //
-    //     clearInterval(self.pushLogicFrameLoopFunc);
-    //     self.upOptBnt("游戏结束1",1)
-    //
-    //     return alert("完犊子了，撞车了...这游戏得结束了....");
-    // };
 
     this.getPlayerDescById = function (id){
         return "(player_"+ id+")";

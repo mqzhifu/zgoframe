@@ -84,7 +84,8 @@ func (gateway *Gateway) ListenCloseEvent() {
 	for {
 		select {
 		case connCloseEvent := <-gateway.Netway.ConnManager.CloseEventQueue:
-			util.MyPrint("ListenCloseEvent......========")
+			//util.MyPrint("ListenCloseEvent......========")
+			util.MyPrint("ListenCloseEvent connCloseEvent:", connCloseEvent)
 			//随便取一个conn，给到下层服务，因为：下层服务可能还要继续给其它人发消息
 			msg := gateway.MakeMsgCloseEventInfo(connCloseEvent)
 			gateway.BroadcastService(msg, nil)
@@ -100,12 +101,25 @@ func (gateway *Gateway) MakeMsgCloseEventInfo(connCloseEvent util.ConnCloseEvent
 	msg.ServiceId = 90
 	msg.FuncId = 120
 	msg.SidFid = 90120
+	msg.ContentType = int32(connCloseEvent.ContentType)
+	msg.ProtocolType = int32(connCloseEvent.ProtocolType)
 
 	FDCloseEvent := pb.FDCloseEvent{}
 	FDCloseEvent.UserId = connCloseEvent.UserId
 	FDCloseEvent.Source = int32(connCloseEvent.Source)
-	FDCloseEventStr, _ := proto.Marshal(&FDCloseEvent)
-	msg.Content = string(FDCloseEventStr)
+	//FDCloseEventStr, _ := proto.Marshal(&FDCloseEvent)
+	//msg.Content = string(FDCloseEventStr)
+	var reqContentStr string
+	if msg.ContentType == util.CONTENT_TYPE_PROTOBUF {
+		requestClientHeartbeatStrByte, _ := proto.Marshal(&FDCloseEvent)
+		reqContentStr = string(requestClientHeartbeatStrByte)
+	} else {
+		requestClientHeartbeatStrByte, _ := json.Marshal(FDCloseEvent)
+		reqContentStr = string(requestClientHeartbeatStrByte)
+	}
+
+	msg.Content = reqContentStr
+
 	return msg
 }
 
@@ -114,20 +128,42 @@ func (gateway *Gateway) MakeMsgHeartbeat(requestClientHeartbeat pb.Heartbeat, co
 	msg := pb.Msg{}
 	msg.ServiceId = 90
 	msg.ContentType = conn.ContentType
-	msg.ContentType = conn.ProtocolType
+	msg.ProtocolType = conn.ProtocolType
 	msg.FuncId = 106
 	msg.SidFid = 90106
 
-	var requestClientHeartbeatStr string
+	var reqContentStr string
 	if msg.ContentType == util.CONTENT_TYPE_PROTOBUF {
 		requestClientHeartbeatStrByte, _ := proto.Marshal(&requestClientHeartbeat)
-		requestClientHeartbeatStr = string(requestClientHeartbeatStrByte)
+		reqContentStr = string(requestClientHeartbeatStrByte)
 	} else {
 		requestClientHeartbeatStrByte, _ := json.Marshal(requestClientHeartbeat)
-		requestClientHeartbeatStr = string(requestClientHeartbeatStrByte)
+		reqContentStr = string(requestClientHeartbeatStrByte)
 	}
 
-	msg.Content = requestClientHeartbeatStr
+	msg.Content = reqContentStr
+	return msg
+}
+
+//网关自己创建一条长连接消息，发送给service
+func (gateway *Gateway) MakeMsgFDCreateEventInfo(FDCreateEvent pb.FDCreateEvent, conn *util.Conn) pb.Msg {
+	msg := pb.Msg{}
+	msg.ServiceId = 90
+	msg.ContentType = conn.ContentType
+	msg.ProtocolType = conn.ProtocolType
+	msg.FuncId = 122
+	msg.SidFid = 90122
+
+	var reqContentStr string
+	if msg.ContentType == util.CONTENT_TYPE_PROTOBUF {
+		requestClientHeartbeatStrByte, _ := proto.Marshal(&FDCreateEvent)
+		reqContentStr = string(requestClientHeartbeatStrByte)
+	} else {
+		requestClientHeartbeatStrByte, _ := json.Marshal(FDCreateEvent)
+		reqContentStr = string(requestClientHeartbeatStrByte)
+	}
+
+	msg.Content = reqContentStr
 	return msg
 }
 
@@ -159,18 +195,27 @@ func (gateway *Gateway) Router(msg pb.Msg, conn *util.Conn) (data interface{}, e
 }
 
 func (gateway *Gateway) RouterServiceTwinAgora(msg pb.Msg, conn *util.Conn) (data []byte, err error) {
-	//util.MyPrint(msg, "==============")
+	//util.MyPrint(msg, "-------RouterServiceTwinAgora msg.Content:", msg.Content)
 	requestCallPeopleReq := pb.CallPeopleReq{}
 	requestFDCloseEvent := pb.FDCloseEvent{}
 	reqHeartbeat := pb.Heartbeat{}
+	reqFDCreateEvent := pb.FDCreateEvent{}
+	reqCallVote := pb.CallVote{}
 	protoServiceFunc, _ := gateway.Netway.Option.ProtoMap.GetServiceFuncById(int(msg.SidFid))
+	//util.MyPrint("RouterServiceTwinAgora protoServiceFunc:", protoServiceFunc)
 	switch protoServiceFunc.FuncName {
 	case "CS_CallPeople":
 		err = gateway.Netway.ProtocolManager.ParserContentMsg(msg, &requestCallPeopleReq, conn.UserId)
-	case "FDClose":
-		err = gateway.Netway.ProtocolManager.ParserContentMsg(msg, &requestFDCloseEvent, conn.UserId)
+	case "FdClose":
+		err = gateway.Netway.ProtocolManager.ParserContentMsg(msg, &requestFDCloseEvent, 0)
+	case "FdCreate":
+		err = gateway.Netway.ProtocolManager.ParserContentMsg(msg, &reqFDCreateEvent, conn.UserId)
 	case "CS_Heartbeat":
 		err = gateway.Netway.ProtocolManager.ParserContentMsg(msg, &reqHeartbeat, conn.UserId)
+	case "CS_CallPeopleAccept":
+		err = gateway.Netway.ProtocolManager.ParserContentMsg(msg, &reqCallVote, conn.UserId)
+	case "CS_CallPeopleDeny":
+		err = gateway.Netway.ProtocolManager.ParserContentMsg(msg, &reqCallVote, conn.UserId)
 	default:
 		gateway.Netway.Option.Log.Error("RouterServiceTwinAgora Router err-1:")
 		return data, errors.New("RouterServiceTwinAgora Router err-1")
@@ -187,8 +232,14 @@ func (gateway *Gateway) RouterServiceTwinAgora(msg pb.Msg, conn *util.Conn) (dat
 		gateway.MyServiceList.TwinAgora.CallPeople(requestCallPeopleReq, conn)
 	case "CS_Heartbeat":
 		gateway.MyServiceList.TwinAgora.Heartbeat(reqHeartbeat, conn)
-	case "FDClose":
+	case "FdClose":
 		gateway.MyServiceList.TwinAgora.ConnCloseCallback(requestFDCloseEvent, gateway.Netway.ConnManager)
+	case "FdCreate":
+		gateway.MyServiceList.TwinAgora.FDCreateEvent(reqFDCreateEvent, conn)
+	case "CS_CallPeopleAccept":
+		gateway.MyServiceList.TwinAgora.CallPeopleAccept(reqCallVote, conn)
+	case "CS_CallPeopleDeny":
+		gateway.MyServiceList.TwinAgora.CallPeopleDeny(reqCallVote, conn)
 	default:
 		gateway.Netway.Option.Log.Error("RouterServiceTwinAgora Router err-2:")
 		return data, errors.New("RouterServiceTwinAgora Router err-2")
@@ -315,12 +366,20 @@ func (gateway *Gateway) RouterServiceGateway(msg pb.Msg, conn *util.Conn) (data 
 	switch protoServiceFunc.FuncName {
 	case "CS_Login": //
 		//这里有个BUG，LOGIN 函数只能在第一次调用，回头加个限定
-		data, err = gateway.Netway.Login(requestLogin, conn)
+		cc, err := gateway.Netway.Login(requestLogin, conn)
+		data = cc
+		if err == nil {
+			FDCreateEvent := pb.FDCreateEvent{UserId: int32(cc.Id)}
+			pbMsg := gateway.MakeMsgFDCreateEventInfo(FDCreateEvent, conn)
+			gateway.BroadcastService(pbMsg, conn)
+		}
+
 	case "CS_Ping":
 		gateway.clientPing(requestClientPing, conn)
 	case "CS_Pong":
 		gateway.ClientPong(requestClientPong, conn)
 	case "CS_Heartbeat":
+
 		gateway.heartbeat(requestClientHeartbeat, conn)
 		msg := gateway.MakeMsgHeartbeat(requestClientHeartbeat, conn)
 		gateway.BroadcastService(msg, conn)
@@ -340,7 +399,7 @@ func (gateway *Gateway) heartbeat(requestClientHeartbeat pb.Heartbeat, conn *uti
 		Time: int64(now),
 	}
 
-	conn.SendMsgCompressByUid(conn.UserId, "SC_Headerbeat", &responseHeartbeat)
+	conn.SendMsgCompressByUid(conn.UserId, "SC_Heartbeat", &responseHeartbeat)
 }
 
 func (gateway *Gateway) clientPing(ping pb.PingReq, conn *util.Conn) {

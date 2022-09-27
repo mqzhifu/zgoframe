@@ -39,11 +39,11 @@ func (twinAgora *TwinAgora)SC_PeopleLeave(ctx context.Context,peopleLeaveRes *pb
     empty := &pb.Empty{}
     return empty,nil
 }
-func (twinAgora *TwinAgora)CS_CallPeopleAccept(ctx context.Context,callVote *pb.CallVote) (*pb.Empty,error){
+func (twinAgora *TwinAgora)SC_CallReply(ctx context.Context,callReply *pb.CallReply) (*pb.Empty,error){
     empty := &pb.Empty{}
     return empty,nil
 }
-func (twinAgora *TwinAgora)CS_CallPeopleDeny(ctx context.Context,callVote *pb.CallVote) (*pb.Empty,error){
+func (twinAgora *TwinAgora)CS_CallPeopleAccept(ctx context.Context,callVote *pb.CallVote) (*pb.Empty,error){
     empty := &pb.Empty{}
     return empty,nil
 }
@@ -51,11 +51,19 @@ func (twinAgora *TwinAgora)SC_CallPeopleAccept(ctx context.Context,callVote *pb.
     empty := &pb.Empty{}
     return empty,nil
 }
+func (twinAgora *TwinAgora)CS_CallPeopleDeny(ctx context.Context,callVote *pb.CallVote) (*pb.Empty,error){
+    empty := &pb.Empty{}
+    return empty,nil
+}
 func (twinAgora *TwinAgora)SC_CallPeopleDeny(ctx context.Context,callVote *pb.CallVote) (*pb.Empty,error){
     empty := &pb.Empty{}
     return empty,nil
 }
-func (twinAgora *TwinAgora)SC_CallReply(ctx context.Context,callReply *pb.CallReply) (*pb.Empty,error){
+func (twinAgora *TwinAgora)CS_RoomHeartbeat(ctx context.Context,roomHeartbeatReq *pb.RoomHeartbeatReq) (*pb.Empty,error){
+    empty := &pb.Empty{}
+    return empty,nil
+}
+func (twinAgora *TwinAgora)SC_PushMsg(ctx context.Context,pushMsg *pb.PushMsg) (*pb.Empty,error){
     empty := &pb.Empty{}
     return empty,nil
 }

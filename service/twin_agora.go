@@ -6,6 +6,7 @@ import (
 	uuid "github.com/satori/go.uuid"
 	"gorm.io/gorm"
 	"strconv"
+	"sync"
 	"time"
 	"zgoframe/model"
 	"zgoframe/protobuf/pb"
@@ -32,14 +33,16 @@ const (
 )
 
 type TwinAgora struct {
-	Gorm        *gorm.DB
-	RTCUserPool map[int]*RTCUser
-	RTCRoomPool map[string]*RTCRoom
-	CancelFunc  context.CancelFunc
-	CancelCtx   context.Context
-	CallTimeout int //一次呼叫，超时时间
-	ExecTimeout int //一次通话，超时时间
-	Separate    string
+	Gorm                 *gorm.DB
+	RTCUserPool          map[int]*RTCUser
+	RTCRoomPool          map[string]*RTCRoom
+	CancelFunc           context.CancelFunc
+	CancelCtx            context.Context
+	CallTimeout          int //一次呼叫，超时时间
+	ExecTimeout          int //一次通话，超时时间
+	Separate             string
+	UserHeartbeatTimeout int //一个用户建立的长连接，超时时间
+	ConnManager          *util.ConnManager
 }
 
 //创建连接的FD管理池：用户基础信息
@@ -51,25 +54,27 @@ type RTCUser struct {
 }
 
 type RTCRoom struct {
-	Id                string `json:"id"`                  //唯一标识，UUID4
-	Channel           string `json:"channel"`             //频道名
-	AddTime           int    `json:"add_time"`            //添加时间
-	Uptime            int    `json:"uptime"`              //最后更新时间
-	Status            int    `json:"status"`              //1发起呼叫，2正常通话中，3已结束
-	EndStatus         int    `json:"end_status"`          //结束的状态：(1)超时，(2)某一方退出,(3)某一方拒绝(4)发起方主动取消呼叫
-	CallUid           int    `json:"call_uid"`            //发起通话的UID
-	ReceiveUids       []int  `json:"receive_uids"`        //被呼叫的用户(专家)IDS
-	ReceiveUidsAccept []int  `json:"receive_uids_accept"` //被呼叫的用户(专家)，接收了此次呼叫
-	ReceiveUidsDeny   []int  `json:"receive_uids_deny"`   //被呼叫的用户(专家)，拒绝了此次呼叫
-	OnlineUids        []int  `json:"online_uids"`         //当前在线并且在房间通话的用户
-	Uids              []int  `json:"uids"`                //CallUid + ReceiveUids ,只是记录下，方便函数调用
+	Id                string       `json:"id"`                  //唯一标识，UUID4
+	Channel           string       `json:"channel"`             //频道名
+	AddTime           int          `json:"add_time"`            //添加时间
+	Uptime            int          `json:"uptime"`              //最后更新时间
+	Status            int          `json:"status"`              //1发起呼叫，2正常通话中，3已结束
+	EndStatus         int          `json:"end_status"`          //结束的状态：(1)超时，(2)某一方退出,(3)某一方拒绝(4)发起方主动取消呼叫
+	CallUid           int          `json:"call_uid"`            //发起通话的UID
+	ReceiveUids       []int        `json:"receive_uids"`        //被呼叫的用户(专家)IDS
+	ReceiveUidsAccept []int        `json:"receive_uids_accept"` //被呼叫的用户(专家)，接收了此次呼叫
+	ReceiveUidsDeny   []int        `json:"receive_uids_deny"`   //被呼叫的用户(专家)，拒绝了此次呼叫
+	OnlineUids        []int        `json:"online_uids"`         //当前在线并且在房间通话的用户
+	Uids              []int        `json:"uids"`                //CallUid + ReceiveUids ,只是记录下，方便函数调用
+	RWLock            sync.RWMutex `json:"-"`                   //变更状态的时候使用
 }
 
 func NewTwinAgora(Gorm *gorm.DB) *TwinAgora {
 	twinAgora := new(TwinAgora)
 	twinAgora.Gorm = Gorm
-	twinAgora.CallTimeout = 8  //呼叫过程的超时时间
-	twinAgora.ExecTimeout = 10 //房间运行的超时时间
+	twinAgora.CallTimeout = 8          //呼叫过程的超时时间
+	twinAgora.ExecTimeout = 10         //房间运行的超时时间，room_heartbeat 也使用此值
+	twinAgora.UserHeartbeatTimeout = 3 //一个用户建立的长连接，超时时间
 	twinAgora.Separate = "##"
 	twinAgora.RTCRoomPool = make(map[string]*RTCRoom) //房间池
 	twinAgora.RTCUserPool = make(map[int]*RTCUser)    //用户池
@@ -78,6 +83,9 @@ func NewTwinAgora(Gorm *gorm.DB) *TwinAgora {
 
 	return twinAgora
 }
+
+var ROOM_ID_NOT_IN_MAP = "roomId not in map : "
+var RTC_ROOM_STATUS_END_WAIT_DEMON = "RTC_ROOM_STATUS_END , waiting demon coroutines process..."
 
 //开启RTC房间监控.这里有2个主要的功能：
 //1. 检查房间各种超时
@@ -98,25 +106,27 @@ func (twinAgora *TwinAgora) CheckTimeout() {
 		case <-twinAgora.CancelCtx.Done():
 			goto end
 		default:
-			if len(twinAgora.RTCRoomPool) <= 0 {
-				time.Sleep(time.Millisecond * 100)
-				break
-			}
 			//循环遍历每个房间
-			for _, v := range twinAgora.RTCRoomPool {
+			for _, room := range twinAgora.RTCRoomPool {
 				//呼叫过程超时
-				if util.GetNowTimeSecondToInt() > v.AddTime+twinAgora.CallTimeout && v.Status == RTC_ROOM_STATUS_CALLING {
-					twinAgora.RoomEnd(v.Id, RTC_ROOM_END_STATUS_TIMEOUT_CALLING, 10)
-					twinAgora.MoveAndStore(v)
+				if util.GetNowTimeSecondToInt() > room.AddTime+twinAgora.CallTimeout && room.Status == RTC_ROOM_STATUS_CALLING {
+					twinAgora.RoomEnd(room.Id, RTC_ROOM_END_STATUS_TIMEOUT_CALLING, 10)
 					continue
 				}
 				//房间运行中超时()
-				if util.GetNowTimeSecondToInt() > v.Uptime+twinAgora.ExecTimeout && v.Status == RTC_ROOM_STATUS_EXECING {
-					twinAgora.RoomEnd(v.Id, RTC_ROOM_END_STATUS_TIMEOUT_EXEC, 11)
-					twinAgora.MoveAndStore(v)
+				if util.GetNowTimeSecondToInt() > room.Uptime+twinAgora.ExecTimeout && room.Status == RTC_ROOM_STATUS_EXECING {
+					twinAgora.RoomEnd(room.Id, RTC_ROOM_END_STATUS_TIMEOUT_EXEC, 11)
 					continue
 				}
 			}
+
+			for _, user := range twinAgora.RTCUserPool {
+				if util.GetNowTimeSecondToInt() > user.Uptime+twinAgora.UserHeartbeatTimeout {
+					twinAgora.ConnCloseProcess(user)
+				}
+			}
+			time.Sleep(time.Millisecond * 100)
+			break
 
 		}
 	}
@@ -124,36 +134,44 @@ end:
 	util.MyPrint("twinAgora CheckTimeout finish.")
 }
 
-func (twinAgora *TwinAgora) RoomEnd(roomId string, endStatus int, source int) {
-	roomInfo, ok := twinAgora.RTCRoomPool[roomId]
-	if !ok {
-		errors.New("roomId not in map")
-		return
-	}
-	roomInfo.Status = RTC_ROOM_STATUS_END
-	roomInfo.EndStatus = endStatus
-
-	util.MyPrint("RoomEnd , roomId: ", roomId, " , endStatus:", endStatus, " , source:", source)
-}
-
 //已结束的房间要做:
 //1. 持久化
 //2. 房间池内删除该元素
 //3. 更新用户池内：在线用户的房间ID清除
-func (twinAgora *TwinAgora) MoveAndStore(RTCRoom *RTCRoom) error {
-	err := twinAgora.StoreHistory(RTCRoom)
+func (twinAgora *TwinAgora) RoomEnd(roomId string, endStatus int, source int) {
+	roomInfo, err := twinAgora.GetRoomById(roomId)
 	if err != nil {
-		return err
+		errors.New("roomId not in map")
+		return
 	}
+	//要修改房间状态，要持久化，最终还要删除内存池中的记录，所以要加写锁
+	roomInfo.RWLock.Lock()
+	defer roomInfo.RWLock.Unlock()
 
-	for _, uid := range RTCRoom.OnlineUids {
+	roomInfo.Status = RTC_ROOM_STATUS_END
+	roomInfo.EndStatus = endStatus
+
+	twinAgora.StoreHistory(roomInfo)
+
+	for _, uid := range roomInfo.OnlineUids {
 		myRTCUser, ok := twinAgora.GetUserById(uid)
 		if ok {
+			conn, ok2 := twinAgora.ConnManager.Pool[int32(uid)]
+			if ok2 {
+				peopleLeaveRes := pb.PeopleLeaveRes{}
+				peopleLeaveRes.Uid = int32(uid)
+				peopleLeaveRes.Channel = roomInfo.Channel
+				peopleLeaveRes.RoomId = roomInfo.Id
+
+				conn.SendMsgCompressByUid(int32(uid), "SC_PeopleLeave", peopleLeaveRes)
+			}
 			myRTCUser.RoomId = ""
 		}
 	}
-	delete(twinAgora.RTCRoomPool, RTCRoom.Channel)
-	return nil
+	util.MyPrint("delete room:", roomInfo.Id)
+	delete(twinAgora.RTCRoomPool, roomInfo.Id)
+
+	util.MyPrint("RoomEnd , roomId: ", roomId, " , endStatus:", endStatus, " , source:", source)
 }
 
 func (twinAgora *TwinAgora) DelUserById(uid int) {
@@ -175,44 +193,70 @@ func (twinAgora *TwinAgora) GetUserById(uid int) (mmRTCUserRTCUser *RTCUser, rs 
 	return myRTCUser, ok
 }
 
-//心跳，更新房间的最后更新时间
+//用户长连接 - 心跳，更新房间的最后更新时间
 func (twinAgora *TwinAgora) Heartbeat(heartbeat pb.Heartbeat, conn *util.Conn) {
 	util.MyPrint("twinAgora Heartbeat data:", heartbeat)
 	myRTCUser, ok := twinAgora.GetUserById(int(conn.UserId))
 	if !ok {
-		//这里也是个异常，按说连接创建，网关会推送消息，会立刻创建一个记录
-		myRTCUser = &RTCUser{
-			Id:      int(conn.UserId),
-			AddTime: util.GetNowTimeSecondToInt(),
-			RoomId:  "",
-			Uptime:  util.GetNowTimeSecondToInt(),
-		}
+		msgInfo := "错误：未找到RTCUser....UID:" + strconv.Itoa(int(conn.UserId))
+		twinAgora.MakeError(msgInfo)
+		twinAgora.PushMsg(conn, int(conn.UserId), 500, 1, msgInfo)
+		return
+	}
+
+	myRTCUser.Uptime = util.GetNowTimeSecondToInt()
+
+	if myRTCUser.RoomId == "" {
+		return
+	}
+	myRTCRoom, err := twinAgora.GetRoomById(myRTCUser.RoomId)
+	//myRTCRoom, ok := twinAgora.RTCRoomPool[myRTCUser.RoomId]
+	if err != nil { //这是种异常的情况，用户基础信息里roomId存在 ,但是在池里已经不存在了，可能是其它协程已经操作了，但是没有清空RTCUser的ROOMID
+		twinAgora.MakeError(ROOM_ID_NOT_IN_MAP + myRTCUser.RoomId)
+		myRTCUser.RoomId = ""
+		return
+	}
+	//这里是个异常，按说房间已经结束，用户基础信息应该把roomId清掉
+	if myRTCRoom.Status == RTC_ROOM_STATUS_END {
+		//交给后台守护协程处理，roomId会被清空的
+		twinAgora.MakeError(RTC_ROOM_STATUS_END_WAIT_DEMON + myRTCUser.RoomId)
+		return
+	}
+
+}
+
+//每个房间的心跳，因为音视频使用的是声网，监控不到，就得单独再加一个心跳
+func (twinAgora *TwinAgora) RoomHeartbeat(heartbeat pb.RoomHeartbeatReq, conn *util.Conn) {
+	myRTCUser, ok := twinAgora.GetUserById(int(heartbeat.Uid))
+	if !ok {
 		return
 	}
 
 	if myRTCUser.RoomId == "" {
 		return
 	}
+	myRTCRoom, err := twinAgora.GetRoomById(myRTCUser.RoomId)
+	if err != nil {
+		return
+	}
 
-	myRTCRoom, ok := twinAgora.RTCRoomPool[myRTCUser.RoomId]
-	if !ok { //这是种异常的情况，用户基础信息里roomId存在 ,但是在池里已经不存在了，可能是其它协程已经操作了，但是没有清空RTCUser的ROOMID
-		myRTCUser.RoomId = ""
-		return
-	}
-	//这里是个异常，按说房间已经结束，用户基础信息应该把roomId清掉
-	if myRTCRoom.Status == RTC_ROOM_STATUS_END {
-		myRTCUser.RoomId = ""
-		//这里只做用户的roomId的清理，房间的回收交给专门的后台守护协程来做
-		return
-	}
-	//只能最后一种房间状态了：RTC_ROOM_STATUS_EXEC
-	myRTCUser.Uptime = util.GetNowTimeSecondToInt()
 	myRTCRoom.Uptime = util.GetNowTimeSecondToInt()
 }
+func (twinAgora *TwinAgora) PushMsg(conn *util.Conn, uid int, code int, eventId int, content string) {
+	pushMsg := pb.PushMsg{
+		Code:    int32(code),
+		Uid:     int32(uid),
+		EventId: int32(eventId),
+		Content: content,
+	}
+	conn.SendMsgCompressByUid(int32(uid), "SC_PushMsg", pushMsg)
+}
 func (twinAgora *TwinAgora) FDCreateEvent(FDCreateEvent pb.FDCreateEvent, conn *util.Conn) {
-	myRTCUser, ok := twinAgora.GetUserById(int(FDCreateEvent.UserId))
+	_, ok := twinAgora.GetUserById(int(FDCreateEvent.UserId))
 	if ok {
-		util.MyPrint("错误：重复创建RTCUser....", myRTCUser)
+		msgInfo := "错误：已有存在RTCUser，请不要重复连接....UID:" + strconv.Itoa(int(FDCreateEvent.UserId))
+		twinAgora.MakeError(msgInfo)
+		twinAgora.PushMsg(conn, int(FDCreateEvent.UserId), 500, 1, msgInfo)
 		return
 	}
 	util.MyPrint("FDCreateEvent ,uid:", FDCreateEvent.UserId)
@@ -225,51 +269,55 @@ func (twinAgora *TwinAgora) FDCreateEvent(FDCreateEvent pb.FDCreateEvent, conn *
 	twinAgora.RTCUserPool[int(FDCreateEvent.UserId)] = &NewRTCUser
 }
 
-//对端连接断开(超时)，网关推送事件
+//网关监控到用户连接断了(超时)，会回调通知服务
 func (twinAgora *TwinAgora) ConnCloseCallback(connCloseEvent pb.FDCloseEvent, connManager *util.ConnManager) {
 	util.MyPrint("TwinAgora ConnCloseCallback :", connCloseEvent)
 	myRTCUser, ok := twinAgora.GetUserById(int(connCloseEvent.UserId))
 	if !ok {
 		return
 	}
+	twinAgora.ConnCloseProcess(myRTCUser)
+}
 
-	if myRTCUser.RoomId == "" {
-		twinAgora.DelUserById(int(connCloseEvent.UserId))
+//连接断开或超时处理
+func (twinAgora *TwinAgora) ConnCloseProcess(rtcUserRTCUser *RTCUser) {
+	if rtcUserRTCUser.RoomId == "" {
+		twinAgora.DelUserById(rtcUserRTCUser.Id)
 		return
 	}
-	myRTCRoom, ok := twinAgora.RTCRoomPool[myRTCUser.RoomId]
-	if !ok { //这是种异常的情况，用户基础信息里roomId存在 ,但是在池里已经不存在了，可能是其它协程已经操作了，但是没有清空RTCUser的ROOMID
-		twinAgora.DelUserById(int(connCloseEvent.UserId))
+	myRTCRoom, err := twinAgora.GetRoomById(rtcUserRTCUser.RoomId)
+	if err != nil { //这是种异常的情况，用户基础信息里roomId存在 ,但是在池里已经不存在了，可能是其它协程已经操作了，但是没有清空RTCUser的ROOMID
+		twinAgora.MakeError(ROOM_ID_NOT_IN_MAP + rtcUserRTCUser.RoomId)
+		twinAgora.DelUserById(rtcUserRTCUser.Id)
 		return
 	}
 
 	if myRTCRoom.Status == RTC_ROOM_STATUS_END {
 		//这也是异常情况，池子里虽然有个房间，但是状态是已经结束了，可能后台协程也没有来得及处理
-		twinAgora.DelUserById(int(connCloseEvent.UserId))
+		twinAgora.MakeError(RTC_ROOM_STATUS_END_WAIT_DEMON + rtcUserRTCUser.RoomId)
+		twinAgora.DelUserById(rtcUserRTCUser.Id)
 		return
 	}
 	util.MyPrint("RTCRoomInfo.Channel ", myRTCRoom.Channel, " , RTCRoomInfo.OnlineUids:", myRTCRoom.OnlineUids)
-	for _, u := range myRTCRoom.OnlineUids {
-		if u == int(connCloseEvent.UserId) {
-			//不要再给自己发了，因为：它已要断开连接了，发也是失败
-			continue
-		}
-		peopleLeaveRes := pb.PeopleLeaveRes{}
-		peopleLeaveRes.Uid = connCloseEvent.UserId
-		peopleLeaveRes.Channel = myRTCRoom.Channel
-		peopleLeaveRes.RoomId = myRTCRoom.Id
-
-		conn, ok := connManager.Pool[int32(u)]
-		if ok {
-			conn.SendMsgCompressByUid(int32(u), "SC_PeopleLeave", peopleLeaveRes)
-		}
-	}
+	//for _, u := range myRTCRoom.OnlineUids {
+	//	if u == rtcUserRTCUser.Id {
+	//		//不要再给自己发了，因为：它已要断开连接了，发也是失败
+	//		continue
+	//	}
+	//	peopleLeaveRes := pb.PeopleLeaveRes{}
+	//	peopleLeaveRes.Uid = int32(rtcUserRTCUser.Id)
+	//	peopleLeaveRes.Channel = myRTCRoom.Channel
+	//	peopleLeaveRes.RoomId = myRTCRoom.Id
+	//
+	//	conn, ok := twinAgora.ConnManager.Pool[int32(u)]
+	//	if ok {
+	//		conn.SendMsgCompressByUid(int32(u), "SC_PeopleLeave", peopleLeaveRes)
+	//	}
+	//}
 
 	//目前是1v1视频，只要有一个人拒绝|断线，即结束，这里后期优化一下吧
 	twinAgora.RoomEnd(myRTCRoom.Id, RTC_ROOM_END_STATUS_QUIT, 21)
-	twinAgora.MoveAndStore(myRTCRoom) //注意：它的内部会把RTCUser roomId清空，但不删除
-	twinAgora.DelUserById(int(connCloseEvent.UserId))
-
+	twinAgora.DelUserById(rtcUserRTCUser.Id)
 }
 
 //持久化到DB中
@@ -277,7 +325,7 @@ func (twinAgora *TwinAgora) StoreHistory(RTCRoom *RTCRoom) error {
 	var twinAgoraRoomRow model.TwinAgoraRoom
 	twinAgora.Gorm.Where("room_id = ? ", RTCRoom.Id).First(&twinAgoraRoomRow)
 	if twinAgoraRoomRow.Id > 0 {
-		return errors.New("db has exist ,do not repeat opt")
+		return twinAgora.MakeError("db has exist ,do not repeat opt")
 	}
 	ReceiveUidsStr := util.ArrCoverStr(RTCRoom.ReceiveUids, ",")
 	ReceiveUidsAcceptStr := util.ArrCoverStr(RTCRoom.ReceiveUidsAccept, ",")
@@ -299,7 +347,7 @@ func (twinAgora *TwinAgora) StoreHistory(RTCRoom *RTCRoom) error {
 
 	err := twinAgora.Gorm.Create(&myTwinAgoraRoom).Error
 	if err != nil {
-		util.MyPrint("StoreHistory to mysql err:", err)
+		twinAgora.MakeError("StoreHistory to mysql err:" + err.Error())
 	}
 	return nil
 }
@@ -312,7 +360,6 @@ func (twinAgora *TwinAgora) CallPeople(callPeopleReq pb.CallPeopleReq, conn *uti
 	if callPeopleReq.Uid <= 0 {
 		callPeopleRes.ErrCode = 501
 		callPeopleRes.ErrMsg = "callPeopleReq.Uid <= 0"
-		util.MyPrint(callPeopleRes.ErrMsg)
 		twinAgora.MakeError(callPeopleRes.ErrMsg)
 		conn.SendMsgCompressByUid(callPeopleReq.Uid, "SC_CallPeople", callPeopleRes)
 		return
@@ -337,8 +384,8 @@ func (twinAgora *TwinAgora) CallPeople(callPeopleReq pb.CallPeopleReq, conn *uti
 	uid := int(conn.UserId)
 	myRTCUser, ok := twinAgora.GetUserById(uid)
 	if ok && myRTCUser.RoomId != "" {
-		RTCRoomInfo, ok := twinAgora.RTCRoomPool[myRTCUser.RoomId]
-		if !ok {
+		RTCRoomInfo, err := twinAgora.GetRoomById(myRTCUser.RoomId)
+		if err != nil {
 			callPeopleRes.ErrCode = 511
 			callPeopleRes.ErrMsg = "用户存在roomId,但是房间却不存在，可能程序有问题，请稍后重试"
 			twinAgora.MakeError(callPeopleRes.ErrMsg)
@@ -473,9 +520,9 @@ func (twinAgora *TwinAgora) CancelCallPeople(cancelCallPeopleReq pb.CancelCallPe
 		return errors.New("myRTCUser.RoomId != cancelCallPeopleReq.RoomId")
 	}
 
-	RTCRoomInfo, ok := twinAgora.RTCRoomPool[cancelCallPeopleReq.RoomId]
-	if !ok {
-		return errors.New("roomId not in map")
+	RTCRoomInfo, err := twinAgora.GetRoomById(cancelCallPeopleReq.RoomId)
+	if err != nil {
+		return err
 	}
 	//取消呼叫，只能由发起者自己取消
 	if RTCRoomInfo.CallUid != int(cancelCallPeopleReq.Uid) {
@@ -492,9 +539,7 @@ func (twinAgora *TwinAgora) CancelCallPeople(cancelCallPeopleReq pb.CancelCallPe
 		}
 		conn.SendMsgCompressByUid(cancelCallPeopleReq.Uid, "SC_CancelCallPeople", cancelCallPeopleReq)
 	}
-	RTCRoomInfo.Status = RTC_ROOM_STATUS_END
-	RTCRoomInfo.EndStatus = RTC_ROOM_END_STATUS_CANCEL
-	twinAgora.MoveAndStore(RTCRoomInfo)
+	twinAgora.RoomEnd(cancelCallPeopleReq.RoomId, RTC_ROOM_END_STATUS_CANCEL, 30)
 	return nil
 }
 
@@ -503,15 +548,28 @@ func (twinAgora *TwinAgora) MakeError(errMsg string) error {
 	return errors.New(errMsg)
 }
 
+func (twinAgora *TwinAgora) GetRoomById(id string) (room *RTCRoom, err error) {
+	if id == "" {
+		return room, twinAgora.MakeError("roomId is empty")
+	}
+
+	room, ok := twinAgora.RTCRoomPool[id]
+	if !ok {
+		return room, twinAgora.MakeError("id not in room map.")
+	}
+
+	return room, nil
+}
+
 func (twinAgora *TwinAgora) PeopleEntry(callPeopleReq pb.CallPeopleReq, conn *util.Conn) error {
 	util.MyPrint("in func PeopleEntry:")
 	myRTCUser, ok := twinAgora.GetUserById(int(callPeopleReq.Uid))
 	if !ok {
 		return twinAgora.MakeError("GetUserById empty ")
 	}
-	RTCRoomInfo, ok := twinAgora.RTCRoomPool[myRTCUser.RoomId]
-	if !ok {
-		return twinAgora.MakeError("roomId NOT in map")
+	RTCRoomInfo, err := twinAgora.GetRoomById(myRTCUser.RoomId)
+	if err != nil {
+		return err
 	}
 
 	hasSearch := 0
@@ -548,8 +606,8 @@ func (twinAgora *TwinAgora) PeopleLeave(callPeopleReq pb.CallPeopleReq, conn *ut
 	if !ok {
 		return errors.New("GetUserById empty ")
 	}
-	RTCRoomInfo, ok := twinAgora.RTCRoomPool[myRTCUser.RoomId]
-	if !ok {
+	RTCRoomInfo, err := twinAgora.GetRoomById(myRTCUser.RoomId)
+	if err != nil {
 		return errors.New("roomId NOT in map")
 	}
 
@@ -570,18 +628,7 @@ func (twinAgora *TwinAgora) PeopleLeave(callPeopleReq pb.CallPeopleReq, conn *ut
 		return errors.New("房间状态错误：只能运行中，才接收离开消息")
 	}
 
-	for _, uid := range RTCRoomInfo.OnlineUids {
-		if int(callPeopleReq.Uid) == uid {
-			continue
-		}
-
-		//目前是1v1视频，只要有一个人拒绝，即结束，这里后期优化一下吧
-		RTCRoomInfo.Status = RTC_ROOM_STATUS_END
-		RTCRoomInfo.EndStatus = RTC_ROOM_END_STATUS_QUIT
-		twinAgora.MoveAndStore(RTCRoomInfo)
-
-		conn.SendMsgCompressByUid(callPeopleReq.Uid, "SC_PeopleLeave", callPeopleReq)
-	}
+	twinAgora.RoomEnd(myRTCUser.RoomId, RTC_ROOM_END_STATUS_QUIT, 40)
 
 	return nil
 }
@@ -589,9 +636,9 @@ func (twinAgora *TwinAgora) PeopleLeave(callPeopleReq pb.CallPeopleReq, conn *ut
 //被呼叫者，接收/拒绝 公共验证
 func (twinAgora *TwinAgora) PeopleVote(callVote pb.CallVote) (error, *RTCRoom) {
 	util.MyPrint("PeopleVote :", callVote)
-	RTCRoomInfo, ok := twinAgora.RTCRoomPool[callVote.RoomId]
-	if !ok {
-		return twinAgora.MakeError("room id not in map"), RTCRoomInfo
+	RTCRoomInfo, err := twinAgora.GetRoomById(callVote.RoomId)
+	if err != nil {
+		return err, RTCRoomInfo
 	}
 	hasSearch := 0
 	for _, uid := range RTCRoomInfo.ReceiveUids {
@@ -668,10 +715,7 @@ func (twinAgora *TwinAgora) CallPeopleDeny(callVote pb.CallVote, conn *util.Conn
 	}
 
 	conn.SendMsgCompressByUid(int32(RTCRoomInfo.CallUid), "SC_CallPeopleDeny", callVote)
-	//目前是1v1视频，只要有一个人拒绝，即结束，这里后期优化一下吧
-	RTCRoomInfo.Status = RTC_ROOM_STATUS_END
-	RTCRoomInfo.EndStatus = RTC_ROOM_END_STATUS_DENY
-	twinAgora.MoveAndStore(RTCRoomInfo)
+	twinAgora.RoomEnd(callVote.RoomId, RTC_ROOM_END_STATUS_DENY, 50)
 	return err
 
 }

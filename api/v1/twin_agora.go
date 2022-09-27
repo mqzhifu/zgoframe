@@ -614,7 +614,7 @@ func TwinAgoraConfig(c *gin.Context) {
 	config := make(map[string]string)
 	config["call_timeout"] = strconv.Itoa(global.V.MyService.TwinAgora.CallTimeout)
 	config["exec_timeout"] = strconv.Itoa(global.V.MyService.TwinAgora.ExecTimeout)
-
+	config["user_heartbeat_timeout"] = strconv.Itoa(global.V.MyService.TwinAgora.UserHeartbeatTimeout)
 	httpresponse.OkWithAll(config, "Query-成功", c)
 }
 

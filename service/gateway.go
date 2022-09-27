@@ -64,6 +64,8 @@ func (gateway *Gateway) StartSocket(netWayOption util.NetWayOption) (*util.NetWa
 
 	go gateway.ListenCloseEvent()
 
+	gateway.MyServiceList.TwinAgora.ConnManager = gateway.Netway.ConnManager
+
 	return netWay, err
 	//if err != nil {
 	//	//errMsg := "NewNetWay err:" + err.Error()
@@ -201,6 +203,7 @@ func (gateway *Gateway) RouterServiceTwinAgora(msg pb.Msg, conn *util.Conn) (dat
 	reqHeartbeat := pb.Heartbeat{}
 	reqFDCreateEvent := pb.FDCreateEvent{}
 	reqCallVote := pb.CallVote{}
+	reqRoomHeartbeat := pb.RoomHeartbeatReq{}
 	protoServiceFunc, _ := gateway.Netway.Option.ProtoMap.GetServiceFuncById(int(msg.SidFid))
 	//util.MyPrint("RouterServiceTwinAgora protoServiceFunc:", protoServiceFunc)
 	switch protoServiceFunc.FuncName {
@@ -210,6 +213,8 @@ func (gateway *Gateway) RouterServiceTwinAgora(msg pb.Msg, conn *util.Conn) (dat
 		err = gateway.Netway.ProtocolManager.ParserContentMsg(msg, &requestFDCloseEvent, 0)
 	case "FdCreate":
 		err = gateway.Netway.ProtocolManager.ParserContentMsg(msg, &reqFDCreateEvent, conn.UserId)
+	case "CS_RoomHeartbeat":
+		err = gateway.Netway.ProtocolManager.ParserContentMsg(msg, &reqRoomHeartbeat, conn.UserId)
 	case "CS_Heartbeat":
 		err = gateway.Netway.ProtocolManager.ParserContentMsg(msg, &reqHeartbeat, conn.UserId)
 	case "CS_CallPeopleAccept":
@@ -232,6 +237,8 @@ func (gateway *Gateway) RouterServiceTwinAgora(msg pb.Msg, conn *util.Conn) (dat
 		gateway.MyServiceList.TwinAgora.CallPeople(requestCallPeopleReq, conn)
 	case "CS_Heartbeat":
 		gateway.MyServiceList.TwinAgora.Heartbeat(reqHeartbeat, conn)
+	case "CS_RoomHeartbeat":
+		gateway.MyServiceList.TwinAgora.RoomHeartbeat(reqRoomHeartbeat, conn)
 	case "FdClose":
 		gateway.MyServiceList.TwinAgora.ConnCloseCallback(requestFDCloseEvent, gateway.Netway.ConnManager)
 	case "FdCreate":

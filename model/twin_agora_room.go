@@ -11,7 +11,7 @@ type TwinAgoraRoom struct {
 	ReceiveUids       string `json:"receive_uids" form:"receive_uids" db:"define:varchar(255);comment:接收呼叫者消息;defaultValue:''"`
 	ReceiveUidsAccept string `json:"receive_uids_accept" form:"receive_uids_accept" db:"define:varchar(13);comment:被呼叫的用户IDS，接收了此次呼叫;defaultValue:''"`
 	ReceiveUidsDeny   string `json:"receive_uids_deny" form:"receive_uids_deny" db:"define:text;comment:被呼叫的用户IDS，拒绝了此次呼叫"`
-	Uids              string `json:"uids" form:"uids" db:"define:text;comment:ReceiveUidsAccept+CallUid"`
+	Uids              string `json:"uids" form:"uids" db:"define:text;comment:方便调试(ReceiveUidsAccept+CallUid)"`
 }
 
 func (twinAgoraRoom *TwinAgoraRoom) TableOptions() map[string]string {

@@ -112,17 +112,18 @@ func NewMyService() *MyService {
 	if C.Gateway.Status == "open" {
 		gateway := service.NewGateway(V.GrpcManager, V.Zap)
 		var netway *util.NetWay
-		netway, err = gateway.StartSocket(netWayOption)
-		if err != nil {
-			util.ExitPrint("InitGateway err:" + err.Error())
-		}
-
 		myService.FrameSync.SetNetway(netway)
 		gateway.MyServiceList.FrameSync = myService.FrameSync
 		gateway.MyServiceList.Match = myService.Match
 		gateway.MyServiceList.RoomManage = myService.RoomManage
 		gateway.MyServiceList.TwinAgora = myService.TwinAgora
 		myService.Gateway = gateway
+
+		netway, err = gateway.StartSocket(netWayOption)
+		if err != nil {
+			util.ExitPrint("InitGateway err:" + err.Error())
+		}
+
 	}
 	myService.Cicd, err = InitCicd()
 

@@ -63,6 +63,8 @@
     var serverHostUri = "http://"+domain + "/gateway/config";
     //S端URL - 通讯协议的协议号
     var actionMapHostUri = "http://"+domain + "/gateway/action/map";
+    var twinAgoraConfigUri = "http://"+domain + "/twin/agora/config";
+    var twinAgoraConfig = null;
     //S端URL - 登陆接口
     var loginUrl = "http://"+domain + "/base/login"
     ////用户名公共前缀
@@ -100,6 +102,7 @@
         playerLogin();//玩家登陆，初始化信息 name token
         console.log(playerList)
         initServerConfig();//获取 后端 连接相关信息, 非异步
+        initTwinAgoraConfig();
         initActionMap();//获取 长连接 接口ID 号等，用于映射, 非异步
         //
         // //基础信息，获取结束，开始 初始化 玩家同步相关信息
@@ -109,12 +112,12 @@
         // }
 
         var player =  playerList["doctor"];
-        var wsObj = new TwinAgoraPlayer(player.info.id , player.token, ServerConfig, null , contentType,protocolType,player);
+        var wsObj = new TwinAgoraPlayer(player.info.id , player.token, ServerConfig, null , contentType,protocolType,player,twinAgoraConfig);
         wsObj.create();
 
 
         var player =  playerList["calluser"];
-        var wsObj = new TwinAgoraPlayer(player.info.id , player.token, ServerConfig, null , contentType,protocolType,player);
+        var wsObj = new TwinAgoraPlayer(player.info.id , player.token, ServerConfig, null , contentType,protocolType,player,twinAgoraConfig);
         wsObj.create();
     }
 
@@ -159,7 +162,29 @@
             serverConfigTable.html(html);
         }
     }
+    function initTwinAgoraConfig(){
+        $.ajax({
+            async:false,
+            type: "GET",
+            headers: {
+                "X-Token":playerList["calluser"].token
+            },
+            url:twinAgoraConfigUri,
+            success: function(data){
+                twinAgoraConfig = data.data;
+                console.log("twinAgoraConfig:",twinAgoraConfig)
+                var html = "";
+                for(let key  in twinAgoraConfig){
+                    // for(var i=0;i<twinAgoraConfig.length;i++){
+                        html += "<tr><td>"+key+"</td><td>"+twinAgoraConfig[key]+"(秒)</td>";
+                    // }
+                }
 
+                var local_config_table = $("#local_config_table");
+                local_config_table.html(html);
+            }
+        });
+    }
 
     function initActionMap(){
         $.ajax({

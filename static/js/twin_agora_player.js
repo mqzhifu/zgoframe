@@ -1,5 +1,5 @@
 //=========
-function TwinAgoraPlayer (playerId,token,data,DomIdPreObj,contentType,protocolType,playerInfo){
+function TwinAgoraPlayer (playerId,token,data,DomIdPreObj,contentType,protocolType,playerInfo,twinAgoraConfig){
     var self = this;
     this.wsObj = null;//js内置ws 对象
     //ws 连接 s 端地址
@@ -16,14 +16,17 @@ function TwinAgoraPlayer (playerId,token,data,DomIdPreObj,contentType,protocolTy
         9:"end",
         10:"close",
     };
-    this.TIMEOUT_CALLING = 0;
-    this.TIMEOUT_EXEC = 0;
+    this.TIMEOUT_CALLING = twinAgoraConfig.call_timeout;
+    this.TIMEOUT_EXEC = twinAgoraConfig.exec_timeout;
+    this.TIMEOUT_HEARTBEAT = twinAgoraConfig.user_heartbeat_timeout;
+    this.UserHeartbeatTimer = null;
+    this.RoomHeartbeatTimer = null;
     this.playerInfo = playerInfo;
+    this.closeFlag = 0;//关闭标识，0正常1手动关闭2后端关闭
+    this.heartbeatLoopFunc = null;//心跳回调函数
     this.status = 1;//1初始化 2等待准备 3运行中  4结束
     this.playerId = playerId;//玩家ID
     this.matchGroupPeople = data.roomPeople;//一个副本的人数
-    this.heartbeatLoopFunc = null;//心跳回调函数
-    this.closeFlag = 0;//关闭标识，0正常1手动关闭2后端关闭
     this.offLineWaitTime = data.offLineWaitTime;//lockStep 玩家掉线后，其它玩家等待最长时间
     this.token = token;//玩家的凭证
     this.otherPlayerOffline = 0;//其它玩家调线
@@ -40,7 +43,7 @@ function TwinAgoraPlayer (playerId,token,data,DomIdPreObj,contentType,protocolTy
         // }
         self.closeFlag = 0;//清空 关闭标识
 
-        console.log("create new WebSocket"+self.hostUri ,  " TIMEOUT_EXEC:",self.TIMEOUT_EXEC, " TIMEOUT_CALLING:",self.TIMEOUT_CALLING, " contentType:",self.contentType, " protocolType:",self.protocolType)
+        console.log("create new WebSocket"+self.hostUri ,  " TIMEOUT_EXEC:",self.TIMEOUT_EXEC, " TIMEOUT_CALLING:",self.TIMEOUT_CALLING, " contentType:",self.contentType, " protocolType:",self.protocolType , " user_heartbeat_timeout:",self.TIMEOUT_HEARTBEAT)
         //创建ws连接
         self.wsObj = new WebSocket(self.hostUri);
         //设置 关闭回调
@@ -140,14 +143,17 @@ function TwinAgoraPlayer (playerId,token,data,DomIdPreObj,contentType,protocolTy
     };
     //玩家操作 - 主动关闭
     this.closeFD = function (){
-        console.log("closeFD");
+        console.log("client to closeFD");
         // window.clearInterval(self.heartbeatLoopFunc);
         // clearInterval(self.pushLogicFrameLoopFunc);
-        self.myClose = 1;
+        // self.myClose = 1;
         self.wsObj.close();
     };
     //ws 接收到服务端关闭
     this.onclose = function(ev){
+        console.log("server onclose")
+        clearInterval(self.UserHeartbeatTimer)
+        clearInterval(self.RoomHeartbeatTimer)
         // alert("receive server close:" +ev.code);
         // clearInterval(self.pushLogicFrameLoopFunc);
         // self.upStatus(10);
@@ -269,18 +275,24 @@ function TwinAgoraPlayer (playerId,token,data,DomIdPreObj,contentType,protocolTy
         // console.log("router:",action,content)
         if ( action == 'SC_Login' ) {
             self.rLoginRes(content);
-        }else if( action == 'SC_CallPeople'){//获取一个当前玩家的状态，如：是否有历史未结束的游戏
+        }else if( action == 'SC_CallPeople'){//
             self.rCallPeopleRes(content);
-        }else if( action == 'SC_Ping'){//获取一个当前玩家的状态，如：是否有历史未结束的游戏
+        }else if( action == 'SC_Ping'){//
             self.rServerPing(content);
         }else if ( action == 'SC_CallReply' ){
             self.rCallReply(content)
         }else if ( action == 'SC_Heartbeat' ){
-            console.log("SC_Heartbeat......",content)
-        //     self.rOtherPlayerOffline(content);
-        // }else if ( action == 'SC_EnterBattle' ){
+            console.log("SC_Heartbeat")
+        }else if ( action == 'SC_CallPeopleAccept' ){
+            self.rAccept(content)
+        }else if ( action == 'SC_CallPeopleDeny' ){
+            console.log("SC_CallPeopleDeny clear roomId.")
+            self.roomId = "";
+        }else if ( action == 'SC_PushMsg' ){
+            console.log("SC_PushMsg:",content)
         //     self.rEnterBattle(content);
-        // }else if( "SC_GameOver" == action){
+        }else if( "SC_PeopleEntry" == action){
+            self.rPeopleEntry(content)
         //     self.rGameOver(content);
         // }else if( "SC_KickOff" == action){
         //     self.rKickOff(content);
@@ -299,7 +311,19 @@ function TwinAgoraPlayer (playerId,token,data,DomIdPreObj,contentType,protocolTy
             return alert("action error."+action);
         }
     };
-
+    this.rPeopleEntry = function(data){
+        console.log("CS_PeopleEntry:",data)
+        if(self.playerInfo.info.role == 1){
+            console.log("眼镜端接收到了有人进入的消息....")
+        }else{
+            console.log("专家端接收到了对端进入了，专家也得进入")
+            var requestPeopleEntry = new proto.pb.PeopleEntry();
+            requestPeopleEntry.setRoomId(self.roomId);
+            requestPeopleEntry.setChannel("testChannel");
+            requestPeopleEntry.setUid(self.playerId);
+            self.sendMsg("CS_PeopleEntry",requestPeopleEntry);
+        }
+    }
     this.rCallReply = function(data){
         console.log("rCallReply ， 接收到了服务端请求呼叫:",data);
         var msg = "有人呼叫你，是否同意该请求?";
@@ -319,6 +343,25 @@ function TwinAgoraPlayer (playerId,token,data,DomIdPreObj,contentType,protocolTy
     };
 
     //=================== 以下都是 接收S端的处理函数========================================
+    this.rRoomHeartbeat  = function(data){
+
+    };
+    this.rAccept = function(data){
+        console.log("SC_CallPeopleAccept:",data)
+
+
+        self.TIMEOUT_EXEC
+
+        var requestPeopleEntry = new proto.pb.PeopleEntry();
+        requestPeopleEntry.setRoomId(self.roomId);
+        requestPeopleEntry.setChannel("testChannel");
+        requestPeopleEntry.setUid(self.playerId);
+        self.sendMsg("CS_PeopleEntry",requestPeopleEntry);
+
+
+        self.RoomHeartbeatTimer =  setInterval(self.rRoomHeartbeat , self.TIMEOUT_EXEC * 1000 )
+
+    }
     this.rReadyTimeout= function(logicFrame){
         console.log("rReadyTimeout:",logicFrame);
 
@@ -371,7 +414,7 @@ function TwinAgoraPlayer (playerId,token,data,DomIdPreObj,contentType,protocolTy
             return alert("loginRes failed!!!"+logicFrame.code + " , "+logicFrame.errMsg);
         }
         //定时心跳
-        setInterval(self.heartbeat , 5000 )
+        self.UserHeartbeatTimer =  setInterval(self.heartbeat , self.TIMEOUT_HEARTBEAT * 1000 )
 
         console.log("登陆成功:",self.playerId);
         if(this.playerInfo.info.role == 1){

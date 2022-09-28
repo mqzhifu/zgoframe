@@ -171,8 +171,8 @@ func (gateway *Gateway) MakeMsgFDCreateEventInfo(FDCreateEvent pb.FDCreateEvent,
 
 //广播给所有服务，如：心跳 PING PONG 关闭事件
 func (gateway *Gateway) BroadcastService(msg pb.Msg, conn *util.Conn) {
-	gateway.RouterServiceSync(msg, conn)
-	gateway.RouterServiceGameMatch(msg, conn)
+	//gateway.RouterServiceSync(msg, conn)
+	//gateway.RouterServiceGameMatch(msg, conn)
 	gateway.RouterServiceTwinAgora(msg, conn)
 }
 
@@ -236,11 +236,11 @@ func (gateway *Gateway) RouterServiceTwinAgora(msg pb.Msg, conn *util.Conn) (dat
 	case "CS_CallPeople":
 		gateway.MyServiceList.TwinAgora.CallPeople(requestCallPeopleReq, conn)
 	case "CS_Heartbeat":
-		gateway.MyServiceList.TwinAgora.Heartbeat(reqHeartbeat, conn)
+		gateway.MyServiceList.TwinAgora.UserHeartbeat(reqHeartbeat, conn)
 	case "CS_RoomHeartbeat":
 		gateway.MyServiceList.TwinAgora.RoomHeartbeat(reqRoomHeartbeat, conn)
 	case "FdClose":
-		gateway.MyServiceList.TwinAgora.ConnCloseCallback(requestFDCloseEvent, gateway.Netway.ConnManager)
+		gateway.MyServiceList.TwinAgora.FDCloseEvent(requestFDCloseEvent, gateway.Netway.ConnManager)
 	case "FdCreate":
 		gateway.MyServiceList.TwinAgora.FDCreateEvent(reqFDCreateEvent, conn)
 	case "CS_CallPeopleAccept":

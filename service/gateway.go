@@ -204,13 +204,22 @@ func (gateway *Gateway) RouterServiceTwinAgora(msg pb.Msg, conn *util.Conn) (dat
 	reqFDCreateEvent := pb.FDCreateEvent{}
 	reqCallVote := pb.CallVote{}
 	reqRoomHeartbeat := pb.RoomHeartbeatReq{}
+	cancelCallPeopleReq := pb.CancelCallPeopleReq{}
+	reqPeopleEntry := pb.PeopleEntry{}
+	reqPeopleLeaveRes := pb.PeopleLeaveRes{}
 	protoServiceFunc, _ := gateway.Netway.Option.ProtoMap.GetServiceFuncById(int(msg.SidFid))
 	//util.MyPrint("RouterServiceTwinAgora protoServiceFunc:", protoServiceFunc)
 	switch protoServiceFunc.FuncName {
 	case "CS_CallPeople":
 		err = gateway.Netway.ProtocolManager.ParserContentMsg(msg, &requestCallPeopleReq, conn.UserId)
+	case "CS_PeopleLeave":
+		err = gateway.Netway.ProtocolManager.ParserContentMsg(msg, &reqPeopleLeaveRes, conn.UserId)
+	case "CS_CancelCallPeople":
+		err = gateway.Netway.ProtocolManager.ParserContentMsg(msg, &cancelCallPeopleReq, conn.UserId)
 	case "FdClose":
 		err = gateway.Netway.ProtocolManager.ParserContentMsg(msg, &requestFDCloseEvent, 0)
+	case "CS_PeopleEntry":
+		err = gateway.Netway.ProtocolManager.ParserContentMsg(msg, &reqPeopleEntry, conn.UserId)
 	case "FdCreate":
 		err = gateway.Netway.ProtocolManager.ParserContentMsg(msg, &reqFDCreateEvent, conn.UserId)
 	case "CS_RoomHeartbeat":
@@ -237,10 +246,16 @@ func (gateway *Gateway) RouterServiceTwinAgora(msg pb.Msg, conn *util.Conn) (dat
 		gateway.MyServiceList.TwinAgora.CallPeople(requestCallPeopleReq, conn)
 	case "CS_Heartbeat":
 		gateway.MyServiceList.TwinAgora.UserHeartbeat(reqHeartbeat, conn)
+	case "CS_PeopleLeave":
+		gateway.MyServiceList.TwinAgora.PeopleLeave(reqPeopleLeaveRes, conn)
 	case "CS_RoomHeartbeat":
 		gateway.MyServiceList.TwinAgora.RoomHeartbeat(reqRoomHeartbeat, conn)
 	case "FdClose":
 		gateway.MyServiceList.TwinAgora.FDCloseEvent(requestFDCloseEvent, gateway.Netway.ConnManager)
+	case "CS_PeopleEntry":
+		gateway.MyServiceList.TwinAgora.PeopleEntry(reqPeopleEntry, conn)
+	case "CS_CancelCallPeople":
+		gateway.MyServiceList.TwinAgora.CancelCallPeople(cancelCallPeopleReq, conn)
 	case "FdCreate":
 		gateway.MyServiceList.TwinAgora.FDCreateEvent(reqFDCreateEvent, conn)
 	case "CS_CallPeopleAccept":
@@ -402,11 +417,11 @@ func (gateway *Gateway) heartbeat(requestClientHeartbeat pb.Heartbeat, conn *uti
 	now := util.GetNowTimeSecondToInt()
 	conn.UpTime = int32(now)
 
-	responseHeartbeat := pb.Heartbeat{
-		Time: int64(now),
-	}
+	//responseHeartbeat := pb.Heartbeat{
+	//	Time: int64(now),
+	//}
 
-	conn.SendMsgCompressByUid(conn.UserId, "SC_Heartbeat", &responseHeartbeat)
+	//conn.SendMsgCompressByUid(conn.UserId, "SC_Heartbeat", &responseHeartbeat)
 }
 
 func (gateway *Gateway) clientPing(ping pb.PingReq, conn *util.Conn) {

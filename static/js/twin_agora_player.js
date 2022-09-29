@@ -322,7 +322,14 @@ function TwinAgoraPlayer (playerId,token,data,DomIdPreObj,contentType,protocolTy
             requestPeopleEntry.setChannel("testChannel");
             requestPeopleEntry.setUid(self.playerId);
             self.sendMsg("CS_PeopleEntry",requestPeopleEntry);
+            setTimeout(self.sLeave,3000);
         }
+    }
+    this.sLeave = function(){
+        var peopleLeaveRes =  new proto.pb.PeopleLeaveRes()
+        peopleLeaveRes.setUid(self.playerId);
+        peopleLeaveRes.setRoomId(self.roomId);
+        self.sendMsg("CS_PeopleLeave",peopleLeaveRes);
     }
     this.rCallReply = function(data){
         console.log("rCallReply ， 接收到了服务端请求呼叫:",data);

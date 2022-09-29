@@ -207,9 +207,8 @@ func (connManager *ConnManager) GetPlayerCtrlInfoById(userId int32) ProtocolCtrl
 		contentType = connManager.Option.DefaultContentType
 		protocolType = connManager.Option.DefaultProtocolType
 	} else {
-		conn, empty := connManager.getConnPoolById(userId)
-		//mylog.Debug("GetContentTypeById player",player)
-		if empty {
+		conn, exist := connManager.getConnPoolById(userId)
+		if !exist {
 			contentType = connManager.Option.DefaultContentType
 			protocolType = connManager.Option.DefaultProtocolType
 		} else {
@@ -636,7 +635,7 @@ func (conn *Conn) SendMsg(action string, content []byte) {
 	//获取协议号结构体
 	actionMap, empty := conn.ConnManager.Option.ProtoMap.GetServiceFuncByFuncName(action)
 	if empty {
-		MyPrint(conn.ConnManager.Option.ProtoMap.ServiceFuncMap)
+		//MyPrint(conn.ConnManager.Option.ProtoMap.ServiceFuncMap)
 		conn.ConnManager.Option.Log.Error("GetActionId is  empty:" + action)
 		return
 	}

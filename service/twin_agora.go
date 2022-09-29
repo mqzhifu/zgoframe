@@ -202,10 +202,12 @@ func (twinAgora *TwinAgora) PeopleEntry(peopleEntry pb.PeopleEntry, conn *util.C
 	util.MyPrint("PeopleEntry  uid:", peopleEntry.Uid)
 	myRTCUser, ok := twinAgora.GetUserById(int(peopleEntry.Uid))
 	if !ok {
+		util.MyPrint("PeopleEntry err1")
 		return twinAgora.MakeError(twinAgora.Lang.NewReplaceOneString(401, strconv.Itoa(int(peopleEntry.Uid))))
 	}
 	RTCRoomInfo, err := twinAgora.GetRoomById(myRTCUser.RoomId)
 	if err != nil {
+		util.MyPrint("PeopleEntry err2")
 		return err
 	}
 
@@ -218,19 +220,21 @@ func (twinAgora *TwinAgora) PeopleEntry(peopleEntry pb.PeopleEntry, conn *util.C
 	}
 
 	if hasSearch == 1 {
+		util.MyPrint("PeopleEntry err3")
 		//您并不在此频道中，请不要乱发消息
 		return errors.New(twinAgora.Lang.NewReplaceOneString(407, strconv.Itoa(int(peopleEntry.Uid))))
 	}
 
 	if RTCRoomInfo.Status != RTC_ROOM_STATUS_EXECING {
+		util.MyPrint("PeopleEntry err4")
 		return twinAgora.MakeError(twinAgora.Lang.NewReplaceOneString(511, RTCRoomInfo.Id))
 	}
-
-	for _, uid := range RTCRoomInfo.OnlineUids {
-		if int(peopleEntry.Uid) == uid {
+	util.MyPrint("PeopleEntry:", RTCRoomInfo.Uids, conn.UserId)
+	for _, uid := range RTCRoomInfo.Uids {
+		if int(conn.UserId) == uid {
 			continue
 		}
-		conn.SendMsgCompressByUid(peopleEntry.Uid, "SC_PeopleEntry", peopleEntry)
+		conn.SendMsgCompressByUid(int32(uid), "SC_PeopleEntry", peopleEntry)
 	}
 	RTCRoomInfo.OnlineUids = append(RTCRoomInfo.OnlineUids, int(peopleEntry.Uid))
 

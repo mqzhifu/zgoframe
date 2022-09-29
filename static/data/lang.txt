@@ -1,5 +1,5 @@
 200|成功
-5555|code不存在
+5555|code不存在{0}
 5100|header SourceType unknow
 5101|header ProjectId <= 0
 5102|header ACCESS empty

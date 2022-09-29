@@ -63,7 +63,7 @@ func NewMyService() *MyService {
 		//MatchSuccessChan chan *Room
 	}
 	//远程呼叫专家
-	myService.TwinAgora = service.NewTwinAgora(V.Gorm)
+	myService.TwinAgora, _ = service.NewTwinAgora(V.Gorm, V.Zap, C.Http.StaticPath)
 
 	//长连接通信 - 配置
 	netWayOption := util.NetWayOption{

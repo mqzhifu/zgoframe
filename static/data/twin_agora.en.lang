@@ -1,0 +1,23 @@
+5555|code not exist:{0}
+400|uid <= 0
+401|uid not in map:{0}
+402|DB user Table: not have user(role=doctor)
+403|All doctor user not online...
+405|exist RTCUser，don't repeat opt....UID:{0}
+406|you are not calling user , no power cancel:{0}
+407|you has in room:{0}
+409|don't reply msg ,no power:{0}
+410|you has deny,don't repeat opt:{0}
+411|you has accept,don't repeat op:{0}
+412|roomId err , is diff:{0}
+420|para PeopleType err , now only support: calling doctor (PeopleType= 2)
+421|not support para:TargetUid
+500|room id is empty
+501|room id not in map : {0}
+510|room status : END , wait demon coroutines process recycle......{0}
+513|room status : EXEC ,{0}
+514|room status : CALL ,{0}
+511|room status :not is EXEC:{0}
+512|room status :not is CALL:{0}
+520|room record has store , dont't repeat opt:{0}
+522|you not in room ,don't leave

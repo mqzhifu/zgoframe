@@ -416,19 +416,20 @@ function TwinAgoraPlayer (playerId,token,data,DomIdPreObj,contentType,protocolTy
         //定时心跳
         self.UserHeartbeatTimer =  setInterval(self.heartbeat , self.TIMEOUT_HEARTBEAT * 1000 )
 
-        console.log("登陆成功:",self.playerId);
-        if(this.playerInfo.info.role == 1){
-            console.log("我是护士，开启呼叫...")
-            var requestCall = new proto.pb.CallPeopleReq()
-            requestCall.setUid(this.playerId)
-            requestCall.setTargetUid(0)
-            requestCall.setChannel("ckck")
-            requestCall.setPeopleType(2)
-            requestCall.setPeopleRole(2)
-            this.sendMsg("CS_CallPeople",requestCall);
-        }else{
-            console.log("我是专家我就不呼叫了，等待眼镜端的发来请求吧...");
-        }
+        // alert(this.playerInfo.info.role );
+        // console.log("登陆成功:",self.playerId);
+        // if(this.playerInfo.info.role == 1){
+        //     console.log("我是护士，开启呼叫...")
+        //     var requestCall = new proto.pb.CallPeopleReq()
+        //     requestCall.setUid(this.playerId)
+        //     requestCall.setTargetUid(0)
+        //     requestCall.setChannel("ckck")
+        //     requestCall.setPeopleType(2)
+        //     requestCall.setPeopleRole(2)
+        //     this.sendMsg("CS_CallPeople",requestCall);
+        // }else{
+        //     console.log("我是专家我就不呼叫了，等待眼镜端的发来请求吧...");
+        // }
 
     };
     this.rServerPong = function(logicFrame){

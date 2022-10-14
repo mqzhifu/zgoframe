@@ -187,13 +187,16 @@ func (twinAgora *TwinAgora) CancelCallPeople(cancelCallPeopleReq pb.CancelCallPe
 	if RTCRoomInfo.Status != RTC_ROOM_STATUS_CALLING {
 		return errors.New(twinAgora.Lang.NewReplaceOneString(512, strconv.Itoa(RTCRoomInfo.Status)))
 	}
+	util.MyPrint("RTCRoomInfo.ReceiveUids:", RTCRoomInfo.ReceiveUids, " cancelCallPeopleReq.Uid:", cancelCallPeopleReq.Uid)
 	//给所有专家端用户发送取消的消息
 	for _, uid := range RTCRoomInfo.ReceiveUids {
 		if int(cancelCallPeopleReq.Uid) == uid {
 			continue
 		}
-		conn.SendMsgCompressByUid(cancelCallPeopleReq.Uid, "SC_CancelCallPeople", cancelCallPeopleReq)
+		conn.SendMsgCompressByUid(int32(uid), "SC_CancelCallPeople", cancelCallPeopleReq)
 	}
+	//清空user的roomId值，RoomEnd只会清空掉已进入房间的用户，而此时房间虽然存在，但没有人进入，用户直接取消了，把给清空一下
+	myRTCUser.RoomId = ""
 	twinAgora.RoomEnd(cancelCallPeopleReq.RoomId, RTC_ROOM_END_STATUS_CANCEL)
 	return nil
 }

@@ -52,6 +52,8 @@ type TwinAgora struct {
 	RTCRoomPool          map[string]*RTCRoom //房间池
 	CallTimeout          int                 //一次呼叫，超时时间
 	ExecTimeout          int                 //一次通话，超时时间
+	ResAcceptTimeout     int                 //专家端收到  确定  取消  请求后，超时时间
+	EntryTimeout         int                 //专家端同意了通话，此时对端迟迟未进入房间
 	UserHeartbeatTimeout int                 //一个用户建立的长连接，超时时间
 	Separate             string              //一个房间信息转换成字符串的：分隔符
 	CancelFunc           context.CancelFunc
@@ -81,17 +83,19 @@ type RTCRoom struct {
 	ReceiveUids       []int        `json:"receive_uids"`        //被呼叫的用户(专家)IDS
 	ReceiveUidsAccept []int        `json:"receive_uids_accept"` //被呼叫的用户(专家)，接收了此次呼叫
 	ReceiveUidsDeny   []int        `json:"receive_uids_deny"`   //被呼叫的用户(专家)，拒绝了此次呼叫
-	OnlineUids        []int        `json:"online_uids"`         //当前在线并且在房间通话的用户
+	OnlineUids        []int        `json:"online_uids"`         //已进入房间(在线)通话的用户
 	Uids              []int        `json:"uids"`                //CallUid + ReceiveUids ,只是记录下，方便函数调用
 	RWLock            sync.RWMutex `json:"-"`                   //变更状态的时候使用
 }
 
 func NewTwinAgora(Gorm *gorm.DB, log *zap.Logger, staticPath string) (*TwinAgora, error) {
 	twinAgora := new(TwinAgora)
-	twinAgora.Gorm = Gorm                             //房间数据持久化
-	twinAgora.CallTimeout = 8                         //呼叫过程的超时时间
-	twinAgora.ExecTimeout = 10                        //房间运行的超时时间，room_heartbeat 也使用此值
-	twinAgora.UserHeartbeatTimeout = 3                //一个用户建立的长连接，超时时间
+	twinAgora.Gorm = Gorm              //房间数据持久化
+	twinAgora.CallTimeout = 8          //呼叫过程的超时时间
+	twinAgora.ExecTimeout = 10         //房间运行的超时时间，room_heartbeat 也使用此值
+	twinAgora.UserHeartbeatTimeout = 3 //一个用户建立的长连接，超时时间
+	twinAgora.ResAcceptTimeout = 60
+	twinAgora.EntryTimeout = 60
 	twinAgora.Separate = "##"                         //一个房间信息转换成字符串的：分隔符
 	twinAgora.RTCRoomPool = make(map[string]*RTCRoom) //房间池
 	twinAgora.RTCUserPool = make(map[int]*RTCUser)    //用户池
@@ -340,7 +344,7 @@ func (twinAgora *TwinAgora) StoreHistory(RTCRoom *RTCRoom) error {
 	ReceiveUidsDenyStr := util.ArrCoverStr(RTCRoom.ReceiveUidsDeny, ",")
 	UidsStr := util.ArrCoverStr(RTCRoom.Uids, ",")
 
-	str := RTCRoom.Channel + twinAgora.Separate + strconv.Itoa(RTCRoom.AddTime) + twinAgora.Separate + strconv.Itoa(RTCRoom.Status) + twinAgora.Separate + strconv.Itoa(RTCRoom.EndStatus) + twinAgora.Separate + strconv.Itoa(RTCRoom.CallUid) + twinAgora.Separate + ReceiveUidsStr + twinAgora.Separate + ReceiveUidsAcceptStr + UidsStr + ReceiveUidsAcceptStr + ReceiveUidsDenyStr
+	str := RTCRoom.Id + twinAgora.Separate + RTCRoom.Channel + twinAgora.Separate + strconv.Itoa(RTCRoom.AddTime) + twinAgora.Separate + strconv.Itoa(RTCRoom.Status) + twinAgora.Separate + strconv.Itoa(RTCRoom.EndStatus) + twinAgora.Separate + strconv.Itoa(RTCRoom.CallUid) + twinAgora.Separate + ReceiveUidsStr + twinAgora.Separate + ReceiveUidsAcceptStr + UidsStr + ReceiveUidsAcceptStr + ReceiveUidsDenyStr
 	util.MyPrint("StoreHistory:", str)
 
 	var myTwinAgoraRoom model.TwinAgoraRoom

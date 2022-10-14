@@ -615,6 +615,9 @@ func TwinAgoraConfig(c *gin.Context) {
 	config["call_timeout"] = strconv.Itoa(global.V.MyService.TwinAgora.CallTimeout)
 	config["exec_timeout"] = strconv.Itoa(global.V.MyService.TwinAgora.ExecTimeout)
 	config["user_heartbeat_timeout"] = strconv.Itoa(global.V.MyService.TwinAgora.UserHeartbeatTimeout)
+	config["res_accept_timeout"] = strconv.Itoa(global.V.MyService.TwinAgora.ResAcceptTimeout)
+	config["entry_timeout"] = strconv.Itoa(global.V.MyService.TwinAgora.EntryTimeout)
+
 	httpresponse.OkWithAll(config, "Query-成功", c)
 }
 

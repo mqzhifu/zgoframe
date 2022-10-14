@@ -1,32 +1,29 @@
 package httpmiddleware
 
 import (
-	"errors"
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis/v8"
-	"go.uber.org/zap"
 	"strconv"
 	"zgoframe/core/global"
-	httpresponse "zgoframe/http/response"
 )
 
 //对API的访问次数、频繁，做限制,防止恶意DDos
 func Limiter() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		global.V.Zap.Debug("middle Limiter start:")
-		//fmt.Println("RateMiddleware pref")
-		// 如果ip请求连接数在10秒内超过N次，返回429并抛出error
-		maxTimes := global.C.Http.ReqLimitTimes
-		if maxTimes > 0 {
-			//N秒允许访问多少次
-			if !LimiterAllow(c.ClientIP(), maxTimes, 10) {
-				err := errors.New("too many requests")
-				global.V.Zap.Error("RateMiddleware", zap.Any("err", err))
-				httpresponse.FailWithMessage(err.Error(), c)
-				c.Abort()
-				return
-			}
-		}
+		////fmt.Println("RateMiddleware pref")
+		//// 如果ip请求连接数在10秒内超过N次，返回429并抛出error
+		//maxTimes := global.C.Http.ReqLimitTimes
+		//if maxTimes > 0 {
+		//	//N秒允许访问多少次
+		//	if !LimiterAllow(c.ClientIP(), maxTimes, 10) {
+		//		err := errors.New("too many requests")
+		//		global.V.Zap.Error("RateMiddleware", zap.Any("err", err))
+		//		httpresponse.FailWithMessage(err.Error(), c)
+		//		c.Abort()
+		//		return
+		//	}
+		//}
 		//global.V.Zap.Debug("middle Limiter finish.")
 		c.Next()
 		//fmt.Println("RateMiddleware after")

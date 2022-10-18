@@ -652,15 +652,22 @@ func (connManager *ConnManager) MakeMsgByActionName(userId int32, action string,
 	if empty {
 		return msg, protocolCtrlInfo, connManager.MakeError("GetActionId is  empty:" + action)
 	}
-
 	protocolCtrlInfo = connManager.GetPlayerCtrlInfoById(userId)
+
+	//SidFid, _ := strconv.Atoi(strconv.Itoa(actionMap.ServiceId) + strconv.Itoa(actionMap.Id))
 	msg = pb.Msg{
+		//SidFid:       int32(SidFid),
+		DataLength:   int32(len(content)),
 		Content:      string(content),
+		SidFid:       int32(actionMap.Id),
 		ServiceId:    int32(actionMap.ServiceId),
 		FuncId:       int32(actionMap.Id),
 		ContentType:  protocolCtrlInfo.ContentType,
 		ProtocolType: protocolCtrlInfo.ProtocolType,
 	}
+
+	//PrintStruct(msg, ":")
+	//MyPrint("msg: ")
 
 	return msg, protocolCtrlInfo, nil
 }

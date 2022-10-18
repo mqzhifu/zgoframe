@@ -69,82 +69,27 @@ func (gateway *Gateway) ListenCloseEvent() {
 
 //网关自己创建一条长连接消息，发送给service
 func (gateway *Gateway) MakeMsgCloseEventInfo(connCloseEvent pb.FDCloseEvent) pb.Msg {
-	//msg := pb.Msg{}
-	//msg.ServiceId = 90
-	//msg.FuncId = 120
-	//msg.SidFid = 90120
-	//msg.ContentType = int32(connCloseEvent.ContentType)
-	//msg.ProtocolType = int32(connCloseEvent.ProtocolType)
-	//
-	//FDCloseEvent := pb.FDCloseEvent{}
-	//FDCloseEvent.UserId = connCloseEvent.UserId
-	//FDCloseEvent.Source = int32(connCloseEvent.Source)
-	//var reqContentStr string
-	//if msg.ContentType == util.CONTENT_TYPE_PROTOBUF {
-	//	requestClientHeartbeatStrByte, _ := proto.Marshal(&FDCloseEvent)
-	//	reqContentStr = string(requestClientHeartbeatStrByte)
-	//} else {
-	//	requestClientHeartbeatStrByte, _ := json.Marshal(FDCloseEvent)
-	//	reqContentStr = string(requestClientHeartbeatStrByte)
-	//}
-	//
-	//msg.Content = reqContentStr
-
-	//FDCloseEvent := pb.FDCloseEvent{}
-	//FDCloseEvent.UserId = connCloseEvent.UserId
-	//FDCloseEvent.Source = int32(connCloseEvent.Source)
-
 	requestClientHeartbeatStrByte, _ := gateway.Netway.ConnManager.CompressNormalContent(connCloseEvent, int(connCloseEvent.ContentType))
-	msg, _, _ := gateway.Netway.ConnManager.MakeMsgByActionName(connCloseEvent.UserId, "FDCloseEvent", requestClientHeartbeatStrByte)
+	msg, _, _ := gateway.Netway.ConnManager.MakeMsgByActionName(connCloseEvent.UserId, "FdClose", requestClientHeartbeatStrByte)
 	return msg
 }
 
 //网关自己创建一条长连接消息，发送给service
 func (gateway *Gateway) MakeMsgHeartbeat(requestClientHeartbeat pb.Heartbeat, conn *util.Conn) pb.Msg {
-	//msg := pb.Msg{}
-	//msg.ServiceId = 90
-	//msg.ContentType = conn.ContentType
-	//msg.ProtocolType = conn.ProtocolType
-	//msg.FuncId = 106
-	//msg.SidFid = 90106
-	//
-	//var reqContentStr string
-	//if msg.ContentType == util.CONTENT_TYPE_PROTOBUF {
-	//	requestClientHeartbeatStrByte, _ := proto.Marshal(&requestClientHeartbeat)
-	//	reqContentStr = string(requestClientHeartbeatStrByte)
-	//} else {
-	//	requestClientHeartbeatStrByte, _ := json.Marshal(requestClientHeartbeat)
-	//	reqContentStr = string(requestClientHeartbeatStrByte)
-	//}
-	//
-	//msg.Content = reqContentStr
-
-	requestClientHeartbeatStrByte, _ := gateway.Netway.ConnManager.CompressContent(requestClientHeartbeat, conn.UserId)
-	msg, _, _ := gateway.Netway.ConnManager.MakeMsgByActionName(conn.UserId, "CS_Heartbeat", requestClientHeartbeatStrByte)
+	requestClientHeartbeatStrByte, err := gateway.Netway.ConnManager.CompressContent(requestClientHeartbeat, conn.UserId)
+	if err != nil {
+		util.MyPrint("MakeMsgHeartbeat err1:", err)
+	}
+	msg, _, err := gateway.Netway.ConnManager.MakeMsgByActionName(conn.UserId, "CS_Heartbeat", requestClientHeartbeatStrByte)
+	if err != nil {
+		util.MyPrint("MakeMsgHeartbeat err2:", err)
+	}
 
 	return msg
 }
 
 //网关自己创建一条长连接消息，发送给service
 func (gateway *Gateway) MakeMsgFDCreateEventInfo(FDCreateEvent pb.FDCreateEvent, conn *util.Conn) pb.Msg {
-	//msg := pb.Msg{}
-	//msg.ServiceId = 90
-	//msg.ContentType = conn.ContentType
-	//msg.ProtocolType = conn.ProtocolType
-	//msg.FuncId = 122
-	//msg.SidFid = 90122
-	//
-	//var reqContentStr string
-	//if msg.ContentType == util.CONTENT_TYPE_PROTOBUF {
-	//	requestClientHeartbeatStrByte, _ := proto.Marshal(&FDCreateEvent)
-	//	reqContentStr = string(requestClientHeartbeatStrByte)
-	//} else {
-	//	requestClientHeartbeatStrByte, _ := json.Marshal(FDCreateEvent)
-	//	reqContentStr = string(requestClientHeartbeatStrByte)
-	//}
-	//
-	//msg.Content = reqContentStr
-
 	requestClientHeartbeatStrByte, _ := gateway.Netway.ConnManager.CompressContent(FDCreateEvent, conn.UserId)
 	msg, _, _ := gateway.Netway.ConnManager.MakeMsgByActionName(conn.UserId, "FdCreate", requestClientHeartbeatStrByte)
 
@@ -213,8 +158,8 @@ func (gateway *Gateway) RouterServiceTwinAgora(msg pb.Msg, conn *util.Conn) (dat
 	case "CS_CallPeopleDeny":
 		err = gateway.Netway.ProtocolManager.ParserContentMsg(msg, &reqCallVote, conn.UserId)
 	default:
-		gateway.Netway.Option.Log.Error("RouterServiceTwinAgora Router err-1:")
-		return data, errors.New("RouterServiceTwinAgora Router err-1")
+		gateway.Netway.Option.Log.Error("RouterServiceTwinAgora Router err-1:" + protoServiceFunc.FuncName)
+		return data, errors.New("RouterServiceTwinAgora Router err-1" + protoServiceFunc.FuncName)
 	}
 
 	if err != nil {
@@ -391,7 +336,7 @@ func (gateway *Gateway) RouterServiceGateway(msg pb.Msg, conn *util.Conn) (data 
 	case "CS_Heartbeat":
 
 		gateway.heartbeat(requestClientHeartbeat, conn)
-		msg := gateway.MakeMsgHeartbeat(requestClientHeartbeat, conn)
+		msg = gateway.MakeMsgHeartbeat(requestClientHeartbeat, conn)
 		gateway.BroadcastService(msg, conn)
 	case "CS_ProjectPushMsg":
 		util.MyPrint("RouterServiceGateway CS_ProjectPushMsg")

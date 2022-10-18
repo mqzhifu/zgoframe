@@ -8,24 +8,25 @@ import (
 	"github.com/gorilla/websocket"
 	"go.uber.org/zap"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 	"zgoframe/protobuf/pb"
 )
 
-type ConnCloseEvent struct {
-	UserId       int32
-	Source       int
-	ContentType  int
-	ProtocolType int
-}
+//type ConnCloseEvent struct {
+//	UserId       int32 `json:"user_id"`
+//	Source       int   `json:"source"`
+//	ContentType  int   `json:"content_type"`
+//	ProtocolType int   `json:"protocol_type"`
+//}
 
 //管理 CONN 的容器
 type ConnManager struct {
 	Pool              map[int32]*Conn // map[userId]*Conn FD 连接池
 	PoolRWLock        *sync.RWMutex
 	CloseCheckTimeout chan int
-	CloseEventQueue   chan ConnCloseEvent
+	CloseEventQueue   chan pb.FDCloseEvent
 	Option            ConnManagerOption
 }
 
@@ -58,7 +59,7 @@ func NewConnManager(connManagerOption ConnManagerOption) *ConnManager {
 	connManager.CloseCheckTimeout = make(chan int) //连接超时 关闭信号
 	connManager.PoolRWLock = &sync.RWMutex{}
 
-	connManager.CloseEventQueue = make(chan ConnCloseEvent, 100)
+	connManager.CloseEventQueue = make(chan pb.FDCloseEvent, 100)
 
 	if connManagerOption.MsgSeparator == "" {
 		//消息分隔符，主要是给TCP使用，一个字符，且最好不要用：\n，因为会与protobuf 冲突
@@ -68,6 +69,11 @@ func NewConnManager(connManagerOption ConnManagerOption) *ConnManager {
 	connManager.Option = connManagerOption
 
 	return connManager
+}
+func (connManager *ConnManager) MakeError(msg string) error {
+	//connManager.Option.Log.Error("CompressContent err :" + err.Error())
+	MyPrint("connManager make error:" + msg)
+	return errors.New(msg)
 }
 
 //启动容器，监听 连接超时处理
@@ -250,9 +256,23 @@ func (connManager *ConnManager) CompressContent(contentStruct interface{}, UserI
 		err = errors.New(" contentType switch err")
 	}
 	if err != nil {
-		connManager.Option.Log.Error("CompressContent err :" + err.Error())
+		return content, connManager.MakeError(err.Error())
 	}
-	return content, err
+
+	return content, nil
+}
+
+//将 结构体 压缩成 字符串，但不依赖userId
+func (connManager *ConnManager) CompressNormalContent(contentStruct interface{}, contentType int) (content []byte, err error) {
+	requestClientHeartbeatStrByte := []byte{}
+	if contentType == CONTENT_TYPE_PROTOBUF {
+		contentStructReal := contentStruct.(proto.Message)
+		requestClientHeartbeatStrByte, err = proto.Marshal(contentStructReal)
+	} else {
+		requestClientHeartbeatStrByte, err = json.Marshal(JsonCamelCase{contentStruct})
+		//requestClientHeartbeatStrByte, err = json.Marshal(contentStruct)
+	}
+	return requestClientHeartbeatStrByte, err
 }
 
 //解析C端发送的数据，这一层，对于用户层的content数据不做处理
@@ -366,44 +386,23 @@ func (connManager *ConnManager) PackContentMsg(msg pb.Msg) []byte {
 //==============================
 //一个连接
 type Conn struct {
-	AddTime        int32
-	UpTime         int32
-	UserId         int32
-	Status         int
-	UserPlayStatus int
-	Conn           FDAdapter //TCP/WS Conn FD
-	CloseChan      chan int
-	RTT            int64
-	SessionId      string
-	ConnManager    *ConnManager //父类
-	MsgInChan      chan pb.Msg
-	ContentType    int32 //传输数据的内容类型	此值由第一次通信时确定，直到断开连接前，不会变更
-	ProtocolType   int32 //传输数据的类型		此值由第一次通信时确定，直到断开连接前，不会变更
-	RoomId         string
-	netWay         *NetWay
+	AddTime        int32        `json:"add_time"`      //添加时间
+	UpTime         int32        `json:"up_time"`       //最后更新时间
+	UserId         int32        `json:"user_id"`       //FD 绑定 uid
+	Status         int          `json:"status"`        //状态
+	RTT            int64        `json:"rtt"`           //延迟
+	SessionId      string       `json:"session_id"`    //会话ID
+	ContentType    int32        `json:"content_type"`  //传输数据的内容类型	此值由第一次通信时确定，直到断开连接前，不会变更
+	ProtocolType   int32        `json:"protocol_type"` //传输数据的类型		此值由第一次通信时确定，直到断开连接前，不会变更
+	RoomId         string       `json:"-"`             //使用网关模式后，room_id 下放到各微服务上，网关不做记录
+	Conn           FDAdapter    `json:"-"`             //TCP/WS 真实的 socket FD
+	CloseChan      chan int     `json:"-"`             //减半信号管道
+	netWay         *NetWay      `json:"-"`             //父父类,快捷指针
+	ConnManager    *ConnManager `json:"-"`             //父类，快捷指针
+	MsgInChan      chan pb.Msg  `json:"-"`             //上层真实sock FD 转发消息进来
+	UserPlayStatus int          `json:"-"`             //status 冲突 暂放弃,不能删 frame_sync game_match 还在使用，后期优化吧
 	//RTTCancelChan chan int
 	//UdpConn 		bool
-}
-
-func (conn *Conn) Write(content []byte, messageType int) {
-	//defer func() {
-	//	if err := recover(); err != nil {
-	//		conn.ConnManager.Option.Log.Error("conn.Conn.WriteMessage failed:")
-	//		myNetWay.CloseOneConn(conn,CLOSE_SOURCE_SEND_MESSAGE)
-	//	}
-	//}()
-
-	//myMetrics.fastLog("total.output.num",METRICS_OPT_INC,0)
-	//myMetrics.fastLog("total.output.size",METRICS_OPT_PLUS,len(content))
-	conn.ConnManager.Option.Metrics.CounterInc("total_output_num")
-	//conn.ConnManager.Option.Metrics.GaugeAdd("total.output.size",float64(StringToFloat(strconv.Itoa(len(content)))))
-	conn.ConnManager.Option.Metrics.GaugeAdd("total_output_size", float64(len(content)))
-
-	//pid := strconv.Itoa(int(conn.UserId))
-	//myMetrics.fastLog("player.fd.num."+pid,METRICS_OPT_INC,0)
-	//myMetrics.fastLog("player.fd.size."+pid,METRICS_OPT_PLUS,len(content))
-
-	conn.Conn.WriteMessage(messageType, content)
 }
 
 //最后更新时间
@@ -482,6 +481,14 @@ func (conn *Conn) ReadLoop(ctx context.Context) {
 					conn.CloseOneConn(CLOSE_SOURCE_CLIENT_WS_FD_GONE)
 					goto end
 				} else {
+					//对端，如果直接关闭网络，或者崩溃之类的，类库捕捉不到这个事件
+					errMsg := strings.ToLower(err.Error())
+					fdNetworkAbnormal := strings.Contains(errMsg, "connection reset by peer")
+					if fdNetworkAbnormal {
+						conn.CloseOneConn(CLOSE_SOURCE_CONN_RESET_BY_PEER)
+						goto end
+					}
+
 					continue
 				}
 			}
@@ -521,12 +528,13 @@ func (conn *Conn) CloseOneConn(source int) {
 	if conn.Status == CONN_STATUS_CLOSE {
 		conn.ConnManager.Option.Log.Error("CloseOneConn error :Conn.Status == CLOSE")
 	}
-	connCloseEvent := ConnCloseEvent{
+	connCloseEvent := pb.FDCloseEvent{
 		UserId:       conn.UserId,
-		Source:       source,
-		ContentType:  int(conn.ContentType),
-		ProtocolType: int(conn.ProtocolType),
+		Source:       int32(source),
+		ContentType:  conn.ContentType,
+		ProtocolType: conn.ProtocolType,
 	}
+	//先通知外层，FD即将要关闭了，外层网关再广播给所有微服务
 	conn.ConnManager.CloseEventQueue <- connCloseEvent
 
 	//通知同步服务，先做构造处理
@@ -596,72 +604,110 @@ func (conn *Conn) CloseHandler(code int, text string) error {
 //===================================================================
 //发送一条消息给一个玩家，根据conn，同时将消息内容进行编码与压缩
 //大部分通信都是这个方法
-func (conn *Conn) SendMsgCompressByConn(actionName string, contentStruct interface{}) {
+func (conn *Conn) SendMsgCompressByConn(actionName string, contentStruct interface{}) error {
+	if conn.UserId <= 0 {
+		return conn.ConnManager.MakeError("conn.UserId <= 0")
+	}
 	conn.ConnManager.Option.Log.Info("SendMsgCompressByConn  actionName:" + actionName)
 	//conn.UserId=0 时，由函数内部做兼容，主要是用来取content type ,protocol type
 	contentByte, err := conn.ConnManager.CompressContent(contentStruct, conn.UserId)
 	if err != nil {
-		return
+		return err
 	}
-	conn.SendMsg(actionName, contentByte)
+	return conn.SendMsg(actionName, contentByte)
 }
 
 //发送一条消息给一个玩家，根据UserId，同时将消息内容进行编码与压缩
-func (conn *Conn) SendMsgCompressByUid(UserId int32, action string, contentStruct interface{}) {
+func (conn *Conn) SendMsgCompressByUid(UserId int32, action string, contentStruct interface{}) error {
+	if UserId <= 0 {
+		return conn.ConnManager.MakeError("conn UserId <= 0")
+	}
+
 	conn.ConnManager.Option.Log.Info("SendMsgCompressByUid UserId:" + strconv.Itoa(int(UserId)) + " action:" + action)
 	contentByte, err := conn.ConnManager.CompressContent(contentStruct, UserId)
 	if err != nil {
-		return
+		return err
 	}
-	conn.SendMsgByUid(UserId, action, contentByte)
+	return conn.SendMsgByUid(UserId, action, contentByte)
 }
 
 //发送一条消息给一个玩家,根据UserId,且不做压缩处理
-func (conn *Conn) SendMsgByUid(UserId int32, action string, content []byte) {
+func (conn *Conn) SendMsgByUid(UserId int32, action string, content []byte) error {
 	conn, ok := conn.ConnManager.getConnPoolById(UserId)
 	if !ok {
-		conn.ConnManager.Option.Log.Error("conn not in pool,maybe del.")
-		return
+		return conn.ConnManager.MakeError("conn not in pool,maybe del.")
 	}
-	conn.SendMsg(action, content)
+	return conn.SendMsg(action, content)
 }
 
 //发送一条消息给一个玩家,根据UserId,且不做压缩处理
+//SendMsg的别名方法，不确定还有什么用，可能其它程序还在用吧
 func (conn *Conn) SendMsgByConn(action string, content []byte) {
 	conn.SendMsg(action, content)
 }
 
-func (conn *Conn) SendMsg(action string, content []byte) {
+func (connManager *ConnManager) MakeMsgByActionName(userId int32, action string, content []byte) (msg pb.Msg, protocolCtrlInfo ProtocolCtrlInfo, err error) {
 	//获取协议号结构体
-	actionMap, empty := conn.ConnManager.Option.ProtoMap.GetServiceFuncByFuncName(action)
+	actionMap, empty := connManager.Option.ProtoMap.GetServiceFuncByFuncName(action)
 	if empty {
-		//MyPrint(conn.ConnManager.Option.ProtoMap.ServiceFuncMap)
-		conn.ConnManager.Option.Log.Error("GetActionId is  empty:" + action)
-		return
+		return msg, protocolCtrlInfo, connManager.MakeError("GetActionId is  empty:" + action)
 	}
 
-	if conn.Status == CONN_STATUS_CLOSE {
-		conn.ConnManager.Option.Log.Error("Conn status =CONN_STATUS_CLOSE.")
-		return
-	}
-
-	protocolCtrlInfo := conn.ConnManager.GetPlayerCtrlInfoById(conn.UserId)
-	msg := pb.Msg{
+	protocolCtrlInfo = connManager.GetPlayerCtrlInfoById(userId)
+	msg = pb.Msg{
 		Content:      string(content),
 		ServiceId:    int32(actionMap.ServiceId),
 		FuncId:       int32(actionMap.Id),
 		ContentType:  protocolCtrlInfo.ContentType,
 		ProtocolType: protocolCtrlInfo.ProtocolType,
 	}
+
+	return msg, protocolCtrlInfo, nil
+}
+
+//这里才是，最终给一个User发送一条消息
+//此方法轻易不要调用，因为没有做容错，比如：conn 不在pool中，直接调用 ProtoMap/uid=0 等，会把程序带崩溃了
+func (conn *Conn) SendMsg(action string, content []byte) error {
+	if conn.Status == CONN_STATUS_CLOSE {
+		conn.ConnManager.Option.Log.Error("Conn status =CONN_STATUS_CLOSE.")
+		return conn.ConnManager.MakeError("Conn status =CONN_STATUS_CLOSE.")
+	}
+
+	msg, protocolCtrlInfo, err := conn.ConnManager.MakeMsgByActionName(conn.UserId, action, content)
+	if err != nil {
+		return err
+	}
 	conn.ConnManager.Option.Log.Info("SendMsg , ContentType:" + strconv.Itoa(int(protocolCtrlInfo.ContentType)) + " ProtocolType: " + strconv.Itoa(int(protocolCtrlInfo.ProtocolType)))
-	conn.ConnManager.Option.Log.Info("SendMsg , actionId:" + strconv.Itoa(actionMap.Id) + " , userId:" + strconv.Itoa(int(conn.UserId)) + " , actionName:" + action)
+	conn.ConnManager.Option.Log.Info("SendMsg , actionId:" + strconv.Itoa(int(msg.Id)) + " , userId:" + strconv.Itoa(int(conn.UserId)) + " , actionName:" + action)
 
 	contentBytes := conn.ConnManager.PackContentMsg(msg)
 
 	//这里先注释掉，发现WS协议，传输内容必须统一：要么全是字符，要么就是二进制，而我的协议中 头消息是二进制的，内容如果是json那就是字符，貌似WS不行
 	//if protocolCtrlInfo.ContentType == CONTENT_TYPE_PROTOBUF {
-	conn.Write(contentBytes, websocket.BinaryMessage)
+	return conn.Write(contentBytes, websocket.BinaryMessage)
 	//} else {
 	//	conn.Write(contentBytes, websocket.TextMessage)
 	//}
+}
+
+//这里才是，真正的往sock FD息(严格说：跟用户没关联了) 里写内容，也就是发送消
+func (conn *Conn) Write(content []byte, messageType int) error {
+	//defer func() {
+	//	if err := recover(); err != nil {
+	//		conn.ConnManager.Option.Log.Error("conn.Conn.WriteMessage failed:")
+	//		myNetWay.CloseOneConn(conn,CLOSE_SOURCE_SEND_MESSAGE)
+	//	}
+	//}()
+
+	//myMetrics.fastLog("total.output.num",METRICS_OPT_INC,0)
+	//myMetrics.fastLog("total.output.size",METRICS_OPT_PLUS,len(content))
+	conn.ConnManager.Option.Metrics.CounterInc("total_output_num")
+	//conn.ConnManager.Option.Metrics.GaugeAdd("total.output.size",float64(StringToFloat(strconv.Itoa(len(content)))))
+	conn.ConnManager.Option.Metrics.GaugeAdd("total_output_size", float64(len(content)))
+
+	//pid := strconv.Itoa(int(conn.UserId))
+	//myMetrics.fastLog("player.fd.num."+pid,METRICS_OPT_INC,0)
+	//myMetrics.fastLog("player.fd.size."+pid,METRICS_OPT_PLUS,len(content))
+
+	return conn.Conn.WriteMessage(messageType, content)
 }

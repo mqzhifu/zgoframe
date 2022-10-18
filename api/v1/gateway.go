@@ -1,10 +1,14 @@
 package v1
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/golang/protobuf/proto"
 	"zgoframe/core/global"
+	"zgoframe/http/request"
 	httpresponse "zgoframe/http/response"
+	"zgoframe/protobuf/pb"
 	"zgoframe/util"
 )
 
@@ -96,10 +100,66 @@ func ActionMap(c *gin.Context) {
 }
 
 // @Tags Gateway
-// @Summary 网关 - 长连接 websocket
-// @Description 通过网关调取后端服务(ws)
+// @Summary 网关 - 长连接
+// @Description 长连接列表，FD => UID
 // @Security ApiKeyAuth
-// @Router /gateway/service/ws [get]
-func GatewayWS(c *gin.Context) {
+// @Router /gateway/fd/list [get]
+// @Success 200 {object} util.Conn "连接结构体"
+func GatewayFDList(c *gin.Context) {
+	connManager := global.V.MyService.Gateway.Netway.ConnManager
+	if len(connManager.Pool) <= 0 {
+		emptyMap := make(map[int32]*util.Conn)
+		httpresponse.OkWithAll(emptyMap, "ok", c)
+		return
+	}
 
+	connFDStrByte, err := json.Marshal(connManager.Pool)
+	if err != nil {
+		util.MyPrint("json.Marshal(connManager.Pool) err:", err)
+	}
+	connFDStr := string(connFDStrByte)
+	util.MyPrint(connManager.Pool, connFDStr, err)
+
+	httpresponse.OkWithAll(connManager.Pool, "ok", c)
+}
+
+// @Tags Gateway
+// @Summary 网关 - 发送一条消息
+// @Description 给某个UID发送一条消息，主要用于测试
+// @Security ApiKeyAuth
+// @Param data body request.GatewaySendMsg true "基础信息"
+// @Router /gateway/send/msg [post]
+// @Success 200 {string} bbbb " "
+func GatewaySendMsg(c *gin.Context) {
+	connManager := global.V.MyService.Gateway.Netway.ConnManager
+	if len(connManager.Pool) <= 0 {
+		msg := "失败，user pool = 0"
+		httpresponse.FailWithMessage(msg, c)
+		return
+	}
+
+	var form request.GatewaySendMsg
+	c.ShouldBind(&form)
+	if form.Uid <= 0 {
+		httpresponse.FailWithMessage("uid empty!!!", c)
+		return
+	}
+
+	if form.Content == "" {
+		httpresponse.FailWithMessage("Content empty!!!", c)
+		return
+	}
+
+	conn, exist := connManager.Pool[int32(form.Uid)]
+	if !exist {
+		httpresponse.FailWithMessage("uid not in pool ,maybe not connect socket", c)
+		return
+	}
+
+	projectPushMsg := pb.ProjectPushMsg{}
+	projectPushMsg.Msg = form.Content
+	projectPushMsgStr, _ := proto.Marshal(&projectPushMsg)
+	conn.SendMsg("SC_ProjectPush", projectPushMsgStr)
+
+	httpresponse.OkWithAll(connManager.Pool, "ok", c)
 }

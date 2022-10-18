@@ -15,6 +15,7 @@ const (
 	CLOSE_SOURCE_SIGNAL_QUIT           = 6  //接收到关闭信号，netWay.Quit触发
 	CLOSE_SOURCE_CLIENT_WS_FD_GONE     = 7  //S端读取连接消息时，异常了~可能是：客户端关闭了连接
 	CLOSE_SOURCE_SEND_MESSAGE          = 8  //S端给某个连接发消息，结果失败了，这里概率是连接已经断了
+	CLOSE_SOURCE_CONN_RESET_BY_PEER    = 81 //对端，如果直接关闭网络，或者崩溃之类的，类库捕捉不到这个事件 ~ :connection reset by peer
 	CLOSE_SOURCE_CONN_SHUTDOWN         = 12
 	CLOSE_SOURCE_CONN_LOGIN_ROUTER_ERR = 13
 
@@ -47,6 +48,7 @@ const (
 	PLAYERS_ACK_STATUS_WAIT = 2 //等待玩家确认
 	PLAYERS_ACK_STATUS_OK   = 3 //所有玩家均已确认
 
+	//status 冲突 暂放弃,不能删 frame_sync game_match 还在使用，后期优化吧
 	PLAYER_STATUS_ONLINE  = 1 //在线
 	PLAYER_STATUS_OFFLINE = 2 //离线
 

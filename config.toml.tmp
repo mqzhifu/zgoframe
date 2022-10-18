@@ -115,7 +115,7 @@ authCode = "#email_port#" #验证码，腾讯的邮箱除了用户名密码外�
 status  = "close"
 ip      = "#push_gateway_ip#"
 port    = "#push_gateway_port#"
-
+#依赖 protobuf 模块的 ProtoMap
 [gateway]
 status   = "close"
 ListenIp = "#gateway_listen_ip#"

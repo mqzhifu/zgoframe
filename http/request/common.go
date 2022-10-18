@@ -165,6 +165,11 @@ type ConfigCenterOpt struct {
 	Value  string `json:"value"`  //写入时，值
 }
 
+type GatewaySendMsg struct {
+	Uid     int    `json:"uid" form:"uid"`
+	Content string `json:"content"  form:"content"`
+}
+
 //type ConfigCenterGetByKeyReq struct {
 //	Module string	`json:"module"`
 //	Key string	`json:"key"`

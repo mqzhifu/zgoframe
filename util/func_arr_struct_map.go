@@ -21,6 +21,15 @@ func PrintStruct(mystruct interface{}, separator string) {
 	}
 }
 
+func StructToJsonStr(s interface{}) string {
+	strBytes, err := json.Marshal(&s)
+	if err != nil {
+		MyPrint("StructToJsonStr err:", err.Error())
+		return ""
+	}
+	return string(strBytes)
+}
+
 //将一个map转换成一个数组
 func MapCovertArr(myMap map[int]int) (arr []int) {
 	for _, v := range myMap {

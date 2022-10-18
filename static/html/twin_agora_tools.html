@@ -51,12 +51,21 @@
 </style>
 
 <div >
+    <div>
+        房间信息:
+    </div>
     <table id="rtc_room" style="display:inline" >
 
     </table>
+    <div>uptime 只能说明还有用户在房间操作，但是不能确定所有用户的room_heartbeat正常</div>
+
     <br/><br/>
+    <div>
+        用户FD信息：
+    </div>
     <table id="rtc_user"  style="display:inline">
     </table>
+    <div>uptime:可以证明用户的心跳，room_heartbeat可以证明用户的房间心跳是否正常</div>
 </div>
 
 <script>
@@ -64,7 +73,7 @@
     var header_X_Source_Type = "11";
     var header_X_Project_Id = "6";
     var header_X_Access = "imzgoframe";
-    var token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJwcm9qZWN0X2lkIjo2LCJzb3VyY2VfdHlwZSI6MTEsImlkIjo5LCJ1c2VybmFtZSI6ImNhbGx1c2VyIiwibmlja19uYW1lIjoiY2FsbHVzZXIiLCJleHAiOjE2NjQ1NDYwMDYsImlzcyI6ImNrLWFyIiwibmJmIjoxNjY0MTg1OTk2fQ.b8ENPufRd_GLClzX8z6FPYZFGqxC5lskNsprbB3A3yw";
+    var token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJwcm9qZWN0X2lkIjo2LCJzb3VyY2VfdHlwZSI6MTEsImlkIjoxMCwidXNlcm5hbWUiOiJkb2N0b3IiLCJuaWNrX25hbWUiOiJkb2N0b3IiLCJleHAiOjE2NjYzNDY2NDYsImlzcyI6ImNrLWFyIiwibmJmIjoxNjY1OTg2NjM2fQ.HpshwGaVfwUnrQlYlvFEfSeM4E-FPB98--DHZGs3auQ";
     function init(){
         var uri = "/twin/agora/socket/tools"
         $.ajax({
@@ -94,22 +103,34 @@
 
                 var rtc_room_pool = data.data.rtc_room_pool;
                 var rtc_room_pool_table_html = "<tr><td>id</td><td>add_time</td><td>uptime</td><td>status</td><td>call_uid</td><td>receive_uids</td><td>receive_uids_accept</td><td>receive_uids_deny</td><td>online_uids</td><td>uids</td></tr>";
-                for (let key in rtc_room_pool) {
-                    var obj = rtc_room_pool[key]
-                    var row = "<tr><td>"+obj["id"]+"</td><td>"+formatUnixTime(obj["add_time"])+"</td><td>"+formatUnixTime(obj["uptime"])+"</td><td>"+obj["status"]+"</td> <td>"+obj["call_uid"]+"</td> <td>"+obj["receive_uids"]+"</td> <td>"+obj["receive_uids_accept"]+"</td> <td>"+obj["receive_uids_deny"]+"</td> <td>"+obj["online_uids"]+"</td> <td>"+obj["uids"]+"</td> </tr>";
-                    rtc_room_pool_table_html += row;
+                var rtc_room_pool_len = Object.keys(rtc_room_pool).length
+                if (!rtc_room_pool_len){
+                    rtc_room_pool_table_html += "<tr><td>空</td></tr>";
+                }else{
+                    for (let key in rtc_room_pool) {
+                        var obj = rtc_room_pool[key]
+                        var row = "<tr><td>"+obj["id"]+"</td><td>"+formatUnixTime(obj["add_time"])+"</td><td>"+formatUnixTime(obj["uptime"])+"</td><td>"+obj["status"]+"</td> <td>"+obj["call_uid"]+"</td> <td>"+obj["receive_uids"]+"</td> <td>"+obj["receive_uids_accept"]+"</td> <td>"+obj["receive_uids_deny"]+"</td> <td>"+obj["online_uids"]+"</td> <td>"+obj["uids"]+"</td> </tr>";
+                        rtc_room_pool_table_html += row;
+                    }
                 }
+
                 $("#rtc_room").html(rtc_room_pool_table_html);
 
                 // RoomId  string `json:"room_id"`
                 // Uptime  int    `json:"uptime"`
                 // AddTime int    `json:"addTime"`
+                var rtc_user_pool_table_html = "<tr><td>uid</td><td>room_id</td><td>add_time</td> <td>uptime</td> <td>room_heartbeat</td> </tr>";
 
                 var rtc_user_pool = data.data.rtc_user_pool;
-                var rtc_user_pool_table_html = "<tr><td>uid</td><td>room_id</td><td>add_time</td><td>uptime</td></tr>";
+                var rtc_user_pool_len = Object.keys(rtc_user_pool).length
+                if (!rtc_user_pool_len){
+                    rtc_user_pool_table_html += "<tr><td>空</td></tr>";
+                    $("#rtc_user").html(rtc_user_pool_table_html);
+                    return
+                }
                 for (let key in rtc_user_pool) {
                     var obj = rtc_user_pool[key]
-                    var row = "<tr><td>"+obj["id"]+"</td><td>"+obj["room_id"]+"</td><td>"+formatUnixTime(obj["add_time"])+"</td><td>"+formatUnixTime(obj["uptime"])+"</td></tr>";
+                    var row = "<tr><td>"+obj["id"]+"</td><td>"+obj["room_id"]+"</td><td>"+formatUnixTime(obj["add_time"])+"</td><td>"+formatUnixTime(obj["uptime"])+"</td><td>"+formatUnixTime (obj["room_heartbeat"]) +"</td></tr>";
                     rtc_user_pool_table_html += row;
                 }
                 $("#rtc_user").html(rtc_user_pool_table_html);

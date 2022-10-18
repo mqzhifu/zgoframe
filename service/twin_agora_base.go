@@ -66,10 +66,11 @@ type TwinAgora struct {
 
 //创建连接的FD管理池：用户基础信息
 type RTCUser struct {
-	Id      int    `json:"id"`       //用户ID
-	RoomId  string `json:"room_id"`  //用户所有房间ID
-	Uptime  int    `json:"uptime"`   //最后更新时间
-	AddTime int    `json:"add_time"` //添加时间
+	Id            int    `json:"id"`             //用户ID
+	RoomId        string `json:"room_id"`        //用户所有房间ID
+	RoomHeartbeat int    `json:"room_heartbeat"` //检测一个用户，是否有发送room heartbeat
+	Uptime        int    `json:"uptime"`         //最后更新时间
+	AddTime       int    `json:"add_time"`       //添加时间
 }
 
 type RTCRoom struct {
@@ -251,7 +252,8 @@ func (twinAgora *TwinAgora) RoomHeartbeat(heartbeat pb.RoomHeartbeatReq, conn *u
 		return
 	}
 
-	myRTCRoom.Uptime = util.GetNowTimeSecondToInt()
+	//myRTCRoom.Uptime = util.GetNowTimeSecondToInt()
+	myRTCUser.RoomHeartbeat = util.GetNowTimeSecondToInt()
 
 }
 

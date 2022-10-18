@@ -12,6 +12,7 @@
 412|roomId err , is diff:{0}
 420|para PeopleType err , now only support: calling doctor (PeopleType= 2)
 421|not support para:TargetUid
+422|Currently, the number of experts online is more than 1. Currently, only 1V1 calls are supported
 500|room id is empty
 501|room id not in map : {0}
 510|room status : END , wait demon coroutines process recycle......{0}

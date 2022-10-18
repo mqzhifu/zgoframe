@@ -3,8 +3,6 @@ package service
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
-	"github.com/golang/protobuf/proto"
 	"go.uber.org/zap"
 	"time"
 	"zgoframe/protobuf/pb"
@@ -20,11 +18,11 @@ type MyServiceList struct {
 }
 
 type Gateway struct {
-	GrpcManager   *util.GrpcManager
-	Log           *zap.Logger
-	NetWayOption  util.NetWayOption
-	Netway        *util.NetWay
-	MyServiceList *MyServiceList
+	GrpcManager   *util.GrpcManager //通过GRPC反射代理其它微服务
+	Log           *zap.Logger       //日志
+	Netway        *util.NetWay      //长连接公共类
+	NetWayOption  util.NetWayOption //长连接公共类的初始化参数
+	MyServiceList *MyServiceList    //快捷访问内部微服务
 }
 
 //网关，目前主要是分为2部分
@@ -39,55 +37,27 @@ func NewGateway(grpcManager *util.GrpcManager, log *zap.Logger) *Gateway {
 	return gateway
 }
 
-//balanceFactor:负载均衡 方法
-func (gateway *Gateway) HttpCallGrpc(serviceName string, funcName string, balanceFactor string, requestData []byte) (resJsonStr string, err error) {
-	fmt.Print("HttpCallGrpc :", serviceName, funcName, balanceFactor, requestData)
-	//gateway.Log.Info("HttpCallGrpc:")
-	callGrpcResData, err := gateway.GrpcManager.CallGrpc(serviceName, funcName, balanceFactor, requestData)
-	if err != nil {
-		return resJsonStr, err
-	}
-	resJsonStrByte, err := json.Marshal(callGrpcResData)
-	if err != nil {
-		return resJsonStr, err
-	}
-	return string(resJsonStrByte), err
-	//return resJsonStr,err
-}
-
 //开启长连接监听
 func (gateway *Gateway) StartSocket(netWayOption util.NetWayOption) (*util.NetWay, error) {
-	netWayOption.RouterBack = gateway.Router
+	netWayOption.RouterBack = gateway.Router //公共回调 路由器，用于给最底层的长连接公共类回调
+	//创建底层长连接公共类
 	gateway.NetWayOption = netWayOption
 	netWay, err := util.NewNetWay(netWayOption)
 	gateway.Netway = netWay
-
+	//监听，长连接公共类 - FD Close 事件(只能被动监听)
 	go gateway.ListenCloseEvent()
-
+	//微服务内部无法直接发送消息(在没有conn的情况下)，回头我想想怎么处理
 	gateway.MyServiceList.TwinAgora.ConnManager = gateway.Netway.ConnManager
 
 	return netWay, err
-	//if err != nil {
-	//	//errMsg := "NewNetWay err:" + err.Error()
-	//	return netWay, err
-	//}
-	//for {
-	//	time.Sleep(time.Second * 1)
-	//}
-	//netWay.Shutdown()
-	//
-	//roomId := "aabbccdd"
-	//ZgoframeClient ,err := gateway.GrpcManager.GetZgoframeClient(roomId)
-
 }
 
-//监听长连接 - 关闭事件
+//监听长连接 - 关闭事件(只能被动监听)
 func (gateway *Gateway) ListenCloseEvent() {
 	for {
 		select {
 		case connCloseEvent := <-gateway.Netway.ConnManager.CloseEventQueue:
-			//util.MyPrint("ListenCloseEvent......========")
-			util.MyPrint("ListenCloseEvent connCloseEvent:", connCloseEvent)
+			gateway.Log.Debug("ListenCloseEvent connCloseEvent:" + util.StructToJsonStr(connCloseEvent))
 			//随便取一个conn，给到下层服务，因为：下层服务可能还要继续给其它人发消息
 			msg := gateway.MakeMsgCloseEventInfo(connCloseEvent)
 			gateway.BroadcastService(msg, nil)
@@ -98,74 +68,86 @@ func (gateway *Gateway) ListenCloseEvent() {
 }
 
 //网关自己创建一条长连接消息，发送给service
-func (gateway *Gateway) MakeMsgCloseEventInfo(connCloseEvent util.ConnCloseEvent) pb.Msg {
-	msg := pb.Msg{}
-	msg.ServiceId = 90
-	msg.FuncId = 120
-	msg.SidFid = 90120
-	msg.ContentType = int32(connCloseEvent.ContentType)
-	msg.ProtocolType = int32(connCloseEvent.ProtocolType)
+func (gateway *Gateway) MakeMsgCloseEventInfo(connCloseEvent pb.FDCloseEvent) pb.Msg {
+	//msg := pb.Msg{}
+	//msg.ServiceId = 90
+	//msg.FuncId = 120
+	//msg.SidFid = 90120
+	//msg.ContentType = int32(connCloseEvent.ContentType)
+	//msg.ProtocolType = int32(connCloseEvent.ProtocolType)
+	//
+	//FDCloseEvent := pb.FDCloseEvent{}
+	//FDCloseEvent.UserId = connCloseEvent.UserId
+	//FDCloseEvent.Source = int32(connCloseEvent.Source)
+	//var reqContentStr string
+	//if msg.ContentType == util.CONTENT_TYPE_PROTOBUF {
+	//	requestClientHeartbeatStrByte, _ := proto.Marshal(&FDCloseEvent)
+	//	reqContentStr = string(requestClientHeartbeatStrByte)
+	//} else {
+	//	requestClientHeartbeatStrByte, _ := json.Marshal(FDCloseEvent)
+	//	reqContentStr = string(requestClientHeartbeatStrByte)
+	//}
+	//
+	//msg.Content = reqContentStr
 
-	FDCloseEvent := pb.FDCloseEvent{}
-	FDCloseEvent.UserId = connCloseEvent.UserId
-	FDCloseEvent.Source = int32(connCloseEvent.Source)
-	//FDCloseEventStr, _ := proto.Marshal(&FDCloseEvent)
-	//msg.Content = string(FDCloseEventStr)
-	var reqContentStr string
-	if msg.ContentType == util.CONTENT_TYPE_PROTOBUF {
-		requestClientHeartbeatStrByte, _ := proto.Marshal(&FDCloseEvent)
-		reqContentStr = string(requestClientHeartbeatStrByte)
-	} else {
-		requestClientHeartbeatStrByte, _ := json.Marshal(FDCloseEvent)
-		reqContentStr = string(requestClientHeartbeatStrByte)
-	}
+	//FDCloseEvent := pb.FDCloseEvent{}
+	//FDCloseEvent.UserId = connCloseEvent.UserId
+	//FDCloseEvent.Source = int32(connCloseEvent.Source)
 
-	msg.Content = reqContentStr
-
+	requestClientHeartbeatStrByte, _ := gateway.Netway.ConnManager.CompressNormalContent(connCloseEvent, int(connCloseEvent.ContentType))
+	msg, _, _ := gateway.Netway.ConnManager.MakeMsgByActionName(connCloseEvent.UserId, "FDCloseEvent", requestClientHeartbeatStrByte)
 	return msg
 }
 
 //网关自己创建一条长连接消息，发送给service
 func (gateway *Gateway) MakeMsgHeartbeat(requestClientHeartbeat pb.Heartbeat, conn *util.Conn) pb.Msg {
-	msg := pb.Msg{}
-	msg.ServiceId = 90
-	msg.ContentType = conn.ContentType
-	msg.ProtocolType = conn.ProtocolType
-	msg.FuncId = 106
-	msg.SidFid = 90106
+	//msg := pb.Msg{}
+	//msg.ServiceId = 90
+	//msg.ContentType = conn.ContentType
+	//msg.ProtocolType = conn.ProtocolType
+	//msg.FuncId = 106
+	//msg.SidFid = 90106
+	//
+	//var reqContentStr string
+	//if msg.ContentType == util.CONTENT_TYPE_PROTOBUF {
+	//	requestClientHeartbeatStrByte, _ := proto.Marshal(&requestClientHeartbeat)
+	//	reqContentStr = string(requestClientHeartbeatStrByte)
+	//} else {
+	//	requestClientHeartbeatStrByte, _ := json.Marshal(requestClientHeartbeat)
+	//	reqContentStr = string(requestClientHeartbeatStrByte)
+	//}
+	//
+	//msg.Content = reqContentStr
 
-	var reqContentStr string
-	if msg.ContentType == util.CONTENT_TYPE_PROTOBUF {
-		requestClientHeartbeatStrByte, _ := proto.Marshal(&requestClientHeartbeat)
-		reqContentStr = string(requestClientHeartbeatStrByte)
-	} else {
-		requestClientHeartbeatStrByte, _ := json.Marshal(requestClientHeartbeat)
-		reqContentStr = string(requestClientHeartbeatStrByte)
-	}
+	requestClientHeartbeatStrByte, _ := gateway.Netway.ConnManager.CompressContent(requestClientHeartbeat, conn.UserId)
+	msg, _, _ := gateway.Netway.ConnManager.MakeMsgByActionName(conn.UserId, "CS_Heartbeat", requestClientHeartbeatStrByte)
 
-	msg.Content = reqContentStr
 	return msg
 }
 
 //网关自己创建一条长连接消息，发送给service
 func (gateway *Gateway) MakeMsgFDCreateEventInfo(FDCreateEvent pb.FDCreateEvent, conn *util.Conn) pb.Msg {
-	msg := pb.Msg{}
-	msg.ServiceId = 90
-	msg.ContentType = conn.ContentType
-	msg.ProtocolType = conn.ProtocolType
-	msg.FuncId = 122
-	msg.SidFid = 90122
+	//msg := pb.Msg{}
+	//msg.ServiceId = 90
+	//msg.ContentType = conn.ContentType
+	//msg.ProtocolType = conn.ProtocolType
+	//msg.FuncId = 122
+	//msg.SidFid = 90122
+	//
+	//var reqContentStr string
+	//if msg.ContentType == util.CONTENT_TYPE_PROTOBUF {
+	//	requestClientHeartbeatStrByte, _ := proto.Marshal(&FDCreateEvent)
+	//	reqContentStr = string(requestClientHeartbeatStrByte)
+	//} else {
+	//	requestClientHeartbeatStrByte, _ := json.Marshal(FDCreateEvent)
+	//	reqContentStr = string(requestClientHeartbeatStrByte)
+	//}
+	//
+	//msg.Content = reqContentStr
 
-	var reqContentStr string
-	if msg.ContentType == util.CONTENT_TYPE_PROTOBUF {
-		requestClientHeartbeatStrByte, _ := proto.Marshal(&FDCreateEvent)
-		reqContentStr = string(requestClientHeartbeatStrByte)
-	} else {
-		requestClientHeartbeatStrByte, _ := json.Marshal(FDCreateEvent)
-		reqContentStr = string(requestClientHeartbeatStrByte)
-	}
+	requestClientHeartbeatStrByte, _ := gateway.Netway.ConnManager.CompressContent(FDCreateEvent, conn.UserId)
+	msg, _, _ := gateway.Netway.ConnManager.MakeMsgByActionName(conn.UserId, "FdCreate", requestClientHeartbeatStrByte)
 
-	msg.Content = reqContentStr
 	return msg
 }
 
@@ -366,8 +348,10 @@ func (gateway *Gateway) RouterServiceGateway(msg pb.Msg, conn *util.Conn) (data 
 	requestClientPong := pb.PongRes{}
 	requestClientPing := pb.PingReq{}
 	requestClientHeartbeat := pb.Heartbeat{}
+	requestProjectPushMsg := pb.ProjectPushMsg{}
 
 	protoServiceFunc, _ := gateway.Netway.Option.ProtoMap.GetServiceFuncById(int(msg.SidFid))
+
 	switch protoServiceFunc.FuncName {
 	case "CS_Login": //
 		err = gateway.Netway.ProtocolManager.ParserContentMsg(msg, &requestLogin, conn.UserId)
@@ -377,6 +361,10 @@ func (gateway *Gateway) RouterServiceGateway(msg pb.Msg, conn *util.Conn) (data 
 		err = gateway.Netway.ProtocolManager.ParserContentMsg(msg, &requestClientPing, conn.UserId)
 	case "CS_Heartbeat": //心跳
 		err = gateway.Netway.ProtocolManager.ParserContentMsg(msg, &requestClientHeartbeat, conn.UserId)
+	case "CS_ProjectPushMsg": //某个服务想给其它服务推送消息
+		err = gateway.Netway.ProtocolManager.ParserContentMsg(msg, &requestProjectPushMsg, conn.UserId)
+		util.MyPrint("requestProjectPushMsg: ", requestProjectPushMsg)
+		err = errors.New("CS_ProjectPushMsg no implementation。")
 	default:
 		gateway.Netway.Option.Log.Error("RouterServiceGateway Router err:")
 		return data, errors.New("RouterServiceGateway Router err")
@@ -405,7 +393,10 @@ func (gateway *Gateway) RouterServiceGateway(msg pb.Msg, conn *util.Conn) (data 
 		gateway.heartbeat(requestClientHeartbeat, conn)
 		msg := gateway.MakeMsgHeartbeat(requestClientHeartbeat, conn)
 		gateway.BroadcastService(msg, conn)
+	case "CS_ProjectPushMsg":
+		util.MyPrint("RouterServiceGateway CS_ProjectPushMsg")
 	}
+
 	return data, err
 }
 
@@ -432,4 +423,18 @@ func (gateway *Gateway) clientPing(ping pb.PingReq, conn *util.Conn) {
 		ServerResponseTime: util.GetNowMillisecond(),
 	}
 	conn.SendMsgCompressByUid(conn.UserId, "SC_Pong", &responseServerPong)
+}
+
+//balanceFactor:负载均衡 方法
+func (gateway *Gateway) HttpCallGrpc(serviceName string, funcName string, balanceFactor string, requestData []byte) (resJsonStr string, err error) {
+	gateway.Log.Info("HttpCallGrpc ， serviceName:" + serviceName + " funcName:" + funcName + " balanceFactor:" + balanceFactor + " requestData:" + string(requestData))
+	callGrpcResData, err := gateway.GrpcManager.CallGrpc(serviceName, funcName, balanceFactor, requestData)
+	if err != nil {
+		return resJsonStr, err
+	}
+	resJsonStrByte, err := json.Marshal(callGrpcResData)
+	if err != nil {
+		return resJsonStr, err
+	}
+	return string(resJsonStrByte), err
 }

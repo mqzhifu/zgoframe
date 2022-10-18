@@ -87,17 +87,27 @@ func (twinAgora *TwinAgora) CallPeople(callPeopleReq pb.CallPeopleReq, conn *uti
 
 	//寻找在线的专家
 	var onlineUserDoctorList []model.User
+	onlineUserDoctorListUids := ""
 	for _, userConn := range conn.ConnManager.Pool {
 		for _, user := range userDoctorList {
 			if userConn.UserId == int32(user.Id) && userConn.Status == util.CONN_STATUS_EXECING {
 				onlineUserDoctorList = append(onlineUserDoctorList, user)
+				onlineUserDoctorListUids += strconv.Itoa(user.Id) + " , "
 			}
 		}
 	}
 
 	if len(onlineUserDoctorList) <= 0 {
-		callPeopleRes.ErrCode = 510
+		callPeopleRes.ErrCode = 403
 		callPeopleRes.ErrMsg = twinAgora.Lang.NewString(403)
+		twinAgora.MakeError(callPeopleRes.ErrMsg)
+		conn.SendMsgCompressByUid(conn.UserId, "SC_CallPeople", callPeopleRes)
+		return
+	}
+
+	if len(onlineUserDoctorList) > 1 {
+		callPeopleRes.ErrCode = 422
+		callPeopleRes.ErrMsg = twinAgora.Lang.NewReplaceOneString(422, onlineUserDoctorListUids)
 		twinAgora.MakeError(callPeopleRes.ErrMsg)
 		conn.SendMsgCompressByUid(conn.UserId, "SC_CallPeople", callPeopleRes)
 		return
@@ -334,7 +344,10 @@ func (twinAgora *TwinAgora) CallPeopleAccept(callVote pb.CallVote, conn *util.Co
 		return twinAgora.MakeError(twinAgora.Lang.NewReplaceOneString(512, callVote.RoomId))
 	}
 
-	rtcUser, _ := twinAgora.GetUserById(int(conn.UserId))
+	rtcUser, exist := twinAgora.GetUserById(int(conn.UserId))
+	if !exist {
+		return twinAgora.MakeError(twinAgora.Lang.NewReplaceOneString(401, strconv.Itoa(int(conn.UserId))))
+	}
 	rtcUser.RoomId = RTCRoomInfo.Id
 
 	RTCRoomInfo.ReceiveUidsAccept = append(RTCRoomInfo.ReceiveUidsAccept, int(callVote.Uid))

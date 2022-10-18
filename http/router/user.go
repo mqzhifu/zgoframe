@@ -9,7 +9,7 @@ func InitUserRouter(Router *gin.RouterGroup) {
 	UserRouter := Router.Group("user")
 	{
 		UserRouter.POST("set/password", v1.SetPassword) // 设置/修改密码
-		UserRouter.POST("list", v1.GetUserInfoList) // 分页获取用户列表
+		UserRouter.POST("list", v1.GetUserInfoList)     // 分页获取用户列表
 
 		//UserRouter.POST("setUserAuthority", v1.SetUserAuthority) // 设置用户权限
 		UserRouter.DELETE("delete", v1.DeleteUser) // 删除用户
@@ -34,14 +34,3 @@ func InitSysRouter(Router *gin.RouterGroup) {
 
 	}
 }
-
-func InitGatewayRouter(Router *gin.RouterGroup) {
-	GatewayRouter := Router.Group("gateway")
-	{
-		GatewayRouter.POST("service/:service_name/:func_name", v1.GatewayService)
-		GatewayRouter.GET("proto", v1.GatewayProto)
-		GatewayRouter.GET("action/map", v1.ActionMap)
-		GatewayRouter.GET("config", v1.GatewayConfig)
-	}
-}
-

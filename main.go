@@ -94,7 +94,6 @@ func main() {
 	//main主协程的 context
 	util.MyPrint(prefix + "create cancel context")
 	mainCxt, mainCancelFunc := context.WithCancel(context.Background())
-
 	mainEnvironment := global.MainEnvironment{
 		RootDir:         pwd,
 		GoVersion:       runtime.Version(),

@@ -1,0 +1,184 @@
+<html>
+
+
+<head>
+    <title>cicd_new</title>
+    <script src="/static/js/jquery.min.js" type="text/javascript" ></script>
+</head>
+<style>
+    table
+    {
+        border-collapse: collapse;
+        /*margin: 0 auto;*/
+        text-align: left;
+    }
+    table td, table th
+    {
+        border: 1px solid #cad9ea;
+        color: #666;
+        height: 30px;
+    }
+    table thead th
+    {
+        background-color: #CCE8EB;
+        width: 100px;
+    }
+    table tr:nth-child(odd)
+    {
+        background: #fff;
+    }
+    table tr:nth-child(even) {
+        background: #F5FAFA;
+    }
+
+    .portlet {
+        border:1px solid #ff0000;
+        margin:5px;
+    }
+
+</style>
+
+<body>
+    <div>
+        <div>
+            FD绑定User:
+        </div>
+        <table id="fd_user_list_div">
+
+        </table>
+        <br/>
+        <div>ps:从 up_time 中可以看心跳正常否</div>
+
+    </div>
+    <br/><br/>
+    <div>
+        <div>发送消息</div>
+        <table>
+            <tr>
+                <td>uid</td>
+                <td><input type="text" name="send_msg_uid" id="send_msg_uid" /> </td>
+            </tr>
+            <tr>
+                <td>content</td>
+                <td><input type="text" name="send_msg_content" id="send_msg_content"></td>
+            </tr>
+            <tr>
+                <td><input type="button" onclick="send_msg()" value="发送" /></td>
+            </tr>
+        </table>
+        <div>
+            仅支持一种类型消息：SC_ProjectPush (ProjectPushMsg)
+        </div>
+    </div>
+
+</body>
+
+
+<script>
+
+    // 后端公共HTTP接口-头信息
+    var header_X_Source_Type = "11";
+    var header_X_Project_Id = "6";
+    var header_X_Access = "imzgoframe";
+    //长连接 通信协议 基础类型 定义
+    var contentTypeDesc = {1:"json",2:"protobuf"};
+    var protocolTypeDesc = {1:"tcp",2:"websocket",3:"udp"};
+    //后端HTTP 域名
+    var domain = window.location.host;
+    //S端URL - 配置信息,IP 端口 协议类型
+    var FDUserListHostUri = "http://"+domain + "/gateway/fd/list";
+    var SendMsgHostUri = "http://"+domain + "/gateway/send/msg";
+
+    // CONN_STATUS_INIT    = 1 //初始化
+    // CONN_STATUS_EXECING = 2 //运行中
+    // CONN_STATUS_CLOSE   = 3 //已关闭
+
+    CONN_STATUS_DESC = {1:"初始化",2:"运行中",3:"已关闭"};
+    console.log(CONN_STATUS_DESC)
+    function GetFDUserList(){
+        $.ajax({
+            type: "GET",
+            async:false,
+            headers: {
+                "X-Source-Type": header_X_Source_Type,
+                "X-Project-Id": header_X_Project_Id,
+                "X-Access": header_X_Access,
+            },
+            url:FDUserListHostUri,
+            success: function(data){
+                var htmlStr = "<tr> <th>uid</th> <th>状态</th> <th>添加时间</th> <th>最后更新时间</th>   <th>content_type</th>  <th>protocol_type</th></tr>";
+
+                if (data.code != 200){
+                    htmlStr += "<tr><td>请求接口，获取数据，出错</td></tr>"
+                    $("#fd_user_list_div").html(htmlStr);
+
+                    var msg =  "code:" + data.code +  " , msg:" + data.msg;
+                    return alert(msg);
+                }
+
+                var fdList = data.data;
+                var fdListLen =  Object.keys(fdList).length;
+                if (fdListLen <= 0){
+                    htmlStr += "<tr><td>在线用户为0</td></tr>"
+                    $("#fd_user_list_div").html(htmlStr);
+
+                    return alert("fdListLen == 0");
+                }
+
+                for (var key in fdList) {
+                    var row = fdList[key];
+                    var trRow = "<tr>";
+                    trRow += "<td>"+row["user_id"] + "</td>"+"<td>"+CONN_STATUS_DESC[row["status"]] + "</td>"+"<td>"+formatUnixTime(row["add_time"] )+ "</td>"+"<td>"+formatUnixTime(row["up_time"]) + "</td>"+"<td>"+contentTypeDesc[row["content_type"]] + "</td>"+"<td>"+protocolTypeDesc[row["protocol_type"]] + "</td>";
+
+                    trRow += "</tr>";
+                    htmlStr += trRow;
+                }
+
+                $("#fd_user_list_div").html(htmlStr);
+            }
+        });
+    }
+
+    function formatUnixTime(us){
+        if (us <= 0 ){
+            return "--";
+        }
+
+        var tims = new Date(us*1000);
+        var format = tims.toLocaleString()
+        return format;
+
+    }
+
+    function send_msg(){
+        var uid = $("#send_msg_uid").val();
+        var content = $("#send_msg_content").val();
+        if (!uid){
+            return alert("uid 不能为空");
+        }
+
+        if (!content){
+            return alert("content 不能为空");
+        }
+
+        $.ajax({
+            type: "POST",
+            async:false,
+            data:{"uid":uid,"content":content},
+            headers: {
+                "X-Source-Type": header_X_Source_Type,
+                "X-Project-Id": header_X_Project_Id,
+                "X-Access": header_X_Access,
+            },
+            url:SendMsgHostUri,
+            success: function(data){
+                console.log("send msg res:",data)
+            }
+        });
+    }
+
+
+    GetFDUserList();
+</script>
+
+</html>

@@ -11,6 +11,7 @@ message Empty {
 //心跳，长连接保活。(不要与PING混淆)
 message Heartbeat{
     int64 time = 1;
+    int64 req_time = 2;
 }
 
 message FDCloseEvent {

@@ -59,7 +59,9 @@ func (gateway *Gateway) ListenCloseEvent() {
 		case connCloseEvent := <-gateway.Netway.ConnManager.CloseEventQueue:
 			gateway.Log.Debug("ListenCloseEvent connCloseEvent:" + util.StructToJsonStr(connCloseEvent))
 			//随便取一个conn，给到下层服务，因为：下层服务可能还要继续给其它人发消息
-			msg := gateway.MakeMsgCloseEventInfo(connCloseEvent)
+			requestClientHeartbeatStrByte, _ := gateway.Netway.ConnManager.CompressNormalContent(connCloseEvent, int(connCloseEvent.ContentType))
+			msg, _, _ := gateway.Netway.ConnManager.MakeMsgByActionName(connCloseEvent.UserId, "FdClose", requestClientHeartbeatStrByte)
+
 			gateway.BroadcastService(msg, nil)
 		default:
 			time.Sleep(time.Millisecond * 100)
@@ -67,36 +69,7 @@ func (gateway *Gateway) ListenCloseEvent() {
 	}
 }
 
-//网关自己创建一条长连接消息，发送给service
-func (gateway *Gateway) MakeMsgCloseEventInfo(connCloseEvent pb.FDCloseEvent) pb.Msg {
-	requestClientHeartbeatStrByte, _ := gateway.Netway.ConnManager.CompressNormalContent(connCloseEvent, int(connCloseEvent.ContentType))
-	msg, _, _ := gateway.Netway.ConnManager.MakeMsgByActionName(connCloseEvent.UserId, "FdClose", requestClientHeartbeatStrByte)
-	return msg
-}
-
-//网关自己创建一条长连接消息，发送给service
-func (gateway *Gateway) MakeMsgHeartbeat(requestClientHeartbeat pb.Heartbeat, conn *util.Conn) pb.Msg {
-	requestClientHeartbeatStrByte, err := gateway.Netway.ConnManager.CompressContent(requestClientHeartbeat, conn.UserId)
-	if err != nil {
-		util.MyPrint("MakeMsgHeartbeat err1:", err)
-	}
-	msg, _, err := gateway.Netway.ConnManager.MakeMsgByActionName(conn.UserId, "CS_Heartbeat", requestClientHeartbeatStrByte)
-	if err != nil {
-		util.MyPrint("MakeMsgHeartbeat err2:", err)
-	}
-
-	return msg
-}
-
-//网关自己创建一条长连接消息，发送给service
-func (gateway *Gateway) MakeMsgFDCreateEventInfo(FDCreateEvent pb.FDCreateEvent, conn *util.Conn) pb.Msg {
-	requestClientHeartbeatStrByte, _ := gateway.Netway.ConnManager.CompressContent(FDCreateEvent, conn.UserId)
-	msg, _, _ := gateway.Netway.ConnManager.MakeMsgByActionName(conn.UserId, "FdCreate", requestClientHeartbeatStrByte)
-
-	return msg
-}
-
-//广播给所有服务，如：心跳 PING PONG 关闭事件
+//广播给所有服务，如：心跳 PING PONG 关闭事件(不广播给gateway)
 func (gateway *Gateway) BroadcastService(msg pb.Msg, conn *util.Conn) {
 	//gateway.RouterServiceSync(msg, conn)
 	//gateway.RouterServiceGameMatch(msg, conn)
@@ -164,7 +137,6 @@ func (gateway *Gateway) RouterServiceTwinAgora(msg pb.Msg, conn *util.Conn) (dat
 
 	if err != nil {
 		util.MyPrint(err)
-		//util.ExitPrint(err)
 		return data, err
 	}
 	//util.MyPrint("=======2,", reqHeartbeat)
@@ -325,8 +297,10 @@ func (gateway *Gateway) RouterServiceGateway(msg pb.Msg, conn *util.Conn) (data 
 		data = cc
 		if err == nil {
 			FDCreateEvent := pb.FDCreateEvent{UserId: int32(cc.Id)}
-			pbMsg := gateway.MakeMsgFDCreateEventInfo(FDCreateEvent, conn)
-			gateway.BroadcastService(pbMsg, conn)
+			//pbMsg := gateway.MakeMsgFDCreateEventInfo(FDCreateEvent, conn)
+			requestClientHeartbeatStrByte, _ := gateway.Netway.ConnManager.CompressContent(FDCreateEvent, conn.UserId)
+			msg, _, _ := gateway.Netway.ConnManager.MakeMsgByActionName(conn.UserId, "FdCreate", requestClientHeartbeatStrByte)
+			gateway.BroadcastService(msg, conn)
 		}
 
 	case "CS_Ping":
@@ -334,9 +308,9 @@ func (gateway *Gateway) RouterServiceGateway(msg pb.Msg, conn *util.Conn) (data 
 	case "CS_Pong":
 		gateway.ClientPong(requestClientPong, conn)
 	case "CS_Heartbeat":
-
 		gateway.heartbeat(requestClientHeartbeat, conn)
-		msg = gateway.MakeMsgHeartbeat(requestClientHeartbeat, conn)
+		requestClientHeartbeatStrByte, _ := gateway.Netway.ConnManager.CompressContent(requestClientHeartbeat, conn.UserId)
+		msg, _, _ := gateway.Netway.ConnManager.MakeMsgByActionName(conn.UserId, "CS_Heartbeat", requestClientHeartbeatStrByte)
 		gateway.BroadcastService(msg, conn)
 	case "CS_ProjectPushMsg":
 		util.MyPrint("RouterServiceGateway CS_ProjectPushMsg")
@@ -351,13 +325,17 @@ func (gateway *Gateway) ClientPong(requestClientPong pb.PongRes, conn *util.Conn
 
 func (gateway *Gateway) heartbeat(requestClientHeartbeat pb.Heartbeat, conn *util.Conn) {
 	now := util.GetNowTimeSecondToInt()
+	now64 := util.GetNowMillisecond()
 	conn.UpTime = int32(now)
+	conn.RTT = now64 - requestClientHeartbeat.Time
 
-	//responseHeartbeat := pb.Heartbeat{
-	//	Time: int64(now),
-	//}
+	util.MyPrint("test=======: ", " now:", now64, " client_time:", requestClientHeartbeat.Time, " RTT:", conn.RTT)
+	responseHeartbeat := pb.Heartbeat{
+		ReqTime: requestClientHeartbeat.Time,
+		Time:    now64,
+	}
 
-	//conn.SendMsgCompressByUid(conn.UserId, "SC_Heartbeat", &responseHeartbeat)
+	conn.SendMsgCompressByUid(conn.UserId, "SC_Heartbeat", &responseHeartbeat)
 }
 
 func (gateway *Gateway) clientPing(ping pb.PingReq, conn *util.Conn) {

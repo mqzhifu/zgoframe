@@ -106,7 +106,7 @@
             },
             url:FDUserListHostUri,
             success: function(data){
-                var htmlStr = "<tr> <th>uid</th> <th>状态</th> <th>添加时间</th> <th>最后更新时间</th>   <th>content_type</th>  <th>protocol_type</th></tr>";
+                var htmlStr = "<tr> <th>uid</th> <th>状态</th> <th>添加时间</th> <th>最后更新时间</th>   <th>content_type</th>  <th>protocol_type</th><th>RTT</th></tr>";
 
                 if (data.code != 200){
                     htmlStr += "<tr><td>请求接口，获取数据，出错</td></tr>"
@@ -128,7 +128,7 @@
                 for (var key in fdList) {
                     var row = fdList[key];
                     var trRow = "<tr>";
-                    trRow += "<td>"+row["user_id"] + "</td>"+"<td>"+CONN_STATUS_DESC[row["status"]] + "</td>"+"<td>"+formatUnixTime(row["add_time"] )+ "</td>"+"<td>"+formatUnixTime(row["up_time"]) + "</td>"+"<td>"+contentTypeDesc[row["content_type"]] + "</td>"+"<td>"+protocolTypeDesc[row["protocol_type"]] + "</td>";
+                    trRow += "<td>"+row["user_id"] + "</td>"+"<td>"+CONN_STATUS_DESC[row["status"]] + "</td>"+"<td>"+formatUnixTime(row["add_time"] )+ "</td>"+"<td>"+formatUnixTime(row["up_time"]) + "</td>"+"<td>"+contentTypeDesc[row["content_type"]] + "</td>"+"<td>"+protocolTypeDesc[row["protocol_type"]] + "</td>"+"<td>"+ row["rtt"] +"</td>";
 
                     trRow += "</tr>";
                     htmlStr += trRow;

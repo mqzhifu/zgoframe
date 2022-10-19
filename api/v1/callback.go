@@ -155,5 +155,19 @@ func AgoraCallbackCloud(c *gin.Context) {
 		}()
 	}
 
+	if form.EventType == model.CallbackEventRecordExit {
+		go func() {
+			var agoraCloudRecord = model.AgoraCloudRecord{
+				EndTime:    util.GetNowTimeSecondToInt(),
+				Status:     model.AGORA_CLOUD_RECORD_STATUS_END,
+				StopAction: model.AGORA_CLOUD_RECORD_STOP_ACTION_CALLBACK,
+			}
+			err = global.V.Gorm.Where("status != ? and session_id = ?", model.AGORA_CLOUD_RECORD_STATUS_END, agoraCallbackRecord.SessionId).Updates(&agoraCloudRecord).Error
+			if err != nil {
+				util.MyPrint("gorm updates err:", err)
+			}
+		}()
+	}
+
 	httpresponse.OkWithAll("回调成功", "ok", c)
 }

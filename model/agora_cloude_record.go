@@ -17,6 +17,7 @@ type AgoraCloudRecord struct {
 	StopResInfo      string `json:"stop_res_info" form:"stop_res_info" db:"define:text;comment:请求声网,停止录制时返回的文件信息"`
 	VideoUrl         string `json:"video_url" form:"video_url" db:"define:varchar(255);comment:最终录制好的视频的URL地址;defaultValue:''"`
 	ErrLog           string `json:"err_log" form:"err_log" db:"define:text;comment:请求3方返回的错误信息"`
+	StopAction       int    `json:"stop_action" form:"stop_action" db:"define:int;comment:0-未知1-正常停止2-页面刷新时拦截3-重新加载页面触发 4-声网回调触发;defaultValue:0"`
 }
 
 func (agoraCloudRecord *AgoraCloudRecord) TableOptions() map[string]string {

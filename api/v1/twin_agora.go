@@ -50,6 +50,40 @@ func TwinAgoraCloudRecordList(c *gin.Context) {
 }
 
 // @Tags TwinAgora
+// @Summary 检查云端录制环境
+// @Description 当有未停止的云端录制时，自动stop掉
+// @accept application/json
+// @Security ApiKeyAuth
+// @Produce application/json
+// @Success 200 {boolean} boolean "true:成功 false:否"
+// @Router /twin/agora/cloud/record/check [POST]
+func TwinAgoraCloudRecordCheck(c *gin.Context) {
+	var formData util.AgoraAcquireReq
+	c.ShouldBind(&formData)
+
+	if util.Atoi(formData.Uid) <= 0 {
+		httpresponse.FailWithMessage("uid <= 0", c)
+		return
+	}
+
+	if formData.Cname == "" {
+		httpresponse.FailWithMessage("cname empty", c)
+		return
+	}
+
+	var agoraCloudRecord = model.AgoraCloudRecord{
+		Status:     model.AGORA_CLOUD_RECORD_STATUS_END,
+		EndTime:    util.GetNowTimeSecondToInt(),
+		StopAction: model.AGORA_CLOUD_RECORD_STOP_ACTION_REENTER,
+	}
+	global.V.Gorm.Where("channel_name = ? and listener_agora_uid = ? and status = ?", formData.Cname, formData.Uid, model.AGORA_CLOUD_RECORD_STATUS_START).
+		Order("start_time desc").
+		Limit(1).
+		Updates(&agoraCloudRecord)
+	httpresponse.OkWithAll(gin.H{"success": true}, "成功", c)
+}
+
+// @Tags TwinAgora
 // @Summary 申请/创建 录屏资源Id
 // @Description 录屏时，要先从声网，申请一个资源ID，之后，才能开始（声网限制：每秒最多请求10次）
 // @accept application/json
@@ -252,7 +286,7 @@ func TwinAgoraCloudRecordQuery(c *gin.Context) {
 // @Param rid path string true "rid"
 // @Produce application/json
 // @Success 200 {object} util.AgoraCloudRecordRes "结果"
-// @Router /twin/agora/cloud/record/stop/{rid} [GET]
+// @Router /twin/agora/cloud/record/stop/{rid}/{type} [GET]
 func TwinAgoraCloudRecordStop(c *gin.Context) {
 	recordId := util.Atoi(c.Param("rid"))
 	record, err := GetCloudRecordById(recordId)
@@ -279,6 +313,7 @@ func TwinAgoraCloudRecordStop(c *gin.Context) {
 		EndTime:     util.GetNowTimeSecondToInt(),
 		Status:      model.AGORA_CLOUD_RECORD_STATUS_END,
 		StopResInfo: string(ServerResponseBytes),
+		StopAction:  util.Atoi(c.Param("type")),
 	}
 	err = global.V.Gorm.Where(" id = ?", recordId).Updates(&agoraCloudRecord).Error
 	if err != nil {

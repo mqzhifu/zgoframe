@@ -387,6 +387,15 @@ const (
 	AGORA_CLOUD_RECORD_SERVER_STATUS_ERR  = 4
 )
 
+// 0-未知1-正常停止2-页面刷新时拦截3-重新加载页面触发 4-声网回调触发
+const (
+	AGORA_CLOUD_RECORD_STOP_ACTION_UNKNOW   = 0
+	AGORA_CLOUD_RECORD_STOP_ACTION_NORMAL   = 1
+	AGORA_CLOUD_RECORD_STOP_ACTION_RELOAD   = 2
+	AGORA_CLOUD_RECORD_STOP_ACTION_REENTER  = 3
+	AGORA_CLOUD_RECORD_STOP_ACTION_CALLBACK = 4
+)
+
 func GetConstListAgoraCloudRecordServerStatus() map[string]int {
 	list := make(map[string]int)
 	list["未处理"] = AGORA_CLOUD_RECORD_SERVER_STATUS_UNDO
@@ -408,6 +417,6 @@ func GetConstListAgoraCloudRecordServerStatus() map[string]int {
 //}
 
 const (
-	CallbackEventAllUploaded = 31
+	CallbackEventAllUploaded = 31 //// 所有录制文件已上传至指定的第三方云存储
+	CallbackEventRecordExit  = 41 // 录制服务已退出
 )
-

@@ -1,12 +1,13 @@
 package util
 
 const (
-	CLOSE_SOURCE_SERVER_HAS_CLOSE = 11 //服务端状态已关闭
-	CLOSE_SOURCE_CLIENT           = 1  //客户端-主动断开连接
-	CLOSE_SOURCE_AUTH_FAILED      = 21 //客户端首次连接，登陆动作,服务端验证失败
-	CLOSE_SOURCE_FD_READ_EMPTY    = 22 //客户端首次连接，登陆动作,服务端read信息为空
-	CLOSE_SOURCE_FD_PARSE_CONTENT = 23 //客户端首次连接，登陆动作,解析内容时出错
-	CLOSE_SOURCE_FIRST_NO_LOGIN   = 24 //客户端首次连接，登陆动作,内容解出来了，但是action!=login
+	CLOSE_SOURCE_SERVER_HAS_CLOSE   = 11 //服务端状态已关闭
+	CLOSE_SOURCE_CLIENT             = 1  //客户端-主动断开连接
+	CLOSE_SOURCE_AUTH_FAILED        = 21 //客户端首次连接，登陆动作,服务端验证失败
+	CLOSE_SOURCE_FD_READ_EMPTY      = 22 //客户端首次连接，登陆动作,服务端read信息为空
+	CLOSE_SOURCE_FD_PARSE_CONTENT   = 23 //客户端首次连接，登陆动作,解析内容时出错
+	CLOSE_SOURCE_FIRST_NO_LOGIN     = 24 //客户端首次连接，登陆动作,内容解出来了，但是action!=login
+	CLOSE_SOURCE_FIRST_PARSER_LOGIN = 25 //login  登陆不出结构体内容
 	//CLOSE_SOURCE_CREATE 			= 3	//初始化 连接类失败，可能是连接数过大
 	CLOSE_SOURCE_OPEN_PANIC            = 31 //初始化 新连接创建成功后，上层要再重新做一次连接，结果未知panic
 	CLOSE_SOURCE_MAX_CLIENT            = 32 //当前连接数过大

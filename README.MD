@@ -136,6 +136,10 @@ go get github.com/golang/protobuf/protoc-gen-go@v1.3.2
 | zap   | 日志                     |
 | redis | http限流使用               |
 
+
+注意组件/类库：
+有些组件是互相依赖的，如：网关要依赖protobuf ，声网-录制屏幕，要依赖阿里云的OSS等
+
 配置文件说明：  
 目前仅使用了toml格式，也可以兼容yaml 等，自行研究    
 每个模块里都有status: open  | close ，自行设置  
@@ -151,10 +155,14 @@ go get github.com/golang/protobuf/protoc-gen-go@v1.3.2
 3. 匹配
 4. 帧同步
 5. 房间
+6. 消息中心：sms、邮件、站内信
+7. 配置中心
+8. 文件/图片系统
 
 未完成
 1. 好友体系
 2. 订单/商品/支付
 3. 任务/成就体系
 4. 货币(金币/现金)
-5. 消息中心，站内信 PUSH
+5. 消息中心：APP-PUSH、队列、公共号
+6. RTC，音视频流控

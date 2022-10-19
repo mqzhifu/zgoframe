@@ -100,13 +100,14 @@ func NewTwinAgora(Gorm *gorm.DB, log *zap.Logger, staticPath string) (*TwinAgora
 	twinAgora.Separate = "##"                         //一个房间信息转换成字符串的：分隔符
 	twinAgora.RTCRoomPool = make(map[string]*RTCRoom) //房间池
 	twinAgora.RTCUserPool = make(map[int]*RTCUser)    //用户池
-
+	twinAgora.Log = log
+	
 	twinAgora.CancelCtx, twinAgora.CancelFunc = context.WithCancel(context.Background())
 
 	//错误码 文案 管理（还未用起来，后期优化）
 	lang, err := util.NewErrMsg(log, staticPath+"/data/twin_agora.en.lang")
 	if err != nil {
-		util.MyPrint(err)
+		twinAgora.MakeError(err.Error())
 		return twinAgora, err
 	}
 	twinAgora.Lang = lang
@@ -132,6 +133,7 @@ func (twinAgora *TwinAgora) Quit() {
 
 //守护协程，检查房间超时：呼叫超时、运行超时(连接断开)
 func (twinAgora *TwinAgora) CheckTimeout() {
+	twinAgora.Log.Debug("twinAgora CheckTimeout demon.")
 	for {
 		select {
 		case <-twinAgora.CancelCtx.Done():
@@ -162,7 +164,7 @@ func (twinAgora *TwinAgora) CheckTimeout() {
 		}
 	}
 end:
-	util.MyPrint("twinAgora CheckTimeout finish.")
+	twinAgora.Log.Debug("twinAgora CheckTimeout finish.")
 }
 
 //网关监控到有C端连接，并通过了登陆验证后，会推送事件
@@ -386,7 +388,7 @@ func (twinAgora *TwinAgora) GetUserById(uid int) (mmRTCUserRTCUser *RTCUser, rs 
 }
 
 func (twinAgora *TwinAgora) MakeError(errMsg string) error {
-	util.MyPrint("*********=====MakeError : ", errMsg)
+	twinAgora.Log.Error("*********=====MakeError : " + errMsg)
 	return errors.New(errMsg)
 }
 

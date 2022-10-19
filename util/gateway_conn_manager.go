@@ -71,8 +71,7 @@ func NewConnManager(connManagerOption ConnManagerOption) *ConnManager {
 	return connManager
 }
 func (connManager *ConnManager) MakeError(msg string) error {
-	//connManager.Option.Log.Error("CompressContent err :" + err.Error())
-	MyPrint("connManager make error:" + msg)
+	connManager.Option.Log.Error("connManager make error:" + msg)
 	return errors.New(msg)
 }
 
@@ -173,7 +172,8 @@ func (connManager *ConnManager) addConnPool(NewConn *Conn) error {
 			Time: GetNowMillisecond(),
 		}
 		//给旧连接发送消息通知
-		oldConn.SendMsgCompressByConn("kickOff", &responseKickOff)
+		oldConn.SendMsgCompressByConn("SC_KickOff", &responseKickOff)
+		//这条消息不一定能发出去，因为后面马上就会接关闭FD
 		time.Sleep(time.Millisecond * 200)
 		oldConn.CloseOneConn(CLOSE_SOURCE_OVERRIDE)
 	}
@@ -228,7 +228,7 @@ func (connManager *ConnManager) GetPlayerCtrlInfoById(userId int32) ProtocolCtrl
 		ProtocolType: protocolType,
 	}
 
-	connManager.Option.Log.Info("GetPlayerCtrlInfo uid : " + strconv.Itoa(int(userId)) + " contentType:" + strconv.Itoa(int(contentType)) + " , protocolType:" + strconv.Itoa(int(protocolType)))
+	//connManager.Option.Log.Info("GetPlayerCtrlInfo uid : " + strconv.Itoa(int(userId)) + " contentType:" + strconv.Itoa(int(contentType)) + " , protocolType:" + strconv.Itoa(int(protocolType)))
 
 	return protocolCtrlInfo
 }
@@ -377,7 +377,7 @@ func (connManager *ConnManager) PackContentMsg(msg pb.Msg) []byte {
 	reserved := []byte("reserved--")
 	serviceIdBytes := Int32ToBytes(msg.ServiceId)[3]
 	ln := connManager.Option.MsgSeparator
-	connManager.Option.Log.Info("PackContentMsg dataLengthBytes:" + strconv.Itoa(len(msg.Content)))
+	//connManager.Option.Log.Info("PackContentMsg dataLengthBytes:" + strconv.Itoa(len(msg.Content)))
 	//合并: 头 + 消息内容体 + 分隔符
 	content := BytesCombine(dataLengthBytes, ByteTurnBytes(contentTypeBytes), ByteTurnBytes(protocolTypeBytes), ByteTurnBytes(serviceIdBytes), actionIdByte, reserved, []byte(msg.Content), []byte(ln))
 	return content
@@ -414,7 +414,8 @@ func (conn *Conn) UpLastTime() {
 func (conn *Conn) Read() (content string, err error) {
 	// 设置消息的最大长度 - 暂无
 	//conn.Conn.SetReadDeadline(time.Now().Add(time.Second * time.Duration(mynetWay.Option.IOTimeout)))
-	messageType, dataByte, err := conn.Conn.ReadMessage()
+	_, dataByte, err := conn.Conn.ReadMessage()
+	//messageType, dataByte, err := conn.Conn.ReadMessage()
 	//_ , dataByte  , err  := conn.Conn.ReadMessage()
 	if err != nil {
 		//myMetrics.fastLog("total.input.err.num",METRICS_OPT_INC,0)
@@ -429,7 +430,7 @@ func (conn *Conn) Read() (content string, err error) {
 	//myMetrics.fastLog("player.fd.num."+pid,METRICS_OPT_INC,0)
 	//myMetrics.fastLog("player.fd.size."+pid,METRICS_OPT_PLUS,len(content))
 
-	conn.ConnManager.Option.Log.Info("conn.ReadMessage messageType:" + strconv.Itoa(messageType) + " len :" + strconv.Itoa(len(dataByte)) + " data:" + string(dataByte))
+	//conn.ConnManager.Option.Log.Info("conn.ReadMessage messageType:" + strconv.Itoa(messageType) + " len :" + strconv.Itoa(len(dataByte)) + " data:" + string(dataByte))
 	content = string(dataByte)
 	return content, nil
 }
@@ -584,7 +585,7 @@ func (conn *Conn) ProcessMsgLoop(ctx context.Context) {
 		case <-ctx.Done():
 			ctxHasDone = 1
 		case msg := <-conn.MsgInChan:
-			conn.ConnManager.Option.Log.Info("ProcessMsgLoop receive msg" + strconv.Itoa(int(msg.SidFid)))
+			conn.ConnManager.Option.Log.Info("ProcessMsgLoop receive msg , SidFid:" + strconv.Itoa(int(msg.SidFid)))
 			conn.ConnManager.Option.NetWay.Router(msg, conn)
 		}
 		if ctxHasDone == 1 {
@@ -666,9 +667,6 @@ func (connManager *ConnManager) MakeMsgByActionName(userId int32, action string,
 		ProtocolType: protocolCtrlInfo.ProtocolType,
 	}
 
-	//PrintStruct(msg, ":")
-	//MyPrint("msg: ")
-
 	return msg, protocolCtrlInfo, nil
 }
 
@@ -684,8 +682,8 @@ func (conn *Conn) SendMsg(action string, content []byte) error {
 	if err != nil {
 		return err
 	}
-	conn.ConnManager.Option.Log.Info("SendMsg , ContentType:" + strconv.Itoa(int(protocolCtrlInfo.ContentType)) + " ProtocolType: " + strconv.Itoa(int(protocolCtrlInfo.ProtocolType)))
-	conn.ConnManager.Option.Log.Info("SendMsg , actionId:" + strconv.Itoa(int(msg.Id)) + " , userId:" + strconv.Itoa(int(conn.UserId)) + " , actionName:" + action)
+	debugMsg := "SendMsg , ContentType:" + strconv.Itoa(int(protocolCtrlInfo.ContentType)) + " ProtocolType: " + strconv.Itoa(int(protocolCtrlInfo.ProtocolType)) + " , actionId:" + strconv.Itoa(int(msg.Id)) + " , userId:" + strconv.Itoa(int(conn.UserId)) + " , actionName:" + action
+	conn.ConnManager.Option.Log.Info(debugMsg)
 
 	contentBytes := conn.ConnManager.PackContentMsg(msg)
 

@@ -117,7 +117,7 @@ func (protocolManager *ProtocolManager) ParserContentMsg(msg pb.Msg, out interfa
 		return err
 	}
 
-	protocolManager.Option.Log.Debug("protocolManager parserMsgContent:")
+	protocolManager.Option.Log.Debug("protocolManager parserMsgContent ， content:" + content)
 
 	return nil
 }

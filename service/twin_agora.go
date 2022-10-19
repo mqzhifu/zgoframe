@@ -11,7 +11,7 @@ import (
 
 //眼镜端发起呼叫
 func (twinAgora *TwinAgora) CallPeople(callPeopleReq pb.CallPeopleReq, conn *util.Conn) {
-	util.MyPrint("in func CallPeople:")
+	twinAgora.Log.Info("in func CallPeople:")
 	callPeopleRes := pb.CallPeopleRes{}
 
 	if callPeopleReq.Uid <= 0 {

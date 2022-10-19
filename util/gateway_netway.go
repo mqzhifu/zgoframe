@@ -241,6 +241,10 @@ func (netWay *NetWay) OpenNewConn(connFD FDAdapter) {
 	NewConn.SendMsgCompressByUid(NewConn.UserId, "SC_Login", &loginRes)
 	//统计 当前FD 数量/历史FD数量
 	netWay.Metrics.CounterInc("create_fd_ok")
+
+	//具体的执行过程，要走一遍gateway 的router ,开始：登陆/验证 过程
+	netWay.Router(firstMsg, NewConn)
+
 	//初始化即登陆成功的响应均完成后，开始该连接的 消息IO 协程
 	go NewConn.IOLoop()
 	//netWay.serverPingRtt(time.Duration(rttMinTimeSecond),NewWsConn,1)
@@ -305,7 +309,7 @@ func (netWay *NetWay) loginPreFailedSendMsg(msg string, closeSource int, conn *C
 
 //首次建立连接，登陆验证，预处理
 func (netWay *NetWay) loginPre(conn *Conn) (jwt request.CustomClaims, firstMsg pb.Msg, err error) {
-	content, err := conn.Read()
+	content, err := conn.Read() //先从socket FD中读取一次数据
 	if err != nil {
 		netWay.loginPreFailedSendMsg(err.Error(), CLOSE_SOURCE_FD_READ_EMPTY, conn)
 		return jwt, firstMsg, errors.New("conn read err:" + err.Error())
@@ -321,37 +325,47 @@ func (netWay *NetWay) loginPre(conn *Conn) (jwt request.CustomClaims, firstMsg p
 		netWay.loginPreFailedSendMsg("first msg must : action=CS_Login api!!", CLOSE_SOURCE_FIRST_NO_LOGIN, conn)
 		return
 	}
-	//开始：登陆/验证 过程
-	jwtDataInterface, err := netWay.Router(msg, conn)
+	//jwt, err := netWay.Login(requestLogin, conn)
+	////具体的执行过程，要走一遍gateway 的router ,开始：登陆/验证 过程
+	//jwtDataInterface, err := netWay.Router(msg, conn)
+	requestLogin := pb.Login{}
+	err = netWay.ProtocolManager.ParserContentMsg(msg, &requestLogin, conn.UserId)
+	if err != nil {
+		netWay.loginPreFailedSendMsg(err.Error(), CLOSE_SOURCE_FIRST_PARSER_LOGIN, conn)
+		return jwt, firstMsg, err
+	}
+
+	jwt, err = netWay.Login(requestLogin, conn)
 	if err != nil {
 		netWay.loginPreFailedSendMsg(err.Error(), CLOSE_SOURCE_CONN_LOGIN_ROUTER_ERR, conn)
 		return
 	}
-	jwt = jwtDataInterface.(request.CustomClaims)
-	if err != nil {
-		netWay.loginPreFailedSendMsg(err.Error(), CLOSE_SOURCE_AUTH_FAILED, conn)
-		return jwt, firstMsg, err
-	}
+	//jwt = jwtDataInterface.(request.CustomClaims)
+	//if err != nil {
+	//	netWay.loginPreFailedSendMsg(err.Error(), CLOSE_SOURCE_AUTH_FAILED, conn)
+	//	return jwt, firstMsg, err
+	//}
 	netWay.Option.Log.Info("login jwt auth ok~~")
 	return jwt, msg, nil
 }
 
 //登陆验证token
 func (netWay *NetWay) Login(requestLogin pb.Login, conn *Conn) (customClaims request.CustomClaims, err error) {
+	netWay.Option.Log.Info("netWay Login , token:" + requestLogin.Token)
 	if conn.UserId > 0 {
 		msg := " don't repeat login." + strconv.Itoa(int(conn.UserId))
 		netWay.Option.Log.Error(msg)
 		return customClaims, errors.New(msg)
 	}
-	MyPrint("gateway_netway Login requestLogin.token:", requestLogin.Token)
 	token := ""
 	if netWay.Option.LoginAuthType == "jwt" {
 		token = requestLogin.Token
+		MyPrint("token:", token)
 		tokenParseWithClaims, err := jwt.ParseWithClaims(token, &request.CustomClaims{}, func(token *jwt.Token) (i interface{}, e error) {
 			return []byte(netWay.Option.LoginAuthSecretKey), nil
 		})
 		if err != nil {
-			MyPrint("gateway_netway Login jwt.ParseWithClaims err:  ", err.Error())
+			netWay.Option.Log.Error("gateway_netway Login jwt.ParseWithClaims err:  " + err.Error())
 			return customClaims, err
 		}
 		claims, _ := tokenParseWithClaims.Claims.(*request.CustomClaims)

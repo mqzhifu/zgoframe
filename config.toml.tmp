@@ -94,6 +94,7 @@ port                    = "#grpc_port#"
 servicePackagePrefix    = "#grpc_user#"
 
 [protobuf]
+status          = "open"
 basePath        = "protobuf" #相对路径，在static下面
 pbServicePath   = "pbservice"#相对路径，在static下面
 protoPath       = "proto"    #相对路径，在static下面

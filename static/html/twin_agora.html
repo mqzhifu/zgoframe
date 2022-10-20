@@ -22,6 +22,7 @@
 </div>
 
 <script src="/static/js/jquery.min.js" type="text/javascript"></script>
+<script src="/static/js/common.js" type="text/javascript"></script>
 <script src="/static/js/twin_agora_player.js" type="text/javascript"></script>
 <!--强依赖，proto 文件，因为它已经定义好对象结构了，直接复用，保持前后端接口数据格式一致-->
 <!--这里用到了两个.proto文件，1.网关(长连接，封/拆包) 2. 帧同步-->
@@ -49,24 +50,24 @@
 </script>
 
 <script type="text/javascript">
-    // 后端公共HTTP接口-头信息
-    var header_X_Source_Type = "11";
-    var header_X_Project_Id = "6";
-    var header_X_Access = "imzgoframe";
-    //长连接 通信协议 基础类型 定义
-    var contentTypeDesc = {1:"json",2:"protobuf"};
-    var protocolTypeDesc = {1:"tcp",2:"websocket",3:"udp"};
-
-    //后端HTTP 域名
-    var domain = window.location.host;
-    //S端URL - 配置信息,IP 端口 协议类型
-    var serverHostUri = "http://"+domain + "/gateway/config";
-    //S端URL - 通讯协议的协议号
-    var actionMapHostUri = "http://"+domain + "/gateway/action/map";
-    var twinAgoraConfigUri = "http://"+domain + "/twin/agora/config";
+    // // 后端公共HTTP接口-头信息
+    // var header_X_Source_Type = "11";
+    // var header_X_Project_Id = "6";
+    // var header_X_Access = "imzgoframe";
+    // //长连接 通信协议 基础类型 定义
+    // var contentTypeDesc = {1:"json",2:"protobuf"};
+    // var protocolTypeDesc = {1:"tcp",2:"websocket",3:"udp"};
+    //
+    // //后端HTTP 域名
+    // var domain = window.location.host;
+    // //S端URL - 配置信息,IP 端口 协议类型
+    // var serverHostUri = "http://"+domain + "/gateway/config";
+    // //S端URL - 通讯协议的协议号
+    // var actionMapHostUri = "http://"+domain + "/gateway/action/map";
+    // var twinAgoraConfigUri = "http://"+domain + "/twin/agora/config";
     var twinAgoraConfig = null;
     //S端URL - 登陆接口
-    var loginUrl = "http://"+domain + "/base/login"
+    // var loginUrl = "http://"+domain + "/base/login"
     ////用户名公共前缀
     // var playerNamePrefix = "frame_sync_"
     // var playerNumber = 1;
@@ -135,7 +136,7 @@
             headers: {
                 "X-Token":playerList["calluser"].token,
             },
-            url:serverHostUri,
+            url:URI_MAP["gateway_config"],
             success: function(data){
                 // alert(data.code);
                 processHtml(data.data);
@@ -169,7 +170,7 @@
             headers: {
                 "X-Token":playerList["calluser"].token
             },
-            url:twinAgoraConfigUri,
+            url:URI_MAP["twin_agora_config"],
             success: function(data){
                 twinAgoraConfig = data.data;
                 console.log("twinAgoraConfig:",twinAgoraConfig)
@@ -193,7 +194,7 @@
             headers: {
                 "X-Token":playerList["calluser"].token
             },
-            url:actionMapHostUri,
+            url:URI_MAP["gateway_action_map"],
             success: function(dataActionMap){
                 ServerConfig.actionMap = dataActionMap.data;
             }

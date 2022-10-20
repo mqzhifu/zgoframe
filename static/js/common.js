@@ -19,6 +19,7 @@ var URI_MAP = {
     "gateway_fd_list":http_protocol + "://"+domain + "/gateway/fd/list",//长连接用户
     "gateway_send_msg":http_protocol + "://"+domain + "/gateway/send/msg",//长连接推送消息
     "gateway_total":http_protocol + "://"+domain + "/gateway/total",//长连接 metrics
+    "twin_agora_config":http_protocol + "://"+domain + "/twin/agora/config",//声网房间长连接配置
 };
 
 var UserList = {

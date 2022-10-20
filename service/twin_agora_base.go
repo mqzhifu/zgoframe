@@ -101,7 +101,7 @@ func NewTwinAgora(Gorm *gorm.DB, log *zap.Logger, staticPath string) (*TwinAgora
 	twinAgora.RTCRoomPool = make(map[string]*RTCRoom) //房间池
 	twinAgora.RTCUserPool = make(map[int]*RTCUser)    //用户池
 	twinAgora.Log = log
-	
+
 	twinAgora.CancelCtx, twinAgora.CancelFunc = context.WithCancel(context.Background())
 
 	//错误码 文案 管理（还未用起来，后期优化）
@@ -249,13 +249,13 @@ func (twinAgora *TwinAgora) RoomHeartbeat(heartbeat pb.RoomHeartbeatReq, conn *u
 		return
 	}
 
+	myRTCRoom.Uptime = util.GetNowTimeSecondToInt()
+	myRTCUser.RoomHeartbeat = util.GetNowTimeSecondToInt()
+
 	if myRTCRoom.Status != RTC_ROOM_STATUS_EXECING {
 		twinAgora.MakeError(twinAgora.Lang.NewReplaceOneString(511, heartbeat.RoomId))
 		return
 	}
-
-	//myRTCRoom.Uptime = util.GetNowTimeSecondToInt()
-	myRTCUser.RoomHeartbeat = util.GetNowTimeSecondToInt()
 
 }
 

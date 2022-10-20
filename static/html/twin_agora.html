@@ -77,6 +77,9 @@
     var playerList = {
         "doctor"  :{id:10,"username"  :"doctor"  ,"password":"123456","info":{},"token":"","roomId":"","channel":"ckck"},
         "calluser":{id:9,"username":"calluser","password":"123456","info":{},"token":"","roomId":"","channel":"ckck"},
+        //线上用户
+        // "doctor"  :{id:10,"username"  :"doctor1"  ,"password":"123456","info":{},"token":"","roomId":"","channel":"ckck"},
+        // "calluser":{id:4,"username":"seedarar","password":"arwillbebest","info":{},"token":"","roomId":"","channel":"ckck"},
     }
 
     var contentType = 1;//长连接 - 传输内容类型
@@ -156,8 +159,8 @@
                 }
             }
 
-            html += "<tr><td>contentType</td><td>"+ contentTypeDesc[contentType] +"</td></tr>";
-            html += "<tr><td>protocolType</td><td>"+ protocolTypeDesc[protocolType]+"</td></tr>";
+            html += "<tr><td>contentType</td><td>"+ content_type_desc[contentType] +"</td></tr>";
+            html += "<tr><td>protocolType</td><td>"+ protocol_type_desc[protocolType]+"</td></tr>";
 
             var serverConfigTable = $("#server_config_table");
             serverConfigTable.html(html);
@@ -314,7 +317,7 @@
             },
             type: "POST",
             data : {"username":playerInfo.username,"password":playerInfo.password},
-            url:loginUrl,
+            url:URI_MAP["user_login"],
             dataType: "json",
             async:false,
             success: function(data){

@@ -3,7 +3,11 @@ function TwinAgoraPlayer (playerId,token,data,DomIdPreObj,contentType,protocolTy
     var self = this;
     this.wsObj = null;//js内置ws 对象
     //ws 连接 s 端地址
-    this.hostUri = "ws://"+data.outIp + ":"+ data.wsPort + data.wsUri;
+    var ws_protocol = "ws";
+    if (http_protocol == "https"){
+        ws_protocol = "wss";
+    }
+    this.hostUri =  ws_protocol+"://"+data.outIp + ":"+ data.wsPort + data.wsUri;
     this.statusDesc = {
         1:"init",
         2:"wsLInkSuccess",
@@ -95,7 +99,7 @@ function TwinAgoraPlayer (playerId,token,data,DomIdPreObj,contentType,protocolTy
         var funcId = id.toString().substring(2);
         var session = "1234567890"
         console.log("serviceId:",serviceId,"funcId:",funcId , parseInt(funcId));
-        if (contentTypeDesc[self.contentType] == "json"){
+        if (content_type_desc[self.contentType] == "json"){
             content = contentObj.toObject();
             content = JSON.stringify(content);
             //这里有个坑，注意下
@@ -120,7 +124,7 @@ function TwinAgoraPlayer (playerId,token,data,DomIdPreObj,contentType,protocolTy
             console.log("<sendMsg final>",content);
 
             self.wsObj.send(content);
-        }else if ( contentTypeDesc[self.contentType]  == "protobuf"){
+        }else if ( content_type_desc[self.contentType]  == "protobuf"){
             // content = contentObj.serializeBinary();
             // var protocolCtrl = contentType +  "" + protocolType + id;
             // if (action != "login" ){
@@ -191,7 +195,7 @@ function TwinAgoraPlayer (playerId,token,data,DomIdPreObj,contentType,protocolTy
         //19 以后为内容体
         //结尾会添加一个字节：\f ,可用于 TCP 粘包 分隔
 
-        if (contentTypeDesc[self.contentType] == 'protobuf'){
+        if (content_type_desc[self.contentType] == 'protobuf'){
             var reader = new FileReader();
             reader.readAsArrayBuffer(ev.data);
             reader.onloadend = function(e) {
@@ -212,7 +216,7 @@ function TwinAgoraPlayer (playerId,token,data,DomIdPreObj,contentType,protocolTy
                 // msgObj.content =  responseProtoClass.deserializeBinary(content).toObject();
                 // self.router(msgObj);
             };
-        }else if(contentTypeDesc[self.contentType] == "json"){
+        }else if(content_type_desc[self.contentType] == "json"){
             var reader = new FileReader();
             reader.readAsArrayBuffer(ev.data);
             reader.onloadend = function(e) {
@@ -241,7 +245,7 @@ function TwinAgoraPlayer (playerId,token,data,DomIdPreObj,contentType,protocolTy
                 self.router(msgObj);
             };
 
-        // }else if(contentTypeDesc[self.contentType] == "json"){//这种是纯JSON格式，传输的是字符流，我再想想如何处理
+        // }else if(content_type_desc[self.contentType] == "json"){//这种是纯JSON格式，传输的是字符流，我再想想如何处理
         //     msgObj.contentType = ev.data.substr(0,1);
         //     msgObj.protocolType = ev.data.substr(1,1);
         //     msgObj.actionId = ev.data.substr(2,4);
@@ -383,7 +387,7 @@ function TwinAgoraPlayer (playerId,token,data,DomIdPreObj,contentType,protocolTy
     };
     this.rPushRoomHistory = function(logicFrame){
         console.log("rPushRoomHistory:");
-        if(contentTypeDesc[self.contentType] =="protobuf"){
+        if(content_type_desc[self.contentType] =="protobuf"){
             logicFrame.list = logicFrame.listList;
         }
         var list = logicFrame.list;

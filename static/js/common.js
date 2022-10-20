@@ -12,6 +12,9 @@ var CONN_STATUS_DESC = {1:"初始化",2:"运行中",3:"已关闭"};
 var domain = window.location.host;
 //http 协议
 var http_protocol = "http";
+if(location.href.substring(0,5) == "https"){
+    http_protocol = "https";
+}
 var URI_MAP = {
     "gateway_config":http_protocol + "://"+domain + "/gateway/config",
     "gateway_action_map":http_protocol + "://"+domain + "/gateway/action/map",//URI - 网关 protobuf 映射表

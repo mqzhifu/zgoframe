@@ -12,12 +12,12 @@ import (
 )
 
 type NetWayOption struct {
-	ListenIp string `json:"listenIp"` //程序启动时监听的IP
-	OutIp    string `json:"outIp"`    //对外访问的IP
-
-	WsPort  string `json:"wsPort"`  //ws监听端口号
-	TcpPort string `json:"tcpPort"` //tcp监听端口号
-	UdpPort string `json:"udpPort"` //udp端口号
+	ListenIp  string `json:"listenIp"` //程序启动时监听的IP
+	OutIp     string `json:"outIp"`    //对外访问的IP
+	OutDomain string `json:"outDomain"`
+	WsPort    string `json:"wsPort"`  //ws监听端口号
+	TcpPort   string `json:"tcpPort"` //tcp监听端口号
+	UdpPort   string `json:"udpPort"` //udp端口号
 
 	WsUri               string `json:"wsUri"`                 //ws接HOST的后面的URL地址
 	DefaultProtocolType int32  `json:"default_protocol_type"` //默认响应协议：ws tcp udp

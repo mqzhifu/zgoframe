@@ -187,13 +187,15 @@ type Email struct {
 }
 
 type Gateway struct {
-	Status   string
-	ListenIp string
-	OutIp    string
-	WsPort   string
-	TcpPort  string
-	UdpPort  string
-	WsUri    string
+	Status    string
+	ListenIp  string
+	OutIp     string
+	OutDomain string
+	WsPort    string
+
+	TcpPort string
+	UdpPort string
+	WsUri   string
 }
 
 type ConfigCenter struct {

@@ -67,12 +67,12 @@ func NewMyService() *MyService {
 
 	//长连接通信 - 配置
 	netWayOption := util.NetWayOption{
-		ListenIp: C.Gateway.ListenIp, //程序启动时监听的IP
-		OutIp:    C.Gateway.OutIp,    //对外访问的IP
-
-		WsPort:  C.Gateway.WsPort,  //监听端口号
-		TcpPort: C.Gateway.TcpPort, //监听端口号
-		UdpPort: C.Gateway.UdpPort, //UDP端口号
+		ListenIp:  C.Gateway.ListenIp, //程序启动时监听的IP
+		OutIp:     C.Gateway.OutIp,    //对外访问的IP
+		OutDomain: C.Gateway.OutDomain,
+		WsPort:    C.Gateway.WsPort,  //监听端口号
+		TcpPort:   C.Gateway.TcpPort, //监听端口号
+		UdpPort:   C.Gateway.UdpPort, //UDP端口号
 
 		WsUri:               C.Gateway.WsUri,        //接HOST的后面的URL地址
 		DefaultProtocolType: GateDefaultProtocol,    //兼容协议：ws tcp udp

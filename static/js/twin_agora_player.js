@@ -4,7 +4,7 @@ function TwinAgoraPlayer (playerId,token,data,DomIdPreObj,contentType,protocolTy
     this.wsObj = null;//js内置ws 对象
     //ws 连接 s 端地址
     if (http_protocol == "https"){
-        this.hostUri =  "wss://"+data.outIp + data.wsUri;
+        this.hostUri =  "wss://"+data.outDomain + data.wsUri;
     }else{
         this.hostUri =  "ws://"+data.outIp + ":"+ data.wsPort + data.wsUri;
     }

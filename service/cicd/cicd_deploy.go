@@ -377,6 +377,9 @@ func (deploy *Deploy) ReplaceInstance(content string, serviceName string, env in
 			key = separator + v + "_" + "out_ip" + separator
 			content = strings.Replace(content, key, host[1], -1)
 
+			key = separator + v + "_" + "out_domain" + separator
+			content = strings.Replace(content, key, host[2], -1)
+
 			ports := strings.Split(instance.Port, ",")
 
 			key = separator + v + "_" + "ws_port" + separator

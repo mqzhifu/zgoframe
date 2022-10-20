@@ -119,12 +119,13 @@ port    = "#push_gateway_port#"
 #依赖 protobuf 模块的 ProtoMap
 
 [gateway]
-status   = "open"
-ListenIp = "#gateway_listen_ip#"
-OutIp    = "#gateway_out_ip#"
-WsPort   = "#gateway_ws_port#"
-TcpPort  = "#gateway_tcp_port#"
-WsUri    = "#gateway_ws_uri#"
+status    = "open"
+ListenIp  = "#gateway_listen_ip#"
+OutIp     = "#gateway_out_ip#"
+OutDomain = "#gateway_out_domain#"
+WsPort    = "#gateway_ws_port#"
+TcpPort   = "#gateway_tcp_port#"
+WsUri     = "#gateway_ws_uri#"
 
 [cicd]
 status  = "close"

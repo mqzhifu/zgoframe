@@ -15,6 +15,7 @@ func InitGatewayRouter(Router *gin.RouterGroup) {
 		GatewayRouter.GET("config", v1.GatewayConfig)
 		GatewayRouter.GET("fd/list", v1.GatewayFDList)
 		GatewayRouter.POST("send/msg", v1.GatewaySendMsg)
+		GatewayRouter.GET("total", v1.GatewayTotal)
 
 	}
 }

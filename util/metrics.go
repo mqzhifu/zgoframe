@@ -9,40 +9,47 @@ package util
 
 	目前metric类型只实现两种：counter Gauge ，未实现：Histogram Summary
 	数据多维度label 未实现
- */
-
+*/
 
 import (
 	"errors"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/push"
 	"strconv"
+	"strings"
 
 	//"github.com/prometheus/client_golang/prometheus/push"
 	"go.uber.org/zap"
 )
 
+type MyMetricsItem struct {
+	Key      string `json:"key"`
+	Desc     string `json:"desc"`
+	ValueStr string `json:"value_str"`
+}
+
 type PushGateway struct {
-	Status 	string
-	Ip 		string
-	Port 	string
+	Status  string
+	Ip      string
+	Port    string
 	JobName string
 }
 
-type MyMetricsOption struct{
-	Log *zap.Logger
+type MyMetricsOption struct {
+	Log         *zap.Logger
 	PushGateway PushGateway
-	NameSpace string
-	Env int
+	NameSpace   string
+	Env         int
+	DescPrefix  string
 }
 
 type MyMetrics struct {
 	Groups map[string]interface{}
-	Pusher 	*push.Pusher
+	Pusher *push.Pusher
 	Option MyMetricsOption
 }
 
-func NewMyMetrics(option MyMetricsOption)*MyMetrics{
+func NewMyMetrics(option MyMetricsOption) *MyMetrics {
 	myMetrics := new(MyMetrics)
 	myMetrics.Groups = make(map[string]interface{})
 	//myMetrics.Log = log
@@ -51,20 +58,19 @@ func NewMyMetrics(option MyMetricsOption)*MyMetrics{
 	myMetrics.Option = option
 	option.Log.Info("NewMyMetrics")
 
-	if myMetrics.Option.PushGateway.Status == "open"{
+	if myMetrics.Option.PushGateway.Status == "open" {
 		//dns := "http://"+pushGateway.Ip + ":" + pushGateway.Port + "/metrics"
-		dns := "http://"+myMetrics.Option.PushGateway.Ip + ":" + myMetrics.Option.PushGateway.Port
-		pusher := push.New(dns,myMetrics.Option.PushGateway.JobName)
+		dns := "http://" + myMetrics.Option.PushGateway.Ip + ":" + myMetrics.Option.PushGateway.Port
+		pusher := push.New(dns, myMetrics.Option.PushGateway.JobName)
 		myMetrics.Pusher = pusher
 		//testPushGateway()
 	}
 
-
 	return myMetrics
 }
 
-func (myMetrics *MyMetrics)GroupNameHasExist(name string)bool{
-	_,ok := myMetrics.Groups[name]
+func (myMetrics *MyMetrics) GroupNameHasExist(name string) bool {
+	_, ok := myMetrics.Groups[name]
 	rs := false
 	if ok {
 		rs = true
@@ -72,35 +78,34 @@ func (myMetrics *MyMetrics)GroupNameHasExist(name string)bool{
 	//fmt.Println("GroupNameHasExist "+ name + " rs:",rs)
 	return rs
 }
-func (myMetrics *MyMetrics)PushMetrics()error{
-	if myMetrics.Option.PushGateway.Status != "open"{
+func (myMetrics *MyMetrics) PushMetrics() error {
+	if myMetrics.Option.PushGateway.Status != "open" {
 		return errors.New("PushGateway.Status != open")
 	}
 
-	myMetrics.Pusher.Grouping("instance", myMetrics.Option.PushGateway.Ip ).Grouping("env",strconv.Itoa(myMetrics.Option.Env)).Push()
+	myMetrics.Pusher.Grouping("instance", myMetrics.Option.PushGateway.Ip).Grouping("env", strconv.Itoa(myMetrics.Option.Env)).Push()
 
 	return nil
 }
-func (myMetrics *MyMetrics)CreateGauge(name string,help string )error{
+func (myMetrics *MyMetrics) CreateGauge(name string, help string) error {
 	if myMetrics.GroupNameHasExist(name) {
-		return errors.New("CreateGauge GroupNameHasExist:"+name)
+		return errors.New("CreateGauge GroupNameHasExist:" + name)
 	}
 
 	//labels :=  make(map[string]string)
 	//labels["label_create_type"] = "CreateGauge"
 	gauge := prometheus.NewGauge(prometheus.GaugeOpts{
-		Name:      name,
+		Name: name,
 		//Namespace: myMetrics.Option.NameSpace,
-		Help:     help,
+		Help: myMetrics.Option.DescPrefix + help,
 		//ConstLabels:labels,
 	})
-
 
 	//myMetrics.Option.Log.Info("metrics: CreateGauge "+ name)
 
 	prometheus.MustRegister(gauge)
 
-	if myMetrics.Option.PushGateway.Status == "open"{
+	if myMetrics.Option.PushGateway.Status == "open" {
 		myMetrics.Pusher.Collector(gauge)
 	}
 
@@ -108,10 +113,11 @@ func (myMetrics *MyMetrics)CreateGauge(name string,help string )error{
 
 	return nil
 }
+
 //Gauge  start
-func (myMetrics *MyMetrics)GaugeSet(name string,value float64 )error{
+func (myMetrics *MyMetrics) GaugeSet(name string, value float64) error {
 	if !myMetrics.GroupNameHasExist(name) {
-		return errors.New("GroupNameHasExist:"+name)
+		return errors.New("GroupNameHasExist:" + name)
 	}
 
 	gauge := myMetrics.Groups[name].(prometheus.Gauge)
@@ -120,9 +126,9 @@ func (myMetrics *MyMetrics)GaugeSet(name string,value float64 )error{
 	return nil
 }
 
-func (myMetrics *MyMetrics)GaugeInc(name string )error{
+func (myMetrics *MyMetrics) GaugeInc(name string) error {
 	if !myMetrics.GroupNameHasExist(name) {
-		return errors.New("GroupName not Exist:"+name)
+		return errors.New("GroupName not Exist:" + name)
 	}
 
 	gauge := myMetrics.Groups[name].(prometheus.Gauge)
@@ -131,9 +137,9 @@ func (myMetrics *MyMetrics)GaugeInc(name string )error{
 	return nil
 }
 
-func (myMetrics *MyMetrics)GaugeDec(name string )error{
+func (myMetrics *MyMetrics) GaugeDec(name string) error {
 	if !myMetrics.GroupNameHasExist(name) {
-		return errors.New("GroupNameHasExist:"+name)
+		return errors.New("GroupNameHasExist:" + name)
 	}
 
 	gauge := myMetrics.Groups[name].(prometheus.Gauge)
@@ -142,9 +148,9 @@ func (myMetrics *MyMetrics)GaugeDec(name string )error{
 	return nil
 }
 
-func (myMetrics *MyMetrics)GaugeAdd(name string,value float64 )error{
+func (myMetrics *MyMetrics) GaugeAdd(name string, value float64) error {
 	if !myMetrics.GroupNameHasExist(name) {
-		return errors.New("GroupNameHasExist:"+name)
+		return errors.New("GroupNameHasExist:" + name)
 	}
 
 	gauge := myMetrics.Groups[name].(prometheus.Gauge)
@@ -152,25 +158,25 @@ func (myMetrics *MyMetrics)GaugeAdd(name string,value float64 )error{
 
 	return nil
 }
+
 //Gauge end
 
 //Counter start
-func (myMetrics *MyMetrics)CreateCounter(name string,help string )error{
+func (myMetrics *MyMetrics) CreateCounter(name string, help string) error {
 	if myMetrics.GroupNameHasExist(name) {
-		return errors.New("CreateCounter GroupNameHasExist:"+name)
+		return errors.New("CreateCounter GroupNameHasExist:" + name)
 	}
 	var AccessCounter = prometheus.NewCounter(
 		prometheus.CounterOpts{
 			Name: name,
 			//Namespace: myMetrics.Option.NameSpace,
-			Help: help,
+			Help: myMetrics.Option.DescPrefix + help,
 		},
 	)
 
 	//myMetrics.Option.Log.Info("metrics: CreateCounter "+name )
 
-
-	if myMetrics.Option.PushGateway.Status == "open"{
+	if myMetrics.Option.PushGateway.Status == "open" {
 		myMetrics.Pusher.Collector(AccessCounter)
 	}
 
@@ -179,9 +185,9 @@ func (myMetrics *MyMetrics)CreateCounter(name string,help string )error{
 
 	return nil
 }
-func (myMetrics *MyMetrics)CounterInc(name string )error{
+func (myMetrics *MyMetrics) CounterInc(name string) error {
 	if !myMetrics.GroupNameHasExist(name) {
-		return errors.New("GroupNameHasExist:"+name)
+		return errors.New("GroupNameHasExist:" + name)
 	}
 
 	counter := myMetrics.Groups[name].(prometheus.Counter)
@@ -190,9 +196,9 @@ func (myMetrics *MyMetrics)CounterInc(name string )error{
 	return nil
 }
 
-func (myMetrics *MyMetrics)CounterDec(name string,value float64 )error{
+func (myMetrics *MyMetrics) CounterDec(name string, value float64) error {
 	if !myMetrics.GroupNameHasExist(name) {
-		return errors.New("GroupNameHasExist:"+name)
+		return errors.New("GroupNameHasExist:" + name)
 	}
 
 	counter := myMetrics.Groups[name].(prometheus.Counter)
@@ -201,12 +207,47 @@ func (myMetrics *MyMetrics)CounterDec(name string,value float64 )error{
 	return nil
 }
 
-func (myMetrics *MyMetrics)Shutdown(){
+func (myMetrics *MyMetrics) GetAllByPrefix() (list []MyMetricsItem, err error) {
+	mfs, err := prometheus.DefaultGatherer.Gather()
+	if err != nil {
+		return list, err
+	}
+	for _, mf := range mfs {
+		if strings.Index(mf.GetHelp(), myMetrics.Option.DescPrefix) == -1 {
+			continue
+		}
+		finalValue := ""
+		mfType := mf.GetType()
+		switch mfType.String() {
+		case "COUNTER":
+			oneMetric := mf.GetMetric()[0]
+			finalValue = Float64ToString(oneMetric.Counter.GetValue(), 4)
+		case "GAUGE":
+			oneMetric := mf.GetMetric()[0]
+			finalValue = Float64ToString(oneMetric.Gauge.GetValue(), 4)
+		//case "SUMMARY":
+		//	oneMetric := mf.GetMetric()[0]
+		default:
+			MyPrint("err: mf.GetType unknow,", mfType)
+		}
+
+		myMetricsItem := MyMetricsItem{
+			Key:      mf.GetName(),
+			Desc:     mf.GetHelp(),
+			ValueStr: finalValue,
+		}
+
+		list = append(list, myMetricsItem)
+	}
+
+	return list, nil
+}
+
+func (myMetrics *MyMetrics) Shutdown() {
 
 }
 
 //Counter end
-
 
 //func testPushGateway(pusher *push.Pusher,dns string){
 //

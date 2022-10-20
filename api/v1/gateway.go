@@ -100,6 +100,26 @@ func ActionMap(c *gin.Context) {
 }
 
 // @Tags Gateway
+// @Summary 网关 - 长连接 - metrics
+// @Description metrics
+// @Security ApiKeyAuth
+// @Router /gateway/total [get]
+// @Success 200 {object} util.Conn "连接结构体"
+func GatewayTotal(c *gin.Context) {
+	myMetrics, _ := global.V.MyService.Gateway.Netway.Metrics.GetAllByPrefix()
+	httpresponse.OkWithAll(myMetrics, "ok", c)
+	//mm, _ := prometheus.DefaultGatherer.Gather()
+	//for _, v := range mm {
+	//	util.MyPrint("mm==:", v.GetType())
+	//	for _, b := range v.GetMetric() {
+	//		util.MyPrint(b.String())
+	//	}
+	//}
+
+	//util.MyPrint("prometheus.DefaultGatherer:======", prometheus.DefaultGatherer.)
+}
+
+// @Tags Gateway
 // @Summary 网关 - 长连接
 // @Description 长连接列表，FD => UID
 // @Security ApiKeyAuth

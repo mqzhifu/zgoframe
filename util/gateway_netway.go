@@ -63,9 +63,9 @@ type NetWay struct {
 	//CancelCtx         	context.Context
 	//CancelFunc			func()
 	//CloseChan       	chan int32
-
 	Status int
-
+	Prefix string
+	//MetricsPool     []MyMetricsPoolItem
 	ProtocolManager *ProtocolManager //协议管理器
 	ConnManager     *ConnManager     //连接管理 器
 	Metrics         *MyMetrics       //metric管理 器
@@ -79,6 +79,7 @@ func NewNetWay(option NetWayOption) (*NetWay, error) {
 	option.Log.Info("New NetWay instance :")
 
 	netWay := new(NetWay)
+	netWay.Prefix = "netway "
 	//统计模块
 	netWay.Metrics = netWay.InitMetrics(option.Log)
 	myMetrics = netWay.Metrics
@@ -138,14 +139,13 @@ func NewNetWay(option NetWayOption) (*NetWay, error) {
 
 	netWay.Status = NETWAY_STATUS_START
 
-	//now := GetNowTimeSecondToInt64()
-	//netWay.Metrics.GaugeSet("startup_time",float64(now))
-
 	option.Log.Info("netway startup finish.")
 	return netWay, nil
 }
 func (netWay *NetWay) InitMetrics(log *zap.Logger) *MyMetrics {
-	metrics := NewMyMetrics(MyMetricsOption{Log: log})
+
+	metrics := NewMyMetrics(MyMetricsOption{Log: log, DescPrefix: netWay.Prefix})
+
 	metrics.CreateGauge("startup_time", "启动时间") //启动时间
 
 	metrics.CreateCounter("ws_ok_fd", "websocket 成功建立FD 数量")           //websocket 成功建立FD 数量
@@ -157,7 +157,7 @@ func (netWay *NetWay) InitMetrics(log *zap.Logger) *MyMetrics {
 	//以上均是 最底层 TCP WS  的统计信息
 
 	//以下有点偏向应用层的统计
-	metrics.CreateCounter("new_fd", "netway 接收来自 tcp/ws 新FD 数量") //netway 接收来自 tcp/ws 新FD 数量
+	metrics.CreateCounter("new_fd", "接收来自 tcp/ws 新FD 数量") //netway 接收来自 tcp/ws 新FD 数量
 
 	metrics.CreateCounter("create_fd_ok", "验证通过，成功创建的FD") //验证通过，成功创建的FD
 	metrics.CreateCounter("create_fd_failed", "验证失败，FD")  //验证失败，FD
@@ -169,8 +169,15 @@ func (netWay *NetWay) InitMetrics(log *zap.Logger) *MyMetrics {
 	metrics.CreateCounter("total_input_num", "总接收消息 次数")  //总接收消息 次数
 	metrics.CreateGauge("total_input_size", "总接收消息 大小")   //总接收消息 大小
 
+	now := GetNowTimeSecondToInt64()
+	metrics.GaugeSet("startup_time", float64(now))
+
 	return metrics
 }
+
+//func (netWay *NetWay) MetricsTotal() {
+//	item := netWay.MetricsPool[0]
+//}
 
 //一个新客户端连接请求进入
 func (netWay *NetWay) OpenNewConn(connFD FDAdapter) {

@@ -2,7 +2,7 @@
 
 
 <head>
-    <title>cicd_new</title>
+    <title>gateway - 网关</title>
     <script src="/static/js/jquery.min.js" type="text/javascript" ></script>
     <script src="/static/js/common.js" type="text/javascript" ></script>
 </head>
@@ -59,6 +59,19 @@
 
     </div>
 
+    <div>
+        <div>
+            metrics:
+        </div>
+        <table id="metrics_div">
+
+        </table>
+        <br/>
+        <div>ps:仅汇总数据，不具体到用户</div>
+
+    </div>
+
+
     <br/><br/>
     <div>
         <div>发送消息</div>
@@ -76,7 +89,7 @@
             </tr>
         </table>
         <div>
-            仅支持一种类型消息：SC_ProjectPush (ProjectPushMsg)
+            ps:仅支持一种类型消息：SC_ProjectPush (ProjectPushMsg)
         </div>
     </div>
 
@@ -96,6 +109,7 @@
     function LoginRes(userInfo){
         initServerConfig();
         GetFDUserList();
+        total();
     }
 
     function GetFDUserList(){
@@ -185,6 +199,32 @@
         });
     }
 
+    function total(){
+        $.ajax({
+            type: "GET",
+            async:false,
+            headers: {
+                "X-Token":UserList[9].token,
+            },
+            url:URI_MAP["gateway_total"],
+            success: function(data){
+                console.log("data:",data)
+                var html = "<tr><th>key</th><th>value</th><th>desc</th></>";
+                var list = data.data;
+                if(list.length <= 0){
+                    html += "<tr><td>空</td></tr>";
+                }else{
+                    for(var i=0;i<list.length;i++){
+                        html += "<tr> <td>"+list[i]["key"]+"</td> <td>"+parseInt(list[i]["value_str"])+"</td> <td>"+list[i]["desc"]+"</td> </tr>"
+                    }
+                }
+
+                var metrics_div_obj = $("#metrics_div");
+                metrics_div_obj.html(html);
+            }
+        });
+    }
+
     function processServerConfig (data){
         console.log("processServerConfig:",data)
         var showServerCfg = ["outIp","wsUri","wsPort","offLineWaitTime","","","","connTimeout"]
@@ -197,9 +237,9 @@
                 }
             }
         }
-        html += "<tr><td></td></tr>";
-        html += "<tr><td>contentType</td><td>"+ content_type_desc[contentType] +"</td></tr>";
-        html += "<tr><td>protocolType</td><td>"+ protocol_type_desc[protocolType]+"</td></tr>";
+        // html += "<tr><td></td></tr>";
+        // html += "<tr><td>contentType</td><td>"+ content_type_desc[contentType] +"</td></tr>";
+        // html += "<tr><td>protocolType</td><td>"+ protocol_type_desc[protocolType]+"</td></tr>";
 
         var serverConfigTable = $("#server_config_table");
         serverConfigTable.html(html);

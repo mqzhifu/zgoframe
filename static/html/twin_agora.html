@@ -74,13 +74,19 @@
     //一共几个玩家参与到游戏中
     // var playerMax = 4;
 
-    var playerList = {
-        "doctor"  :{id:10,"username"  :"doctor"  ,"password":"123456","info":{},"token":"","roomId":"","channel":"ckck"},
-        "calluser":{id:9,"username":"calluser","password":"123456","info":{},"token":"","roomId":"","channel":"ckck"},
-        //线上用户
-        // "doctor"  :{id:10,"username"  :"doctor1"  ,"password":"123456","info":{},"token":"","roomId":"","channel":"ckck"},
-        // "calluser":{id:4,"username":"seedarar","password":"arwillbebest","info":{},"token":"","roomId":"","channel":"ckck"},
+    if(http_protocol == "https"){
+        var playerList = {
+            "doctor"  :{id:10,"username"  :"doctor1"  ,"password":"123456","info":{},"token":"","roomId":"","channel":"ckck"},
+            "calluser":{id:4,"username":"seedarar","password":"arwillbebest","info":{},"token":"","roomId":"","channel":"ckck"},
+        }
+    }else{
+        var playerList = {
+            "doctor"  :{id:10,"username"  :"doctor"  ,"password":"123456","info":{},"token":"","roomId":"","channel":"ckck"},
+            "calluser":{id:9,"username":"calluser","password":"123456","info":{},"token":"","roomId":"","channel":"ckck"},
+        }
     }
+
+
 
     var contentType = 1;//长连接 - 传输内容类型
     var protocolType = 2;//长连接 - 协议 类型
@@ -302,12 +308,12 @@
     //玩家登陆，初始化信息 name token
     function playerLogin(){
         for (let key in playerList) {
-            ajaxLogin(playerList[key])
+            ajaxLogin(playerList[key],key)
         }
     }
 
-    function ajaxLogin(playerInfo){
-        console.log(playerInfo)
+    function ajaxLogin(playerInfo,key){
+        console.log(playerInfo,key)
         // var username = GetPlayerNameByIndex(player_index);
         $.ajax({
             headers: {
@@ -325,10 +331,10 @@
                     return alert("login server back err:"+data.msg);
                 }
 
-                var username = data.data.user.username;
-                playerList[username].info = data.data.user;
+                // var username = data.data.user.username;
+                playerList[key].info = data.data.user;
                 // playerList[username].id = data.data.id;
-                playerList[username].token = data.data.token;
+                playerList[key].token = data.data.token;
 
             }
         });

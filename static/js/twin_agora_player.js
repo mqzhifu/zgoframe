@@ -3,11 +3,13 @@ function TwinAgoraPlayer (playerId,token,data,DomIdPreObj,contentType,protocolTy
     var self = this;
     this.wsObj = null;//js内置ws 对象
     //ws 连接 s 端地址
-    var ws_protocol = "ws";
     if (http_protocol == "https"){
         ws_protocol = "wss";
+        this.hostUri =  "wss://"+data.outIp + data.wsUri;
+    }else{
+        this.hostUri =  "ws://"+ws_protocol+"://"+data.outIp + ":"+ data.wsPort + data.wsUri;
     }
-    this.hostUri =  ws_protocol+"://"+data.outIp + ":"+ data.wsPort + data.wsUri;
+
     this.statusDesc = {
         1:"init",
         2:"wsLInkSuccess",
@@ -63,8 +65,8 @@ function TwinAgoraPlayer (playerId,token,data,DomIdPreObj,contentType,protocolTy
             self.wsOpen();
         };
         self.wsObj.onerror = function(ev){
-            alert("wsObj.onerror");
-            console.log("error:"+ev);
+            // alert("wsObj.onerror");
+            console.log("error:",ev);
         };
     };
     //连接成功后，会执行此函数

@@ -12,49 +12,38 @@ import (
 )
 
 type NetWayOption struct {
-	ListenIp  string `json:"listenIp"` //程序启动时监听的IP
-	OutIp     string `json:"outIp"`    //对外访问的IP
-	OutDomain string `json:"outDomain"`
-	WsPort    string `json:"wsPort"`  //ws监听端口号
-	TcpPort   string `json:"tcpPort"` //tcp监听端口号
-	UdpPort   string `json:"udpPort"` //udp端口号
+	ListenIp            string       `json:"listenIp"`              //程序启动时监听的IP
+	OutIp               string       `json:"outIp"`                 //对外访问的IP
+	OutDomain           string       `json:"outDomain"`             //长连接有时候，得用https ，nginx直接反代略简单些，需要域名
+	WsPort              string       `json:"wsPort"`                //ws监听端口号
+	TcpPort             string       `json:"tcpPort"`               //tcp监听端口号
+	UdpPort             string       `json:"udpPort"`               //udp端口号
+	WsUri               string       `json:"wsUri"`                 //ws接HOST的后面的URL地址
+	DefaultProtocolType int32        `json:"default_protocol_type"` //默认响应协议：ws tcp udp
+	DefaultContentType  int32        `json:"default_content_type"`  //默认响应内容格式 ：json protobuf
+	LoginAuthType       string       `json:"loginAuthType"`         //jwt登陆验证
+	LoginAuthSecretKey  string       `json:"login_auth_secret_key"` //jwt登陆验证-密钥
+	MaxClientConnNum    int32        `json:"maxClientConnMum"`      //客户端最大连接数
+	MsgContentMax       int32        `json:"msg_content_max"`       //一条消息内容最大值,byte,ps:最大10KB
+	IOTimeout           int64        `json:"io_timeout"`            //read write sock fd 超时时间
+	ConnTimeout         int32        `json:"connTimeout"`           //一个FD超时时间
+	ClientHeartbeatTime int32        `json:"client_heartbeat_time"` //客户端心跳时间(秒)
+	ServerHeartbeatTime int32        `json:"server_heartbeat_time"` //服务端心跳时间(秒)
+	GrpcManager         *GrpcManager `json:"-"`                     //外部指针,grpc反代
+	ProtoMap            *ProtoMap    `json:"-"`                     //外部指针,协议号转换
+	Log                 *zap.Logger  `json:"-"`                     //外部指针,日志
+	//网关接收FD消息后，回调，路由分发具体微服务
+	RouterBack func(msg pb.Msg, conn *Conn) (data interface{}, err error) `json:"-"`
 
-	WsUri               string `json:"wsUri"`                 //ws接HOST的后面的URL地址
-	DefaultProtocolType int32  `json:"default_protocol_type"` //默认响应协议：ws tcp udp
-	DefaultContentType  int32  `json:"default_content_type"`  //默认响应内容格式 ：json protobuf
-
-	LoginAuthType      string `json:"loginAuthType"`         //jwt登陆验证
-	LoginAuthSecretKey string `json:"login_auth_secret_key"` //jwt登陆验证-密钥
-
-	MaxClientConnNum int32 `json:"maxClientConnMum"` //客户端最大连接数
-	MsgContentMax    int32 `json:"msg_content_max"`  //一条消息内容最大值,byte,ps:最大10KB
-	IOTimeout        int64 `json:"io_timeout"`       //read write sock fd 超时时间
-	ConnTimeout      int32 `json:"connTimeout"`      //一个FD超时时间
-
-	GrpcManager *GrpcManager `json:"-"` //外部链接,grpc反代
-	ProtoMap    *ProtoMap    `json:"-"` //外部链接,协议号转换
-	Log         *zap.Logger  `json:"-"` //外部链接,日志
-
-	//ProtobufMapPath		string		`json:"portobuf_map_path"`	//协议号对应的函数名
-
+	//MapSize          int32 `json:"mapSize"`          //帧同步，地图大小，给前端初始化使用，测试使用
+	//OffLineWaitTime  int32 `json:"offLineWaitTime"`  //lockStep 玩家掉线后，其它玩家等待最长时间
+	//LockMode         int32 `json:"lockMode"`         //锁模式，乐观|悲观
+	//FPS              int32 `json:"fps"`              //frame pre second
+	//RoomReadyTimeout int32 `json:"roomReadyTimeout"` //一个房间的，玩家的准备，超时时间
+	//Store            int32 `json:"store"`            //持久化：players room
 	//两种关闭方式：
 	//OutCxt 				context.Context `json:"-"`			//调用方的CTX，用于所有协程的退出操作
 	//CloseChan 			chan int		`json:"-"`			//调用方的CTX，用于所有协程的退出操作
-	//http 查看状态
-	//HttpdRootPath 	string 		`json:"httpdRootPath"`
-	//HttpPort 			string 		`json:"httpPort"`		//短连接端口号
-
-	//以下都是帧同步的配置信息：
-	MapSize int32 `json:"mapSize"` //地址大小，给前端初始化使用，测试使用
-	//RoomPeople		int32		`json:"roomPeople"`		//一局游戏包含几个玩家
-	//RoomTimeout 		int32 		`json:"roomTimeout"`	//一个房间超时时间
-	OffLineWaitTime int32 `json:"offLineWaitTime"` //lockStep 玩家掉线后，其它玩家等待最长时间
-	//LockMode  		int32 		`json:"lockMode"`		//锁模式，乐观|悲观
-	FPS              int32 `json:"fps"`              //frame pre second
-	RoomReadyTimeout int32 `json:"roomReadyTimeout"` //一个房间的，玩家的准备，超时时间
-	//Store 			int32 		`json:"store"`			//持久化：players room
-
-	RouterBack func(msg pb.Msg, conn *Conn) (data interface{}, err error) `json:"-"`
 }
 
 var myMetrics *MyMetrics
@@ -149,15 +138,15 @@ func (netWay *NetWay) InitMetrics(log *zap.Logger) *MyMetrics {
 	metrics.CreateGauge("startup_time", "启动时间") //启动时间
 
 	metrics.CreateCounter("ws_ok_fd", "websocket 成功建立FD 数量")           //websocket 成功建立FD 数量
-	metrics.CreateCounter("ws_server_close_fd", "websocket 主动关闭FD 数量") //websocket 主动关闭FD 数量
-	metrics.CreateCounter("ws_client_close_fd", "websocket 被动关闭FD 数量") //websocket 被动关闭FD 数量
+	metrics.CreateCounter("ws_server_close_fd", "websocket 主动关闭FD 数量") //websocket 服务端关闭FD 数量
+	metrics.CreateCounter("ws_client_close_fd", "websocket 被动关闭FD 数量") //websocket 客户端关闭FD 数量
 	metrics.CreateCounter("tcp_ok_fd", "tcp 成功建立FD 数量")                //tcp 成功建立FD 数量
-	metrics.CreateCounter("tcp_server_close_fd", "tcp 主动关闭FD 数量")      //tcp 主动关闭FD 数量
-	metrics.CreateCounter("tcp_client_close_fd", "tcp 被动关闭FD 数量")      //tcp 被动关闭FD 数量
+	metrics.CreateCounter("tcp_server_close_fd", "tcp 主动关闭FD 数量")      //tcp 服务端关闭FD 数量
+	metrics.CreateCounter("tcp_client_close_fd", "tcp 被动关闭FD 数量")      //tcp 客户端关闭FD 数量
 	//以上均是 最底层 TCP WS  的统计信息
 
 	//以下有点偏向应用层的统计
-	metrics.CreateCounter("new_fd", "接收来自 tcp/ws 新FD 数量") //netway 接收来自 tcp/ws 新FD 数量
+	metrics.CreateCounter("new_fd", "接收来自 tcp/ws 新FD 数量") //接收来自 tcp/ws 新FD 数量
 
 	metrics.CreateCounter("create_fd_ok", "验证通过，成功创建的FD") //验证通过，成功创建的FD
 	metrics.CreateCounter("create_fd_failed", "验证失败，FD")  //验证失败，FD
@@ -175,13 +164,9 @@ func (netWay *NetWay) InitMetrics(log *zap.Logger) *MyMetrics {
 	return metrics
 }
 
-//func (netWay *NetWay) MetricsTotal() {
-//	item := netWay.MetricsPool[0]
-//}
-
 //一个新客户端连接请求进入
 func (netWay *NetWay) OpenNewConn(connFD FDAdapter) {
-	myMetrics.CounterInc("ws_ok_fd")
+	myMetrics.CounterInc("new_fd")
 	netWay.Option.Log.Info("OpenNewConn:" + connFD.RemoteAddr())
 
 	var loginRes pb.LoginRes

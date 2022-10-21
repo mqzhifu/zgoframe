@@ -14,13 +14,6 @@ import (
 	"zgoframe/protobuf/pb"
 )
 
-//type ConnCloseEvent struct {
-//	UserId       int32 `json:"user_id"`
-//	Source       int   `json:"source"`
-//	ContentType  int   `json:"content_type"`
-//	ProtocolType int   `json:"protocol_type"`
-//}
-
 //管理 CONN 的容器
 type ConnManager struct {
 	Pool              map[int32]*Conn // map[userId]*Conn FD 连接池
@@ -31,9 +24,9 @@ type ConnManager struct {
 }
 
 type ConnManagerOption struct {
-	maxClientConnNum    int32 //客户端最大连接数
-	connTimeout         int32
-	MsgContentMax       int32
+	maxClientConnNum    int32  //客户端最大连接数
+	connTimeout         int32  //一个FD的超时时间
+	MsgContentMax       int32  //一条消息最大值
 	DefaultContentType  int32  //每个连接的默认 内容 类型
 	DefaultProtocolType int32  //每个连接的默认 协议 类型
 	MsgSeparator        string //传输消息时，每条消息的间隔符，防止 粘包
@@ -44,6 +37,7 @@ type ConnManagerOption struct {
 	NetWay   *NetWay
 }
 
+//消息内容协议体
 type ProtocolCtrlInfo struct {
 	ContentType  int32
 	ProtocolType int32
@@ -138,6 +132,7 @@ func (connManager *ConnManager) CreateOneConn(connFd FDAdapter, netWay *NetWay) 
 		SessionId:      "",
 		ContentType:    connManager.Option.DefaultContentType,
 		ProtocolType:   connManager.Option.DefaultProtocolType,
+		Metrics:        ConnMetrics{},
 		MsgInChan:      make(chan pb.Msg, 5000), //从底层FD中读出消息后，存储此处，等待其它协程接收
 		netWay:         netWay,
 		UserPlayStatus: PLAYER_STATUS_ONLINE,
@@ -171,10 +166,8 @@ func (connManager *ConnManager) addConnPool(NewConn *Conn) error {
 		responseKickOff := pb.KickOff{
 			Time: GetNowMillisecond(),
 		}
-		//给旧连接发送消息通知
+		//给旧连接发送消息通知,这条消息不一定能发出去，因为后面马上就会接关闭FD，最好是同步执行，不要异步发送这条消息
 		oldConn.SendMsgCompressByConn("SC_KickOff", &responseKickOff)
-		//这条消息不一定能发出去，因为后面马上就会接关闭FD
-		time.Sleep(time.Millisecond * 200)
 		oldConn.CloseOneConn(CLOSE_SOURCE_OVERRIDE)
 	}
 	connManager.Option.Log.Info("addConnPool : " + strconv.Itoa(int(NewConn.UserId)))
@@ -194,7 +187,7 @@ func (connManager *ConnManager) delConnPool(uid int32) {
 	delete(connManager.Pool, uid)
 }
 
-//
+//获取所有已连接用户的FD
 func (connManager *ConnManager) getPoolAll() map[int32]*Conn {
 	connManager.PoolRWLock.RLock()
 	defer connManager.PoolRWLock.RUnlock()
@@ -232,6 +225,22 @@ func (connManager *ConnManager) GetPlayerCtrlInfoById(userId int32) ProtocolCtrl
 
 	return protocolCtrlInfo
 }
+
+////这里是做个 容错处理，content type 跟 protocol type 不能为空，一但出现为空的情况，得给一个默认值
+//func(connManager *ConnManager)GetCtrlInfo(contentType int32 ,protocolType int32)ProtocolCtrlInfo{
+//	if contentType <= 0 {
+//		contentType = connManager.Option.DefaultContentType
+//	}
+//
+//	if protocolType <= 0 {
+//		protocolType = connManager.Option.DefaultProtocol
+//	}
+//	protocolCtrlInfo := ProtocolCtrlInfo{
+//		ContentType: contentType,
+//		ProtocolType: protocolType,
+//	}
+//	return protocolCtrlInfo
+//}
 
 //==========================================================
 //将 结构体 压缩成 字符串
@@ -340,21 +349,6 @@ func (connManager *ConnManager) ParserContentProtocol(content string) (message p
 	return msg, nil
 }
 
-////这里是做个 容错处理，content type 跟 protocol type 不能为空，一但出现为空的情况，得给一个默认值
-//func(connManager *ConnManager)GetCtrlInfo(contentType int32 ,protocolType int32)ProtocolCtrlInfo{
-//	if contentType <= 0 {
-//		contentType = connManager.Option.DefaultContentType
-//	}
-//
-//	if protocolType <= 0 {
-//		protocolType = connManager.Option.DefaultProtocol
-//	}
-//	protocolCtrlInfo := ProtocolCtrlInfo{
-//		ContentType: contentType,
-//		ProtocolType: protocolType,
-//	}
-//	return protocolCtrlInfo
-//}
 //字节 转换 协议控制信息
 func (connManager *ConnManager) parserProtocolCtrlInfo(stream []byte) (int32, int32) {
 	//firstByteHighThreeBit := (firstByte >> 5 ) & 7
@@ -384,23 +378,32 @@ func (connManager *ConnManager) PackContentMsg(msg pb.Msg) []byte {
 }
 
 //==============================
+type ConnMetrics struct {
+	ReceiveMsgTimes int   `json:"receive_msg_times"`
+	ReceiveMsgSize  int64 `json:"receive_msg_size"`
+	SendMsgTimes    int   `json:"send_msg_times"`
+	SendMsgSize     int64 `json:"send_msg_size"`
+}
+
 //一个连接
 type Conn struct {
-	AddTime        int32        `json:"add_time"`      //添加时间
-	UpTime         int32        `json:"up_time"`       //最后更新时间
-	UserId         int32        `json:"user_id"`       //FD 绑定 uid
-	Status         int          `json:"status"`        //状态
-	RTT            int64        `json:"rtt"`           //延迟
-	SessionId      string       `json:"session_id"`    //会话ID
-	ContentType    int32        `json:"content_type"`  //传输数据的内容类型	此值由第一次通信时确定，直到断开连接前，不会变更
-	ProtocolType   int32        `json:"protocol_type"` //传输数据的类型		此值由第一次通信时确定，直到断开连接前，不会变更
-	RoomId         string       `json:"-"`             //使用网关模式后，room_id 下放到各微服务上，网关不做记录
-	Conn           FDAdapter    `json:"-"`             //TCP/WS 真实的 socket FD
-	CloseChan      chan int     `json:"-"`             //减半信号管道
-	netWay         *NetWay      `json:"-"`             //父父类,快捷指针
-	ConnManager    *ConnManager `json:"-"`             //父类，快捷指针
-	MsgInChan      chan pb.Msg  `json:"-"`             //上层真实sock FD 转发消息进来
-	UserPlayStatus int          `json:"-"`             //status 冲突 暂放弃,不能删 frame_sync game_match 还在使用，后期优化吧
+	AddTime      int32        `json:"add_time"`      //添加时间
+	UpTime       int32        `json:"up_time"`       //最后更新时间
+	UserId       int32        `json:"user_id"`       //FD 绑定 uid
+	Status       int          `json:"status"`        //状态
+	RTT          int64        `json:"rtt"`           //延迟
+	SessionId    string       `json:"session_id"`    //会话ID
+	ContentType  int32        `json:"content_type"`  //传输数据的内容类型	此值由第一次通信时确定，直到断开连接前，不会变更
+	ProtocolType int32        `json:"protocol_type"` //传输数据的类型		此值由第一次通信时确定，直到断开连接前，不会变更
+	Metrics      ConnMetrics  `json:"metrics"`       //测量/统计，公共metrics是放汇总数据的，这个是针对一个用户的
+	Conn         FDAdapter    `json:"-"`             //TCP/WS 真实的 socket FD
+	CloseChan    chan int     `json:"-"`             //减半信号管道
+	netWay       *NetWay      `json:"-"`             //父父类,快捷指针
+	ConnManager  *ConnManager `json:"-"`             //父类，快捷指针
+	MsgInChan    chan pb.Msg  `json:"-"`             //上层真实sock FD 转发消息进来
+	//帧同步在用，后期优化掉
+	RoomId         string `json:"-"` //使用网关模式后，room_id 下放到各微服务上，网关不做记录
+	UserPlayStatus int    `json:"-"` //status 冲突 暂放弃,不能删 frame_sync game_match 还在使用，后期优化吧
 	//RTTCancelChan chan int
 	//UdpConn 		bool
 }
@@ -422,6 +425,8 @@ func (conn *Conn) Read() (content string, err error) {
 		conn.ConnManager.Option.Log.Error("conn.Conn.ReadMessage err: " + err.Error())
 		return content, err
 	}
+	conn.Metrics.ReceiveMsgTimes++
+	conn.Metrics.ReceiveMsgSize = conn.Metrics.ReceiveMsgSize + int64(len(dataByte))
 	conn.ConnManager.Option.Metrics.CounterInc("total_input_num")
 	//conn.ConnManager.Option.Metrics.GaugeAdd("total.input.size",float64(StringToFloat(strconv.Itoa(len(dataByte)))))
 	conn.ConnManager.Option.Metrics.GaugeAdd("total_input_size", float64(len(dataByte)))
@@ -486,6 +491,7 @@ func (conn *Conn) ReadLoop(ctx context.Context) {
 					errMsg := strings.ToLower(err.Error())
 					fdNetworkAbnormal := strings.Contains(errMsg, "connection reset by peer")
 					if fdNetworkAbnormal {
+						//这里可能有重复关闭的情况，如：C端监听到网络断了，然后立刻重连，等于kick off 会关闭一次，这里又监测到一次
 						conn.CloseOneConn(CLOSE_SOURCE_CONN_RESET_BY_PEER)
 						goto end
 					}
@@ -528,7 +534,15 @@ func (conn *Conn) CloseOneConn(source int) {
 	conn.ConnManager.Option.Log.Info("Conn close ,source : " + strconv.Itoa(source) + " , " + strconv.Itoa(int(conn.UserId)))
 	if conn.Status == CONN_STATUS_CLOSE {
 		conn.ConnManager.Option.Log.Error("CloseOneConn error :Conn.Status == CLOSE")
+		return
 	}
+
+	if conn.Status == CONN_STATUS_CLOSE_ING {
+		conn.ConnManager.Option.Log.Error("CloseOneConn error :Conn.Status == CONN_STATUS_CLOSE_ING")
+		return
+	}
+	conn.Status = CONN_STATUS_CLOSE_ING
+
 	connCloseEvent := pb.FDCloseEvent{
 		UserId:       conn.UserId,
 		Source:       int32(source),
@@ -703,6 +717,9 @@ func (conn *Conn) Write(content []byte, messageType int) error {
 	//		myNetWay.CloseOneConn(conn,CLOSE_SOURCE_SEND_MESSAGE)
 	//	}
 	//}()
+
+	conn.Metrics.SendMsgTimes++
+	conn.Metrics.SendMsgSize = conn.Metrics.ReceiveMsgSize + int64(len(content))
 
 	//myMetrics.fastLog("total.output.num",METRICS_OPT_INC,0)
 	//myMetrics.fastLog("total.output.size",METRICS_OPT_PLUS,len(content))

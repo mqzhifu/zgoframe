@@ -50,29 +50,7 @@
 </script>
 
 <script type="text/javascript">
-    // // 后端公共HTTP接口-头信息
-    // var header_X_Source_Type = "11";
-    // var header_X_Project_Id = "6";
-    // var header_X_Access = "imzgoframe";
-    // //长连接 通信协议 基础类型 定义
-    // var contentTypeDesc = {1:"json",2:"protobuf"};
-    // var protocolTypeDesc = {1:"tcp",2:"websocket",3:"udp"};
-    //
-    // //后端HTTP 域名
-    // var domain = window.location.host;
-    // //S端URL - 配置信息,IP 端口 协议类型
-    // var serverHostUri = "http://"+domain + "/gateway/config";
-    // //S端URL - 通讯协议的协议号
-    // var actionMapHostUri = "http://"+domain + "/gateway/action/map";
-    // var twinAgoraConfigUri = "http://"+domain + "/twin/agora/config";
     var twinAgoraConfig = null;
-    //S端URL - 登陆接口
-    // var loginUrl = "http://"+domain + "/base/login"
-    ////用户名公共前缀
-    // var playerNamePrefix = "frame_sync_"
-    // var playerNumber = 1;
-    //一共几个玩家参与到游戏中
-    // var playerMax = 4;
 
     if(http_protocol == "https"){
         var playerList = {
@@ -86,26 +64,8 @@
         }
     }
 
-
-
     var contentType = 1;//长连接 - 传输内容类型
     var protocolType = 2;//长连接 - 协议 类型
-    // //各种html div id 前缀，主要是方便sync.js控制页面UI变化
-    // var domIdPre = {
-    //     "seq":"seqId_",
-    //     "map":"mapId_",
-    //     "room":"roomId_",
-    //     "optBnt":"optBntId_",
-    //     "randSeek":"randSeekId_",
-    //     "moveUp":"moveUp_",
-    //     "moveLeft":"moveLeft_",
-    //     "moveRight":"moveRight_",
-    //     "moveDown":"moveDown_",
-    // };
-    // function GetPlayerNameByIndex(index){
-    //     return playerNamePrefix + index;
-    // }
-
 
     function init(){
         // showLocalConfig();

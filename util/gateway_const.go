@@ -30,9 +30,10 @@ const (
 	CONTENT_TYPE_JSON     = 1 //内容类型 json
 	CONTENT_TYPE_PROTOBUF = 2 //proto_buf
 
-	CONN_STATUS_INIT    = 1 //初始化
-	CONN_STATUS_EXECING = 2 //运行中
-	CONN_STATUS_CLOSE   = 3 //已关闭
+	CONN_STATUS_INIT      = 1 //初始化
+	CONN_STATUS_EXECING   = 2 //运行中
+	CONN_STATUS_CLOSE     = 3 //已关闭
+	CONN_STATUS_CLOSE_ING = 4 //关闭中，防止重复关闭，不能用锁，因为：并发变串行后，还能重复关闭
 
 	PROTOCOL_TCP       = 1
 	PROTOCOL_UDP       = 3

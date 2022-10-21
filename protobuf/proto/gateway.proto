@@ -7,10 +7,10 @@ option go_package ="./;pb";
 
 service Gateway {
 
-    rpc CS_Login             (Login)        returns (LoginRes) {}//登陆
-    rpc CS_Ping              (PingReq)         returns (PongRes) {}//客户端PING服务端
-    rpc CS_Pong              (PongRes)         returns (PingReq) {}//C端响应S端PIN
-    rpc CS_Heartbeat         (Heartbeat)    returns (Empty) {}//心跳
+    rpc CS_Login        (Login)        returns (LoginRes) {}//登陆
+    rpc CS_Ping         (PingReq)         returns (PongRes) {}//客户端PING服务端
+    rpc CS_Pong         (PongRes)         returns (PingReq) {}//C端响应S端PIN
+    rpc CS_Heartbeat    (Heartbeat)    returns (Empty) {}//心跳
 
     rpc SC_Login             (LoginRes)     returns (Empty) {}//登陆
     rpc SC_Ping              (PingReq)         returns (PongRes) {}//S端测试RTT
@@ -62,34 +62,23 @@ message KickOff{
 }
 
 message CfgServer{
-    	string  ListenIp            = 1;
-    	string  OutIp               = 2;
-    	string  HttpdRootPath       = 3;
-    	string  HttpPort            = 4;
-    	string  WsPort              = 5;
-    	string  UdpPort             = 6;
-    	int32   Protocol            = 7;
-    	string  WsUri               = 8;
-    	int32   ContentType         = 9;
-
-    	string  LoginAuthType       =10;
-    	string  LoginAuthSecretKey  =11;
-
-    	int32   MaxClientConnNum    =12;
-    	int32   MsgContentMax       =13;
-    	int64   IOTimeout           =14;
-    	int32   ConnTimeout         =15;
-
-    	int32   MapSize             =16;
-    	int32   RoomPeople          =17;
-    	int32   RoomTimeout         =18;
-    	int32   OffLineWaitTime     =19;
-
-    	int32   LockMode            =20;
-    	int32   FPS                 =21;
-    	int32   RoomReadyTimeout    =22;
-    	int32   Store               =23;
-    	string  TcpPort             =24;
+    string  ListenIp            = 1;
+    string  OutIp               = 2;
+    string  OutDomain           = 3;
+    string  WsPort              = 5;
+    string  TcpPort             = 6;
+    string  UdpPort             = 7;
+    string  WsUri               = 8;
+    int32   DefaultProtocolType = 9;
+    int32   DefaultContentType  =10;
+    string  LoginAuthType       =11;
+    string  LoginAuthSecretKey  =12;
+    int32   MaxClientConnNum    =13;
+    int32   MsgContentMax       =14;
+    int64   IOTimeout           =15;
+    int32   ConnTimeout         =16;
+    int32   ClientHeartbeatTime =16;
+    int32   ServerHeartbeatTime =17;
 }
 
 message CfgProtoMap{

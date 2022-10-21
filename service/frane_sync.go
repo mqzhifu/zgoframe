@@ -34,13 +34,14 @@ type FrameSync struct {
 }
 
 type FrameSyncOption struct {
-	FPS        int32 `json:"fps"`      //frame pre second
-	LockMode   int32 `json:"lockMode"` //锁模式，乐观|悲观
-	MapSize    int32 `json:"mapSize"`  //地址大小，给前端初始化使用
-	Store      int32 `json:"store"`    //持久化，暂未使用
-	Log        *zap.Logger
-	RoomManage *RoomManager //外部指针-房间服务
-	Netway     *util.NetWay //网关 - 连接层 -  消息收发
+	FPS             int32 `json:"fps"`             //frame pre second
+	LockMode        int32 `json:"lockMode"`        //锁模式，乐观|悲观
+	MapSize         int32 `json:"mapSize"`         //地址大小，给前端初始化使用
+	Store           int32 `json:"store"`           //持久化，玩家每帧的动作，暂未使用
+	OffLineWaitTime int32 `json:"offLineWaitTime"` //lockStep 玩家掉线后，其它玩家等待最长时间
+	Log             *zap.Logger
+	RoomManage      *RoomManager //外部指针-房间服务
+	Netway          *util.NetWay //网关 - 连接层 -  消息收发
 }
 
 //断点调试

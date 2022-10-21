@@ -60,6 +60,8 @@ type RoomManagerOption struct {
 	FrameSync    *FrameSync
 	ReadyTimeout int32 //房间人数满足了，等待 所有玩家确认，超时时间
 	RoomPeople   int32 //房间有多少人后，可以开始游戏了
+	MapSize      int32 `json:"mapSize"` //帧同步，地图大小，给前端初始化使用（测试使用）
+	Store        int32 `json:"store"`   //持久化：room
 }
 
 func NewRoomManager(roomManagerOption RoomManagerOption) *RoomManager {

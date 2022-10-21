@@ -3,6 +3,7 @@ package service
 import (
 	"errors"
 	uuid "github.com/satori/go.uuid"
+	"go.uber.org/zap"
 	"strconv"
 	"zgoframe/model"
 	"zgoframe/protobuf/pb"
@@ -137,7 +138,7 @@ func (twinAgora *TwinAgora) CallPeople(callPeopleReq pb.CallPeopleReq, conn *uti
 
 //这里假设验证都成功了，不做二次验证了
 func (twinAgora *TwinAgora) CreateRTCRoom(callPeopleReq pb.CallPeopleReq, onlineUserDoctorList []model.User) RTCRoom {
-	util.MyPrint("CreateRTCRoom uid:", callPeopleReq.Uid)
+	twinAgora.Log.Info("CreateRTCRoom ", zap.Int32("uid", callPeopleReq.Uid))
 	//给所有在线的专家发送邀请通知
 	var receiveUids []int
 	for _, user := range onlineUserDoctorList {
@@ -160,14 +161,14 @@ func (twinAgora *TwinAgora) CreateRTCRoom(callPeopleReq pb.CallPeopleReq, online
 		newRTCUser.Uptime = util.GetNowTimeSecondToInt()
 		twinAgora.RTCUserPool[int(callPeopleReq.Uid)] = &newRTCUser
 	}
-	util.MyPrint("CreateRTCRoom id:", RTCRoomOne.Id, " , uids:", RTCRoomOne.Uids)
+	twinAgora.Log.Info("CreateRTCRoom id:" + RTCRoomOne.Id)
 	twinAgora.RTCRoomPool[RTCRoomOne.Id] = &RTCRoomOne
 	return RTCRoomOne
 }
 
 //发起方，取消呼叫
 func (twinAgora *TwinAgora) CancelCallPeople(cancelCallPeopleReq pb.CancelCallPeopleReq, conn *util.Conn) error {
-	util.MyPrint("CancelCallPeople , uid:", cancelCallPeopleReq.Uid, " roomId:", cancelCallPeopleReq.RoomId)
+	twinAgora.Log.Warn("CancelCallPeople , ", zap.Int32("uid", cancelCallPeopleReq.Uid), zap.String("roomId", cancelCallPeopleReq.RoomId))
 	if cancelCallPeopleReq.Uid <= 0 {
 		return twinAgora.MakeError(twinAgora.Lang.NewString(400))
 	}
@@ -197,7 +198,8 @@ func (twinAgora *TwinAgora) CancelCallPeople(cancelCallPeopleReq pb.CancelCallPe
 	if RTCRoomInfo.Status != RTC_ROOM_STATUS_CALLING {
 		return errors.New(twinAgora.Lang.NewReplaceOneString(512, strconv.Itoa(RTCRoomInfo.Status)))
 	}
-	util.MyPrint("RTCRoomInfo.ReceiveUids:", RTCRoomInfo.ReceiveUids, " cancelCallPeopleReq.Uid:", cancelCallPeopleReq.Uid)
+
+	//util.MyPrint("RTCRoomInfo.ReceiveUids:", RTCRoomInfo.ReceiveUids, " cancelCallPeopleReq.Uid:", cancelCallPeopleReq.Uid)
 	//给所有专家端用户发送取消的消息
 	for _, uid := range RTCRoomInfo.ReceiveUids {
 		if int(cancelCallPeopleReq.Uid) == uid {
@@ -212,15 +214,13 @@ func (twinAgora *TwinAgora) CancelCallPeople(cancelCallPeopleReq pb.CancelCallPe
 }
 
 func (twinAgora *TwinAgora) PeopleEntry(peopleEntry pb.PeopleEntry, conn *util.Conn) error {
-	util.MyPrint("PeopleEntry  uid:", peopleEntry.Uid)
+	twinAgora.Log.Info("PeopleEntry  ", zap.Int32("uid", peopleEntry.Uid))
 	myRTCUser, ok := twinAgora.GetUserById(int(peopleEntry.Uid))
 	if !ok {
-		util.MyPrint("PeopleEntry err1")
 		return twinAgora.MakeError(twinAgora.Lang.NewReplaceOneString(401, strconv.Itoa(int(peopleEntry.Uid))))
 	}
 	RTCRoomInfo, err := twinAgora.GetRoomById(myRTCUser.RoomId)
 	if err != nil {
-		util.MyPrint("PeopleEntry err2")
 		return err
 	}
 
@@ -233,16 +233,14 @@ func (twinAgora *TwinAgora) PeopleEntry(peopleEntry pb.PeopleEntry, conn *util.C
 	}
 
 	if hasSearch == 1 {
-		util.MyPrint("PeopleEntry err3")
 		//您并不在此频道中，请不要乱发消息
 		return errors.New(twinAgora.Lang.NewReplaceOneString(407, strconv.Itoa(int(peopleEntry.Uid))))
 	}
 
 	if RTCRoomInfo.Status != RTC_ROOM_STATUS_EXECING {
-		util.MyPrint("PeopleEntry err4")
 		return twinAgora.MakeError(twinAgora.Lang.NewReplaceOneString(511, RTCRoomInfo.Id))
 	}
-	util.MyPrint("PeopleEntry:", RTCRoomInfo.Uids, conn.UserId)
+	//util.MyPrint("PeopleEntry:", RTCRoomInfo.Uids, conn.UserId)
 	for _, uid := range RTCRoomInfo.Uids {
 		if int(conn.UserId) == uid {
 			continue
@@ -289,7 +287,7 @@ func (twinAgora *TwinAgora) PeopleLeave(peopleLeaveRes pb.PeopleLeaveRes, conn *
 
 //被呼叫者，接收/拒绝 公共验证
 func (twinAgora *TwinAgora) PeopleVote(callVote pb.CallVote) (error, *RTCRoom) {
-	util.MyPrint("PeopleVote :", callVote)
+	twinAgora.Log.Info("PeopleVote :", zap.Int32("uid", callVote.Uid), zap.String("roomId", callVote.RoomId))
 	RTCRoomInfo, err := twinAgora.GetRoomById(callVote.RoomId)
 	if err != nil {
 		return err, RTCRoomInfo
@@ -351,7 +349,7 @@ func (twinAgora *TwinAgora) CallPeopleAccept(callVote pb.CallVote, conn *util.Co
 	rtcUser.RoomId = RTCRoomInfo.Id
 
 	RTCRoomInfo.ReceiveUidsAccept = append(RTCRoomInfo.ReceiveUidsAccept, int(callVote.Uid))
-	util.MyPrint("RTCRoomInfo.ReceiveUidsAccept:", RTCRoomInfo.ReceiveUidsAccept)
+	//util.MyPrint("RTCRoomInfo.ReceiveUidsAccept:", RTCRoomInfo.ReceiveUidsAccept)
 	//RTCRoomInfo.Uids = append(RTCRoomInfo.Uids, int(callVote.Uid))
 	conn.SendMsgCompressByUid(int32(RTCRoomInfo.CallUid), "SC_CallPeopleAccept", callVote)
 	//目前是1v1视频，只要有一个接收，即把房间状态标识为运行中，这里后期优化一下吧

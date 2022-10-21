@@ -182,7 +182,7 @@ func (twinAgora *TwinAgora) FDCreateEvent(FDCreateEvent pb.FDCreateEvent, conn *
 		return
 	}
 
-	util.MyPrint("FDCreateEvent ,uid:", FDCreateEvent.UserId)
+	twinAgora.Log.Warn("FDCreateEvent ,uid:" + strconv.Itoa(int(FDCreateEvent.UserId)))
 	NewRTCUser := RTCUser{
 		Id:      int(FDCreateEvent.UserId),
 		AddTime: util.GetNowTimeSecondToInt(),
@@ -194,7 +194,7 @@ func (twinAgora *TwinAgora) FDCreateEvent(FDCreateEvent pb.FDCreateEvent, conn *
 
 //网关监控到用户连接断了(超时)，会回调通知服务
 func (twinAgora *TwinAgora) FDCloseEvent(connCloseEvent pb.FDCloseEvent, connManager *util.ConnManager) {
-	util.MyPrint("TwinAgora ConnCloseCallback :", connCloseEvent)
+	twinAgora.Log.Warn("TwinAgora ConnCloseCallback :", zap.Int("userId", int(connCloseEvent.UserId)), zap.Int("source", int(connCloseEvent.Source)))
 	myRTCUser, ok := twinAgora.GetUserById(int(connCloseEvent.UserId))
 	if !ok {
 		twinAgora.MakeError(twinAgora.Lang.NewReplaceOneString(401, strconv.Itoa(int(connCloseEvent.UserId))))
@@ -205,7 +205,7 @@ func (twinAgora *TwinAgora) FDCloseEvent(connCloseEvent pb.FDCloseEvent, connMan
 
 //用户长连接 - 心跳，更新房间的最后更新时间
 func (twinAgora *TwinAgora) UserHeartbeat(heartbeat pb.Heartbeat, conn *util.Conn) {
-	util.MyPrint("twinAgora Heartbeat , time:", heartbeat.Time, " uid:", conn.UserId)
+	twinAgora.Log.Info("twinAgora Heartbeat , ", zap.Int64("time", heartbeat.Time), zap.Int32("uid", conn.UserId))
 	myRTCUser, ok := twinAgora.GetUserById(int(conn.UserId))
 	if !ok {
 		msgInfo := twinAgora.Lang.NewReplaceOneString(401, strconv.Itoa(int(conn.UserId)))
@@ -237,7 +237,7 @@ func (twinAgora *TwinAgora) UserHeartbeat(heartbeat pb.Heartbeat, conn *util.Con
 
 //每个房间的心跳，因为音视频使用的是声网，监控不到，就得单独再加一个心跳
 func (twinAgora *TwinAgora) RoomHeartbeat(heartbeat pb.RoomHeartbeatReq, conn *util.Conn) {
-	util.MyPrint("twinAgora RoomHeartbeat , time:", heartbeat.Time, " uid:", heartbeat.Uid, " , roomId:", heartbeat.RoomId)
+	twinAgora.Log.Info("twinAgora RoomHeartbeat , ", zap.Int64("time", heartbeat.Time), zap.Int32("uid", conn.UserId))
 	myRTCUser, ok := twinAgora.GetUserById(int(heartbeat.Uid))
 	if !ok {
 		twinAgora.MakeError(twinAgora.Lang.NewReplaceOneString(401, strconv.Itoa(int(heartbeat.Uid))))
@@ -273,7 +273,7 @@ func (twinAgora *TwinAgora) PushMsg(conn *util.Conn, uid int, code int, eventId 
 
 //连接断开或超时处理
 func (twinAgora *TwinAgora) ConnCloseProcess(rtcUserRTCUser *RTCUser, source string) {
-	util.MyPrint("ConnCloseProcess source: ", source, " , uid:", rtcUserRTCUser.Id, " roomId:", rtcUserRTCUser.RoomId)
+	twinAgora.Log.Warn("ConnCloseProcess source: " + source + " , uid:" + strconv.Itoa(rtcUserRTCUser.Id) + " roomId:" + rtcUserRTCUser.RoomId)
 	if rtcUserRTCUser.RoomId == "" {
 		twinAgora.DelUserById(rtcUserRTCUser.Id)
 		return
@@ -292,8 +292,9 @@ func (twinAgora *TwinAgora) ConnCloseProcess(rtcUserRTCUser *RTCUser, source str
 		return
 	}
 	//目前是1v1视频，只要有一个人拒绝|断线，即结束，这里后期优化一下吧
+	twinAgora.DelUserById(rtcUserRTCUser.Id) //这个得放在上面，可能有人断网后立即重连，并行的话有问题
 	twinAgora.RoomEnd(myRTCRoom.Id, RTC_ROOM_END_STATUS_CONN_CLOSE)
-	twinAgora.DelUserById(rtcUserRTCUser.Id)
+
 }
 
 //已结束的房间要做:
@@ -301,7 +302,7 @@ func (twinAgora *TwinAgora) ConnCloseProcess(rtcUserRTCUser *RTCUser, source str
 //2. 房间池内删除该元素
 //3. 更新用户池内：在线用户的房间ID清除
 func (twinAgora *TwinAgora) RoomEnd(roomId string, endStatus int) {
-	util.MyPrint("RoomEnd id:", roomId, " , endStatus:", endStatus)
+	twinAgora.Log.Warn("RoomEnd id:" + roomId + " , endStatus:" + strconv.Itoa(endStatus))
 	roomInfo, err := twinAgora.GetRoomById(roomId)
 	if err != nil {
 		return
@@ -330,10 +331,10 @@ func (twinAgora *TwinAgora) RoomEnd(roomId string, endStatus int) {
 			myRTCUser.RoomId = ""
 		}
 	}
-	util.MyPrint("delete room:", roomInfo.Id)
+	twinAgora.Log.Warn("delete room:" + roomInfo.Id)
 	delete(twinAgora.RTCRoomPool, roomInfo.Id)
 
-	util.MyPrint("RoomEnd ok , roomId: ", roomId, " , endStatus:", endStatus)
+	twinAgora.Log.Warn("RoomEnd ok , roomId: " + roomId + " , endStatus:" + strconv.Itoa(endStatus))
 }
 
 //持久化到DB中
@@ -370,7 +371,7 @@ func (twinAgora *TwinAgora) StoreHistory(RTCRoom *RTCRoom) error {
 }
 
 func (twinAgora *TwinAgora) DelUserById(uid int) {
-	util.MyPrint("DelUserById:", uid)
+	twinAgora.Log.Warn("DelUserById:" + strconv.Itoa(uid))
 	delete(twinAgora.RTCUserPool, uid)
 }
 

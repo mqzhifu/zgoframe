@@ -8,12 +8,6 @@ import (
 	"strings"
 )
 
-const (
-	LOG_LEVEL_DEBUG = iota
-	LOG_LEVEL_INFO
-	LOG_LEVEL_OFF
-)
-
 var LogLevelFlag = LOG_LEVEL_OFF
 
 type ErrorCode struct {
@@ -24,14 +18,15 @@ type ErrorCode struct {
 
 func (e *ErrorCode) Error() string {
 	//var errorCode ErrorCode {}
-	errorCode := new (ErrorCode)
+	errorCode := new(ErrorCode)
 	errorCode.Code = e.Code
 	errorCode.Msg = e.Msg
 	errorCode.Where = e.Where
 
-	errorJsonStr,_ := json.Marshal(errorCode)
+	errorJsonStr, _ := json.Marshal(errorCode)
 	return string(errorJsonStr)
 }
+
 // 声明一个错误
 func NewCoder(code uint32, msg string) *ErrorCode {
 	where := caller(1, false)
@@ -40,7 +35,7 @@ func NewCoder(code uint32, msg string) *ErrorCode {
 
 // 对一个错误追加信息
 func Wrap(err error, extMsg ...string) *ErrorCode {
-	msg  := err.Error()
+	msg := err.Error()
 	if len(extMsg) != 0 {
 		msg = strings.Join(extMsg, " : ") + " : " + msg
 	}
@@ -59,4 +54,3 @@ func caller(calldepth int, short bool) string {
 
 	return fmt.Sprintf("%s:%d", file, line)
 }
-

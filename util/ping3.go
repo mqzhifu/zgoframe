@@ -2,26 +2,26 @@ package util
 
 import (
 	"errors"
-	"net"
-	"time"
 	"fmt"
-	"strconv"
+	"net"
 	"os"
+	"strconv"
+	"time"
 )
 
-type PingOption struct{
-	Count int
-	Size int
-	Timeout int64
+type PingOption struct {
+	Count      int
+	Size       int
+	Timeout    int64
 	Nerverstop bool
 }
 
-func NewPingOption()*PingOption{
+func NewPingOption() *PingOption {
 	return &PingOption{
-		Count:4,
-		Size:32,
-		Timeout:1000,
-		Nerverstop:false,
+		Count:      4,
+		Size:       32,
+		Timeout:    1000,
+		Nerverstop: false,
 	}
 }
 
@@ -29,7 +29,7 @@ func NewPingOption()*PingOption{
 //Ping的基本原理是发送和接受ICMP请求回显报文。接收方将报文原封不动的返回发送方，发送方校验报文，校验成功则表示ping通。
 //一台主机向一个节点发送一个类型字段值为8的ICMP报文，如果途中没有异常（如果没有被路由丢弃，目标不回应ICMP或者传输失败），
 //则目标返回类型字段值为0的ICMP报文，说明这台主机可达
-func (p *PingOption)Ping3(host string, args map[string]interface{})error {
+func (p *PingOption) Ping3(host string, args map[string]interface{}) error {
 	prefix := "Ping3"
 	//要发送的回显请求数
 	var count int = 1
@@ -40,7 +40,7 @@ func (p *PingOption)Ping3(host string, args map[string]interface{})error {
 	//Ping 指定的主机，直到停止
 	var neverstop bool = false
 
-	if len(args)!=0{
+	if len(args) != 0 {
 		count = args["n"].(int)
 		size = args["l"].(int)
 		timeout = args["w"].(int64)
@@ -60,7 +60,6 @@ func (p *PingOption)Ping3(host string, args map[string]interface{})error {
 	id0, id1 := genidentifier3(host)
 	//ICMP报头的长度至少8字节，如果报文包含数据部分则大于8字节。
 	//ping命令包含"请求"（Echo Request，报头类型是8）和"应答"（Echo Reply，类型是0）2个部分，由ICMP报头的类型决定
-	const ECHO_REQUEST_HEAD_LEN = 8
 
 	//记录发送次数
 	sendN := 0
@@ -80,14 +79,14 @@ func (p *PingOption)Ping3(host string, args map[string]interface{})error {
 		//ICMP报文长度，报头8字节，数据部分32字节
 		var msg []byte = make([]byte, size+ECHO_REQUEST_HEAD_LEN)
 		//第一个字节表示报文类型，8表示回显请求
-		msg[0] = 8                        // echo
+		msg[0] = 8 // echo
 		//ping的请求和应答，该code都为0
-		msg[1] = 0                        // code 0
+		msg[1] = 0 // code 0
 		//校验码占2字节
-		msg[2] = 0                        // checksum
-		msg[3] = 0                        // checksum
+		msg[2] = 0 // checksum
+		msg[3] = 0 // checksum
 		//ID标识符 占2字节
-		msg[4], msg[5] = id0, id1         //identifier[0] identifier[1]
+		msg[4], msg[5] = id0, id1 //identifier[0] identifier[1]
 		//序号占2字节
 		msg[6], msg[7] = gensequence3(seq) //sequence[0], sequence[1]
 
@@ -101,7 +100,7 @@ func (p *PingOption)Ping3(host string, args map[string]interface{})error {
 		conn, err = net.DialTimeout("ip:icmp", host, time.Duration(timeout*1000*1000))
 		//todo test
 		//ip := conn.RemoteAddr()
-		fmt.Println(prefix ," remote ip:",host , " args:",args)
+		fmt.Println(prefix, " remote ip:", host, " args:", args)
 
 		checkError3(err)
 
@@ -113,7 +112,6 @@ func (p *PingOption)Ping3(host string, args map[string]interface{})error {
 
 		//在使用Go语言的net.Dial函数时，发送echo request报文时，不用考虑i前20个字节的ip头；
 		// 但是在接收到echo response消息时，前20字节是ip头。后面的内容才是icmp的内容，应该与echo request的内容一致
-		const ECHO_REPLY_HEAD_LEN = 20
 
 		var receive []byte = make([]byte, ECHO_REPLY_HEAD_LEN+length)
 		n, err := conn.Read(receive)

@@ -11,15 +11,6 @@ import (
 	"zgoframe/util"
 )
 
-const (
-	//INIT -> READY -> EXECING -> PAUSE -> END
-	ROOM_STATUS_INIT    = 1 //新房间，刚刚初始化，等待其它操作
-	ROOM_STATUS_EXECING = 2 //已开始游戏
-	ROOM_STATUS_END     = 3 //已结束
-	ROOM_STATUS_READY   = 4 //准备中
-	ROOM_STATUS_PAUSE   = 5 //有玩家掉线，暂停中
-)
-
 type Room struct {
 	Id                     string          `json:"id"`               //房间ID
 	Category               int32           `json:"category"`         //分类  - 目前未使用

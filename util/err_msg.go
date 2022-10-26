@@ -7,11 +7,6 @@ import (
 	"strings"
 )
 
-const (
-	CODE_NOT_EXIST = 5555
-	ERR_separate   = "-_-"
-)
-
 type ErrInfo struct {
 	Code int
 	Msg  string

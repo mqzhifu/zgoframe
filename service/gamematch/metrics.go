@@ -1,13 +1,14 @@
 package gamematch
 
 import (
+	"zgoframe/service"
 	"zgoframe/util"
 )
 
-func (gamematch *Gamematch)RedisMetrics()(rulelist map[int]Rule ,list map[int]map[string]int,playerCnt map[string]int,rulePersonNum map[int]map[int]int){
+func (gamematch *Gamematch) RedisMetrics() (rulelist map[int]Rule, list map[int]map[string]int, playerCnt map[string]int, rulePersonNum map[int]map[int]int) {
 	rulelist = gamematch.RuleConfig.getAll()
 
-	playerList,_ := playerStatus.getAllPlayers()
+	playerList, _ := playerStatus.getAllPlayers()
 	playerCnt = make(map[string]int)
 	playerCnt["total"] = 0
 	playerCnt["signTimeout"] = 0
@@ -18,29 +19,28 @@ func (gamematch *Gamematch)RedisMetrics()(rulelist map[int]Rule ,list map[int]ma
 	playerCnt["int"] = 0
 	playerCnt["unknow"] = 0
 
-	if(len(playerList) > 0){
+	if len(playerList) > 0 {
 		now := util.GetNowTimeSecondToInt()
-		for _,playerStatusElement := range playerList{
-			if playerStatusElement.Status == PlayerStatusSign{
+		for _, playerStatusElement := range playerList {
+			if playerStatusElement.Status == service.PlayerStatusSign {
 				playerCnt["sign"]++
-			}else if playerStatusElement.Status == PlayerStatusSuccess{
+			} else if playerStatusElement.Status == service.PlayerStatusSuccess {
 				playerCnt["success"]++
-			}else if playerStatusElement.Status == PlayerStatusInit{
+			} else if playerStatusElement.Status == service.PlayerStatusInit {
 				playerCnt["int"]++
-			}else{
+			} else {
 				playerCnt["unknow"]++
 			}
 
-			if now - playerStatusElement.SignTimeout >  rulelist[playerStatusElement.RuleId].MatchTimeout{
+			if now-playerStatusElement.SignTimeout > rulelist[playerStatusElement.RuleId].MatchTimeout {
 				playerCnt["signTimeout"]++
 			}
 
 			if playerStatusElement.SuccessTimeout > 0 {
-				if now - playerStatusElement.SuccessTimeout >  rulelist[playerStatusElement.RuleId].SuccessTimeout{
+				if now-playerStatusElement.SuccessTimeout > rulelist[playerStatusElement.RuleId].SuccessTimeout {
 					playerCnt["successTimeout"]++
 				}
 			}
-
 
 			playerCnt["total"]++
 		}
@@ -48,7 +48,7 @@ func (gamematch *Gamematch)RedisMetrics()(rulelist map[int]Rule ,list map[int]ma
 	list = make(map[int]map[string]int)
 
 	rulePersonNum = make(map[int]map[int]int)
-	for ruleId,_ := range rulelist{
+	for ruleId, _ := range rulelist {
 		//prefix := "rule("+strconv.Itoa(ruleId) + ")"
 
 		row := make(map[string]int)
@@ -56,14 +56,14 @@ func (gamematch *Gamematch)RedisMetrics()(rulelist map[int]Rule ,list map[int]ma
 		//playerCnt := playerStatus.getOneRuleAllPlayerCnt(ruleId)
 		push := gamematch.getContainerPushByRuleId(ruleId)
 		row["push"] = push.getAllCnt()
-		row["pushWaitStatut"] = push.getStatusCnt(PushStatusWait)
-		row["pushRetryStatut"] = push.getStatusCnt(PushStatusRetry)
+		row["pushWaitStatut"] = push.getStatusCnt(service.PushStatusWait)
+		row["pushRetryStatut"] = push.getStatusCnt(service.PushStatusRetry)
 
 		sign := gamematch.GetContainerSignByRuleId(ruleId)
 		row["signGroup"] = sign.getAllGroupsWeightCnt()
 		//row["groupPersonCnt"] =
 		//map[int]int
-		playersByPerson := sign.getPlayersCntByWeight("0","100")
+		playersByPerson := sign.getPlayersCntByWeight("0", "100")
 		rulePersonNum[ruleId] = playersByPerson
 
 		success := gamematch.getContainerSuccessByRuleId(ruleId)
@@ -72,5 +72,5 @@ func (gamematch *Gamematch)RedisMetrics()(rulelist map[int]Rule ,list map[int]ma
 		//	//match := httpd.Gamematch.getContainerMatchByRuleId(ruleId)
 		list[ruleId] = row
 	}
-	return rulelist,list,playerCnt,rulePersonNum
+	return rulelist, list, playerCnt, rulePersonNum
 }

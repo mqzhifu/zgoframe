@@ -136,11 +136,11 @@ func processCmdParameter(prefix string) global.CmdParameter {
 	//当前环境,env:local test pre dev online
 	env := flag.Int("e", 0, "must require , "+envListStr)
 	//配置读取源类型，1 文件  2 etcd
-	configSourceType := flag.String("cs", global.DEFAULT_CONFIG_SOURCE_TYPE, "configSource:file or etcd")
+	configSourceType := flag.String("cs", core.DEFAULT_GLOBAL_CONFIG_TYPE_FILE, "configSource:file or etcd")
 	//配置文件的类型:toml yaml
-	configFileType := flag.String("ct", global.DEFAULT_CONFIT_TYPE, "configFileType")
+	configFileType := flag.String("ct", core.DEFAULT_GLOBAL_CONFIG_FILE_TYPE, "configFileType")
 	//配置文件的名称
-	configFileName := flag.String("cfn", global.DEFAULT_CONFIG_FILE_NAME, "configFileName")
+	configFileName := flag.String("cfn", core.DEFAULT_GLOBAL_CONFIG_FILE_NAME, "configFileName")
 	//获取etcd 配置信息的URL,也可以把配置文件中的信息存于ETCD中，通过URL请求ETCD获取
 	etcdUrl := flag.String("etl", "http://127.0.0.1/getEtcdCluster/Ip/Port", "get etcd config url")
 	//DEBUG模式

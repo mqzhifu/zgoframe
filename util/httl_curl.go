@@ -9,11 +9,6 @@ import (
 	"strings"
 )
 
-const (
-	HTTP_DATA_CONTENT_TYPE_JSON   = 1
-	HTTP_DATA_CONTENT_TYPE_NOrMAL = 2
-)
-
 type HttpCurl struct {
 	Header              map[string]string
 	RequestContentType  int

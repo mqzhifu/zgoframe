@@ -2,21 +2,6 @@ package util
 
 import "strconv"
 
-const (
-	ENV_LOCAL_STR  = "local"  //开发环境
-	ENV_DEV_STR    = "dev"    //开发环境
-	ENV_TEST_STR   = "test"   //测试环境
-	ENV_PRE_STR    = "pre"    //预发布环境
-	ENV_ONLINE_STR = "online" //线上环境
-
-	ENV_LOCAL_INT  = 1 //开发环境
-	ENV_DEV_INT    = 2 //开发环境
-	ENV_TEST_INT   = 3 //测试环境
-	ENV_PRE_INT    = 4 //预发布环境
-	ENV_ONLINE_INT = 5 //线上环境
-
-)
-
 func CheckEnvExist(env int) bool {
 	list := GetConstListEnv()
 	for _, v := range list {

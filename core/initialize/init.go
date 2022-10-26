@@ -35,7 +35,7 @@ func (initialize *Initialize) Start() error {
 	//---read config file end -----
 	//预/报警->推送器，这里是推送到3方，如：prometheus
 	//ps:这个要优先zap日志类优化处理，因为zap里的<钩子>有用到,主要是日志里自动触发报警，略方便
-	if global.C.Alert.Status == global.CONFIG_STATUS_OPEN {
+	if global.C.Alert.Status == core.GLOBAL_CONFIG_MODEL_STATUS_OPEN {
 		global.V.AlertPush = util.NewAlertPush(global.C.Alert.Host, global.C.Alert.Port, global.C.Alert.Uri, prefix)
 	}
 	//创建main日志类
@@ -87,7 +87,7 @@ func (initialize *Initialize) Start() error {
 	//基础类：用于恢复一个挂了的协程,避免主进程被panic fatal 带挂了，同时有重度次数控制
 	global.V.RecoverGo = util.NewRecoverGo(global.V.Zap, 3)
 	//redis
-	if global.C.Redis.Status == global.CONFIG_STATUS_OPEN {
+	if global.C.Redis.Status == core.GLOBAL_CONFIG_MODEL_STATUS_OPEN {
 		global.V.Redis, err = GetNewRedis(prefix)
 		if err != nil {
 			global.V.Zap.Error(prefix + " GetRedis " + err.Error())
@@ -103,7 +103,7 @@ func (initialize *Initialize) Start() error {
 		global.V.RedisGo, _ = util.NewRedisConnPool(redisGoOption)
 	}
 	//http server
-	if global.C.Http.Status == global.CONFIG_STATUS_OPEN {
+	if global.C.Http.Status == core.GLOBAL_CONFIG_MODEL_STATUS_OPEN {
 		configZap = global.C.Zap
 		configZap.FileName = "http"
 		configZap.ModuleName = "http"
@@ -122,7 +122,7 @@ func (initialize *Initialize) Start() error {
 		HttpZap = LoggerWithProject(HttpZap, global.V.Project.Id)
 	}
 	//etcd
-	if global.C.Etcd.Status == global.CONFIG_STATUS_OPEN {
+	if global.C.Etcd.Status == core.GLOBAL_CONFIG_MODEL_STATUS_OPEN {
 		global.V.Etcd, err = GetNewEtcd(global.MainCmdParameter.Env, configZapReturn, prefix)
 		if err != nil {
 			global.V.Zap.Error(prefix + "GetNewEtcd err:" + err.Error())
@@ -133,8 +133,8 @@ func (initialize *Initialize) Start() error {
 	//ps:之所以单独加一个模块，也是因为service有些特殊的结构变量，与project的结构变量不太一样
 	global.V.ServiceManager, _ = util.NewServiceManager(global.V.Gorm)
 	//service 服务发现，这里有个顺序，必须先实现化完成:serviceManager
-	if global.C.ServiceDiscovery.Status == global.CONFIG_STATUS_OPEN {
-		if global.C.Etcd.Status != global.CONFIG_STATUS_OPEN {
+	if global.C.ServiceDiscovery.Status == core.GLOBAL_CONFIG_MODEL_STATUS_OPEN {
+		if global.C.Etcd.Status != core.GLOBAL_CONFIG_MODEL_STATUS_OPEN {
 			return errors.New("ServiceDiscovery need Etcd open!")
 		}
 		global.V.ServiceDiscovery, err = GetNewServiceDiscovery()
@@ -143,7 +143,7 @@ func (initialize *Initialize) Start() error {
 		}
 	}
 	//metrics
-	if global.C.Metrics.Status == global.CONFIG_STATUS_OPEN {
+	if global.C.Metrics.Status == core.GLOBAL_CONFIG_MODEL_STATUS_OPEN {
 		myPushGateway := util.PushGateway{
 			Status:  global.C.PushGateway.Status,
 			Ip:      global.C.PushGateway.Ip,
@@ -158,7 +158,7 @@ func (initialize *Initialize) Start() error {
 		}
 		global.V.Metric = util.NewMyMetrics(myMetricsOption)
 
-		if global.C.Http.Status != global.CONFIG_STATUS_OPEN {
+		if global.C.Http.Status != core.GLOBAL_CONFIG_MODEL_STATUS_OPEN {
 			return errors.New("metrics need gin open!")
 		}
 		global.V.Gin.GET("/metrics", gin.WrapH(promhttp.Handler()))
@@ -175,7 +175,7 @@ func (initialize *Initialize) Start() error {
 	//初始化-protobuf 映射文件
 	dir := global.MainEnv.RootDir + "/" + global.C.Protobuf.BasePath + "/" + global.C.Protobuf.PbServicePath
 	//将rpc service 中的方法，转化成ID（由PHP生成 的ID map）
-	if global.C.Protobuf.Status == global.CONFIG_STATUS_OPEN {
+	if global.C.Protobuf.Status == core.GLOBAL_CONFIG_MODEL_STATUS_OPEN {
 		global.V.ProtoMap, err = util.NewProtoMap(global.V.Zap, dir, global.C.Protobuf.IdMapFileName, global.V.ProjectMng)
 		if err != nil {
 			util.MyPrint("GetNewViper err:", err)
@@ -184,20 +184,20 @@ func (initialize *Initialize) Start() error {
 		//util.ExitPrint(global.V.ProtoMap.ServiceFuncMap)
 	}
 	//grpc
-	if global.C.Grpc.Status == global.CONFIG_STATUS_OPEN {
+	if global.C.Grpc.Status == core.GLOBAL_CONFIG_MODEL_STATUS_OPEN {
 		grpcManagerOption := util.GrpcManagerOption{
 			//AppId: global.V.App.Id,
 			//ServiceId: global.V.Service.Id,
 			ProjectId: global.V.Project.Id,
 			Log:       global.V.Zap,
 		}
-		if global.C.ServiceDiscovery.Status == global.CONFIG_STATUS_OPEN {
+		if global.C.ServiceDiscovery.Status == core.GLOBAL_CONFIG_MODEL_STATUS_OPEN {
 			grpcManagerOption.ServiceDiscovery = global.V.ServiceDiscovery
 		}
 		global.V.GrpcManager, _ = util.NewGrpcManager(grpcManagerOption)
 	}
 	//邮件模块
-	if global.C.Email.Status == global.CONFIG_STATUS_OPEN {
+	if global.C.Email.Status == core.GLOBAL_CONFIG_MODEL_STATUS_OPEN {
 		emailOption := util.EmailOption{
 			Host:      global.C.Email.Host,
 			Port:      global.C.Email.Port,
@@ -211,13 +211,13 @@ func (initialize *Initialize) Start() error {
 	}
 	//预/报警,这个是真正的直接报警，如：邮件 SMS 等，不是推送3方
 	//ps:不推荐这么用，最好都统一推送3方报警机制
-	if global.C.Alert.Status == global.CONFIG_STATUS_OPEN {
+	if global.C.Alert.Status == core.GLOBAL_CONFIG_MODEL_STATUS_OPEN {
 		global.V.AlertHook = util.NewAlertHook(-1, "程序出错了：#body#", "报错", util.ALERT_METHOD_SYNC, global.V.Zap)
 		global.V.AlertHook.Email = global.V.Email
 		//global.V.AlertHook.Alert("Aaaa")
 		//util.ExitPrint(123123123)
 	}
-	if global.C.AliOss.Status == global.CONFIG_STATUS_OPEN {
+	if global.C.AliOss.Status == core.GLOBAL_CONFIG_MODEL_STATUS_OPEN {
 		op := util.AliOssOptions{
 			AccessKeyId:     global.C.AliOss.AccessKeyId,
 			AccessKeySecret: global.C.AliOss.AccessKeySecret,
@@ -228,7 +228,7 @@ func (initialize *Initialize) Start() error {
 		global.V.AliOss = util.NewAliOss(op)
 	}
 	//var netWayOption util.NetWayOption
-	//if global.C.Gateway.Status == global.CONFIG_STATUS_OPEN {
+	//if global.C.Gateway.Status == global.GLOBAL_CONFIG_MODEL_STATUS_OPEN {
 	//	netWayOption = InitGateway()
 	//	netWay, err := util.NewNetWay(netWayOption)
 	//	if err != nil {
@@ -242,7 +242,7 @@ func (initialize *Initialize) Start() error {
 
 	//global.C.System.ENV = initialize.Option.Env
 	//启动http
-	if global.C.Http.Status == global.CONFIG_STATUS_OPEN {
+	if global.C.Http.Status == core.GLOBAL_CONFIG_MODEL_STATUS_OPEN {
 		RegGinHttpRoute() //这里注册项目自己的http 路由策略
 		StartHttpGin()
 	}
@@ -269,23 +269,23 @@ func (initialize *Initialize) OutHttpGetBaseInfo() string {
 
 func (initialize *Initialize) Quit() {
 	global.V.Zap.Warn("init quit start:")
-	if global.C.Http.Status == global.CONFIG_STATUS_OPEN {
+	if global.C.Http.Status == core.GLOBAL_CONFIG_MODEL_STATUS_OPEN {
 		HttpServerShutdown()
 	}
 
-	if global.C.Redis.Status == global.CONFIG_STATUS_OPEN {
+	if global.C.Redis.Status == core.GLOBAL_CONFIG_MODEL_STATUS_OPEN {
 		RedisShutdown()
 	}
 	//这个得优于etcd先关
-	if global.C.Grpc.Status == global.CONFIG_STATUS_OPEN {
+	if global.C.Grpc.Status == core.GLOBAL_CONFIG_MODEL_STATUS_OPEN {
 		global.V.GrpcManager.Shutdown()
 	}
 	//这个得优于etcd先关
-	if global.C.ServiceDiscovery.Status == global.CONFIG_STATUS_OPEN {
+	if global.C.ServiceDiscovery.Status == core.GLOBAL_CONFIG_MODEL_STATUS_OPEN {
 		global.V.ServiceDiscovery.Shutdown()
 	}
 
-	if global.C.Etcd.Status == global.CONFIG_STATUS_OPEN {
+	if global.C.Etcd.Status == core.GLOBAL_CONFIG_MODEL_STATUS_OPEN {
 		global.V.Etcd.Shutdown()
 	}
 	//global.V.Websocket.Shutdown()

@@ -6,25 +6,16 @@ import (
 	"zgoframe/model"
 )
 
-const (
-	SERVER_STATUS_NORMAL = 1
-	SERVER_STATUS_CLOSE = 2
-
-	SERVER_PING_OK = 1	//正常：PING 成功
-	SERVER_PING_FAIL = 2 //异常：PING 失败了
-
-)
-
 type Server struct {
-	Id       int    `json:"id"`
-	Name     string `json:"name"`
-	Platform string `json:"platform"`
-	OutIp    string `json:"out_ip"`
-	InnerIp  string `json:"inner_ip"`
-	Env      int `json:"env"`
-	Status   int    `json:"status"` //1正常2关闭
-	PingStatus int 	`json:"ping_status"`//1正常2异常
-	SuperVisorStatus int `json:"super_visor_status"`
+	Id               int    `json:"id"`
+	Name             string `json:"name"`
+	Platform         string `json:"platform"`
+	OutIp            string `json:"out_ip"`
+	InnerIp          string `json:"inner_ip"`
+	Env              int    `json:"env"`
+	Status           int    `json:"status"`      //1正常2关闭
+	PingStatus       int    `json:"ping_status"` //1正常2异常
+	SuperVisorStatus int    `json:"super_visor_status"`
 }
 
 type ServerManager struct {

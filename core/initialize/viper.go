@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/viper"
 	"io/ioutil"
 	"net/http"
+	"zgoframe/core"
 	"zgoframe/core/global"
 	"zgoframe/util"
 )
@@ -102,7 +103,7 @@ func GetNewViper(prefix string) (myViper *viper.Viper, config global.Config, err
 	}
 	//监听 配置文件 变化
 	//有点鸡肋，如果是单独的字符串变更还好，重新再加载一下全局变量，而如果像IP PORT 这些变了，当前已经建立的TCP连接必须得断掉，那跟重启没啥区分了...
-	if config.Viper.Watch == global.CONFIG_STATUS_OPEN {
+	if config.Viper.Watch == core.GLOBAL_CONFIG_MODEL_STATUS_OPEN {
 		util.MyPrint(viperOption.PrintPrefix + "viper watch startup")
 		myViper.WatchConfig()
 		handleFunc := func(in fsnotify.Event) {

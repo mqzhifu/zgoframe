@@ -14,17 +14,6 @@ import (
 	"zgoframe/util"
 )
 
-const (
-	//配置文件的类型
-	DEFAULT_CONFIT_TYPE        = "toml"
-	DEFAULT_CONFIG_FILE_NAME   = "config"
-	DEFAULT_CONFIG_SOURCE_TYPE = "file"
-
-	//每个配置文件中模块的开头
-	CONFIG_STATUS_OPEN = "open"
-	CONFIG_STATUS_OFF  = "off"
-)
-
 type Global struct {
 	Vip              *viper.Viper
 	Zap              *zap.Logger

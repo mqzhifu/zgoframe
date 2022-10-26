@@ -15,20 +15,6 @@ import (
 	"time"
 )
 
-const VERSION_LENGTH = 3
-const APP_ID_LENGTH = 32
-
-type Privileges uint16
-
-const (
-	KJoinChannel        = 1
-	KPublishAudioStream = 2
-	KPublishVideoStream = 3
-	KPublishDataStream  = 4
-
-	KLoginRtm            = 1000
-)
-
 type AccessToken struct {
 	AppID          string
 	AppCertificate string
@@ -320,16 +306,7 @@ func unPackMessages(msg_str string) (uint32, uint32, map[uint16]uint32, error) {
 	return salt, ts, msg_map, nil
 }
 
-
 //=================================================================================================================
-
-// Role Type
-type RTMRole uint16
-
-// Role consts
-const (
-	RoleRtmUser = 1
-)
 
 //RtmTokenBuilder class
 type RtmTokenBuilder struct {
@@ -354,19 +331,6 @@ func RTMBuildToken(appID string, appCertificate string, userAccount string, role
 }
 
 //=====================================
-
-
-
-// Role Type
-type RTCRole uint16
-
-// Role consts
-const (
-	RoleAttendee   = 0
-	RolePublisher  = 1
-	RoleSubscriber = 2
-	RoleAdmin      = 101
-)
 
 //RtcTokenBuilder class
 type RtcTokenBuilder struct {

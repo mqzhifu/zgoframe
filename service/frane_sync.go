@@ -10,24 +10,6 @@ import (
 	"zgoframe/util"
 )
 
-const (
-	LOCK_MODE_PESSIMISTIC = 1 //囚徒
-	LOCK_MODE_OPTIMISTIC  = 2 //乐观
-
-	//一个副本的，一条消息的，同步状态
-	PLAYERS_ACK_STATUS_INIT = 1 //初始化
-	PLAYERS_ACK_STATUS_WAIT = 2 //等待玩家确认
-	PLAYERS_ACK_STATUS_OK   = 3 //所有玩家均已确认
-
-	PLAYER_STATUS_ONLINE  = 1 //在线
-	PLAYER_STATUS_OFFLINE = 2 //离线
-
-	PLAYER_NO_READY  = 1
-	PLAYER_HAS_READY = 2
-
-	CTX_DONE_PRE = "ctx.done() "
-)
-
 type FrameSync struct {
 	Option    FrameSyncOption
 	CloseChan chan int

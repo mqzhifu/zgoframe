@@ -11,19 +11,6 @@ import (
 	"sync"
 )
 
-const (
-	//FILE_TYPE_ALL   = 1
-	FILE_TYPE_IMG   = 2
-	FILE_TYPE_DOC   = 3
-	FILE_TYPE_VIDEO = 4
-
-	UPLOAD_STORE_LOCAL_OFF  = 1
-	UPLOAD_STORE_LOCAL_OPEN = 2
-
-	UPLOAD_STORE_OSS_OFF = 0
-	UPLOAD_STORE_OSS_ALI = 1
-)
-
 //type FileDownInfo struct {
 //	PieceNum         int
 //	PieceSize        int

@@ -23,7 +23,7 @@ func (twinAgora *TwinAgora) CallPeople(callPeopleReq pb.CallPeopleReq, conn *uti
 		return
 	}
 
-	if callPeopleReq.PeopleType != int32(USER_ROLE_DOCTOR) {
+	if callPeopleReq.PeopleType != int32(model.USER_ROLE_DOCTOR) {
 		callPeopleRes.ErrCode = 420
 		callPeopleRes.ErrMsg = twinAgora.Lang.NewString(420)
 		twinAgora.MakeError(callPeopleRes.ErrMsg)
@@ -77,7 +77,7 @@ func (twinAgora *TwinAgora) CallPeople(callPeopleReq pb.CallPeopleReq, conn *uti
 	}
 
 	var userDoctorList []model.User
-	err := twinAgora.Gorm.Where(" role =  ?", USER_ROLE_DOCTOR).Find(&userDoctorList).Error
+	err := twinAgora.Gorm.Where(" role =  ?", model.USER_ROLE_DOCTOR).Find(&userDoctorList).Error
 	if err != nil {
 		callPeopleRes.ErrCode = 402
 		callPeopleRes.ErrMsg = twinAgora.Lang.NewString(402)

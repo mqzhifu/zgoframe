@@ -13,29 +13,6 @@ import (
 	"zgoframe/util"
 )
 
-const (
-	USER_ROLE_NORMAL = 1 //普通用户
-	USER_ROLE_DOCTOR = 2 //专家
-
-	CALL_USER_PEOPLE_ALL     = 1 //呼叫所有人
-	CALL_USER_PEOPLE_GROUP   = 2 //按照<小组>呼叫
-	CALL_USER_PEOPLE_PROVIDE = 3 //用户自己指定呼叫的人
-
-	RTC_ROOM_STATUS_CALLING = 1 //房间状态：呼叫中
-	RTC_ROOM_STATUS_EXECING = 2 //房间状态：运行中
-	RTC_ROOM_STATUS_END     = 3 //房间状态：已结束
-
-	RTC_ROOM_END_STATUS_TIMEOUT_CALLING = 10 //房间结束状态标识：呼叫超时(也可能是连接断了)
-	RTC_ROOM_END_STATUS_TIMEOUT_EXEC    = 11 //房间结束状态标识：运行超时(也可能是连接断了)
-	RTC_ROOM_END_STATUS_CONN_CLOSE      = 2  //房间结束状态标识：用户退出
-	RTC_ROOM_END_STATUS_DENY            = 3  //房间结束状态标识：被呼叫人拒绝
-	RTC_ROOM_END_STATUS_CANCEL          = 4  //房间结束状态标识：呼叫者取消
-	RTC_ROOM_END_STATUS_USER_LEAVE      = 4  //房间结束状态标识：用户离开
-
-	RTC_PUSH_MSG_EVENT_FD_CREATE_REPEAT = 400
-	RTC_PUSH_MSG_EVENT_UID_NOT_IN_MAP   = 401
-)
-
 //var ERR_ROOM_ID_NOT_IN_MAP = "roomId not in map : "
 //var ERR_ROOM_STATUS_END_WAIT_DEMON = "RTC_ROOM_STATUS_END , waiting demon coroutines process..."
 //var ERR_ROOM_ID_EMPTY = "room id is empty:"

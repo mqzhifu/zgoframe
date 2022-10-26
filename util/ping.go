@@ -15,12 +15,6 @@ import (
 	"golang.org/x/net/ipv6"
 )
 
-const (
-	TimeSliceLength  = 8
-	ProtocolICMP     = 1
-	ProtocolIPv6ICMP = 58
-)
-
 var (
 	ipv4Proto = map[string]string{"ip": "ip4:icmp", "udp": "udp4"}
 	ipv6Proto = map[string]string{"ip": "ip6:ipv6-icmp", "udp": "udp6"}
@@ -416,7 +410,7 @@ mainloop:
 			if handler != nil {
 				handler()
 			}
-			p.debugln("Run():",once,err )
+			p.debugln("Run():", once, err)
 			if once || err != nil {
 				break mainloop
 			}
@@ -548,7 +542,6 @@ func (p *Pinger) recvICMP(conn *icmp.PacketConn, recv chan<- *packet, ctx *myCon
 					wg.Done()
 					return
 
-
 				} else {
 					p.debugln("recvICMP(): OpError happen", err)
 					p.mu.Lock()
@@ -562,11 +555,11 @@ func (p *Pinger) recvICMP(conn *icmp.PacketConn, recv chan<- *packet, ctx *myCon
 				}
 			}
 		}
-		p.debugln("recvICMP(): p.recv <- packet , len:",number)
+		p.debugln("recvICMP(): p.recv <- packet , len:", number)
 
 		select {
 		case recv <- &packet{bytes: bytes, addr: ra}:
-			p.debugln("recvICMP(): read data ",recv)
+			p.debugln("recvICMP(): read data ", recv)
 		case <-ctx.stop:
 			p.debugln("recvICMP(): <-ctx.stop")
 			wg.Done()
@@ -588,7 +581,7 @@ func (p *Pinger) procRecv(recv *packet, queue map[string]*net.IPAddr) {
 		return
 	}
 	addr := ipaddr.String()
-	MyPrint("im procRecv 2:",addr)
+	MyPrint("im procRecv 2:", addr)
 	//p.mu.Lock()
 	//if _, ok := p.addrs[addr]; !ok {
 	//	p.mu.Unlock()
@@ -619,7 +612,7 @@ func (p *Pinger) procRecv(recv *packet, queue map[string]*net.IPAddr) {
 	}
 
 	//a ,e := m.Body.Marshal(64)
-	MyPrint("m.Type:",m.Type)
+	MyPrint("m.Type:", m.Type)
 
 	if m.Type != ipv4.ICMPTypeEchoReply && m.Type != ipv6.ICMPTypeEchoReply {
 		return

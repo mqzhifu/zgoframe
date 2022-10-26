@@ -4,105 +4,106 @@ import (
 	"github.com/gomodule/redigo/redis"
 	"strconv"
 	"strings"
+	"zgoframe/service"
 	"zgoframe/util"
 )
 
 // 1. 等待计算   2计算中   3匹配成功
 type PlayerStatusElement struct {
-	PlayerId 		int
-	Status 			int
-	RuleId			int
-	Weight			float32
-	GroupId			int
-	ATime 			int
-	UTime 			int
-	SignTimeout		int
-	SuccessTimeout	int
+	PlayerId       int
+	Status         int
+	RuleId         int
+	Weight         float32
+	GroupId        int
+	ATime          int
+	UTime          int
+	SignTimeout    int
+	SuccessTimeout int
 }
 
 type PlayerStatus struct {
-
 }
 
-func NewPlayerStatus()*PlayerStatus{
+func NewPlayerStatus() *PlayerStatus {
 	mylog.Info("Global var :NewPlayerStatus")
 	playerStatus := new(PlayerStatus)
 	return playerStatus
 }
 
-func (playerStatus *PlayerStatus) newPlayerStatusElement ()PlayerStatusElement{
+func (playerStatus *PlayerStatus) newPlayerStatusElement() PlayerStatusElement {
 	newPlayerStatusElement := PlayerStatusElement{
-		PlayerId: 0,
-		Status:PlayerStatusInit,
-		RuleId:0,
-		SignTimeout:0,
-		GroupId:0,
+		PlayerId:    0,
+		Status:      service.PlayerStatusInit,
+		RuleId:      0,
+		SignTimeout: 0,
+		GroupId:     0,
 	}
 	return newPlayerStatusElement
 }
 
-func (playerStatus *PlayerStatus) getRedisPrefixKey( )string{
-	return redisPrefix + redisSeparation + "pstatus"+ redisSeparation
+func (playerStatus *PlayerStatus) getRedisPrefixKey() string {
+	return service.RedisPrefix + service.RedisSeparation + "pstatus" + service.RedisSeparation
 	//strPlayerId := strconv.Itoa( playerId )
 	//return playerStatus.GetCommonRedisPrefix() + strPlayerId
 }
 
-func (playerStatus *PlayerStatus) getRedisStatusPrefixByPid(playerId int)string{
+func (playerStatus *PlayerStatus) getRedisStatusPrefixByPid(playerId int) string {
 	//return redisPrefix + redisSeparation + "status" + redisSeparation
 	//return redisPrefix + redisSeparation + "status"
-	return playerStatus.getRedisPrefixKey()+ strconv.Itoa( playerId )
+	return playerStatus.getRedisPrefixKey() + strconv.Itoa(playerId)
 }
 
-func (playerStatus *PlayerStatus) getRulePlayerPrefixById(ruleId int)string{
-	return playerStatus.getRedisPrefixKey() + "rule" + redisSeparation + strconv.Itoa(ruleId)
+func (playerStatus *PlayerStatus) getRulePlayerPrefixById(ruleId int) string {
+	return playerStatus.getRedisPrefixKey() + "rule" + service.RedisSeparation + strconv.Itoa(ruleId)
 }
+
 //索引，一个rule里包含的玩家信息，主要用于批量删除，也可用做一个rule的当前所有玩家列表
-func (playerStatus *PlayerStatus) addOneRulePlayer(redisConn redis.Conn ,playerId int ,ruleId int){
+func (playerStatus *PlayerStatus) addOneRulePlayer(redisConn redis.Conn, playerId int, ruleId int) {
 	key := playerStatus.getRulePlayerPrefixById(ruleId)
-	res,err := myredis.Send(redisConn,"zadd",redis.Args{}.Add(key).Add(0).Add(playerId)...)
+	res, err := myredis.Send(redisConn, "zadd", redis.Args{}.Add(key).Add(0).Add(playerId)...)
 	//res,err := myredis.RedisDo("zadd",redis.Args{}.Add(key).Add(0).Add(playerId)...)
-	util.MyPrint("addRulePlayer:",res,err)
+	util.MyPrint("addRulePlayer:", res, err)
 }
 
-func (playerStatus *PlayerStatus) delOneRulePlayer(redisConn redis.Conn ,playerId int ,ruleId int){
+func (playerStatus *PlayerStatus) delOneRulePlayer(redisConn redis.Conn, playerId int, ruleId int) {
 	key := playerStatus.getRulePlayerPrefixById(ruleId)
-	res,err := myredis.Send(redisConn,"zrem",redis.Args{}.Add(key).Add(playerId)...)
+	res, err := myredis.Send(redisConn, "zrem", redis.Args{}.Add(key).Add(playerId)...)
 	//res,err := myredis.RedisDo("zrem",redis.Args{}.Add(key).Add(playerId)...)
-	util.MyPrint("delOneRulePlayer:",res,err)
+	util.MyPrint("delOneRulePlayer:", res, err)
 }
-func (playerStatus *PlayerStatus) getOneRuleAllPlayer( ruleId int)[]string{
+func (playerStatus *PlayerStatus) getOneRuleAllPlayer(ruleId int) []string {
 	key := playerStatus.getRulePlayerPrefixById(ruleId)
 	//ZRANGEBYSCORE salary -inf +inf WITHSCORES
-	res,err := redis.Strings( myredis.RedisDo("ZRANGEBYSCORE",redis.Args{}.Add(key).Add("-inf").Add("+inf")...))
-	util.MyPrint("getOneRuleAllPlayer:",res,err)
+	res, err := redis.Strings(myredis.RedisDo("ZRANGEBYSCORE", redis.Args{}.Add(key).Add("-inf").Add("+inf")...))
+	util.MyPrint("getOneRuleAllPlayer:", res, err)
 	return res
 }
 
-func (playerStatus *PlayerStatus) getOneRuleAllPlayerCnt( ruleId int)int{
+func (playerStatus *PlayerStatus) getOneRuleAllPlayerCnt(ruleId int) int {
 	key := playerStatus.getRulePlayerPrefixById(ruleId)
 	//ZRANGEBYSCORE salary -inf +inf WITHSCORES
-	res,err := redis.Int( myredis.RedisDo("ZCOUNT",redis.Args{}.Add(key).Add("-inf").Add("+inf")...))
-	util.MyPrint("getOneRuleAllPlayer:",res,err)
+	res, err := redis.Int(myredis.RedisDo("ZCOUNT", redis.Args{}.Add(key).Add("-inf").Add("+inf")...))
+	util.MyPrint("getOneRuleAllPlayer:", res, err)
 	return res
 }
 
 //根据PID 获取一个玩家的状态信息
-func (playerStatus *PlayerStatus)GetById(playerId int)(playerStatusElement PlayerStatusElement ,isEmpty int){
+func (playerStatus *PlayerStatus) GetById(playerId int) (playerStatusElement PlayerStatusElement, isEmpty int) {
 	//var playerStatusElement PlayerStatusElement
 	key := playerStatus.getRedisStatusPrefixByPid(playerId)
-	res ,err := redis.Values(myredis.RedisDo("HGETALL",key))
-	if err != nil{
-		return playerStatusElement,1
+	res, err := redis.Values(myredis.RedisDo("HGETALL", key))
+	if err != nil {
+		return playerStatusElement, 1
 	}
 	//playerStatusElement := &PlayerStatusElement{}
 	if err := redis.ScanStruct(res, &playerStatusElement); err != nil {
-		return playerStatusElement,1
+		return playerStatusElement, 1
 	}
 	//playerStatusElement =  playerStatus.strToStruct(res)
-	return playerStatusElement,0
+	return playerStatusElement, 0
 }
 
-func  (playerStatus *PlayerStatus)  upInfo( newPlayerStatusElement PlayerStatusElement,redisConnFD redis.Conn)(bool ,error){
+func (playerStatus *PlayerStatus) upInfo(newPlayerStatusElement PlayerStatusElement, redisConnFD redis.Conn) (bool, error) {
 	//fmt.Printf("%+v , %+v \n",playerStatusElement,newPlayerStatusElement)
 	//queueSign.Log.Info("upInfo status , old :",playerStatusElementMap[player.Id].Status ,  " , new : ",newPlayerStatusElement.Status )
 	//mylog.Info("action Upinfo , old status :",playerStatusElement.Status , " new status :" ,newPlayerStatusElement.Status)
@@ -117,100 +118,102 @@ func  (playerStatus *PlayerStatus)  upInfo( newPlayerStatusElement PlayerStatusE
 	//	}
 	//	mylog.Info("playerStatus up One")
 	//}
-	playerStatus.delOneRulePlayer(redisConnFD,newPlayerStatusElement.PlayerId,newPlayerStatusElement.RuleId)
-	playerStatus.addOneRulePlayer(redisConnFD,newPlayerStatusElement.PlayerId,newPlayerStatusElement.RuleId)
+	playerStatus.delOneRulePlayer(redisConnFD, newPlayerStatusElement.PlayerId, newPlayerStatusElement.RuleId)
+	playerStatus.addOneRulePlayer(redisConnFD, newPlayerStatusElement.PlayerId, newPlayerStatusElement.RuleId)
 
 	newPlayerStatusElement.UTime = util.GetNowTimeSecondToInt()
-	playerStatus.setInfo(redisConnFD,newPlayerStatusElement)
+	playerStatus.setInfo(redisConnFD, newPlayerStatusElement)
 
-	return true,nil
+	return true, nil
 }
 
-func (playerStatus *PlayerStatus)strToStruct(str string)PlayerStatusElement{
-	strArr := strings.Split(str,separation)
+func (playerStatus *PlayerStatus) strToStruct(str string) PlayerStatusElement {
+	strArr := strings.Split(str, service.Separation)
 	playerStatusElement := PlayerStatusElement{
-		PlayerId 		: util.Atoi(strArr[0]),
-		Status 			:util.Atoi(strArr[1]),
-		RuleId			:util.Atoi(strArr[2]),
+		PlayerId: util.Atoi(strArr[0]),
+		Status:   util.Atoi(strArr[1]),
+		RuleId:   util.Atoi(strArr[2]),
 		//Weight			:zlib.Atoi(strArr[0]),
-		GroupId			:util.Atoi(strArr[4]),
-		ATime 			:util.Atoi(strArr[5]),
-		UTime 			:util.Atoi(strArr[6]),
-		SignTimeout		:util.Atoi(strArr[7]),
-		SuccessTimeout	:util.Atoi(strArr[8]),
+		GroupId:        util.Atoi(strArr[4]),
+		ATime:          util.Atoi(strArr[5]),
+		UTime:          util.Atoi(strArr[6]),
+		SignTimeout:    util.Atoi(strArr[7]),
+		SuccessTimeout: util.Atoi(strArr[8]),
 	}
 
 	return playerStatusElement
 }
 
-func  (playerStatus *PlayerStatus) setInfo(conn redis.Conn,playerStatusElement PlayerStatusElement ){
+func (playerStatus *PlayerStatus) setInfo(conn redis.Conn, playerStatusElement PlayerStatusElement) {
 	key := playerStatus.getRedisStatusPrefixByPid(playerStatusElement.PlayerId)
-	res,err  := myredis.Send(conn,"HMSET",redis.Args{}.Add(key).AddFlat(&playerStatusElement)...)
+	res, err := myredis.Send(conn, "HMSET", redis.Args{}.Add(key).AddFlat(&playerStatusElement)...)
 	//res,err  := myredis.RedisDo("HMSET",redis.Args{}.Add(key).AddFlat(&playerStatusElement)...)
-	util.MyPrint("playerStatus setInfo : ",playerStatusElement,res,err)
+	util.MyPrint("playerStatus setInfo : ", playerStatusElement, res, err)
 }
+
 //tmp process
-func (playerStatus *PlayerStatus)  delOneById(redisConn redis.Conn,playerId int){
-	playerStatusElement,isEmpty := playerStatus.GetById(playerId)
-	if isEmpty == 1{
+func (playerStatus *PlayerStatus) delOneById(redisConn redis.Conn, playerId int) {
+	playerStatusElement, isEmpty := playerStatus.GetById(playerId)
+	if isEmpty == 1 {
 		mylog.Error(" getByid is empty!!!")
 		return
 	}
 	key := playerStatus.getRedisStatusPrefixByPid(playerId)
-	res,_ := myredis.RedisDo("del",key)
-	util.MyPrint("playerStatus delOneById , id : "+strconv.Itoa(playerId) + " , rs : ", res)
+	res, _ := myredis.RedisDo("del", key)
+	util.MyPrint("playerStatus delOneById , id : "+strconv.Itoa(playerId)+" , rs : ", res)
 
-	playerStatus.delOneRulePlayer(redisConn,playerId,playerStatusElement.RuleId)
+	playerStatus.delOneRulePlayer(redisConn, playerId, playerStatusElement.RuleId)
 	//启用事务后，这里先做 个补救
 	myredis.RedisDo("ping")
 }
+
 //删除所有玩家状态值
-func  (playerStatus *PlayerStatus)  delAllPlayers(){
+func (playerStatus *PlayerStatus) delAllPlayers() {
 	mylog.Warn("delAllPlayers ")
 	key := playerStatus.getRedisPrefixKey()
 	keys := key + "*"
 	myredis.RedisDelAllByPrefix(keys)
 }
-func (playerStatus *PlayerStatus) checkSignTimeout(rule Rule,playerStatusElement PlayerStatusElement)(isTimeout bool ){
+func (playerStatus *PlayerStatus) checkSignTimeout(rule Rule, playerStatusElement PlayerStatusElement) (isTimeout bool) {
 	now := util.GetNowTimeSecondToInt()
-	if(now > playerStatusElement.SignTimeout){
+	if now > playerStatusElement.SignTimeout {
 		return true
 	}
 	return false
 }
 
-func  (playerStatus *PlayerStatus)  getAllPlayers()(list map[int]PlayerStatusElement,err error){
+func (playerStatus *PlayerStatus) getAllPlayers() (list map[int]PlayerStatusElement, err error) {
 	mylog.Warn("getAllPlayers ")
 	key := playerStatus.getRedisPrefixKey()
 	keys := key + "*"
 
-	res,err := redis.Strings(  myredis.RedisDo("keys",keys))
-	if err != nil{
-		util.ExitPrint("redis keys err :",err.Error())
+	res, err := redis.Strings(myredis.RedisDo("keys", keys))
+	if err != nil {
+		util.ExitPrint("redis keys err :", err.Error())
 	}
-	mylog.Debug("all element will num :"+strconv.Itoa(len(res)))
+	mylog.Debug("all element will num :" + strconv.Itoa(len(res)))
 	if len(res) <= 0 {
 		mylog.Warn(" keys is null,no need del...")
-		return list,err
+		return list, err
 	}
 	list = make(map[int]PlayerStatusElement)
-	for _,p_key := range res{
+	for _, p_key := range res {
 		//onePlayerRedis,err := myredis.RedisDo("get",v)
 		//mylog.Debug("get one ",v , " ,  onePlayerRedis ",onePlayerRedis , " , err : ",err)
-		if strings.Index(p_key, "rule") != -1{
+		if strings.Index(p_key, "rule") != -1 {
 			continue
 		}
-		res ,err := redis.Values(myredis.RedisDo("HGETALL",p_key))
-		if err != nil{
+		res, err := redis.Values(myredis.RedisDo("HGETALL", p_key))
+		if err != nil {
 			util.ExitPrint("get oneplay error")
 		}
 		playerStatusElement := PlayerStatusElement{}
 		if err := redis.ScanStruct(res, &playerStatusElement); err != nil {
-			util.ExitPrint("get oneplay error 2", p_key,err)
+			util.ExitPrint("get oneplay error 2", p_key, err)
 		}
 		list[playerStatusElement.PlayerId] = playerStatusElement
 	}
-	return list,err
+	return list, err
 }
 
 //func (playerStatus *PlayerStatus)  delOne(playerStatusElement PlayerStatusElement){
@@ -301,5 +304,3 @@ func  (playerStatus *PlayerStatus)  getAllPlayers()(list map[int]PlayerStatusEle
 //
 //	return commandValue
 //}
-
-

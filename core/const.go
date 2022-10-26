@@ -10,8 +10,9 @@ const (
 //@parse 全局(公共) 配置类型
 const (
 	DEFAULT_GLOBAL_CONFIG_TYPE_FILE   = "file"   //从文件中读取配置信息
-	DEFAULT_GLOBAL_CONFIG_TYPE_ETCD   = "etcd"   //从ETCD中读取配置信息(暂未使用)
-	DEFAULT_GLOBAL_CONFIG_TYPE_CENTER = "center" //从配置吣读取配置信息(暂未使用)
+	DEFAULT_GLOBAL_CONFIG_TYPE_ETCD   = "etcd"   //从ETCD中读取配置信息-暂未使用
+	DEFAULT_GLOBAL_CONFIG_TYPE_CENTER = "center" //从配置吣读取配置信息-暂未使用
+
 )
 
 //@parse 全局配置文件中，每个模块的：开关选项

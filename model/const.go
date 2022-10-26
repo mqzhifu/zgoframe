@@ -31,18 +31,18 @@ const (
 	PURPOSE_SET_PAY_PASSWORD   = 24 //设置支付密码
 )
 
-//func GetConstListPurpose() map[string]int {
-//	list := make(map[string]int)
-//	list["注册"] = PURPOSE_REGISTER
-//	list["找回密码"] = PURPOSE_FIND_BACK_PASSWORD
-//	list["设置密码"] = PURPOSE_SET_PASSWORD
-//	list["登陆"] = PURPOSE_LOGIN
-//	list["设置手机号"] = PURPOSE_SET_MOBILE
-//	list["设置邮件"] = PURPOSE_SET_EMAIL
-//	list["设置支付密码"] = PURPOSE_SET_PAY_PASSWORD
-//
-//	return list
-//}
+func GetConstListPurpose() map[string]int {
+	list := make(map[string]int)
+	list["注册"] = PURPOSE_REGISTER
+	list["找回密码"] = PURPOSE_FIND_BACK_PASSWORD
+	list["设置密码"] = PURPOSE_SET_PASSWORD
+	list["登陆"] = PURPOSE_LOGIN
+	list["设置手机号"] = PURPOSE_SET_MOBILE
+	list["设置邮件"] = PURPOSE_SET_EMAIL
+	list["设置支付密码"] = PURPOSE_SET_PAY_PASSWORD
+
+	return list
+}
 
 //@parse 平台类型
 const (
@@ -57,24 +57,24 @@ const (
 	PLATFORM_UNKNOW             = 99 //未知
 )
 
-//func GetConstListPlatform() map[string]int {
-//	list := make(map[string]int)
-//	list["MAC台式浏览器"] = PLATFORM_MAC_PC_BROWSER
-//	list["MAC台式APP"] = PLATFORM_MAC_APP
-//
-//	list["WIN台式浏览器"] = PLATFORM_WIN_PC_BROWSER
-//	list["WIN台式APP"] = PLATFORM_WIN_APP
-//
-//	list["安卓手机浏览器"] = PLATFORM_ANDROID_H5_BROWSER
-//	list["安卓手机APP"] = PLATFORM_ANDROID_APP
-//
-//	list["IOS手机浏览器"] = PLATFORM_IOS_H5_BROWSER
-//	list["IOS手机APP"] = PLATFORM_IOS_APP
-//
-//	list["未知"] = PLATFORM_UNKNOW
-//
-//	return list
-//}
+func GetConstListPlatform() map[string]int {
+	list := make(map[string]int)
+	list["MAC台式浏览器"] = PLATFORM_MAC_PC_BROWSER
+	list["MAC台式APP"] = PLATFORM_MAC_APP
+
+	list["WIN台式浏览器"] = PLATFORM_WIN_PC_BROWSER
+	list["WIN台式APP"] = PLATFORM_WIN_APP
+
+	list["安卓手机浏览器"] = PLATFORM_ANDROID_H5_BROWSER
+	list["安卓手机APP"] = PLATFORM_ANDROID_APP
+
+	list["IOS手机浏览器"] = PLATFORM_IOS_H5_BROWSER
+	list["IOS手机APP"] = PLATFORM_IOS_APP
+
+	list["未知"] = PLATFORM_UNKNOW
+
+	return list
+}
 
 //@parse 验证码状态
 const (

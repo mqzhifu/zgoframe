@@ -9,7 +9,6 @@ import (
 	"zgoframe/http/request"
 	httpresponse "zgoframe/http/response"
 	"zgoframe/model"
-	myservice "zgoframe/service"
 	"zgoframe/service/cicd"
 	"zgoframe/util"
 )
@@ -75,12 +74,12 @@ func ProjectList(c *gin.Context) {
 // @Success 200 {object} []httpresponse.ConstInfo "常量列表"
 // @Router /tools/const/list [get]
 func ConstList(c *gin.Context) {
-	var a model.Project
-	c.ShouldBind(&a)
-
-	list := GetConstList()
-
-	httpresponse.OkWithAll(list, "成功", c)
+	//var a model.Project
+	//c.ShouldBind(&a)
+	//
+	//list := GetConstList()
+	//
+	//httpresponse.OkWithAll(list, "成功", c)
 
 }
 
@@ -94,30 +93,32 @@ func ConstList(c *gin.Context) {
 // @Success 200 {string} string "sql script"
 // @Router /tools/const/init/db [get]
 func ConstInitDb(c *gin.Context) {
-	/*
-		delete from sys_dictionaries where id > 6;
-		delete from sys_dictionary_details where sys_dictionary_id > 6;
-	*/
-
-	//list := global.V.MyService.User.GetConstList()
-	list := GetConstList()
+	constHandle := util.NewConstHandle()
+	enumConstPool := constHandle.EnumConstPool
 
 	sqlTemp := "INSERT INTO `sys_dictionaries` (`id`, `created_at`, `updated_at`, `deleted_at`, `name`, `type`, `status`, `desc`) VALUES (#id#, '2022-04-04 00:01:01',NULL, NULL, '#name#', '#key#', '1', '')"
 	subSqlTemp := "INSERT INTO `sys_dictionary_details` (`id`, `created_at`, `updated_at`, `deleted_at`, `label`, `value`, `status`, `sort`, `sys_dictionary_id`) VALUES (NULL,  '2022-04-04 00:00:01',NULL , NULL, '#name#', '#value#', '1', '0', '#link_id#')"
 	sqlStr := ""
 	id := 10
-	for _, v := range list {
+	for _, EnumConst := range enumConstPool {
 		sql1 := strings.Replace(sqlTemp, "#id#", strconv.Itoa(id), -1)
-		sql1 = strings.Replace(sql1, "#name#", v.Name, -1)
-		sql1 = strings.Replace(sql1, "#key#", v.Key, -1)
+		sql1 = strings.Replace(sql1, "#name#", EnumConst.Desc, -1)
+		sql1 = strings.Replace(sql1, "#key#", EnumConst.CommonPrefix, -1)
 		//util.MyPrint(sql1)
 		sqlStr += sql1 + ";  \n"
 		//sqlList = append(sqlList, sql1)
 
-		for k, sub := range v.List {
+		for _, constItem := range EnumConst.ConstList {
+			value := ""
+			if EnumConst.Type == "int" {
+				aa := constItem.Value.(int)
+				value = strconv.Itoa(aa)
+			} else {
+				value = constItem.Value.(string)
+			}
 			sql2_sub := strings.Replace(subSqlTemp, "#link_id#", strconv.Itoa(id), -1)
-			sql2_sub = strings.Replace(sql2_sub, "#name#", k, -1)
-			sql2_sub = strings.Replace(sql2_sub, "#value#", strconv.Itoa(sub), -1)
+			sql2_sub = strings.Replace(sql2_sub, "#name#", constItem.Desc, -1)
+			sql2_sub = strings.Replace(sql2_sub, "#value#", value, -1)
 			sqlStr += sql2_sub + ";    \n"
 			//util.MyPrint("    " + sql2_sub)
 		}
@@ -259,169 +260,169 @@ func AddConstLis(row httpresponse.ConstInfo) {
 	ConstDataList = append(ConstDataList, row)
 }
 
-func GetConstList() []httpresponse.ConstInfo {
-	AddConstLis(httpresponse.ConstInfo{
-		List: util.GetConstListEnv(),
-		Name: "env-环境",
-		Key:  "ENV",
-	})
-
-	AddConstLis(httpresponse.ConstInfo{
-		List: model.GetConstListProjectType(),
-		Name: "项目类型",
-		Key:  "PROJECT_TYPE",
-	})
-
-	AddConstLis(httpresponse.ConstInfo{
-		List: model.GetConstListProjectStatus(),
-		Name: "项目状态",
-		Key:  "PROJECT_STATUS",
-	})
-
-	AddConstLis(httpresponse.ConstInfo{
-		List: model.GetConstListPlatform(),
-		Name: "平台类型",
-		Key:  "PLATFORM",
-	})
-
-	AddConstLis(httpresponse.ConstInfo{
-		List: model.GetConstListUserTypeThird(),
-		Name: "用户类型3方",
-		Key:  "USER_TYPE_THIRD",
-	})
-
-	AddConstLis(httpresponse.ConstInfo{
-		List: model.GetConstListUserRegType(),
-		Name: "用户注册类型",
-		Key:  "USER_REG_TYPE",
-	})
-
-	AddConstLis(httpresponse.ConstInfo{
-		List: model.GetConstListUserSex(),
-		Name: "用户性别",
-		Key:  "USER_SEX",
-	})
-
-	AddConstLis(httpresponse.ConstInfo{
-		List: model.GetConstListUserStatus(),
-		Name: "用户状态",
-		Key:  "USER_STATUS",
-	})
-
-	AddConstLis(httpresponse.ConstInfo{
-		List: model.GetConstListUserTypeThirdCN(),
-		Name: "用户类型-中国",
-		Key:  "USER_TYPE_THIRD_CN",
-	})
-
-	AddConstLis(httpresponse.ConstInfo{
-		List: model.GetConstListUserTypeThirdNotCN(),
-		Name: "用户类型-外国",
-		Key:  "USER_TYPE_THIRD_NOT_CN",
-	})
-
-	AddConstLis(httpresponse.ConstInfo{
-		List: model.GetConstListUserGuest(),
-		Name: "游客分类",
-		Key:  "USER_GUEST",
-	})
-
-	AddConstLis(httpresponse.ConstInfo{
-		List: model.GetConstListUserRobot(),
-		Name: "机器人",
-		Key:  "USER_ROBOT",
-	})
-
-	AddConstLis(httpresponse.ConstInfo{
-		List: model.GetConstListUserTest(),
-		Name: "测试账号",
-		Key:  "USER_TEST",
-	})
-
-	AddConstLis(httpresponse.ConstInfo{
-		List: model.GetConstListPurpose(),
-		Name: "本次操作目的",
-		Key:  "PURPOSE",
-	})
-
-	AddConstLis(httpresponse.ConstInfo{
-		List: model.GetConstListAuthCodeStatus(),
-		Name: "验证码状态",
-		Key:  "AUTH_CODE_STATUS",
-	})
-
-	AddConstLis(httpresponse.ConstInfo{
-		List: model.GetConstListRuleType(),
-		Name: "配置规则类型",
-		Key:  "RULE_TYPE",
-	})
-
-	AddConstLis(httpresponse.ConstInfo{
-		List: model.GetConstListSendMsgStatus(),
-		Name: "消息发送状态",
-		Key:  "SEND_MSG_STATUS",
-	})
-
-	AddConstLis(httpresponse.ConstInfo{
-		List: model.GetConstListProjectLanguage(),
-		Name: "项目开发语言",
-		Key:  "PROJECT_LANG",
-	})
-
-	//AddConstLis(httpresponse.ConstInfo{
-	//	List: model.GetConstListFileHashType(),
-	//	Name: "文件hash类型",
-	//	Key:  "FILE_HASH_TYPE",
-	//})
-
-	//
-	AddConstLis(httpresponse.ConstInfo{
-		List: model.GetConstListSmsChannel(),
-		Name: "短信渠道",
-		Key:  "SMS_CHANNEL",
-	})
-
-	AddConstLis(httpresponse.ConstInfo{
-		List: model.GetConstListServerPlatform(),
-		Name: "服务器平台",
-		Key:  "SERVER_PLATFORM",
-	})
-
-	AddConstLis(httpresponse.ConstInfo{
-		List: model.GetConstListCicdPublishStatus(),
-		Name: "CICD发布状态",
-		Key:  "CICD_PUBLISH_STATUS",
-	})
-
-	AddConstLis(httpresponse.ConstInfo{
-		List: model.GetConstListCicdPublishDeployStatus(),
-		Name: "CICD发布部署状态",
-		Key:  "CICD_PUBLISH_STATUS",
-	})
-
-	AddConstLis(httpresponse.ConstInfo{
-		List: myservice.GetConstListMailBoxType(),
-		Name: "站内信,信件箱类型",
-		Key:  "MAIL_BOX",
-	})
-
-	AddConstLis(httpresponse.ConstInfo{
-		List: myservice.GetConstListMailPeople(),
-		Name: "站内信,接收人群类型",
-		Key:  "MAIL_PEOPLE",
-	})
-
-	AddConstLis(httpresponse.ConstInfo{
-		List: myservice.GetConstListConfigPersistenceType(),
-		Name: "配置中心持久化类型",
-		Key:  "CONFIG_PERSISTENCE_TYPE",
-	})
-
-	AddConstLis(httpresponse.ConstInfo{
-		List: global.GetUtilUploadConst(),
-		Name: "上传，文件类型",
-		Key:  "UPLOAD_FILE_TYPE",
-	})
-
-	return ConstDataList
-}
+//func GetConstList() []httpresponse.ConstInfo {
+//	AddConstLis(httpresponse.ConstInfo{
+//		List: util.GetConstListEnv(),
+//		Name: "env-环境",
+//		Key:  "ENV",
+//	})
+//
+//	AddConstLis(httpresponse.ConstInfo{
+//		List: model.GetConstListProjectType(),
+//		Name: "项目类型",
+//		Key:  "PROJECT_TYPE",
+//	})
+//
+//	AddConstLis(httpresponse.ConstInfo{
+//		List: model.GetConstListProjectStatus(),
+//		Name: "项目状态",
+//		Key:  "PROJECT_STATUS",
+//	})
+//
+//	AddConstLis(httpresponse.ConstInfo{
+//		List: model.GetConstListPlatform(),
+//		Name: "平台类型",
+//		Key:  "PLATFORM",
+//	})
+//
+//	AddConstLis(httpresponse.ConstInfo{
+//		List: model.GetConstListUserTypeThird(),
+//		Name: "用户类型3方",
+//		Key:  "USER_TYPE_THIRD",
+//	})
+//
+//	AddConstLis(httpresponse.ConstInfo{
+//		List: model.GetConstListUserRegType(),
+//		Name: "用户注册类型",
+//		Key:  "USER_REG_TYPE",
+//	})
+//
+//	AddConstLis(httpresponse.ConstInfo{
+//		List: model.GetConstListUserSex(),
+//		Name: "用户性别",
+//		Key:  "USER_SEX",
+//	})
+//
+//	AddConstLis(httpresponse.ConstInfo{
+//		List: model.GetConstListUserStatus(),
+//		Name: "用户状态",
+//		Key:  "USER_STATUS",
+//	})
+//
+//	AddConstLis(httpresponse.ConstInfo{
+//		List: model.GetConstListUserTypeThirdCN(),
+//		Name: "用户类型-中国",
+//		Key:  "USER_TYPE_THIRD_CN",
+//	})
+//
+//	AddConstLis(httpresponse.ConstInfo{
+//		List: model.GetConstListUserTypeThirdNotCN(),
+//		Name: "用户类型-外国",
+//		Key:  "USER_TYPE_THIRD_NOT_CN",
+//	})
+//
+//	AddConstLis(httpresponse.ConstInfo{
+//		List: model.GetConstListUserGuest(),
+//		Name: "游客分类",
+//		Key:  "USER_GUEST",
+//	})
+//
+//	AddConstLis(httpresponse.ConstInfo{
+//		List: model.GetConstListUserRobot(),
+//		Name: "机器人",
+//		Key:  "USER_ROBOT",
+//	})
+//
+//	AddConstLis(httpresponse.ConstInfo{
+//		List: model.GetConstListUserTest(),
+//		Name: "测试账号",
+//		Key:  "USER_TEST",
+//	})
+//
+//	AddConstLis(httpresponse.ConstInfo{
+//		List: model.GetConstListPurpose(),
+//		Name: "本次操作目的",
+//		Key:  "PURPOSE",
+//	})
+//
+//	AddConstLis(httpresponse.ConstInfo{
+//		List: model.GetConstListAuthCodeStatus(),
+//		Name: "验证码状态",
+//		Key:  "AUTH_CODE_STATUS",
+//	})
+//
+//	AddConstLis(httpresponse.ConstInfo{
+//		List: model.GetConstListRuleType(),
+//		Name: "配置规则类型",
+//		Key:  "RULE_TYPE",
+//	})
+//
+//	AddConstLis(httpresponse.ConstInfo{
+//		List: model.GetConstListSendMsgStatus(),
+//		Name: "消息发送状态",
+//		Key:  "SEND_MSG_STATUS",
+//	})
+//
+//	AddConstLis(httpresponse.ConstInfo{
+//		List: model.GetConstListProjectLanguage(),
+//		Name: "项目开发语言",
+//		Key:  "PROJECT_LANG",
+//	})
+//
+//	//AddConstLis(httpresponse.ConstInfo{
+//	//	List: model.GetConstListFileHashType(),
+//	//	Name: "文件hash类型",
+//	//	Key:  "FILE_HASH_TYPE",
+//	//})
+//
+//	//
+//	AddConstLis(httpresponse.ConstInfo{
+//		List: model.GetConstListSmsChannel(),
+//		Name: "短信渠道",
+//		Key:  "SMS_CHANNEL",
+//	})
+//
+//	AddConstLis(httpresponse.ConstInfo{
+//		List: model.GetConstListServerPlatform(),
+//		Name: "服务器平台",
+//		Key:  "SERVER_PLATFORM",
+//	})
+//
+//	AddConstLis(httpresponse.ConstInfo{
+//		List: model.GetConstListCicdPublishStatus(),
+//		Name: "CICD发布状态",
+//		Key:  "CICD_PUBLISH_STATUS",
+//	})
+//
+//	AddConstLis(httpresponse.ConstInfo{
+//		List: model.GetConstListCicdPublishDeployStatus(),
+//		Name: "CICD发布部署状态",
+//		Key:  "CICD_PUBLISH_STATUS",
+//	})
+//
+//	AddConstLis(httpresponse.ConstInfo{
+//		List: myservice.GetConstListMailBoxType(),
+//		Name: "站内信,信件箱类型",
+//		Key:  "MAIL_BOX",
+//	})
+//
+//	AddConstLis(httpresponse.ConstInfo{
+//		List: myservice.GetConstListMailPeople(),
+//		Name: "站内信,接收人群类型",
+//		Key:  "MAIL_PEOPLE",
+//	})
+//
+//	AddConstLis(httpresponse.ConstInfo{
+//		List: myservice.GetConstListConfigPersistenceType(),
+//		Name: "配置中心持久化类型",
+//		Key:  "CONFIG_PERSISTENCE_TYPE",
+//	})
+//
+//	AddConstLis(httpresponse.ConstInfo{
+//		List: global.GetUtilUploadConst(),
+//		Name: "上传，文件类型",
+//		Key:  "UPLOAD_FILE_TYPE",
+//	})
+//
+//	return ConstDataList
+//}

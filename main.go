@@ -93,6 +93,7 @@ func main() {
 	//开始初始化模块
 	//main主协程的 context
 	util.MyPrint(prefix + "create cancel context")
+	ttt()
 	mainCxt, mainCancelFunc := context.WithCancel(context.Background())
 	mainEnvironment := global.MainEnvironment{
 		RootDir:         pwd,
@@ -168,7 +169,11 @@ func processCmdParameter(prefix string) global.CmdParameter {
 
 	return cmdParameter
 }
-
+func ttt() {
+	ss := util.NewConstHandle()
+	util.MyPrint(ss.EnumConstPool)
+	util.ExitPrint(33)
+}
 func QuitAll(source int) {
 	defer func() {
 		global.V.Process.DelPid()

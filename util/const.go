@@ -17,6 +17,9 @@ const (
 
 	KLoginRtm = 1000
 
+	READ_QUEUE_ORDER_FONT = "0"
+	READ_QUEUE_ORDER_TAIL = "$"
+
 	//error_msg
 	CODE_NOT_EXIST = 5555
 	ERR_separate   = "-_-"
@@ -256,12 +259,6 @@ const (
 const (
 	ECHO_REQUEST_HEAD_LEN = 8
 	ECHO_REPLY_HEAD_LEN   = 20
-)
-
-//@parse redis queue
-const (
-	READ_QUEUE_ORDER_FONT = "0"
-	READ_QUEUE_ORDER_TAIL = "$"
 )
 
 //@parse SERVER_STATUS

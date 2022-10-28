@@ -1,5 +1,6 @@
 package gamematch
 
+//此类主要是操作：报名的 redis queue 数据
 import (
 	"github.com/gomodule/redigo/redis"
 	"go.uber.org/zap"
@@ -11,72 +12,65 @@ import (
 )
 
 type QueueSign struct {
-	Mutex     sync.Mutex  //计算匹配结果时，要加锁  1、阻塞住报名，2、阻塞其它匹配的协程
-	Rule      Rule        //基数据
-	Log       *zap.Logger //日志
-	Gamematch *Gamematch  //父类
+	Mutex              sync.Mutex //计算匹配结果时，要加锁  1、阻塞住报名，2、阻塞其它匹配的协程
+	Rule               *Rule      //父类
+	RedisKeySeparator  string
+	RedisTextSeparator string
+	Log                *zap.Logger //log 实例
+	Redis              *util.MyRedisGo
+	Err                *util.ErrMsg
+	CloseChan          chan int
+	Prefix             string
 }
 
-func NewQueueSign(rule Rule, gamematch *Gamematch) *QueueSign {
+func NewQueueSign(rule *Rule) *QueueSign {
 	queueSign := new(QueueSign)
 	queueSign.Rule = rule
-	queueSign.Log = mylog
-	queueSign.Gamematch = gamematch
-
-	//queueSign.Log = getRuleModuleLogInc(rule.CategoryKey,"sign")
-
+	queueSign.Redis = rule.RuleManager.Option.GameMatch.Option.Redis
+	queueSign.RedisTextSeparator = rule.RuleManager.Option.GameMatch.Option.RedisTextSeparator
+	queueSign.RedisKeySeparator = rule.RuleManager.Option.GameMatch.Option.RedisKeySeparator
+	queueSign.Log = rule.RuleManager.Option.GameMatch.Option.Log
+	queueSign.Err = rule.RuleManager.Option.GameMatch.Err
+	queueSign.CloseChan = make(chan int)
+	queueSign.Prefix = "sign"
 	return queueSign
 }
 
-//type QueueSignSignTimeoutElement struct {
-//	PlayerId	int
-//	SignTime		int
-//	Flag 		int		//1超时 2状态变更
-//	Memo 		string	//备注
-//	id		int
-//}
-
-//报名类的整个：大前缀
-func (queueSign *QueueSign) getRedisPrefixKey() string {
-	return service.RedisPrefix + service.RedisSeparation + "sign"
-}
-
-//不同的匹配池(规则)，要有不同的KEY
-func (queueSign *QueueSign) getRedisCatePrefixKey() string {
-	return queueSign.getRedisPrefixKey() + service.RedisSeparation + queueSign.Rule.CategoryKey
+func (queueSign *QueueSign) Demon() {
+	queueSign.Log.Info(queueSign.Prefix + " Demon")
 }
 
 //有序集合：组索引，所有报名的组，都在这个集合中，weight => id
 func (queueSign *QueueSign) getRedisKeyWeight() string {
-	return queueSign.getRedisCatePrefixKey() + service.RedisSeparation + "group_weight"
+	return queueSign.Rule.GetCommRedisKeyByModuleRuleId(queueSign.Prefix, queueSign.Rule.Id) + "group_weight"
 }
 
 //有序集合：组的人数索引，每个规则的池，允许N人成组，其中，每个组里有多少个人，就是这个索引
 func (queueSign *QueueSign) getRedisKeyPersonIndexPrefix() string {
-	return queueSign.getRedisCatePrefixKey() + service.RedisSeparation + "group_person"
+	return queueSign.Rule.GetCommRedisKeyByModuleRuleId(queueSign.Prefix, queueSign.Rule.Id) + "group_person"
 }
 
 //组人数=>id
 func (queueSign *QueueSign) getRedisKeyPersonIndex(personNum int) string {
-	return queueSign.getRedisKeyPersonIndexPrefix() + service.RedisSeparation + strconv.Itoa(personNum)
+	return queueSign.getRedisKeyPersonIndexPrefix() + queueSign.RedisKeySeparator + strconv.Itoa(personNum)
 }
 
 //最简单的string：一个组的详细信息
 func (queueSign *QueueSign) getRedisKeyGroupElementPrefix() string {
-	return queueSign.getRedisCatePrefixKey() + service.RedisSeparation + "element"
+	return queueSign.Rule.GetCommRedisKeyByModuleRuleId(queueSign.Prefix, queueSign.Rule.Id) + "element"
 }
 func (queueSign *QueueSign) getRedisKeyGroupElement(id int) string {
-	return queueSign.getRedisKeyGroupElementPrefix() + service.RedisSeparation + strconv.Itoa(id)
+	return queueSign.getRedisKeyGroupElementPrefix() + queueSign.RedisKeySeparator + strconv.Itoa(id)
 }
 
 //有序集合：一个小组，包含的所有玩家ID
 func (queueSign *QueueSign) getRedisKeyGroupPlayer() string {
-	return queueSign.getRedisCatePrefixKey() + service.RedisSeparation + "player"
+	return queueSign.Rule.GetCommRedisKeyByModuleRuleId(queueSign.Prefix, queueSign.Rule.Id) + "player"
 }
 
 //组的超时索引,有序集合
 func (queueSign *QueueSign) getRedisKeyGroupSignTimeout() string {
-	return queueSign.getRedisCatePrefixKey() + service.RedisSeparation + "timeout"
+	return queueSign.Rule.GetCommRedisKeyByModuleRuleId(queueSign.Prefix, queueSign.Rule.Id) + "timeout"
 }
 
 //===============================以上是 redis key 相关============================
@@ -89,7 +83,7 @@ func (queueSign *QueueSign) getAllGroupsWeightCnt() int {
 //获取当前所有，已报名的，所有组，总数
 func (queueSign *QueueSign) getGroupsWeightCnt(rangeStart string, rangeEnd string) int {
 	key := queueSign.getRedisKeyWeight()
-	res, err := redis.Int(myredis.RedisDo("ZCOUNT", redis.Args{}.Add(key).Add(rangeStart).Add(rangeEnd)...))
+	res, err := redis.Int(queueSign.Redis.RedisDo("ZCOUNT", redis.Args{}.Add(key).Add(rangeStart).Add(rangeEnd)...))
 	if err != nil {
 		util.ExitPrint("ZCOUNT err", err.Error())
 	}
@@ -99,7 +93,7 @@ func (queueSign *QueueSign) getGroupsWeightCnt(rangeStart string, rangeEnd strin
 //获取当前所有，已报名的，组，总数
 func (queueSign *QueueSign) getAllGroupPersonCnt() map[int]int {
 	groupPersonNum := make(map[int]int)
-	for i := 1; i <= queueSign.Rule.GroupPersonMax; i++ {
+	for i := 1; i <= queueSign.Rule.TeamMaxPeople; i++ {
 		groupPersonNum[i] = queueSign.getAllGroupPersonIndexCnt(i)
 	}
 	return groupPersonNum
@@ -111,7 +105,7 @@ func (queueSign *QueueSign) getAllGroupPersonIndexCnt(personNum int) int {
 //获取当前所有，已报名的，组，总数
 func (queueSign *QueueSign) getGroupPersonIndexCnt(personNum int, rangeStart string, rangeEnd string) int {
 	key := queueSign.getRedisKeyPersonIndex(personNum)
-	res, err := redis.Int(myredis.RedisDo("ZCOUNT", redis.Args{}.Add(key).Add(rangeStart).Add(rangeEnd)...))
+	res, err := redis.Int(queueSign.Redis.RedisDo("ZCOUNT", redis.Args{}.Add(key).Add(rangeStart).Add(rangeEnd)...))
 	if err != nil {
 		util.ExitPrint("ZCOUNT err", err.Error())
 	}
@@ -126,7 +120,7 @@ func (queueSign *QueueSign) getAllPlayersCnt() int {
 //获取当前所有，已报名的，玩家，总数,这个是基于groupId
 func (queueSign *QueueSign) getPlayersCnt(rangeStart string, rangeEnd string) int {
 	key := queueSign.getRedisKeyGroupPlayer()
-	res, err := redis.Int(myredis.RedisDo("ZCOUNT", redis.Args{}.Add(key).Add(rangeStart).Add(rangeEnd)...))
+	res, err := redis.Int(queueSign.Redis.RedisDo("ZCOUNT", redis.Args{}.Add(key).Add(rangeStart).Add(rangeEnd)...))
 	if err != nil {
 		util.ExitPrint("ZCOUNT err", err.Error())
 	}
@@ -136,7 +130,7 @@ func (queueSign *QueueSign) getPlayersCnt(rangeStart string, rangeEnd string) in
 //获取当前所有，已报名的，玩家，总数,这个是基于 权重
 func (queueSign *QueueSign) getPlayersCntTotalByWeight(rangeStart string, rangeEnd string) int {
 	total := 0
-	for i := 1; i <= queueSign.Rule.GroupPersonMax; i++ {
+	for i := 1; i <= queueSign.Rule.TeamMaxPeople; i++ {
 		oneCnt := queueSign.getGroupPersonIndexCnt(i, rangeStart, rangeEnd)
 		total += oneCnt * i
 
@@ -146,7 +140,7 @@ func (queueSign *QueueSign) getPlayersCntTotalByWeight(rangeStart string, rangeE
 
 func (queueSign *QueueSign) getPlayersCntByWeight(rangeStart string, rangeEnd string) map[int]int {
 	groupPersonNum := make(map[int]int)
-	for i := 1; i <= queueSign.Rule.GroupPersonMax; i++ {
+	for i := 1; i <= queueSign.Rule.TeamMaxPeople; i++ {
 		groupPersonNum[i] = queueSign.getGroupPersonIndexCnt(i, rangeStart, rangeEnd)
 	}
 	return groupPersonNum
@@ -162,25 +156,22 @@ func (queueSign *QueueSign) CancelByGroupId(groupId int) error {
 	//mylog.Debug(group)
 	//这里是偷懒了，判断是否为空，按说应该返回2个参数，但这个方法调用 地方多，先这样
 	if group.Id == 0 || group.Person == 0 || len(group.Players) == 0 {
-		msg := make(map[int]string)
-		msg[0] = strconv.Itoa(groupId)
-		return myerr.NewReplace(750, msg)
+		msg := queueSign.Err.MakeOneStringReplace(strconv.Itoa(groupId))
+		return queueSign.Err.NewReplace(750, msg)
 	}
-	redisConn := myredis.GetNewConnFromPool()
+	redisConn := queueSign.Redis.GetNewConnFromPool()
 	defer redisConn.Close()
 
 	if group.SignTime > util.GetNowTimeSecondToInt() {
-		mylog.Warn("group timeout:" + strconv.Itoa(groupId))
 		queueSign.Log.Warn("group timeout:" + strconv.Itoa(groupId))
 	}
 	//检查每个玩家的报名时间 ，是否已经超时了
 	for _, player := range group.Players {
-		playerElement, isEmpty := playerStatus.GetById(player.Id)
+		playerElement, isEmpty := queueSign.Rule.RuleManager.Option.GameMatch.PlayerManager.GetById(player.Id)
 		if isEmpty == 0 {
-			if playerElement.Status != service.PlayerStatusSign {
-				msg := make(map[int]string)
-				msg[0] = strconv.Itoa(playerElement.Status)
-				return myerr.NewReplace(623, msg)
+			if playerElement.Status != service.GAME_MATCH_PLAYER_STATUS_SIGN {
+				msg := queueSign.Err.MakeOneStringReplace(strconv.Itoa(playerElement.Status))
+				return queueSign.Err.NewReplace(623, msg)
 			}
 		}
 	}
@@ -193,9 +184,9 @@ func (queueSign *QueueSign) CancelByGroupId(groupId int) error {
 
 func (queueSign *QueueSign) getGroupElementById(id int) (group Group) {
 	key := queueSign.getRedisKeyGroupElement(id)
-	res, _ := redis.String(myredis.RedisDo("get", key))
+	res, _ := redis.String(queueSign.Redis.RedisDo("get", key))
 	if res == "" {
-		mylog.Error(" getGroupElementById is empty," + strconv.Itoa(id))
+		queueSign.Log.Error(" getGroupElementById is empty," + strconv.Itoa(id))
 		return group
 	}
 	group = GroupStrToStruct(res)
@@ -204,11 +195,11 @@ func (queueSign *QueueSign) getGroupElementById(id int) (group Group) {
 
 func (queueSign *QueueSign) getGroupIdByPlayerId(playerId int) int {
 	key := queueSign.getRedisKeyGroupPlayer()
-	memberIndex, _ := redis.Int(myredis.RedisDo("zrank", key, playerId))
+	memberIndex, _ := redis.Int(queueSign.Redis.RedisDo("zrank", key, playerId))
 	if memberIndex == 0 {
 		util.MyPrint(" getGroupElementById is empty!")
 	}
-	id, _ := redis.Int(myredis.RedisDo("zrange", redis.Args{}.Add(key).Add(memberIndex).Add(memberIndex).Add("WITHSCORES")...))
+	id, _ := redis.Int(queueSign.Redis.RedisDo("zrange", redis.Args{}.Add(key).Add(memberIndex).Add(memberIndex).Add("WITHSCORES")...))
 	//group := queueSign.strToStruct(res)
 	return id
 }
@@ -218,9 +209,9 @@ func (queueSign *QueueSign) getGroupPersonIndexList(personNum int, rangeStart st
 	key := queueSign.getRedisKeyPersonIndex(personNum)
 	//这里有个问题，person=>id,person是重复的，如果带着分值一并返回，MAP会有重复值的情况
 	argc := redis.Args{}.Add(key).Add(rangeEnd).Add(rangeStart).Add("limit").Add(limitOffset).Add(limitCnt)
-	res, err := redis.Ints(myredis.RedisDo("ZREVRANGEBYSCORE", argc...))
+	res, err := redis.Ints(queueSign.Redis.RedisDo("ZREVRANGEBYSCORE", argc...))
 	if err != nil {
-		mylog.Error("getPersonRangeList err" + err.Error())
+		queueSign.Log.Error("getPersonRangeList err" + err.Error())
 	}
 	if len(res) <= 0 {
 		return ids
@@ -229,7 +220,7 @@ func (queueSign *QueueSign) getGroupPersonIndexList(personNum int, rangeStart st
 	rs := util.ArrCovertMap(res)
 
 	if isDel {
-		redisConn := myredis.GetNewConnFromPool()
+		redisConn := queueSign.Redis.GetNewConnFromPool()
 		defer redisConn.Close()
 		util.MyPrint("getGroupPersonIndexList del group:", res)
 		for _, groupId := range res {
@@ -240,57 +231,38 @@ func (queueSign *QueueSign) getGroupPersonIndexList(personNum int, rangeStart st
 	return rs
 }
 
-//func (queueSign *QueueSign) getPersonRangeList( personNum int ,scoreMin int,scoreMax float32,limitOffset int ,limitCnt int)(ids map[int]int){
-//	key := queueSign.getRedisKeyPersonIndex( personNum)
-//	res,err := redis.IntMap(redisDo("ZREVRANGEBYSCORE", redis.Args{}.Add(key).Add(scoreMax).Add(scoreMin).Add("limit").Add(limitOffset).Add(limitCnt)...))
-//	if err != nil{
-//		zlib.MyPrint("getPersonRangeList err",err.Error())
-//	}
-//	if len(res) <= 0{
-//		return ids
-//	}
-//
-//	inc := 0
-//	for _,v := range res{
-//		ids[inc]  = v
-//		inc++
-//	}
-//	return ids
-//}
-
 //============================以上都是范围性的取值===============================
 
 //获取超时索引集合的，所有成员
 //这里间接等于：获取当前所有groupId,取个巧
 func (queueSign *QueueSign) GetGroupSignTimeoutAll() []int {
-	//myredis.Multi(redisConn)
-	//defer myredis.
+	//queueSign.Redis.Multi(redisConn)
+	//defer queueSign.Redis.
 	groupSignTimeoutKey := queueSign.getRedisKeyGroupSignTimeout()
-	list, _ := redis.Ints(myredis.RedisDo("ZRANGE", redis.Args{}.Add(groupSignTimeoutKey).Add(0).Add(-1)...))
-	//myredis.Exec(redisConn)
+	list, _ := redis.Ints(queueSign.Redis.RedisDo("ZRANGE", redis.Args{}.Add(groupSignTimeoutKey).Add(0).Add(-1)...))
+	//queueSign.Redis.Exec(redisConn)
 	return list
 }
 
 //报名
 func (queueSign *QueueSign) AddOne(group Group, connFd redis.Conn) {
-	queueSign.Log.Debug("start :  add sign one group")
-	mylog.Info("")
+	queueSign.Log.Debug(queueSign.Prefix + " , add sign one group , start :")
 	group.SignTime = util.GetNowTimeSecondToInt()
 
 	groupIndexKey := queueSign.getRedisKeyWeight()
-	res, err := myredis.Send(connFd, "zadd", redis.Args{}.Add(groupIndexKey).Add(group.Weight).Add(group.Id)...)
-	//res,err := myredis.RedisDo("zadd",redis.Args{}.Add(groupIndexKey).Add(group.Weight).Add(group.Id)...)
+	res, err := queueSign.Redis.Send(connFd, "zadd", redis.Args{}.Add(groupIndexKey).Add(group.Weight).Add(group.Id)...)
+	//res,err := queueSign.Redis.RedisDo("zadd",redis.Args{}.Add(groupIndexKey).Add(group.Weight).Add(group.Id)...)
 
 	util.MyPrint("add GroupWeightIndex rs : ", res, err)
 
 	PersonIndexKey := queueSign.getRedisKeyPersonIndex(group.Person)
-	res, err = myredis.Send(connFd, "zadd", redis.Args{}.Add(PersonIndexKey).Add(group.Weight).Add(group.Id)...)
-	//res,err = myredis.RedisDo("zadd",redis.Args{}.Add(PersonIndexKey).Add(group.Weight).Add(group.Id)...)
+	res, err = queueSign.Redis.Send(connFd, "zadd", redis.Args{}.Add(PersonIndexKey).Add(group.Weight).Add(group.Id)...)
+	//res,err = queueSign.Redis.RedisDo("zadd",redis.Args{}.Add(PersonIndexKey).Add(group.Weight).Add(group.Id)...)
 	util.MyPrint("add GroupPersonIndex ( ", group.Person, " ) rs : ", res, err)
 
 	groupSignTimeoutKey := queueSign.getRedisKeyGroupSignTimeout()
-	res, err = myredis.Send(connFd, "zadd", redis.Args{}.Add(groupSignTimeoutKey).Add(group.SignTimeout).Add(group.Id)...)
-	//res,err = myredis.RedisDo("zadd",redis.Args{}.Add(groupSignTimeoutKey).Add(group.SignTimeout).Add(group.Id)...)
+	res, err = queueSign.Redis.Send(connFd, "zadd", redis.Args{}.Add(groupSignTimeoutKey).Add(group.SignTimeout).Add(group.Id)...)
+	//res,err = queueSign.Redis.RedisDo("zadd",redis.Args{}.Add(groupSignTimeoutKey).Add(group.SignTimeout).Add(group.Id)...)
 	util.MyPrint("add GroupSignTimeout rs : ", res, err)
 
 	groupElementRedisKey := queueSign.getRedisKeyGroupElement(group.Id)
@@ -299,15 +271,15 @@ func (queueSign *QueueSign) AddOne(group Group, connFd redis.Conn) {
 	//zlib.ExitPrint(1111)
 	groupPlayersKey := queueSign.getRedisKeyGroupPlayer()
 	for _, v := range group.Players {
-		res, err = myredis.Send(connFd, "zadd", redis.Args{}.Add(groupPlayersKey).Add(group.Id).Add(v.Id)...)
-		//res,err = myredis.RedisDo("zadd",redis.Args{}.Add(groupPlayersKey).Add(group.Id).Add(v.Id)...)
+		res, err = queueSign.Redis.Send(connFd, "zadd", redis.Args{}.Add(groupPlayersKey).Add(group.Id).Add(v.Id)...)
+		//res,err = queueSign.Redis.RedisDo("zadd",redis.Args{}.Add(groupPlayersKey).Add(group.Id).Add(v.Id)...)
 		util.MyPrint("add player rs : ", res, err)
 	}
 
-	res, err = myredis.Send(connFd, "set", redis.Args{}.Add(groupElementRedisKey).Add(content)...)
-	//res,err = myredis.RedisDo("set",redis.Args{}.Add(groupElementRedisKey).Add(content)...)
+	res, err = queueSign.Redis.Send(connFd, "set", redis.Args{}.Add(groupElementRedisKey).Add(content)...)
+	//res,err = queueSign.Redis.RedisDo("set",redis.Args{}.Add(groupElementRedisKey).Add(content)...)
 	util.MyPrint("add groupElement rs : ", res, err)
-	queueSign.Log.Debug("finish :  add sign one group")
+	queueSign.Log.Debug(queueSign.Prefix + " , add sign one group , finish ")
 }
 
 //==============以下均是 删除操作======================================
@@ -315,13 +287,13 @@ func (queueSign *QueueSign) AddOne(group Group, connFd redis.Conn) {
 ////删除 所有Rule：池里的报名组、玩家、索引等-有点暴力，尽量不用
 //func  (queueSign *QueueSign)  delAll(){
 //	key := queueSign.getRedisPrefixKey()
-//	myredis.RedisDo("del",key)
+//	queueSign.Redis.RedisDo("del",key)
 //}
 //删除一条规则的所有匹配信息
 func (queueSign *QueueSign) delOneRule() {
-	mylog.Info(" queueSign delOneRule : ")
-	keys := queueSign.getRedisCatePrefixKey() + "*"
-	myredis.RedisDelAllByPrefix(keys)
+	queueSign.Log.Info(" queueSign delOneRule : ")
+	keys := queueSign.Rule.GetCommRedisKeyByModuleRuleId("sign", queueSign.Rule.Id) + "*"
+	queueSign.Redis.RedisDelAllByPrefix(keys)
 
 	//queueSign.delOneRuleALLGroupElement()
 	//queueSign.delOneRuleALLPersonIndex()
@@ -335,13 +307,13 @@ func (queueSign *QueueSign) delOneRule() {
 ////删除一条规则的，所有玩家索引
 //func  (queueSign *QueueSign)  delOneRuleALLPlayers( ){
 //	key := queueSign.getRedisKeyGroupPlayer()
-//	res,_ := redis.Int(myredis.RedisDo("del",key))
+//	res,_ := redis.Int(queueSign.Redis.RedisDo("del",key))
 //	mylog.Debug("delOneRuleALLPlayers : ",res)
 //}
 ////删除一条规则的，所有权重索引
 //func  (queueSign *QueueSign)  delOneRuleALLWeight( ){
 //	key := queueSign.getRedisKeyWeight()
-//	res,_ := redis.Int(myredis.RedisDo("del",key))
+//	res,_ := redis.Int(queueSign.Redis.RedisDo("del",key))
 //	mylog.Debug("delOneRuleALLPlayers : ",res)
 //}
 //删除一条规则的，所有人数分组索引
@@ -354,14 +326,14 @@ func (queueSign *QueueSign) delOneRule() {
 ////删除一条规则的，所有分组详细信息
 //func  (queueSign *QueueSign)  delOneRuleALLGroupElement( ){
 //	prefix := queueSign.getRedisKeyGroupElementPrefix()
-//	res,_ := redis.Strings( myredis.RedisDo("keys",prefix + "*"  ))
+//	res,_ := redis.Strings( queueSign.Redis.RedisDo("keys",prefix + "*"  ))
 //	if len(res) == 0{
 //		mylog.Notice(" GroupElement by keys(*) : is empty")
 //		return
 //	}
 //	//zlib.ExitPrint(res,-200)
 //	for _,v := range res{
-//		res,_ := redis.Int(myredis.RedisDo("del",v))
+//		res,_ := redis.Int(queueSign.Redis.RedisDo("del",v))
 //		mylog.Debug("del group element v :",res)
 //	}
 //}
@@ -369,14 +341,14 @@ func (queueSign *QueueSign) delOneRule() {
 ////删除一条规则的，所有人组超时索引
 //func  (queueSign *QueueSign)  delOneRuleAllGroupSignTimeout( ){
 //	key := queueSign.getRedisKeyGroupSignTimeout()
-//	res,_ := redis.Int(myredis.RedisDo("del",key))
+//	res,_ := redis.Int(queueSign.Redis.RedisDo("del",key))
 //	mylog.Debug("delOneRuleALLPlayers : ",res)
 //}
 
 //删除一条规则的，某一人数各类的，所有人数分组索引
 func (queueSign *QueueSign) delOneRuleOnePersonIndex(personNum int) {
 	key := queueSign.getRedisKeyPersonIndex(personNum)
-	res, _ := redis.Int(myredis.RedisDo("del", key))
+	res, _ := redis.Int(queueSign.Redis.RedisDo("del", key))
 	util.MyPrint("delOneRuleALLPlayers : ", res)
 }
 
@@ -384,8 +356,8 @@ func (queueSign *QueueSign) delOneRuleOnePersonIndex(personNum int) {
 
 func (queueSign *QueueSign) delOneRuleOnePersonIndexById(redisConn redis.Conn, personNum int, id int) {
 	key := queueSign.getRedisKeyPersonIndex(personNum)
-	res, _ := myredis.Send(redisConn, "ZREM", redis.Args{}.Add(key).Add(id)...)
-	//res, _ := myredis.RedisDo("ZREM",redis.Args{}.Add(key).Add(id)...)
+	res, _ := queueSign.Redis.Send(redisConn, "ZREM", redis.Args{}.Add(key).Add(id)...)
+	//res, _ := queueSign.Redis.RedisDo("ZREM",redis.Args{}.Add(key).Add(id)...)
 	util.MyPrint("delOne PersonIndexById : ", res)
 	util.MyPrint("delOneRuleOnePersonIndexById", personNum, id)
 }
@@ -393,8 +365,8 @@ func (queueSign *QueueSign) delOneRuleOnePersonIndexById(redisConn redis.Conn, p
 //删除一个组的所有玩家信息
 func (queueSign *QueueSign) delOneRuleOneGroupPlayers(redisConn redis.Conn, id int) {
 	key := queueSign.getRedisKeyGroupPlayer()
-	res, _ := myredis.Send(redisConn, "ZREMRANGEBYSCORE", redis.Args{}.Add(key).Add(id).Add(id)...)
-	//res,_ := myredis.RedisDo("ZREMRANGEBYSCORE",redis.Args{}.Add(key).Add(id).Add(id)...)
+	res, _ := queueSign.Redis.Send(redisConn, "ZREMRANGEBYSCORE", redis.Args{}.Add(key).Add(id).Add(id)...)
+	//res,_ := queueSign.Redis.RedisDo("ZREMRANGEBYSCORE",redis.Args{}.Add(key).Add(id).Add(id)...)
 	util.MyPrint("delOne GroupPlayers : ", res)
 	util.MyPrint("delOneRuleOneGroupPlayers:", id)
 }
@@ -402,8 +374,8 @@ func (queueSign *QueueSign) delOneRuleOneGroupPlayers(redisConn redis.Conn, id i
 //删除一条规则的一个组的详细信息
 func (queueSign *QueueSign) delOneRuleOneGroupSignTimeout(redisConn redis.Conn, id int) {
 	key := queueSign.getRedisKeyGroupSignTimeout()
-	res, _ := myredis.Send(redisConn, "ZREM", redis.Args{}.Add(key).Add(id)...)
-	//res, _ := myredis.RedisDo("ZREM",redis.Args{}.Add(key).Add(id)...)
+	res, _ := queueSign.Redis.Send(redisConn, "ZREM", redis.Args{}.Add(key).Add(id)...)
+	//res, _ := queueSign.Redis.RedisDo("ZREM",redis.Args{}.Add(key).Add(id)...)
 	util.MyPrint("delOneRuleOneGroupSignTimeout : ", res)
 	util.MyPrint("delOneRuleOneGroupSignTimeout ", id)
 }
@@ -411,8 +383,8 @@ func (queueSign *QueueSign) delOneRuleOneGroupSignTimeout(redisConn redis.Conn, 
 //删除一条规则的权限分组索引
 func (queueSign *QueueSign) delOneRuleOneWeight(redisConn redis.Conn, id int) {
 	key := queueSign.getRedisKeyWeight()
-	res, _ := myredis.Send(redisConn, "ZREM", redis.Args{}.Add(key).Add(id)...)
-	//res,_ := myredis.RedisDo("ZREM",redis.Args{}.Add(key).Add(id)...)
+	res, _ := queueSign.Redis.Send(redisConn, "ZREM", redis.Args{}.Add(key).Add(id)...)
+	//res,_ := queueSign.Redis.RedisDo("ZREM",redis.Args{}.Add(key).Add(id)...)
 	util.MyPrint("delOneWeight : ", res)
 	util.MyPrint("delOneWeight ", id)
 }
@@ -420,8 +392,8 @@ func (queueSign *QueueSign) delOneRuleOneWeight(redisConn redis.Conn, id int) {
 //删除一条规则的一个组的详细信息
 func (queueSign *QueueSign) delOneRuleOneGroupElement(redisConn redis.Conn, id int) {
 	key := queueSign.getRedisKeyGroupElement(id)
-	res, _ := myredis.Send(redisConn, "del", key)
-	//res,_ := myredis.RedisDo("del",key)
+	res, _ := queueSign.Redis.Send(redisConn, "del", key)
+	//res,_ := queueSign.Redis.RedisDo("del",key)
 	util.MyPrint("delOneGroupElement : ", res)
 	util.MyPrint("delOneGroupElement ", id)
 }
@@ -446,11 +418,10 @@ func (queueSign *QueueSign) delOneRuleOneGroup(redisConn redis.Conn, id int, isD
 	util.MyPrint(group)
 	//这里是偷懒了，判断是否为空，按说应该返回2个参数，但这个方法调用 地方多，先这样
 	if group.Id == 0 || group.Person == 0 || len(group.Players) == 0 {
-		msg := make(map[int]string)
-		msg[0] = strconv.Itoa(id)
-		nowerr := myerr.NewReplace(750, msg)
+		msg := queueSign.Err.MakeOneStringReplace(strconv.Itoa(id))
+		nowerr := queueSign.Err.NewReplace(750, msg)
 
-		mylog.Error("750" + nowerr.Error())
+		queueSign.Log.Error("750" + nowerr.Error())
 		queueSign.Log.Error("750" + nowerr.Error())
 
 		return nowerr
@@ -467,7 +438,7 @@ func (queueSign *QueueSign) delOneRuleOneGroup(redisConn redis.Conn, id int, isD
 		for _, v := range group.Players {
 			queueSign.Log.Info("playerStatus delOneById : " + strconv.Itoa(v.Id))
 			//playerStatus.upInfo(v)
-			playerStatus.delOneById(redisConn, v.Id)
+			queueSign.Rule.RuleManager.Option.GameMatch.PlayerManager.delOneById(redisConn, v.Id)
 		}
 	}
 
@@ -493,11 +464,11 @@ func (queueSign *QueueSign) addOneGroupIndex(redisConn redis.Conn, groupId int, 
 	//group := queueSign.getGroupElementById(groupId)
 
 	groupIndexKey := queueSign.getRedisKeyWeight()
-	res, err := myredis.RedisDo("zadd", redis.Args{}.Add(groupIndexKey).Add(weight).Add(groupId)...)
+	res, err := queueSign.Redis.RedisDo("zadd", redis.Args{}.Add(groupIndexKey).Add(weight).Add(groupId)...)
 	util.MyPrint("add GroupWeightIndex rs : ", res, err)
 
 	PersonIndexKey := queueSign.getRedisKeyPersonIndex(personNum)
-	res, err = myredis.RedisDo("zadd", redis.Args{}.Add(PersonIndexKey).Add(weight).Add(groupId)...)
+	res, err = queueSign.Redis.RedisDo("zadd", redis.Args{}.Add(PersonIndexKey).Add(weight).Add(groupId)...)
 	util.MyPrint("add GroupPersonIndex ( ", personNum, " ) rs : ", res, err)
 }
 
@@ -506,11 +477,11 @@ func (queueSign *QueueSign) addOneGroupIndex(redisConn redis.Conn, groupId int, 
 //	group := queueSign.getGroupElementById(groupId)
 //
 //	groupIndexKey := queueSign.getRedisKeyWeight( )
-//	res,err := myredis.RedisDo("zadd",redis.Args{}.Add(groupIndexKey).Add(group.Weight).Add(group.Id)...)
+//	res,err := queueSign.Redis.RedisDo("zadd",redis.Args{}.Add(groupIndexKey).Add(group.Weight).Add(group.Id)...)
 //	mylog.Debug("add GroupWeightIndex rs : ",res,err)
 //
 //	PersonIndexKey := queueSign.getRedisKeyPersonIndex(  group.Person)
-//	res,err = myredis.RedisDo("zadd",redis.Args{}.Add(PersonIndexKey).Add(group.Weight).Add(group.Id)...)
+//	res,err = queueSign.Redis.RedisDo("zadd",redis.Args{}.Add(PersonIndexKey).Add(group.Weight).Add(group.Id)...)
 //	mylog.Debug("add GroupPersonIndex ( ",group.Person," ) rs : ",res,err)
 //}
 
@@ -518,7 +489,7 @@ func (queueSign *QueueSign) addOneGroupIndex(redisConn redis.Conn, groupId int, 
 //-匹配的时候，前期计算均是基于索引，在getList时，要把这个索引先删了，等到计算出最终结果，再决定是否全删
 //-如果有些索引要放回去，直接恢复这两个索引即可
 func (queueSign *QueueSign) delOneRuleOneGroupIndex(redisConn redis.Conn, groupId int, personNum int) {
-	mylog.Info("action : delOneRuleOneGroupIndex id:" + strconv.Itoa(groupId))
+	queueSign.Log.Info("action : delOneRuleOneGroupIndex id:" + strconv.Itoa(groupId))
 	//group := queueSign.getGroupElementById(id)
 	//mylog.Debug(group)
 
@@ -531,15 +502,16 @@ func (queueSign *QueueSign) CheckTimeout() {
 	//rootAndSingToLogInfoMsg(queueSign," one rule CheckSignTimeout , ruleId : ",queueSign.Rule.Id)
 	//mylog.Info(" one rule CheckSignTimeout , ruleId : ",queueSign.Rule.Id)
 
-	push := queueSign.Gamematch.getContainerPushByRuleId(queueSign.Rule.Id)
+	//push := queueSign.Gamematch.getContainerPushByRuleId(queueSign.Rule.Id)
+	push := queueSign.Rule.Push
 	keys := queueSign.getRedisKeyGroupSignTimeout()
 
 	now := util.GetNowTimeSecondToInt()
-	res, err := redis.IntMap(myredis.RedisDo("ZREVRANGEBYSCORE", redis.Args{}.Add(keys).Add(now).Add("-inf").Add("WITHSCORES")...))
+	res, err := redis.IntMap(queueSign.Redis.RedisDo("ZREVRANGEBYSCORE", redis.Args{}.Add(keys).Add(now).Add("-inf").Add("WITHSCORES")...))
 	//rootAndSingToLogInfoMsg(queueSign,"sign timeout group element total : ",len(res))
 	//mylog.Info("sign timeout group element total : ",len(res))
 	if err != nil {
-		mylog.Error("redis ZREVRANGEBYSCORE err :" + err.Error())
+		queueSign.Log.Error("redis ZREVRANGEBYSCORE err :" + err.Error())
 		queueSign.Log.Error("redis ZREVRANGEBYSCORE err :" + err.Error())
 		return
 	}
@@ -559,10 +531,10 @@ func (queueSign *QueueSign) CheckTimeout() {
 	//mymetrics.FastLog("SignTimeout",zlib.METRICS_OPT_PLUS,len(res))
 
 	queueSign.Log.Info(" one rule CheckSignTimeout , ruleId : " + strconv.Itoa(queueSign.Rule.Id))
-	redisConn := myredis.GetNewConnFromPool()
+	redisConn := queueSign.Redis.GetNewConnFromPool()
 	defer redisConn.Close()
 	for groupIdStr, _ := range res {
-		myredis.Multi(redisConn)
+		queueSign.Redis.Multi(redisConn)
 
 		groupId := util.Atoi(groupIdStr)
 		group := queueSign.getGroupElementById(groupId)
@@ -573,7 +545,7 @@ func (queueSign *QueueSign) CheckTimeout() {
 		queueSign.Log.Info("delOneRuleOneGroup")
 		queueSign.delOneRuleOneGroup(redisConn, groupId, 1)
 
-		myredis.Exec(redisConn)
+		queueSign.Redis.Exec(redisConn)
 	}
 	//rootAndSingToLogInfoMsg(queueSign,"queueSign checkTimeOut finish in oneTime")
 	queueSign.Log.Info("queueSign checkTimeOut finish in oneTime")
@@ -607,7 +579,7 @@ func (queueSign *QueueSign) TestTotalCnt() SignTotalCnt {
 
 	key := queueSign.getRedisKeyGroupElement(0)
 	key = key[0 : len(key)-1]
-	res, _ := redis.Strings(myredis.RedisDo("keys", key+"*"))
+	res, _ := redis.Strings(queueSign.Redis.RedisDo("keys", key+"*"))
 	data["groupElement"] = len(res)
 
 	groupPlayerCnt := 0
@@ -623,4 +595,32 @@ func (queueSign *QueueSign) TestTotalCnt() SignTotalCnt {
 	return signTotalCnt
 	//queueSign.getRedisKeyGroupPlayer()
 	//gameMatchInstance.PlayerStatus.getOneRuleAllPlayerCnt
+}
+
+func (queueSign *QueueSign) Close() {
+	queueSign.CloseChan <- 1
+}
+
+func (queueSign *QueueSign) TestRedisKey() {
+	redisKey := queueSign.getRedisKeyWeight()
+	util.MyPrint("queueSign test :", redisKey)
+
+	redisKey = queueSign.getRedisKeyPersonIndexPrefix()
+	util.MyPrint("queueSign test :", redisKey)
+
+	redisKey = queueSign.getRedisKeyPersonIndex(1)
+	util.MyPrint("queueSign test :", redisKey)
+
+	redisKey = queueSign.getRedisKeyGroupElementPrefix()
+	util.MyPrint("queueSign test :", redisKey)
+
+	redisKey = queueSign.getRedisKeyGroupElement(1)
+	util.MyPrint("queueSign test :", redisKey)
+
+	redisKey = queueSign.getRedisKeyGroupPlayer()
+	util.MyPrint("queueSign test :", redisKey)
+
+	redisKey = queueSign.getRedisKeyGroupSignTimeout()
+	util.MyPrint("queueSign test :", redisKey)
+
 }

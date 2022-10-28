@@ -1,48 +1,32 @@
 package service
 
 const (
-	CTX_DONE_PRE           = "ctx.done() " //字符串标识，用于打印输出信息时的前缀
-	MAIL_ADMIN_USER_UID    = 9999          //管理员默认UID，主要用于：确定发送者的UID
-	Separation             = "#"           //redis 内容-字符串分隔符
-	PayloadSeparation      = "%"           //push时的内容，缓存进redis时
-	RedisSeparation        = "_"           //redis key 分隔符
-	IdsSeparation          = ","           //多个ID 分隔符
-	RedisPrefix            = "match"       //整个服务的，redis 前缀
-	PlayerMatchingMaxTimes = 3             //一个玩家，参与匹配机制的最大次数，超过这个次数，证明不用再匹配了，目前没用上，目前使用的还是绝对的超时时间为准
-
-	FormulaFirst = "<" //游戏匹配-计算权重公式-前缀
-	FormulaEnd   = ">" //游戏匹配-计算权重公式-后缀
+	CTX_DONE_PRE        = "ctx.done() " //字符串标识，用于打印输出信息时的前缀
+	MAIL_ADMIN_USER_UID = 9999          //管理员默认UID，主要用于：确定发送者的UID
+	Separation          = "#"           //redis 内容-字符串分隔符
+	PayloadSeparation   = "%"           //push时的内容，缓存进redis时
+	//RedisSeparation     = "_"           //redis key 分隔符
+	IdsSeparation          = "," //多个ID 分隔符
+	PlayerMatchingMaxTimes = 3   //一个玩家，参与匹配机制的最大次数，超过这个次数，证明不用再匹配了，目前没用上，目前使用的还是绝对的超时时间为准
 
 	//rule规格配置表
-	RuleFlagTeamVS        = 1 //对战类型
-	RuleFlagCollectPerson = 2 //满足人数即可
-
-	RuleGroupPersonMax     = 5   //一个小组允许最大人数
-	RuleTeamVSPersonMax    = 10  //组队互相PK，每个队最多人数
-	RulePersonConditionMax = 100 //N人组团，最大人数
-
-	RuleMatchTimeoutMax   = 400 //报名，最大超时时间
-	RuleMatchTimeoutMin   = 3   //报名，最小时间
-	RuleSuccessTimeoutMax = 600 //匹配成功后，最大超时时间
-	RuleSuccessTimeoutMin = 10  //匹配成功后，最短超时时间
+	RULE_TYPE_TEAM_VS         = 1 //moba 类 5V5 对战类型
+	RULE_TYPE_TEAM_EACH_OTHER = 2 //类似吃鸡 多个队伍互相撕杀
 
 	RuleEtcdConfigPrefix = "/v1/conf/matches/" //etcd中  ， 存放 rule  集合的前缀
-
-	WeightMaxValue = 100
 
 	//微服务
 	SERVICE_MSG_SERVER = "msgServer"
 	//SERVICE_MATCH_NAME		="gamematch"
 	//SERVICE_PREFIX = "/v1/service"		//微服务前缀
-
-	SIGNAL_GOROUTINE_EXEC_EXIT   = 1 //通知协程，执行结束操作
-	SIGNAL_GOROUTINE_EXIT_FINISH = 2 //协程，通知父协程，已结束
-	SIGNAL_GOROUTINE_EXEC_ING    = 6 //协程，通知父协程，已执行
-
-	SIGNAL_EXIT = 3 //结束所有后台守护协程，退出程序
-
-	SIGNAL_QUIT_SOURCE            = 4
-	SIGNAL_QUIT_SOURCE_RULE_WATCH = 5
+	//SIGNAL_GOROUTINE_EXEC_EXIT   = 1 //通知协程，执行结束操作
+	//SIGNAL_GOROUTINE_EXIT_FINISH = 2 //协程，通知父协程，已结束
+	//SIGNAL_GOROUTINE_EXEC_ING    = 6 //协程，通知父协程，已执行
+	//
+	//SIGNAL_EXIT = 3 //结束所有后台守护协程，退出程序
+	//
+	//SIGNAL_QUIT_SOURCE            = 4
+	//SIGNAL_QUIT_SOURCE_RULE_WATCH = 5
 )
 
 //@parse 配置中心-数据持久化类型
@@ -150,10 +134,11 @@ const (
 
 //@parse 游戏匹配-玩家状态
 const (
-	PlayerStatusNotExist = 1 //redis中还没有该玩家信息
-	PlayerStatusSign     = 2 //已报名，等待匹配
-	PlayerStatusSuccess  = 3 //匹配成功，等待拿走
-	PlayerStatusInit     = 4 //初始化阶段
+	GAME_MATCH_PLAYER_STATUS_NOT_EXIST = 1 //redis中还没有该玩家信息
+	GAME_MATCH_PLAYER_STATUS_SIGN      = 2 //已报名，等待匹配
+	GAME_MATCH_PLAYER_STATUS_SUCCESS   = 3 //匹配成功，等待拿走
+	GAME_MATCH_PLAYER_STATUS_INIT      = 4 //初始化阶段
+
 )
 
 //@parse 游戏匹配-HTTP推送状态
@@ -183,6 +168,13 @@ const (
 	RTC_ROOM_STATUS_END     = 3 //房间状态：已结束
 )
 
+//@parse 一条RULE的状态
+const (
+	GAME_MATCH_RULE_STATUS_INIT = 1
+	GAME_MATCH_RULE_STATUS_EXEC = 2
+	GAME_MATCH_RULE_STATUS_QUIT = 3
+)
+
 //@parse 房间结束类型
 const (
 	RTC_ROOM_END_STATUS_TIMEOUT_CALLING = 10 //房间结束状态标识：呼叫超时(也可能是连接断了)
@@ -197,4 +189,10 @@ const (
 const (
 	RTC_PUSH_MSG_EVENT_FD_CREATE_REPEAT = 400
 	RTC_PUSH_MSG_EVENT_UID_NOT_IN_MAP   = 401
+)
+
+const (
+	GAME_MATCH_DATA_SOURCE_TYPE_ETCD    = 1
+	GAME_MATCH_DATA_SOURCE_TYPE_DB      = 2
+	GAME_MATCH_DATA_SOURCE_TYPE_SERVICE = 3
 )

@@ -9,6 +9,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"zgoframe/http/request"
 	"zgoframe/service"
 	"zgoframe/util"
 )
@@ -26,55 +27,70 @@ type PushElement struct {
 }
 
 type Push struct {
-	Mutex sync.Mutex
-	Rule  Rule
-	//queueSign 	*QueueSign
-	QueueSuccess *QueueSuccess
-	Log          *zap.Logger
-	Gamematch    *Gamematch
+	Mutex              sync.Mutex
+	Rule               *Rule //父类
+	RedisKeySeparator  string
+	RedisTextSeparator string
+	Log                *zap.Logger //log 实例
+	Redis              *util.MyRedisGo
+	Err                *util.ErrMsg
+	CloseChan          chan int
+	prefix             string
+	RetryPeriod        []int
 }
 
-func NewPush(rule Rule, gamematch *Gamematch) *Push {
+func NewPush(rule *Rule) *Push {
 	push := new(Push)
-	push.Rule = rule
 
-	//push.queueSign = NewQueueSign(rule)
-	//这里有个问题，循环 new
-	//push.QueueSuccess = NewQueueSuccess(rule,push)
-	//push.QueueSuccess = gamematch.getContainerSuccessByRuleId(rule.Id)
-	//push.Log = getRuleModuleLogInc(rule.CategoryKey,"push")
-	push.Log = mylog
-	push.Gamematch = gamematch
+	push.Rule = rule
+	push.Redis = rule.RuleManager.Option.GameMatch.Option.Redis
+	push.RedisTextSeparator = rule.RuleManager.Option.GameMatch.Option.RedisTextSeparator
+	push.RedisKeySeparator = rule.RuleManager.Option.GameMatch.Option.RedisKeySeparator
+	push.Log = rule.RuleManager.Option.GameMatch.Option.Log
+	push.Err = rule.RuleManager.Option.GameMatch.Err
+	push.CloseChan = make(chan int)
+	push.prefix = "push"
+	//var PushRetryPeriod = []int{10,30,60,600}
+	push.RetryPeriod = []int{5, 10, 15} //方便测试
 	return push
 }
 
-//var PushRetryPeriod = []int{10,30,60,600}
-//方便测试
-var PushRetryPeriod = []int{5, 10, 15}
+func (push *Push) TestRedisKey() {
+	redisKey := push.getRedisPushIncKey()
+	util.MyPrint("push test :", redisKey)
 
-//成功类的整个：大前缀
-func (push *Push) getRedisPrefixKey() string {
-	return service.RedisPrefix + service.RedisSeparation + "push"
+	redisKey = push.getRedisKeyPushStatus()
+	util.MyPrint("push test :", redisKey)
+
+	redisKey = push.getRedisKeyPush(1)
+	util.MyPrint("push test :", redisKey)
+
 }
 
-//不同的匹配池(规则)，要有不同的KEY
-func (push *Push) getRedisCatePrefixKey() string {
-	return push.getRedisPrefixKey() + service.RedisSeparation + push.Rule.CategoryKey
-}
 func (push *Push) getRedisPushIncKey() string {
-	return push.getRedisCatePrefixKey() + service.RedisSeparation + "inc_id"
+	return push.Rule.GetCommRedisKeyByModuleRuleId(push.prefix, push.Rule.Id) + "inc_id"
 }
+
+func (push *Push) getRedisKeyPushStatus() string {
+	return push.Rule.GetCommRedisKeyByModuleRuleId(push.prefix, push.Rule.Id) + "status"
+}
+
+func (push *Push) getRedisKeyPush(id int) string {
+	return push.Rule.GetCommRedisKeyByModuleRuleId(push.prefix, push.Rule.Id) + strconv.Itoa(id)
+}
+
 func (push *Push) GetPushIncId() int {
+
 	key := push.getRedisPushIncKey()
-	res, _ := redis.Int(myredis.RedisDo("INCR", key))
+	res, _ := redis.Int(push.Redis.RedisDo("INCR", key))
 	return res
 }
 
 //
-func (push *Push) RuntimeSuccess(httpReqBusiness HttpReqBusiness, ruleId int, gamematch *Gamematch) {
+func (push *Push) RuntimeSuccess(httpReqGameMatchPlayerSign request.HttpReqGameMatchPlayerSign, ruleId int) {
 	//mylog.Debug("RuntimeSuccess : " , httpReqBusiness ,strconv.Itoa( util.GetNowTimeSecondToInt()))
-	time.Sleep(time.Second * 1)
-	mylog.Debug("RuntimeSuccess sleep wake up , " + strconv.Itoa(util.GetNowTimeSecondToInt()))
+	//time.Sleep(time.Second * 1)
+	//mylog.Debug("RuntimeSuccess sleep wake up , " + strconv.Itoa(util.GetNowTimeSecondToInt()))
 
 	pushElement := PushElement{
 		//Id  		:0,
@@ -87,19 +103,19 @@ func (push *Push) RuntimeSuccess(httpReqBusiness HttpReqBusiness, ruleId int, ga
 		//Payload 	:"",
 	}
 	var playerIds []int
-	for _, v := range httpReqBusiness.PlayerList {
+	for _, v := range httpReqGameMatchPlayerSign.PlayerList {
 		playerIds = append(playerIds, v.Uid)
 	}
 	now := util.GetNowTimeSecondToInt()
 	newGroups := Group{
-		MatchCode:      httpReqBusiness.MatchCode,
-		OutGroupId:     httpReqBusiness.GroupId,
+		//MatchCode:      httpReqBusiness.MatchCode,
+		//CustomProp:     httpReqBusiness.CustomProp,
+		OutGroupId:     httpReqGameMatchPlayerSign.GroupId,
 		MatchTimes:     -1,
 		Weight:         -99,
 		TeamId:         1,
-		Addition:       httpReqBusiness.Addition,
-		CustomProp:     httpReqBusiness.CustomProp,
-		Person:         len(httpReqBusiness.PlayerList),
+		Addition:       httpReqGameMatchPlayerSign.Addition,
+		Person:         len(httpReqGameMatchPlayerSign.PlayerList),
 		SignTime:       now,
 		SignTimeout:    now,
 		SuccessTime:    now,
@@ -107,14 +123,14 @@ func (push *Push) RuntimeSuccess(httpReqBusiness HttpReqBusiness, ruleId int, ga
 	}
 
 	result := Result{
-		Id:          -11,
-		RuleId:      ruleId,
-		MatchCode:   httpReqBusiness.MatchCode,
+		Id:     -11,
+		RuleId: ruleId,
+		//MatchCode:   httpReqBusiness.MatchCode,
 		ATime:       now + 1,
 		Timeout:     now + 1,
-		Teams:       []int{httpReqBusiness.GroupId},
+		Teams:       []int{httpReqGameMatchPlayerSign.GroupId},
 		PlayerIds:   playerIds,
-		GroupIds:    []int{httpReqBusiness.GroupId},
+		GroupIds:    []int{httpReqGameMatchPlayerSign.GroupId},
 		PushId:      -22,
 		Groups:      []Group{newGroups},
 		PushElement: pushElement,
@@ -128,6 +144,8 @@ func (push *Push) RuntimeSuccess(httpReqBusiness HttpReqBusiness, ruleId int, ga
 	//	push.Log.Error("push.getServiceUri err:",err)
 	//}
 	//httpRs,err := myservice.HttpPost(SERVICE_MSG_SERVER,thirdMethodUri,postData)
+	myServiceDiscovery := push.Rule.RuleManager.Option.GameMatch.Option.ServiceDiscovery
+	projectId := push.Rule.RuleManager.Option.GameMatch.Option.ProjectId
 	myService, _ := myServiceDiscovery.GetLoadBalanceServiceNodeByServiceName(service.SERVICE_MSG_SERVER, "")
 	serviceHttp := util.NewServiceHttp(projectId, service.SERVICE_MSG_SERVER, myService.Ip, myService.Port, myService.ServiceId)
 
@@ -137,21 +155,9 @@ func (push *Push) RuntimeSuccess(httpReqBusiness HttpReqBusiness, ruleId int, ga
 	util.MyPrint("RuntimeSuccess finish: ", httpRs, "|", err)
 }
 
-func (push *Push) getRedisKeyPushStatus() string {
-	return push.getRedisCatePrefixKey() + service.RedisSeparation + "status"
-}
-
-//func (push *Push) getRedisKeyPushPrefix()string{
-//	return push.getRedisCatePrefixKey() + redisSeparation + "push"
-//}
-
-func (push *Push) getRedisKeyPush(id int) string {
-	return push.getRedisCatePrefixKey() + service.RedisSeparation + strconv.Itoa(id)
-}
-
 func (push *Push) getById(id int) (element PushElement) {
 	key := push.getRedisKeyPush(id)
-	res, _ := redis.String(myredis.RedisDo("get", key))
+	res, _ := redis.String(push.Redis.RedisDo("get", key))
 	if res == "" {
 		return element
 	}
@@ -161,7 +167,7 @@ func (push *Push) getById(id int) (element PushElement) {
 }
 
 func (push *Push) addOnePush(redisConn redis.Conn, linkId int, category int, payload string) int {
-	mylog.Debug("addOnePush" + strconv.Itoa(linkId) + " " + strconv.Itoa(category) + " " + payload)
+	push.Log.Debug("addOnePush" + strconv.Itoa(linkId) + " " + strconv.Itoa(category) + " " + payload)
 	id := push.GetPushIncId()
 	key := push.getRedisKeyPush(id)
 	pushElement := PushElement{
@@ -175,14 +181,14 @@ func (push *Push) addOnePush(redisConn redis.Conn, linkId int, category int, pay
 		Payload:  payload,
 	}
 	pushStr := push.pushStructToStr(pushElement)
-	res, err := myredis.Send(redisConn, "set", redis.Args{}.Add(key).Add(pushStr)...)
-	//res,err := myredis.RedisDo("set",redis.Args{}.Add(key).Add(pushStr)...)
+	res, err := push.Redis.Send(redisConn, "set", redis.Args{}.Add(key).Add(pushStr)...)
+	//res,err := push.Redis.RedisDo("set",redis.Args{}.Add(key).Add(pushStr)...)
 	util.MyPrint("addOnePush rs : ", res, err)
 	push.Log.Info("addOnePush ,cate : " + strconv.Itoa(category) + payload + ",payload")
 
 	pushKey := push.getRedisKeyPushStatus()
-	res, err = myredis.Send(redisConn, "zadd", redis.Args{}.Add(pushKey).Add(service.PushStatusWait).Add(id)...)
-	//res,err = myredis.RedisDo("zadd",redis.Args{}.Add(pushKey).Add(PushStatusWait).Add(id)...)
+	res, err = push.Redis.Send(redisConn, "zadd", redis.Args{}.Add(pushKey).Add(service.PushStatusWait).Add(id)...)
+	//res,err = push.Redis.RedisDo("zadd",redis.Args{}.Add(pushKey).Add(PushStatusWait).Add(id)...)
 	util.MyPrint("addOnePush status : ", res, err)
 	push.Log.Info("addOnePush status")
 
@@ -220,34 +226,34 @@ func (push *Push) pushStructToStr(pushElement PushElement) string {
 
 //func (push *Push)   delAll(){
 //	key := push.getRedisPrefixKey()
-//	myredis.RedisDo("del",key)
+//	push.Redis.RedisDo("del",key)
 //}
 
 func (push *Push) delOneRule() {
-	mylog.Debug(" push delOneRule : ")
-	key := push.getRedisCatePrefixKey() + "*"
-	myredis.RedisDelAllByPrefix(key)
+	push.Log.Debug(" push delOneRule : ")
+	key := push.Rule.GetCommRedisKeyByModuleRuleId("push", push.Rule.Id) + "*"
+	push.Redis.RedisDelAllByPrefix(key)
 	//push.delAllPush()
 	//push.delAllStatus()
 }
 
 //func  (push *Push)  delAllPush( ){
 //	prefix := push.getRedisCatePrefixKey()
-//	res,_ := redis.Strings( myredis.RedisDo("keys",prefix + "*"  ))
+//	res,_ := redis.Strings( push.Redis.RedisDo("keys",prefix + "*"  ))
 //	if len(res) == 0{
 //		mylog.Notice(" GroupElement by keys(*) : is empty")
 //		return
 //	}
 //	//zlib.ExitPrint(res,-200)
 //	for _,v := range res{
-//		res,_ := redis.Int(myredis.RedisDo("del",v))
+//		res,_ := redis.Int(push.Redis.RedisDo("del",v))
 //		zlib.MyPrint("del group element v :",res)
 //	}
 //}
 //
 //func  (push *Push)  delAllStatus( ){
 //	key := push.getRedisKeyPushStatus()
-//	res,_ := redis.Strings( myredis.RedisDo("del",key ))
+//	res,_ := redis.Strings( push.Redis.RedisDo("del",key ))
 //	mylog.Debug("delAllStatus :",res)
 //}
 
@@ -262,8 +268,8 @@ func (push *Push) delOneRule() {
 
 func (push *Push) delOneStatus(redisConn redis.Conn, pushId int) {
 	key := push.getRedisKeyPushStatus()
-	res, err := myredis.Send(redisConn, "ZREM", redis.Args{}.Add(key).Add(pushId)...)
-	//res,err :=  myredis.RedisDo("ZREM",redis.Args{}.Add(key).Add(pushId)... )
+	res, err := push.Redis.Send(redisConn, "ZREM", redis.Args{}.Add(key).Add(pushId)...)
+	//res,err :=  push.Redis.RedisDo("ZREM",redis.Args{}.Add(key).Add(pushId)... )
 	util.MyPrint(" delOne PushStatus index res", res, err)
 	//push.Log.Info(" delOne PushStatus index res",res,err)
 }
@@ -293,17 +299,17 @@ func (push *Push) metrics(elementCategory int, action string) {
 
 //失败且需要重试的PUSH-ELEMENT
 func (push *Push) upRetryPushInfo(element PushElement) {
-	redisConnFD := myredis.GetNewConnFromPool()
+	redisConnFD := push.Redis.GetNewConnFromPool()
 	defer redisConnFD.Close()
 
-	myredis.Send(redisConnFD, "multi")
+	push.Redis.Send(redisConnFD, "multi")
 	element.Status = service.PushStatusRetry
 	element.UTime = util.GetNowTimeSecondToInt()
 	element.Times = element.Times + 1
 	key := push.getRedisKeyPush(element.Id)
 	pushStr := push.pushStructToStr(element)
-	res, err := myredis.Send(redisConnFD, "set", redis.Args{}.Add(key).Add(pushStr)...)
-	//res,err := myredis.RedisDo("set",redis.Args{}.Add(key).Add(pushStr)...)
+	res, err := push.Redis.Send(redisConnFD, "set", redis.Args{}.Add(key).Add(pushStr)...)
+	//res,err := push.Redis.RedisDo("set",redis.Args{}.Add(key).Add(pushStr)...)
 
 	util.MyPrint("upRetryPushElementInfo , ", element)
 	//这里有个麻烦点，元素信息 和 索引信息，是分开放的，元素的变更比较简单，索引是一个集合，改起来有点麻烦
@@ -311,29 +317,48 @@ func (push *Push) upRetryPushInfo(element PushElement) {
 	statuskey := push.getRedisKeyPushStatus()
 	util.MyPrint("del pushStatus index ,pushId : ", element.Id)
 	push.delOneStatus(redisConnFD, element.Id)
-	res, err = myredis.Send(redisConnFD, "zadd", redis.Args{}.Add(statuskey).Add(service.PushStatusRetry).Add(element.Id)...)
-	//res,err = myredis.RedisDo("zadd",redis.Args{}.Add(statuskey).Add(PushStatusRetry).Add(element.Id)...)
+	res, err = push.Redis.Send(redisConnFD, "zadd", redis.Args{}.Add(statuskey).Add(service.PushStatusRetry).Add(element.Id)...)
+	//res,err = push.Redis.RedisDo("zadd",redis.Args{}.Add(statuskey).Add(PushStatusRetry).Add(element.Id)...)
 
 	util.MyPrint("add  new pushStatus index : ", res, err)
 	//mylog.Info("add  new pushStatus index : ",res,err)
 
-	myredis.Exec(redisConnFD)
+	push.Redis.Exec(redisConnFD)
 }
 
 //在业务里，删除一条push
 //走到里，前置条件肯定是PUSH成功了
 func (push *Push) delOneByIdInBusiness(redisConn redis.Conn, id int) {
-	myredis.Send(redisConn, "multi")
+	push.Redis.Send(redisConn, "multi")
 	element := push.getById(id)
 	push.delOnePush(redisConn, id)
 	if element.Category == service.PushCategorySuccess || element.Category == service.PushCategorySuccessTimeout {
 		push.Log.Info("delOneResult")
-		success := push.Gamematch.getContainerSuccessByRuleId(push.Rule.Id)
+		//success := push.Gamematch.getContainerSuccessByRuleId(push.Rule.Id)
+		success := push.Rule.QueueSuccess
 		success.delOneResult(redisConn, element.LinkId, 1, 1, 1, 1)
 	}
 	push.metrics(element.Category, "Ok")
-	myredis.ConnDo(redisConn, "exec")
+	push.Redis.ConnDo(redisConn, "exec")
 }
+
+func (push *Push) Demon() {
+	push.Log.Info(push.prefix + " Demon start")
+	for {
+		select {
+		case signal := <-push.CloseChan:
+			push.Log.Warn(push.prefix + "Demon CloseChan receive :" + strconv.Itoa(signal))
+			goto forEnd
+		default:
+			push.checkStatus()
+			time.Sleep(time.Millisecond * time.Duration(push.Rule.RuleManager.Option.GameMatch.LoopSleepTime))
+		}
+	}
+forEnd:
+	push.Log.Warn(push.prefix + "  Demon end .")
+}
+
+//检查需要抢着的数据：待推送、重试推送
 func (push *Push) checkStatus() {
 	//mylog.Info("one rule checkStatus : start ")
 	//push.Log.Info("one rule checkStatus : start ")
@@ -347,32 +372,29 @@ func (push *Push) checkStatus() {
 
 func (push *Push) getAllCnt() int {
 	key := push.getRedisKeyPushStatus()
-	res, _ := redis.Int(myredis.RedisDo("ZCOUNT", redis.Args{}.Add(key).Add("-inf").Add("+inf")...))
+	res, _ := redis.Int(push.Redis.RedisDo("ZCOUNT", redis.Args{}.Add(key).Add("-inf").Add("+inf")...))
 	return res
 }
 
 func (push *Push) getStatusCnt(status int) int {
 	key := push.getRedisKeyPushStatus()
-	res, _ := redis.Int(myredis.RedisDo("ZCOUNT", redis.Args{}.Add(key).Add(status).Add(status)...))
+	res, _ := redis.Int(push.Redis.RedisDo("ZCOUNT", redis.Args{}.Add(key).Add(status).Add(status)...))
 	return res
 }
 
 //status:待推送、重试推送
 func (push *Push) checkOneByStatus(key string, status int) {
 	//mylog.Info("checkOneByStatus :",status)
-	res, err := redis.Ints(myredis.RedisDo("ZREVRANGEBYSCORE", redis.Args{}.Add(key).Add(status).Add(status)...))
-
+	res, err := redis.Ints(push.Redis.RedisDo("ZREVRANGEBYSCORE", redis.Args{}.Add(key).Add(status).Add(status)...))
 	if err != nil {
-		mylog.Error("redis keys err :" + err.Error())
+		push.Log.Error("redis keys err :" + err.Error())
 		push.Log.Error("redis keys err :" + err.Error())
 		return
 	}
 	now := util.GetNowTimeSecondToInt()
 	if len(res) == 0 {
-		//mylog.Notice(" empty , no need process")
 		if now%10 == 0 {
-			push.Log.Info("checkOneByStatus :" + strconv.Itoa(status))
-			push.Log.Warn("checkOneByStatus empty , no need process")
+			push.Log.Info(push.prefix + " checkOneByStatus :" + strconv.Itoa(status) + " empty , no need process")
 		}
 		return
 	}
@@ -391,19 +413,19 @@ func (push *Push) processOne(id int, status int) {
 		push.Log.Info("element first push")
 		push.pushAndUpInfo(element, service.PushStatusRetry)
 	} else {
-		push.Log.Info("element retry ,element.Times:" + strconv.Itoa(element.Times) + " len(PushRetryPeriod):" + strconv.Itoa(len(PushRetryPeriod)))
-		if element.Times >= len(PushRetryPeriod) {
+		push.Log.Info("element retry ,element.Times:" + strconv.Itoa(element.Times) + " len(PushRetryPeriod):" + strconv.Itoa(len(push.RetryPeriod)))
+		if element.Times >= len(push.RetryPeriod) {
 			//已超过，最大重试次数
 			push.metrics(element.Category, "Drop")
 
-			redisConnFD := myredis.GetNewConnFromPool()
+			redisConnFD := push.Redis.GetNewConnFromPool()
 			defer redisConnFD.Close()
 
-			mylog.Warn(" push retry time > maxRetryTime , drop this msg.")
+			push.Log.Warn(" push retry time > maxRetryTime , drop this msg.")
 			push.delOneByIdInBusiness(redisConnFD, id)
 		} else {
-			time := PushRetryPeriod[element.Times]
-			util.MyPrint("retry rule : ", PushRetryPeriod, " this time : ", time)
+			time := push.RetryPeriod[element.Times]
+			util.MyPrint("retry rule : ", push.RetryPeriod, " this time : ", time)
 			d := util.GetNowTimeSecondToInt() - element.UTime
 			//mylog.Info("this time : ",time,"now :",zlib.GetNowTimeSecondToInt() , " - element.UTime ",element.UTime , " = ",d)
 			util.MyPrint("this time : ", time, "now :", util.GetNowTimeSecondToInt(), " - element.UTime ", element.UTime, " = ", d)
@@ -424,7 +446,8 @@ func getAnyType() (a interface{}) {
 func (push *Push) getServiceUri(element PushElement, payload string) (uri string, post interface{}, err error) {
 	postData := getAnyType()
 	thirdMethodUri := ""
-	success := push.Gamematch.getContainerSuccessByRuleId(push.Rule.Id)
+	//success := push.Gamematch.getContainerSuccessByRuleId(push.Rule.Id)
+	success := push.Rule.QueueSuccess
 	if element.Category == service.PushCategorySignTimeout {
 		push.Log.Debug("element.Category == PushCategorySignTimeout")
 		postData = GroupStrToStruct(payload)
@@ -432,7 +455,7 @@ func (push *Push) getServiceUri(element PushElement, payload string) (uri string
 		thirdMethodUri = "v1/match/error"
 	} else if element.Category == service.PushCategorySuccessTimeout {
 		push.Log.Debug("element.Category == PushCategorySuccessTimeout")
-		postData = push.QueueSuccess.strToStruct(payload)
+		postData = push.Rule.QueueSuccess.strToStruct(payload)
 		thirdMethodUri = "v1/match/error"
 	} else if element.Category == service.PushCategorySuccess {
 		push.Log.Debug("element.Category == PushCategorySuccess")
@@ -441,7 +464,6 @@ func (push *Push) getServiceUri(element PushElement, payload string) (uri string
 		postData, _ = success.GetResultById(thisResult.Id, 1, 0)
 		thirdMethodUri = "v1/match/succ"
 	} else {
-		mylog.Error("element.Category error.")
 		push.Log.Error("element.Category error.")
 		return uri, post, errors.New("element.Category error")
 	}
@@ -461,6 +483,8 @@ func (push *Push) pushAndUpInfo(element PushElement, upStatus int) {
 	}
 	util.MyPrint("push third service ,  uri : ", thirdMethodUri, " , postData : ", postData)
 
+	myServiceDiscovery := push.Rule.RuleManager.Option.GameMatch.Option.ServiceDiscovery
+	projectId := push.Rule.RuleManager.Option.GameMatch.Option.ProjectId
 	myService, _ := myServiceDiscovery.GetLoadBalanceServiceNodeByServiceName(service.SERVICE_MSG_SERVER, "")
 	serviceHttp := util.NewServiceHttp(projectId, service.SERVICE_MSG_SERVER, myService.Ip, myService.Port, myService.ServiceId)
 
@@ -470,8 +494,8 @@ func (push *Push) pushAndUpInfo(element PushElement, upStatus int) {
 
 	if err != nil {
 		push.upRetryPushInfo(element)
-		msg := myerr.MakeOneStringReplace(err.Error())
-		myerr.NewReplace(911, msg)
+		msg := push.Err.MakeOneStringReplace(err.Error())
+		push.Err.NewReplace(911, msg)
 		push.Log.Error("push third service " + err.Error())
 		return
 	}
@@ -480,7 +504,7 @@ func (push *Push) pushAndUpInfo(element PushElement, upStatus int) {
 
 }
 func (push *Push) hook(element PushElement, httpRs util.ResponseMsgST) {
-	redisConnFD := myredis.GetNewConnFromPool()
+	redisConnFD := push.Redis.GetNewConnFromPool()
 	defer redisConnFD.Close()
 
 	if httpRs.Code == 0 { // 0 即是200 ，推送成功~
@@ -502,8 +526,9 @@ func (push *Push) hook(element PushElement, httpRs util.ResponseMsgST) {
 			push.upRetryPushInfo(element)
 
 			httpRsJsonStr, _ := json.Marshal(httpRs)
-			msg := myerr.MakeOneStringReplace(string(httpRsJsonStr))
-			myerr.NewReplace(700, msg)
+			msg := push.Err.MakeOneStringReplace(string(httpRsJsonStr))
+			//msg := myerr.MakeOneStringReplace(string(httpRsJsonStr))
+			push.Err.NewReplace(700, msg)
 			return
 		}
 	} else if element.Category == service.PushCategorySuccessTimeout {
@@ -517,8 +542,9 @@ func (push *Push) hook(element PushElement, httpRs util.ResponseMsgST) {
 			push.upRetryPushInfo(element)
 
 			httpRsJsonStr, _ := json.Marshal(httpRs)
-			msg := myerr.MakeOneStringReplace(string(httpRsJsonStr))
-			myerr.NewReplace(700, msg)
+			msg := push.Err.MakeOneStringReplace(string(httpRsJsonStr))
+			//msg := myerr.MakeOneStringReplace(string(httpRsJsonStr))
+			push.Err.NewReplace(700, msg)
 			return
 		} else {
 			push.Log.Info("delOneResult")
@@ -528,17 +554,21 @@ func (push *Push) hook(element PushElement, httpRs util.ResponseMsgST) {
 			return
 		}
 	} else {
-		mylog.Error("pushAndUpInfo element.Category not found!!!")
+		push.Log.Error("pushAndUpInfo element.Category not found!!!")
 		push.Log.Error("pushAndUpInfo element.Category not found!!!")
 	}
 }
 func (push *Push) delOnePush(redisConn redis.Conn, id int) {
 	key := push.getRedisKeyPush(id)
-	mylog.Info("delOnePush action" + strconv.Itoa(id) + " key:" + key)
-	res, err := myredis.Send(redisConn, "del", redis.Args{}.Add(key)...)
-	//res,err :=   myredis.RedisDo("del",redis.Args{}.Add(key)... )
+	push.Log.Info("delOnePush action" + strconv.Itoa(id) + " key:" + key)
+	res, err := push.Redis.Send(redisConn, "del", redis.Args{}.Add(key)...)
+	//res,err :=   push.Redis.RedisDo("del",redis.Args{}.Add(key)... )
 	util.MyPrint(" delOnePush (", id, ")", res, err)
 	//util.MyPrint(" delOnePush (",id,")",res,err)
 
 	push.delOneStatus(redisConn, id)
+}
+
+func (push *Push) Close() {
+	push.CloseChan <- 1
 }

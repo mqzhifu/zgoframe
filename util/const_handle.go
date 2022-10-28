@@ -31,63 +31,6 @@ func (constHandle *ConstHandle) Init() {
 	var constItem ConstItem
 	var enumConst EnumConst
         	constItem = ConstItem{
-		Key:   "DEFAULT_GLOBAL_CONFIG_TYPE_FILE",
-		Value: "file",
-		Desc:  "从文件中读取配置信息",
-	}
-	constItemList = append(constItemList, constItem)
-
-	constItem = ConstItem{
-		Key:   "DEFAULT_GLOBAL_CONFIG_TYPE_ETCD",
-		Value: "etcd",
-		Desc:  "从ETCD中读取配置信息-暂未使用",
-	}
-	constItemList = append(constItemList, constItem)
-
-	constItem = ConstItem{
-		Key:   "DEFAULT_GLOBAL_CONFIG_TYPE_CENTER",
-		Value: "center",
-		Desc:  "从配置吣读取配置信息-暂未使用",
-	}
-	constItemList = append(constItemList, constItem)
-
-
-	enumConst = EnumConst{
-		CommonPrefix: "DEFAULT_GLOBAL_CONFIG_TYPE_",
-		Desc:         "全局(公共) 配置类型",
-		ConstList:    constItemList,
-		Type:          "string",
-	}
-
-	constHandle.EnumConstPool[enumConst.CommonPrefix] = enumConst
-	constItemList = []ConstItem{}
-
-    	constItem = ConstItem{
-		Key:   "GLOBAL_CONFIG_MODEL_STATUS_OPEN",
-		Value: "open",
-		Desc:  "打开",
-	}
-	constItemList = append(constItemList, constItem)
-
-	constItem = ConstItem{
-		Key:   "GLOBAL_CONFIG_MODEL_STATUS_OFF",
-		Value: "off",
-		Desc:  "关闭",
-	}
-	constItemList = append(constItemList, constItem)
-
-
-	enumConst = EnumConst{
-		CommonPrefix: "GLOBAL_CONFIG_MODEL_STATUS_O",
-		Desc:         "全局配置文件中，每个模块的：开关选项",
-		ConstList:    constItemList,
-		Type:          "string",
-	}
-
-	constHandle.EnumConstPool[enumConst.CommonPrefix] = enumConst
-	constItemList = []ConstItem{}
-
-    	constItem = ConstItem{
 		Key:   "HTTP_RES_COMM_ERROR",
 		Value: 4,
 		Desc:  "失败",
@@ -1025,13 +968,6 @@ func (constHandle *ConstHandle) Init() {
 	constItemList = append(constItemList, constItem)
 
 	constItem = ConstItem{
-		Key:   "",
-		Value: 0,
-		Desc:  "",
-	}
-	constItemList = append(constItemList, constItem)
-
-	constItem = ConstItem{
 		Key:   "USER_TYPE_THIRD_WEIBO",
 		Value: 11,
 		Desc:  "微博",
@@ -1054,7 +990,7 @@ func (constHandle *ConstHandle) Init() {
 
 
 	enumConst = EnumConst{
-		CommonPrefix: "",
+		CommonPrefix: "USER_TYPE_THIRD_",
 		Desc:         "用户注册类型",
 		ConstList:    constItemList,
 		Type:          "int",
@@ -1792,52 +1728,6 @@ func (constHandle *ConstHandle) Init() {
 	constItemList = []ConstItem{}
 
     	constItem = ConstItem{
-		Key:   "ENV_LOCAL_STR",
-		Value: "local",
-		Desc:  "开发环境",
-	}
-	constItemList = append(constItemList, constItem)
-
-	constItem = ConstItem{
-		Key:   "ENV_DEV_STR",
-		Value: "dev",
-		Desc:  "开发环境",
-	}
-	constItemList = append(constItemList, constItem)
-
-	constItem = ConstItem{
-		Key:   "ENV_TEST_STR",
-		Value: "test",
-		Desc:  "测试环境",
-	}
-	constItemList = append(constItemList, constItem)
-
-	constItem = ConstItem{
-		Key:   "ENV_PRE_STR",
-		Value: "pre",
-		Desc:  "预发布环境",
-	}
-	constItemList = append(constItemList, constItem)
-
-	constItem = ConstItem{
-		Key:   "ENV_ONLINE_STR",
-		Value: "online",
-		Desc:  "线上环境",
-	}
-	constItemList = append(constItemList, constItem)
-
-
-	enumConst = EnumConst{
-		CommonPrefix: "ENV_",
-		Desc:         "环境变量-字符串",
-		ConstList:    constItemList,
-		Type:          "string",
-	}
-
-	constHandle.EnumConstPool[enumConst.CommonPrefix] = enumConst
-	constItemList = []ConstItem{}
-
-    	constItem = ConstItem{
 		Key:   "LOG_LEVEL_DEBUG",
 		Value: 0,
 		Desc:  "",
@@ -2368,7 +2258,7 @@ func (constHandle *ConstHandle) Init() {
 	constItem = ConstItem{
 		Key:   "CLOSE_SOURCE_CONN_RESET_BY_PEER",
 		Value: 81,
-		Desc:  "对端，如果直接关闭网络，或者崩溃之类的，类库捕捉不到这个事件 ~ :connection reset by peer",
+		Desc:  "对端，如果直接关闭网络，或者崩溃之类的，类库捕捉不到这个事件",
 	}
 	constItemList = append(constItemList, constItem)
 
@@ -2578,63 +2468,6 @@ func (constHandle *ConstHandle) Init() {
 	constItemList = []ConstItem{}
 
     	constItem = ConstItem{
-		Key:   "TimeSliceLength",
-		Value: 8,
-		Desc:  "",
-	}
-	constItemList = append(constItemList, constItem)
-
-	constItem = ConstItem{
-		Key:   "ProtocolICMP",
-		Value: 1,
-		Desc:  "",
-	}
-	constItemList = append(constItemList, constItem)
-
-	constItem = ConstItem{
-		Key:   "ProtocolIPv6ICMP",
-		Value: 58,
-		Desc:  "",
-	}
-	constItemList = append(constItemList, constItem)
-
-
-	enumConst = EnumConst{
-		CommonPrefix: "",
-		Desc:         "ping",
-		ConstList:    constItemList,
-		Type:          "int",
-	}
-
-	constHandle.EnumConstPool[enumConst.CommonPrefix] = enumConst
-	constItemList = []ConstItem{}
-
-    	constItem = ConstItem{
-		Key:   "ECHO_REQUEST_HEAD_LEN",
-		Value: 8,
-		Desc:  "",
-	}
-	constItemList = append(constItemList, constItem)
-
-	constItem = ConstItem{
-		Key:   "ECHO_REPLY_HEAD_LEN",
-		Value: 20,
-		Desc:  "",
-	}
-	constItemList = append(constItemList, constItem)
-
-
-	enumConst = EnumConst{
-		CommonPrefix: "ECHO_RE",
-		Desc:         "ping3",
-		ConstList:    constItemList,
-		Type:          "int",
-	}
-
-	constHandle.EnumConstPool[enumConst.CommonPrefix] = enumConst
-	constItemList = []ConstItem{}
-
-    	constItem = ConstItem{
 		Key:   "SERVER_STATUS_NORMAL",
 		Value: 1,
 		Desc:  "",
@@ -2676,7 +2509,7 @@ func (constHandle *ConstHandle) Init() {
 
 	enumConst = EnumConst{
 		CommonPrefix: "SERVER_PING_",
-		Desc:         "SERVER_STATUS",
+		Desc:         "SERVER_PING服务器的状态",
 		ConstList:    constItemList,
 		Type:          "int",
 	}
@@ -2724,13 +2557,6 @@ func (constHandle *ConstHandle) Init() {
 	constItemList = []ConstItem{}
 
     	constItem = ConstItem{
-		Key:   "",
-		Value: 0,
-		Desc:  "服务发现 - 分布式DB",
-	}
-	constItemList = append(constItemList, constItem)
-
-	constItem = ConstItem{
 		Key:   "SERVICE_DISCOVERY_ETCD",
 		Value: 1,
 		Desc:  "",
@@ -2746,8 +2572,8 @@ func (constHandle *ConstHandle) Init() {
 
 
 	enumConst = EnumConst{
-		CommonPrefix: "",
-		Desc:         "服务发现的类型",
+		CommonPrefix: "SERVICE_DISCOVERY_",
+		Desc:         "服务发现的类型，分布式DB",
 		ConstList:    constItemList,
 		Type:          "int",
 	}

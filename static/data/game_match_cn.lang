@@ -1,0 +1,68 @@
+300|redis connect err,error,redis连接超时
+301|redisDo has err {0},error,执行redis指令失败
+350|init log class has err : {0},error,初始化公共库：日志，失败
+400|ruleId not in redis db,error,ruleId错误不在REDIS-DB中
+401|players len is : 0,error,报名的玩家数为空
+402|sign err Status:PlayerStatusSign  id:{0} ,error,玩家状态：报名中~不能重复报名
+403|sign err Status:PlayerStatusSuccess  id:{0} ,error,玩家状态为已成功匹配，等待ROOM服务接收成功数据
+405|sign err Status:PlayerStatusSign id:{0} but timeout and group person > 1 ,error,玩家状态为报名中，且已失效，等待后台任务回收，并且该玩家所有组的人数大于1
+406|players is timeout : 0,error,报名的玩家数为空
+407|sign err Status:PlayerStatusSign timeout  id:{0} ,error,玩家状态：~不能重复报名，已超时,等待后台协程回收或者可以取消报名
+408|sign err :player len  > rule.max person id:{0},error,rule规定是N人-报名的小组人数大于此数
+409|sign err :check groupId uniq...:{0},error,外部groupId错误
+410|sign err :player len  > rule.PersonCondition ,max person :{0},error,rule规定是N人-报名的小组人数大于此数
+411|sign err :max person > 5,报名每组人数最大为5
+412|sign err :uid empty
+450|matchCode is null,error,matchCode为空
+451|matchCode not exist in db,error,matchCode在DB中找不见
+452|groupId is null or <= 0,error,groupId为空
+453|customProp is null,error,customProp为空
+454|playerList is null,error,playerList为空
+455|playerList.(map[string]map[string]interface{}) error ,error,playerList格式错误
+456|some player id is null,error,某个玩家ID为空
+457|player id is null or group id is null,error,某个玩家ID为空
+458|oldPlayerStatusElement == newPlayerStatusElement,error,更新玩家信息出错，新值与旧值相同
+459|httpReqBusiness decode json ,error,un
+460|httpReqBusiness successId = 0 ,error,un
+500|getErrorCode list is empty ,error,错误描述文件列表为空
+501|pidFilePath is empty,error,进程ID保存文件位置为空
+502|init initPid open file err : {0},error,进程ID保存文件-打开失败
+503|pidFilePath io.WriteString err :{0},error,进程ID写入出错
+555|公众错误类中，有一个找不到错误码的情况
+600|rule config HGETALL err:{0},error,rule数据库中为空
+601|RuleConfig is null  ,error,rule数据库中为空
+602|rule id not exist :{0},error,ruleId为空
+603|addRuleOne redis err,error,添加一条rule发生错误
+604|id <= 0,error,id为空
+605|AppId <= 0,error,appId为空
+606|Flag <= 0,error,flag <= 0
+607|Flag must : 1 or 2,error,flag值错误~只允许有：1 和2
+608|TeamVSPerson <= 0,error,TeamVSPerson<=0
+609|TeamVSPerson > {0},error,TeamVSPerson
+610|PersonCondition <= 0,error,PersonCondition
+611|PersonCondition > {0},error,PersonCondition
+612|MatchTimeout < {0} or MatchTimeout > {1},error,MatchTimeout
+613|SuccessTimeout < {0} or SuccessTimeout > {1},error,MatchTimeout
+614|GroupPersonMax <= 0,error,GroupPersonMax
+615|GroupPersonMax > {0},error,GroupPersonMax
+616|CategoryKey is empty,error,CategoryKey为空
+617|PlayerWeight.ScoreMin > rule.PlayerWeight.ScoreMax,error,ScoreMin>ScoreMax
+620| etcd rule matchCode is empty ,error,matchCode为空
+621| etcd rule value is empty,error,rule结构为空
+622| etcd rule json.Unmarshal err {0},error, 解析rule字符串到json失败
+623| playerStatus not equal Sign {0},error,un
+624| etcd rule status != online ,error,un
+625| rule config is null ,error,从etcd里可以读到ruleList ，但是用户监听的ruleId list 对不上
+700| push respone code err {0},error,un
+750| groupId not in db {0},error,un
+800|http content = 0 ,post data is empty ,error,该接口需要POST数据，但数据为空
+801|http no route this uri ,error,请求URI无法路由到具体方法
+802|post data is empty,error,数据为空
+803|HttpdRuleState error,error,该rule未初始化
+804|state != HTTPD_RULE_STATE_OK,error,该rule的httpd接口，未开启
+805| json decode to struct failed : {0},error,un
+806| MatchCode not in map ,error,unknow
+807| successId not in db ,error,unknow
+900|get ErrorCode container is null ,error,获取错误码配置表为空
+910|init etcd error {0} ,error,初始化etcd 发生错误
+911|service HttpPost etcd  {0} ,error,向微服务发送请求时，出现错误

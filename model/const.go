@@ -116,10 +116,9 @@ const (
 	USER_TYPE_THIRD_GOOGLE   = 22 //google
 	USER_TYPE_THIRD_TWITTER  = 23 //twitter
 	USER_TYPE_THIRD_YOUTOBE  = 24 //youtobe
-
-	USER_TYPE_THIRD_WEIBO  = 11 //微博
-	USER_TYPE_THIRD_WECHAT = 12 //微信
-	USER_TYPE_THIRD_QQ     = 13 //QQ
+	USER_TYPE_THIRD_WEIBO    = 11 //微博
+	USER_TYPE_THIRD_WECHAT   = 12 //微信
+	USER_TYPE_THIRD_QQ       = 13 //QQ
 )
 
 //@parse 用户注册类型

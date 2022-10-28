@@ -3,6 +3,7 @@ package global
 import (
 	"zgoframe/service"
 	"zgoframe/service/cicd"
+	gamematch "zgoframe/service/game_match"
 	"zgoframe/util"
 )
 
@@ -18,6 +19,7 @@ type MyService struct {
 	ConfigCenter *service.ConfigCenter //配置中心
 	Cicd         *cicd.CicdManager     //自动部署
 	Mail         *service.Mail         //站内信
+	GameMatch    *gamematch.GameMatch
 }
 
 var GateDefaultProtocol = int32(util.PROTOCOL_WEBSOCKET)
@@ -125,6 +127,40 @@ func NewMyService() *MyService {
 
 	}
 	myService.Cicd, err = InitCicd()
+
+	//type GameMatchOption struct {
+	//	Log                *zap.Logger            //log 实例
+	//	Redis              *util.MyRedisGo        //redis 实例
+	//	Gorm               *gorm.DB               //mysql 实例
+	//	Service            *util.Service          //服务 实例
+	//	Metrics            *util.MyMetrics        //统计 实例
+	//	ServiceDiscovery   *util.ServiceDiscovery //服务发现 实例
+	//	StaticPath         string                 //静态文件公共目录
+	//	RuleDataSourceType int                    //rule的数据来源类型
+	//	RedisPrefix        string                 //redis公共的前缀，主要是怕key重复
+	//	RedisTextSeparator string                 //结构体不能直接存到redis中，得手动分隔存进去。不存JSON是因为浪费空间
+	//	RedisKeySeparator  string                 //redis key 的分隔符号
+	//	ProjectId          int
+	//	//Etcd             *util.MyEtcd
+	//}
+
+	gmOp := gamematch.GameMatchOption{
+		Log:     V.Zap,
+		Redis:   V.RedisGo,
+		Gorm:    V.Gorm,
+		Metrics: V.Metric,
+		//Service:            V.ServiceManager,
+		ServiceDiscovery:   V.ServiceDiscovery,
+		RuleDataSourceType: service.GAME_MATCH_DATA_SOURCE_TYPE_DB,
+		StaticPath:         C.Http.StaticPath,
+		RedisPrefix:        "gm",
+		RedisKeySeparator:  "_",
+		RedisTextSeparator: "#",
+	}
+	myService.GameMatch, err = gamematch.NewGameMatch(gmOp)
+	if err != nil {
+		util.ExitPrint("NewGameMatch err:", err)
+	}
 
 	//这个是真的匹配服务，上面是个假的DEMO类型的匹配服务
 	//gameMatchOption :=  gamematch.GamematchOption{

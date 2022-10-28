@@ -2,6 +2,9 @@ package v1
 
 import (
 	"github.com/gin-gonic/gin"
+	"zgoframe/core/global"
+	"zgoframe/http/request"
+	httpresponse "zgoframe/http/response"
 )
 
 // @Tags GameMatch
@@ -13,33 +16,19 @@ import (
 // @Param X-Project-Id header string true "项目ID"  default(6)
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
 // @Produce application/json
-// @Param data body gamematch.HttpReqBusiness true " "
+// @Param data body request.HttpReqGameMatchPlayerSign true " "
 // @Success 200 {object} gamematch.Group
-// @Router /game/match/sign [get]
+// @Router /game/match/sign [post]
 func GameMatchSign(c *gin.Context) {
-	//var form gamematch.HttpReqBusiness
-	//c.ShouldBind(&form)
-	//
-	//code,httpReqBusiness  := global.V.MyService.GameMatch.BusinessCheckData(form)
-	//if code != 0{
-	//	err := global.V.Err.New(code)
-	//	httpresponse.FailWithMessage(err.Error(), c)
-	//	return
-	//}
-	//
-	//err := global.V.MyService.GameMatch.CheckHttpSignData(httpReqBusiness)
-	//if err != nil{
-	//	httpresponse.FailWithMessage(err.Error(), c)
-	//	return
-	//}
-	//
-	//signRsData, err := global.V.MyService.GameMatch.Sign(httpReqBusiness)
-	//if err != nil{
-	//	httpresponse.FailWithMessage(err.Error(), c)
-	//	return
-	//}
-	//
-	//httpresponse.OkWithAll(signRsData,"ok",c)
+	var form request.HttpReqGameMatchPlayerSign
+	c.ShouldBind(&form)
+
+	group, err := global.V.MyService.GameMatch.Sign(form)
+	if err != nil {
+		httpresponse.FailWithMessage(err.Error(), c)
+		return
+	}
+	httpresponse.OkWithAll(group, "ok", c)
 }
 
 // @Tags GameMatch

@@ -111,7 +111,6 @@ func RegGinHttpRoute() {
 	SystemGroup := global.V.Gin.Group("")
 	SystemGroup.Use(httpmiddleware.JWTAuth()).Use(httpmiddleware.SecondAuth())
 	{
-		router.InitToolsRouter(SystemGroup)
 		router.InitSysRouter(SystemGroup)
 	}
 
@@ -119,6 +118,7 @@ func RegGinHttpRoute() {
 	//设置正常API（需要验证）
 	PrivateGroup.Use(httpmiddleware.JWTAuth())
 	{
+		router.InitToolsRouter(PrivateGroup)
 		router.InitTwinAgoraRouter(PrivateGroup)
 		router.InitUserRouter(PrivateGroup)
 		router.InitMailRouter(PrivateGroup)

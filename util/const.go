@@ -34,6 +34,14 @@ const (
 	//log
 	CONTENT_TYPE_STRING = 0
 	//CONTENT_TYPE_JSON = 1
+
+	// ping
+	TimeSliceLength  = 8
+	ProtocolICMP     = 1
+	ProtocolIPv6ICMP = 58
+	// ping3
+	ECHO_REQUEST_HEAD_LEN = 8
+	ECHO_REPLY_HEAD_LEN   = 20
 )
 
 //声网 access token 自研
@@ -76,7 +84,7 @@ const (
 	ENV_ONLINE_INT = 5 //线上环境
 )
 
-//@parse 环境变量-字符串
+// 环境变量-字符串
 const (
 	ENV_LOCAL_STR  = "local"  //开发环境
 	ENV_DEV_STR    = "dev"    //开发环境
@@ -197,7 +205,7 @@ const (
 	CLOSE_SOURCE_SIGNAL_QUIT           = 6  //接收到关闭信号，netWay.Quit触发
 	CLOSE_SOURCE_CLIENT_WS_FD_GONE     = 7  //S端读取连接消息时，异常了~可能是：客户端关闭了连接
 	CLOSE_SOURCE_SEND_MESSAGE          = 8  //S端给某个连接发消息，结果失败了，这里概率是连接已经断了
-	CLOSE_SOURCE_CONN_RESET_BY_PEER    = 81 //对端，如果直接关闭网络，或者崩溃之类的，类库捕捉不到这个事件 ~ :connection reset by peer
+	CLOSE_SOURCE_CONN_RESET_BY_PEER    = 81 //对端，如果直接关闭网络，或者崩溃之类的，类库捕捉不到这个事件
 	CLOSE_SOURCE_CONN_SHUTDOWN         = 12
 	CLOSE_SOURCE_CONN_LOGIN_ROUTER_ERR = 13
 	CLOSE_SOURCE_RTT_TIMEOUT           = 91 //S端已收到了RTT的响应，但已超时
@@ -248,26 +256,13 @@ const (
 	OUT_TARGET_NET_UDP = 2
 )
 
-//@parse ping
-const (
-	TimeSliceLength  = 8
-	ProtocolICMP     = 1
-	ProtocolIPv6ICMP = 58
-)
-
-//@parse ping3
-const (
-	ECHO_REQUEST_HEAD_LEN = 8
-	ECHO_REPLY_HEAD_LEN   = 20
-)
-
 //@parse SERVER_STATUS
 const (
 	SERVER_STATUS_NORMAL = 1
 	SERVER_STATUS_CLOSE  = 2
 )
 
-//@parse SERVER_STATUS
+//@parse SERVER_PING服务器的状态
 const (
 	SERVER_PING_OK   = 1 //正常：PING 成功
 	SERVER_PING_FAIL = 2 //异常：PING 失败了
@@ -281,10 +276,8 @@ const (
 	SERVICE_PROTOCOL_TCP       = 4
 )
 
-//@parse 服务发现的类型
+//@parse 服务发现的类型，分布式DB
 const (
-
-	//服务发现 - 分布式DB
 	SERVICE_DISCOVERY_ETCD   = 1
 	SERVICE_DISCOVERY_CONSUL = 2
 )

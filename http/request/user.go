@@ -171,3 +171,16 @@ type CheckEmailExist struct {
 	Email   string `json:"email"`   //邮箱
 	Purpose int    `json:"purpose"` //用途,1注册2找回密码3修改密码4登陆
 }
+
+//能用HTTP请求结构体，按说应该拆开，但是有些公共的参数，拆开不能统一check
+type HttpReqGameMatchPlayerSign struct {
+	RuleId     int                      `json:"rule_id" desc:"同上，这个是整型，由系统自动生成"`
+	GroupId    int                      `json:"group_id" desc:"小组ID，注：请输入唯一值，不要重复"`
+	PlayerList []HttpReqGameMatchPlayer `json:"player_list" desc:"玩家列表,ex:[{\"uid\":2,\"matchAttr\":{\"age\":1,\"sex\":2}}]"`
+	Addition   string                   `json:"addition" desc:"附加值，请求方传什么值，返回就会随带该值"`
+}
+
+type HttpReqGameMatchPlayer struct {
+	Uid        int            `json:"uid"`
+	WeightAttr map[string]int `json:"weight_attr"`
+}

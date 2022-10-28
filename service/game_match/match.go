@@ -5,82 +5,97 @@ import (
 	"go.uber.org/zap"
 	"strconv"
 	"sync"
+	"time"
 	"zgoframe/service"
 	"zgoframe/util"
 )
 
 //匹配 (这个就是整个包的核心)
 type Match struct {
-	Mutex        sync.Mutex
-	Rule         Rule
-	QueueSign    *QueueSign
-	QueueSuccess *QueueSuccess
-	Push         *Push
-	Gamematch    *Gamematch //父类
-	rangeStart   string
-	rangeEnd     string
-	Log          *zap.Logger
+	Mutex      sync.Mutex
+	Rule       *Rule
+	rangeStart string
+	rangeEnd   string
+	Log        *zap.Logger //log 实例
+	Redis      *util.MyRedisGo
+	Err        *util.ErrMsg
+	CloseChan  chan int
+	prefix     string
 }
 
-func NewMatch(rule Rule, gamematch *Gamematch) *Match {
+func NewMatch(rule *Rule) *Match {
 	match := new(Match)
 	match.Rule = rule
-	match.Gamematch = gamematch
 	match.rangeStart = ""
 	match.rangeEnd = ""
-
-	match.QueueSign = match.Gamematch.GetContainerSignByRuleId(rule.Id)
-	match.QueueSuccess = match.Gamematch.getContainerSuccessByRuleId(rule.Id)
-	match.Push = match.Gamematch.getContainerPushByRuleId(rule.Id)
-
-	//match.Log = getRuleModuleLogInc(rule.CategoryKey,"matching")
-	match.Log = mylog
+	match.Log = rule.RuleManager.Option.GameMatch.Option.Log
+	match.CloseChan = make(chan int)
+	match.prefix = "match"
 	return match
+}
+func (match *Match) Close() {
+	match.CloseChan <- 1
+}
+
+func (match *Match) Demon() {
+	match.Log.Info(match.prefix + " Demon.")
+	for {
+		select {
+		case signal := <-match.CloseChan:
+			match.Log.Warn(match.prefix + "Demon CloseChan receive :" + strconv.Itoa(signal))
+			goto forEnd
+		default:
+			match.matching()
+			time.Sleep(time.Millisecond * time.Duration(match.Rule.RuleManager.Option.GameMatch.LoopSleepTime))
+		}
+	}
+forEnd:
+	match.Log.Warn("match Demon end .")
 }
 
 //一次完整的匹配大流程
 func (match *Match) matching() {
 	//match.Log.Info("new times <matching> ")
 	//每次匹配之前，要先检查一下数据是否超时，后面就不再检查了
-	match.QueueSign.CheckTimeout()
+	match.Rule.QueueSign.CheckTimeout()
 
-	//mylog.Info("start one rule matching , ruleId :  ",match.Rule.Id, " category :" ,match.Rule.CategoryKey)
-	playersTotal := match.QueueSign.getAllPlayersCnt()
-	groupsTotal := match.QueueSign.getAllGroupsWeightCnt()
+	//match.Log.Info("start one rule matching , ruleId :  ",match.Rule.Id, " category :" ,match.Rule.CategoryKey)
+	playersTotal := match.Rule.QueueSign.getAllPlayersCnt()
+	groupsTotal := match.Rule.QueueSign.getAllGroupsWeightCnt()
 	match.clearMemberRange()
 
 	now := util.GetNowTimeSecondToInt()
 	if playersTotal == 0 || groupsTotal == 0 {
-		//mylog.Debug(" first total is empty ")
+		//match.Log.Debug(" first total is empty ")
 		if now%10 == 0 {
-			match.Log.Info(" first total is empty ")
+			match.Log.Info(match.prefix + " first total is empty ")
 		}
 
 		return
 	}
-	mylog.Info("new once matching func , playersTotal total:" + strconv.Itoa(playersTotal) + " groupsTotal : " + strconv.Itoa(groupsTotal))
+	match.Log.Info("new once matching func , playersTotal total:" + strconv.Itoa(playersTotal) + " groupsTotal : " + strconv.Itoa(groupsTotal))
 	//match.Log.Info("new once matching func , playersTotal total:",playersTotal , " groupsTotal : ",groupsTotal)
 
 	//match.Log.Info("Rule.PlayerWeight:",match.Rule.PlayerWeight)
-	util.MyPrint(match.Rule.PlayerWeight)
+	util.MyPrint(match.Rule.GameMatchRule)
 	//设置了匹配权重公式
-	if match.Rule.PlayerWeight.Formula != "" && match.Rule.PlayerWeight.ScoreMax > match.Rule.PlayerWeight.ScoreMin {
+	if match.Rule.Formula != "" && match.Rule.WeightScoreMax > match.Rule.WeightScoreMin {
 		match.Log.Info("if case in :PlayerWeight.Formula")
 		dead := 0
 		//两个<极值>的距离
-		distance := match.Rule.PlayerWeight.ScoreMax - match.Rule.PlayerWeight.ScoreMin
+		distance := match.Rule.WeightScoreMax - match.Rule.WeightScoreMin
 		match.Log.Info("case in Formula , distance:" + strconv.Itoa(distance))
 		//这里，比较好的循环值应该是0-100，保证每走向前走一步，上下值的范围都能获取全了
 		//但是，这样有点浪费，步长设置成  上面的距离值，更快一些
-		for i := 0; i < service.WeightMaxValue; i = i + distance {
-			start := i - match.Rule.PlayerWeight.ScoreMin
+		for i := 0; i < match.Rule.RuleManager.Option.GameMatch.WeightMaxValue; i = i + distance {
+			start := i - match.Rule.WeightScoreMin
 			if start < 0 {
 				start = 0
 			}
 
-			end := i + match.Rule.PlayerWeight.ScoreMax
-			if end > service.WeightMaxValue {
-				end = service.WeightMaxValue
+			end := i + match.Rule.WeightScoreMax
+			if end > match.Rule.RuleManager.Option.GameMatch.WeightMaxValue {
+				end = match.Rule.RuleManager.Option.GameMatch.WeightMaxValue
 				dead = 1
 			}
 
@@ -95,7 +110,7 @@ func (match *Match) matching() {
 			match.setMemberRange(rangeStart, rangeEnd)
 			//successGroupIds: map[int]map[int]int   ,外层的map 是证明一次匹配成功的结果，内层map 是 groupIds
 			successGroupIds, isEmpty := match.searchByRange(service.FilterFlagDIY)
-			//mylog.Info("searchByRange rs : ",rangeStart , " ~ ",rangeStart , " , rs , cnt:",len(successGroupIds) , "isEmpty : ",isEmpty)
+			//match.Log.Info("searchByRange rs : ",rangeStart , " ~ ",rangeStart , " , rs , cnt:",len(successGroupIds) , "isEmpty : ",isEmpty)
 			match.Log.Info("searchByRange rs : " + rangeStart + " ~ " + rangeStart + " , rs , cnt:" + strconv.Itoa(len(successGroupIds)) + "isEmpty : " + strconv.Itoa(isEmpty))
 
 			//match.Log.Debug("searchByRange rs : ",successGroupIds)
@@ -103,7 +118,7 @@ func (match *Match) matching() {
 			if isEmpty == 1 {
 				continue
 			}
-			//mylog.Debug("successGroupIds",successGroupIds)
+			//match.Log.Debug("successGroupIds",successGroupIds)
 			util.MyPrint("searchByRange rs : ", successGroupIds)
 			//match.Log.Info("successGroupIds",successGroupIds)
 			//将计算好的组ID，团队，插入到 成功 队列中
@@ -119,22 +134,22 @@ func (match *Match) matching() {
 		for i := 0; i < len(matchingRange); i++ {
 			groupIds, isEmpty := match.matchingRange(matchingRange[i])
 			if isEmpty == 1 {
-				mylog.Warn("signed players is empty ")
+				match.Log.Warn("signed players is empty ")
 				return
 			}
 			if matchingRange[i] == service.FilterFlagAll {
 				if len(groupIds) > 0 {
-					mylog.Info("FilterFlagAll hit...")
+					match.Log.Info("FilterFlagAll hit...")
 					return
 				}
 			}
 		}
 	}
 
-	finalPlayersTotal := match.QueueSign.getAllPlayersCnt()
-	finalGroupsTotal := match.QueueSign.getAllGroupsWeightCnt()
+	finalPlayersTotal := match.Rule.QueueSign.getAllPlayersCnt()
+	finalGroupsTotal := match.Rule.QueueSign.getAllGroupsWeightCnt()
 
-	mylog.Info("once matching end, playersTotal total:" + strconv.Itoa(playersTotal) + " groupsTotal : " + strconv.Itoa(groupsTotal) +
+	match.Log.Info("once matching end, playersTotal total:" + strconv.Itoa(playersTotal) + " groupsTotal : " + strconv.Itoa(groupsTotal) +
 		"finalPlayersTotal total:" + strconv.Itoa(finalPlayersTotal) + " finalGroupsTotal : " + strconv.Itoa(finalGroupsTotal))
 	//match.Log.Info("once matching end, playersTotal total:",playersTotal , " groupsTotal : ",groupsTotal,
 	//	"finalPlayersTotal total:",finalPlayersTotal , " finalGroupsTotal : ",finalGroupsTotal)
@@ -145,14 +160,14 @@ func (match *Match) matching() {
 func (match *Match) setMemberRange(rangeStart string, rangeEnd string) {
 	match.rangeStart = rangeStart
 	match.rangeEnd = rangeEnd
-	//mylog.Info(" set MemberVar Range ", rangeStart , " ", rangeEnd)
+	//match.Log.Info(" set MemberVar Range ", rangeStart , " ", rangeEnd)
 	//match.Log.Info(" set MemberVar Range ", rangeStart , " ", rangeEnd)
 }
 
 func (match *Match) clearMemberRange() {
 	match.rangeStart = ""
 	match.rangeEnd = ""
-	//mylog.Info(" clear MemberVar : rangeStart  rangeEnd" )
+	//match.Log.Info(" clear MemberVar : rangeStart  rangeEnd" )
 	//match.Log.Info(" clear MemberVar : rangeStart  rangeEnd")
 }
 
@@ -164,14 +179,14 @@ flag
 */
 //范围性匹配：搜索一定<权重>范围内的数据，一共是3次，由最粗到最细粒度
 func (match *Match) matchingRange(flag int) (successGroupIds map[int]map[int]int, isEmpty int) {
-	//mylog.Info(" matchingRange , flag : ",flag)
+	//match.Log.Info(" matchingRange , flag : ",flag)
 	match.Log.Info("matchingRange , flag : " + strconv.Itoa(flag))
 	var tmpMin int
 	var tmpMax float32
 	rangeStart := ""
 	rangeEnd := ""
 	forStart := 0
-	forEnd := service.WeightMaxValue
+	forEnd := match.Rule.RuleManager.Option.GameMatch.WeightMaxValue
 	if flag == service.FilterFlagAll {
 		forEnd = 1
 	}
@@ -205,16 +220,16 @@ func (match *Match) matchingRange(flag int) (successGroupIds map[int]map[int]int
 		}
 		match.setMemberRange(rangeStart, rangeEnd)
 		successGroupIds, isEmpty = match.searchByRange(flag)
-		//mylog.Info("searchByRange rs : ",rangeStart , " ~ ",rangeStart , " , rs , cnt:",len(successGroupIds) , "isEmpty : ",isEmpty)
+		//match.Log.Info("searchByRange rs : ",rangeStart , " ~ ",rangeStart , " , rs , cnt:",len(successGroupIds) , "isEmpty : ",isEmpty)
 		util.MyPrint("searchByRange rs : ", successGroupIds)
 		match.Log.Info("searchByRange rs : " + rangeStart + " ~ " + rangeStart + " , rs , cnt:" + strconv.Itoa(len(successGroupIds)) + "isEmpty : " + strconv.Itoa(isEmpty))
 		if isEmpty == 1 && flag == service.FilterFlagAll {
 			//最大范围的查找没有数据，并且从redis读不出数据，证明就是数据太少，不可能成团
-			mylog.Warn(" FilterFlagAll  isEmpty  = 1 ,break this foreach")
+			match.Log.Warn(" FilterFlagAll  isEmpty  = 1 ,break this foreach")
 			match.Log.Info(" FilterFlagAll  isEmpty  = 1 ,break this foreach")
 			return successGroupIds, isEmpty
 		}
-		//mylog.Debug("successGroupIds",successGroupIds)
+		//match.Log.Debug("successGroupIds",successGroupIds)
 		util.MyPrint("successGroupIds", successGroupIds)
 		//将计算好的组ID，团队，插入到 成功 队列中
 		if len(successGroupIds) > 0 {
@@ -233,39 +248,39 @@ func (match *Match) matchingRange(flag int) (successGroupIds map[int]map[int]int
 //根据具体的<权重>值，开始进行最真实的匹配
 func (match *Match) searchByRange(flag int) (successGroupIds map[int]map[int]int, isEmpty int) {
 	//先做最大范围的搜索：所有报名匹配的玩家
-	mylog.Info("searchByRange : " + match.rangeStart + " , " + match.rangeEnd + "  , flag " + strconv.Itoa(flag))
+	match.Log.Info("searchByRange : " + match.rangeStart + " , " + match.rangeEnd + "  , flag " + strconv.Itoa(flag))
 	match.Log.Info("searchByRange : " + match.rangeStart + " , " + match.rangeEnd + "  , flag " + strconv.Itoa(flag))
 	playersTotal := 0                  //当前池子里共有多少个玩家
 	if flag == service.FilterFlagAll { //全匹配
-		playersTotal = match.QueueSign.getAllPlayersCnt()
+		playersTotal = match.Rule.QueueSign.getAllPlayersCnt()
 	} else { //块匹配
-		playersTotal = match.QueueSign.getPlayersCntTotalByWeight(match.rangeStart, match.rangeEnd)
+		playersTotal = match.Rule.QueueSign.getPlayersCntTotalByWeight(match.rangeStart, match.rangeEnd)
 	}
 	//当前池子里的小组数
-	groupsTotal := match.QueueSign.getGroupsWeightCnt(match.rangeStart, match.rangeEnd)
-	mylog.Info(" playersTotal total:" + strconv.Itoa(playersTotal) + " groupsTotal : " + strconv.Itoa(groupsTotal))
+	groupsTotal := match.Rule.QueueSign.getGroupsWeightCnt(match.rangeStart, match.rangeEnd)
+	match.Log.Info(" playersTotal total:" + strconv.Itoa(playersTotal) + " groupsTotal : " + strconv.Itoa(groupsTotal))
 	match.Log.Info(" playersTotal total:" + strconv.Itoa(playersTotal) + " groupsTotal : " + strconv.Itoa(groupsTotal))
 	//玩家数 或 小组数 <=0 没必要再算了，直接返回
 	if playersTotal <= 0 || groupsTotal <= 0 {
-		mylog.Info("total is 0")
+		match.Log.Info("total is 0")
 		match.Log.Info("total is 0")
 		return successGroupIds, 1
 	}
 	//组成一个队的：最低人数要求
-	personCondition := match.Rule.PersonCondition
-	if match.Rule.Flag == service.RuleFlagTeamVS { //组队/对战类
-		personCondition = match.Rule.TeamVSPerson * 2
+	personCondition := match.Rule.ConditionPeople
+	if match.Rule.Type == service.RULE_TYPE_TEAM_VS { //组队/对战类
+		personCondition = match.Rule.TeamMaxPeople * 2
 	}
-	mylog.Info(" success condition when person =" + strconv.Itoa(personCondition))
+	match.Log.Info(" success condition when person =" + strconv.Itoa(personCondition))
 	match.Log.Info(" success condition when person =" + strconv.Itoa(personCondition))
 	if playersTotal < personCondition {
-		mylog.Warn(" total < personCondition ")
+		match.Log.Warn(" total < personCondition ")
 		match.Log.Warn(" total < personCondition ")
 		return successGroupIds, 1
 	}
 
 	if flag == service.FilterFlagAll && playersTotal > personCondition*2 {
-		mylog.Warn(" FilterFlagAll playersTotal > personCondition * 2 ,end this searchByRange ")
+		match.Log.Warn(" FilterFlagAll playersTotal > personCondition * 2 ,end this searchByRange ")
 		match.Log.Info(" FilterFlagAll playersTotal > personCondition * 2 ,end this searchByRange ")
 		return successGroupIds, 0
 	}
@@ -279,13 +294,13 @@ func (match *Match) searchByRange(flag int) (successGroupIds map[int]map[int]int
 //前面是基于各种<总数>汇总，的各种验证，都没有问题了，这里才算是正式的细节匹配
 //defaultSuccessGroupIds:这个返回变量得注意下，整个过程都会带着，有点全局变量的意思
 func (match *Match) searchFilterDetail() (defaultSuccessGroupIds map[int]map[int]int) {
-	mylog.Info("searchFilterDetail , rule flag :" + strconv.Itoa(service.RuleFlagTeamVS))
-	match.Log.Info("searchFilterDetail , rule flag :" + strconv.Itoa(service.RuleFlagTeamVS))
+	match.Log.Info("searchFilterDetail , rule flag :" + strconv.Itoa(service.RULE_TYPE_TEAM_VS))
+	match.Log.Info("searchFilterDetail , rule flag :" + strconv.Itoa(service.RULE_TYPE_TEAM_VS))
 	//实例化，使用地址引用，后面的子函数，不用返回值了
 	successGroupIds := make(map[int]map[int]int)
 	TeamVSSuccessGroupIds := make(map[int]map[int]int)
 	//N vs N ，会多一步，公平性匹配，也就是5人组优化匹配的对手也是5人组
-	if match.Rule.Flag == service.RuleFlagTeamVS {
+	if match.Rule.Type == service.RULE_TYPE_TEAM_VS {
 		/*
 			共2轮过滤筛选
 			1、只求互补数，为了公平：5人组~匹配，对手也是5人组队的，3人组队匹配到的对手里也应该有3人组队的
@@ -312,7 +327,7 @@ func (match *Match) searchFilterDetail() (defaultSuccessGroupIds map[int]map[int
 	}
 	//因用的是map ,预先make 下，地址就已经分配了，可能有时，其实一个值都没有用到，但是len 依然是 > 0
 	if util.CheckMap2IntIsEmpty(successGroupIds) {
-		mylog.Warn("searchFilterDetail is empty")
+		match.Log.Warn("searchFilterDetail is empty")
 		match.Log.Warn("searchFilterDetail is empty")
 		return defaultSuccessGroupIds
 	}
@@ -334,18 +349,18 @@ func (match *Match) searchFilterDetail() (defaultSuccessGroupIds map[int]map[int
 //小组人数计算  数字组合方式
 func (match *Match) groupPersonCalculateNumberCombination(successGroupIds map[int]map[int]int) {
 	//这里吧，按说取，一条rule最大的值就行，没必要取全局最大的5，但是吧，后面的算法有点LOW，外层循环数就是5 ，除了矩阵，太麻烦，回头我再想想
-	groupPersonNum := match.QueueSign.getPlayersCntByWeight(match.rangeStart, match.rangeEnd)
-	//mylog.Debug(zlib.GetSpaceStr(4)+"every group person total : ",groupPersonNum)
+	groupPersonNum := match.Rule.QueueSign.getPlayersCntByWeight(match.rangeStart, match.rangeEnd)
+	//match.Log.Debug(zlib.GetSpaceStr(4)+"every group person total : ",groupPersonNum)
 	match.Log.Info("every group person total : ")
 	util.MyPrint(groupPersonNum)
 	//根据组人数，做排列组合，得到最终自然数和
-	calculateNumberTotalRs := match.calculateNumberTotal(match.Rule.PersonCondition, groupPersonNum)
-	//mylog.Info(zlib.GetSpaceStr(4)+"calculateNumberTotalRs :",calculateNumberTotalRs)
+	calculateNumberTotalRs := match.calculateNumberTotal(match.Rule.ConditionPeople, groupPersonNum)
+	//match.Log.Info(zlib.GetSpaceStr(4)+"calculateNumberTotalRs :",calculateNumberTotalRs)
 	util.MyPrint("calculateNumberTotalRs:", calculateNumberTotalRs)
 	//match.Log.Info("calculateNumberTotalRs :",calculateNumberTotalRs)
 	//上面的函数，虽然计算完了，总人数是够了，但是也可能不会成团，比如：全是4人为一组报名，成团总人数却是奇数，偶数和是不可能出现奇数的
 	if len(calculateNumberTotalRs) == 0 {
-		//mylog.Notice(zlib.GetSpaceStr(4)+"calculateNumberTotal is empty")
+		//match.Log.Notice(zlib.GetSpaceStr(4)+"calculateNumberTotal is empty")
 		match.Log.Warn("calculateNumberTotal is empty")
 		return
 	}
@@ -370,7 +385,7 @@ func (match *Match) groupPersonCalculateNumberCombination(successGroupIds map[in
 			successGroupIds[inc] = oneConditionGroupIds
 			inc++
 		} else {
-			mylog.Warn("this calculateNumberTotal condition not found ~")
+			match.Log.Warn("this calculateNumberTotal condition not found ~")
 		}
 	}
 	util.MyPrint("groupPersonCalculateNumberCombination rs :", successGroupIds)
@@ -378,7 +393,7 @@ func (match *Match) groupPersonCalculateNumberCombination(successGroupIds map[in
 func (match *Match) oneConditionConvertGroup(oneOkPersonCondition [5]int) map[int]int {
 	oneConditionGroupIds := make(map[int]int)
 	inc := 0
-	//mylog.Debug(oneOkPersonCondition)
+	//match.Log.Debug(oneOkPersonCondition)
 	someOneEmpty := 0 //redis 里取不出来数据了，或者取出的数据 小于 应取数据个数
 	for index, num := range oneOkPersonCondition {
 		person := index + 1
@@ -388,10 +403,10 @@ func (match *Match) oneConditionConvertGroup(oneOkPersonCondition [5]int) map[in
 			continue
 		}
 		//从redis的GroupPersonIndex索引中 到内存中（redis的数据已被删除，这里不能断了，如果断了得把取出来的数据再塞回去，不然对不上)
-		groupIds := match.QueueSign.getGroupPersonIndexList(person, match.rangeStart, match.rangeEnd, 0, num, true)
+		groupIds := match.Rule.QueueSign.getGroupPersonIndexList(person, match.rangeStart, match.rangeEnd, 0, num, true)
 		if len(groupIds) == 0 {
 			someOneEmpty = 1
-			mylog.Error("getGroupPersonIndexList empty")
+			match.Log.Error("getGroupPersonIndexList empty")
 			break
 		}
 		for i := 0; i < len(groupIds); i++ {
@@ -407,19 +422,19 @@ func (match *Match) oneConditionConvertGroup(oneOkPersonCondition [5]int) map[in
 		//zlib.MyPrint("groupIds : ",groupIds)
 	}
 	if someOneEmpty == 1 {
-		//mylog.Error("oneConditionConvertGroup someOneEmpty  empty")
+		//match.Log.Error("oneConditionConvertGroup someOneEmpty  empty")
 		//match.Log.Error("oneConditionConvertGroup someOneEmpty  empty")
 		msg := "oneConditionConvertGroup someOneEmpty  empty"
 		if len(oneConditionGroupIds) <= 0 {
 			msg += " bug oneConditionGroupIds len = 0 ,no need pushBack redis info"
-			mylog.Error(msg)
+			match.Log.Error(msg)
 		} else {
 			msg += " oneConditionGroupIds len = " + strconv.Itoa(len(oneConditionGroupIds))
-			mylog.Error(msg)
-			redisConnFD := myredis.GetNewConnFromPool()
-			myredis.Multi(redisConnFD)
+			match.Log.Error(msg)
+			redisConnFD := match.Redis.GetNewConnFromPool()
+			match.Redis.Multi(redisConnFD)
 			match.groupPushBackCondition(redisConnFD, oneConditionGroupIds)
-			myredis.Exec(redisConnFD)
+			match.Redis.Exec(redisConnFD)
 			redisConnFD.Close()
 			//重置：该变量
 			oneConditionGroupIds = make(map[int]int)
@@ -433,17 +448,17 @@ func (match *Match) oneConditionConvertGroup(oneOkPersonCondition [5]int) map[in
 //N V N  ,求:互补数/对数
 //这里只是做公平匹配，如：5V5 优先匹配出来，然后是4+1 VS 4+1 ，依此类推，保证5人组最好是直接匹配成5人组
 func (match *Match) logarithmic(successGroupIds map[int]map[int]int) {
-	//mylog.Info(zlib.GetSpaceStr(3)+ " action RuleFlagTeamVS logarithmic :")
+	//match.Log.Info(zlib.GetSpaceStr(3)+ " action RuleFlagTeamVS logarithmic :")
 	match.Log.Info("logarithmic")
-	groupPersonNum := match.QueueSign.getPlayersCntByWeight(match.rangeStart, match.rangeEnd)
-	//mylog.Debug(zlib.GetSpaceStr(2),"groupPersonTotal , ",groupPersonNum)
+	groupPersonNum := match.Rule.QueueSign.getPlayersCntByWeight(match.rangeStart, match.rangeEnd)
+	//match.Log.Debug(zlib.GetSpaceStr(2),"groupPersonTotal , ",groupPersonNum)
 	util.MyPrint("groupPersonTotal , ", groupPersonNum)
 	successGroupIdsInc := 0
 	//已处理过的互补数，如：4计算完了，1就不用算了，3计算完了，2其实也不用算了，
 	var processedNumber []int
 	wishSuccessGroups := 0 //预计应该成功的  团队~  用于统计debug
 	for personNum, personTotal := range groupPersonNum {
-		//mylog.Debug(zlib.GetSpaceStr(4)+"foreach groupPerson , person " , personNum, " ,  personTotal  ",personTotal , "successGroupIdsInc",successGroupIdsInc)
+		//match.Log.Debug(zlib.GetSpaceStr(4)+"foreach groupPerson , person " , personNum, " ,  personTotal  ",personTotal , "successGroupIdsInc",successGroupIdsInc)
 		match.Log.Info("foreach groupPerson , person " + strconv.Itoa(personNum) + " ,  personTotal  " + strconv.Itoa(personTotal) + "successGroupIdsInc" + strconv.Itoa(successGroupIdsInc))
 		//判断是否已经处理过了
 		elementInArrIndex := util.ElementInArrIndex(processedNumber, personNum)
@@ -452,25 +467,25 @@ func (match *Match) logarithmic(successGroupIds map[int]map[int]int) {
 			continue
 		}
 		//5或者设置的最大值，已知最大的，且直接满足不做处理
-		if personNum == match.Rule.TeamVSPerson {
-			//mylog.Debug(zlib.GetSpaceStr(4),"in max TeamVSPerson , no need remainder number")
+		if personNum == match.Rule.TeamMaxPeople {
+			//match.Log.Debug(zlib.GetSpaceStr(4),"in max TeamVSPerson , no need remainder number")
 			match.Log.Info(util.GetSpaceStr(4) + "in max TeamVSPerson , no need remainder number")
 			if personTotal <= 1 { //<5人组>如果只有一个的情况，满足不了条件
-				//mylog.Notice(zlib.GetSpaceStr(4),"in max TeamVSPerson 1 , but personTotal <= 1 , continue")
+				//match.Log.Notice(zlib.GetSpaceStr(4),"in max TeamVSPerson 1 , but personTotal <= 1 , continue")
 				match.Log.Warn("in max TeamVSPerson 1 , but personTotal <= 1 , continue")
 				continue
 			}
 			maxNumber := match.getMinPersonNum(personTotal, personTotal)
-			//mylog.Debug(zlib.GetSpaceStr(4),"maxNumber " , maxNumber)
+			//match.Log.Debug(zlib.GetSpaceStr(4),"maxNumber " , maxNumber)
 			match.Log.Info("maxNumber " + strconv.Itoa(maxNumber))
 			if maxNumber <= 0 {
-				//mylog.Notice(zlib.GetSpaceStr(4),"in max TeamVSPerson 2 , but personTotal <= 1 , continue")
+				//match.Log.Notice(zlib.GetSpaceStr(4),"in max TeamVSPerson 2 , but personTotal <= 1 , continue")
 				match.Log.Warn("in max TeamVSPerson 2 , but personTotal <= 1 , continue")
 				continue
 			}
 			wishSuccessGroups += maxNumber / 2
 			//取出集合中，所有人数为5的组ids
-			groupIds := match.QueueSign.getGroupPersonIndexList(match.Rule.TeamVSPerson, "-inf", "+inf", 0, maxNumber, true)
+			groupIds := match.Rule.QueueSign.getGroupPersonIndexList(match.Rule.TeamMaxPeople, "-inf", "+inf", 0, maxNumber, true)
 			j := 0
 			for i := 0; i < maxNumber/2; i++ {
 				tmp := make(map[int]int)
@@ -485,18 +500,18 @@ func (match *Match) logarithmic(successGroupIds map[int]map[int]int) {
 			continue
 		}
 		//团队最大值 - 当前人数 = 需要补哪个<组人数>   补数
-		needRemainderNum := match.Rule.TeamVSPerson - personNum
+		needRemainderNum := match.Rule.TeamMaxPeople - personNum
 		if groupPersonNum[needRemainderNum] <= 0 {
 			//互补值 不存在 ，或者 互补值 人数 为 0
 			continue
 		}
 		maxNumber := match.getMinPersonNum(personTotal, groupPersonNum[needRemainderNum])
-		mylog.Debug(util.GetSpaceStr(4) + "needNumber : " + strconv.Itoa(needRemainderNum) + "needNumberPersonTotal" + strconv.Itoa(groupPersonNum[needRemainderNum]) + " maxNumber : " + strconv.Itoa(maxNumber))
+		match.Log.Debug(util.GetSpaceStr(4) + "needNumber : " + strconv.Itoa(needRemainderNum) + "needNumberPersonTotal" + strconv.Itoa(groupPersonNum[needRemainderNum]) + " maxNumber : " + strconv.Itoa(maxNumber))
 		if maxNumber <= 0 {
 			continue
 		}
-		setA := match.QueueSign.getGroupPersonIndexList(needRemainderNum, match.rangeStart, match.rangeEnd, 0, maxNumber, true)
-		setB := match.QueueSign.getGroupPersonIndexList(personNum, match.rangeStart, match.rangeEnd, 0, maxNumber, true)
+		setA := match.Rule.QueueSign.getGroupPersonIndexList(needRemainderNum, match.rangeStart, match.rangeEnd, 0, maxNumber, true)
+		setB := match.Rule.QueueSign.getGroupPersonIndexList(personNum, match.rangeStart, match.rangeEnd, 0, maxNumber, true)
 		//逐条合并 setA setB
 		for k, _ := range setA {
 			tmp := make(map[int]int)
@@ -510,8 +525,8 @@ func (match *Match) logarithmic(successGroupIds map[int]map[int]int) {
 
 		processedNumber = append(processedNumber, needRemainderNum)
 	}
-	//mylog.Debug("wishSuccessGroups :",wishSuccessGroups)
-	//mylog.Info(zlib.GetSpaceStr(4),"logarithmic rs : ",successGroupIds)
+	//match.Log.Debug("wishSuccessGroups :",wishSuccessGroups)
+	//match.Log.Info(zlib.GetSpaceStr(4),"logarithmic rs : ",successGroupIds)
 	util.MyPrint("logarithmic rs : ", successGroupIds)
 	//time.Sleep(time.Second * 3)
 	//zlib.ExitPrint(3333333)
@@ -536,18 +551,18 @@ func (match *Match) getMinPersonNum(personTotal int, needRemainderNumPerson int)
 //注：successGroupIds ，这里只是组ID，是从索引里拿出来的，只是单一删除了索引值，并没有删除真正的组信息
 func (match *Match) successConditions(successGroupIds map[int]map[int]int) {
 	length := len(successGroupIds)
-	mylog.Info("successConditions  ...   len :   " + strconv.Itoa(length))
 	match.Log.Info("successConditions  ...   len :   " + strconv.Itoa(length))
-	redisConnFD := myredis.GetNewConnFromPool()
+	match.Log.Info("successConditions  ...   len :   " + strconv.Itoa(length))
+	redisConnFD := match.Redis.GetNewConnFromPool()
 	defer redisConnFD.Close()
 
-	if match.Rule.Flag == service.RuleFlagCollectPerson { //满足人数即开团
+	if match.Rule.Type == service.RULE_TYPE_TEAM_EACH_OTHER { //满足人数即开团
 		match.Log.Debug("case : RuleFlagCollectPerson")
 		//zlib.MyPrint("successGroupIds",successGroupIds)
 		for _, oneCondition := range successGroupIds {
-			myredis.Multi(redisConnFD)
+			match.Redis.Multi(redisConnFD)
 			util.MyPrint("oneCondition : ", oneCondition)
-			resultElement := match.QueueSuccess.NewResult()
+			resultElement := match.Rule.QueueSuccess.NewResult()
 			match.Log.Info("newr ResultElement struct")
 			//zlib.MyPrint("new resultElement : ",resultElement)
 			teamId := 1
@@ -563,14 +578,14 @@ func (match *Match) successConditions(successGroupIds map[int]map[int]int) {
 			resultElement.Teams = []int{teamId}
 			//zlib.MyPrint("resultElement",resultElement)
 			util.MyPrint("QueueSuccess.addOne", resultElement)
-			match.QueueSuccess.addOne(redisConnFD, resultElement, match.Push)
-			myredis.Exec(redisConnFD)
+			match.Rule.QueueSuccess.addOne(redisConnFD, resultElement, match.Rule.Push)
+			match.Redis.Exec(redisConnFD)
 		}
 	} else { //组队互相PK
 		match.Log.Debug("case : RuleFlagTeamVS")
 		if length == 1 {
 			match.groupPushBackCondition(redisConnFD, successGroupIds[0])
-			mylog.Warn("successGroupIds length = 1 , break")
+			match.Log.Warn("successGroupIds length = 1 , break")
 			match.Log.Warn("successGroupIds length = 1 , break")
 			return
 		}
@@ -595,20 +610,20 @@ func (match *Match) successConditions(successGroupIds map[int]map[int]int) {
 			match.Log.Info("i:" + strconv.Itoa(i))
 			//zlib.MyPrint(successGroupIds[i],i)
 			if len(successGroupIds[i]) == 1 {
-				mylog.Info(" has a single")
+				match.Log.Info(" has a single")
 				match.groupPushBackCondition(redisConnFD, successGroupIds[i])
 				continue
 			}
 			//一个成功的结果需要：A队(N个小组) B队(N个小组)
 			//第一次是创建结果集，同时，把A队里的小组插入进该结果集中，第二次就不创建结果集了
 			if i%2 == 0 {
-				myredis.Multi(redisConnFD)
-				resultElement = match.QueueSuccess.NewResult()
+				match.Redis.Multi(redisConnFD)
+				resultElement = match.Rule.QueueSuccess.NewResult()
 				teamId = 1
 				groupIdsArr = make(map[int]int)
 				playerIdsArr = make(map[int]int)
 
-				mylog.Warn("groupId : " + strconv.Itoa(resultElement.Id))
+				match.Log.Warn("groupId : " + strconv.Itoa(resultElement.Id))
 			}
 			//将小组信息依次：插入到结果集中
 			for _, groupId := range successGroupIds[i] {
@@ -623,13 +638,13 @@ func (match *Match) successConditions(successGroupIds map[int]map[int]int) {
 				teamIds := []int{1, 2}
 				resultElement.Teams = teamIds
 				util.MyPrint("QueueSuccess.addOne", resultElement)
-				match.QueueSuccess.addOne(redisConnFD, resultElement, match.Push)
-				myredis.Exec(redisConnFD)
+				match.Rule.QueueSuccess.addOne(redisConnFD, resultElement, match.Rule.Push)
+				match.Redis.Exec(redisConnFD)
 			}
 		}
 		//zlib.ExitPrint(123123)
 	}
-	mylog.Info("finish successConditions  ...")
+	match.Log.Info("finish successConditions  ...")
 	match.Log.Info("finish successConditions  ...")
 }
 
@@ -639,18 +654,18 @@ func (match *Match) groupPushBackCondition(redisConn redis.Conn, oneCondition ma
 	util.MyPrint("groupPushBackCondition:", oneCondition)
 	//match.Log.Info("groupPushBackCondition", oneCondition)
 	for _, groupId := range oneCondition {
-		group := match.QueueSign.getGroupElementById(groupId)
-		match.QueueSign.addOneGroupIndex(redisConn, groupId, group.Person, group.Weight)
+		group := match.Rule.QueueSign.getGroupElementById(groupId)
+		match.Rule.QueueSign.addOneGroupIndex(redisConn, groupId, group.Person, group.Weight)
 	}
 }
 
 //添加一个组
 func (match *Match) successConditionAddOneGroup(redisConnFD redis.Conn, resultId int, groupId int, teamId int, groupIdsArr map[int]int, playerIdsArr map[int]int) Group {
-	mylog.Info("successConditionAddOneGroup , resultId:" + strconv.Itoa(resultId) + " ,groupId:" + strconv.Itoa(groupId) + " ,teamId:" + strconv.Itoa(teamId))
+	match.Log.Info("successConditionAddOneGroup , resultId:" + strconv.Itoa(resultId) + " ,groupId:" + strconv.Itoa(groupId) + " ,teamId:" + strconv.Itoa(teamId))
 	match.Log.Info("successConditionAddOneGroup")
 	//先以出之前报名的组信息
-	group := match.QueueSign.getGroupElementById(groupId)
-	//mylog.Debug("getGroupElementById group ",group)
+	group := match.Rule.QueueSign.getGroupElementById(groupId)
+	//match.Log.Debug("getGroupElementById group ",group)
 	//groupIdsArr = append(  (*groupIdsArr),groupId)
 	groupIdsArr[len(groupIdsArr)] = groupId
 	playerIdsArrInc := len(playerIdsArr)
@@ -661,32 +676,32 @@ func (match *Match) successConditionAddOneGroup(redisConnFD redis.Conn, resultId
 	//将之前<报名小组>信息复制，并更新相关值
 	SuccessGroup := group
 	SuccessGroup.SuccessTimeout = util.GetNowTimeSecondToInt() + match.Rule.SuccessTimeout
-	SuccessGroup.LinkId = resultId
+	//SuccessGroup.LinkId = resultId
 	SuccessGroup.SuccessTime = util.GetNowTimeSecondToInt()
 	SuccessGroup.TeamId = teamId
 	//fmt.Printf("%+v",SuccessGroup)
 	//zlib.ExitPrint(222)
 	//添加一条新的小组
 	util.MyPrint("addOneGroup", SuccessGroup)
-	match.QueueSuccess.addOneGroup(redisConnFD, SuccessGroup)
+	match.Rule.QueueSuccess.addOneGroup(redisConnFD, SuccessGroup)
 	//开始删除，旧的<报名小组>
 	match.Log.Warn("delSingOldGroup" + strconv.Itoa(groupId))
-	match.QueueSign.delOneRuleOneGroup(redisConnFD, groupId, 0)
+	match.Rule.QueueSign.delOneRuleOneGroup(redisConnFD, groupId, 0)
 	//更新玩家状态值，上面其实已经把原玩家状态给清空了
 	for _, player := range group.Players {
-		playerStatusElement, isEmpty := playerStatus.GetById(player.Id)
-		var newPlayerStatusElement PlayerStatusElement
+		playerStatusElement, isEmpty := match.Rule.RuleManager.Option.GameMatch.PlayerManager.GetById(player.Id)
+		var newPlayerStatusElement Player
 		if isEmpty == 1 {
-			newPlayerStatusElement = playerStatus.newPlayerStatusElement()
+			newPlayerStatusElement = match.Rule.RuleManager.Option.GameMatch.PlayerManager.create()
 		} else {
 			newPlayerStatusElement = playerStatusElement
 		}
-		newPlayerStatusElement.Status = service.PlayerStatusSuccess
+		newPlayerStatusElement.Status = service.GAME_MATCH_PLAYER_STATUS_SUCCESS
 		newPlayerStatusElement.SuccessTimeout = group.SuccessTimeout
 		newPlayerStatusElement.GroupId = group.Id
 
 		//queueSign.Log.Info("playerStatus.upInfo:" ,PlayerStatusSign)
-		playerStatus.upInfo(newPlayerStatusElement, redisConnFD)
+		match.Rule.RuleManager.Option.GameMatch.PlayerManager.upInfo(newPlayerStatusElement, redisConnFD)
 		//match.Log.Info("playerStatus.upInfo ", "oldStatus : ",PlayerStatusElement.Status,"newStatus : ",newPlayerStatusElement.Status)
 	}
 	//zlib.MyPrint( "add one group : ")

@@ -12,12 +12,13 @@ import (
 
 type Rule struct {
 	model.GameMatchRule
-	QueueSign    *QueueSign    `json:"-"`
-	QueueSuccess *QueueSuccess `json:"-"`
-	Push         *Push         `json:"-"`
-	Match        *Match        `json:"Match"`
-	RuleManager  *RuleManager  `json:"-"`
-	Status       int           `json:"status"`
+	QueueSign     *QueueSign     `json:"-"`
+	QueueSuccess  *QueueSuccess  `json:"-"`
+	Push          *Push          `json:"-"`
+	Match         *Match         `json:"Match"`
+	PlayerManager *PlayerManager `json:"-"`
+	RuleManager   *RuleManager   `json:"-"`
+	Status        int            `json:"status"`
 }
 
 type RuleManagerOption struct {
@@ -77,10 +78,13 @@ func (ruleManager *RuleManager) InitData() (err error) {
 		oneRule.QueueSign.TestRedisKey()
 		oneRule.QueueSuccess = NewQueueSuccess(&oneRule)
 		oneRule.QueueSuccess.TestRedisKey()
+		oneRule.PlayerManager = NewPlayerManager(&oneRule)
+		oneRule.PlayerManager.TestRedisKey()
 		oneRule.Push = NewPush(&oneRule)
 		oneRule.Push.TestRedisKey()
 		oneRule.Match = NewMatch(&oneRule)
 
+		//util.ExitPrint(33)
 		ruleManager.pool = append(ruleManager.pool, &oneRule)
 		oneRule.Status = service.GAME_MATCH_RULE_STATUS_EXEC
 	}
@@ -158,7 +162,7 @@ func (rule *Rule) GetCommRedisKeyByModuleRuleId(module string, ruleId int) strin
 }
 
 func (rule *Rule) Close() {
-	rule.Status = service.GAME_MATCH_RULE_STATUS_QUIT
+	rule.Status = service.GAME_MATCH_RULE_STATUS_CLOSE
 	rule.QueueSign.Close()
 	rule.QueueSuccess.Close()
 	rule.Push.Close()
@@ -179,13 +183,13 @@ func (ruleManager *RuleManager) delOneRuleRedisData(ruleId int) {
 	//删除匹配成功池信息
 	rule.QueueSuccess.delOneRule()
 	//清空该池的玩家信息
-	playerIds := ruleManager.Option.GameMatch.PlayerManager.getOneRuleAllPlayer(ruleId)
+	playerIds, _ := rule.PlayerManager.getOneRuleAllPlayer()
 
 	redisConnFD := ruleManager.Option.GameMatch.Option.Redis.GetNewConnFromPool()
 	defer redisConnFD.Close()
 	ruleManager.Option.GameMatch.Option.Redis.Send(redisConnFD, "Multi")
 	for _, playerId := range playerIds {
-		ruleManager.Option.GameMatch.PlayerManager.delOneById(redisConnFD, util.Atoi(playerId))
+		rule.PlayerManager.delOneById(redisConnFD, util.Atoi(playerId))
 	}
 	ruleManager.Option.GameMatch.Option.Redis.ConnDo(redisConnFD, "exec")
 }

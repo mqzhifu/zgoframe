@@ -138,7 +138,7 @@ func (queueSuccess *QueueSuccess) GetResultIncId() int {
 }
 
 //添加一条匹配成功记录
-func (queueSuccess *QueueSuccess) addOne(redisConn redis.Conn, result Result, push *Push) {
+func (queueSuccess *QueueSuccess) addOne(redisConn redis.Conn, result Result) {
 	//mymetrics.IncNode("matchingSuccess")
 
 	queueSuccess.Log.Info("func : addOne")
@@ -150,7 +150,7 @@ func (queueSuccess *QueueSuccess) addOne(redisConn redis.Conn, result Result, pu
 	//这里注意下：pushId = 0
 	resultStr := queueSuccess.structToStr(result)
 	payload := strings.Replace(resultStr, service.Separation, service.PayloadSeparation, -1)
-	pushId := push.addOnePush(redisConn, result.Id, service.PushCategorySuccess, payload)
+	pushId := queueSuccess.Rule.Push.addOnePush(redisConn, result.Id, service.PushCategorySuccess, payload)
 	result.PushId = pushId
 	queueSuccess.Log.Info("addOnePush , newId : " + strconv.Itoa(pushId))
 	//添加一条元素
@@ -315,7 +315,7 @@ func (queueSuccess *QueueSuccess) delOneResult(redisConn redis.Conn, id int, isI
 	if isIncludeTimeout == 1 {
 		for _, playerId := range element.PlayerIds {
 			queueSuccess.Log.Info("playerStatus.delOneById " + strconv.Itoa(playerId))
-			queueSuccess.Rule.RuleManager.Option.GameMatch.PlayerManager.delOneById(redisConn, playerId)
+			queueSuccess.Rule.PlayerManager.delOneById(redisConn, playerId)
 		}
 	}
 

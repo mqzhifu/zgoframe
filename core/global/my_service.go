@@ -179,7 +179,32 @@ func NewMyService() *MyService {
 	//}
 	//service.GameMatch = myGamematch
 
+	myService.RegisterService()
+
 	return myService
+}
+
+//这里测试一下，服务注册到ETCD
+func (myService *MyService) RegisterService() {
+	if C.ServiceDiscovery.Status == "open" && C.Etcd.Status == "open" {
+		ip := "127.0.0.1"
+		listenIp := "127.0.0.1"
+		port := "6666"
+
+		node := util.ServiceNode{
+			//ServiceId: global.C.System.ProjectId,
+			ServiceId:   2, //游戏匹配服务
+			ServiceName: "GameMatch",
+			Ip:          ip,
+			ListenIp:    listenIp,
+			Port:        port,
+			Protocol:    util.SERVICE_PROTOCOL_HTTP,
+			IsSelfReg:   true,
+		}
+
+		err := V.ServiceDiscovery.Register(node)
+		util.ExitPrint(err)
+	}
 }
 
 func InitCicd() (*cicd.CicdManager, error) {

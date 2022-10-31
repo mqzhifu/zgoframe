@@ -29,7 +29,6 @@ type GameMatch struct {
 	Option                 GameMatchOption //初始化 配置参数
 	Err                    *util.ErrMsg    //错误处理类
 	RuleManager            *RuleManager    //管理一条 rule 的所有控制，如：报名 匹配 推送 等等
-	PlayerManager          *PlayerManager  //管理所有用户的状态信息等
 	prefix                 string          //前缀字符串
 	LoopSleepTime          int             //有些死循环需要睡眠的场景,毫秒
 	FormulaFirst           string          //游戏匹配-计算权重公式-前缀
@@ -42,6 +41,7 @@ type GameMatch struct {
 	RuleSuccessTimeoutMin  int             //匹配成功后，最短超时时间
 	WeightMaxValue         int
 	//RuleTeamVSPersonMax    int             //组队互相PK，每个队最多人数
+	//PlayerManager          *PlayerManager  //管理所有用户的状态信息等
 }
 
 func NewGameMatch(option GameMatchOption) (*GameMatch, error) {
@@ -80,8 +80,8 @@ func NewGameMatch(option GameMatchOption) (*GameMatch, error) {
 		util.MyPrint(err)
 		return gameMatch, err
 	}
-	gameMatch.PlayerManager = NewPlayerManager(gameMatch)
-	gameMatch.PlayerManager.TestRedisKey()
+	//gameMatch.PlayerManager = NewPlayerManager(gameMatch)
+	//gameMatch.PlayerManager.TestRedisKey()
 
 	gameMatch.RuleManager.StartupAll()
 

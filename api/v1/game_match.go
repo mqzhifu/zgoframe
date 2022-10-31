@@ -8,8 +8,8 @@ import (
 )
 
 // @Tags GameMatch
-// @Summary 玩家报名
-// @Description  玩家报名
+// @Summary 玩家加入/报名游戏匹配
+// @Description  报名是以（组）为单位的，而校验是以 player 为单位的
 // @Security ApiKeyAuth
 // @accept application/json
 // @Param X-Source-Type header string true "来源" default(11)
@@ -23,7 +23,7 @@ func GameMatchSign(c *gin.Context) {
 	var form request.HttpReqGameMatchPlayerSign
 	c.ShouldBind(&form)
 
-	group, err := global.V.MyService.GameMatch.Sign(form)
+	group, err := global.V.MyService.GameMatch.PlayerJoin(form)
 	if err != nil {
 		httpresponse.FailWithMessage(err.Error(), c)
 		return

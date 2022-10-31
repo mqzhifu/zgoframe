@@ -9,9 +9,9 @@ import (
 )
 
 type Group struct {
-	Id int
-	//LinkId         int     //关联ID，匹配成功后关联成功的那条记录的ID，正常报名用不上
-	Person         int      //小组人数
+	Id             int
+	Type           int      //报名跟报名成功会各创建一条group记录，1：报名，2匹配成功
+	Person         int      //小组总人数
 	Weight         float32  //小组权重
 	MatchTimes     int      //已匹配过的次数，超过3次，证明该用户始终不能匹配成功，直接丢弃，不过没用到
 	SignTimeout    int      //多少秒后无人来取，即超时，更新用户状态，删除数据
@@ -24,6 +24,7 @@ type Group struct {
 	OutGroupId     int      //报名时，客户端请求时，自带的一个ID
 	//CustomProp     string
 	//MatchCode      string
+	//LinkId         int     //关联ID，匹配成功后关联成功的那条记录的ID，正常报名用不上
 }
 
 func (gamematch *GameMatch) NewGroupStruct(rule *Rule) Group {

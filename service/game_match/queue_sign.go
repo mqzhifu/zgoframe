@@ -40,7 +40,7 @@ func (queueSign *QueueSign) Demon() {
 	queueSign.Log.Info(queueSign.Prefix + " Demon")
 }
 
-//有序集合：组索引，所有报名的组，都在这个集合中，weight => id
+//有序集合：每个组的权重值。也可以做(组索引)，所有报名的组，都在这个集合中，weight => group_id
 func (queueSign *QueueSign) getRedisKeyWeight() string {
 	return queueSign.Rule.GetCommRedisKeyByModuleRuleId(queueSign.Prefix, queueSign.Rule.Id) + "group_weight"
 }
@@ -50,7 +50,7 @@ func (queueSign *QueueSign) getRedisKeyPersonIndexPrefix() string {
 	return queueSign.Rule.GetCommRedisKeyByModuleRuleId(queueSign.Prefix, queueSign.Rule.Id) + "group_person"
 }
 
-//组人数=>id
+//有序集合：小组人数=>小组id ，如：1人 => groupId ,  2人  => groupId,  3人  => groupId,  4人  => groupId
 func (queueSign *QueueSign) getRedisKeyPersonIndex(personNum int) string {
 	return queueSign.getRedisKeyPersonIndexPrefix() + queueSign.RedisKeySeparator + strconv.Itoa(personNum)
 }
@@ -59,16 +59,18 @@ func (queueSign *QueueSign) getRedisKeyPersonIndex(personNum int) string {
 func (queueSign *QueueSign) getRedisKeyGroupElementPrefix() string {
 	return queueSign.Rule.GetCommRedisKeyByModuleRuleId(queueSign.Prefix, queueSign.Rule.Id) + "element"
 }
+
+//一个组，简单的KV类型，即：set name string
 func (queueSign *QueueSign) getRedisKeyGroupElement(id int) string {
 	return queueSign.getRedisKeyGroupElementPrefix() + queueSign.RedisKeySeparator + strconv.Itoa(id)
 }
 
-//有序集合：一个小组，包含的所有玩家ID
+//有序集合：一个小组，包含的所有玩家ID.  groupId => playerId
 func (queueSign *QueueSign) getRedisKeyGroupPlayer() string {
-	return queueSign.Rule.GetCommRedisKeyByModuleRuleId(queueSign.Prefix, queueSign.Rule.Id) + "player"
+	return queueSign.Rule.GetCommRedisKeyByModuleRuleId(queueSign.Prefix, queueSign.Rule.Id) + "group_player"
 }
 
-//组的超时索引,有序集合
+//有序集合:组的超时索引.  超时时间 => groupId
 func (queueSign *QueueSign) getRedisKeyGroupSignTimeout() string {
 	return queueSign.Rule.GetCommRedisKeyByModuleRuleId(queueSign.Prefix, queueSign.Rule.Id) + "timeout"
 }
@@ -167,8 +169,8 @@ func (queueSign *QueueSign) CancelByGroupId(groupId int) error {
 	}
 	//检查每个玩家的报名时间 ，是否已经超时了
 	for _, player := range group.Players {
-		playerElement, isEmpty := queueSign.Rule.RuleManager.Option.GameMatch.PlayerManager.GetById(player.Id)
-		if isEmpty == 0 {
+		playerElement, err := queueSign.Rule.RuleManager.GetById(player.Id)
+		if err != nil { //证明为空，未取到
 			if playerElement.Status != service.GAME_MATCH_PLAYER_STATUS_SIGN {
 				msg := queueSign.Err.MakeOneStringReplace(strconv.Itoa(playerElement.Status))
 				return queueSign.Err.NewReplace(623, msg)
@@ -268,7 +270,6 @@ func (queueSign *QueueSign) AddOne(group Group, connFd redis.Conn) {
 	groupElementRedisKey := queueSign.getRedisKeyGroupElement(group.Id)
 	content := GroupStructToStr(group)
 
-	//zlib.ExitPrint(1111)
 	groupPlayersKey := queueSign.getRedisKeyGroupPlayer()
 	for _, v := range group.Players {
 		res, err = queueSign.Redis.Send(connFd, "zadd", redis.Args{}.Add(groupPlayersKey).Add(group.Id).Add(v.Id)...)
@@ -438,7 +439,7 @@ func (queueSign *QueueSign) delOneRuleOneGroup(redisConn redis.Conn, id int, isD
 		for _, v := range group.Players {
 			queueSign.Log.Info("playerStatus delOneById : " + strconv.Itoa(v.Id))
 			//playerStatus.upInfo(v)
-			queueSign.Rule.RuleManager.Option.GameMatch.PlayerManager.delOneById(redisConn, v.Id)
+			queueSign.Rule.PlayerManager.delOneById(redisConn, v.Id)
 		}
 	}
 

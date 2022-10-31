@@ -578,7 +578,7 @@ func (match *Match) successConditions(successGroupIds map[int]map[int]int) {
 			resultElement.Teams = []int{teamId}
 			//zlib.MyPrint("resultElement",resultElement)
 			util.MyPrint("QueueSuccess.addOne", resultElement)
-			match.Rule.QueueSuccess.addOne(redisConnFD, resultElement, match.Rule.Push)
+			match.Rule.QueueSuccess.addOne(redisConnFD, resultElement)
 			match.Redis.Exec(redisConnFD)
 		}
 	} else { //组队互相PK
@@ -638,7 +638,7 @@ func (match *Match) successConditions(successGroupIds map[int]map[int]int) {
 				teamIds := []int{1, 2}
 				resultElement.Teams = teamIds
 				util.MyPrint("QueueSuccess.addOne", resultElement)
-				match.Rule.QueueSuccess.addOne(redisConnFD, resultElement, match.Rule.Push)
+				match.Rule.QueueSuccess.addOne(redisConnFD, resultElement)
 				match.Redis.Exec(redisConnFD)
 			}
 		}
@@ -675,6 +675,7 @@ func (match *Match) successConditionAddOneGroup(redisConnFD redis.Conn, resultId
 	}
 	//将之前<报名小组>信息复制，并更新相关值
 	SuccessGroup := group
+	SuccessGroup.Type = service.GAME_MATCH_GROUP_TYPE_SUCCESS
 	SuccessGroup.SuccessTimeout = util.GetNowTimeSecondToInt() + match.Rule.SuccessTimeout
 	//SuccessGroup.LinkId = resultId
 	SuccessGroup.SuccessTime = util.GetNowTimeSecondToInt()
@@ -689,19 +690,23 @@ func (match *Match) successConditionAddOneGroup(redisConnFD redis.Conn, resultId
 	match.Rule.QueueSign.delOneRuleOneGroup(redisConnFD, groupId, 0)
 	//更新玩家状态值，上面其实已经把原玩家状态给清空了
 	for _, player := range group.Players {
-		playerStatusElement, isEmpty := match.Rule.RuleManager.Option.GameMatch.PlayerManager.GetById(player.Id)
-		var newPlayerStatusElement Player
+		playerElement, isEmpty := match.Rule.PlayerManager.GetById(player.Id)
+		//var newPlayerStatusElement Player
 		if isEmpty == 1 {
-			newPlayerStatusElement = match.Rule.RuleManager.Option.GameMatch.PlayerManager.create()
-		} else {
-			newPlayerStatusElement = playerStatusElement
+			match.Log.Error("GetById empty " + strconv.Itoa(player.Id))
+			continue
+			//newPlayerStatusElement = match.Rule.PlayerManager.create()
+			//} else {
+			//newPlayerStatusElement = playerStatusElement
 		}
-		newPlayerStatusElement.Status = service.GAME_MATCH_PLAYER_STATUS_SUCCESS
-		newPlayerStatusElement.SuccessTimeout = group.SuccessTimeout
-		newPlayerStatusElement.GroupId = group.Id
+		playerElement.UpStatus(service.GAME_MATCH_PLAYER_STATUS_SUCCESS, group.SuccessTimeout, redisConnFD)
+
+		//newPlayerStatusElement.Status = service.GAME_MATCH_PLAYER_STATUS_SUCCESS
+		//newPlayerStatusElement.SuccessTimeout = group.SuccessTimeout
+		//newPlayerStatusElement.GroupId = group.Id
 
 		//queueSign.Log.Info("playerStatus.upInfo:" ,PlayerStatusSign)
-		match.Rule.RuleManager.Option.GameMatch.PlayerManager.upInfo(newPlayerStatusElement, redisConnFD)
+		//match.Rule.PlayerManager.setInfo(newPlayerStatusElement, redisConnFD)
 		//match.Log.Info("playerStatus.upInfo ", "oldStatus : ",PlayerStatusElement.Status,"newStatus : ",newPlayerStatusElement.Status)
 	}
 	//zlib.MyPrint( "add one group : ")

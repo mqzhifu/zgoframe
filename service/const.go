@@ -141,6 +141,13 @@ const (
 
 )
 
+//@parse 游戏匹配-小组类型
+const (
+	GAME_MATCH_GROUP_TYPE_SIGN    = 1 //报名
+	GAME_MATCH_GROUP_TYPE_SUCCESS = 2 //报名成功
+
+)
+
 //@parse 游戏匹配-HTTP推送状态
 const (
 	PushCategorySignTimeout    = 1 //报名超时
@@ -170,9 +177,9 @@ const (
 
 //@parse 一条RULE的状态
 const (
-	GAME_MATCH_RULE_STATUS_INIT = 1
-	GAME_MATCH_RULE_STATUS_EXEC = 2
-	GAME_MATCH_RULE_STATUS_QUIT = 3
+	GAME_MATCH_RULE_STATUS_INIT  = 1 //初始化
+	GAME_MATCH_RULE_STATUS_EXEC  = 2 //运行中
+	GAME_MATCH_RULE_STATUS_CLOSE = 3 //关闭
 )
 
 //@parse 房间结束类型

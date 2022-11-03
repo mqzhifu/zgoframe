@@ -15,7 +15,7 @@ import (
 
 func Record() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		prefix := "http GIN middle Record "
+		prefix := "http middleware <Record>  "
 		global.V.Zap.Debug(prefix + "start:")
 
 		var body []byte
@@ -61,16 +61,14 @@ func Record() gin.HandlerFunc {
 		startTime := util.GetNowTimeSecondToInt()
 		//开始执行用户 业务 函数
 		c.Next()
-
-		//fmt.Println("OperationRecord after")
-
-		latency := util.GetNowTimeSecondToInt() - startTime
+		//用户业务执行完毕后，需要对本次请求做收尾统计，并做持久化
+		latency := util.GetNowTimeSecondToInt() - startTime //本次请求的总时长
 		record.ErrorMessage = c.Errors.ByType(gin.ErrorTypePrivate).String()
 		record.Status = c.Writer.Status()
 		record.Latency = latency
 		record.Resp = writer.body.String()
 
-		global.V.Zap.Debug(prefix+"finish , func exec time:"+strconv.Itoa(latency))
+		global.V.Zap.Debug(prefix + "finish , func exec time:" + strconv.Itoa(latency))
 
 		//fmt.Println("opt final record:", record)
 		//if err := service.CreateSysOperationRecord(record); err != nil {

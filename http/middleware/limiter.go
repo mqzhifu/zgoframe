@@ -13,20 +13,27 @@ import (
 //对API的访问次数、频繁，做限制,防止恶意DDos
 func Limiter() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		global.V.Zap.Debug("middle Limiter start:")
-		//fmt.Println("RateMiddleware pref")
+		reqIp := c.ClientIP()
+		secondPeriod := 10
 		// 如果ip请求连接数在10秒内超过N次，返回429并抛出error
 		maxTimes := global.C.Http.ReqLimitTimes
+		showMsg := "http middleware <Limiter> , ReqLimitTimes:" + strconv.Itoa(maxTimes) + " , reqIp:" + reqIp + " , secondPeriod:" + strconv.Itoa(secondPeriod)
 		if maxTimes > 0 {
 			//N秒允许访问多少次
-			if !LimiterAllow(c.ClientIP(), maxTimes, 10) {
+			rs, nowTimes := LimiterAllow(reqIp, maxTimes, secondPeriod)
+			showMsg += " , nowTimes:" + strconv.Itoa(nowTimes)
+			if !rs {
 				err := errors.New("too many requests")
 				global.V.Zap.Error("RateMiddleware", zap.Any("err", err))
 				httpresponse.FailWithMessage(err.Error(), c)
 				c.Abort()
 				return
 			}
+		} else {
+			showMsg += " , no need process."
 		}
+
+		global.V.Zap.Debug(showMsg)
 		//global.V.Zap.Debug("middle Limiter finish.")
 		c.Next()
 		//fmt.Println("RateMiddleware after")
@@ -34,22 +41,22 @@ func Limiter() gin.HandlerFunc {
 }
 
 // 通过redis的value判断第几次访问并返回是否允许访问
-func LimiterAllow(ip string, maxTimes int, second int) bool {
+func LimiterAllow(ip string, maxTimes int, second int) (bool, int) {
 	element, _ := global.V.Redis.GetElementByIndex("limiter", ip)
-	nowTimes, err := global.V.Redis.Get(element)
+	nowTimesStr, err := global.V.Redis.Get(element)
+	nowTimes, _ := strconv.Atoi(nowTimesStr)
 
 	if err == redis.Nil {
 		global.V.Redis.SetEX(element, strconv.Itoa(1), second)
-		return true
+		return true, nowTimes
 	} else if err != nil {
-		return false
+		return false, nowTimes
 	} else {
-		t, _ := strconv.Atoi(nowTimes)
-		if t >= maxTimes {
-			return false
+		if nowTimes >= maxTimes {
+			return false, nowTimes
 		}
 		global.V.Redis.Incr(element)
-		return true
+		return true, nowTimes
 	}
 
 	//if v := global.V.Redis.(key).Val(); v == 0 {

@@ -1,12 +1,12 @@
 package util
 
 import (
-	"github.com/go-redis/redis/v8"
 	"context"
+	"github.com/go-redis/redis/v8"
 	"go.uber.org/zap"
 )
 
-type TracingHook struct{
+type TracingHook struct {
 	Log *zap.Logger
 }
 
@@ -16,13 +16,13 @@ const (
 )
 
 func NewTracingHook(log *zap.Logger) *TracingHook {
-	tracingHook :=  new(TracingHook)
+	tracingHook := new(TracingHook)
 	tracingHook.Log = log
 	return tracingHook
 }
 
 func (tracingHook TracingHook) BeforeProcess(ctx context.Context, cmd redis.Cmder) (context.Context, error) {
-	tracingHook.Log.Info (MY_REDIS_HOOK_LOG_PREFIX + "BeforeProcess:" + cmd.String())
+	tracingHook.Log.Info(MY_REDIS_HOOK_LOG_PREFIX + "BeforeProcess:" + cmd.String())
 	//if !trace.SpanFromContext(ctx).IsRecording() {
 	//	return ctx, nil
 	//}
@@ -45,12 +45,12 @@ func (tracingHook TracingHook) AfterProcess(ctx context.Context, cmd redis.Cmder
 }
 
 func (tracingHook TracingHook) BeforeProcessPipeline(ctx context.Context, cmds []redis.Cmder) (context.Context, error) {
-	tracingHook.Log.Info(MY_REDIS_HOOK_LOG_PREFIX + "BeforeProcessPipeline:" )
+	//tracingHook.Log.Info(MY_REDIS_HOOK_LOG_PREFIX + "BeforeProcessPipeline:")
 	return ctx, nil
 }
 
 func (tracingHook TracingHook) AfterProcessPipeline(ctx context.Context, cmds []redis.Cmder) error {
-	tracingHook.Log.Info(MY_REDIS_HOOK_LOG_PREFIX + "AfterProcessPipeline:" )
+	//tracingHook.Log.Info(MY_REDIS_HOOK_LOG_PREFIX + "AfterProcessPipeline:" )
 	return nil
 }
 

@@ -11,7 +11,7 @@ import (
 func HeaderAuth() gin.HandlerFunc {
 	//res := httpresponse.Response{}
 	return func(c *gin.Context) {
-		global.V.Zap.Debug("middle HeaderAuth start:")
+		global.V.Zap.Debug("http middleware <HeaderAuth> start:")
 		header, _ := request.GetMyHeader(c)
 		//验证SourceType
 		if !model.CheckConstInList(model.GetConstListPlatform(), header.SourceType) {
@@ -46,6 +46,6 @@ func HeaderAuth() gin.HandlerFunc {
 			ErrAbortWithResponse(5104, c)
 			return
 		}
-		global.V.Zap.Debug("middle HeaderAuth finish.")
+		global.V.Zap.Debug("http middleware <HeaderAuth> finish.")
 	}
 }

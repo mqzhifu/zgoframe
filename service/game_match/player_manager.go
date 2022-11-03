@@ -1,6 +1,7 @@
 package gamematch
 
 import (
+	"encoding/json"
 	"errors"
 	"github.com/gomodule/redigo/redis"
 	"go.uber.org/zap"
@@ -65,15 +66,18 @@ func (playerManager *PlayerManager) createEmptyPlayer() Player {
 	return newPlayer
 }
 
-func (player *Player) UpStatus(status int, SuccessTimeout int, redisFDConn redis.Conn) {
+func (playerManager *PlayerManager) UpStatus(pid int, status int, SuccessTimeout int, redisFDConn redis.Conn) {
+	util.MyPrint("playerManager UpStatus , pid:", pid, " status:", status, " SuccessTimeout:", SuccessTimeout)
 	now := util.GetNowTimeSecondToInt()
+	player, _ := playerManager.GetById(pid)
 	player.Status = status
 	player.UTime = now
 	player.SuccessTimeout = SuccessTimeout
 
-	key := player.PlayerManager.getRedisPrefixKeyByPid(player.Id)
-	res, err := player.PlayerManager.Redis.Send(redisFDConn, "HMSET",
-		redis.Args{}.Add(key).Add("Status").Add(status).Add("SuccessTimeout").Add(SuccessTimeout).Add("UTime").Add(now))
+	key := playerManager.getRedisPrefixKeyByPid(player.Id)
+	//res, err := playerManager.Redis.Send(redisFDConn, "HMSET",
+	//	redis.Args{}.Add(key).Add("Status").Add(status).Add("SuccessTimeout").Add(SuccessTimeout).Add("UTime").Add(now))
+	res, err := playerManager.Redis.Send(redisFDConn, "HMSET", redis.Args{}.Add(key).AddFlat(&player)...)
 	util.MyPrint(res, err)
 }
 
@@ -84,9 +88,10 @@ func (playerManager *PlayerManager) Create(player Player, redisConnFD redis.Conn
 	player.UTime = util.GetNowTimeSecondToInt()
 
 	key := playerManager.getRedisPrefixKeyByPid(player.Id)
-	res, err := playerManager.Redis.Send(redisConnFD, "HMSET", redis.Args{}.Add(key).AddFlat(&player)...)
+	playerManager.Redis.Send(redisConnFD, "HMSET", redis.Args{}.Add(key).AddFlat(&player)...)
 	//res,err  := playerManager.Redis.RedisDo("HMSET",redis.Args{}.Add(key).AddFlat(&playerStatusElement)...)
-	util.MyPrint("Create ,playerStatus setInfo : ", player, res, err)
+	playerBytes, _ := json.Marshal(&player)
+	playerManager.Log.Info("playerManager Create : " + string(playerBytes))
 
 	return true, nil
 }
@@ -103,9 +108,10 @@ func (playerManager *PlayerManager) getRedisPrefixKeyByPid(pid int) string {
 
 func (playerManager *PlayerManager) delOneRulePlayer(redisConn redis.Conn, playerId int) {
 	key := playerManager.getRedisPrefixKeyByPid(playerId)
-	res, err := playerManager.Redis.Send(redisConn, "zrem", redis.Args{}.Add(key).Add(playerId)...)
+	playerManager.Redis.Send(redisConn, "del", redis.Args{}.Add(key).Add(playerId)...)
 	//res,err := playerManager.Redis.RedisDo("zrem",redis.Args{}.Add(key).Add(playerId)...)
-	util.MyPrint("delOneRulePlayer:", res, err)
+	//playerManager.Log.Warn("playerManager delOneRulePlayer")
+	//util.MyPrint("delOneRulePlayer:", key, res, err)
 }
 
 func (playerManager *PlayerManager) getOneRuleAllPlayer() (list []string, err error) {
@@ -152,6 +158,10 @@ func (playerManager *PlayerManager) GetById(playerId int) (player Player, isEmpt
 	if err != nil {
 		return player, 1
 	}
+
+	if res == nil || len(res) <= 0 {
+		return player, 1
+	}
 	//playerStatusElement := &PlayerStatusElement{}
 	if err := redis.ScanStruct(res, &player); err != nil {
 		return player, 1
@@ -162,18 +172,19 @@ func (playerManager *PlayerManager) GetById(playerId int) (player Player, isEmpt
 
 //tmp process
 func (playerManager *PlayerManager) delOneById(redisConn redis.Conn, playerId int) {
+	playerManager.Log.Warn("playerManager delOneById:" + strconv.Itoa(playerId))
 	_, isEmpty := playerManager.GetById(playerId)
 	if isEmpty == 1 {
-		playerManager.Log.Error(" getByid is empty!!!")
+		playerManager.Log.Warn(" playerManager getById is empty , id:" + strconv.Itoa(playerId))
 		return
 	}
-	key := playerManager.getRedisPrefixKeyByPid(playerId)
-	res, _ := playerManager.Redis.RedisDo("del", key)
-	util.MyPrint("playerStatus delOneById , id : "+strconv.Itoa(playerId)+" , rs : ", res)
+	//key := playerManager.getRedisPrefixKeyByPid(playerId)
+	//res, _ := playerManager.Redis.RedisDo("del", key)
+	//util.MyPrint("playerStatus delOneById , id : "+strconv.Itoa(playerId)+" , rs : ", res)
 
 	playerManager.delOneRulePlayer(redisConn, playerId)
-	//启用事务后，这里先做 个补救
-	playerManager.Redis.RedisDo("ping")
+	////启用事务后，这里先做 个补救
+	//playerManager.Redis.RedisDo("ping")
 }
 
 //检查报名超时

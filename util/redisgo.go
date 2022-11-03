@@ -89,7 +89,8 @@ func (myRedis *MyRedisGo) ConnDo(conn redis.Conn, commandName string, args ...in
 	//myRedis.option.Log.Debug("[redis]connDo  :",commandName,args)
 	res, error := conn.Do(commandName, args...)
 	if error != nil {
-		myRedis.option.Log.Error("redis ConnDo err :" + error.Error())
+		MyPrint("redis ConnDo err :" + error.Error())
+		//myRedis.option.Log.Error("redis ConnDo err :" + error.Error())
 		return nil, error
 	}
 	return res, error

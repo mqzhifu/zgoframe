@@ -1,13 +1,9 @@
 package service
 
 const (
-	CTX_DONE_PRE        = "ctx.done() " //字符串标识，用于打印输出信息时的前缀
-	MAIL_ADMIN_USER_UID = 9999          //管理员默认UID，主要用于：确定发送者的UID
-	Separation          = "#"           //redis 内容-字符串分隔符
-	PayloadSeparation   = "%"           //push时的内容，缓存进redis时
-	//RedisSeparation     = "_"           //redis key 分隔符
-	IdsSeparation          = "," //多个ID 分隔符
-	PlayerMatchingMaxTimes = 3   //一个玩家，参与匹配机制的最大次数，超过这个次数，证明不用再匹配了，目前没用上，目前使用的还是绝对的超时时间为准
+	CTX_DONE_PRE           = "ctx.done() " //字符串标识，用于打印输出信息时的前缀
+	MAIL_ADMIN_USER_UID    = 9999          //管理员默认UID，主要用于：确定发送者的UID
+	PlayerMatchingMaxTimes = 3             //一个玩家，参与匹配机制的最大次数，超过这个次数，证明不用再匹配了，目前没用上，目前使用的还是绝对的超时时间为准
 
 	//rule规格配置表
 	RULE_TYPE_TEAM_VS         = 1 //moba 类 5V5 对战类型
@@ -15,8 +11,13 @@ const (
 
 	RuleEtcdConfigPrefix = "/v1/conf/matches/" //etcd中  ， 存放 rule  集合的前缀
 
+	//Separation        = "#" //redis 内容-字符串分隔符
+	//PayloadSeparation = "%" //push时的内容，缓存进redis时
+	////RedisSeparation     = "_"           //redis key 分隔符
+	//IdsSeparation = "," //多个ID 分隔符
+
 	//微服务
-	SERVICE_MSG_SERVER = "msgServer"
+	//SERVICE_MSG_SERVER = "msgServer"
 	//SERVICE_MATCH_NAME		="gamematch"
 	//SERVICE_PREFIX = "/v1/service"		//微服务前缀
 	//SIGNAL_GOROUTINE_EXEC_EXIT   = 1 //通知协程，执行结束操作
@@ -31,6 +32,7 @@ const (
 
 //@parse 配置中心-数据持久化类型
 const (
+	PERSISTENCE_TYPE_OFF     = 0 //关闭
 	PERSISTENCE_TYPE_MYSQL   = 1 //mysql数据库
 	PERSISTENCE_TYPE_REDIS   = 2 //redis缓存
 	PERSISTENCE_TYPE_FILE    = 3 //文件
@@ -124,12 +126,19 @@ const (
 	RuleStatusDelete  = 3
 )
 
-//@parse 游戏匹配-筛选策略
+//@parse 游戏匹配-筛选策略(如何从匹配池里拿用户)
 const (
-	FilterFlagAll      = 1 //全匹配
-	FilterFlagBlock    = 2 //块-匹配
-	FilterFlagBlockInc = 3 //递增块匹配
-	FilterFlagDIY      = 4 //自定义块匹配
+	FilterFlagAll      = 1 //全匹配，无差别匹配，rule 没有配置权重公式时，使用
+	FilterFlagBlock    = 2 //权重公式，块-匹配
+	FilterFlagBlockInc = 3 //权重公式，递增块匹配
+	FilterFlagDIY      = 4 //权重公式，自定义块匹配
+)
+
+//@parse 游戏匹配-rule数据来源
+const (
+	GAME_MATCH_DATA_SOURCE_TYPE_ETCD    = 1
+	GAME_MATCH_DATA_SOURCE_TYPE_DB      = 2
+	GAME_MATCH_DATA_SOURCE_TYPE_SERVICE = 3
 )
 
 //@parse 游戏匹配-玩家状态
@@ -139,6 +148,13 @@ const (
 	GAME_MATCH_PLAYER_STATUS_SUCCESS   = 3 //匹配成功，等待拿走
 	GAME_MATCH_PLAYER_STATUS_INIT      = 4 //初始化阶段
 
+)
+
+//@parse 一条RULE的状态
+const (
+	GAME_MATCH_RULE_STATUS_INIT  = 1 //初始化
+	GAME_MATCH_RULE_STATUS_EXEC  = 2 //运行中
+	GAME_MATCH_RULE_STATUS_CLOSE = 3 //关闭
 )
 
 //@parse 游戏匹配-小组类型
@@ -157,8 +173,10 @@ const (
 
 //@parse 游戏匹配-推送状态
 const (
-	PushStatusWait  = 1 //等待推送
-	PushStatusRetry = 2 //已推送过，但失败了，等待重试
+	PUSH_STATUS_WAIT   = 1 //等待推送
+	PUSH_STATUS_RETRY  = 2 //已推送过，但失败了，等待重试
+	PUSH_STATUS_OK     = 3 //推送成功
+	PUSH_STATUS_FAILED = 4 //推送失败
 )
 
 //@parse 呼叫类型
@@ -175,13 +193,6 @@ const (
 	RTC_ROOM_STATUS_END     = 3 //房间状态：已结束
 )
 
-//@parse 一条RULE的状态
-const (
-	GAME_MATCH_RULE_STATUS_INIT  = 1 //初始化
-	GAME_MATCH_RULE_STATUS_EXEC  = 2 //运行中
-	GAME_MATCH_RULE_STATUS_CLOSE = 3 //关闭
-)
-
 //@parse 房间结束类型
 const (
 	RTC_ROOM_END_STATUS_TIMEOUT_CALLING = 10 //房间结束状态标识：呼叫超时(也可能是连接断了)
@@ -196,10 +207,4 @@ const (
 const (
 	RTC_PUSH_MSG_EVENT_FD_CREATE_REPEAT = 400
 	RTC_PUSH_MSG_EVENT_UID_NOT_IN_MAP   = 401
-)
-
-const (
-	GAME_MATCH_DATA_SOURCE_TYPE_ETCD    = 1
-	GAME_MATCH_DATA_SOURCE_TYPE_DB      = 2
-	GAME_MATCH_DATA_SOURCE_TYPE_SERVICE = 3
 )

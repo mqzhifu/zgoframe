@@ -20,7 +20,7 @@ type GameMatchRule struct {
 
 func (gameMatchRule *GameMatchRule) TableOptions() map[string]string {
 	m := make(map[string]string)
-	m["comment"] = "游戏匹配"
+	m["comment"] = "游戏匹配-规则配置"
 
 	return m
 }

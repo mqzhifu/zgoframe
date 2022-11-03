@@ -7,7 +7,6 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-
 )
 
 // all regex's here

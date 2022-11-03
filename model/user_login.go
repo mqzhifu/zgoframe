@@ -25,7 +25,7 @@ type UserLogin struct {
 	DeviceId      string `json:"device_id" db:"define:varchar(50);comment:设备ID;defaultValue:''"`
 	Dpi           string `json:"dpi" db:"define:varchar(50);comment:分辨率;defaultValue:''"`
 	Referer       string `json:"referer" db:"define:varchar(255);comment:页面来源;defaultValue:''"`
-	Jwt           string `json:"jwt" db:"define:text;comment:登陆成功后的jwt;defaultValue:"`
+	Jwt           string `json:"jwt" db:"define:text;comment:登陆成功后的jwt"`
 }
 
 func (UserLogin *UserLogin) TableOptions() map[string]string {

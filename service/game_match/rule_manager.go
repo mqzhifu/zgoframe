@@ -11,14 +11,15 @@ import (
 )
 
 type Rule struct {
-	model.GameMatchRule
-	QueueSign     *QueueSign     `json:"-"`
-	QueueSuccess  *QueueSuccess  `json:"-"`
-	Push          *Push          `json:"-"`
-	Match         *Match         `json:"Match"`
-	PlayerManager *PlayerManager `json:"-"`
-	RuleManager   *RuleManager   `json:"-"`
-	Status        int            `json:"status"`
+	model.GameMatchRule `json:"model.game_match_rule"`
+	Status              int            `json:"status"`
+	DemonDebugTime      int            `json:"demon_debug_time"`
+	QueueSign           *QueueSign     `json:"-"`
+	QueueSuccess        *QueueSuccess  `json:"-"`
+	Push                *Push          `json:"-"`
+	Match               *Match         `json:"-"`
+	PlayerManager       *PlayerManager `json:"-"`
+	RuleManager         *RuleManager   `json:"-"`
 }
 
 type RuleManagerOption struct {
@@ -69,7 +70,7 @@ func (ruleManager *RuleManager) InitData() (err error) {
 		oneRule.Status = service.GAME_MATCH_RULE_STATUS_INIT
 		oneRule.RuleManager = ruleManager
 		oneRule.GameMatchRule = v
-
+		oneRule.DemonDebugTime = 20
 		err = ruleManager.CheckRule(oneRule)
 		if err != nil {
 			return err
@@ -141,7 +142,7 @@ func (ruleManager *RuleManager) startOneRuleDemon(rule *Rule) {
 	//推送
 	go rule.Push.Demon()
 	//匹配
-	go rule.Match.Demon()
+	//go rule.Match.Demon()
 }
 
 func (ruleManager *RuleManager) Quit() {
@@ -228,7 +229,7 @@ func (ruleManager *RuleManager) CheckRule(rule Rule) error {
 			return errors.New("组队互相撕杀，仅支持两个队伍，那么满足条件总人数肯定是偶数")
 		}
 
-		if rule.TeamMaxPeople*2 > rule.ConditionPeople {
+		if rule.TeamMaxPeople > rule.ConditionPeople {
 			return errors.New("组队互相撕杀，仅支持两个队伍，每个队伍最大支持5人， 剩2 肯定是 < 10人的")
 		}
 	} else if rule.Type == service.RULE_TYPE_TEAM_EACH_OTHER {

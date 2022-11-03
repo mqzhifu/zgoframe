@@ -31,7 +31,7 @@ func (gameMatch *GameMatch) PlayerJoin(form request.HttpReqGameMatchPlayerSign) 
 	}
 
 	if rule.Status != service.GAME_MATCH_RULE_STATUS_EXEC {
-		return group, gameMatch.Err.New(400)
+		return group, gameMatch.Err.New(624)
 	}
 
 	lenPlayers := len(form.PlayerList)
@@ -49,7 +49,6 @@ func (gameMatch *GameMatch) PlayerJoin(form request.HttpReqGameMatchPlayerSign) 
 	//mylog.Info("new sign :[ruleId : ",ruleId,"(",rule.CategoryKey,") , outGroupId : ",outGroupId," , playersCount : ",lenPlayers,"] ")
 	//queueSign.Log.Info("new sign :[ruleId : " ,  ruleId   ,"(",rule.CategoryKey,") , outGroupId : ",outGroupId," , playersCount : ",lenPlayers,"] ")
 	processStartTime := util.GetNowTimeSecondToInt()
-	//util.PrintStruct(queueSign.Rule, ":")
 	if lenPlayers > rule.TeamMaxPeople {
 		errMsgMap := gameMatch.Err.MakeOneStringReplace(" rule.TeamMaxPeople:" + strconv.Itoa(rule.TeamMaxPeople))
 		return group, gameMatch.Err.NewReplace(408, errMsgMap)
@@ -67,7 +66,6 @@ func (gameMatch *GameMatch) PlayerJoin(form request.HttpReqGameMatchPlayerSign) 
 	allGroupIds := rule.QueueSign.GetGroupSignTimeoutAll()
 	for _, hasGroupId := range allGroupIds {
 		if outGroupId == hasGroupId {
-			//util.MyPrint(allGroupIds, outGroupId, hasGroupId, httpReqBusiness)
 			errMsg := gameMatch.Err.MakeOneStringReplace(strconv.Itoa(outGroupId))
 			return group, gameMatch.Err.NewReplace(409, errMsg)
 		}
@@ -80,11 +78,13 @@ func (gameMatch *GameMatch) PlayerJoin(form request.HttpReqGameMatchPlayerSign) 
 		if httpPlayer.Uid <= 0 {
 			return group, gameMatch.Err.New(412)
 		}
-		//player := Player{Id: httpPlayer.Uid, MatchAttr: httpPlayer.MatchAttr}
 		player, isEmpty := rule.PlayerManager.GetById(httpPlayer.Uid)
 		//queueSign.Log.Info("player(" + strconv.Itoa(player.Id) + ") GetById :  status = " + strconv.Itoa(playerStatusElement.Status) + " isEmpty:" + strconv.Itoa(isEmpty))
 		if isEmpty == 1 {
-			//这是正常
+			//这是正常，用户之前没有登陆过，或 玩过一次，结算的时候把该数据清了
+			newPlayer := rule.PlayerManager.createEmptyPlayer()
+			newPlayer.Id = httpPlayer.Uid
+			player = newPlayer
 		} else if player.Status == service.GAME_MATCH_PLAYER_STATUS_SUCCESS { //玩家已经匹配成功，并等待开始游戏
 			//queueSign.Log.Error(" player status = PlayerStatusSuccess ,demon not clean.")
 			errMsg := gameMatch.Err.MakeOneStringReplace("strconv.Itoa(player.Id)")
@@ -102,9 +102,8 @@ func (gameMatch *GameMatch) PlayerJoin(form request.HttpReqGameMatchPlayerSign) 
 				return group, gameMatch.Err.NewReplace(407, errMsg)
 			}
 		}
-		//player.WeightAttrs = httpPlayer.WeightAttr
+		player.WeightAttrs = httpPlayer.WeightAttr
 		playerList = append(playerList, player)
-		//playerStatusElementMap[player.Id] = playerStatusElement
 	}
 	gameMatch.Option.Log.Info("finish check player status ，start calculate group/player weight:")
 
@@ -115,11 +114,10 @@ func (gameMatch *GameMatch) PlayerJoin(form request.HttpReqGameMatchPlayerSign) 
 	if rule.Formula != "" {
 		//util.MyPrint(queueSign, "rule weight , Formula : ", rule.PlayerWeight.Formula)
 		var weight float32
-		weight = 0.00
+		weight = 0.00 //一个组的总权重值
 		var playerWeightValue []float32
 		for k, p := range playerList {
 			onePlayerWeight := gameMatch.getPlayerWeightByFormula(rule.Formula, p.WeightAttrs)
-			util.MyPrint("onePlayerWeight : ", onePlayerWeight)
 			if onePlayerWeight > float32(gameMatch.WeightMaxValue) {
 				onePlayerWeight = float32(gameMatch.WeightMaxValue)
 			}
@@ -127,6 +125,7 @@ func (gameMatch *GameMatch) PlayerJoin(form request.HttpReqGameMatchPlayerSign) 
 			playerWeightValue = append(playerWeightValue, onePlayerWeight)
 			playerList[k].Weight = onePlayerWeight
 		}
+		//util.MyPrint("rule.WeightTeamAggregation:", rule.WeightTeamAggregation)
 		switch rule.WeightTeamAggregation {
 		case "sum":
 			groupWeightTotal = weight
@@ -137,11 +136,13 @@ func (gameMatch *GameMatch) PlayerJoin(form request.HttpReqGameMatchPlayerSign) 
 		case "average":
 			groupWeightTotal = weight / float32(len(playerList))
 		default:
+			//util.MyPrint("len(playerList):", len(playerList), " weight:", weight)
 			groupWeightTotal = weight / float32(len(playerList))
 		}
 		//保留2位小数
 		tmp := util.FloatToString(groupWeightTotal, 2)
 		groupWeightTotal = util.StringToFloat(tmp)
+		//util.MyPrint("groupWeightTotal:", groupWeightTotal, " tmp ", tmp)
 	} else {
 		gameMatch.Option.Log.Info("rule.Formula empty , no need calculate group/player weight.")
 	}
@@ -154,12 +155,18 @@ func (gameMatch *GameMatch) PlayerJoin(form request.HttpReqGameMatchPlayerSign) 
 			return
 		}
 	}
+
 	//这里再做一次检查，防止，此时某个 rule 关闭了
 	if rule.Status != service.GAME_MATCH_RULE_STATUS_EXEC {
 		return group, gameMatch.Err.New(400)
 	}
 
-	//下面两行必须是原子操作，如果pushOne执行成功，但是 upInfo 没成功会导致报名队列里，同一个用户能再报名一次
+	//验证都成功了，下面开始处理具体的添加组、添加用户的操作，因为是强依赖REDIS，用redis当DB
+	//所以必须是原子操作。否则数据一但更新不全，某些用户可能就永远不能再匹配了......
+
+	//这里有偷个懒，还是用外部的groupId , 不想再给redis加 groupId映射outGroupId了
+	//gameMatch.Option.Log.Warn(" outGroupId replace groupId :" + strconv.Itoa(outGroupId) + " " + strconv.Itoa(group.Id))
+
 	redisConnFD := gameMatch.Option.Redis.GetNewConnFromPool()
 	defer redisConnFD.Close()
 	gameMatch.Option.Redis.Multi(redisConnFD) //开始多指令缓存模式
@@ -167,22 +174,20 @@ func (gameMatch *GameMatch) PlayerJoin(form request.HttpReqGameMatchPlayerSign) 
 	expire := processStartTime + rule.MatchTimeout
 	//创建一个新的小组
 	group = gameMatch.NewGroupStruct(rule)
-	//这里有偷个懒，还是用外部的groupId , 不想再给redis加 groupId映射outGroupId了
-	gameMatch.Option.Log.Warn(" outGroupId replace groupId :" + strconv.Itoa(outGroupId) + " " + strconv.Itoa(group.Id))
 	group.Id = outGroupId
 	group.Players = playerList
 	group.Type = service.GAME_MATCH_GROUP_TYPE_SIGN
 	group.SignTimeout = expire
+	group.SignTime = processStartTime
 	group.Person = len(playerList)
 	group.Weight = groupWeightTotal
 	group.OutGroupId = outGroupId
 	group.Addition = form.Addition
 	//group.CustomProp = httpReqBusiness.CustomProp
 	//group.MatchCode = rule.CategoryKey
-	//util.MyPrint(queueSign, "newGroupId : ", group.Id, "player/group weight : ", groupWeightTotal, " now : ", now, " expire : ", expire)
-	//mylog.Info("newGroupId : ",group.Id , "player/group weight : " ,groupWeightTotal ," now : ",now ," expire : ",expire )
-	//queueSign.Log.Info("newGroupId : ",group.Id , "player/group weight : " ,groupWeightTotal ," now : ",now ," expire : ",expire)
 	rule.QueueSign.AddOne(group, redisConnFD)
+	groupBytes, _ := json.Marshal(&group)
+	gameMatch.Option.Log.Info("add one group:" + string(groupBytes))
 	playerIds := ""
 	for _, player := range playerList {
 
@@ -194,34 +199,32 @@ func (gameMatch *GameMatch) PlayerJoin(form request.HttpReqGameMatchPlayerSign) 
 		newPlayerStatusElement.GroupId = group.Id
 		//newPlayerStatusElement.RuleId = ruleId
 		//queueSign.Log.Info("playerStatus.upInfo:" + strconv.Itoa(service.PlayerStatusSign))
+		rule.PlayerManager.delOneById(redisConnFD, player.Id)
 		rule.PlayerManager.Create(newPlayerStatusElement, redisConnFD)
 
 		playerIds += strconv.Itoa(player.Id) + ","
 	}
-	//提交缓存中的指令
+
+	//持久化,报名记录
+	gameMatch.PersistenceRecordGroup(group, rule.Id)
+
+	//提交事务(缓存中的redis指令)
 	_, err = gameMatch.Option.Redis.Exec(redisConnFD)
 	//if err != nil {
 	//	queueSign.Log.Error("transaction failed : " + err.Error())
 	//}
-	//queueSign.Log.Info(" sign finish ,total : newGroupId " + strconv.Itoa(group.Id) + " success players : " + strconv.Itoa(len(players)))
-	gameMatch.Option.Log.Info(" sign finish ,total : newGroupId " + strconv.Itoa(group.Id) + " success players : " + strconv.Itoa(len(playerList)))
-
-	//signSuccessReturnData = SignSuccessReturnData{
-	//	RuleId: ruleId,
-	//	GroupId: outGroupId,
-	//	PlayerIds: playerIds,
-	//
-	//}
+	gameMatch.Option.Log.Info(" sign finish ,total : newGroupId " + strconv.Itoa(group.Id) + " success players len : " + strconv.Itoa(len(playerList)))
 
 	return group, nil
 }
 
+//注： formula 不支持小数点，变量用尖括号：( <age> * 20 ) + ( <level> * 50)
 func (gameMatch *GameMatch) getPlayerWeightByFormula(formula string, MatchAttr map[string]int) float32 {
 	//mylog.Debug("getPlayerWeightByFormula , formula:",formula)
 	grep := gameMatch.FormulaFirst + "([\\s\\S]*?)" + gameMatch.FormulaEnd
 	var imgRE = regexp.MustCompile(grep)
 	findRs := imgRE.FindAllStringSubmatch(formula, -1)
-	//util.MyPrint(sign, "parse PlayerWeightByFormula : ", findRs)
+	//util.MyPrint("parse PlayerWeightByFormula : ", findRs)
 	if len(findRs) == 0 {
 		return 0
 	}
@@ -233,8 +236,9 @@ func (gameMatch *GameMatch) getPlayerWeightByFormula(formula string, MatchAttr m
 		formula = strings.Replace(formula, v[0], strconv.Itoa(val), -1)
 
 	}
-	//util.MyPrint(sign, "final formula replaced str :", formula)
+	//util.MyPrint("final formula replaced str :", formula)
 	rs, err := util.Eval(formula)
+	//util.MyPrint(rs, err)
 	if err != nil {
 		return 0
 	}

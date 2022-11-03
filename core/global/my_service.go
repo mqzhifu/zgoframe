@@ -150,12 +150,14 @@ func NewMyService() *MyService {
 		Gorm:    V.Gorm,
 		Metrics: V.Metric,
 		//Service:            V.ServiceManager,
-		ServiceDiscovery:   V.ServiceDiscovery,
-		RuleDataSourceType: service.GAME_MATCH_DATA_SOURCE_TYPE_DB,
-		StaticPath:         C.Http.StaticPath,
-		RedisPrefix:        "gm",
-		RedisKeySeparator:  "_",
-		RedisTextSeparator: "#",
+		ServiceDiscovery:       V.ServiceDiscovery,
+		RuleDataSourceType:     service.GAME_MATCH_DATA_SOURCE_TYPE_DB,
+		StaticPath:             C.Http.StaticPath,
+		RedisPrefix:            "gm",
+		RedisKeySeparator:      "_",
+		RedisTextSeparator:     "#",
+		RedisIdSeparator:       ",",
+		RedisPayloadSeparation: "%",
 	}
 	myService.GameMatch, err = gamematch.NewGameMatch(gmOp)
 	if err != nil {
@@ -187,13 +189,14 @@ func NewMyService() *MyService {
 //这里测试一下，服务注册到ETCD
 func (myService *MyService) RegisterService() {
 	if C.ServiceDiscovery.Status == "open" && C.Etcd.Status == "open" {
+		var node util.ServiceNode
 		ip := "127.0.0.1"
 		listenIp := "127.0.0.1"
-		port := "6666"
+		port := "1111"
 
-		node := util.ServiceNode{
+		node = util.ServiceNode{
 			//ServiceId: global.C.System.ProjectId,
-			ServiceId:   2, //游戏匹配服务
+			ServiceId:   1, //游戏匹配服务
 			ServiceName: "GameMatch",
 			Ip:          ip,
 			ListenIp:    listenIp,
@@ -201,9 +204,32 @@ func (myService *MyService) RegisterService() {
 			Protocol:    util.SERVICE_PROTOCOL_HTTP,
 			IsSelfReg:   true,
 		}
+		V.ServiceDiscovery.Register(node)
 
-		err := V.ServiceDiscovery.Register(node)
-		util.ExitPrint(err)
+		node = util.ServiceNode{
+			//ServiceId: global.C.System.ProjectId,
+			ServiceId:   6, //游戏匹配服务
+			ServiceName: "Zgoframe",
+			Ip:          ip,
+			ListenIp:    listenIp,
+			Port:        port,
+			Protocol:    util.SERVICE_PROTOCOL_HTTP,
+			IsSelfReg:   true,
+		}
+
+		V.ServiceDiscovery.Register(node)
+		node = util.ServiceNode{
+			//ServiceId: global.C.System.ProjectId,
+			ServiceId:   2, //游戏匹配服务
+			ServiceName: "FrameSync",
+			Ip:          ip,
+			ListenIp:    listenIp,
+			Port:        port,
+			Protocol:    util.SERVICE_PROTOCOL_HTTP,
+			IsSelfReg:   true,
+		}
+		V.ServiceDiscovery.Register(node)
+
 	}
 }
 

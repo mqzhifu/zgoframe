@@ -2,6 +2,7 @@ package httpmiddleware
 
 import (
 	"github.com/gin-gonic/gin"
+	"zgoframe/core/global"
 	"zgoframe/http/request"
 	"zgoframe/util"
 )
@@ -19,6 +20,7 @@ func GetSecondAuthUserList() []SecondAuthUser {
 
 func SecondAuth() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		global.V.Zap.Debug("http middleware <SecondAuth>  start:")
 		myHeader, exist := c.Get("myheader")
 		util.MyPrint(myHeader)
 		if !exist {
@@ -35,6 +37,7 @@ func SecondAuth() gin.HandlerFunc {
 			ErrAbortWithResponse(5902, c)
 			return
 		}
+		global.V.Zap.Debug("http middleware <SecondAuth>  finish.")
 		c.Next()
 	}
 }

@@ -288,6 +288,7 @@ func (initialize *Initialize) Quit() {
 	if global.C.Etcd.Status == core.GLOBAL_CONFIG_MODEL_STATUS_OPEN {
 		global.V.Etcd.Shutdown()
 	}
+
 	//global.V.Websocket.Shutdown()
 
 	GormShutdown()

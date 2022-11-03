@@ -46,6 +46,41 @@ import (
 //		},
 //	}
 //
+
+func TestGameMatch() {
+	/*
+			1. 先测试HTTP 接口
+				1. 报名
+				2. 取消报名
+			2. 自动化测试
+				1. 报名
+					1. 基础参数测试
+					1. 组队模式
+					2。 吃鸡模式
+			3. rule 测试
+				1. 基础参数测试
+
+		HTTP-报名-用例1：走一下最基本的流程
+			正常用工具请求，报名后，检查 redis 数据：
+				1. PlayerManager_rid_player
+				2. sign_rid_group_person_1
+				3. sign_rid_group_player
+				4. sign_rid_group_weight
+				5. sign_rid_group_element_gid
+				6. sign_rid_timeout
+			等待10秒，让报名超时，看一下超时：
+				上面6个队列的值均应该被删除
+		    超时后，PUSH会运作，查看 redis 数据：
+				1. push_ruleId_pushId
+				2. push_ruleId_status
+				3. push_ruleId_inc_id
+			查看 push 的重试机制，N秒后，重度N次后，上面的  push_ruleId_pushId 、push_ruleId_status 会被删除
+
+		HTTP-报名-用例1：请求两次，看一下匹配成功后的一些流程
+
+	*/
+}
+
 func getOneRandomPlayerUid() int {
 	return util.GetRandIntNumRange(1000, 9999)
 }

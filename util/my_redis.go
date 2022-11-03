@@ -98,7 +98,7 @@ func (myRedis *MyRedis) GetElementByIndex(keyIndex string, values ...string) (re
 
 	one.Key = myRedis.Option.KeyPrefix + one.Key
 
-	myRedis.Debug("GetKey :"+keyIndex, zap.Any(" element:", one))
+	//myRedis.Debug("GetKey :"+keyIndex, zap.Any(" element:", one))
 
 	return one, nil
 }

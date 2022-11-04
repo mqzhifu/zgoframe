@@ -143,14 +143,12 @@ func (queueSuccess *QueueSuccess) GetResultIncId() int {
 
 //添加一条匹配成功记录
 func (queueSuccess *QueueSuccess) addOne(redisConn redis.Conn, result Result) PushElement {
-	//mymetrics.IncNode("matchingSuccess")
-
 	queueSuccess.Log.Info("func : addOne")
 	//添加元素超时信息
 	key := queueSuccess.getRedisKeyTimeout()
-	res, err := queueSuccess.Redis.Send(redisConn, "zadd", redis.Args{}.Add(key).Add(result.Timeout).Add(result.Id)...)
+	queueSuccess.Redis.Send(redisConn, "zadd", redis.Args{}.Add(key).Add(result.Timeout).Add(result.Id)...)
 	//res,err := queueSuccess.Redis.RedisDo("zadd",redis.Args{}.Add(key).Add(result.Timeout).Add(result.Id)...)
-	util.MyPrint("add timeout index rs : ", res, err)
+	//util.MyPrint("add timeout index rs : ", res, err)
 	//这里注意下：pushId = 0
 	resultStr := queueSuccess.structToStr(result)
 	payload := strings.Replace(resultStr, queueSuccess.RedisTextSeparator, queueSuccess.RedisPayloadSeparation, -1)
@@ -161,12 +159,10 @@ func (queueSuccess *QueueSuccess) addOne(redisConn redis.Conn, result Result) Pu
 	key = queueSuccess.getRedisKeyResult(result.Id)
 	//这里还得重新再  to str 一下，因为pushid 已经可以拿到了
 	str := queueSuccess.structToStr(result)
-	res, err = queueSuccess.Redis.Send(redisConn, "set", redis.Args{}.Add(key).Add(str)...)
-	util.MyPrint("add successResult rs : ", res, err)
+	queueSuccess.Redis.Send(redisConn, "set", redis.Args{}.Add(key).Add(str)...)
+	//util.MyPrint("add successResult rs : ", res, err)
 
 	return pushElement
-	//mymetrics.FastLog("MatchSuccess",zlib.METRICS_OPT_INC,0)
-
 }
 
 //一条匹配成功记录，要包括N条组信息，这是添加一个组的记录
@@ -251,44 +247,39 @@ func (queueSuccess *QueueSuccess) delOneRule() {
 
 //====================================================
 func (queueSuccess *QueueSuccess) delOneResult(redisConn redis.Conn, id int, isIncludeGroupInfo int, isIncludePushInfo int, isIncludeTimeout int, isIncludePlayerStatus int) {
-	util.MyPrint("delOneResult id :", id, isIncludeGroupInfo, isIncludePushInfo, isIncludeTimeout)
+	queueSuccess.Log.Info("delOneResult id :" +
+		strconv.Itoa(id) + " isIncludeGroupInfo:" + strconv.Itoa(isIncludeGroupInfo) + " isIncludePushInfo:" + strconv.Itoa(isIncludePushInfo) + "isIncludeTimeout" +
+		strconv.Itoa(isIncludeTimeout) + "isIncludeTimeout" + strconv.Itoa(isIncludePlayerStatus))
+
 	element, isEmpty := queueSuccess.GetResultById(id, isIncludeGroupInfo, isIncludePushInfo)
 	if isEmpty == 1 {
 		queueSuccess.Log.Error("del failed ,id is empty~")
-		queueSuccess.Log.Error("del failed ,id is empty~")
 		return
 	}
+	//删除 result element
 	key := queueSuccess.getRedisKeyResult(id)
-	res, err := queueSuccess.Redis.Send(redisConn, "del", redis.Args{}.Add(key)...)
-	//res,err :=   queueSuccess.Redis.RedisDo("del",redis.Args{}.Add(key)... )
-
-	util.MyPrint(" delOneRuleOneResult res", res, err)
-	util.MyPrint(" delOneRuleOneResult res", res, err)
+	queueSuccess.Redis.Send(redisConn, "del", redis.Args{}.Add(key)...)
 
 	if isIncludePushInfo == 1 {
-		//push := queueSuccess.Gamematch.getContainerPushByRuleId(element.RuleId)
-		util.MyPrint("delOnePush", element.PushId)
 		queueSuccess.Rule.Push.delOnePush(redisConn, element.PushId)
 	}
-
+	//删除 超时 索引
 	if isIncludeTimeout == 1 {
 		queueSuccess.Log.Info("delOneTimeout" + strconv.Itoa(id))
 		queueSuccess.delOneTimeout(redisConn, id)
 	}
-
+	//删除 用户组
 	if isIncludeGroupInfo == 1 {
 		for _, groupId := range element.GroupIds {
 			queueSuccess.delOneGroup(redisConn, groupId)
 		}
 	}
-
-	if isIncludeTimeout == 1 {
+	//删除每个用户的基础数据
+	if isIncludePlayerStatus == 1 {
 		for _, playerId := range element.PlayerIds {
-			queueSuccess.Log.Info("playerStatus.delOneById " + strconv.Itoa(playerId))
 			queueSuccess.Rule.PlayerManager.delOneById(redisConn, playerId)
 		}
 	}
-
 }
 
 func (queueSuccess *QueueSuccess) delOneTimeout(redisConn redis.Conn, id int) {
@@ -382,6 +373,72 @@ func (queueSuccess *QueueSuccess) TestRedisKey() {
 	redisKey = queueSuccess.getRedisKeyGroup(1)
 	util.MyPrint("queueSuccess test :", redisKey)
 }
+
+//有些报名直接就满足条件，不需要再走匹配的过程了。注：N VS N 模式至少得2个队伍，所以，只有吃鸡模式的报名才能进入此方法
+//这里得有个前置条件，就是已执行了 报名方法，其中的：基础数据验证步骤
+//正常流程：
+//1. 报名过程，得往 REDIS 写进一堆数据
+//2. 匹配成功后，得创建新组，再创建一条 result
+//这里第一步完全省略掉
+//func (queueSuccess *QueueSuccess) RuntimeSuccess(httpReqGameMatchPlayerSign request.HttpReqGameMatchPlayerSign, ruleId int) {
+//	var playerIds []int
+//	var playerList []Player
+//	for _, httpPlayer := range httpReqGameMatchPlayerSign.PlayerList {
+//		playerIds = append(playerIds, httpPlayer.Uid)
+//
+//		newPlayer := queueSuccess.Rule.PlayerManager.createEmptyPlayer()
+//		newPlayer.Id = httpPlayer.Uid
+//		newPlayer.WeightAttrs = httpPlayer.WeightAttr
+//
+//		playerList = append(playerList, newPlayer)
+//
+//		queueSuccess.Rule.PlayerManager.UpStatus(httpPlayer.Uid, service.GAME_MATCH_PLAYER_STATUS_SUCCESS, group.SuccessTimeout, redisConnFD)
+//
+//	}
+//	now := util.GetNowTimeSecondToInt()
+//
+//	group := queueSuccess.Rule.RuleManager.Option.GameMatch.NewGroupStruct(queueSuccess.Rule)
+//	group.Id = httpReqGameMatchPlayerSign.GroupId
+//	group.Players = playerList
+//	group.Type = service.GAME_MATCH_GROUP_TYPE_SUCCESS
+//	group.SignTimeout = now + queueSuccess.Rule.MatchTimeout + now
+//	group.SignTime = now
+//	group.SuccessTime = now
+//	group.SuccessTimeout = now
+//	group.Person = len(httpReqGameMatchPlayerSign.PlayerList)
+//	group.OutGroupId = httpReqGameMatchPlayerSign.GroupId
+//	group.Addition = httpReqGameMatchPlayerSign.Addition
+//	group.MatchTimes = -1 //这里用负数做个区分
+//	group.Weight = -99    //这里用负数做个区分
+//	group.TeamId = 1
+//
+//	result := Result{
+//		Id:        -11,
+//		RuleId:    ruleId,
+//		ATime:     now + 1,
+//		Timeout:   now + 1,
+//		Teams:     []int{httpReqGameMatchPlayerSign.GroupId},
+//		PlayerIds: playerIds,
+//		GroupIds:  []int{httpReqGameMatchPlayerSign.GroupId},
+//		PushId:    -22,
+//		Groups:    []Group{group},
+//	}
+//
+//	//httpRs,err := myservice.HttpPost(SERVICE_MSG_SERVER,thirdMethodUri,postData)
+//	myServiceDiscovery := push.Rule.RuleManager.Option.GameMatch.Option.ServiceDiscovery
+//	projectId := push.Rule.RuleManager.Option.GameMatch.Option.ProjectId
+//	myService, err := myServiceDiscovery.GetLoadBalanceServiceNodeByServiceName(push.Service, "")
+//	if err != nil {
+//		push.Log.Error("myServiceDiscovery err2:" + err.Error())
+//		return
+//	}
+//	serviceHttp := util.NewServiceHttp(projectId, push.Service, myService.Ip, myService.Port, myService.ServiceId)
+//
+//	thirdMethodUri := "v1/match/succ"
+//	//httpRs,err := myservice.HttpPost(SERVICE_MSG_SERVER,thirdMethodUri,result)
+//	httpRs, err := serviceHttp.Post(thirdMethodUri, result)
+//	util.MyPrint("RuntimeSuccess finish: ", httpRs, "|", err)
+//}
 
 //删除一条规则的，所有分组详细信息
 //func (queueSuccess *QueueSuccess)  delALLTimeout( ){

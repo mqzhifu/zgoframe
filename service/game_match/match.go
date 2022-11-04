@@ -81,7 +81,6 @@ forEnd:
 
 */
 func (match *Match) matching() {
-	match.Log.Info("new times <matching> ,ruleId: " + strconv.Itoa(match.Rule.Id))
 	//每次匹配之前，要先检查一下数据是否超时，后面就不再检查了
 	match.Rule.QueueSign.CheckTimeout()
 
@@ -93,6 +92,7 @@ func (match *Match) matching() {
 	if playersTotal == 0 || groupsTotal == 0 {
 		//match.Log.Debug(" first total is empty ")
 		if now%match.Rule.DemonDebugTime == 0 {
+			match.Log.Info("new times <matching> ,ruleId: " + strconv.Itoa(match.Rule.Id))
 			match.Log.Info(match.prefix + " matching total is empty ")
 		}
 
@@ -317,7 +317,7 @@ func (match *Match) searchByRange(flag int) (successGroupIds map[int]map[int]int
 	//}
 	match.Log.Info("searchByRange success condition when person =" + strconv.Itoa(personCondition))
 	if playersTotal < personCondition {
-		match.Log.Warn("searchByRange : total < personCondition ")
+		match.Log.Warn("searchByRange : playersTotal(" + strconv.Itoa(playersTotal) + ") < personCondition (" + strconv.Itoa(personCondition) + ") ")
 		return successGroupIds, 1
 	}
 	//因为：最先做的就是 <全匹配模式> ，但略有些粗暴，如果此时待匹配的玩家过多，最好还是留给后面的 细匹配来处理

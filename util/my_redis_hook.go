@@ -22,7 +22,7 @@ func NewTracingHook(log *zap.Logger) *TracingHook {
 }
 
 func (tracingHook TracingHook) BeforeProcess(ctx context.Context, cmd redis.Cmder) (context.Context, error) {
-	tracingHook.Log.Info(MY_REDIS_HOOK_LOG_PREFIX + "BeforeProcess:" + cmd.String())
+	//tracingHook.Log.Info(MY_REDIS_HOOK_LOG_PREFIX + "BeforeProcess:" + cmd.String())
 	//if !trace.SpanFromContext(ctx).IsRecording() {
 	//	return ctx, nil
 	//}
@@ -38,9 +38,9 @@ func (tracingHook TracingHook) BeforeProcess(ctx context.Context, cmd redis.Cmde
 
 func (tracingHook TracingHook) AfterProcess(ctx context.Context, cmd redis.Cmder) error {
 	//MyPrint(MY_REDIS_HOOK_LOG_PREFIX + "AfterProcess:")
-	if cmd.Err() != nil {
-		tracingHook.Log.Info(MY_REDIS_HOOK_LOG_PREFIX + "AfterProcess error:" + cmd.Err().Error())
-	}
+	//if cmd.Err() != nil {
+	//	tracingHook.Log.Info(MY_REDIS_HOOK_LOG_PREFIX + "AfterProcess error:" + cmd.Err().Error())
+	//}
 	return nil
 }
 

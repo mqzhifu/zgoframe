@@ -32,43 +32,27 @@ func GameMatchSign(c *gin.Context) {
 }
 
 // @Tags GameMatch
-// @Summary 取消报名 -
-// @Description  删除已参与匹配的玩家信息
+// @Summary 取消报名
+// @Description  删除已参与匹配的玩家信息，以组为单位，如果组里是多个人，其中一个人取消，组里其它的玩家一并都得跟着取消
 // @Security ApiKeyAuth
 // @accept application/json
 // @Param X-Source-Type header string true "来源" default(11)
 // @Param X-Project-Id header string true "项目ID"  default(6)
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
 // @Produce application/json
-// @Param data body gamematch.HttpReqBusiness true " "
+// @Param data body gamematch.HttpReqGameMatchPlayerCancel true " "
 // @Success 200 {boolean} true "true:成功 false:否"
 // @Router /game/match/sign/cancel [get]
 func GameMatchSignCancel(c *gin.Context) {
-	//var form gamematch.HttpReqBusiness
-	//c.ShouldBind(&form)
-	//
-	//code, httpReqBusiness := global.V.MyService.GameMatch.BusinessCheckData(form)
-	//if code != 0 {
-	//	err := global.V.Err.New(code)
-	//	httpresponse.FailWithMessage(err.Error(), c)
-	//	return
-	//}
-	//
-	//err := global.V.MyService.GameMatch.CheckHttpSignCancelData(httpReqBusiness)
-	//if err != nil {
-	//	httpresponse.FailWithMessage(err.Error(), c)
-	//	return
-	//}
-	//
-	//signClass := global.V.MyService.GameMatch.GetContainerSignByRuleId(httpReqBusiness.RuleId)
-	//global.V.Zap.Info("del by groupId")
-	//err = signClass.CancelByGroupId(httpReqBusiness.GroupId)
-	//if err != nil {
-	//	httpresponse.FailWithMessage(err.Error(), c)
-	//	return
-	//}
-	//
-	//httpresponse.OkWithAll("成功", "ok", c)
+	var form request.HttpReqGameMatchPlayerCancel
+	c.ShouldBind(&form)
+
+	err := global.V.MyService.GameMatch.Cancel(form)
+	if err != nil {
+		httpresponse.FailWithMessage(err.Error(), c)
+		return
+	}
+	httpresponse.OkWithMessage("ok", c)
 }
 
 //}else if uri == "/success/del"{//匹配成功记录，不想要了，删除一掉

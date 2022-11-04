@@ -162,7 +162,6 @@ func (queueSign *QueueSign) cancelByPlayerId(playerId int) {
 func (queueSign *QueueSign) CancelByGroupId(groupId int) error {
 	group := queueSign.getGroupElementById(groupId)
 	queueSign.Log.Info("cancelByGroupId groupId : " + strconv.Itoa(groupId))
-	//mylog.Debug(group)
 	//这里是偷懒了，判断是否为空，按说应该返回2个参数，但这个方法调用 地方多，先这样
 	if group.Id == 0 || group.Person == 0 || len(group.Players) == 0 {
 		msg := queueSign.Err.MakeOneStringReplace(strconv.Itoa(groupId))
@@ -170,20 +169,20 @@ func (queueSign *QueueSign) CancelByGroupId(groupId int) error {
 	}
 	redisConn := queueSign.Redis.GetNewConnFromPool()
 	defer redisConn.Close()
-
+	//检查超时，这种概率比较低，一般守护协程会提前处理的
 	if group.SignTime > util.GetNowTimeSecondToInt() {
 		queueSign.Log.Warn("group timeout:" + strconv.Itoa(groupId))
 	}
-	//检查每个玩家的报名时间 ，是否已经超时了
-	for _, player := range group.Players {
-		playerElement, err := queueSign.Rule.RuleManager.GetById(player.Id)
-		if err != nil { //证明为空，未取到
-			if playerElement.Status != service.GAME_MATCH_PLAYER_STATUS_SIGN {
-				msg := queueSign.Err.MakeOneStringReplace(strconv.Itoa(playerElement.Status))
-				return queueSign.Err.NewReplace(623, msg)
-			}
-		}
-	}
+	////检查每个玩家的当前状态 ，是否已经超时了
+	//for _, player := range group.Players {
+	//	playerElement, err := queueSign.Rule.RuleManager.GetById(player.Id)
+	//	if err != nil { //证明为空，未取到
+	//		if playerElement.Status != service.GAME_MATCH_PLAYER_STATUS_SIGN {
+	//			msg := queueSign.Err.MakeOneStringReplace(strconv.Itoa(playerElement.Status))
+	//			return queueSign.Err.NewReplace(623, msg)
+	//		}
+	//	}
+	//}
 	//开始真正删除一个小组
 	queueSign.delOneRuleOneGroup(redisConn, groupId, 1)
 	return nil
@@ -519,11 +518,11 @@ func (queueSign *QueueSign) CheckTimeout() {
 
 		groupId := util.Atoi(groupIdStr)                //redis 数据全是string 转成int
 		group := queueSign.getGroupElementById(groupId) //根据ID获取小组的详细信息
-		queueSign.Log.Warn("group timeout , id:" + groupIdStr + " playerIds:" + queueSign.Rule.RuleManager.Option.GameMatch.GetGroupPlayerIds(group))
+		queueSign.Log.Warn(queueSign.Prefix + " group timeout , id:" + groupIdStr + " , playerIds:" + queueSign.Rule.RuleManager.Option.GameMatch.GetGroupPlayerIds(group) + " timeout:" + strconv.Itoa(group.MatchTimes))
 
 		payload := queueSign.Rule.RuleManager.Option.GameMatch.GroupStructToStr(group) //小组是个结构体，要存redis得转成字符串
 		payload = strings.Replace(payload, queueSign.RedisTextSeparator, queueSign.RedisPayloadSeparation, -1)
-		queueSign.Log.Info("addOnePush" + strconv.Itoa(groupId) + " " + strconv.Itoa(service.PushCategorySignTimeout) + " " + payload)
+
 		pushElement := push.addOnePush(redisConn, groupId, service.PushCategorySignTimeout, payload) //添加一条推送消息
 		queueSign.Log.Info("delOneRuleOneGroup")
 		queueSign.delOneRuleOneGroup(redisConn, groupId, 1)

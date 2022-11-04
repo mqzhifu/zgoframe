@@ -23,8 +23,9 @@ type Rule struct {
 }
 
 type RuleManagerOption struct {
-	Gorm      *gorm.DB
-	GameMatch *GameMatch //父类
+	Gorm           *gorm.DB
+	GameMatch      *GameMatch //父类
+	MonitorRuleIds []int      //负载时使用，当某个 rule 负载较大时，拆分到其它机器上，其它机器上启动的进程仅监听此 rule 即可
 }
 type RuleManager struct {
 	Option RuleManagerOption
@@ -65,11 +66,25 @@ func (ruleManager *RuleManager) InitData() (err error) {
 		return err
 	}
 	//上面读取的是基础配置信息的数据，现在要给该条 rule 挂载 具体的实现类
-	for _, v := range list {
+	for _, rule := range list {
+		if len(ruleManager.Option.MonitorRuleIds) > 0 {
+			hasSearchRuleId := 0
+			for _, MonitorRuleId := range ruleManager.Option.MonitorRuleIds {
+				if rule.Id == MonitorRuleId {
+					hasSearchRuleId = 1
+					break
+				}
+
+			}
+			if hasSearchRuleId == 0 {
+				continue
+			}
+		}
+
 		oneRule := Rule{}
 		oneRule.Status = service.GAME_MATCH_RULE_STATUS_INIT
 		oneRule.RuleManager = ruleManager
-		oneRule.GameMatchRule = v
+		oneRule.GameMatchRule = rule
 		oneRule.DemonDebugTime = 20
 		err = ruleManager.CheckRule(oneRule)
 		if err != nil {
@@ -85,9 +100,7 @@ func (ruleManager *RuleManager) InitData() (err error) {
 		oneRule.Push.TestRedisKey()
 		oneRule.Match = NewMatch(&oneRule)
 
-		//util.ExitPrint(33)
 		ruleManager.pool = append(ruleManager.pool, &oneRule)
-		oneRule.Status = service.GAME_MATCH_RULE_STATUS_EXEC
 	}
 
 	return nil
@@ -136,13 +149,21 @@ func (ruleManager *RuleManager) StartupAll() error {
 //虽然有4个，但是只有match是最核心、最复杂的，另外3个算是辅助
 func (ruleManager *RuleManager) startOneRuleDemon(rule *Rule) {
 	ruleManager.Log.Info(ruleManager.prefix + "  startOneRuleDemon:" + strconv.Itoa(rule.Id))
+	//启动守护协程后，要先执行一下，超时检测，都完成后，该 rule 的状态才是正常，才能接收新的报名，不然，redis 里数据会出现混乱
+	//这里必须是同步，不能异步，且必须得是顺序执行
+	rule.QueueSign.CheckTimeout()
+	rule.QueueSuccess.CheckTimeout()
+	rule.Push.checkStatus()
+
 	go rule.QueueSign.Demon()
 	//报名成功
 	go rule.QueueSuccess.Demon()
 	//推送
 	go rule.Push.Demon()
 	//匹配
-	//go rule.Match.Demon()
+	go rule.Match.Demon()
+
+	rule.Status = service.GAME_MATCH_RULE_STATUS_EXEC
 }
 
 func (ruleManager *RuleManager) Quit() {

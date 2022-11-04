@@ -9,6 +9,7 @@ import (
 
 type Group struct {
 	Id             int      `json:"id"`
+	OutGroupId     int      `json:"out_group_id"`    //报名时，客户端请求时，自带的一个ID
 	Type           int      `json:"type"`            //报名跟报名成功会各创建一条group记录，1：报名，2匹配成功
 	Person         int      `json:"person"`          //小组总人数
 	Weight         float32  `json:"weight"`          //小组权重
@@ -20,7 +21,6 @@ type Group struct {
 	Players        []Player `json:"players"`         //用户列表
 	Addition       string   `json:"addition"`        //请求方附加属性值
 	TeamId         int      `json:"team_id"`         //组队互相PK的时候，得成两个队伍
-	OutGroupId     int      `json:"out_group_id"`    //报名时，客户端请求时，自带的一个ID
 	//CustomProp     string
 	//MatchCode      string
 	//LinkId         int     //关联ID，匹配成功后关联成功的那条记录的ID，正常报名用不上

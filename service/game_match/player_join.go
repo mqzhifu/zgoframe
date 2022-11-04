@@ -2,6 +2,7 @@ package gamematch
 
 import (
 	"encoding/json"
+	"errors"
 	"regexp"
 	"strconv"
 	"strings"
@@ -149,12 +150,13 @@ func (gameMatch *GameMatch) PlayerJoin(form request.HttpReqGameMatchPlayerSign) 
 
 	//这里有个特殊的情况:报名(人数)即满足条件
 	//按说也不应该进到我这儿，直接调用同步服务即可，可能为了统一走一个服务，且调用方不想麻烦再写代码了
-	if rule.Type == service.RULE_TYPE_TEAM_EACH_OTHER {
-		if lenPlayers == rule.ConditionPeople {
-			go rule.Push.RuntimeSuccess(form, ruleId)
-			return
-		}
-	}
+	//此方法放弃，如果单独写，得弄两套代码，但逻辑差不多，而一边改了，另一边忘改就出BUG，还是正常走匹配逻辑，正常的产生数据，正常的推送
+	//if rule.Type == service.RULE_TYPE_TEAM_EACH_OTHER {
+	//	if lenPlayers == rule.ConditionPeople {
+	//		go rule.Push.RuntimeSuccess(form, ruleId)
+	//		return
+	//	}
+	//}
 
 	//这里再做一次检查，防止，此时某个 rule 关闭了
 	if rule.Status != service.GAME_MATCH_RULE_STATUS_EXEC {
@@ -213,9 +215,25 @@ func (gameMatch *GameMatch) PlayerJoin(form request.HttpReqGameMatchPlayerSign) 
 	//if err != nil {
 	//	queueSign.Log.Error("transaction failed : " + err.Error())
 	//}
-	gameMatch.Option.Log.Info(" sign finish ,total : newGroupId " + strconv.Itoa(group.Id) + " success players len : " + strconv.Itoa(len(playerList)))
+	gameMatch.Option.Log.Info(" sign finish ,total : newGroupId " + strconv.Itoa(group.Id) + " , players len : " + strconv.Itoa(len(playerList)))
 
 	return group, nil
+}
+
+func (gameMatch *GameMatch) Cancel(form request.HttpReqGameMatchPlayerCancel) error {
+	if form.RuleId <= 0 {
+		return errors.New("rule id empty")
+	}
+
+	if form.GroupId <= 0 {
+		return errors.New("GroupId empty")
+	}
+
+	rule, err := gameMatch.RuleManager.GetById(form.RuleId)
+	if err != nil {
+		return err
+	}
+	return rule.QueueSign.CancelByGroupId(form.GroupId)
 }
 
 //注： formula 不支持小数点，变量用尖括号：( <age> * 20 ) + ( <level> * 50)

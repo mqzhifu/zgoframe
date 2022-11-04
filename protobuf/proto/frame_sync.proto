@@ -7,7 +7,7 @@ option go_package ="./;pb";
 
 
 service FrameSync {
-    rpc CS_PlayerReady             ( PlayerReady)           returns (Empty) {}//玩家报名/准备
+    rpc CS_PlayerReady             ( PlayerReady)           returns (Empty) {}//匹配成功/进入文章后，玩家需要再次确认：准备
     rpc CS_PlayerOperations        ( LogicFrame )           returns (Empty) {}//玩家推送操作记录
     rpc CS_PlayerResumeGame        ( PlayerResumeGame)      returns (Empty) {}//掉线恢复游戏
     rpc CS_PlayerOver              ( PlayerOver)            returns (Empty) {}//玩家死亡

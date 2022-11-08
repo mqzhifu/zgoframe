@@ -1,4 +1,4 @@
-//所有HTTP短连接的入口
+//所有 RESTFUL服务(HTTP)短连接的入口
 package api
 
 var (

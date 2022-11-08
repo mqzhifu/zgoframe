@@ -1,7 +1,7 @@
 拼装一个GO的基础框架，主要是想把经常用的类/包 统一化/SDK化，统一管理，节省重复造轮子。  
 像：log 链路追踪 etcd等，保证项目高可用
 
-主要package说明 ：
+主要 3方 package 说明 ：
 
 | 类库                       | 说明         | 版本  |
 |--------------------------|------------|-----|
@@ -17,6 +17,7 @@
 | protobuf                 | 传输内容压缩     ||     |g
 | uuid                     | uniq-uid   ||     |
 | go-redis                 | redis      ||     |
+| redigo                   | redis      ||     |
 | gorilla/websocket        | websocket  ||     |
 | base64Captcha            | 图片二进制转码    ||     |
 | sigs.k8s.io/yaml         | 解析yaml配置文件 ||     |
@@ -70,7 +71,7 @@ http response body:
 启动doc
 ```
 go get golang.org/x/tools/cmd/godoc
-godoc -http=:6060
+~/go/bin/godoc -http=:6060
 ```
 
 安装swag指令行工具
@@ -164,5 +165,5 @@ go get github.com/golang/protobuf/protoc-gen-go@v1.3.2
 2. 订单/商品/支付
 3. 任务/成就体系
 4. 货币(金币/现金)
-5. 消息中心：APP-PUSH、队列、公共号
+5. 消息中心：APP-PUSH、队列、公众号
 6. RTC，音视频流控

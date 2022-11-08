@@ -1,3 +1,4 @@
+//自动化：持续集成/持续交付/持续部署
 package cicd
 
 import (

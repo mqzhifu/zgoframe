@@ -144,7 +144,7 @@ func GatewayFDList(c *gin.Context) {
 }
 
 // @Tags Gateway
-// @Summary 网关 - 发送一条消息
+// @Summary 网关 - 给某个用户-发送一条消息
 // @Description 给某个UID发送一条消息，主要用于测试
 // @Security ApiKeyAuth
 // @Param data body request.GatewaySendMsg true "基础信息"

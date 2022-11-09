@@ -12,26 +12,6 @@ import (
 	"zgoframe/util"
 )
 
-func GetConstListMailBoxType() map[string]int {
-	list := make(map[string]int)
-	list["收件箱"] = MAIL_IN_BOX
-	list["发件箱"] = MAIL_OUT_BOX
-	//list["收件删除箱"] = MAIL_IN_DEL_BOX
-	list["全部"] = MAIL_ALL_BOX
-	return list
-}
-
-func GetConstListMailPeople() map[string]int {
-	list := make(map[string]int)
-	list["个人"] = MAIL_PEOPLE_PERSON
-	list["所有人"] = MAIL_PEOPLE_ALL
-	list["针对组"] = MAIL_PEOPLE_GROUP
-	list["针对TAG"] = MAIL_PEOPLE_TAG
-	list["指针若干人"] = MAIL_PEOPLE_UIDS
-
-	return list
-}
-
 type Mail struct {
 	Gorm *gorm.DB
 	Log  *zap.Logger

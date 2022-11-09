@@ -41,7 +41,7 @@ func NewGateway(grpcManager *util.GrpcManager, log *zap.Logger) *Gateway {
 func (gateway *Gateway) StartSocket(netWayOption util.NetWayOption) (*util.NetWay, error) {
 	gateway.Log.Info("gateway StartSocket:")
 	netWayOption.RouterBack = gateway.Router //公共回调 路由器，用于给最底层的长连接公共类回调
-	//创建底层长连接公共类
+	//创建长连接:底层-公共类
 	gateway.NetWayOption = netWayOption
 	netWay, err := util.NewNetWay(netWayOption)
 	gateway.Netway = netWay

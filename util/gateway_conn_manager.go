@@ -19,7 +19,6 @@ type ConnManager struct {
 	Pool              map[int32]*Conn // map[userId]*Conn FD 连接池
 	PoolRWLock        *sync.RWMutex
 	CloseCheckTimeout chan int
-	CloseEventQueue   chan pb.FDCloseEvent
 	Option            ConnManagerOption
 }
 
@@ -52,8 +51,6 @@ func NewConnManager(connManagerOption ConnManagerOption) *ConnManager {
 	connManager.Pool = make(map[int32]*Conn)
 	connManager.CloseCheckTimeout = make(chan int) //连接超时 关闭信号
 	connManager.PoolRWLock = &sync.RWMutex{}
-
-	connManager.CloseEventQueue = make(chan pb.FDCloseEvent, 100)
 
 	if connManagerOption.MsgSeparator == "" {
 		//消息分隔符，主要是给TCP使用，一个字符，且最好不要用：\n，因为会与protobuf 冲突
@@ -145,7 +142,7 @@ func (connManager *ConnManager) CreateOneConn(connFd FDAdapter, netWay *NetWay) 
 }
 
 //
-func (connManager *ConnManager) getConnPoolById(userId int32) (*Conn, bool) {
+func (connManager *ConnManager) GetConnPoolById(userId int32) (*Conn, bool) {
 	connManager.PoolRWLock.RLock()
 	defer connManager.PoolRWLock.RUnlock()
 
@@ -158,7 +155,7 @@ func (connManager *ConnManager) addConnPool(NewConn *Conn) error {
 	if NewConn.UserId <= 0 {
 		connManager.Option.Log.Error("addConnPool NewConn.UserId <= 0 ")
 	}
-	oldConn, exist := connManager.getConnPoolById(NewConn.UserId)
+	oldConn, exist := connManager.GetConnPoolById(NewConn.UserId)
 	if exist { //该UID已经创建了连接，可能是在别处登陆，直接踢掉旧的连接
 		msg := strconv.Itoa(int(NewConn.UserId)) + " kickOff old pid :" + strconv.Itoa(int(oldConn.UserId))
 		connManager.Option.Log.Warn(msg)
@@ -206,7 +203,7 @@ func (connManager *ConnManager) GetPlayerCtrlInfoById(userId int32) ProtocolCtrl
 		contentType = connManager.Option.DefaultContentType
 		protocolType = connManager.Option.DefaultProtocolType
 	} else {
-		conn, exist := connManager.getConnPoolById(userId)
+		conn, exist := connManager.GetConnPoolById(userId)
 		if !exist {
 			contentType = connManager.Option.DefaultContentType
 			protocolType = connManager.Option.DefaultProtocolType
@@ -516,6 +513,7 @@ func (conn *Conn) ReadLoop(ctx context.Context) {
 				conn.ConnManager.Option.Log.Warn("parserContent err :" + err.Error())
 				continue
 			}
+			msg.SourceUid = conn.UserId
 			//写入队列，等待其它协程处理，继续死循环
 			conn.MsgInChan <- msg
 		}
@@ -550,8 +548,9 @@ func (conn *Conn) CloseOneConn(source int) {
 		ProtocolType: conn.ProtocolType,
 	}
 	//先通知外层，FD即将要关闭了，外层网关再广播给所有微服务
-	conn.ConnManager.CloseEventQueue <- connCloseEvent
-
+	requestClientCloseStrByte, _ := conn.ConnManager.CompressNormalContent(connCloseEvent, int(connCloseEvent.ContentType))
+	msg, _, _ := conn.ConnManager.MakeMsgByActionName(connCloseEvent.UserId, "FdClose", requestClientCloseStrByte)
+	conn.ConnManager.Option.NetWay.Router(msg, conn)
 	//通知同步服务，先做构造处理
 	//mySync.CloseOne(conn)//这里可能还要再发消息
 
@@ -648,7 +647,7 @@ func (conn *Conn) SendMsgCompressByUid(UserId int32, action string, contentStruc
 
 //发送一条消息给一个玩家,根据UserId,且不做压缩处理
 func (conn *Conn) SendMsgByUid(UserId int32, action string, content []byte) error {
-	conn, ok := conn.ConnManager.getConnPoolById(UserId)
+	conn, ok := conn.ConnManager.GetConnPoolById(UserId)
 	if !ok {
 		return conn.ConnManager.MakeError("conn not in pool,maybe del.")
 	}
@@ -666,6 +665,29 @@ func (connManager *ConnManager) MakeMsgByActionName(userId int32, action string,
 	actionMap, empty := connManager.Option.ProtoMap.GetServiceFuncByFuncName(action)
 	if empty {
 		return msg, protocolCtrlInfo, connManager.MakeError("GetActionId is  empty:" + action)
+	}
+	protocolCtrlInfo = connManager.GetPlayerCtrlInfoById(userId)
+
+	//SidFid, _ := strconv.Atoi(strconv.Itoa(actionMap.ServiceId) + strconv.Itoa(actionMap.Id))
+	msg = pb.Msg{
+		//SidFid:       int32(SidFid),
+		DataLength:   int32(len(content)),
+		Content:      string(content),
+		SidFid:       int32(actionMap.Id),
+		ServiceId:    int32(actionMap.ServiceId),
+		FuncId:       int32(actionMap.Id),
+		ContentType:  protocolCtrlInfo.ContentType,
+		ProtocolType: protocolCtrlInfo.ProtocolType,
+	}
+
+	return msg, protocolCtrlInfo, nil
+}
+
+func (connManager *ConnManager) MakeMsgByActionId(userId int32, actionId int, content []byte) (msg pb.Msg, protocolCtrlInfo ProtocolCtrlInfo, err error) {
+	//获取协议号结构体
+	actionMap, empty := connManager.Option.ProtoMap.GetServiceFuncById(actionId)
+	if empty {
+		return msg, protocolCtrlInfo, connManager.MakeError("GetActionId is  empty:" + strconv.Itoa(actionId))
 	}
 	protocolCtrlInfo = connManager.GetPlayerCtrlInfoById(userId)
 

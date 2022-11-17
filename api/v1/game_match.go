@@ -2,9 +2,10 @@ package v1
 
 import (
 	"github.com/gin-gonic/gin"
+	"strconv"
 	"zgoframe/core/global"
-	"zgoframe/http/request"
 	httpresponse "zgoframe/http/response"
+	"zgoframe/protobuf/pb"
 )
 
 // @Tags GameMatch
@@ -13,14 +14,12 @@ import (
 // @Security ApiKeyAuth
 // @accept application/json
 // @Param X-Source-Type header string true "来源" default(11)
-// @Param X-Project-Id header string true "项目ID"  default(6)
-// @Param X-Access header string true "访问KEY" default(imzgoframe)
 // @Produce application/json
-// @Param data body request.HttpReqGameMatchPlayerSign true " "
+// @Param data body pb.GameMatchSign true " "
 // @Success 200 {object} gamematch.Group
 // @Router /game/match/sign [post]
 func GameMatchSign(c *gin.Context) {
-	var form request.HttpReqGameMatchPlayerSign
+	var form pb.GameMatchSign
 	c.ShouldBind(&form)
 
 	group, err := global.V.MyService.GameMatch.PlayerJoin(form)
@@ -37,14 +36,12 @@ func GameMatchSign(c *gin.Context) {
 // @Security ApiKeyAuth
 // @accept application/json
 // @Param X-Source-Type header string true "来源" default(11)
-// @Param X-Project-Id header string true "项目ID"  default(6)
-// @Param X-Access header string true "访问KEY" default(imzgoframe)
 // @Produce application/json
-// @Param data body gamematch.HttpReqGameMatchPlayerCancel true " "
+// @Param data body pb.GameMatchPlayerCancel true " "
 // @Success 200 {boolean} true "true:成功 false:否"
 // @Router /game/match/sign/cancel [get]
 func GameMatchSignCancel(c *gin.Context) {
-	var form request.HttpReqGameMatchPlayerCancel
+	var form pb.GameMatchPlayerCancel
 	c.ShouldBind(&form)
 
 	err := global.V.MyService.GameMatch.Cancel(form)
@@ -53,6 +50,27 @@ func GameMatchSignCancel(c *gin.Context) {
 		return
 	}
 	httpresponse.OkWithMessage("ok", c)
+}
+
+// @Tags GameMatch
+// @Summary 获取一个 RULE 的基础信息
+// @Description  RULE是后台录入的，一次匹配的大部分的配置信息
+// @Security ApiKeyAuth
+// @accept application/json
+// @Param X-Source-Type header string true "来源" default(11)
+// @Param id path string true "query rule id"
+// @Produce application/json
+// @Success 200 {boolean} true "true:成功 false:否"
+// @Router /game/match/rule/{id} [get]
+func GameMatchGetOneRule(c *gin.Context) {
+	ridStr := c.Param("id")
+	rid, _ := strconv.Atoi(ridStr)
+	rule, err := global.V.MyService.GameMatch.RuleManager.GetById(rid)
+	if err != nil {
+		httpresponse.FailWithMessage(err.Error(), c)
+		return
+	}
+	httpresponse.OkWithAll(rule, "ok", c)
 }
 
 //}else if uri == "/success/del"{//匹配成功记录，不想要了，删除一掉

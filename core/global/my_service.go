@@ -3,23 +3,30 @@ package global
 import (
 	"zgoframe/service"
 	"zgoframe/service/cicd"
+	"zgoframe/service/config_center"
+	"zgoframe/service/frame_sync"
 	gamematch "zgoframe/service/game_match"
+	"zgoframe/service/gateway"
+	"zgoframe/service/msg_center"
+	"zgoframe/service/seed_business"
+	"zgoframe/service/user_center"
 	"zgoframe/util"
 )
 
 type MyService struct {
-	User         *service.User         //用户中心
-	Sms          *service.Sms          //短信服务
-	Email        *service.Email        //电子邮件服务
-	RoomManage   *service.RoomManager  //房间服务
-	FrameSync    *service.FrameSync    //帧同步服务
-	Gateway      *service.Gateway      //网关服务
-	Match        *service.Match        //匹配服务
-	TwinAgora    *service.TwinAgora    //广播120远程专家指导
-	ConfigCenter *service.ConfigCenter //配置中心
-	Cicd         *cicd.CicdManager     //自动部署
-	Mail         *service.Mail         //站内信
-	GameMatch    *gamematch.GameMatch
+	User                  *user_center.User           //用户中心
+	Sms                   *msg_center.Sms             //短信服务
+	Email                 *msg_center.Email           //电子邮件服务
+	RoomManage            *frame_sync.RoomManager     //房间服务
+	FrameSync             *frame_sync.FrameSync       //帧同步服务
+	Match                 *gamematch.GameMatch        //匹配服务
+	Gateway               *gateway.Gateway            //网关服务
+	TwinAgora             *seed_business.TwinAgora    //广播120远程专家指导
+	ConfigCenter          *config_center.ConfigCenter //配置中心
+	Cicd                  *cicd.CicdManager           //自动部署
+	Mail                  *msg_center.Mail            //站内信
+	GameMatch             *gamematch.GameMatch
+	RequestServiceAdapter *service.RequestServiceAdapter //请求3方服务 适配器
 }
 
 var GateDefaultProtocol = int32(util.PROTOCOL_WEBSOCKET)
@@ -29,16 +36,18 @@ var GateDefaultContentType = int32(util.CONTENT_TYPE_JSON)
 func NewMyService() *MyService {
 	var err error
 	myService := new(MyService)
+	//创建一个 请求3方服务 的适配器，服务之间的请求/调用
+	myService.RequestServiceAdapter = service.NewRequestServiceAdapter(V.ServiceDiscovery, V.GrpcManager, service.REQ_SERVICE_METHOD_INNER, C.System.ProjectId, V.Zap)
 	//用户服务
-	myService.User = service.NewUser(V.Gorm, V.Redis)
+	myService.User = user_center.NewUser(V.Gorm, V.Redis)
 	//站内信服务
-	myService.Mail = service.NewMail(V.Gorm, V.Zap)
+	myService.Mail = msg_center.NewMail(V.Gorm, V.Zap)
 	//短信服务
-	myService.Sms = service.NewSms(V.Gorm)
+	myService.Sms = msg_center.NewSms(V.Gorm)
 	//电子邮件服务
-	myService.Email = service.NewEmail(V.Gorm, V.Email)
+	myService.Email = msg_center.NewEmail(V.Gorm, V.Email)
 	//配置中心服务
-	configCenterOption := service.ConfigCenterOption{
+	configCenterOption := config_center.ConfigCenterOption{
 		EnvList:            util.GetConstListEnv(),
 		Gorm:               V.Gorm,
 		Redis:              V.Redis,
@@ -47,105 +56,60 @@ func NewMyService() *MyService {
 		PersistenceFileDir: C.Http.StaticPath + "/" + C.ConfigCenter.DataPath,
 		Log:                V.Zap,
 	}
-	myService.ConfigCenter, err = service.NewConfigCenter(configCenterOption)
+	myService.ConfigCenter, err = config_center.NewConfigCenter(configCenterOption)
 	if err != nil {
 		util.ExitPrint("NewConfigCenter err:" + err.Error())
 	}
-	//房间服务 - room要先实例化,math frame_sync 都强依赖room
-	roomManagerOption := service.RoomManagerOption{
-		Log:          V.Zap,
-		ReadyTimeout: 60,
-		RoomPeople:   2,
-	}
-	myService.RoomManage = service.NewRoomManager(roomManagerOption)
-	//匹配服务 , 依赖 RoomManage
-	matchOption := service.MatchOption{
-		Log:         V.Zap,
-		RoomManager: myService.RoomManage,
-		//MatchSuccessChan chan *Room
-	}
 	//远程呼叫专家
-	myService.TwinAgora, _ = service.NewTwinAgora(V.Gorm, V.Zap, C.Http.StaticPath)
-
+	twinAgoraOption := seed_business.TwinAgoraOption{
+		Log:                   V.Zap,
+		Gorm:                  V.Gorm,
+		StaticPath:            C.Http.StaticPath,
+		RequestServiceAdapter: myService.RequestServiceAdapter,
+	}
+	myService.TwinAgora, err = seed_business.NewTwinAgora(twinAgoraOption)
+	if err != nil {
+		util.ExitPrint(err)
+	}
 	//长连接通信 - 配置
 	netWayOption := util.NetWayOption{
-		ListenIp:            C.Gateway.ListenIp, //程序启动时监听的IP
-		OutIp:               C.Gateway.OutIp,    //对外访问的IP
-		OutDomain:           C.Gateway.OutDomain,
+		ListenIp:            C.Gateway.ListenIp,     //程序启动时监听的IP
+		OutIp:               C.Gateway.OutIp,        //对外访问的IP
+		OutDomain:           C.Gateway.OutDomain,    //对外的域名,WS在线上得用wss
 		WsPort:              C.Gateway.WsPort,       //监听端口号
 		TcpPort:             C.Gateway.TcpPort,      //监听端口号
 		UdpPort:             C.Gateway.UdpPort,      //UDP端口号
 		WsUri:               C.Gateway.WsUri,        //接HOST的后面的URL地址
 		DefaultProtocolType: GateDefaultProtocol,    //兼容协议：ws tcp udp
 		DefaultContentType:  GateDefaultContentType, //默认内容格式 ：json protobuf
-		LoginAuthType:       "jwt",                  //jwt
-		LoginAuthSecretKey:  C.Jwt.Key,
-		MaxClientConnNum:    10,    //客户端最大连接数
-		MsgContentMax:       10240, //一条消息内容最大值
-		IOTimeout:           3,     //read write sock fd 超时时间
-		ConnTimeout:         60,    //一个FD超时时间
-		ClientHeartbeatTime: 3,
-		ServerHeartbeatTime: 5,
+		LoginAuthType:       "jwt",                  //登陆验证类型-jwt
+		LoginAuthSecretKey:  C.Jwt.Key,              //登陆验证-key
+		MaxClientConnNum:    1024,                   //客户端最大连接数
+		MsgContentMax:       10240,                  //一条消息内容最大值
+		IOTimeout:           3,                      //read write sock fd 超时时间
+		ConnTimeout:         60,                     //一个FD超时时间
+		ClientHeartbeatTime: 3,                      //客户端心跳时间(秒)
+		ServerHeartbeatTime: 5,                      //服务端心跳时间(秒)
+		ProtoMap:            V.ProtoMap,             //protobuf 映射表
 		GrpcManager:         V.GrpcManager,
 		Log:                 V.Zap,
-		ProtoMap:            V.ProtoMap,
-		//ProtobufMapPath		string		`json:"portobuf_map_path"`//协议号对应的函数名
-		//两种快速关闭方式，也可以直接调用 shutdown 函数
-		//OutCxt 				context.Context `json:"-"`			//调用方的CTX，用于所有协程的退出操作
-		//CloseChan 			chan int		`json:"-"`
-		//FPS:     10,
-		//MapSize: 10,
 	}
-	//匹配服务，这个是假的，或者说简易版本，用于快速测试
-	myService.Match = service.NewMatch(matchOption)
-	syncOption := service.FrameSyncOption{
-		Log:        V.Zap,
-		RoomManage: myService.RoomManage,
-		FPS:        10,
-		MapSize:    5,
-	}
-	go myService.Match.Start()
-	//user -> sign ->Match -> Room -> Rsync
-	//帧同步服务 - 强-依赖room
-	myService.FrameSync = service.NewFrameSync(syncOption)
-	myService.RoomManage.SetFrameSync(myService.FrameSync)
 	//网关
 	if C.Gateway.Status == "open" {
-		gateway := service.NewGateway(V.GrpcManager, V.Zap)
-		var netway *util.NetWay
-		myService.FrameSync.SetNetway(netway)
+		gateway := gateway.NewGateway(V.GrpcManager, V.Zap, myService.RequestServiceAdapter)
 		gateway.MyServiceList.FrameSync = myService.FrameSync
 		gateway.MyServiceList.Match = myService.Match
 		gateway.MyServiceList.RoomManage = myService.RoomManage
 		gateway.MyServiceList.TwinAgora = myService.TwinAgora
+
 		myService.Gateway = gateway
 
-		netway, err = gateway.StartSocket(netWayOption)
+		_, err := gateway.StartSocket(netWayOption)
 		if err != nil {
 			util.ExitPrint("InitGateway err:" + err.Error())
 		}
-
 	}
-	//这个是真的匹配服务
-	//gmOp := gamematch.GameMatchOption{
-	//	Log:     V.Zap,
-	//	Redis:   V.RedisGo,
-	//	Gorm:    V.Gorm,
-	//	Metrics: V.Metric,
-	//	//Service:            V.ServiceManager,
-	//	ServiceDiscovery:       V.ServiceDiscovery,
-	//	RuleDataSourceType:     service.GAME_MATCH_DATA_SOURCE_TYPE_DB,
-	//	StaticPath:             C.Http.StaticPath,
-	//	RedisPrefix:            "gm",
-	//	RedisKeySeparator:      "_",
-	//	RedisTextSeparator:     "#",
-	//	RedisIdSeparator:       ",",
-	//	RedisPayloadSeparation: "%",
-	//}
-	//myService.GameMatch, err = gamematch.NewGameMatch(gmOp)
-	//if err != nil {
-	//	util.ExitPrint("NewGameMatch err:", err)
-	//}
+	CreateGame(myService)
 
 	myService.Cicd, err = InitCicd()
 
@@ -199,6 +163,64 @@ func (myService *MyService) RegisterService() {
 		V.ServiceDiscovery.Register(node)
 
 	}
+}
+
+//游戏类的服务,一个游戏至少得有：房间、匹配、帧同步
+func CreateGame(myService *MyService) (err error) {
+	//帧同步 - 房间服务 - room要先实例化,math frame_sync 都强依赖room
+	roomManagerOption := frame_sync.RoomManagerOption{
+		Log:                   V.Zap,
+		ReadyTimeout:          60,
+		RoomPeople:            2,
+		RequestServiceAdapter: myService.RequestServiceAdapter,
+	}
+	myService.RoomManage = frame_sync.NewRoomManager(roomManagerOption)
+	//匹配服务 , 依赖 RoomManage
+	//matchOption := service.MatchOption{
+	//	RequestServiceAdapter: myService.RequestServiceAdapter,
+	//	Log:                   V.Zap,
+	//	RoomManager:           myService.RoomManage,
+	//	//MatchSuccessChan chan *Room
+	//}
+	//匹配服务，这个是假的，或者说简易版本，用于快速测试
+	//myService.Match = service.NewMatch(matchOption)
+
+	//这个是真的匹配服务
+	gmOp := gamematch.GameMatchOption{
+		RequestServiceAdapter:  myService.RequestServiceAdapter,
+		Log:                    V.Zap,
+		Redis:                  V.RedisGo,
+		Gorm:                   V.Gorm,
+		Metrics:                V.Metric,
+		ServiceDiscovery:       V.ServiceDiscovery,
+		RuleDataSourceType:     service.GAME_MATCH_DATA_SOURCE_TYPE_DB,
+		StaticPath:             C.Http.StaticPath,
+		RedisPrefix:            "gm",
+		RedisKeySeparator:      "_",
+		RedisTextSeparator:     "#",
+		FrameSyncRoom:          myService.RoomManage,
+		RedisIdSeparator:       ",",
+		RedisPayloadSeparation: "%",
+	}
+	myService.GameMatch, err = gamematch.NewGameMatch(gmOp)
+	if err != nil {
+		util.ExitPrint("NewGameMatch err:", err)
+	}
+
+	//user -> sign ->Match -> Room -> Rsync
+	//帧同步服务 - 强-依赖room
+	syncOption := frame_sync.FrameSyncOption{
+		RequestServiceAdapter: myService.RequestServiceAdapter,
+		ProjectId:             C.System.ProjectId,
+		Log:                   V.Zap,
+		RoomManage:            myService.RoomManage,
+		FPS:                   10,
+		MapSize:               5,
+	}
+	myService.FrameSync = frame_sync.NewFrameSync(syncOption)
+	myService.RoomManage.SetFrameSync(myService.FrameSync)
+	//go myService.Match.Start()
+	return nil
 }
 
 func InitCicd() (*cicd.CicdManager, error) {

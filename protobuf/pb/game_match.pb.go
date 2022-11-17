@@ -24,196 +24,244 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
 
-type PlayerMatchSign struct {
-	PlayerId             int32    `protobuf:"varint,1,opt,name=player_id,json=playerId,proto3" json:"player_id,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
+type GameMatchSign struct {
+	SourceUid            int32                  `protobuf:"varint,1,opt,name=source_uid,json=sourceUid,proto3" json:"source_uid,omitempty"`
+	RuleId               int32                  `protobuf:"varint,2,opt,name=rule_id,json=ruleId,proto3" json:"rule_id,omitempty"`
+	GroupId              int32                  `protobuf:"varint,3,opt,name=group_id,json=groupId,proto3" json:"group_id,omitempty"`
+	Addition             string                 `protobuf:"bytes,4,opt,name=addition,proto3" json:"addition,omitempty"`
+	PlayerList           []*GameMatchSignPlayer `protobuf:"bytes,5,rep,name=player_list,json=playerList,proto3" json:"player_list,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}               `json:"-"`
+	XXX_unrecognized     []byte                 `json:"-"`
+	XXX_sizecache        int32                  `json:"-"`
 }
 
-func (m *PlayerMatchSign) Reset()         { *m = PlayerMatchSign{} }
-func (m *PlayerMatchSign) String() string { return proto.CompactTextString(m) }
-func (*PlayerMatchSign) ProtoMessage()    {}
-func (*PlayerMatchSign) Descriptor() ([]byte, []int) {
+func (m *GameMatchSign) Reset()         { *m = GameMatchSign{} }
+func (m *GameMatchSign) String() string { return proto.CompactTextString(m) }
+func (*GameMatchSign) ProtoMessage()    {}
+func (*GameMatchSign) Descriptor() ([]byte, []int) {
 	return fileDescriptor_7a724bc5c4547e83, []int{0}
 }
 
-func (m *PlayerMatchSign) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_PlayerMatchSign.Unmarshal(m, b)
+func (m *GameMatchSign) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_GameMatchSign.Unmarshal(m, b)
 }
-func (m *PlayerMatchSign) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_PlayerMatchSign.Marshal(b, m, deterministic)
+func (m *GameMatchSign) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_GameMatchSign.Marshal(b, m, deterministic)
 }
-func (m *PlayerMatchSign) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_PlayerMatchSign.Merge(m, src)
+func (m *GameMatchSign) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GameMatchSign.Merge(m, src)
 }
-func (m *PlayerMatchSign) XXX_Size() int {
-	return xxx_messageInfo_PlayerMatchSign.Size(m)
+func (m *GameMatchSign) XXX_Size() int {
+	return xxx_messageInfo_GameMatchSign.Size(m)
 }
-func (m *PlayerMatchSign) XXX_DiscardUnknown() {
-	xxx_messageInfo_PlayerMatchSign.DiscardUnknown(m)
+func (m *GameMatchSign) XXX_DiscardUnknown() {
+	xxx_messageInfo_GameMatchSign.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_PlayerMatchSign proto.InternalMessageInfo
+var xxx_messageInfo_GameMatchSign proto.InternalMessageInfo
 
-func (m *PlayerMatchSign) GetPlayerId() int32 {
+func (m *GameMatchSign) GetSourceUid() int32 {
 	if m != nil {
-		return m.PlayerId
+		return m.SourceUid
 	}
 	return 0
 }
 
-type PlayerMatchSignCancel struct {
-	PlayerId             int32    `protobuf:"varint,1,opt,name=player_id,json=playerId,proto3" json:"player_id,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
+func (m *GameMatchSign) GetRuleId() int32 {
+	if m != nil {
+		return m.RuleId
+	}
+	return 0
 }
 
-func (m *PlayerMatchSignCancel) Reset()         { *m = PlayerMatchSignCancel{} }
-func (m *PlayerMatchSignCancel) String() string { return proto.CompactTextString(m) }
-func (*PlayerMatchSignCancel) ProtoMessage()    {}
-func (*PlayerMatchSignCancel) Descriptor() ([]byte, []int) {
+func (m *GameMatchSign) GetGroupId() int32 {
+	if m != nil {
+		return m.GroupId
+	}
+	return 0
+}
+
+func (m *GameMatchSign) GetAddition() string {
+	if m != nil {
+		return m.Addition
+	}
+	return ""
+}
+
+func (m *GameMatchSign) GetPlayerList() []*GameMatchSignPlayer {
+	if m != nil {
+		return m.PlayerList
+	}
+	return nil
+}
+
+type GameMatchSignPlayer struct {
+	Uid                  int32            `protobuf:"varint,1,opt,name=uid,proto3" json:"uid,omitempty"`
+	WeightAttr           map[string]int32 `protobuf:"bytes,2,rep,name=weight_attr,json=weightAttr,proto3" json:"weight_attr,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"varint,2,opt,name=value,proto3"`
+	XXX_NoUnkeyedLiteral struct{}         `json:"-"`
+	XXX_unrecognized     []byte           `json:"-"`
+	XXX_sizecache        int32            `json:"-"`
+}
+
+func (m *GameMatchSignPlayer) Reset()         { *m = GameMatchSignPlayer{} }
+func (m *GameMatchSignPlayer) String() string { return proto.CompactTextString(m) }
+func (*GameMatchSignPlayer) ProtoMessage()    {}
+func (*GameMatchSignPlayer) Descriptor() ([]byte, []int) {
 	return fileDescriptor_7a724bc5c4547e83, []int{1}
 }
 
-func (m *PlayerMatchSignCancel) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_PlayerMatchSignCancel.Unmarshal(m, b)
+func (m *GameMatchSignPlayer) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_GameMatchSignPlayer.Unmarshal(m, b)
 }
-func (m *PlayerMatchSignCancel) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_PlayerMatchSignCancel.Marshal(b, m, deterministic)
+func (m *GameMatchSignPlayer) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_GameMatchSignPlayer.Marshal(b, m, deterministic)
 }
-func (m *PlayerMatchSignCancel) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_PlayerMatchSignCancel.Merge(m, src)
+func (m *GameMatchSignPlayer) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GameMatchSignPlayer.Merge(m, src)
 }
-func (m *PlayerMatchSignCancel) XXX_Size() int {
-	return xxx_messageInfo_PlayerMatchSignCancel.Size(m)
+func (m *GameMatchSignPlayer) XXX_Size() int {
+	return xxx_messageInfo_GameMatchSignPlayer.Size(m)
 }
-func (m *PlayerMatchSignCancel) XXX_DiscardUnknown() {
-	xxx_messageInfo_PlayerMatchSignCancel.DiscardUnknown(m)
+func (m *GameMatchSignPlayer) XXX_DiscardUnknown() {
+	xxx_messageInfo_GameMatchSignPlayer.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_PlayerMatchSignCancel proto.InternalMessageInfo
+var xxx_messageInfo_GameMatchSignPlayer proto.InternalMessageInfo
 
-func (m *PlayerMatchSignCancel) GetPlayerId() int32 {
+func (m *GameMatchSignPlayer) GetUid() int32 {
 	if m != nil {
-		return m.PlayerId
+		return m.Uid
 	}
 	return 0
 }
 
-type PlayerMatchSignFailed struct {
-	PlayerId             int32    `protobuf:"varint,1,opt,name=player_id,json=playerId,proto3" json:"player_id,omitempty"`
-	Msg                  string   `protobuf:"bytes,2,opt,name=msg,proto3" json:"msg,omitempty"`
-	Code                 int32    `protobuf:"varint,3,opt,name=code,proto3" json:"code,omitempty"`
+func (m *GameMatchSignPlayer) GetWeightAttr() map[string]int32 {
+	if m != nil {
+		return m.WeightAttr
+	}
+	return nil
+}
+
+type GameMatchPlayerCancel struct {
+	SourceUid            int32    `protobuf:"varint,1,opt,name=source_uid,json=sourceUid,proto3" json:"source_uid,omitempty"`
+	RuleId               int32    `protobuf:"varint,2,opt,name=rule_id,json=ruleId,proto3" json:"rule_id,omitempty"`
+	GroupId              int32    `protobuf:"varint,3,opt,name=group_id,json=groupId,proto3" json:"group_id,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *PlayerMatchSignFailed) Reset()         { *m = PlayerMatchSignFailed{} }
-func (m *PlayerMatchSignFailed) String() string { return proto.CompactTextString(m) }
-func (*PlayerMatchSignFailed) ProtoMessage()    {}
-func (*PlayerMatchSignFailed) Descriptor() ([]byte, []int) {
+func (m *GameMatchPlayerCancel) Reset()         { *m = GameMatchPlayerCancel{} }
+func (m *GameMatchPlayerCancel) String() string { return proto.CompactTextString(m) }
+func (*GameMatchPlayerCancel) ProtoMessage()    {}
+func (*GameMatchPlayerCancel) Descriptor() ([]byte, []int) {
 	return fileDescriptor_7a724bc5c4547e83, []int{2}
 }
 
-func (m *PlayerMatchSignFailed) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_PlayerMatchSignFailed.Unmarshal(m, b)
+func (m *GameMatchPlayerCancel) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_GameMatchPlayerCancel.Unmarshal(m, b)
 }
-func (m *PlayerMatchSignFailed) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_PlayerMatchSignFailed.Marshal(b, m, deterministic)
+func (m *GameMatchPlayerCancel) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_GameMatchPlayerCancel.Marshal(b, m, deterministic)
 }
-func (m *PlayerMatchSignFailed) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_PlayerMatchSignFailed.Merge(m, src)
+func (m *GameMatchPlayerCancel) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GameMatchPlayerCancel.Merge(m, src)
 }
-func (m *PlayerMatchSignFailed) XXX_Size() int {
-	return xxx_messageInfo_PlayerMatchSignFailed.Size(m)
+func (m *GameMatchPlayerCancel) XXX_Size() int {
+	return xxx_messageInfo_GameMatchPlayerCancel.Size(m)
 }
-func (m *PlayerMatchSignFailed) XXX_DiscardUnknown() {
-	xxx_messageInfo_PlayerMatchSignFailed.DiscardUnknown(m)
+func (m *GameMatchPlayerCancel) XXX_DiscardUnknown() {
+	xxx_messageInfo_GameMatchPlayerCancel.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_PlayerMatchSignFailed proto.InternalMessageInfo
+var xxx_messageInfo_GameMatchPlayerCancel proto.InternalMessageInfo
 
-func (m *PlayerMatchSignFailed) GetPlayerId() int32 {
+func (m *GameMatchPlayerCancel) GetSourceUid() int32 {
 	if m != nil {
-		return m.PlayerId
+		return m.SourceUid
 	}
 	return 0
 }
 
-func (m *PlayerMatchSignFailed) GetMsg() string {
+func (m *GameMatchPlayerCancel) GetRuleId() int32 {
 	if m != nil {
-		return m.Msg
-	}
-	return ""
-}
-
-func (m *PlayerMatchSignFailed) GetCode() int32 {
-	if m != nil {
-		return m.Code
+		return m.RuleId
 	}
 	return 0
 }
 
-type PlayerMatchingFailed struct {
-	PlayerId             int32    `protobuf:"varint,1,opt,name=player_id,json=playerId,proto3" json:"player_id,omitempty"`
-	Msg                  string   `protobuf:"bytes,2,opt,name=msg,proto3" json:"msg,omitempty"`
-	RoomId               string   `protobuf:"bytes,3,opt,name=roomId,proto3" json:"roomId,omitempty"`
-	Code                 int32    `protobuf:"varint,4,opt,name=code,proto3" json:"code,omitempty"`
+func (m *GameMatchPlayerCancel) GetGroupId() int32 {
+	if m != nil {
+		return m.GroupId
+	}
+	return 0
+}
+
+type GameMatchOptResult struct {
+	SourceUid            int32    `protobuf:"varint,1,opt,name=source_uid,json=sourceUid,proto3" json:"source_uid,omitempty"`
+	GroupId              int32    `protobuf:"varint,2,opt,name=group_id,json=groupId,proto3" json:"group_id,omitempty"`
+	Msg                  string   `protobuf:"bytes,3,opt,name=msg,proto3" json:"msg,omitempty"`
+	RoomId               string   `protobuf:"bytes,4,opt,name=roomId,proto3" json:"roomId,omitempty"`
+	Code                 int32    `protobuf:"varint,5,opt,name=code,proto3" json:"code,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *PlayerMatchingFailed) Reset()         { *m = PlayerMatchingFailed{} }
-func (m *PlayerMatchingFailed) String() string { return proto.CompactTextString(m) }
-func (*PlayerMatchingFailed) ProtoMessage()    {}
-func (*PlayerMatchingFailed) Descriptor() ([]byte, []int) {
+func (m *GameMatchOptResult) Reset()         { *m = GameMatchOptResult{} }
+func (m *GameMatchOptResult) String() string { return proto.CompactTextString(m) }
+func (*GameMatchOptResult) ProtoMessage()    {}
+func (*GameMatchOptResult) Descriptor() ([]byte, []int) {
 	return fileDescriptor_7a724bc5c4547e83, []int{3}
 }
 
-func (m *PlayerMatchingFailed) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_PlayerMatchingFailed.Unmarshal(m, b)
+func (m *GameMatchOptResult) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_GameMatchOptResult.Unmarshal(m, b)
 }
-func (m *PlayerMatchingFailed) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_PlayerMatchingFailed.Marshal(b, m, deterministic)
+func (m *GameMatchOptResult) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_GameMatchOptResult.Marshal(b, m, deterministic)
 }
-func (m *PlayerMatchingFailed) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_PlayerMatchingFailed.Merge(m, src)
+func (m *GameMatchOptResult) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GameMatchOptResult.Merge(m, src)
 }
-func (m *PlayerMatchingFailed) XXX_Size() int {
-	return xxx_messageInfo_PlayerMatchingFailed.Size(m)
+func (m *GameMatchOptResult) XXX_Size() int {
+	return xxx_messageInfo_GameMatchOptResult.Size(m)
 }
-func (m *PlayerMatchingFailed) XXX_DiscardUnknown() {
-	xxx_messageInfo_PlayerMatchingFailed.DiscardUnknown(m)
+func (m *GameMatchOptResult) XXX_DiscardUnknown() {
+	xxx_messageInfo_GameMatchOptResult.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_PlayerMatchingFailed proto.InternalMessageInfo
+var xxx_messageInfo_GameMatchOptResult proto.InternalMessageInfo
 
-func (m *PlayerMatchingFailed) GetPlayerId() int32 {
+func (m *GameMatchOptResult) GetSourceUid() int32 {
 	if m != nil {
-		return m.PlayerId
+		return m.SourceUid
 	}
 	return 0
 }
 
-func (m *PlayerMatchingFailed) GetMsg() string {
+func (m *GameMatchOptResult) GetGroupId() int32 {
+	if m != nil {
+		return m.GroupId
+	}
+	return 0
+}
+
+func (m *GameMatchOptResult) GetMsg() string {
 	if m != nil {
 		return m.Msg
 	}
 	return ""
 }
 
-func (m *PlayerMatchingFailed) GetRoomId() string {
+func (m *GameMatchOptResult) GetRoomId() string {
 	if m != nil {
 		return m.RoomId
 	}
 	return ""
 }
 
-func (m *PlayerMatchingFailed) GetCode() int32 {
+func (m *GameMatchOptResult) GetCode() int32 {
 	if m != nil {
 		return m.Code
 	}
@@ -221,34 +269,45 @@ func (m *PlayerMatchingFailed) GetCode() int32 {
 }
 
 func init() {
-	proto.RegisterType((*PlayerMatchSign)(nil), "pb.PlayerMatchSign")
-	proto.RegisterType((*PlayerMatchSignCancel)(nil), "pb.PlayerMatchSignCancel")
-	proto.RegisterType((*PlayerMatchSignFailed)(nil), "pb.PlayerMatchSignFailed")
-	proto.RegisterType((*PlayerMatchingFailed)(nil), "pb.PlayerMatchingFailed")
+	proto.RegisterType((*GameMatchSign)(nil), "pb.GameMatchSign")
+	proto.RegisterType((*GameMatchSignPlayer)(nil), "pb.GameMatchSignPlayer")
+	proto.RegisterMapType((map[string]int32)(nil), "pb.GameMatchSignPlayer.WeightAttrEntry")
+	proto.RegisterType((*GameMatchPlayerCancel)(nil), "pb.GameMatchPlayerCancel")
+	proto.RegisterType((*GameMatchOptResult)(nil), "pb.GameMatchOptResult")
 }
 
 func init() { proto.RegisterFile("game_match.proto", fileDescriptor_7a724bc5c4547e83) }
 
 var fileDescriptor_7a724bc5c4547e83 = []byte{
-	// 278 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x12, 0x48, 0x4f, 0xcc, 0x4d,
-	0x8d, 0xcf, 0x4d, 0x2c, 0x49, 0xce, 0xd0, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0x62, 0x2a, 0x48,
-	0x92, 0xe2, 0x49, 0xce, 0xcf, 0xcd, 0xcd, 0xcf, 0x83, 0x88, 0x28, 0xe9, 0x71, 0xf1, 0x07, 0xe4,
-	0x24, 0x56, 0xa6, 0x16, 0xf9, 0x82, 0x94, 0x05, 0x67, 0xa6, 0xe7, 0x09, 0x49, 0x73, 0x71, 0x16,
-	0x80, 0x85, 0xe2, 0x33, 0x53, 0x24, 0x18, 0x15, 0x18, 0x35, 0x58, 0x83, 0x38, 0x20, 0x02, 0x9e,
-	0x29, 0x4a, 0x26, 0x5c, 0xa2, 0x68, 0xea, 0x9d, 0x13, 0xf3, 0x92, 0x53, 0x73, 0xf0, 0xeb, 0x8a,
-	0xc2, 0xd0, 0xe5, 0x96, 0x98, 0x99, 0x93, 0x9a, 0x82, 0x57, 0x97, 0x90, 0x00, 0x17, 0x73, 0x6e,
-	0x71, 0xba, 0x04, 0x93, 0x02, 0xa3, 0x06, 0x67, 0x10, 0x88, 0x29, 0x24, 0xc4, 0xc5, 0x92, 0x9c,
-	0x9f, 0x92, 0x2a, 0xc1, 0x0c, 0x56, 0x09, 0x66, 0x2b, 0x15, 0x72, 0x89, 0x20, 0x99, 0x9d, 0x99,
-	0x97, 0x4e, 0x9e, 0xd1, 0x62, 0x5c, 0x6c, 0x45, 0xf9, 0xf9, 0xb9, 0x9e, 0x29, 0x60, 0xc3, 0x39,
-	0x83, 0xa0, 0x3c, 0xb8, 0x95, 0x2c, 0x08, 0x2b, 0x8d, 0x7a, 0x99, 0xb8, 0x38, 0xdd, 0x13, 0x73,
-	0x53, 0xc1, 0x36, 0x0a, 0x99, 0x71, 0x09, 0x39, 0x07, 0xc7, 0xa3, 0x87, 0xa2, 0xb0, 0x5e, 0x41,
-	0x92, 0x1e, 0x9a, 0xa0, 0x14, 0x27, 0x48, 0xd0, 0x35, 0xb7, 0xa0, 0xa4, 0x52, 0x89, 0x41, 0xc8,
-	0x89, 0x4b, 0x02, 0x53, 0x1f, 0x34, 0x34, 0x25, 0xb1, 0xe8, 0x86, 0x48, 0x61, 0x98, 0x11, 0xec,
-	0x1c, 0x8f, 0x3d, 0x6c, 0xb1, 0x99, 0x01, 0x91, 0x42, 0x35, 0xc3, 0x81, 0x4b, 0x1c, 0xd5, 0x0c,
-	0x44, 0x18, 0x4a, 0xa0, 0x19, 0x01, 0x97, 0x41, 0x31, 0xc1, 0x89, 0x3d, 0x8a, 0x55, 0x4f, 0xdf,
-	0xba, 0x20, 0x29, 0x89, 0x0d, 0x9c, 0xa8, 0x8c, 0x01, 0x01, 0x00, 0x00, 0xff, 0xff, 0x27, 0xb9,
-	0x6a, 0x2f, 0x7a, 0x02, 0x00, 0x00,
+	// 444 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xb4, 0x53, 0x41, 0x8b, 0xd3, 0x40,
+	0x14, 0x36, 0xe9, 0xa6, 0xdd, 0xbc, 0x2a, 0xd6, 0xa7, 0x6e, 0xb3, 0x05, 0xa1, 0xe4, 0x62, 0x4f,
+	0x11, 0x56, 0x0f, 0x8b, 0xa2, 0xe2, 0x96, 0x55, 0x0b, 0x8a, 0x92, 0x22, 0x82, 0x97, 0x30, 0xcd,
+	0x0c, 0xd9, 0xd1, 0x24, 0x33, 0x4c, 0x26, 0x2e, 0xfd, 0x03, 0x9e, 0xfc, 0x31, 0x1e, 0xfd, 0x79,
+	0x32, 0x93, 0x90, 0xdd, 0x6c, 0x15, 0xf1, 0xe0, 0xed, 0x7d, 0xef, 0x7d, 0xf3, 0x7d, 0x8f, 0xef,
+	0x25, 0x30, 0xc9, 0x48, 0xc1, 0x92, 0x82, 0xe8, 0xf4, 0x2c, 0x92, 0x4a, 0x68, 0x81, 0xae, 0xdc,
+	0xcc, 0xae, 0xa7, 0xa2, 0x28, 0x44, 0xd9, 0x74, 0xc2, 0x9f, 0x0e, 0xdc, 0x78, 0x45, 0x0a, 0xf6,
+	0xd6, 0xb0, 0xd6, 0x3c, 0x2b, 0xf1, 0x1e, 0x40, 0x25, 0x6a, 0x95, 0xb2, 0xa4, 0xe6, 0x34, 0x70,
+	0xe6, 0xce, 0xc2, 0x8b, 0xfd, 0xa6, 0xf3, 0x81, 0x53, 0x9c, 0xc2, 0x48, 0xd5, 0x39, 0x4b, 0x38,
+	0x0d, 0x5c, 0x3b, 0x1b, 0x1a, 0xb8, 0xa2, 0x78, 0x08, 0xfb, 0x99, 0x12, 0xb5, 0x34, 0x93, 0x81,
+	0x9d, 0x8c, 0x2c, 0x5e, 0x51, 0x9c, 0xc1, 0x3e, 0xa1, 0x94, 0x6b, 0x2e, 0xca, 0x60, 0x6f, 0xee,
+	0x2c, 0xfc, 0xb8, 0xc3, 0x78, 0x0c, 0x63, 0x99, 0x93, 0x2d, 0x53, 0x49, 0xce, 0x2b, 0x1d, 0x78,
+	0xf3, 0xc1, 0x62, 0x7c, 0x34, 0x8d, 0xe4, 0x26, 0xea, 0xad, 0xf5, 0xde, 0x72, 0x62, 0x68, 0xb8,
+	0x6f, 0x78, 0xa5, 0xc3, 0x1f, 0x0e, 0xdc, 0xfe, 0x0d, 0x07, 0x27, 0x30, 0xb8, 0xd8, 0xdc, 0x94,
+	0xf8, 0x1a, 0xc6, 0xe7, 0x8c, 0x67, 0x67, 0x3a, 0x21, 0x5a, 0xab, 0xc0, 0xb5, 0x1e, 0xf7, 0xff,
+	0xe0, 0x11, 0x7d, 0xb4, 0xd4, 0x17, 0x5a, 0xab, 0xd3, 0x52, 0xab, 0x6d, 0x0c, 0xe7, 0x5d, 0x63,
+	0xf6, 0x14, 0x6e, 0x5e, 0x19, 0x1b, 0xbb, 0x2f, 0x6c, 0x6b, 0xed, 0xfc, 0xd8, 0x94, 0x78, 0x07,
+	0xbc, 0xaf, 0x24, 0xaf, 0x59, 0x1b, 0x50, 0x03, 0x1e, 0xbb, 0xc7, 0x4e, 0xf8, 0x19, 0xee, 0x76,
+	0x8e, 0x8d, 0xdb, 0x92, 0x94, 0x29, 0xcb, 0xff, 0x43, 0xe8, 0xe1, 0x77, 0x07, 0xb0, 0x33, 0x7b,
+	0x27, 0x75, 0xcc, 0xaa, 0x3a, 0xd7, 0x7f, 0x73, 0xba, 0x2c, 0xe8, 0xf6, 0xaf, 0x38, 0x81, 0x41,
+	0x51, 0x65, 0xd6, 0xc6, 0x8f, 0x4d, 0x89, 0x07, 0x30, 0x54, 0x42, 0x14, 0x2b, 0xda, 0x5e, 0xb5,
+	0x45, 0x88, 0xb0, 0x97, 0x0a, 0xca, 0x02, 0xcf, 0x0a, 0xd8, 0xfa, 0xe8, 0x9b, 0x0b, 0x7e, 0xb7,
+	0x0e, 0x3e, 0x02, 0x5c, 0xae, 0x93, 0x26, 0x82, 0x8b, 0x4f, 0xef, 0xd6, 0xce, 0x49, 0x66, 0xbe,
+	0x69, 0x9d, 0x16, 0x52, 0x6f, 0xc3, 0x6b, 0x78, 0x02, 0xc1, 0xee, 0xab, 0x36, 0xc1, 0xc3, 0xde,
+	0xdb, 0xcb, 0xe1, 0xf6, 0x35, 0x9e, 0x43, 0xb0, 0x5e, 0x5e, 0xd5, 0x78, 0x49, 0x78, 0xce, 0x28,
+	0x1e, 0xf4, 0x34, 0xba, 0xcc, 0xfa, 0x02, 0xcf, 0x60, 0xda, 0x17, 0xe0, 0x65, 0xf6, 0x0f, 0xef,
+	0x4f, 0x46, 0x9f, 0xbc, 0xe8, 0xc1, 0x13, 0xb9, 0xd9, 0x0c, 0xed, 0x1f, 0xf8, 0xf0, 0x57, 0x00,
+	0x00, 0x00, 0xff, 0xff, 0x03, 0x96, 0x5a, 0x00, 0xa7, 0x03, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -263,10 +322,10 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type GameMatchClient interface {
-	CS_PlayerMatchSign(ctx context.Context, in *PlayerMatchSign, opts ...grpc.CallOption) (*Empty, error)
-	CS_PlayerMatchSignCancel(ctx context.Context, in *PlayerMatchSignCancel, opts ...grpc.CallOption) (*Empty, error)
-	SC_PlayerMatchSignFailed(ctx context.Context, in *PlayerMatchSignFailed, opts ...grpc.CallOption) (*Empty, error)
-	SC_PlayerMatchingFailed(ctx context.Context, in *PlayerMatchingFailed, opts ...grpc.CallOption) (*Empty, error)
+	CS_PlayerMatchSign(ctx context.Context, in *GameMatchSign, opts ...grpc.CallOption) (*Empty, error)
+	CS_PlayerMatchSignCancel(ctx context.Context, in *GameMatchPlayerCancel, opts ...grpc.CallOption) (*Empty, error)
+	SC_PlayerMatchSignFailed(ctx context.Context, in *GameMatchOptResult, opts ...grpc.CallOption) (*Empty, error)
+	SC_PlayerMatchingFailed(ctx context.Context, in *GameMatchOptResult, opts ...grpc.CallOption) (*Empty, error)
 }
 
 type gameMatchClient struct {
@@ -277,7 +336,7 @@ func NewGameMatchClient(cc *grpc.ClientConn) GameMatchClient {
 	return &gameMatchClient{cc}
 }
 
-func (c *gameMatchClient) CS_PlayerMatchSign(ctx context.Context, in *PlayerMatchSign, opts ...grpc.CallOption) (*Empty, error) {
+func (c *gameMatchClient) CS_PlayerMatchSign(ctx context.Context, in *GameMatchSign, opts ...grpc.CallOption) (*Empty, error) {
 	out := new(Empty)
 	err := c.cc.Invoke(ctx, "/pb.GameMatch/CS_PlayerMatchSign", in, out, opts...)
 	if err != nil {
@@ -286,7 +345,7 @@ func (c *gameMatchClient) CS_PlayerMatchSign(ctx context.Context, in *PlayerMatc
 	return out, nil
 }
 
-func (c *gameMatchClient) CS_PlayerMatchSignCancel(ctx context.Context, in *PlayerMatchSignCancel, opts ...grpc.CallOption) (*Empty, error) {
+func (c *gameMatchClient) CS_PlayerMatchSignCancel(ctx context.Context, in *GameMatchPlayerCancel, opts ...grpc.CallOption) (*Empty, error) {
 	out := new(Empty)
 	err := c.cc.Invoke(ctx, "/pb.GameMatch/CS_PlayerMatchSignCancel", in, out, opts...)
 	if err != nil {
@@ -295,7 +354,7 @@ func (c *gameMatchClient) CS_PlayerMatchSignCancel(ctx context.Context, in *Play
 	return out, nil
 }
 
-func (c *gameMatchClient) SC_PlayerMatchSignFailed(ctx context.Context, in *PlayerMatchSignFailed, opts ...grpc.CallOption) (*Empty, error) {
+func (c *gameMatchClient) SC_PlayerMatchSignFailed(ctx context.Context, in *GameMatchOptResult, opts ...grpc.CallOption) (*Empty, error) {
 	out := new(Empty)
 	err := c.cc.Invoke(ctx, "/pb.GameMatch/SC_PlayerMatchSignFailed", in, out, opts...)
 	if err != nil {
@@ -304,7 +363,7 @@ func (c *gameMatchClient) SC_PlayerMatchSignFailed(ctx context.Context, in *Play
 	return out, nil
 }
 
-func (c *gameMatchClient) SC_PlayerMatchingFailed(ctx context.Context, in *PlayerMatchingFailed, opts ...grpc.CallOption) (*Empty, error) {
+func (c *gameMatchClient) SC_PlayerMatchingFailed(ctx context.Context, in *GameMatchOptResult, opts ...grpc.CallOption) (*Empty, error) {
 	out := new(Empty)
 	err := c.cc.Invoke(ctx, "/pb.GameMatch/SC_PlayerMatchingFailed", in, out, opts...)
 	if err != nil {
@@ -315,26 +374,26 @@ func (c *gameMatchClient) SC_PlayerMatchingFailed(ctx context.Context, in *Playe
 
 // GameMatchServer is the server API for GameMatch service.
 type GameMatchServer interface {
-	CS_PlayerMatchSign(context.Context, *PlayerMatchSign) (*Empty, error)
-	CS_PlayerMatchSignCancel(context.Context, *PlayerMatchSignCancel) (*Empty, error)
-	SC_PlayerMatchSignFailed(context.Context, *PlayerMatchSignFailed) (*Empty, error)
-	SC_PlayerMatchingFailed(context.Context, *PlayerMatchingFailed) (*Empty, error)
+	CS_PlayerMatchSign(context.Context, *GameMatchSign) (*Empty, error)
+	CS_PlayerMatchSignCancel(context.Context, *GameMatchPlayerCancel) (*Empty, error)
+	SC_PlayerMatchSignFailed(context.Context, *GameMatchOptResult) (*Empty, error)
+	SC_PlayerMatchingFailed(context.Context, *GameMatchOptResult) (*Empty, error)
 }
 
 // UnimplementedGameMatchServer can be embedded to have forward compatible implementations.
 type UnimplementedGameMatchServer struct {
 }
 
-func (*UnimplementedGameMatchServer) CS_PlayerMatchSign(ctx context.Context, req *PlayerMatchSign) (*Empty, error) {
+func (*UnimplementedGameMatchServer) CS_PlayerMatchSign(ctx context.Context, req *GameMatchSign) (*Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CS_PlayerMatchSign not implemented")
 }
-func (*UnimplementedGameMatchServer) CS_PlayerMatchSignCancel(ctx context.Context, req *PlayerMatchSignCancel) (*Empty, error) {
+func (*UnimplementedGameMatchServer) CS_PlayerMatchSignCancel(ctx context.Context, req *GameMatchPlayerCancel) (*Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CS_PlayerMatchSignCancel not implemented")
 }
-func (*UnimplementedGameMatchServer) SC_PlayerMatchSignFailed(ctx context.Context, req *PlayerMatchSignFailed) (*Empty, error) {
+func (*UnimplementedGameMatchServer) SC_PlayerMatchSignFailed(ctx context.Context, req *GameMatchOptResult) (*Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SC_PlayerMatchSignFailed not implemented")
 }
-func (*UnimplementedGameMatchServer) SC_PlayerMatchingFailed(ctx context.Context, req *PlayerMatchingFailed) (*Empty, error) {
+func (*UnimplementedGameMatchServer) SC_PlayerMatchingFailed(ctx context.Context, req *GameMatchOptResult) (*Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SC_PlayerMatchingFailed not implemented")
 }
 
@@ -343,7 +402,7 @@ func RegisterGameMatchServer(s *grpc.Server, srv GameMatchServer) {
 }
 
 func _GameMatch_CS_PlayerMatchSign_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(PlayerMatchSign)
+	in := new(GameMatchSign)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -355,13 +414,13 @@ func _GameMatch_CS_PlayerMatchSign_Handler(srv interface{}, ctx context.Context,
 		FullMethod: "/pb.GameMatch/CS_PlayerMatchSign",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(GameMatchServer).CS_PlayerMatchSign(ctx, req.(*PlayerMatchSign))
+		return srv.(GameMatchServer).CS_PlayerMatchSign(ctx, req.(*GameMatchSign))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _GameMatch_CS_PlayerMatchSignCancel_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(PlayerMatchSignCancel)
+	in := new(GameMatchPlayerCancel)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -373,13 +432,13 @@ func _GameMatch_CS_PlayerMatchSignCancel_Handler(srv interface{}, ctx context.Co
 		FullMethod: "/pb.GameMatch/CS_PlayerMatchSignCancel",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(GameMatchServer).CS_PlayerMatchSignCancel(ctx, req.(*PlayerMatchSignCancel))
+		return srv.(GameMatchServer).CS_PlayerMatchSignCancel(ctx, req.(*GameMatchPlayerCancel))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _GameMatch_SC_PlayerMatchSignFailed_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(PlayerMatchSignFailed)
+	in := new(GameMatchOptResult)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -391,13 +450,13 @@ func _GameMatch_SC_PlayerMatchSignFailed_Handler(srv interface{}, ctx context.Co
 		FullMethod: "/pb.GameMatch/SC_PlayerMatchSignFailed",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(GameMatchServer).SC_PlayerMatchSignFailed(ctx, req.(*PlayerMatchSignFailed))
+		return srv.(GameMatchServer).SC_PlayerMatchSignFailed(ctx, req.(*GameMatchOptResult))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _GameMatch_SC_PlayerMatchingFailed_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(PlayerMatchingFailed)
+	in := new(GameMatchOptResult)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -409,7 +468,7 @@ func _GameMatch_SC_PlayerMatchingFailed_Handler(srv interface{}, ctx context.Con
 		FullMethod: "/pb.GameMatch/SC_PlayerMatchingFailed",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(GameMatchServer).SC_PlayerMatchingFailed(ctx, req.(*PlayerMatchingFailed))
+		return srv.(GameMatchServer).SC_PlayerMatchingFailed(ctx, req.(*GameMatchOptResult))
 	}
 	return interceptor(ctx, in, info, handler)
 }

@@ -26,6 +26,22 @@ type Group struct {
 	//LinkId         int     //关联ID，匹配成功后关联成功的那条记录的ID，正常报名用不上
 }
 
+////redis公共前缀+模块名
+//func (gamematch *GameMatch) GetCommRedisKeyByModule(module string) string {
+//	return gamematch.Option.RedisPrefix + gamematch.Option.RedisKeySeparator + module + gamematch.Option.RedisKeySeparator
+//}
+//
+//func (gamematch *GameMatch) getRedisPushIncKey(ruleId int) string {
+//	return gamematch.GetCommRedisKeyByModule("group") + strconv.Itoa(ruleId) + gamematch.Option.RedisKeySeparator + "inc_id"
+//}
+//
+//func (gamematch *GameMatch) GetGroupIncId(ruleId int) int {
+//
+//	key := gamematch.getRedisPushIncKey(ruleId)
+//	res, _ := redis.Int(gamematch.Option.Redis.RedisDo("INCR", key))
+//	return res
+//}
+
 func (gamematch *GameMatch) NewGroupStruct(rule *Rule) Group {
 	group := Group{}
 	//group.Id = gamematch.GetGroupIncId(rule.Id)
@@ -47,7 +63,7 @@ func (gamematch *GameMatch) NewGroupStruct(rule *Rule) Group {
 
 //组自增ID，因为匹配最小单位是基于组，而不是基于一个人，组ID就得做到全局唯一，很重要
 func (gameMatch *GameMatch) getRedisGroupIncKey(ruleId int) string {
-	return gameMatch.Option.RedisKeySeparator + "group_inc_id" + gameMatch.Option.RedisKeySeparator + strconv.Itoa(ruleId)
+	return gameMatch.Option.RedisPrefix + gameMatch.Option.RedisKeySeparator + "group_inc_id" + gameMatch.Option.RedisKeySeparator + strconv.Itoa(ruleId)
 }
 
 //获取并生成一个自增GROUP-ID

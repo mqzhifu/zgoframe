@@ -5,7 +5,7 @@ import (
 	v1 "zgoframe/api/v1"
 )
 
-func CallbackRouter(Router *gin.RouterGroup) {
+func Callback(Router *gin.RouterGroup) {
 	BaseRouter := Router.Group("callback")
 	{
 		BaseRouter.POST("agora/cloud", v1.AgoraCallbackCloud)

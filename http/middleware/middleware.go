@@ -8,6 +8,7 @@ import (
 	httpresponse "zgoframe/http/response"
 )
 
+//公共函数 - 结束中间件处理，不执行后面的函数了
 func ErrAbortWithResponse(errCode int, c *gin.Context) {
 	global.V.Zap.Error("ErrAbortWithResponse:" + strconv.Itoa(errCode))
 	httpresponse.ErrWithAllByCode(errCode, c)

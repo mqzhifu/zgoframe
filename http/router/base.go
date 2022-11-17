@@ -5,7 +5,7 @@ import (
 	v1 "zgoframe/api/v1"
 )
 
-func InitBaseRouter(Router *gin.RouterGroup) {
+func Base(Router *gin.RouterGroup) {
 	BaseRouter := Router.Group("base")
 	{
 		//图形 - 验证码

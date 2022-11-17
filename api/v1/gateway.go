@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/golang/protobuf/proto"
+	"strconv"
+	"strings"
 	"zgoframe/core/global"
-	"zgoframe/http/request"
 	httpresponse "zgoframe/http/response"
 	"zgoframe/protobuf/pb"
 	"zgoframe/util"
@@ -144,10 +145,10 @@ func GatewayFDList(c *gin.Context) {
 }
 
 // @Tags Gateway
-// @Summary 网关 - 给某个用户-发送一条消息
+// @Summary 网关 - 长连接 - 给某个用户-发送一条消息
 // @Description 给某个UID发送一条消息，主要用于测试
 // @Security ApiKeyAuth
-// @Param data body request.GatewaySendMsg true "基础信息"
+// @Param data body pb.ProjectPushMsg true "基础信息"
 // @Router /gateway/send/msg [post]
 // @Success 200 {string} bbbb " "
 func GatewaySendMsg(c *gin.Context) {
@@ -158,28 +159,56 @@ func GatewaySendMsg(c *gin.Context) {
 		return
 	}
 
-	var form request.GatewaySendMsg
+	var form pb.ProjectPushMsg
 	c.ShouldBind(&form)
-	if form.Uid <= 0 {
-		httpresponse.FailWithMessage("uid empty!!!", c)
+	if form.ServiceId <= 0 {
+		httpresponse.FailWithMessage("ServiceId empty!!!", c)
 		return
 	}
 
-	if form.Content == "" {
+	if form.FuncId <= 0 {
+		httpresponse.FailWithMessage("FuncId empty!!!", c)
+		return
+	}
+
+	if form.Msg == "" {
 		httpresponse.FailWithMessage("Content empty!!!", c)
 		return
 	}
 
-	conn, exist := connManager.Pool[int32(form.Uid)]
-	if !exist {
-		httpresponse.FailWithMessage("uid not in pool ,maybe not connect socket", c)
+	if form.TargetUids == "" {
+		httpresponse.FailWithMessage("TargetUids empty!!!", c)
 		return
 	}
+	TargetUidArr := strings.Split(form.TargetUids, ",")
+	uids := []int{}
+	for _, uidStr := range TargetUidArr {
+		uid, _ := strconv.Atoi(uidStr)
+		if uid <= 0 {
+			httpresponse.FailWithMessage("uid <=0", c)
+			return
+		}
+		uids = append(uids, uid)
+	}
 
-	projectPushMsg := pb.ProjectPushMsg{}
-	projectPushMsg.Msg = form.Content
-	projectPushMsgStr, _ := proto.Marshal(&projectPushMsg)
-	conn.SendMsg("SC_ProjectPush", projectPushMsgStr)
+	for _, uid := range uids {
+		conn, exist := connManager.Pool[int32(uid)]
+		if !exist {
+			httpresponse.FailWithMessage("uid not in pool ,maybe not connect socket", c)
+			return
+		}
+
+		msg := pb.Msg{}
+		msg.ServiceId = form.ServiceId
+		msg.FuncId = form.FuncId
+
+		ServiceIdFuncId, _ := strconv.Atoi(strconv.Itoa(int(form.ServiceId)) + strconv.Itoa(int(form.FuncId)))
+		requestClientCloseStrByte, _ := conn.ConnManager.CompressNormalContent(form.Msg, int(conn.ContentType))
+		finalMsg, _, _ := conn.ConnManager.MakeMsgByActionId(int32(uid), ServiceIdFuncId, requestClientCloseStrByte)
+
+		projectPushMsgStr, _ := proto.Marshal(&finalMsg)
+		conn.SendMsg("SC_ProjectPush", projectPushMsgStr)
+	}
 
 	httpresponse.OkWithAll(connManager.Pool, "ok", c)
 }

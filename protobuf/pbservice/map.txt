@@ -1,4 +1,4 @@
-20100|FrameSync|CS_PlayerReady|PlayerReady|Empty|玩家报名/准备
+20100|FrameSync|CS_PlayerReady|PlayerReady|Empty|匹配成功/进入文章后，玩家需要再次确认：准备
 20102|FrameSync|CS_PlayerOperations|LogicFrame|Empty|玩家推送操作记录
 20104|FrameSync|CS_PlayerResumeGame|PlayerResumeGame|Empty|掉线恢复游戏
 20106|FrameSync|CS_PlayerOver|PlayerOver|Empty|玩家死亡
@@ -15,10 +15,9 @@
 20128|FrameSync|SC_StartBattle|StartBattle|Empty|开始战斗
 20130|FrameSync|SC_RestartGame|RestartGame|Empty|玩家均已在线，重新开始游戏
 20132|FrameSync|SC_GameOver|GameOver|Empty|一局游戏结束
-10100|GameMatch|CS_PlayerMatchSign|PlayerMatchSign|Empty|玩家匹配报名
-10102|GameMatch|CS_PlayerMatchSignCancel|PlayerMatchSignCancel|Empty|玩家匹配取消报名
-10104|GameMatch|SC_PlayerMatchSignFailed|PlayerMatchSignFailed|Empty|玩家报名(匹配)失败
-10106|GameMatch|SC_PlayerMatchingFailed|PlayerMatchingFailed|Empty|玩家匹配失败(可能超时，可能人不够组团)
+10100|GameMatch|CS_PlayerMatchSign|GameMatchSign|Empty|玩家匹配报名
+10102|GameMatch|CS_PlayerMatchSignCancel|GameMatchPlayerCancel|Empty|玩家匹配取消报名
+10104|GameMatch|SC_GameMatchOptResult|GameMatchOptResult|Empty|玩家报名(匹配)失败
 90100|Gateway|CS_Login|Login|LoginRes|登陆
 90102|Gateway|CS_Ping|PingReq|PongRes|客户端PING服务端
 90104|Gateway|CS_Pong|PongRes|PingReq|C端响应S端PIN
@@ -40,7 +39,7 @@
 12112|TwinAgora|CS_PeopleLeave|PeopleLeaveRes|Empty|某人离开了一个房间/频道
 12114|TwinAgora|SC_PeopleLeave|PeopleLeaveRes|Empty|告知房间里的人：有人离开了一个房间/频道
 12116|TwinAgora|SC_CallReply|CallReply|Empty|S端-通知专家端，有新的呼叫，请做出应答/选择
-12118|TwinAgora|CS_CallPeopleAccept|CallVote|Empty|被呼叫者-接收此次请求
+12118|TwinAgora|CS_CallPeopleAccefpt|CallVote|Empty|被呼叫者-接收此次请求
 12120|TwinAgora|SC_CallPeopleAccept|CallVote|Empty|告诉其它端，专家端已接收
 12122|TwinAgora|CS_CallPeopleDeny|CallVote|Empty|被呼叫者-拒绝此次请求
 12124|TwinAgora|SC_CallPeopleDeny|CallVote|Empty|告诉其它端，专家端已拒绝

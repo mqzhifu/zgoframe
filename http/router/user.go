@@ -5,7 +5,7 @@ import (
 	"zgoframe/api/v1"
 )
 
-func InitUserRouter(Router *gin.RouterGroup) {
+func User(Router *gin.RouterGroup) {
 	UserRouter := Router.Group("user")
 	{
 		UserRouter.POST("set/password", v1.SetPassword) // 设置/修改密码
@@ -22,7 +22,7 @@ func InitUserRouter(Router *gin.RouterGroup) {
 	}
 }
 
-func InitSysRouter(Router *gin.RouterGroup) {
+func System(Router *gin.RouterGroup) {
 	SysRouter := Router.Group("sys")
 	{
 		//

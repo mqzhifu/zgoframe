@@ -5,7 +5,7 @@ import (
 	v1 "zgoframe/api/v1"
 )
 
-func InitToolsRouter(Router *gin.RouterGroup) {
+func Tools(Router *gin.RouterGroup) {
 	ToolsRouter := Router.Group("tools")
 	{
 		//获取 - httpHeader 结构体

@@ -14,6 +14,8 @@ import (
 // @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
 // @Param X-Project-Id header string true "项目ID" default(6)
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
+// @Param X-Second-Auth-Ps header string true "二次验证-密码" default(qweASD1234560)
+// @Param X-Client-Req-Time header string true "客户端请求时间unix" default(1648277052)
 // @Param data body request.ConfigCenterOpt true "请求参数"
 // @Success 200 {boolean} true "true:成功 false:否"
 // @Router /config/center/get/module [POST]
@@ -39,6 +41,8 @@ func ConfigCenterGetByModule(c *gin.Context) {
 // @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
 // @Param X-Project-Id header string true "项目ID" default(6)
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
+// @Param X-Second-Auth-Ps header string true "二次验证-密码" default(qweASD1234560)
+// @Param X-Client-Req-Time header string true "客户端请求时间unix" default(1648277052)
 // @Param data body request.ConfigCenterOpt true "请求参数"
 // @Success 200 {boolean} true "true:成功 false:否"
 // @Router /config/center/get/key [post]
@@ -63,6 +67,8 @@ func ConfigCenterGetByModuleByKey(c *gin.Context) {
 // @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
 // @Param X-Project-Id header string true "项目ID" default(6)
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
+// @Param X-Second-Auth-Ps header string true "二次验证-密码" default(qweASD1234560)
+// @Param X-Client-Req-Time header string true "客户端请求时间unix" default(1648277052)
 // @Param data body request.ConfigCenterOpt true "请求参数"
 // @Success 200 {boolean} true "true:成功 false:否"
 // @Router /config/center/module/set/key [post]
@@ -88,6 +94,8 @@ func ConfigCenterSetByModuleByKey(c *gin.Context) {
 // @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
 // @Param X-Project-Id header string true "项目ID" default(6)
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
+// @Param X-Second-Auth-Ps header string true "二次验证-密码" default(qweASD1234560)
+// @Param X-Client-Req-Time header string true "客户端请求时间unix" default(1648277052)
 // @Param data body request.ConfigCenterOpt true "请求参数"
 // @Success 200 {boolean} true "true:成功 false:否"
 // @Router /config/center/create/module [post]

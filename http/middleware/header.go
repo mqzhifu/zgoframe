@@ -18,9 +18,7 @@ func Header() gin.HandlerFunc {
 		global.V.Zap.Debug("http middleware <header> start:")
 
 		//string header map 映射到 request.Header 结构体中
-		//util.MyPrint(c.Request.Header)
 		header := HttpHeaderSureMapCovertSureStruct(c.Request.Header)
-
 		header.AutoIp = c.Request.RemoteAddr
 
 		header.ServerReceiveTime = util.GetNowTimeSecondToInt()
@@ -32,16 +30,11 @@ func Header() gin.HandlerFunc {
 			header.TraceId = CreateOneTraceId()
 		}
 
-		//formatHeader := fmt.Sprintf("%+v", header)
-		//util.MyPrint("parser haeder:", formatHeader)
-
-		c.Set("myheader", header)
+		c.Set("myHeader", header)
 
 		global.V.Zap.Debug("http middleware <header>  finish.")
 
 		c.Next()
-
-		//fmt.Println("ProcessHeader after")
 	}
 }
 
@@ -56,9 +49,9 @@ func CreateOneTraceId() string {
 /*
 //给定一个空的struct ，再给定一个有值的map ， 根据struct的tag ， 把map值 映射到 空 struct 中
 //问题：
-	1目前仅支持一维
-	2并不是真正的struct 转 map ， 还需要struct 元素中定义tag
-	3map里的key 是http header 模式，也就是X-XXX 开头这种
+	1. 目前仅支持一维
+	2. 并不是真正的struct 转 map ， 还需要struct 元素中定义tag
+	3. map里的key 是http header 模式，也就是X-XXX 开头这种
 */
 func HttpHeaderSureMapCovertSureStruct(inMap map[string][]string) request.HeaderRequest {
 	outStruct := request.HeaderRequest{}

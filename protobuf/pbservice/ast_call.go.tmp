@@ -211,33 +211,26 @@ func (grpcManager *GrpcManager) CallServiceFuncGameMatch(funcName string,balance
     ctx := context.Background()
     switch funcName {
     case "CS_PlayerMatchSign":
-        request := pb.PlayerMatchSign{}
+        request := pb.GameMatchSign{}
         err := json.Unmarshal(postData,&request)
         if err != nil{
             return data,err
         }
         data ,err = grpcClient.CS_PlayerMatchSign(ctx,&request)
     case "CS_PlayerMatchSignCancel":
-        request := pb.PlayerMatchSignCancel{}
+        request := pb.GameMatchPlayerCancel{}
         err := json.Unmarshal(postData,&request)
         if err != nil{
             return data,err
         }
         data ,err = grpcClient.CS_PlayerMatchSignCancel(ctx,&request)
-    case "SC_PlayerMatchSignFailed":
-        request := pb.PlayerMatchSignFailed{}
+    case "SC_GameMatchOptResult":
+        request := pb.GameMatchOptResult{}
         err := json.Unmarshal(postData,&request)
         if err != nil{
             return data,err
         }
-        data ,err = grpcClient.SC_PlayerMatchSignFailed(ctx,&request)
-    case "SC_PlayerMatchingFailed":
-        request := pb.PlayerMatchingFailed{}
-        err := json.Unmarshal(postData,&request)
-        if err != nil{
-            return data,err
-        }
-        data ,err = grpcClient.SC_PlayerMatchingFailed(ctx,&request)
+        data ,err = grpcClient.SC_GameMatchOptResult(ctx,&request)
 
     default:
             return data,errors.New("func name router failed.")
@@ -417,13 +410,13 @@ func (grpcManager *GrpcManager) CallServiceFuncTwinAgora(funcName string,balance
             return data,err
         }
         data ,err = grpcClient.SC_CallReply(ctx,&request)
-    case "CS_CallPeopleAccept":
+    case "CS_CallPeopleAccefpt":
         request := pb.CallVote{}
         err := json.Unmarshal(postData,&request)
         if err != nil{
             return data,err
         }
-        data ,err = grpcClient.CS_CallPeopleAccept(ctx,&request)
+        data ,err = grpcClient.CS_CallPeopleAccefpt(ctx,&request)
     case "SC_CallPeopleAccept":
         request := pb.CallVote{}
         err := json.Unmarshal(postData,&request)

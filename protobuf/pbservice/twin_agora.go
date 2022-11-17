@@ -43,7 +43,7 @@ func (twinAgora *TwinAgora)SC_CallReply(ctx context.Context,callReply *pb.CallRe
     empty := &pb.Empty{}
     return empty,nil
 }
-func (twinAgora *TwinAgora)CS_CallPeopleAccept(ctx context.Context,callVote *pb.CallVote) (*pb.Empty,error){
+func (twinAgora *TwinAgora)CS_CallPeopleAccefpt(ctx context.Context,callVote *pb.CallVote) (*pb.Empty,error){
     empty := &pb.Empty{}
     return empty,nil
 }

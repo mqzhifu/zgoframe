@@ -31,15 +31,15 @@ type ClientLogStruct struct {
 
 //@description http客户端请求头
 type HeaderRequest struct {
-	Access            string         `json:"access"`              //使用网关时，不允许随意访问，得有key
+	Access            string         `json:"access"`              //使用网关时，不允许随意访问，得有access key
 	RequestId         string         `json:"request_id"`          //每次请求的唯一标识，响应时也会返回，如果请求方没有，后端会默认生成一个
 	TraceId           string         `json:"trace_id"`            //追踪ID，主要用于链路追踪，如果请求方没有，后端会默认生成一个
-	SourceType        int            `json:"source_type"`         //请求方来源类型(pc h5 ios android vr spider unknow)，不同类型，不同JWT，原因：1手机端登陆后，PC端再登陆，互踢，无法共存。2越权，有些接口不允许互相访问
-	ProjectId         int            `json:"project_id"`          //项目ID，所有的服务/项目/前端/App，均要先向管理员申请一个账号，才能用于日常请求
+	SourceType        int            `json:"source_type"`         //请求方来源：类型(pc h5 ios android vr spider unknow)，不同类型，不同JWT，原因：1手机端登陆后，PC端再登陆，互踢，无法共存。2越权，有些接口不允许互相访问
+	ProjectId         int            `json:"project_id"`          //请求方来源:项目ID，所有的服务/项目/前端/App，均要先向管理员申请一个账号，才能用于日常请求
 	Token             string         `json:"token"`               //JWT用户登陆令牌(HS256 对称算法，共享一个密钥)
-	AutoIp            string         `json:"auto_ip"`             //请求方没有IP时，系统自动获取生成,供后端/业务层使用
-	ClientReqTime     int            `json:"client_req_time"`     //客户端请求时间  unixtime
-	ServerReceiveTime int            `json:"server_receive_time"` //服务端接收到请求的时间 unixtime
+	AutoIp            string         `json:"auto_ip"`             //后端系统自动获取获取,供后端/业务层使用
+	ClientReqTime     int            `json:"client_req_time"`     //客户端请求时间  unix_time
+	ServerReceiveTime int            `json:"server_receive_time"` //服务端接收到请求的时间 unix_time
 	SecondAuthUname   string         `json:"second_auth_uname"`   //有些API是给管理员使用，除了TOKEN验证外，还得进行二次验证
 	SecondAuthPs      string         `json:"second_auth_ps"`      //有些API是给管理员使用，除了TOKEN验证外，还得进行二次验证
 	BaseInfo          HeaderBaseInfo `json:"base_info"`           //收集客户端的一些基础信息，json格式，参考：HeaderBaseInfo 结构体
@@ -51,9 +51,9 @@ type HeaderResponse struct {
 	SourceType    int    `json:"source_type"`          //请求方来源类型(pc h5 ios android vr spider unknow)，不同类型，不同JWT，原因：1手机端登陆后，PC端再登陆，互踢，无法共存。2越权，有些接口不允许互相访问
 	ProjectId     int    `json:"project_id"`           //项目ID，所有的服务/项目/前端/App，均要先向管理员申请一个账号，才能用于日常请求
 	AutoIp        string `json:"auto_ip"`              //获取不到请求方IP时，系统自动获取生成
-	ClientReqTime int    `json:"client_req_time"`      //客户端请求时间  unixtime
-	ReceiveTime   int    `json:"server_receive_time"`  //服务端接收到请求的时间 unixtime
-	ResponseTime  int    `json:"server_response_time"` //服务端最后响应的时间 unixtime
+	ClientReqTime int    `json:"client_req_time"`      //客户端请求时间  unix_time
+	ReceiveTime   int    `json:"server_receive_time"`  //服务端接收到请求的时间 unix_time
+	ResponseTime  int    `json:"server_response_time"` //服务端最后响应的时间 uni_xtime
 }
 
 type UploadFile struct {
@@ -165,10 +165,10 @@ type ConfigCenterOpt struct {
 	Value  string `json:"value"`  //写入时，值
 }
 
-type GatewaySendMsg struct {
-	Uid     int    `json:"uid" form:"uid"`
-	Content string `json:"content"  form:"content"`
-}
+//type GatewaySendMsg struct {
+//	Uid     int    `json:"uid" form:"uid"`
+//	Content string `json:"content"  form:"content"`
+//}
 
 //type ConfigCenterGetByKeyReq struct {
 //	Module string	`json:"module"`

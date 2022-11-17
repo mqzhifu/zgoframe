@@ -7,30 +7,35 @@ option go_package ="./;pb";
 
 service GameMatch {
 
-    rpc CS_PlayerMatchSign         ( PlayerMatchSign)        returns (Empty) {}//玩家匹配报名
-    rpc CS_PlayerMatchSignCancel   ( PlayerMatchSignCancel)  returns (Empty) {}//玩家匹配取消报名
+    rpc CS_PlayerMatchSign         ( GameMatchSign)        returns (Empty) {}//玩家匹配报名
+    rpc CS_PlayerMatchSignCancel   ( GameMatchPlayerCancel)  returns (Empty) {}//玩家匹配取消报名
 
-    rpc SC_PlayerMatchSignFailed   ( PlayerMatchSignFailed) returns (Empty) {}//玩家报名(匹配)失败
-    rpc SC_PlayerMatchingFailed    ( PlayerMatchingFailed)  returns (Empty) {}//玩家匹配失败(可能超时，可能人不够组团)
+    rpc SC_GameMatchOptResult   ( GameMatchOptResult) returns (Empty) {}//玩家报名(匹配)失败
 }
 
-message PlayerMatchSign{
-    int32 player_id = 1;
+message GameMatchSign{
+    int32       source_uid                      = 1;
+    int32       rule_id                         = 2;
+    int32       group_id                        = 3;
+    string      addition                        = 4;
+    repeated    GameMatchSignPlayer player_list = 5;
 }
 
-message PlayerMatchSignCancel{
-    int32 player_id = 1;
+message GameMatchSignPlayer{
+	int32               uid         = 1;
+    map<string, int32>    weight_attr = 2;
 }
 
-message PlayerMatchSignFailed{
-    int32   player_id   = 1;
-    string  msg         = 2;
-    int32   code        = 3;
+message GameMatchPlayerCancel{
+    int32   source_uid  = 1;
+    int32   rule_id     = 2;
+    int32   group_id    = 3;
 }
 
-message PlayerMatchingFailed{
-    int32   player_id   = 1;
-    string  msg         = 2;
-    string  roomId      = 3;
-    int32   code        = 4;
+message GameMatchOptResult{
+    int32   source_uid  = 1;
+    int32   group_id    = 2;
+    string  msg         = 3;
+    string  roomId      = 4;
+    int32   code        = 5;
 }

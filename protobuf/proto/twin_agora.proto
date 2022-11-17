@@ -17,7 +17,7 @@ service TwinAgora {
     rpc SC_PeopleLeave         (PeopleLeaveRes)         returns (Empty) {}//告知房间里的人：有人离开了一个房间/频道
 
     rpc SC_CallReply           (CallReply)              returns (Empty) {}//S端-通知专家端，有新的呼叫，请做出应答/选择
-    rpc CS_CallPeopleAccept    (CallVote)               returns (Empty) {}//被呼叫者-接收此次请求
+    rpc CS_CallPeopleAccefpt    (CallVote)               returns (Empty) {}//被呼叫者-接收此次请求
     rpc SC_CallPeopleAccept    (CallVote)               returns (Empty) {}//告诉其它端，专家端已接收
     rpc CS_CallPeopleDeny      (CallVote)               returns (Empty) {}//被呼叫者-拒绝此次请求
     rpc SC_CallPeopleDeny      (CallVote)               returns (Empty) {}//告诉其它端，专家端已拒绝
@@ -28,62 +28,71 @@ service TwinAgora {
 }
 //S端推送给C端一些事件
 message PushMsg{
-    int32   code            = 1;
-    int32   uid             = 2;
-    string  room_id         = 3;
-    int32   event_id        = 4;
-    string  content         = 5;
+    int32   source_uid      = 1;
+    int32   code            = 2;
+    int32   uid             = 3;
+    string  room_id         = 4;
+    int32   event_id        = 5;
+    string  content         = 6;
 }
 //房间心跳
 message RoomHeartbeatReq{
-    int64   time        = 1;
-    string  room_id     = 2;
-    int32   uid         = 3;
+    int32   source_uid  = 1;
+    int64   time        = 2;
+    string  room_id     = 3;
+    int32   uid         = 4;
 }
 //呼叫某人，加入一个房间，进行：音视频通话
 message CancelCallPeopleReq{
-	int32   uid 	        = 1;//发起者UID,长连接其实已经确定了UID，这里不写也行
-	string  room_id         = 2;//房间ID
+    int32   source_uid      = 1;
+	int32   uid 	        = 2;//发起者UID,长连接其实已经确定了UID，这里不写也行
+	string  room_id         = 3;//房间ID
 }
 //专家发出应答选择
 message CallVote{
-	int32   uid 	        = 1;//发起者UID,长连接其实已经确定了UID，这里不写也行
-	string  room_id         = 2;//房间ID
+    int32   source_uid      = 1;
+	int32   uid 	        = 2;//发起者UID,长连接其实已经确定了UID，这里不写也行
+	string  room_id         = 3;//房间ID
 }
 //呼叫某人，加入一个房间，进行：音视频通话
 message CallPeopleReq{
-	int32   uid 	        = 1;//发起者UID,长连接其实已经确定了UID，这里不写也行
-	int32   target_uid      = 2;//希望指定用户，进行音视频-通话
-	string  channel 	    = 3;//双方进入某个特定的频道(可以为空,由后端随机生成一个,能发送给双方)
-	int32   people_type 	= 4;//呼叫人群类型：1 呼叫所有人，2 按照<小组>呼叫 3 用户自己指定呼叫的人
-	int32   people_role 	= 5;//呼叫人群角色：1普通用户2专家
+    int32   source_uid      = 1;
+	int32   uid 	        = 2;//发起者UID,长连接其实已经确定了UID，这里不写也行
+	int32   target_uid      = 3;//希望指定用户，进行音视频-通话
+	string  channel 	    = 4;//双方进入某个特定的频道(可以为空,由后端随机生成一个,能发送给双方)
+	int32   people_type 	= 5;//呼叫人群类型：1 呼叫所有人，2 按照<小组>呼叫 3 用户自己指定呼叫的人
+	int32   people_role 	= 6;//呼叫人群角色：1普通用户2专家
 }
 //给发发起呼叫者，做出应答
 message CallPeopleRes{
-	string  receive_uid 	= 1;//已接收呼叫的用户ID
-	string  channel 	    = 2;//双方进入某个特定的频道(可以为空,由后端随机生成一个,能发送给双方)
-	int32   err_code        = 3;//0,没有错误，1所有专家均不在线，请等待一会，重新呼叫
-	string  err_msg 	    = 4;//错误消息
-	string  room_id         = 5;//roomId,C端呼叫验证通过后会创建一个虚拟的房间号
+    int32   source_uid      = 1;
+	string  receive_uid 	= 2;//已接收呼叫的用户ID
+	string  channel 	    = 3;//双方进入某个特定的频道(可以为空,由后端随机生成一个,能发送给双方)
+	int32   err_code        = 4;//0,没有错误，1所有专家均不在线，请等待一会，重新呼叫
+	string  err_msg 	    = 5;//错误消息
+	string  room_id         = 6;//roomId,C端呼叫验证通过后会创建一个虚拟的房间号
 }
 //某人进入了一个房间/频道，通知给C端
 message PeopleEntry{
-	int32   uid 	        = 1;//发起者UID,长连接其实已经确定了UID，这里不写也行
-	string  channel 	    = 2;//双方进入某个特定的频道(可以为空,由后端随机生成一个,能发送给双方)
+    int32   source_uid      = 1;
+	int32   uid 	        = 2;//发起者UID,长连接其实已经确定了UID，这里不写也行
+	string  channel 	    = 3;//双方进入某个特定的频道(可以为空,由后端随机生成一个,能发送给双方)
 	string  room_id         = 4;//房间ID
 }
 //某人进入了一个房间/频道，通知给C端
 message PeopleLeaveRes{
-	int32   uid 	        = 1;//发起者UID,长连接其实已经确定了UID，这里不写也行
-	string  channel 	    = 2;//双方进入某个特定的频道(可以为空,由后端随机生成一个,能发送给双方)
+    int32   source_uid      = 1;
+	int32   uid 	        = 2;//发起者UID,长连接其实已经确定了UID，这里不写也行
+	string  channel 	    = 3;//双方进入某个特定的频道(可以为空,由后端随机生成一个,能发送给双方)
 	string  room_id         = 4;//房间ID
 }
 //给某人推送一条消息
 message CallReply{
-	int32   send_uid 	    = 1;//发起者UID，如果是系统发送：uid=99999
-	int32   target_uid      = 2;//收消息的UID
-	string  content 	    = 3;//消息具体的内容，这里可以自定义成json格式
-	int32   msg_type 	    = 4;//消息分类
-	string  room_id         = 5;//房间ID
+    int32   source_uid      = 1;
+	int32   send_uid 	    = 2;//发起者UID，如果是系统发送：uid=99999
+	int32   target_uid      = 3;//收消息的UID
+	string  content 	    = 4;//消息具体的内容，这里可以自定义成json格式
+	int32   msg_type 	    = 5;//消息分类
+	string  room_id         = 6;//房间ID
 }
 

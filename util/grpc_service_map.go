@@ -202,28 +202,28 @@ func (grpcManager *GrpcManager) CallServiceFuncGameMatch(funcName string, balanc
 	ctx := context.Background()
 	switch funcName {
 	case "CS_PlayerMatchSign":
-		request := pb.PlayerMatchSign{}
+		request := pb.GameMatchSign{}
 		err := json.Unmarshal(postData, &request)
 		if err != nil {
 			return data, err
 		}
 		data, err = grpcClient.CS_PlayerMatchSign(ctx, &request)
 	case "CS_PlayerMatchSignCancel":
-		request := pb.PlayerMatchSignCancel{}
+		request := pb.GameMatchPlayerCancel{}
 		err := json.Unmarshal(postData, &request)
 		if err != nil {
 			return data, err
 		}
 		data, err = grpcClient.CS_PlayerMatchSignCancel(ctx, &request)
 	case "SC_PlayerMatchSignFailed":
-		request := pb.PlayerMatchSignFailed{}
+		request := pb.GameMatchOptResult{}
 		err := json.Unmarshal(postData, &request)
 		if err != nil {
 			return data, err
 		}
 		data, err = grpcClient.SC_PlayerMatchSignFailed(ctx, &request)
 	case "SC_PlayerMatchingFailed":
-		request := pb.PlayerMatchingFailed{}
+		request := pb.GameMatchOptResult{}
 		err := json.Unmarshal(postData, &request)
 		if err != nil {
 			return data, err

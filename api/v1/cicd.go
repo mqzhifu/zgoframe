@@ -15,6 +15,8 @@ import (
 // @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
 // @Param X-Project-Id header string true "项目ID" default(6)
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
+// @Param X-Second-Auth-Ps header string true "二次验证-密码" default(qweASD1234560)
+// @Param X-Client-Req-Time header string true "客户端请求时间unix" default(1648277052)
 // @Produce  application/json
 // @Success 200 {boolean} true "数据过长，先用bool替代"
 // @Router /cicd/superVisor/list [get]
@@ -34,6 +36,8 @@ func CicdSuperVisorList(c *gin.Context) {
 // @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
 // @Param X-Project-Id header string true "项目ID" default(6)
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
+// @Param X-Second-Auth-Ps header string true "二次验证-密码" default(qweASD1234560)
+// @Param X-Client-Req-Time header string true "客户端请求时间unix" default(1648277052)
 // @Produce  application/json
 // @Success 200 {object} util.Service
 // @Router /cicd/local/all/server/service/list [get]
@@ -48,6 +52,8 @@ func CicdLocalAllServerServiceList(c *gin.Context) {
 // @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
 // @Param X-Project-Id header string true "项目ID" default(6)
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
+// @Param X-Second-Auth-Ps header string true "二次验证-密码" default(qweASD1234560)
+// @Param X-Client-Req-Time header string true "客户端请求时间unix" default(1648277052)
 // @Produce  application/json
 // @Success 200 {object} util.Service
 // @Router /cicd/service/list [get]
@@ -62,6 +68,8 @@ func CicdServiceList(c *gin.Context) {
 // @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
 // @Param X-Project-Id header string true "项目ID" default(6)
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
+// @Param X-Second-Auth-Ps header string true "二次验证-密码" default(qweASD1234560)
+// @Param X-Client-Req-Time header string true "客户端请求时间unix" default(1648277052)
 // @Produce  application/json
 // @Success 200 {object} util.Server
 // @Router /cicd/server/list [get]
@@ -76,6 +84,8 @@ func CicdServerList(c *gin.Context) {
 // @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
 // @Param X-Project-Id header string true "项目ID" default(6)
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
+// @Param X-Second-Auth-Ps header string true "二次验证-密码" default(qweASD1234560)
+// @Param X-Client-Req-Time header string true "客户端请求时间unix" default(1648277052)
 // @Produce  application/json
 // @Success 200 {object} model.CicdPublish
 // @Router /cicd/publish/list [get]
@@ -90,6 +100,8 @@ func CicdPublishList(c *gin.Context) {
 // @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
 // @Param X-Project-Id header string true "项目ID" default(6)
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
+// @Param X-Second-Auth-Ps header string true "二次验证-密码" default(qweASD1234560)
+// @Param X-Client-Req-Time header string true "客户端请求时间unix" default(1648277052)
 // @Param id path string true "publish id"
 // @Produce  application/json
 // @Success 200 {bool} bool "true:成功 false:失败"
@@ -127,6 +139,8 @@ func CicdServicePublish(c *gin.Context) {
 // @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
 // @Param X-Project-Id header string true "项目ID" default(6)
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
+// @Param X-Second-Auth-Ps header string true "二次验证-密码" default(qweASD1234560)
+// @Param X-Client-Req-Time header string true "客户端请求时间unix" default(1648277052)
 // @Param data body request.CicdDeploy true "用户信息"
 // @Produce  application/json
 // @Success 200 {bool} bool "true:成功 false:失败"
@@ -153,6 +167,8 @@ func CicdServiceDeploy(c *gin.Context) {
 // @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
 // @Param X-Project-Id header string true "项目ID" default(6)
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
+// @Param X-Second-Auth-Ps header string true "二次验证-密码" default(qweASD1234560)
+// @Param X-Client-Req-Time header string true "客户端请求时间unix" default(1648277052)
 // @Param data body request.CicdDeploy true "用户信息"
 // @Produce  application/json
 // @Success 200 {bool} bool "true:成功 false:失败"
@@ -176,6 +192,8 @@ func CicdSuperVisorProcess(c *gin.Context) {
 // @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
 // @Param X-Project-Id header string true "项目ID" default(6)
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
+// @Param X-Second-Auth-Ps header string true "二次验证-密码" default(qweASD1234560)
+// @Param X-Client-Req-Time header string true "客户端请求时间unix" default(1648277052)
 // @Produce  application/json
 // @Success 200 {bool} bool "true:成功 false:失败"
 // @Router /cicd/ping [get]
@@ -189,6 +207,8 @@ func CicdPing(c *gin.Context) {
 // @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
 // @Param X-Project-Id header string true "项目ID" default(6)
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
+// @Param X-Second-Auth-Ps header string true "二次验证-密码" default(qweASD1234560)
+// @Param X-Client-Req-Time header string true "客户端请求时间unix" default(1648277052)
 // @Produce  application/json
 // @Success 200 {object} model.Project
 // @Router /cicd/local/deploy/dir/list [get]
@@ -203,6 +223,8 @@ func CicdLocalDeployDirList(c *gin.Context) {
 // @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
 // @Param X-Project-Id header string true "项目ID" default(6)
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
+// @Param X-Second-Auth-Ps header string true "二次验证-密码" default(qweASD1234560)
+// @Param X-Client-Req-Time header string true "客户端请求时间unix" default(1648277052)
 // @Param data body request.CicdSync true "用户信息"
 // @Produce  application/json
 // @Success 200 {bool} bool "true:成功 false:失败"

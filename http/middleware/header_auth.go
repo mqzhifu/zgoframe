@@ -5,14 +5,19 @@ import (
 	"zgoframe/core/global"
 	"zgoframe/http/request"
 	"zgoframe/model"
+	"zgoframe/util"
 )
 
 //非JWT的接口，公共接口，也是允许访问，但是得从HEADER里提取信用，做基础验证
 func HeaderAuth() gin.HandlerFunc {
-	//res := httpresponse.Response{}
 	return func(c *gin.Context) {
 		global.V.Zap.Debug("http middleware <HeaderAuth> start:")
-		header, _ := request.GetMyHeader(c)
+		header, err := request.GetMyHeader(c)
+		if err != nil {
+			util.MyPrint("err:" + err.Error())
+			ErrAbortWithResponse(5105, c)
+			return
+		}
 		//验证SourceType
 		if !model.CheckConstInList(model.GetConstListPlatform(), header.SourceType) {
 			header.SourceType = model.PLATFORM_UNKNOW
@@ -32,17 +37,10 @@ func HeaderAuth() gin.HandlerFunc {
 
 		project, empty := global.V.ProjectMng.GetById(header.ProjectId)
 		if empty {
-			//res.Code = 504
-			//res.Msg = "projectId  empty"
-			//c.AbortWithStatusJSON(500, res)
 			ErrAbortWithResponse(5103, c)
 			return
 		}
-		//fmt.Println(project.Access, " - ", header.Access)
 		if project.Access != header.Access {
-			//res.Code = 505
-			//res.Msg = "ACCESS  error"
-			//c.AbortWithStatusJSON(500, res)
 			ErrAbortWithResponse(5104, c)
 			return
 		}

@@ -1,4 +1,4 @@
-package service
+package user_center
 
 import (
 	"errors"
@@ -423,4 +423,3 @@ func (user *User) BindEmail(uid int, email string) (err error) {
 	err = user.Gorm.Updates(&userInfoEdit).Error
 	return err
 }
-

@@ -5,7 +5,7 @@ import (
 	v1 "zgoframe/api/v1"
 )
 
-func InitGatewayRouter(Router *gin.RouterGroup) {
+func Gateway(Router *gin.RouterGroup) {
 
 	GatewayRouter := Router.Group("gateway")
 	{

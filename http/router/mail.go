@@ -5,7 +5,7 @@ import (
 	v1 "zgoframe/api/v1"
 )
 
-func InitMailRouter(Router *gin.RouterGroup) {
+func Mail(Router *gin.RouterGroup) {
 	mailRouter := Router.Group("mail")
 	{
 		//发送站一条站内信

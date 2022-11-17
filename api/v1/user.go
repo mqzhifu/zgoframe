@@ -20,11 +20,11 @@ import (
 // 登录成功(DB比对成功)后，签发jwt
 // 这里分成2个部分，1是JWT字符串2redis，加REDIS是防止恶意攻击
 func tokenNext(c *gin.Context, user model.User, loginType int) (loginResponse httpresponse.LoginResponse, err error) {
-	ExpiresAt :=  time.Now().Unix() + global.C.Jwt.ExpiresTime // 过期时间 7天  配置文件
+	ExpiresAt := time.Now().Unix() + global.C.Jwt.ExpiresTime // 过期时间 7天  配置文件
 	//ExpiresAt := time.Now().Unix() + 60							//测试使用
-	haeder , _ := request.GetMyHeader(c)
+	haeder, _ := request.GetMyHeader(c)
 
-	util.MyPrint("tokenNext uid:" + strconv.Itoa(user.Id) + " sourceType:" + strconv.Itoa(haeder.SourceType)+ " ExpiresAt:",ExpiresAt)
+	util.MyPrint("tokenNext uid:"+strconv.Itoa(user.Id)+" sourceType:"+strconv.Itoa(haeder.SourceType)+" ExpiresAt:", ExpiresAt)
 	j := httpmiddleware.NewJWT()
 
 	claims := request.CustomClaims{
@@ -34,9 +34,9 @@ func tokenNext(c *gin.Context, user model.User, loginType int) (loginResponse ht
 		Username:   user.Username,
 		SourceType: haeder.SourceType,
 		StandardClaims: jwt.StandardClaims{
-			NotBefore: time.Now().Unix() - 10,                       // 签名生效时间，这里提前10秒，用于容错
-			ExpiresAt: ExpiresAt,									//失效时间
-			Issuer:    "ck-ar",                                      // 签名的发行者
+			NotBefore: time.Now().Unix() - 10, // 签名生效时间，这里提前10秒，用于容错
+			ExpiresAt: ExpiresAt,              //失效时间
+			Issuer:    "ck-ar",                // 签名的发行者
 		},
 	}
 	//生成token 字符串
@@ -47,7 +47,7 @@ func tokenNext(c *gin.Context, user model.User, loginType int) (loginResponse ht
 	//从redis里再取一下：可能有，可能没有(redis key=sourceType+uid ，因为可能多端同时登陆，所以得有 sourceType)
 	redisElement, _ := global.V.Redis.GetElementByIndex("jwt", strconv.Itoa(haeder.SourceType), strconv.Itoa(user.Id))
 	jwtStr, err := global.V.Redis.Get(redisElement)
-	util.MyPrint("token key:" + redisElement.Key," RedisJwtStr:", jwtStr, " err:", err, " ")
+	util.MyPrint("token key:"+redisElement.Key, " RedisJwtStr:", jwtStr, " err:", err, " ")
 
 	if err == redis.Nil { //redis里不存在，要么之前没登陆过，要么失效了...
 		//token 写入redis 并设置失效时间
@@ -93,7 +93,7 @@ func tokenNext(c *gin.Context, user model.User, loginType int) (loginResponse ht
 //2. 减少请求方每次头里加上一些重复的统计信息，有session的功能，但不推荐这么用
 //3. 长连接不可能每次请求都带头信息的
 func LoginRecord(c *gin.Context, uid int, loginType int) {
-	header,_ := request.GetMyHeader(c)
+	header, _ := request.GetMyHeader(c)
 
 	userLogin := model.UserLogin{
 		ProjectId:  header.ProjectId,
@@ -122,12 +122,13 @@ func LoginRecord(c *gin.Context, uid int, loginType int) {
 // @Description 删除 jwt，记录日志。不过只是删除一端的JWT，不同端(source_type)登陆都会生成一个jwt
 // @Tags User
 // @Security ApiKeyAuth
+// @Param X-Source-Type header string true "来源" default(11)
 // @Produce  application/json
 // @Success 200 {string} string "成功"
 // @Router /user/logout [post]
 func Logout(c *gin.Context) {
 	uid, _ := request.GetUid(c)
-	header ,_ := request.GetMyHeader(c)
+	header, _ := request.GetMyHeader(c)
 	redisElement, _ := global.V.Redis.GetElementByIndex("jwt", strconv.Itoa(header.SourceType), strconv.Itoa(uid))
 	global.V.Redis.Del(redisElement)
 
@@ -140,6 +141,7 @@ func Logout(c *gin.Context) {
 // @Summary 设置/修改 密码
 // @Description 首次设置 与 修改两个动作可以合成一个，因为没有唯一性验证
 // @Security ApiKeyAuth
+// @Param X-Source-Type header string true "来源" default(11)
 // @Produce  application/json
 // @Param data body request.SetPassword true "用户名, 原密码, 新密码"
 // @Success 200 {string} string "ok"
@@ -169,6 +171,7 @@ func SetPassword(c *gin.Context) {
 // @Tags User
 // @Summary 获取当前登陆用户的基础信息(使用头里的token解析)
 // @Security ApiKeyAuth
+// @Param X-Source-Type header string true "来源" default(11)
 // @Produce  application/json
 // @Success 200 {object} model.User "用户结构体"
 // @Router /user/info [get]
@@ -180,6 +183,7 @@ func GetUserInfo(c *gin.Context) {
 // @Tags User
 // @Summary 分页获取用户列表,目前并没有加筛选条件
 // @Security ApiKeyAuth
+// @Param X-Source-Type header string true "来源" default(11)
 // @accept application/json
 // @Produce application/json
 // @Param data body request.PageInfo true "基础信息"
@@ -208,6 +212,7 @@ func GetUserInfoList(c *gin.Context) {
 // @Tags User
 // @Summary 设定|修改 - 手机号
 // @Security ApiKeyAuth
+// @Param X-Source-Type header string true "来源" default(11)
 // @accept application/json
 // @Produce application/json
 // @Param data body request.BindMobile true "基础信息"
@@ -241,6 +246,7 @@ func SetMobile(c *gin.Context) {
 // @Tags User
 // @Summary 设定|修改 - 邮箱
 // @Security ApiKeyAuth
+// @Param X-Source-Type header string true "来源" default(11)
 // @accept application/json
 // @Produce application/json
 // @Param data body request.BindEmail true "基础信息"
@@ -275,6 +281,7 @@ func SetEmail(c *gin.Context) {
 // @Summary 设置/修改 用户基础信息
 // @Description ""
 // @Security ApiKeyAuth
+// @Param X-Source-Type header string true "来源" default(11)
 // @accept application/json
 // @Produce application/json
 // @Param data body request.SetUserInfo true "ID, 用户名, 昵称, 头像链接"
@@ -310,6 +317,7 @@ func SetUserInfo(c *gin.Context) {
 // @Summary 删除用户
 // @Description 欧美国家要求比较严，必须得有这功能，国内现在也有但不多，目前是用来方便开发/测试的，像脚本做自动化测试生成的用户(需要删除)，以及测试员线上测试时产生的用户数据需要删除（危险甚用）
 // @Security ApiKeyAuth
+// @Param X-Source-Type header string true "来源" default(11)
 // @Accept multipart/form-data
 // @Param uids formData string true "用户IDs，多用户时用逗号分割"
 // @Produce application/json

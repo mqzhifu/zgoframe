@@ -90,45 +90,43 @@ func GetNewHttpGIN(zapLog *zap.Logger, prefix string) (*gin.Engine, error) {
 
 func RegGinHttpRoute() {
 	httpresponse.ErrManager = global.V.Err
-
+	//公共 中间件: 限流 日志 头部解析
 	global.V.Gin.Use(httpmiddleware.Limiter()).Use(httpmiddleware.Record()).Use(httpmiddleware.Header())
-
 	//设置非登陆可访问API，但是头里要加基础认证的信息
 	PublicGroup := global.V.Gin.Group("")
 	//开启跨域，NGINX做了配置暂时可以先不用打开
 	//PublicGroup.Use(httpmiddleware.Cors())
 	PublicGroup.Use(httpmiddleware.HeaderAuth())
 	{
-		router.InitBaseRouter(PublicGroup)
-		router.InitConfigCenterRouter(PublicGroup)
-		router.InitGameMatchRouter(PublicGroup)
-		router.InitPersistenceRouter(PublicGroup)
-		router.InitFileRouter(PublicGroup)
-		router.InitCicdRouter(PublicGroup)
-
+		router.Base(PublicGroup)
+		router.Persistence(PublicGroup)
+		router.File(PublicGroup)
 	}
-	//给 管理员/开发/运维 使用，正常需要登陆一次并获取TOKEN，还需要二次验证
+	//管理员/开发/运维 使用，头部要验证，还需要二次验证，主要有些危险的操作
 	SystemGroup := global.V.Gin.Group("")
-	SystemGroup.Use(httpmiddleware.JWTAuth()).Use(httpmiddleware.SecondAuth())
+	SystemGroup.Use(httpmiddleware.HeaderAuth()).Use(httpmiddleware.SecondAuth())
 	{
-		router.InitSysRouter(SystemGroup)
+		router.Cicd(SystemGroup)
+		router.ConfigCenter(SystemGroup)
+		router.System(SystemGroup)
+		router.Tools(SystemGroup)
 	}
 
 	PrivateGroup := global.V.Gin.Group("")
 	//设置正常API（需要验证）
 	PrivateGroup.Use(httpmiddleware.JWTAuth())
 	{
-		router.InitToolsRouter(PrivateGroup)
-		router.InitTwinAgoraRouter(PrivateGroup)
-		router.InitUserRouter(PrivateGroup)
-		router.InitMailRouter(PrivateGroup)
+		router.Gateway(PrivateGroup)
+		router.GameMatch(PrivateGroup)
+		router.TwinAgora(PrivateGroup)
+		router.User(PrivateGroup)
+		router.Mail(PrivateGroup)
 	}
-
+	//3方回调的请求
 	nobodyGroup := global.V.Gin.Group("")
 	nobodyGroup.Use()
 	{
-		router.CallbackRouter(nobodyGroup)
-		router.InitGatewayRouter(nobodyGroup)
+		router.Callback(nobodyGroup)
 	}
 
 }

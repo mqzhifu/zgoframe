@@ -12,6 +12,7 @@ import (
 // @Summary 发送一条站内信
 // @Description 注意参数
 // @Security ApiKeyAuth
+// @Param X-Source-Type header string true "来源" default(11)
 // @accept application/json
 // @Security ApiKeyAuth
 // @Param data body request.SendMail true "参数信息,参考model"
@@ -33,6 +34,7 @@ func MailSend(c *gin.Context) {
 // @Summary 获取用户站内信列表
 // @Description 注意参数
 // @Security ApiKeyAuth
+// @Param X-Source-Type header string true "来源" default(11)
 // @accept application/json
 // @Security ApiKeyAuth
 // @Param data body request.MailList true "参数信息,参考model"
@@ -55,6 +57,7 @@ func MailList(c *gin.Context) {
 // @Summary 获取用户一条信息的详情
 // @Description 注意参数
 // @Security ApiKeyAuth
+// @Param X-Source-Type header string true "来源" default(11)
 // @accept application/json
 // @Security ApiKeyAuth
 // @Param data body request.MailInfo true "参数信息,参考model"
@@ -76,6 +79,7 @@ func MailInfo(c *gin.Context) {
 // @Summary 站内信未读总数
 // @Description 注意参数
 // @Security ApiKeyAuth
+// @Param X-Source-Type header string true "来源" default(11)
 // @accept application/json
 // @Security ApiKeyAuth
 // @Success 200 {integer} int "155"

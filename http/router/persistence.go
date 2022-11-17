@@ -5,7 +5,7 @@ import (
 	v1 "zgoframe/api/v1"
 )
 
-func InitPersistenceRouter(Router *gin.RouterGroup) {
+func Persistence(Router *gin.RouterGroup) {
 	persistenceRouter := Router.Group("persistence")
 	{
 		persistenceRouter.POST("log/push", v1.LogPush)
@@ -14,7 +14,7 @@ func InitPersistenceRouter(Router *gin.RouterGroup) {
 	}
 }
 
-func InitFileRouter(Router *gin.RouterGroup) {
+func File(Router *gin.RouterGroup) {
 	persistenceRouter := Router.Group("file")
 	{
 		//persistenceRouter.POST("upload/img", v1.Upload)

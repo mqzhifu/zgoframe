@@ -36,8 +36,8 @@ func GetUtilAgora() *util.MyAgora {
 // @Tags TwinAgora
 // @Summary 获取用户的录屏记录列表
 // @Description 获取用户的录屏记录列表
-// @accept application/json
 // @Security ApiKeyAuth
+// @Param X-Source-Type header string true "来源" default(11)
 // @Produce application/json
 // @Success 200 {boolean} boolean "true:成功 false:否"
 // @Router /twin/agora/cloud/record/list [POST]
@@ -52,6 +52,8 @@ func TwinAgoraCloudRecordList(c *gin.Context) {
 // @Tags TwinAgora
 // @Summary 检查云端录制环境
 // @Description 当有未停止的云端录制时，自动stop掉
+// @Security ApiKeyAuth
+// @Param X-Source-Type header string true "来源" default(11)
 // @accept application/json
 // @Security ApiKeyAuth
 // @Produce application/json
@@ -89,8 +91,6 @@ func TwinAgoraCloudRecordCheck(c *gin.Context) {
 // @accept application/json
 // @Security ApiKeyAuth
 // @Param X-Source-Type header string true "来源" default(11)
-// @Param X-Project-Id header string true "项目ID"  default(6)
-// @Param X-Access header string true "访问KEY" default(imzgoframe)
 // @Param data body util.AgoraAcquireReq false "基础信息"
 // @Produce application/json
 // @Success 200 {object} util.AgoraCloudRecordRes "结果"
@@ -158,8 +158,6 @@ func TwinAgoraCloudRecordCreateAcquire(c *gin.Context) {
 // @accept application/json
 // @Security ApiKeyAuth
 // @Param X-Source-Type header string true "来源" default(11)
-// @Param X-Project-Id header string true "项目ID"  default(6)
-// @Param X-Access header string true "访问KEY" default(imzgoframe)
 // @Param data body request.TwinAgoraReq false "基础信息"
 // @Produce application/json
 // @Success 200 {object} util.AgoraCloudRecordRes "结果"
@@ -243,8 +241,6 @@ func CloudRecordErr(recordId int, agoraCloudRecordRes util.AgoraCloudRecordRes) 
 // @accept application/json
 // @Security ApiKeyAuth
 // @Param X-Source-Type header string true "来源" default(11)
-// @Param X-Project-Id header string true "项目ID"  default(6)
-// @Param X-Access header string true "访问KEY" default(imzgoframe)
 // @Produce application/json
 // @Param rid path string true "rid"
 // @Success 200 {object} util.AgoraCloudRecordRes "结果"
@@ -281,8 +277,6 @@ func TwinAgoraCloudRecordQuery(c *gin.Context) {
 // @accept application/json
 // @Security ApiKeyAuth
 // @Param X-Source-Type header string true "来源" default(11)
-// @Param X-Project-Id header string true "项目ID"  default(6)
-// @Param X-Access header string true "访问KEY" default(imzgoframe)
 // @Param rid path string true "rid"
 // @Produce application/json
 // @Success 200 {object} util.AgoraCloudRecordRes "结果"
@@ -329,8 +323,6 @@ func TwinAgoraCloudRecordStop(c *gin.Context) {
 // @accept application/json
 // @Security ApiKeyAuth
 // @Param X-Source-Type header string true "来源" default(11)
-// @Param X-Project-Id header string true "项目ID"  default(6)
-// @Param X-Access header string true "访问KEY" default(imzgoframe)
 // @Param data body request.TwinAgoraToken false "基础信息"
 // @Produce application/json
 // @Success 200 {boolean} boolean "true:成功 false:否"
@@ -432,8 +424,6 @@ func GetRtcToken(form request.TwinAgoraToken) (token string, err error) {
 // @accept application/json
 // @Security ApiKeyAuth
 // @Param X-Source-Type header string true "来源" default(11)
-// @Param X-Project-Id header string true "项目ID"  default(6)
-// @Param X-Access header string true "访问KEY" default(imzgoframe)
 // @Param data body request.TwinAgoraToken false "基础信息"
 // @Produce application/json
 // @Success 200 {boolean} boolean "true:成功 false:否"
@@ -466,7 +456,6 @@ func TwinAgoraRTCGetToken(c *gin.Context) {
 // @accept application/json
 // @Security ApiKeyAuth
 // @Param X-Source-Type header string true "来源" default(11)
-// @Param X-Access header string true "访问KEY" default(imzgoframe)
 // @Param rid path string true "rid"
 // @Produce application/json
 // @Success 200 {boolean} boolean "true:成功 false:否"
@@ -641,7 +630,6 @@ func GenerateCloudVideo(recordId int) (err error) {
 // @accept application/json
 // @Security ApiKeyAuth
 // @Param X-Source-Type header string true "来源" default(11)
-// @Param X-Access header string true "访问KEY" default(imzgoframe)
 // @Produce application/json
 // @Success 200 {boolean} boolean "true:成功 false:否"
 // @Router /twin/agora/config [GET]
@@ -662,7 +650,6 @@ func TwinAgoraConfig(c *gin.Context) {
 // @accept application/json
 // @Security ApiKeyAuth
 // @Param X-Source-Type header string true "来源" default(11)
-// @Param X-Access header string true "访问KEY" default(imzgoframe)
 // @Produce application/json
 // @Success 200 {boolean} boolean "true:成功 false:否"
 // @Router /twin/agora/socket/tools [GET]

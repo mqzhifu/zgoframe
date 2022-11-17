@@ -7,11 +7,14 @@ import (
 )
 
 func GetMyHeader(c *gin.Context) (hr HeaderRequest, err error) {
-	myHeaderInterface, exists := c.Get("myheader")
+	myHeaderInterface, exists := c.Get("myHeader")
 	if !exists {
-		return hr, errors.New("get myheader is empty~")
+		return hr, errors.New("get myHeader is empty~")
 	}
-	myHeader := myHeaderInterface.(HeaderRequest)
+	myHeader, ok := myHeaderInterface.(HeaderRequest)
+	if !ok {
+		return hr, errors.New("assertions failed: HeaderRequest")
+	}
 	return myHeader, nil
 }
 

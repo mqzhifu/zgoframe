@@ -9,6 +9,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"zgoframe/protobuf/pb"
 	"zgoframe/service"
 	"zgoframe/util"
 )
@@ -276,8 +277,10 @@ func (push *Push) checkOneByStatus(key string, status int) {
 //处理首次推送
 func (push *Push) processWaitOne(id int, status int) {
 	element := push.getById(id)
-	push.Log.Info("processOne , push id : " + strconv.Itoa(id) + " status : " + strconv.Itoa(status) + "(retry) category:" + strconv.Itoa(element.Category))
-	httpRs, err := push.ServiceDiscoveryRequest(element, service.PUSH_STATUS_RETRY)
+	push.Log.Info("processWaitOne , push id : " + strconv.Itoa(id) + " status : " + strconv.Itoa(status) + "(retry) category:" + strconv.Itoa(element.Category))
+	//httpRs, err := push.ServiceDiscoveryRequest(element, service.PUSH_STATUS_RETRY)
+	httpRs, err := push.ServiceDiscoveryRequestUser(element)
+
 	if err != nil {
 		push.upRetryPushInfo(element)
 		msg := push.Err.MakeOneStringReplace(err.Error())
@@ -292,7 +295,7 @@ func (push *Push) processWaitOne(id int, status int) {
 //处理重试推送
 func (push *Push) processRetryOne(id int, status int) {
 	element := push.getById(id)
-	push.Log.Info("processOne , push id : " + strconv.Itoa(id) + " status : " + strconv.Itoa(status) + "(wait) category:" + strconv.Itoa(element.Category))
+	push.Log.Info("processRetryOne , push id : " + strconv.Itoa(id) + " status : " + strconv.Itoa(status) + "(wait) category:" + strconv.Itoa(element.Category))
 	if element.Times >= len(push.RetryPeriod) {
 		//已超过，最大重试次数
 		redisConnFD := push.Redis.GetNewConnFromPool()
@@ -308,7 +311,8 @@ func (push *Push) processRetryOne(id int, status int) {
 	//util.MyPrint("this time : ", time, "now :", util.GetNowTimeSecondToInt(), " - element.UTime ", element.UTime, " = ", d)
 	if d >= time {
 		push.Log.Info("trigger retry Push!!! ")
-		httpRs, err := push.ServiceDiscoveryRequest(element, service.PUSH_STATUS_RETRY)
+		//httpRs, err := push.ServiceDiscoveryRequest(element, service.PUSH_STATUS_RETRY)
+		httpRs, err := push.ServiceDiscoveryRequestUser(element)
 		if err != nil {
 			push.upRetryPushInfo(element)
 			msg := push.Err.MakeOneStringReplace(err.Error())
@@ -354,6 +358,50 @@ func (push *Push) getServiceUri(element PushElement, payload string) (uri string
 	}
 	return thirdMethodUri, postData, nil
 }
+
+//没有单独的 room 服务做聚合，直接返回给用户
+func (push *Push) ServiceDiscoveryRequestUser(element PushElement) (httpRs util.ResponseMsgST, err error) {
+
+	payload := strings.Replace(element.Payload, push.RedisPayloadSeparation, push.RedisTextSeparator, -1)
+	success := push.Rule.QueueSuccess
+	if element.Category == service.PushCategorySignTimeout {
+		groupInfo := push.Rule.RuleManager.Option.GameMatch.GroupStrToStruct(payload)
+		playerIds := push.Rule.RuleManager.Option.GameMatch.GetGroupPlayerIds(groupInfo)
+		gameMatchOptResult := pb.GameMatchOptResult{
+			GroupId: int32(groupInfo.Id),
+			RoomId:  "",
+			Code:    400,
+			Msg:     "sign timeout",
+		}
+		push.Rule.RuleManager.Option.RequestServiceAdapter.GatewaySendMsgByUids(playerIds, "SC_GameMatchOptResult", gameMatchOptResult)
+	} else if element.Category == service.PushCategorySuccessTimeout {
+		return httpRs, nil
+	} else if element.Category == service.PushCategorySuccess {
+		thisResult := success.strToStruct(payload)
+		resultInfo, _ := success.GetResultById(thisResult.Id, 1, 0)
+
+		newRoom := push.Rule.RuleManager.Option.GameMatch.Option.FrameSyncRoom.NewRoom()
+		util.MyPrint("newRoom:", newRoom)
+		newRoom.RuleId = int32(push.Rule.Id)
+		for _, uid := range resultInfo.PlayerIds {
+			newRoom.AddPlayer(uid)
+			gameMatchOptResult := pb.GameMatchOptResult{
+				//GroupId: resultInfo.Groups,
+				RoomId: newRoom.Id,
+				Code:   200,
+				Msg:    "success",
+			}
+			push.Rule.RuleManager.Option.RequestServiceAdapter.GatewaySendMsgByUid(int32(uid), "SC_GameMatchOptResult", gameMatchOptResult)
+		}
+
+	} else {
+		push.Log.Error("element.Category error.")
+		return httpRs, errors.New("element.Category error")
+	}
+
+	return httpRs, nil
+}
+
 func (push *Push) ServiceDiscoveryRequest(element PushElement, upStatus int) (httpRs util.ResponseMsgST, err error) {
 	push.Log.Debug("ServiceDiscoveryRequest id:" + strconv.Itoa(element.Id) + " status:" + strconv.Itoa(element.Status) + " , upStatus:" + strconv.Itoa(upStatus) + " category:" + strconv.Itoa(element.Category))
 	//var httpRs util.ResponseMsgST
@@ -376,16 +424,12 @@ func (push *Push) ServiceDiscoveryRequest(element PushElement, upStatus int) (ht
 
 	serviceHttp := util.NewServiceHttp(projectId, push.Service, myService.Ip, myService.Port, myService.ServiceId)
 	httpRs, err = serviceHttp.Post(thirdMethodUri, postData)
-	push.Log.Debug("push third service , httpCode : " + strconv.Itoa(httpRs.Code) + " err : " + err.Error())
-	if err != nil {
-		return httpRs, err
-	}
 	return httpRs, nil
 }
 
 //到了这一步，一定是发送了http请求，并拿到了http的响应数据
 func (push *Push) hook(element PushElement, httpRs util.ResponseMsgST) {
-	push.Log.Debug("hook id:" + strconv.Itoa(element.Id) + " status:" + strconv.Itoa(element.Status) + "upStatus:" + " category:" + strconv.Itoa(element.Category))
+	push.Log.Debug("hook id:" + strconv.Itoa(element.Id) + " status:" + strconv.Itoa(element.Status) + " category:" + strconv.Itoa(element.Category))
 	redisConnFD := push.Redis.GetNewConnFromPool()
 	defer redisConnFD.Close()
 

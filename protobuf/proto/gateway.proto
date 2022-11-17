@@ -27,20 +27,22 @@ service Gateway {
 
 //长连接传输内容：一条标准的内容
 message Msg{
-    int32   id               = 1;//未使用，保留
-    int32   sid_fid          = 2;//无实际用，方便开发，service_id+func_id
-    int32   data_length      = 3;//内容的总长度
-    int32   content_type     = 4;//内容类型
-    int32   protocol_type    = 5;//协议类型
-    int32   service_id       = 6;//服务ID
-    int32   func_id          = 7;//函数ID
-    string  reserved         = 8;//保留字段，未使用，后期可存sessionId
-    string  content          = 9;//具体传输内容
-    string  end_char         =10;//包结束字符，用于TCP粘包，无实际作用，只是保证消息完整性
+    int32   source_uid       = 1;
+    int32   id               = 2;//未使用，保留
+    int32   sid_fid          = 3;//无实际用，方便开发，service_id+func_id
+    int32   data_length      = 4;//内容的总长度
+    int32   content_type     = 5;//内容类型
+    int32   protocol_type    = 6;//协议类型
+    int32   service_id       = 7;//服务ID
+    int32   func_id          = 8;//函数ID
+    string  reserved         = 9;//保留字段，未使用，后期可存sessionId
+    string  content          =10;//具体传输内容
+    string  end_char         =11;//包结束字符，用于TCP粘包，无实际作用，只是保证消息完整性
 }
 
 message Login{
-    string token = 1;
+    int32   source_uid  = 1;
+    string  token       = 2;
 }
 
 message LoginRes{
@@ -50,33 +52,35 @@ message LoginRes{
 }
 
 message ProjectPushMsg{
-    string  project_id  = 1;
-    string  service_id  = 2;
-    string  func_id     = 3;
-    string  target_uids = 4;
-    string  msg         = 5;
+    int32   source_uid  = 1;
+    int32   project_id  = 2;
+    int32   service_id  = 3;
+    int32   func_id     = 4;
+    string  target_uids = 5;
+    string  msg         = 6;
 }
 
 message KickOff{
-    int64 time = 1;
+    int32   source_uid  = 1;
+    int64   time        = 2;
 }
 
 message CfgServer{
     string  ListenIp            = 1;
     string  OutIp               = 2;
     string  OutDomain           = 3;
-    string  WsPort              = 5;
-    string  TcpPort             = 6;
-    string  UdpPort             = 7;
-    string  WsUri               = 8;
-    int32   DefaultProtocolType = 9;
-    int32   DefaultContentType  =10;
-    string  LoginAuthType       =11;
-    string  LoginAuthSecretKey  =12;
-    int32   MaxClientConnNum    =13;
-    int32   MsgContentMax       =14;
-    int64   IOTimeout           =15;
-    int32   ConnTimeout         =16;
+    string  WsPort              = 4;
+    string  TcpPort             = 5;
+    string  UdpPort             = 6;
+    string  WsUri               = 7;
+    int32   DefaultProtocolType = 8;
+    int32   DefaultContentType  = 9;
+    string  LoginAuthType       =10;
+    string  LoginAuthSecretKey  =11;
+    int32   MaxClientConnNum    =12;
+    int32   MsgContentMax       =13;
+    int64   IOTimeout           =14;
+    int32   ConnTimeout         =15;
     int32   ClientHeartbeatTime =16;
     int32   ServerHeartbeatTime =17;
 }

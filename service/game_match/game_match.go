@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"zgoframe/model"
 	"zgoframe/service"
+	"zgoframe/service/frame_sync"
 	"zgoframe/util"
 )
 
@@ -49,10 +50,10 @@ import (
 */
 
 type GameMatchOption struct {
-	Log   *zap.Logger     //log 实例
-	Redis *util.MyRedisGo //redis 实例
-	Gorm  *gorm.DB        //mysql 实例
-	//Service            *util.Service          //服务 实例
+	ProjectId              int
+	Log                    *zap.Logger            //log 实例
+	Redis                  *util.MyRedisGo        //redis 实例
+	Gorm                   *gorm.DB               //mysql 实例
 	Metrics                *util.MyMetrics        //统计 实例
 	ServiceDiscovery       *util.ServiceDiscovery //服务发现 实例
 	StaticPath             string                 //静态文件公共目录
@@ -62,9 +63,9 @@ type GameMatchOption struct {
 	RedisKeySeparator      string                 //redis key 的分隔符号
 	RedisIdSeparator       string                 //一个大的结构被转化成字符串后，有些元素是复合结构，如IDS。得有个分隔符
 	RedisPayloadSeparation string                 //也是redis内容的分隔符，但它包含了其它的内容，与其它内容的分隔符冲突，所以得新起一个
-	ProjectId              int
-	PersistenceType        int //持久化类型，0关闭
-	//Etcd             *util.MyEtcd
+	PersistenceType        int                    //持久化类型，0关闭
+	FrameSyncRoom          *frame_sync.RoomManager
+	RequestServiceAdapter  *service.RequestServiceAdapter //请求3方服务 适配器
 }
 
 type GameMatch struct {
@@ -83,39 +84,36 @@ type GameMatch struct {
 	RuleSuccessTimeoutMin  int             //匹配成功后，最短超时时间
 	WeightMaxValue         int             //玩家权重上限值
 	//RuleTeamVSPersonMax    int             //组队互相PK，每个队最多人数
-	//PlayerManager          *PlayerManager  //管理所有用户的状态信息等
 }
 
 func NewGameMatch(option GameMatchOption) (*GameMatch, error) {
 	option.Log.Info("NewGameMatch : ")
-
-	util.MyPrint(option.Redis)
 
 	gameMatch := new(GameMatch)
 	gameMatch.Option = option
 
 	gameMatch.prefix = "gameMatch"
 	gameMatch.LoopSleepTime = 200
-	gameMatch.FormulaFirst = "<"           //游戏匹配-计算权重公式-前缀
-	gameMatch.FormulaEnd = ">"             //游戏匹配-计算权重公式-后缀
-	gameMatch.RuleTeamMaxPeople = 5        //一个小组允许最大人数
-	gameMatch.RulePersonConditionMax = 100 //N人组团，最大人数
-	gameMatch.RuleMatchTimeoutMax = 400    //报名，最大超时时间
-	gameMatch.RuleMatchTimeoutMin = 3      //报名，最小时间
-	gameMatch.RuleSuccessTimeoutMax = 600  //匹配成功后，最大超时时间
-	gameMatch.RuleSuccessTimeoutMin = 10   //匹配成功后，最短超时时间
-	gameMatch.WeightMaxValue = 100
-	gameMatch.Option.PersistenceType = service.PERSISTENCE_TYPE_MYSQL
-	//gameMatch.RuleTeamVSPersonMax = 10     //组队互相PK，每个队最多人数
-
+	gameMatch.FormulaFirst = "<"                                      //游戏匹配-计算权重公式-前缀
+	gameMatch.FormulaEnd = ">"                                        //游戏匹配-计算权重公式-后缀
+	gameMatch.RuleTeamMaxPeople = 5                                   //一个小组允许最大人数
+	gameMatch.RulePersonConditionMax = 100                            //N人组团，最大人数
+	gameMatch.RuleMatchTimeoutMax = 100                               //报名，最大超时时间
+	gameMatch.RuleMatchTimeoutMin = 3                                 //报名，最小时间
+	gameMatch.RuleSuccessTimeoutMax = 300                             //匹配成功后，最大超时时间
+	gameMatch.RuleSuccessTimeoutMin = 10                              //匹配成功后，最短超时时间
+	gameMatch.WeightMaxValue = 100                                    //权限最终的值，不能大于 100
+	gameMatch.Option.PersistenceType = service.PERSISTENCE_TYPE_MYSQL //数据 - 持久化
+	//语言包
 	lang, err := util.NewErrMsg(option.Log, option.StaticPath+"/data/game_match_cn.lang")
 	if err != nil {
 		util.ExitPrint(err)
 	}
 	gameMatch.Err = lang
 	ruleManagerOption := RuleManagerOption{
-		Gorm:      option.Gorm,
-		GameMatch: gameMatch,
+		Gorm:                  option.Gorm,
+		GameMatch:             gameMatch,
+		RequestServiceAdapter: option.RequestServiceAdapter,
 	}
 
 	gameMatch.RuleManager, err = NewRuleManager(ruleManagerOption)

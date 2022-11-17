@@ -6,7 +6,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-	"zgoframe/http/request"
+	"zgoframe/protobuf/pb"
 	"zgoframe/service"
 	"zgoframe/util"
 )
@@ -20,13 +20,14 @@ import (
 	3. 处理权重
 	4. 增加到匹配池
 */
-func (gameMatch *GameMatch) PlayerJoin(form request.HttpReqGameMatchPlayerSign) (group Group, err error) {
+func (gameMatch *GameMatch) PlayerJoin(form pb.GameMatchSign) (group Group, err error) {
+	//func (gameMatch *GameMatch) PlayerJoin(form request.HttpReqGameMatchPlayerSign) (group Group, err error) {
 	formBytes, err := json.Marshal(&form)
 	gameMatch.Option.Log.Debug("PlayerJoin " + string(formBytes))
 	ruleId := form.RuleId
-	outGroupId := form.GroupId
+
 	//这里只做最基础的验证，前置条件是已经在HTTP层作了验证
-	rule, err := gameMatch.RuleManager.GetById(ruleId)
+	rule, err := gameMatch.RuleManager.GetById(int(ruleId))
 	if err != nil {
 		return group, gameMatch.Err.New(400)
 	}
@@ -40,15 +41,13 @@ func (gameMatch *GameMatch) PlayerJoin(form request.HttpReqGameMatchPlayerSign) 
 		return group, gameMatch.Err.New(401)
 	}
 	if form.GroupId <= 0 {
-		return group, gameMatch.Err.New(452)
+		//这里是做一下兼容，按说应该直接返回错误。但有时候就是单用户直接报名
+		form.GroupId = int32(gameMatch.GetGroupIncId(int(form.RuleId)))
+		//return group, gameMatch.Err.New(452)
 	}
-	//groupsTotal := queueSign.getAllGroupsWeightCnt()	//报名 小组总数
-	//playersTotal := queueSign.getAllPlayersCnt()	//报名 玩家总数
-	//mylog.Info(" action :  Sign , players : " + strconv.Itoa(lenPlayers) +" ,queue cnt : groupsTotal",groupsTotal ," , playersTotal",playersTotal)
-	//queueSign := gamematch.GetContainerSignByRuleId(ruleId)
-	//mylog.Info("new sign :[ruleId : " + strconv.Itoa(ruleId) + "(" + rule.CategoryKey + ") , outGroupId : " + strconv.Itoa(outGroupId) + " , playersCount : " + strconv.Itoa(lenPlayers) + "] ")
-	//mylog.Info("new sign :[ruleId : ",ruleId,"(",rule.CategoryKey,") , outGroupId : ",outGroupId," , playersCount : ",lenPlayers,"] ")
-	//queueSign.Log.Info("new sign :[ruleId : " ,  ruleId   ,"(",rule.CategoryKey,") , outGroupId : ",outGroupId," , playersCount : ",lenPlayers,"] ")
+	outGroupId := form.GroupId
+
+	gameMatch.DebugShowQueueInfo(rule, form)
 	processStartTime := util.GetNowTimeSecondToInt()
 	if lenPlayers > rule.TeamMaxPeople {
 		errMsgMap := gameMatch.Err.MakeOneStringReplace(" rule.TeamMaxPeople:" + strconv.Itoa(rule.TeamMaxPeople))
@@ -66,8 +65,8 @@ func (gameMatch *GameMatch) PlayerJoin(form request.HttpReqGameMatchPlayerSign) 
 	//验证3方传过来的groupId 是否重复
 	allGroupIds := rule.QueueSign.GetGroupSignTimeoutAll()
 	for _, hasGroupId := range allGroupIds {
-		if outGroupId == hasGroupId {
-			errMsg := gameMatch.Err.MakeOneStringReplace(strconv.Itoa(outGroupId))
+		if int(outGroupId) == hasGroupId {
+			errMsg := gameMatch.Err.MakeOneStringReplace(strconv.Itoa(int(outGroupId)))
 			return group, gameMatch.Err.NewReplace(409, errMsg)
 		}
 	}
@@ -79,12 +78,12 @@ func (gameMatch *GameMatch) PlayerJoin(form request.HttpReqGameMatchPlayerSign) 
 		if httpPlayer.Uid <= 0 {
 			return group, gameMatch.Err.New(412)
 		}
-		player, isEmpty := rule.PlayerManager.GetById(httpPlayer.Uid)
+		player, isEmpty := rule.PlayerManager.GetById(int(httpPlayer.Uid))
 		//queueSign.Log.Info("player(" + strconv.Itoa(player.Id) + ") GetById :  status = " + strconv.Itoa(playerStatusElement.Status) + " isEmpty:" + strconv.Itoa(isEmpty))
 		if isEmpty == 1 {
 			//这是正常，用户之前没有登陆过，或 玩过一次，结算的时候把该数据清了
 			newPlayer := rule.PlayerManager.createEmptyPlayer()
-			newPlayer.Id = httpPlayer.Uid
+			newPlayer.Id = int(httpPlayer.Uid)
 			player = newPlayer
 		} else if player.Status == service.GAME_MATCH_PLAYER_STATUS_SUCCESS { //玩家已经匹配成功，并等待开始游戏
 			//queueSign.Log.Error(" player status = PlayerStatusSuccess ,demon not clean.")
@@ -176,14 +175,14 @@ func (gameMatch *GameMatch) PlayerJoin(form request.HttpReqGameMatchPlayerSign) 
 	expire := processStartTime + rule.MatchTimeout
 	//创建一个新的小组
 	group = gameMatch.NewGroupStruct(rule)
-	group.Id = outGroupId
+	group.Id = int(outGroupId)
 	group.Players = playerList
 	group.Type = service.GAME_MATCH_GROUP_TYPE_SIGN
 	group.SignTimeout = expire
 	group.SignTime = processStartTime
 	group.Person = len(playerList)
 	group.Weight = groupWeightTotal
-	group.OutGroupId = outGroupId
+	group.OutGroupId = int(outGroupId)
 	group.Addition = form.Addition
 	//group.CustomProp = httpReqBusiness.CustomProp
 	//group.MatchCode = rule.CategoryKey
@@ -220,7 +219,7 @@ func (gameMatch *GameMatch) PlayerJoin(form request.HttpReqGameMatchPlayerSign) 
 	return group, nil
 }
 
-func (gameMatch *GameMatch) Cancel(form request.HttpReqGameMatchPlayerCancel) error {
+func (gameMatch *GameMatch) Cancel(form pb.GameMatchPlayerCancel) error {
 	if form.RuleId <= 0 {
 		return errors.New("rule id empty")
 	}
@@ -229,15 +228,15 @@ func (gameMatch *GameMatch) Cancel(form request.HttpReqGameMatchPlayerCancel) er
 		return errors.New("GroupId empty")
 	}
 
-	rule, err := gameMatch.RuleManager.GetById(form.RuleId)
+	rule, err := gameMatch.RuleManager.GetById(int(form.RuleId))
 	if err != nil {
 		return err
 	}
-	return rule.QueueSign.CancelByGroupId(form.GroupId)
+	return rule.QueueSign.CancelByGroupId(int(form.GroupId))
 }
 
 //注： formula 不支持小数点，变量用尖括号：( <age> * 20 ) + ( <level> * 50)
-func (gameMatch *GameMatch) getPlayerWeightByFormula(formula string, MatchAttr map[string]int) float32 {
+func (gameMatch *GameMatch) getPlayerWeightByFormula(formula string, MatchAttr map[string]int32) float32 {
 	//mylog.Debug("getPlayerWeightByFormula , formula:",formula)
 	grep := gameMatch.FormulaFirst + "([\\s\\S]*?)" + gameMatch.FormulaEnd
 	var imgRE = regexp.MustCompile(grep)
@@ -251,7 +250,7 @@ func (gameMatch *GameMatch) getPlayerWeightByFormula(formula string, MatchAttr m
 		if !ok {
 			val = 0
 		}
-		formula = strings.Replace(formula, v[0], strconv.Itoa(val), -1)
+		formula = strings.Replace(formula, v[0], strconv.Itoa(int(val)), -1)
 
 	}
 	//util.MyPrint("final formula replaced str :", formula)
@@ -262,4 +261,11 @@ func (gameMatch *GameMatch) getPlayerWeightByFormula(formula string, MatchAttr m
 	}
 	f, _ := rs.Float32()
 	return f
+}
+
+func (gameMatch *GameMatch) DebugShowQueueInfo(rule *Rule, form pb.GameMatchSign) {
+
+	groupsTotal := rule.QueueSign.getAllGroupsWeightCnt() //报名 小组总数
+	playersTotal := rule.QueueSign.getAllPlayersCnt()     //报名 玩家总数
+	gameMatch.Option.Log.Debug("ShowQueueInfo , groupId:" + strconv.Itoa(int(form.GroupId)) + " , playersLen : " + strconv.Itoa(len(form.PlayerList)) + " ,queue cnt : groupsTotal" + strconv.Itoa(groupsTotal) + " , playersTotal" + strconv.Itoa(playersTotal))
 }

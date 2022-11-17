@@ -10,7 +10,7 @@ import (
 	"zgoframe/http/request"
 	httpresponse "zgoframe/http/response"
 	"zgoframe/model"
-	"zgoframe/service"
+	"zgoframe/service/user_center"
 	"zgoframe/util"
 )
 
@@ -212,7 +212,7 @@ func RegisterSms(c *gin.Context) {
 		return
 	}
 	header, _ := request.GetMyHeader(c)
-	err, userInfo := global.V.MyService.User.Register(user, header, service.UserRegInfo{})
+	err, userInfo := global.V.MyService.User.Register(user, header, user_center.UserRegInfo{})
 	if err != nil {
 		//global.V.Zap.Error("注册失败", zap.Any("err", err))
 		httpresponse.FailWithAll(userInfo, "注册失败:"+err.Error(), c)

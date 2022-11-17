@@ -13,16 +13,16 @@ import (
 
 // 1. 等待计算   2计算中   3匹配成功
 type Player struct {
-	Id             int            `json:"id"`
-	Status         int            `json:"status"`
-	GroupId        int            `json:"group_id"`
-	Weight         float32        `json:"weight"`
-	ATime          int            `json:"a_time"`
-	UTime          int            `json:"u_time"`
-	SignTimeout    int            `json:"sign_timeout"`
-	SuccessTimeout int            `json:"success_timeout"`
-	WeightAttrs    map[string]int `json:"weight_attrs" redis:"-"`
-	PlayerManager  *PlayerManager `json:"-" redis:"-"`
+	Id             int              `json:"id"`
+	Status         int              `json:"status"`
+	GroupId        int              `json:"group_id"`
+	Weight         float32          `json:"weight"`
+	ATime          int              `json:"a_time"`
+	UTime          int              `json:"u_time"`
+	SignTimeout    int              `json:"sign_timeout"`
+	SuccessTimeout int              `json:"success_timeout"`
+	WeightAttrs    map[string]int32 `json:"weight_attrs" redis:"-"`
+	PlayerManager  *PlayerManager   `json:"-" redis:"-"`
 	//RuleId         int            `json:"rule_id"`
 }
 

@@ -28,125 +28,114 @@ service FrameSync {
 }
 
 message RoomBaseInfo{
-    string  id 	                = 1;
-    int32   add_time            = 2;
-    int32   status              = 3;
-    int32   timeout 	        = 4;
-    int32   sequence_number     = 5;
-    int32   rand_seek           = 6;
-    repeated int32 player_ids = 7;
-    string  room_id             = 8;
-    int32   start_time          = 9;
-    int32   end_time 	        =10;
+    int32       source_uid          = 1;
+    string      id 	                = 2;
+    int32       add_time            = 3;
+    int32       status              = 4;
+    int32       timeout 	        = 5;
+    int32       sequence_number     = 6;
+    int32       rand_seek           = 7;
+    repeated    int32 player_ids    = 8;
+    string      room_id             = 9;
+    int32       start_time          =10;
+    int32       end_time 	        =11;
 }
 
 message PlayerResumeGame{
-    int32 player_id         = 1;
-    string room_id          = 2;
-    int32 sequence_number   = 3;
+    int32 source_uid        = 1;
+    int32 player_id         = 2;
+    string room_id          = 3;
+    int32 sequence_number   = 4;
 }
 
 message PlayerReady{
-    int32 player_id     = 1;
-    string room_id      = 2;
+    int32 source_uid    = 1;
+    int32 player_id     = 2;
+    string room_id      = 3;
 }
 
 message ReqRoomHistory{
-    int32 player_id             = 1;
-    string room_id              = 2;
-    int32 sequence_numberStart  = 3;
-    int32 sequence_numberEnd    = 4;
+    int32 source_uid            = 1;
+    int32 player_id             = 2;
+    string room_id              = 3;
+    int32 sequence_numberStart  = 4;
+    int32 sequence_numberEnd    = 5;
 }
 
 message RoomHistoryList{
-    repeated RoomHistory list = 1;
+    int32   source_uid          = 1;
+    repeated RoomHistory list   = 2;
 }
 
 message RoomHistory{
-	int32  id      = 1;
-	string action  = 2;
-	string content = 3;
+    int32 source_uid    = 1;
+	int32  id           = 2;
+	string action       = 3;
+	string content      = 4;
 }
 
 message GameOver{
-    int32 player_id         = 1;
-    string room_id          = 2;
-    int32 sequence_number   = 3;
-    string result           = 4;
+    int32   source_uid      = 1;
+    int32   player_id       = 2;
+    string  room_id         = 3;
+    int32   sequence_number = 4;
+    string  result          = 5;
 }
 
 message PlayerOver{
-    int32 player_id = 1;
-    int32 sequence_number   = 2;
+    int32   source_uid        = 1;
+    int32   player_id         = 2;
+    int32   sequence_number   = 3;
+    string  room_id           = 4;
 }
 
 message OtherPlayerOffline{
-    int32 player_id = 1;
+    int32 source_uid    = 1;
+    int32 player_id     = 2;
 }
 
 message StartBattle{
-    int32 sequence_number_start = 1;
+    int32 source_uid            = 1;
+    int32 sequence_number_start = 2;
 }
 
 message EnterBattle{
-    int32   rand_seek           = 1;
-    string  room_id             = 2;
-    int32   sequence_number     = 3;
-    int32   status              = 4;
-    int32   add_time            = 5;
-    int64   time                = 6;
-    string  udp_port            = 7;
-    repeated int32 player_ids   = 8;
-
-
+    int32       source_uid          = 1;
+    int32       rand_seek           = 2;
+    string      room_id             = 3;
+    int32       sequence_number     = 4;
+    int32       status              = 5;
+    int32       add_time            = 6;
+    int64       time                = 7;
+    string      udp_port            = 8;
+    repeated    int32 player_ids    = 9;
 }
 
 message LogicFrame{
-	int32 id 	                    = 1;
-	string room_id 		            = 2;
-	int32 sequence_number           = 3;
-	repeated Operation operations   = 4;
+    int32       source_uid          = 1;
+	int32       id 	                = 2;
+	string      room_id 		    = 3;
+	int32       sequence_number     = 4;
+	repeated    Operation operations= 5;
 }
 
 message Operation{
-	int32   id 	        = 1;
-	string  event 	    = 2;
-	string  value 	    = 3;
-	int32   player_id 	= 4;
+    int32   source_uid  = 1;
+	int32   id 	        = 2;
+	string  event 	    = 3;
+	string  value 	    = 4;
+	int32   player_id 	= 5;
 }
 
 message ReadyTimeout{
-    string room_id      = 1;
+    int32   source_uid      = 1;
+    string  room_id         = 2;
 }
 
 message RestartGame{
-    string      room_id             = 1;
-    repeated    int32 player_ids    = 2;
+    int32       source_uid          = 1;
+    string      room_id             = 2;
+    repeated    int32 player_ids    = 3;
 }
-
-
-//message Player{
-//    int32   id            = 1;
-//    string  username      = 2;
-//    string  nickname      = 3;
-//    int32   status        = 4;
-//    int32   add_time      = 5;
-//    int32   upTime        = 6;
-//    string  room_id       = 7;
-//    string  session_id    = 8;
-//    int32   timeout       = 9;
-//   int32   content_type  = 10;
-//    int32   protocol_type = 11;
-//}
-
-//message PlayerStatus{
-//    int32   id            = 1;
-//    string  nickname      = 2;
-//    int32   status        = 3;
-//    string  room_id       = 4;
-//    int32   add_time      = 5;
-//    int32   up_time       = 6;
-//}
-
 
 

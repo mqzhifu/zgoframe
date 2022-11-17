@@ -5,7 +5,7 @@ import (
 	v1 "zgoframe/api/v1"
 )
 
-func InitTwinAgoraRouter(Router *gin.RouterGroup) {
+func TwinAgora(Router *gin.RouterGroup) {
 	TwinAgora := Router.Group("twin/agora")
 	{
 		TwinAgora.POST("rtc/get/token", v1.TwinAgoraRTCGetToken) // 设置/修改密码

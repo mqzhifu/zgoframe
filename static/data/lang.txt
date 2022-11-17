@@ -5,6 +5,7 @@
 5102|header ACCESS empty
 5103|header projectId  empty
 5104|header ACCESS  error
+5105|getMyHeader empty or assertions failed: HeaderRequest
 5200|保留
 5201|jwt ParseWithClaims , token过期或未启用，err_info:{0}
 5202|jwt ParseWithClaims , err_info:{0}
@@ -13,3 +14,5 @@
 5205|token 不在redis 中，也可能已失效
 5206|redis 读取token 为空 , 失败:
 5207|uid not in db :{0}
+5290|二次验证为空
+5291|二次验证为失败

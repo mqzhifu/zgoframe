@@ -23,9 +23,10 @@ type Rule struct {
 }
 
 type RuleManagerOption struct {
-	Gorm           *gorm.DB
-	GameMatch      *GameMatch //父类
-	MonitorRuleIds []int      //负载时使用，当某个 rule 负载较大时，拆分到其它机器上，其它机器上启动的进程仅监听此 rule 即可
+	Gorm                  *gorm.DB
+	GameMatch             *GameMatch                     //父类
+	MonitorRuleIds        []int                          //负载时使用，当某个 rule 负载较大时，拆分到其它机器上，其它机器上启动的进程仅监听此 rule 即可
+	RequestServiceAdapter *service.RequestServiceAdapter //请求3方服务 适配器
 }
 type RuleManager struct {
 	Option RuleManagerOption
@@ -44,6 +45,7 @@ func NewRuleManager(option RuleManagerOption) (*RuleManager, error) {
 	ruleManager.Option = option
 	ruleManager.Log = ruleManager.Option.GameMatch.Option.Log
 	ruleManager.Err = ruleManager.Option.GameMatch.Err
+
 	err := ruleManager.InitData()
 	return ruleManager, err
 }

@@ -5,7 +5,7 @@ import (
 	v1 "zgoframe/api/v1"
 )
 
-func InitConfigCenterRouter(Router *gin.RouterGroup) {
+func ConfigCenter(Router *gin.RouterGroup) {
 	configCenterRouter := Router.Group("config/center")
 	{
 		//以模块(文件)为单位，获取该模块(文件)下的所有配置信息

@@ -1,4 +1,4 @@
-package service
+package frame_sync
 
 import (
 	"container/list"
@@ -8,19 +8,26 @@ import (
 	"sync"
 	"time"
 	"zgoframe/protobuf/pb"
+	"zgoframe/service"
 	"zgoframe/util"
 )
 
+type Player struct {
+	Id     int32
+	Status int
+	RoomId string
+}
+
 type Room struct {
 	Id                     string          `json:"id"`               //房间ID
-	Category               int32           `json:"category"`         //分类  - 目前未使用
+	RuleId                 int32           `json:"rule_id"`          //分类
 	AddTime                int32           `json:"addTime"`          //创建时间
 	StartTime              int32           `json:"startTime"`        //开始游戏时间
 	EndTime                int32           `json:"endTime"`          //游戏结束时间
 	ReadyTimeout           int32           `json:"readyTimeout"`     //房间创建，玩家进入，需要每个玩家点击准备：超时时间
 	Status                 int32           `json:"status"`           //状态
 	StatusLock             *sync.Mutex     `json:"-"`                //修改状态得加锁
-	PlayerList             []*util.Conn    `json:"playerList"`       //玩家列表
+	PlayerList             []*Player       `json:"playerList"`       //玩家列表
 	PlayerIds              []int32         `json:"player_ids"`       //玩家列表IDS，跟上面一样，只是 方便计算
 	SequenceNumber         int             `json:"sequenceNumber"`   //当前帧：顺序号
 	PlayersReadyList       map[int32]int32 `json:"playersReadyList"` //存储：玩家<准备>状态的列表
@@ -47,12 +54,13 @@ type RoomManager struct {
 }
 
 type RoomManagerOption struct {
-	Log          *zap.Logger
-	FrameSync    *FrameSync
-	ReadyTimeout int32 //房间人数满足了，等待 所有玩家确认，超时时间
-	RoomPeople   int32 //房间有多少人后，可以开始游戏了
-	MapSize      int32 `json:"mapSize"` //帧同步，地图大小，给前端初始化使用（测试使用）
-	Store        int32 `json:"store"`   //持久化：room
+	RequestServiceAdapter *service.RequestServiceAdapter //请求3方服务 适配器
+	Log                   *zap.Logger
+	FrameSync             *FrameSync
+	ReadyTimeout          int32 //房间人数满足了，等待 所有玩家确认，超时时间
+	RoomPeople            int32 //房间有多少人后，可以开始游戏了
+	MapSize               int32 `json:"mapSize"` //帧同步，地图大小，给前端初始化使用（测试使用）
+	Store                 int32 `json:"store"`   //持久化：room
 }
 
 func NewRoomManager(roomManagerOption RoomManagerOption) *RoomManager {
@@ -70,21 +78,21 @@ func (roomManager *RoomManager) SetFrameSync(frameSync *FrameSync) {
 func (roomManager *RoomManager) NewRoom() *Room {
 	room := new(Room)
 	room.Id = CreateRoomId()
-	room.Status = ROOM_STATUS_INIT
+	room.Status = service.ROOM_STATUS_INIT
 	room.AddTime = int32(util.GetNowTimeSecondToInt())
 	room.StartTime = 0
 	room.EndTime = 0
 	room.SequenceNumber = -1
 	room.PlayersAckList = make(map[int32]int32)
 	room.PlayersAckListRWLock = &sync.RWMutex{}
-	room.PlayersAckStatus = PLAYERS_ACK_STATUS_INIT
+	room.PlayersAckStatus = service.PLAYERS_ACK_STATUS_INIT
 	room.RandSeek = int32(util.GetRandIntNum(100))
 	room.PlayersOperationQueue = list.New()
 	room.PlayersReadyList = make(map[int32]int32)
 	room.PlayersReadyListRWLock = &sync.RWMutex{}
 	room.StatusLock = &sync.Mutex{}
 	room.Rs = ""
-	room.Category = 0
+	room.RuleId = 0
 	readyTimeout := int32(util.GetNowTimeSecondToInt()) + roomManager.Option.ReadyTimeout
 	room.ReadyTimeout = readyTimeout
 
@@ -101,8 +109,13 @@ func CreateRoomId() string {
 	return string
 }
 
-func (room *Room) AddPlayer(conn *util.Conn) {
-	room.PlayerList = append(room.PlayerList, conn)
+func (room *Room) AddPlayer(id int) {
+	p := Player{
+		Id:     int32(id),
+		Status: service.PLAYER_STATUS_ONLINE,
+		RoomId: "",
+	}
+	room.PlayerList = append(room.PlayerList, &p)
 }
 
 func (room *Room) GetStatus(status int32) {
@@ -119,7 +132,7 @@ func (room *Room) UpStatus(status int32) {
 }
 
 //C端获取一个房间的信息
-func (roomManager *RoomManager) GetRoom(requestGetRoom pb.RoomBaseInfo, conn *util.Conn) error {
+func (roomManager *RoomManager) GetRoom(requestGetRoom pb.RoomBaseInfo) error {
 	roomId := requestGetRoom.RoomId
 	room, _ := roomManager.GetById(roomId)
 
@@ -133,7 +146,8 @@ func (roomManager *RoomManager) GetRoom(requestGetRoom pb.RoomBaseInfo, conn *ut
 		RandSeek: room.RandSeek,
 		RoomId:   room.Id,
 	}
-	conn.SendMsgCompressByUid(conn.UserId, "pushRoomInfo", &ResponsePushRoomInfo)
+	roomManager.Option.RequestServiceAdapter.GatewaySendMsgByUid(requestGetRoom.SourceUid, "pushRoomInfo", &ResponsePushRoomInfo)
+	//conn.SendMsgCompressByUid(requestGetRoom.SourceUid, "pushRoomInfo", &ResponsePushRoomInfo)
 	return nil
 }
 
@@ -155,9 +169,9 @@ func (roomManager *RoomManager) Shutdown() {
 	}
 	//这里只做信号关闭，即：死循环的协程，而真实的关闭由netWay.Close解决
 	for _, room := range roomManager.Pool {
-		if room.Status == ROOM_STATUS_READY {
+		if room.Status == service.ROOM_STATUS_READY {
 			room.ReadyCloseChan <- 1
-		} else if room.Status == ROOM_STATUS_EXECING {
+		} else if room.Status == service.ROOM_STATUS_EXECING {
 			room.CloseChan <- 1
 		}
 	}
@@ -178,10 +192,10 @@ func (roomManager *RoomManager) AddPoolElement(room *Room) error {
 	uids := []int32{}
 	for _, v := range room.PlayerList {
 		v.UpPlayerRoomId(room.Id)
-		uids = append(uids, v.UserId)
+		uids = append(uids, int32(v.Id))
 	}
 	room.PlayerIds = uids
-	room.UpStatus(ROOM_STATUS_READY)
+	room.UpStatus(service.ROOM_STATUS_READY)
 	roomManager.Pool[room.Id] = room
 
 	room.CloseChan = make(chan int)
@@ -190,4 +204,8 @@ func (roomManager *RoomManager) AddPoolElement(room *Room) error {
 	roomManager.Option.FrameSync.StartOne(room)
 
 	return nil
+}
+
+func (player *Player) UpPlayerRoomId(roomId string) {
+	player.RoomId = roomId
 }

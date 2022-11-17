@@ -25,12 +25,13 @@ func NewJWT() *JWT {
 
 // 根据 JWT，创建一个token ，HS256(SHA-256 + HMAC ,共享一个密钥)
 func (j *JWT) CreateToken(claims request.CustomClaims) (string, error) {
-	global.V.Zap.Debug("CreateToken")
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString(j.SigningKey)
+	tokenClaims := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	token, err := tokenClaims.SignedString(j.SigningKey)
+	global.V.Zap.Debug("CreateToken: " + token)
+	return token, err
 }
 
-//快捷函数，方便 回调
+//快捷函数，方便 回调 ，主要是给gin http 使用
 func JWTAuth() gin.HandlerFunc {
 	global.V.Zap.Debug("im in jwtauth:")
 	return RealJWTAuth
@@ -38,10 +39,10 @@ func JWTAuth() gin.HandlerFunc {
 
 // 解析 token
 func (j *JWT) ParseToken(tokenString string) (customClaims request.CustomClaims, err error) {
-	global.V.Zap.Debug("ParseToken:" + tokenString)
 	token, err := jwt.ParseWithClaims(tokenString, &request.CustomClaims{}, func(token *jwt.Token) (i interface{}, e error) {
 		return j.SigningKey, nil
 	})
+	global.V.Zap.Debug("ParseToken:" + tokenString)
 	//util.MyPrint(token.Header, " ", token.Valid, "  ", token.Signature, " ", token.Method.Alg(), " ", err)
 	if err != nil { //发生错误
 		global.V.Zap.Debug("jwt.ParseWithClaims err:" + err.Error())
@@ -59,16 +60,12 @@ func (j *JWT) ParseToken(tokenString string) (customClaims request.CustomClaims,
 		return customClaims, err
 
 	}
-	//if claims, ok := token.Claims.(*request.CustomClaims); ok && token.Valid {
-	//	return claims, nil
-	//}
 	claims, ok := token.Claims.(*request.CustomClaims)
 	if ok && token.Valid {
 		global.V.Zap.Debug("ParseToken success , id: " + strconv.Itoa(claims.Id) + " username:" + claims.Username + " sourceType" + strconv.Itoa(claims.SourceType))
 		return *claims, nil
 	} else {
 		err := global.V.Err.New(5203)
-		//global.V.Zap.Debug("ParseToken failed ,err: 断言失败，request.CustomClaims")
 		return customClaims, err
 	}
 
@@ -114,7 +111,6 @@ func CheckToken(myHeader request.HeaderRequest) (u model.User, customClaims requ
 	}
 
 	if claims.ProjectId <= 0 || claims.Id <= 0 || claims.SourceType <= 0 {
-		//return u, customClaims, errors.New("ProjectId or claims.Id or claims.SourceType : is null")
 		return u, customClaims, global.V.Err.New(5204)
 	}
 	//请求头里的来源类型要与jwt里的对上

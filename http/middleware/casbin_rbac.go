@@ -1,7 +1,6 @@
 package httpmiddleware
 
-
-//// 拦截器
+// 后台，对用户做角色权限的时候使用
 //func CasbinHandler() gin.HandlerFunc {
 //	return func(c *gin.Context) {
 //		claims, _ := c.Get("claims")
@@ -24,4 +23,3 @@ package httpmiddleware
 //		}
 //	}
 //}
-

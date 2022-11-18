@@ -73,10 +73,35 @@ func GameMatchGetOneRule(c *gin.Context) {
 	httpresponse.OkWithAll(rule, "ok", c)
 }
 
-//}else if uri == "/success/del"{//匹配成功记录，不想要了，删除一掉
-//code,msg = httpd.successDelHandler(postJsonStr)
-//}else if uri == "/config"{//
-//code,msg = httpd.ConfigHandler(postJsonStr)
+// @Tags GameMatch
+// @Summary 获取语言包
+// @Description  用于日常调试
+// @Security ApiKeyAuth
+// @accept application/json
+// @Param X-Source-Type header string true "来源" default(11)
+// @Produce application/json
+// @Success 200 {boolean} true "true:成功 false:否"
+// @Router /game/match/lang [get]
+func GameMatchGetLang(c *gin.Context) {
+	//util.ErrInfo
+	lang := global.V.MyService.GameMatch.GetLang()
+	httpresponse.OkWithAll(lang, "ok", c)
+}
+
+// @Tags GameMatch
+// @Summary 配置信息
+// @Description  配置信息
+// @Security ApiKeyAuth
+// @accept application/json
+// @Param X-Source-Type header string true "来源" default(11)
+// @Produce application/json
+// @Success 200 {boolean} true "true:成功 false:否"
+// @Router /game/match/config [get]
+func GameMatchConfig(c *gin.Context) {
+	op := global.V.MyService.GameMatch.GetOption()
+	httpresponse.OkWithAll(op, "ok", c)
+}
+
 //}else if uri == "/rule/add" {//添加一条rule
 ////code,msg = httpd.ruleAddOne(postDataMap)
 //}else if uri == "/tools/getErrorInfo" {//所有错误码列表

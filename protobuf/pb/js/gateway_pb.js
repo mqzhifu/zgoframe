@@ -225,16 +225,17 @@ proto.pb.Msg.prototype.toObject = function(opt_includeInstance) {
  */
 proto.pb.Msg.toObject = function(includeInstance, msg) {
   var f, obj = {
-    id: jspb.Message.getFieldWithDefault(msg, 1, 0),
-    sidFid: jspb.Message.getFieldWithDefault(msg, 2, 0),
-    dataLength: jspb.Message.getFieldWithDefault(msg, 3, 0),
-    contentType: jspb.Message.getFieldWithDefault(msg, 4, 0),
-    protocolType: jspb.Message.getFieldWithDefault(msg, 5, 0),
-    serviceId: jspb.Message.getFieldWithDefault(msg, 6, 0),
-    funcId: jspb.Message.getFieldWithDefault(msg, 7, 0),
-    reserved: jspb.Message.getFieldWithDefault(msg, 8, ""),
-    content: jspb.Message.getFieldWithDefault(msg, 9, ""),
-    endChar: jspb.Message.getFieldWithDefault(msg, 10, "")
+    sourceUid: jspb.Message.getFieldWithDefault(msg, 1, 0),
+    id: jspb.Message.getFieldWithDefault(msg, 2, 0),
+    sidFid: jspb.Message.getFieldWithDefault(msg, 3, 0),
+    dataLength: jspb.Message.getFieldWithDefault(msg, 4, 0),
+    contentType: jspb.Message.getFieldWithDefault(msg, 5, 0),
+    protocolType: jspb.Message.getFieldWithDefault(msg, 6, 0),
+    serviceId: jspb.Message.getFieldWithDefault(msg, 7, 0),
+    funcId: jspb.Message.getFieldWithDefault(msg, 8, 0),
+    reserved: jspb.Message.getFieldWithDefault(msg, 9, ""),
+    content: jspb.Message.getFieldWithDefault(msg, 10, ""),
+    endChar: jspb.Message.getFieldWithDefault(msg, 11, "")
   };
 
   if (includeInstance) {
@@ -273,41 +274,45 @@ proto.pb.Msg.deserializeBinaryFromReader = function(msg, reader) {
     switch (field) {
     case 1:
       var value = /** @type {number} */ (reader.readInt32());
-      msg.setId(value);
+      msg.setSourceUid(value);
       break;
     case 2:
       var value = /** @type {number} */ (reader.readInt32());
-      msg.setSidFid(value);
+      msg.setId(value);
       break;
     case 3:
       var value = /** @type {number} */ (reader.readInt32());
-      msg.setDataLength(value);
+      msg.setSidFid(value);
       break;
     case 4:
       var value = /** @type {number} */ (reader.readInt32());
-      msg.setContentType(value);
+      msg.setDataLength(value);
       break;
     case 5:
       var value = /** @type {number} */ (reader.readInt32());
-      msg.setProtocolType(value);
+      msg.setContentType(value);
       break;
     case 6:
       var value = /** @type {number} */ (reader.readInt32());
-      msg.setServiceId(value);
+      msg.setProtocolType(value);
       break;
     case 7:
       var value = /** @type {number} */ (reader.readInt32());
-      msg.setFuncId(value);
+      msg.setServiceId(value);
       break;
     case 8:
-      var value = /** @type {string} */ (reader.readString());
-      msg.setReserved(value);
+      var value = /** @type {number} */ (reader.readInt32());
+      msg.setFuncId(value);
       break;
     case 9:
       var value = /** @type {string} */ (reader.readString());
-      msg.setContent(value);
+      msg.setReserved(value);
       break;
     case 10:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setContent(value);
+      break;
+    case 11:
       var value = /** @type {string} */ (reader.readString());
       msg.setEndChar(value);
       break;
@@ -340,73 +345,80 @@ proto.pb.Msg.prototype.serializeBinary = function() {
  */
 proto.pb.Msg.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
-  f = message.getId();
+  f = message.getSourceUid();
   if (f !== 0) {
     writer.writeInt32(
       1,
       f
     );
   }
-  f = message.getSidFid();
+  f = message.getId();
   if (f !== 0) {
     writer.writeInt32(
       2,
       f
     );
   }
-  f = message.getDataLength();
+  f = message.getSidFid();
   if (f !== 0) {
     writer.writeInt32(
       3,
       f
     );
   }
-  f = message.getContentType();
+  f = message.getDataLength();
   if (f !== 0) {
     writer.writeInt32(
       4,
       f
     );
   }
-  f = message.getProtocolType();
+  f = message.getContentType();
   if (f !== 0) {
     writer.writeInt32(
       5,
       f
     );
   }
-  f = message.getServiceId();
+  f = message.getProtocolType();
   if (f !== 0) {
     writer.writeInt32(
       6,
       f
     );
   }
-  f = message.getFuncId();
+  f = message.getServiceId();
   if (f !== 0) {
     writer.writeInt32(
       7,
       f
     );
   }
-  f = message.getReserved();
-  if (f.length > 0) {
-    writer.writeString(
+  f = message.getFuncId();
+  if (f !== 0) {
+    writer.writeInt32(
       8,
       f
     );
   }
-  f = message.getContent();
+  f = message.getReserved();
   if (f.length > 0) {
     writer.writeString(
       9,
       f
     );
   }
-  f = message.getEndChar();
+  f = message.getContent();
   if (f.length > 0) {
     writer.writeString(
       10,
+      f
+    );
+  }
+  f = message.getEndChar();
+  if (f.length > 0) {
+    writer.writeString(
+      11,
       f
     );
   }
@@ -414,10 +426,10 @@ proto.pb.Msg.serializeBinaryToWriter = function(message, writer) {
 
 
 /**
- * optional int32 id = 1;
+ * optional int32 source_uid = 1;
  * @return {number}
  */
-proto.pb.Msg.prototype.getId = function() {
+proto.pb.Msg.prototype.getSourceUid = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 1, 0));
 };
 
@@ -426,16 +438,16 @@ proto.pb.Msg.prototype.getId = function() {
  * @param {number} value
  * @return {!proto.pb.Msg} returns this
  */
-proto.pb.Msg.prototype.setId = function(value) {
+proto.pb.Msg.prototype.setSourceUid = function(value) {
   return jspb.Message.setProto3IntField(this, 1, value);
 };
 
 
 /**
- * optional int32 sid_fid = 2;
+ * optional int32 id = 2;
  * @return {number}
  */
-proto.pb.Msg.prototype.getSidFid = function() {
+proto.pb.Msg.prototype.getId = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 2, 0));
 };
 
@@ -444,16 +456,16 @@ proto.pb.Msg.prototype.getSidFid = function() {
  * @param {number} value
  * @return {!proto.pb.Msg} returns this
  */
-proto.pb.Msg.prototype.setSidFid = function(value) {
+proto.pb.Msg.prototype.setId = function(value) {
   return jspb.Message.setProto3IntField(this, 2, value);
 };
 
 
 /**
- * optional int32 data_length = 3;
+ * optional int32 sid_fid = 3;
  * @return {number}
  */
-proto.pb.Msg.prototype.getDataLength = function() {
+proto.pb.Msg.prototype.getSidFid = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 3, 0));
 };
 
@@ -462,16 +474,16 @@ proto.pb.Msg.prototype.getDataLength = function() {
  * @param {number} value
  * @return {!proto.pb.Msg} returns this
  */
-proto.pb.Msg.prototype.setDataLength = function(value) {
+proto.pb.Msg.prototype.setSidFid = function(value) {
   return jspb.Message.setProto3IntField(this, 3, value);
 };
 
 
 /**
- * optional int32 content_type = 4;
+ * optional int32 data_length = 4;
  * @return {number}
  */
-proto.pb.Msg.prototype.getContentType = function() {
+proto.pb.Msg.prototype.getDataLength = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 4, 0));
 };
 
@@ -480,16 +492,16 @@ proto.pb.Msg.prototype.getContentType = function() {
  * @param {number} value
  * @return {!proto.pb.Msg} returns this
  */
-proto.pb.Msg.prototype.setContentType = function(value) {
+proto.pb.Msg.prototype.setDataLength = function(value) {
   return jspb.Message.setProto3IntField(this, 4, value);
 };
 
 
 /**
- * optional int32 protocol_type = 5;
+ * optional int32 content_type = 5;
  * @return {number}
  */
-proto.pb.Msg.prototype.getProtocolType = function() {
+proto.pb.Msg.prototype.getContentType = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 5, 0));
 };
 
@@ -498,16 +510,16 @@ proto.pb.Msg.prototype.getProtocolType = function() {
  * @param {number} value
  * @return {!proto.pb.Msg} returns this
  */
-proto.pb.Msg.prototype.setProtocolType = function(value) {
+proto.pb.Msg.prototype.setContentType = function(value) {
   return jspb.Message.setProto3IntField(this, 5, value);
 };
 
 
 /**
- * optional int32 service_id = 6;
+ * optional int32 protocol_type = 6;
  * @return {number}
  */
-proto.pb.Msg.prototype.getServiceId = function() {
+proto.pb.Msg.prototype.getProtocolType = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 6, 0));
 };
 
@@ -516,16 +528,16 @@ proto.pb.Msg.prototype.getServiceId = function() {
  * @param {number} value
  * @return {!proto.pb.Msg} returns this
  */
-proto.pb.Msg.prototype.setServiceId = function(value) {
+proto.pb.Msg.prototype.setProtocolType = function(value) {
   return jspb.Message.setProto3IntField(this, 6, value);
 };
 
 
 /**
- * optional int32 func_id = 7;
+ * optional int32 service_id = 7;
  * @return {number}
  */
-proto.pb.Msg.prototype.getFuncId = function() {
+proto.pb.Msg.prototype.getServiceId = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 7, 0));
 };
 
@@ -534,34 +546,34 @@ proto.pb.Msg.prototype.getFuncId = function() {
  * @param {number} value
  * @return {!proto.pb.Msg} returns this
  */
-proto.pb.Msg.prototype.setFuncId = function(value) {
+proto.pb.Msg.prototype.setServiceId = function(value) {
   return jspb.Message.setProto3IntField(this, 7, value);
 };
 
 
 /**
- * optional string reserved = 8;
+ * optional int32 func_id = 8;
+ * @return {number}
+ */
+proto.pb.Msg.prototype.getFuncId = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 8, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.pb.Msg} returns this
+ */
+proto.pb.Msg.prototype.setFuncId = function(value) {
+  return jspb.Message.setProto3IntField(this, 8, value);
+};
+
+
+/**
+ * optional string reserved = 9;
  * @return {string}
  */
 proto.pb.Msg.prototype.getReserved = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 8, ""));
-};
-
-
-/**
- * @param {string} value
- * @return {!proto.pb.Msg} returns this
- */
-proto.pb.Msg.prototype.setReserved = function(value) {
-  return jspb.Message.setProto3StringField(this, 8, value);
-};
-
-
-/**
- * optional string content = 9;
- * @return {string}
- */
-proto.pb.Msg.prototype.getContent = function() {
   return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 9, ""));
 };
 
@@ -570,16 +582,16 @@ proto.pb.Msg.prototype.getContent = function() {
  * @param {string} value
  * @return {!proto.pb.Msg} returns this
  */
-proto.pb.Msg.prototype.setContent = function(value) {
+proto.pb.Msg.prototype.setReserved = function(value) {
   return jspb.Message.setProto3StringField(this, 9, value);
 };
 
 
 /**
- * optional string end_char = 10;
+ * optional string content = 10;
  * @return {string}
  */
-proto.pb.Msg.prototype.getEndChar = function() {
+proto.pb.Msg.prototype.getContent = function() {
   return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 10, ""));
 };
 
@@ -588,8 +600,26 @@ proto.pb.Msg.prototype.getEndChar = function() {
  * @param {string} value
  * @return {!proto.pb.Msg} returns this
  */
-proto.pb.Msg.prototype.setEndChar = function(value) {
+proto.pb.Msg.prototype.setContent = function(value) {
   return jspb.Message.setProto3StringField(this, 10, value);
+};
+
+
+/**
+ * optional string end_char = 11;
+ * @return {string}
+ */
+proto.pb.Msg.prototype.getEndChar = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 11, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.pb.Msg} returns this
+ */
+proto.pb.Msg.prototype.setEndChar = function(value) {
+  return jspb.Message.setProto3StringField(this, 11, value);
 };
 
 
@@ -625,7 +655,8 @@ proto.pb.Login.prototype.toObject = function(opt_includeInstance) {
  */
 proto.pb.Login.toObject = function(includeInstance, msg) {
   var f, obj = {
-    token: jspb.Message.getFieldWithDefault(msg, 1, "")
+    sourceUid: jspb.Message.getFieldWithDefault(msg, 1, 0),
+    token: jspb.Message.getFieldWithDefault(msg, 2, "")
   };
 
   if (includeInstance) {
@@ -663,6 +694,10 @@ proto.pb.Login.deserializeBinaryFromReader = function(msg, reader) {
     var field = reader.getFieldNumber();
     switch (field) {
     case 1:
+      var value = /** @type {number} */ (reader.readInt32());
+      msg.setSourceUid(value);
+      break;
+    case 2:
       var value = /** @type {string} */ (reader.readString());
       msg.setToken(value);
       break;
@@ -695,10 +730,17 @@ proto.pb.Login.prototype.serializeBinary = function() {
  */
 proto.pb.Login.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
+  f = message.getSourceUid();
+  if (f !== 0) {
+    writer.writeInt32(
+      1,
+      f
+    );
+  }
   f = message.getToken();
   if (f.length > 0) {
     writer.writeString(
-      1,
+      2,
       f
     );
   }
@@ -706,11 +748,29 @@ proto.pb.Login.serializeBinaryToWriter = function(message, writer) {
 
 
 /**
- * optional string token = 1;
+ * optional int32 source_uid = 1;
+ * @return {number}
+ */
+proto.pb.Login.prototype.getSourceUid = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 1, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.pb.Login} returns this
+ */
+proto.pb.Login.prototype.setSourceUid = function(value) {
+  return jspb.Message.setProto3IntField(this, 1, value);
+};
+
+
+/**
+ * optional string token = 2;
  * @return {string}
  */
 proto.pb.Login.prototype.getToken = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 1, ""));
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 2, ""));
 };
 
 
@@ -719,7 +779,7 @@ proto.pb.Login.prototype.getToken = function() {
  * @return {!proto.pb.Login} returns this
  */
 proto.pb.Login.prototype.setToken = function(value) {
-  return jspb.Message.setProto3StringField(this, 1, value);
+  return jspb.Message.setProto3StringField(this, 2, value);
 };
 
 
@@ -945,11 +1005,12 @@ proto.pb.ProjectPushMsg.prototype.toObject = function(opt_includeInstance) {
  */
 proto.pb.ProjectPushMsg.toObject = function(includeInstance, msg) {
   var f, obj = {
-    projectId: jspb.Message.getFieldWithDefault(msg, 1, ""),
-    serviceId: jspb.Message.getFieldWithDefault(msg, 2, ""),
-    funcId: jspb.Message.getFieldWithDefault(msg, 3, ""),
-    targetUids: jspb.Message.getFieldWithDefault(msg, 4, ""),
-    msg: jspb.Message.getFieldWithDefault(msg, 5, "")
+    sourceUid: jspb.Message.getFieldWithDefault(msg, 1, 0),
+    projectId: jspb.Message.getFieldWithDefault(msg, 2, 0),
+    serviceId: jspb.Message.getFieldWithDefault(msg, 3, 0),
+    funcId: jspb.Message.getFieldWithDefault(msg, 4, 0),
+    targetUids: jspb.Message.getFieldWithDefault(msg, 5, ""),
+    msg: jspb.Message.getFieldWithDefault(msg, 6, "")
   };
 
   if (includeInstance) {
@@ -987,22 +1048,26 @@ proto.pb.ProjectPushMsg.deserializeBinaryFromReader = function(msg, reader) {
     var field = reader.getFieldNumber();
     switch (field) {
     case 1:
-      var value = /** @type {string} */ (reader.readString());
-      msg.setProjectId(value);
+      var value = /** @type {number} */ (reader.readInt32());
+      msg.setSourceUid(value);
       break;
     case 2:
-      var value = /** @type {string} */ (reader.readString());
-      msg.setServiceId(value);
+      var value = /** @type {number} */ (reader.readInt32());
+      msg.setProjectId(value);
       break;
     case 3:
-      var value = /** @type {string} */ (reader.readString());
-      msg.setFuncId(value);
+      var value = /** @type {number} */ (reader.readInt32());
+      msg.setServiceId(value);
       break;
     case 4:
+      var value = /** @type {number} */ (reader.readInt32());
+      msg.setFuncId(value);
+      break;
+    case 5:
       var value = /** @type {string} */ (reader.readString());
       msg.setTargetUids(value);
       break;
-    case 5:
+    case 6:
       var value = /** @type {string} */ (reader.readString());
       msg.setMsg(value);
       break;
@@ -1035,38 +1100,45 @@ proto.pb.ProjectPushMsg.prototype.serializeBinary = function() {
  */
 proto.pb.ProjectPushMsg.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
-  f = message.getProjectId();
-  if (f.length > 0) {
-    writer.writeString(
+  f = message.getSourceUid();
+  if (f !== 0) {
+    writer.writeInt32(
       1,
       f
     );
   }
-  f = message.getServiceId();
-  if (f.length > 0) {
-    writer.writeString(
+  f = message.getProjectId();
+  if (f !== 0) {
+    writer.writeInt32(
       2,
       f
     );
   }
-  f = message.getFuncId();
-  if (f.length > 0) {
-    writer.writeString(
+  f = message.getServiceId();
+  if (f !== 0) {
+    writer.writeInt32(
       3,
+      f
+    );
+  }
+  f = message.getFuncId();
+  if (f !== 0) {
+    writer.writeInt32(
+      4,
       f
     );
   }
   f = message.getTargetUids();
   if (f.length > 0) {
     writer.writeString(
-      4,
+      5,
       f
     );
   }
   f = message.getMsg();
   if (f.length > 0) {
     writer.writeString(
-      5,
+      6,
       f
     );
   }
@@ -1074,82 +1146,82 @@ proto.pb.ProjectPushMsg.serializeBinaryToWriter = function(message, writer) {
 
 
 /**
- * optional string project_id = 1;
- * @return {string}
+ * optional int32 source_uid = 1;
+ * @return {number}
  */
-proto.pb.ProjectPushMsg.prototype.getProjectId = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 1, ""));
+proto.pb.ProjectPushMsg.prototype.getSourceUid = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 1, 0));
 };
 
 
 /**
- * @param {string} value
+ * @param {number} value
+ * @return {!proto.pb.ProjectPushMsg} returns this
+ */
+proto.pb.ProjectPushMsg.prototype.setSourceUid = function(value) {
+  return jspb.Message.setProto3IntField(this, 1, value);
+};
+
+
+/**
+ * optional int32 project_id = 2;
+ * @return {number}
+ */
+proto.pb.ProjectPushMsg.prototype.getProjectId = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 2, 0));
+};
+
+
+/**
+ * @param {number} value
  * @return {!proto.pb.ProjectPushMsg} returns this
  */
 proto.pb.ProjectPushMsg.prototype.setProjectId = function(value) {
-  return jspb.Message.setProto3StringField(this, 1, value);
+  return jspb.Message.setProto3IntField(this, 2, value);
 };
 
 
 /**
- * optional string service_id = 2;
- * @return {string}
+ * optional int32 service_id = 3;
+ * @return {number}
  */
 proto.pb.ProjectPushMsg.prototype.getServiceId = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 2, ""));
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 3, 0));
 };
 
 
 /**
- * @param {string} value
+ * @param {number} value
  * @return {!proto.pb.ProjectPushMsg} returns this
  */
 proto.pb.ProjectPushMsg.prototype.setServiceId = function(value) {
-  return jspb.Message.setProto3StringField(this, 2, value);
+  return jspb.Message.setProto3IntField(this, 3, value);
 };
 
 
 /**
- * optional string func_id = 3;
- * @return {string}
+ * optional int32 func_id = 4;
+ * @return {number}
  */
 proto.pb.ProjectPushMsg.prototype.getFuncId = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 3, ""));
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 4, 0));
 };
 
 
 /**
- * @param {string} value
+ * @param {number} value
  * @return {!proto.pb.ProjectPushMsg} returns this
  */
 proto.pb.ProjectPushMsg.prototype.setFuncId = function(value) {
-  return jspb.Message.setProto3StringField(this, 3, value);
+  return jspb.Message.setProto3IntField(this, 4, value);
 };
 
 
 /**
- * optional string target_uids = 4;
+ * optional string target_uids = 5;
  * @return {string}
  */
 proto.pb.ProjectPushMsg.prototype.getTargetUids = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 4, ""));
-};
-
-
-/**
- * @param {string} value
- * @return {!proto.pb.ProjectPushMsg} returns this
- */
-proto.pb.ProjectPushMsg.prototype.setTargetUids = function(value) {
-  return jspb.Message.setProto3StringField(this, 4, value);
-};
-
-
-/**
- * optional string msg = 5;
- * @return {string}
- */
-proto.pb.ProjectPushMsg.prototype.getMsg = function() {
   return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 5, ""));
 };
 
@@ -1158,8 +1230,26 @@ proto.pb.ProjectPushMsg.prototype.getMsg = function() {
  * @param {string} value
  * @return {!proto.pb.ProjectPushMsg} returns this
  */
-proto.pb.ProjectPushMsg.prototype.setMsg = function(value) {
+proto.pb.ProjectPushMsg.prototype.setTargetUids = function(value) {
   return jspb.Message.setProto3StringField(this, 5, value);
+};
+
+
+/**
+ * optional string msg = 6;
+ * @return {string}
+ */
+proto.pb.ProjectPushMsg.prototype.getMsg = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 6, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.pb.ProjectPushMsg} returns this
+ */
+proto.pb.ProjectPushMsg.prototype.setMsg = function(value) {
+  return jspb.Message.setProto3StringField(this, 6, value);
 };
 
 
@@ -1195,7 +1285,8 @@ proto.pb.KickOff.prototype.toObject = function(opt_includeInstance) {
  */
 proto.pb.KickOff.toObject = function(includeInstance, msg) {
   var f, obj = {
-    time: jspb.Message.getFieldWithDefault(msg, 1, 0)
+    sourceUid: jspb.Message.getFieldWithDefault(msg, 1, 0),
+    time: jspb.Message.getFieldWithDefault(msg, 2, 0)
   };
 
   if (includeInstance) {
@@ -1233,6 +1324,10 @@ proto.pb.KickOff.deserializeBinaryFromReader = function(msg, reader) {
     var field = reader.getFieldNumber();
     switch (field) {
     case 1:
+      var value = /** @type {number} */ (reader.readInt32());
+      msg.setSourceUid(value);
+      break;
+    case 2:
       var value = /** @type {number} */ (reader.readInt64());
       msg.setTime(value);
       break;
@@ -1265,10 +1360,17 @@ proto.pb.KickOff.prototype.serializeBinary = function() {
  */
 proto.pb.KickOff.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
+  f = message.getSourceUid();
+  if (f !== 0) {
+    writer.writeInt32(
+      1,
+      f
+    );
+  }
   f = message.getTime();
   if (f !== 0) {
     writer.writeInt64(
-      1,
+      2,
       f
     );
   }
@@ -1276,10 +1378,10 @@ proto.pb.KickOff.serializeBinaryToWriter = function(message, writer) {
 
 
 /**
- * optional int64 time = 1;
+ * optional int32 source_uid = 1;
  * @return {number}
  */
-proto.pb.KickOff.prototype.getTime = function() {
+proto.pb.KickOff.prototype.getSourceUid = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 1, 0));
 };
 
@@ -1288,8 +1390,26 @@ proto.pb.KickOff.prototype.getTime = function() {
  * @param {number} value
  * @return {!proto.pb.KickOff} returns this
  */
-proto.pb.KickOff.prototype.setTime = function(value) {
+proto.pb.KickOff.prototype.setSourceUid = function(value) {
   return jspb.Message.setProto3IntField(this, 1, value);
+};
+
+
+/**
+ * optional int64 time = 2;
+ * @return {number}
+ */
+proto.pb.KickOff.prototype.getTime = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 2, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.pb.KickOff} returns this
+ */
+proto.pb.KickOff.prototype.setTime = function(value) {
+  return jspb.Message.setProto3IntField(this, 2, value);
 };
 
 
@@ -1327,28 +1447,21 @@ proto.pb.CfgServer.toObject = function(includeInstance, msg) {
   var f, obj = {
     listenip: jspb.Message.getFieldWithDefault(msg, 1, ""),
     outip: jspb.Message.getFieldWithDefault(msg, 2, ""),
-    httpdrootpath: jspb.Message.getFieldWithDefault(msg, 3, ""),
-    httpport: jspb.Message.getFieldWithDefault(msg, 4, ""),
-    wsport: jspb.Message.getFieldWithDefault(msg, 5, ""),
+    outdomain: jspb.Message.getFieldWithDefault(msg, 3, ""),
+    wsport: jspb.Message.getFieldWithDefault(msg, 4, ""),
+    tcpport: jspb.Message.getFieldWithDefault(msg, 5, ""),
     udpport: jspb.Message.getFieldWithDefault(msg, 6, ""),
-    protocol: jspb.Message.getFieldWithDefault(msg, 7, 0),
-    wsuri: jspb.Message.getFieldWithDefault(msg, 8, ""),
-    contenttype: jspb.Message.getFieldWithDefault(msg, 9, 0),
+    wsuri: jspb.Message.getFieldWithDefault(msg, 7, ""),
+    defaultprotocoltype: jspb.Message.getFieldWithDefault(msg, 8, 0),
+    defaultcontenttype: jspb.Message.getFieldWithDefault(msg, 9, 0),
     loginauthtype: jspb.Message.getFieldWithDefault(msg, 10, ""),
     loginauthsecretkey: jspb.Message.getFieldWithDefault(msg, 11, ""),
     maxclientconnnum: jspb.Message.getFieldWithDefault(msg, 12, 0),
     msgcontentmax: jspb.Message.getFieldWithDefault(msg, 13, 0),
     iotimeout: jspb.Message.getFieldWithDefault(msg, 14, 0),
     conntimeout: jspb.Message.getFieldWithDefault(msg, 15, 0),
-    mapsize: jspb.Message.getFieldWithDefault(msg, 16, 0),
-    roompeople: jspb.Message.getFieldWithDefault(msg, 17, 0),
-    roomtimeout: jspb.Message.getFieldWithDefault(msg, 18, 0),
-    offlinewaittime: jspb.Message.getFieldWithDefault(msg, 19, 0),
-    lockmode: jspb.Message.getFieldWithDefault(msg, 20, 0),
-    fps: jspb.Message.getFieldWithDefault(msg, 21, 0),
-    roomreadytimeout: jspb.Message.getFieldWithDefault(msg, 22, 0),
-    store: jspb.Message.getFieldWithDefault(msg, 23, 0),
-    tcpport: jspb.Message.getFieldWithDefault(msg, 24, "")
+    clientheartbeattime: jspb.Message.getFieldWithDefault(msg, 16, 0),
+    serverheartbeattime: jspb.Message.getFieldWithDefault(msg, 17, 0)
   };
 
   if (includeInstance) {
@@ -1395,31 +1508,31 @@ proto.pb.CfgServer.deserializeBinaryFromReader = function(msg, reader) {
       break;
     case 3:
       var value = /** @type {string} */ (reader.readString());
-      msg.setHttpdrootpath(value);
+      msg.setOutdomain(value);
       break;
     case 4:
       var value = /** @type {string} */ (reader.readString());
-      msg.setHttpport(value);
+      msg.setWsport(value);
       break;
     case 5:
       var value = /** @type {string} */ (reader.readString());
-      msg.setWsport(value);
+      msg.setTcpport(value);
       break;
     case 6:
       var value = /** @type {string} */ (reader.readString());
       msg.setUdpport(value);
       break;
     case 7:
-      var value = /** @type {number} */ (reader.readInt32());
-      msg.setProtocol(value);
-      break;
-    case 8:
       var value = /** @type {string} */ (reader.readString());
       msg.setWsuri(value);
       break;
+    case 8:
+      var value = /** @type {number} */ (reader.readInt32());
+      msg.setDefaultprotocoltype(value);
+      break;
     case 9:
       var value = /** @type {number} */ (reader.readInt32());
-      msg.setContenttype(value);
+      msg.setDefaultcontenttype(value);
       break;
     case 10:
       var value = /** @type {string} */ (reader.readString());
@@ -1447,39 +1560,11 @@ proto.pb.CfgServer.deserializeBinaryFromReader = function(msg, reader) {
       break;
     case 16:
       var value = /** @type {number} */ (reader.readInt32());
-      msg.setMapsize(value);
+      msg.setClientheartbeattime(value);
       break;
     case 17:
       var value = /** @type {number} */ (reader.readInt32());
-      msg.setRoompeople(value);
-      break;
-    case 18:
-      var value = /** @type {number} */ (reader.readInt32());
-      msg.setRoomtimeout(value);
-      break;
-    case 19:
-      var value = /** @type {number} */ (reader.readInt32());
-      msg.setOfflinewaittime(value);
-      break;
-    case 20:
-      var value = /** @type {number} */ (reader.readInt32());
-      msg.setLockmode(value);
-      break;
-    case 21:
-      var value = /** @type {number} */ (reader.readInt32());
-      msg.setFps(value);
-      break;
-    case 22:
-      var value = /** @type {number} */ (reader.readInt32());
-      msg.setRoomreadytimeout(value);
-      break;
-    case 23:
-      var value = /** @type {number} */ (reader.readInt32());
-      msg.setStore(value);
-      break;
-    case 24:
-      var value = /** @type {string} */ (reader.readString());
-      msg.setTcpport(value);
+      msg.setServerheartbeattime(value);
       break;
     default:
       reader.skipField();
@@ -1524,21 +1609,21 @@ proto.pb.CfgServer.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
-  f = message.getHttpdrootpath();
+  f = message.getOutdomain();
   if (f.length > 0) {
     writer.writeString(
       3,
       f
     );
   }
-  f = message.getHttpport();
+  f = message.getWsport();
   if (f.length > 0) {
     writer.writeString(
       4,
       f
     );
   }
-  f = message.getWsport();
+  f = message.getTcpport();
   if (f.length > 0) {
     writer.writeString(
       5,
@@ -1552,21 +1637,21 @@ proto.pb.CfgServer.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
-  f = message.getProtocol();
-  if (f !== 0) {
-    writer.writeInt32(
+  f = message.getWsuri();
+  if (f.length > 0) {
+    writer.writeString(
       7,
       f
     );
   }
-  f = message.getWsuri();
-  if (f.length > 0) {
-    writer.writeString(
+  f = message.getDefaultprotocoltype();
+  if (f !== 0) {
+    writer.writeInt32(
       8,
       f
     );
   }
-  f = message.getContenttype();
+  f = message.getDefaultcontenttype();
   if (f !== 0) {
     writer.writeInt32(
       9,
@@ -1615,66 +1700,17 @@ proto.pb.CfgServer.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
-  f = message.getMapsize();
+  f = message.getClientheartbeattime();
   if (f !== 0) {
     writer.writeInt32(
       16,
       f
     );
   }
-  f = message.getRoompeople();
+  f = message.getServerheartbeattime();
   if (f !== 0) {
     writer.writeInt32(
       17,
-      f
-    );
-  }
-  f = message.getRoomtimeout();
-  if (f !== 0) {
-    writer.writeInt32(
-      18,
-      f
-    );
-  }
-  f = message.getOfflinewaittime();
-  if (f !== 0) {
-    writer.writeInt32(
-      19,
-      f
-    );
-  }
-  f = message.getLockmode();
-  if (f !== 0) {
-    writer.writeInt32(
-      20,
-      f
-    );
-  }
-  f = message.getFps();
-  if (f !== 0) {
-    writer.writeInt32(
-      21,
-      f
-    );
-  }
-  f = message.getRoomreadytimeout();
-  if (f !== 0) {
-    writer.writeInt32(
-      22,
-      f
-    );
-  }
-  f = message.getStore();
-  if (f !== 0) {
-    writer.writeInt32(
-      23,
-      f
-    );
-  }
-  f = message.getTcpport();
-  if (f.length > 0) {
-    writer.writeString(
-      24,
       f
     );
   }
@@ -1718,10 +1754,10 @@ proto.pb.CfgServer.prototype.setOutip = function(value) {
 
 
 /**
- * optional string HttpdRootPath = 3;
+ * optional string OutDomain = 3;
  * @return {string}
  */
-proto.pb.CfgServer.prototype.getHttpdrootpath = function() {
+proto.pb.CfgServer.prototype.getOutdomain = function() {
   return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 3, ""));
 };
 
@@ -1730,16 +1766,16 @@ proto.pb.CfgServer.prototype.getHttpdrootpath = function() {
  * @param {string} value
  * @return {!proto.pb.CfgServer} returns this
  */
-proto.pb.CfgServer.prototype.setHttpdrootpath = function(value) {
+proto.pb.CfgServer.prototype.setOutdomain = function(value) {
   return jspb.Message.setProto3StringField(this, 3, value);
 };
 
 
 /**
- * optional string HttpPort = 4;
+ * optional string WsPort = 4;
  * @return {string}
  */
-proto.pb.CfgServer.prototype.getHttpport = function() {
+proto.pb.CfgServer.prototype.getWsport = function() {
   return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 4, ""));
 };
 
@@ -1748,16 +1784,16 @@ proto.pb.CfgServer.prototype.getHttpport = function() {
  * @param {string} value
  * @return {!proto.pb.CfgServer} returns this
  */
-proto.pb.CfgServer.prototype.setHttpport = function(value) {
+proto.pb.CfgServer.prototype.setWsport = function(value) {
   return jspb.Message.setProto3StringField(this, 4, value);
 };
 
 
 /**
- * optional string WsPort = 5;
+ * optional string TcpPort = 5;
  * @return {string}
  */
-proto.pb.CfgServer.prototype.getWsport = function() {
+proto.pb.CfgServer.prototype.getTcpport = function() {
   return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 5, ""));
 };
 
@@ -1766,7 +1802,7 @@ proto.pb.CfgServer.prototype.getWsport = function() {
  * @param {string} value
  * @return {!proto.pb.CfgServer} returns this
  */
-proto.pb.CfgServer.prototype.setWsport = function(value) {
+proto.pb.CfgServer.prototype.setTcpport = function(value) {
   return jspb.Message.setProto3StringField(this, 5, value);
 };
 
@@ -1790,29 +1826,11 @@ proto.pb.CfgServer.prototype.setUdpport = function(value) {
 
 
 /**
- * optional int32 Protocol = 7;
- * @return {number}
- */
-proto.pb.CfgServer.prototype.getProtocol = function() {
-  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 7, 0));
-};
-
-
-/**
- * @param {number} value
- * @return {!proto.pb.CfgServer} returns this
- */
-proto.pb.CfgServer.prototype.setProtocol = function(value) {
-  return jspb.Message.setProto3IntField(this, 7, value);
-};
-
-
-/**
- * optional string WsUri = 8;
+ * optional string WsUri = 7;
  * @return {string}
  */
 proto.pb.CfgServer.prototype.getWsuri = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 8, ""));
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 7, ""));
 };
 
 
@@ -1821,15 +1839,33 @@ proto.pb.CfgServer.prototype.getWsuri = function() {
  * @return {!proto.pb.CfgServer} returns this
  */
 proto.pb.CfgServer.prototype.setWsuri = function(value) {
-  return jspb.Message.setProto3StringField(this, 8, value);
+  return jspb.Message.setProto3StringField(this, 7, value);
 };
 
 
 /**
- * optional int32 ContentType = 9;
+ * optional int32 DefaultProtocolType = 8;
  * @return {number}
  */
-proto.pb.CfgServer.prototype.getContenttype = function() {
+proto.pb.CfgServer.prototype.getDefaultprotocoltype = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 8, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.pb.CfgServer} returns this
+ */
+proto.pb.CfgServer.prototype.setDefaultprotocoltype = function(value) {
+  return jspb.Message.setProto3IntField(this, 8, value);
+};
+
+
+/**
+ * optional int32 DefaultContentType = 9;
+ * @return {number}
+ */
+proto.pb.CfgServer.prototype.getDefaultcontenttype = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 9, 0));
 };
 
@@ -1838,7 +1874,7 @@ proto.pb.CfgServer.prototype.getContenttype = function() {
  * @param {number} value
  * @return {!proto.pb.CfgServer} returns this
  */
-proto.pb.CfgServer.prototype.setContenttype = function(value) {
+proto.pb.CfgServer.prototype.setDefaultcontenttype = function(value) {
   return jspb.Message.setProto3IntField(this, 9, value);
 };
 
@@ -1952,10 +1988,10 @@ proto.pb.CfgServer.prototype.setConntimeout = function(value) {
 
 
 /**
- * optional int32 MapSize = 16;
+ * optional int32 ClientHeartbeatTime = 16;
  * @return {number}
  */
-proto.pb.CfgServer.prototype.getMapsize = function() {
+proto.pb.CfgServer.prototype.getClientheartbeattime = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 16, 0));
 };
 
@@ -1964,16 +2000,16 @@ proto.pb.CfgServer.prototype.getMapsize = function() {
  * @param {number} value
  * @return {!proto.pb.CfgServer} returns this
  */
-proto.pb.CfgServer.prototype.setMapsize = function(value) {
+proto.pb.CfgServer.prototype.setClientheartbeattime = function(value) {
   return jspb.Message.setProto3IntField(this, 16, value);
 };
 
 
 /**
- * optional int32 RoomPeople = 17;
+ * optional int32 ServerHeartbeatTime = 17;
  * @return {number}
  */
-proto.pb.CfgServer.prototype.getRoompeople = function() {
+proto.pb.CfgServer.prototype.getServerheartbeattime = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 17, 0));
 };
 
@@ -1982,134 +2018,8 @@ proto.pb.CfgServer.prototype.getRoompeople = function() {
  * @param {number} value
  * @return {!proto.pb.CfgServer} returns this
  */
-proto.pb.CfgServer.prototype.setRoompeople = function(value) {
+proto.pb.CfgServer.prototype.setServerheartbeattime = function(value) {
   return jspb.Message.setProto3IntField(this, 17, value);
-};
-
-
-/**
- * optional int32 RoomTimeout = 18;
- * @return {number}
- */
-proto.pb.CfgServer.prototype.getRoomtimeout = function() {
-  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 18, 0));
-};
-
-
-/**
- * @param {number} value
- * @return {!proto.pb.CfgServer} returns this
- */
-proto.pb.CfgServer.prototype.setRoomtimeout = function(value) {
-  return jspb.Message.setProto3IntField(this, 18, value);
-};
-
-
-/**
- * optional int32 OffLineWaitTime = 19;
- * @return {number}
- */
-proto.pb.CfgServer.prototype.getOfflinewaittime = function() {
-  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 19, 0));
-};
-
-
-/**
- * @param {number} value
- * @return {!proto.pb.CfgServer} returns this
- */
-proto.pb.CfgServer.prototype.setOfflinewaittime = function(value) {
-  return jspb.Message.setProto3IntField(this, 19, value);
-};
-
-
-/**
- * optional int32 LockMode = 20;
- * @return {number}
- */
-proto.pb.CfgServer.prototype.getLockmode = function() {
-  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 20, 0));
-};
-
-
-/**
- * @param {number} value
- * @return {!proto.pb.CfgServer} returns this
- */
-proto.pb.CfgServer.prototype.setLockmode = function(value) {
-  return jspb.Message.setProto3IntField(this, 20, value);
-};
-
-
-/**
- * optional int32 FPS = 21;
- * @return {number}
- */
-proto.pb.CfgServer.prototype.getFps = function() {
-  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 21, 0));
-};
-
-
-/**
- * @param {number} value
- * @return {!proto.pb.CfgServer} returns this
- */
-proto.pb.CfgServer.prototype.setFps = function(value) {
-  return jspb.Message.setProto3IntField(this, 21, value);
-};
-
-
-/**
- * optional int32 RoomReadyTimeout = 22;
- * @return {number}
- */
-proto.pb.CfgServer.prototype.getRoomreadytimeout = function() {
-  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 22, 0));
-};
-
-
-/**
- * @param {number} value
- * @return {!proto.pb.CfgServer} returns this
- */
-proto.pb.CfgServer.prototype.setRoomreadytimeout = function(value) {
-  return jspb.Message.setProto3IntField(this, 22, value);
-};
-
-
-/**
- * optional int32 Store = 23;
- * @return {number}
- */
-proto.pb.CfgServer.prototype.getStore = function() {
-  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 23, 0));
-};
-
-
-/**
- * @param {number} value
- * @return {!proto.pb.CfgServer} returns this
- */
-proto.pb.CfgServer.prototype.setStore = function(value) {
-  return jspb.Message.setProto3IntField(this, 23, value);
-};
-
-
-/**
- * optional string TcpPort = 24;
- * @return {string}
- */
-proto.pb.CfgServer.prototype.getTcpport = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 24, ""));
-};
-
-
-/**
- * @param {string} value
- * @return {!proto.pb.CfgServer} returns this
- */
-proto.pb.CfgServer.prototype.setTcpport = function(value) {
-  return jspb.Message.setProto3StringField(this, 24, value);
 };
 
 

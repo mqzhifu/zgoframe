@@ -55,7 +55,7 @@ func NewPush(rule *Rule) *Push {
 	push.Err = rule.RuleManager.Option.GameMatch.Err
 	push.CloseChan = make(chan int)
 	push.Service = "roomService"
-	push.prefix = "push"
+	push.prefix = rule.Prefix + "_push"
 	//var PushRetryPeriod = []int{10,30,60,600}
 	push.RetryPeriod = []int{2, 4, 6} //方便测试
 	return push
@@ -222,7 +222,7 @@ func (push *Push) Demon() {
 			goto forEnd
 		default:
 			push.checkStatus()
-			time.Sleep(time.Millisecond * time.Duration(push.Rule.RuleManager.Option.GameMatch.LoopSleepTime))
+			time.Sleep(time.Millisecond * time.Duration(push.Rule.RuleManager.Option.GameMatch.Option.LoopSleepTime))
 		}
 	}
 forEnd:
@@ -256,11 +256,8 @@ func (push *Push) checkOneByStatus(key string, status int) {
 		push.Log.Error("redis keys err :" + err.Error())
 		return
 	}
-	now := util.GetNowTimeSecondToInt()
 	if len(res) == 0 {
-		if now%push.Rule.DemonDebugTime == 0 {
-			push.Log.Info(push.prefix + " checkOneByStatus :" + strconv.Itoa(status) + " empty , no need process")
-		}
+		push.Rule.NothingToDoLog(push.prefix + " checkOneByStatus :" + strconv.Itoa(status) + " empty , no need process")
 		return
 	}
 	push.Log.Info("push need process element total : " + strconv.Itoa(len(res)) + " status: " + strconv.Itoa(status))
@@ -380,7 +377,7 @@ func (push *Push) ServiceDiscoveryRequestUser(element PushElement) (httpRs util.
 		thisResult := success.strToStruct(payload)
 		resultInfo, _ := success.GetResultById(thisResult.Id, 1, 0)
 
-		newRoom := push.Rule.RuleManager.Option.GameMatch.Option.FrameSyncRoom.NewRoom()
+		newRoom := push.Rule.RuleManager.Option.GameMatch.Option.FrameSyncRoom.NewEmptyRoom()
 		util.MyPrint("newRoom:", newRoom)
 		newRoom.RuleId = int32(push.Rule.Id)
 		for _, uid := range resultInfo.PlayerIds {

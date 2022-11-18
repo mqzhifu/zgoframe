@@ -31,7 +31,7 @@ func NewMatch(rule *Rule) *Match {
 	match.Redis = rule.RuleManager.Option.GameMatch.Option.Redis
 	match.Log = rule.RuleManager.Option.GameMatch.Option.Log
 	match.CloseChan = make(chan int)
-	match.prefix = "match"
+	match.prefix = rule.Prefix + "_match"
 	return match
 }
 func (match *Match) Close() {
@@ -48,7 +48,7 @@ func (match *Match) Demon() {
 			goto forEnd
 		default:
 			match.matching()
-			time.Sleep(time.Millisecond * time.Duration(match.Rule.RuleManager.Option.GameMatch.LoopSleepTime))
+			time.Sleep(time.Millisecond * time.Duration(match.Rule.RuleManager.Option.GameMatch.Option.LoopSleepTime))
 		}
 	}
 forEnd:
@@ -88,14 +88,8 @@ func (match *Match) matching() {
 	groupsTotal := match.Rule.QueueSign.getAllGroupsWeightCnt()
 	match.clearMemberRange()
 
-	now := util.GetNowTimeSecondToInt()
 	if playersTotal == 0 || groupsTotal == 0 {
-		//match.Log.Debug(" first total is empty ")
-		if now%match.Rule.DemonDebugTime == 0 {
-			match.Log.Info("new times <matching> ,ruleId: " + strconv.Itoa(match.Rule.Id))
-			match.Log.Info(match.prefix + " matching total is empty ")
-		}
-
+		match.Rule.NothingToDoLog(match.prefix + " matching total is empty " + "new times <matching> ,ruleId: " + strconv.Itoa(match.Rule.Id))
 		return
 	}
 	match.Log.Info("new once matching func , playersTotal total:" + strconv.Itoa(playersTotal) + " groupsTotal : " + strconv.Itoa(groupsTotal))
@@ -108,15 +102,15 @@ func (match *Match) matching() {
 		match.Log.Info("case in Formula , distance:" + strconv.Itoa(distance))
 		//这里，比较好的循环值应该是0-100，保证每走向前走一步，上下值的范围都能获取全了
 		//但是，这样有点浪费，步长设置成  上面的距离值，更快一些
-		for i := 0; i < match.Rule.RuleManager.Option.GameMatch.WeightMaxValue; i = i + distance {
+		for i := 0; i < match.Rule.RuleManager.Option.GameMatch.Option.WeightMaxValue; i = i + distance {
 			start := i - match.Rule.WeightScoreMin
 			if start < 0 {
 				start = 0
 			}
 
 			end := i + match.Rule.WeightScoreMax
-			if end > match.Rule.RuleManager.Option.GameMatch.WeightMaxValue {
-				end = match.Rule.RuleManager.Option.GameMatch.WeightMaxValue
+			if end > match.Rule.RuleManager.Option.GameMatch.Option.WeightMaxValue {
+				end = match.Rule.RuleManager.Option.GameMatch.Option.WeightMaxValue
 				dead = 1
 			}
 
@@ -230,7 +224,7 @@ func (match *Match) matchingRange(flag int) (successGroupIds map[int]map[int]int
 	rangeEnd := ""   //权限范围的结束值
 	forStart := 0    //循环的开始值
 	//循环的结束值
-	forEnd := match.Rule.RuleManager.Option.GameMatch.WeightMaxValue
+	forEnd := match.Rule.RuleManager.Option.GameMatch.Option.WeightMaxValue
 	if flag == service.FilterFlagAll { //全匹配模式下就不需要多次循环了，一次即可
 		forEnd = 1
 	}

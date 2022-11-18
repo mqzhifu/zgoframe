@@ -18,10 +18,9 @@ type MyService struct {
 	Sms                   *msg_center.Sms             //短信服务
 	Email                 *msg_center.Email           //电子邮件服务
 	RoomManage            *frame_sync.RoomManager     //房间服务
-	FrameSync             *frame_sync.FrameSync       //帧同步服务
 	Match                 *gamematch.GameMatch        //匹配服务
 	Gateway               *gateway.Gateway            //网关服务
-	TwinAgora             *seed_business.TwinAgora    //广播120远程专家指导
+	TwinAgora             *seed_business.TwinAgora    //广州 120远程专家指导
 	ConfigCenter          *config_center.ConfigCenter //配置中心
 	Cicd                  *cicd.CicdManager           //自动部署
 	Mail                  *msg_center.Mail            //站内信
@@ -97,7 +96,6 @@ func NewMyService() *MyService {
 	//网关
 	if C.Gateway.Status == "open" {
 		gateway := gateway.NewGateway(V.GrpcManager, V.Zap, myService.RequestServiceAdapter)
-		gateway.MyServiceList.FrameSync = myService.FrameSync
 		gateway.MyServiceList.Match = myService.Match
 		gateway.MyServiceList.RoomManage = myService.RoomManage
 		gateway.MyServiceList.TwinAgora = myService.TwinAgora
@@ -170,9 +168,8 @@ func CreateGame(myService *MyService) (err error) {
 	//帧同步 - 房间服务 - room要先实例化,math frame_sync 都强依赖room
 	roomManagerOption := frame_sync.RoomManagerOption{
 		Log:                   V.Zap,
-		ReadyTimeout:          60,
-		RoomPeople:            2,
 		RequestServiceAdapter: myService.RequestServiceAdapter,
+		Gorm:                  V.Gorm,
 	}
 	myService.RoomManage = frame_sync.NewRoomManager(roomManagerOption)
 	//匹配服务 , 依赖 RoomManage
@@ -207,19 +204,6 @@ func CreateGame(myService *MyService) (err error) {
 		util.ExitPrint("NewGameMatch err:", err)
 	}
 
-	//user -> sign ->Match -> Room -> Rsync
-	//帧同步服务 - 强-依赖room
-	syncOption := frame_sync.FrameSyncOption{
-		RequestServiceAdapter: myService.RequestServiceAdapter,
-		ProjectId:             C.System.ProjectId,
-		Log:                   V.Zap,
-		RoomManage:            myService.RoomManage,
-		FPS:                   10,
-		MapSize:               5,
-	}
-	myService.FrameSync = frame_sync.NewFrameSync(syncOption)
-	myService.RoomManage.SetFrameSync(myService.FrameSync)
-	//go myService.Match.Start()
 	return nil
 }
 

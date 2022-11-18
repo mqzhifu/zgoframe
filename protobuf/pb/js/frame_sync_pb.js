@@ -353,7 +353,7 @@ if (goog.DEBUG && !COMPILED) {
  * @private {!Array<number>}
  * @const
  */
-proto.pb.RoomBaseInfo.repeatedFields_ = [7];
+proto.pb.RoomBaseInfo.repeatedFields_ = [8];
 
 
 
@@ -386,16 +386,17 @@ proto.pb.RoomBaseInfo.prototype.toObject = function(opt_includeInstance) {
  */
 proto.pb.RoomBaseInfo.toObject = function(includeInstance, msg) {
   var f, obj = {
-    id: jspb.Message.getFieldWithDefault(msg, 1, ""),
-    addTime: jspb.Message.getFieldWithDefault(msg, 2, 0),
-    status: jspb.Message.getFieldWithDefault(msg, 3, 0),
-    timeout: jspb.Message.getFieldWithDefault(msg, 4, 0),
-    sequenceNumber: jspb.Message.getFieldWithDefault(msg, 5, 0),
-    randSeek: jspb.Message.getFieldWithDefault(msg, 6, 0),
-    playerIdsList: (f = jspb.Message.getRepeatedField(msg, 7)) == null ? undefined : f,
-    roomId: jspb.Message.getFieldWithDefault(msg, 8, ""),
-    startTime: jspb.Message.getFieldWithDefault(msg, 9, 0),
-    endTime: jspb.Message.getFieldWithDefault(msg, 10, 0)
+    sourceUid: jspb.Message.getFieldWithDefault(msg, 1, 0),
+    id: jspb.Message.getFieldWithDefault(msg, 2, ""),
+    addTime: jspb.Message.getFieldWithDefault(msg, 3, 0),
+    status: jspb.Message.getFieldWithDefault(msg, 4, 0),
+    timeout: jspb.Message.getFieldWithDefault(msg, 5, 0),
+    sequenceNumber: jspb.Message.getFieldWithDefault(msg, 6, 0),
+    randSeek: jspb.Message.getFieldWithDefault(msg, 7, 0),
+    playerIdsList: (f = jspb.Message.getRepeatedField(msg, 8)) == null ? undefined : f,
+    roomId: jspb.Message.getFieldWithDefault(msg, 9, ""),
+    startTime: jspb.Message.getFieldWithDefault(msg, 10, 0),
+    endTime: jspb.Message.getFieldWithDefault(msg, 11, 0)
   };
 
   if (includeInstance) {
@@ -433,44 +434,48 @@ proto.pb.RoomBaseInfo.deserializeBinaryFromReader = function(msg, reader) {
     var field = reader.getFieldNumber();
     switch (field) {
     case 1:
+      var value = /** @type {number} */ (reader.readInt32());
+      msg.setSourceUid(value);
+      break;
+    case 2:
       var value = /** @type {string} */ (reader.readString());
       msg.setId(value);
       break;
-    case 2:
+    case 3:
       var value = /** @type {number} */ (reader.readInt32());
       msg.setAddTime(value);
       break;
-    case 3:
+    case 4:
       var value = /** @type {number} */ (reader.readInt32());
       msg.setStatus(value);
       break;
-    case 4:
+    case 5:
       var value = /** @type {number} */ (reader.readInt32());
       msg.setTimeout(value);
       break;
-    case 5:
+    case 6:
       var value = /** @type {number} */ (reader.readInt32());
       msg.setSequenceNumber(value);
       break;
-    case 6:
+    case 7:
       var value = /** @type {number} */ (reader.readInt32());
       msg.setRandSeek(value);
       break;
-    case 7:
+    case 8:
       var values = /** @type {!Array<number>} */ (reader.isDelimited() ? reader.readPackedInt32() : [reader.readInt32()]);
       for (var i = 0; i < values.length; i++) {
         msg.addPlayerIds(values[i]);
       }
       break;
-    case 8:
+    case 9:
       var value = /** @type {string} */ (reader.readString());
       msg.setRoomId(value);
       break;
-    case 9:
+    case 10:
       var value = /** @type {number} */ (reader.readInt32());
       msg.setStartTime(value);
       break;
-    case 10:
+    case 11:
       var value = /** @type {number} */ (reader.readInt32());
       msg.setEndTime(value);
       break;
@@ -503,73 +508,80 @@ proto.pb.RoomBaseInfo.prototype.serializeBinary = function() {
  */
 proto.pb.RoomBaseInfo.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
+  f = message.getSourceUid();
+  if (f !== 0) {
+    writer.writeInt32(
+      1,
+      f
+    );
+  }
   f = message.getId();
   if (f.length > 0) {
     writer.writeString(
-      1,
+      2,
       f
     );
   }
   f = message.getAddTime();
   if (f !== 0) {
     writer.writeInt32(
-      2,
+      3,
       f
     );
   }
   f = message.getStatus();
   if (f !== 0) {
     writer.writeInt32(
-      3,
+      4,
       f
     );
   }
   f = message.getTimeout();
   if (f !== 0) {
     writer.writeInt32(
-      4,
+      5,
       f
     );
   }
   f = message.getSequenceNumber();
   if (f !== 0) {
     writer.writeInt32(
-      5,
+      6,
       f
     );
   }
   f = message.getRandSeek();
   if (f !== 0) {
     writer.writeInt32(
-      6,
+      7,
       f
     );
   }
   f = message.getPlayerIdsList();
   if (f.length > 0) {
     writer.writePackedInt32(
-      7,
+      8,
       f
     );
   }
   f = message.getRoomId();
   if (f.length > 0) {
     writer.writeString(
-      8,
+      9,
       f
     );
   }
   f = message.getStartTime();
   if (f !== 0) {
     writer.writeInt32(
-      9,
+      10,
       f
     );
   }
   f = message.getEndTime();
   if (f !== 0) {
     writer.writeInt32(
-      10,
+      11,
       f
     );
   }
@@ -577,11 +589,29 @@ proto.pb.RoomBaseInfo.serializeBinaryToWriter = function(message, writer) {
 
 
 /**
- * optional string id = 1;
+ * optional int32 source_uid = 1;
+ * @return {number}
+ */
+proto.pb.RoomBaseInfo.prototype.getSourceUid = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 1, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.pb.RoomBaseInfo} returns this
+ */
+proto.pb.RoomBaseInfo.prototype.setSourceUid = function(value) {
+  return jspb.Message.setProto3IntField(this, 1, value);
+};
+
+
+/**
+ * optional string id = 2;
  * @return {string}
  */
 proto.pb.RoomBaseInfo.prototype.getId = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 1, ""));
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 2, ""));
 };
 
 
@@ -590,33 +620,15 @@ proto.pb.RoomBaseInfo.prototype.getId = function() {
  * @return {!proto.pb.RoomBaseInfo} returns this
  */
 proto.pb.RoomBaseInfo.prototype.setId = function(value) {
-  return jspb.Message.setProto3StringField(this, 1, value);
+  return jspb.Message.setProto3StringField(this, 2, value);
 };
 
 
 /**
- * optional int32 add_time = 2;
+ * optional int32 add_time = 3;
  * @return {number}
  */
 proto.pb.RoomBaseInfo.prototype.getAddTime = function() {
-  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 2, 0));
-};
-
-
-/**
- * @param {number} value
- * @return {!proto.pb.RoomBaseInfo} returns this
- */
-proto.pb.RoomBaseInfo.prototype.setAddTime = function(value) {
-  return jspb.Message.setProto3IntField(this, 2, value);
-};
-
-
-/**
- * optional int32 status = 3;
- * @return {number}
- */
-proto.pb.RoomBaseInfo.prototype.getStatus = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 3, 0));
 };
 
@@ -625,16 +637,16 @@ proto.pb.RoomBaseInfo.prototype.getStatus = function() {
  * @param {number} value
  * @return {!proto.pb.RoomBaseInfo} returns this
  */
-proto.pb.RoomBaseInfo.prototype.setStatus = function(value) {
+proto.pb.RoomBaseInfo.prototype.setAddTime = function(value) {
   return jspb.Message.setProto3IntField(this, 3, value);
 };
 
 
 /**
- * optional int32 timeout = 4;
+ * optional int32 status = 4;
  * @return {number}
  */
-proto.pb.RoomBaseInfo.prototype.getTimeout = function() {
+proto.pb.RoomBaseInfo.prototype.getStatus = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 4, 0));
 };
 
@@ -643,16 +655,16 @@ proto.pb.RoomBaseInfo.prototype.getTimeout = function() {
  * @param {number} value
  * @return {!proto.pb.RoomBaseInfo} returns this
  */
-proto.pb.RoomBaseInfo.prototype.setTimeout = function(value) {
+proto.pb.RoomBaseInfo.prototype.setStatus = function(value) {
   return jspb.Message.setProto3IntField(this, 4, value);
 };
 
 
 /**
- * optional int32 sequence_number = 5;
+ * optional int32 timeout = 5;
  * @return {number}
  */
-proto.pb.RoomBaseInfo.prototype.getSequenceNumber = function() {
+proto.pb.RoomBaseInfo.prototype.getTimeout = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 5, 0));
 };
 
@@ -661,16 +673,16 @@ proto.pb.RoomBaseInfo.prototype.getSequenceNumber = function() {
  * @param {number} value
  * @return {!proto.pb.RoomBaseInfo} returns this
  */
-proto.pb.RoomBaseInfo.prototype.setSequenceNumber = function(value) {
+proto.pb.RoomBaseInfo.prototype.setTimeout = function(value) {
   return jspb.Message.setProto3IntField(this, 5, value);
 };
 
 
 /**
- * optional int32 rand_seek = 6;
+ * optional int32 sequence_number = 6;
  * @return {number}
  */
-proto.pb.RoomBaseInfo.prototype.getRandSeek = function() {
+proto.pb.RoomBaseInfo.prototype.getSequenceNumber = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 6, 0));
 };
 
@@ -679,17 +691,35 @@ proto.pb.RoomBaseInfo.prototype.getRandSeek = function() {
  * @param {number} value
  * @return {!proto.pb.RoomBaseInfo} returns this
  */
-proto.pb.RoomBaseInfo.prototype.setRandSeek = function(value) {
+proto.pb.RoomBaseInfo.prototype.setSequenceNumber = function(value) {
   return jspb.Message.setProto3IntField(this, 6, value);
 };
 
 
 /**
- * repeated int32 player_ids = 7;
+ * optional int32 rand_seek = 7;
+ * @return {number}
+ */
+proto.pb.RoomBaseInfo.prototype.getRandSeek = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 7, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.pb.RoomBaseInfo} returns this
+ */
+proto.pb.RoomBaseInfo.prototype.setRandSeek = function(value) {
+  return jspb.Message.setProto3IntField(this, 7, value);
+};
+
+
+/**
+ * repeated int32 player_ids = 8;
  * @return {!Array<number>}
  */
 proto.pb.RoomBaseInfo.prototype.getPlayerIdsList = function() {
-  return /** @type {!Array<number>} */ (jspb.Message.getRepeatedField(this, 7));
+  return /** @type {!Array<number>} */ (jspb.Message.getRepeatedField(this, 8));
 };
 
 
@@ -698,7 +728,7 @@ proto.pb.RoomBaseInfo.prototype.getPlayerIdsList = function() {
  * @return {!proto.pb.RoomBaseInfo} returns this
  */
 proto.pb.RoomBaseInfo.prototype.setPlayerIdsList = function(value) {
-  return jspb.Message.setField(this, 7, value || []);
+  return jspb.Message.setField(this, 8, value || []);
 };
 
 
@@ -708,7 +738,7 @@ proto.pb.RoomBaseInfo.prototype.setPlayerIdsList = function(value) {
  * @return {!proto.pb.RoomBaseInfo} returns this
  */
 proto.pb.RoomBaseInfo.prototype.addPlayerIds = function(value, opt_index) {
-  return jspb.Message.addToRepeatedField(this, 7, value, opt_index);
+  return jspb.Message.addToRepeatedField(this, 8, value, opt_index);
 };
 
 
@@ -722,11 +752,11 @@ proto.pb.RoomBaseInfo.prototype.clearPlayerIdsList = function() {
 
 
 /**
- * optional string room_id = 8;
+ * optional string room_id = 9;
  * @return {string}
  */
 proto.pb.RoomBaseInfo.prototype.getRoomId = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 8, ""));
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 9, ""));
 };
 
 
@@ -735,33 +765,15 @@ proto.pb.RoomBaseInfo.prototype.getRoomId = function() {
  * @return {!proto.pb.RoomBaseInfo} returns this
  */
 proto.pb.RoomBaseInfo.prototype.setRoomId = function(value) {
-  return jspb.Message.setProto3StringField(this, 8, value);
+  return jspb.Message.setProto3StringField(this, 9, value);
 };
 
 
 /**
- * optional int32 start_time = 9;
+ * optional int32 start_time = 10;
  * @return {number}
  */
 proto.pb.RoomBaseInfo.prototype.getStartTime = function() {
-  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 9, 0));
-};
-
-
-/**
- * @param {number} value
- * @return {!proto.pb.RoomBaseInfo} returns this
- */
-proto.pb.RoomBaseInfo.prototype.setStartTime = function(value) {
-  return jspb.Message.setProto3IntField(this, 9, value);
-};
-
-
-/**
- * optional int32 end_time = 10;
- * @return {number}
- */
-proto.pb.RoomBaseInfo.prototype.getEndTime = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 10, 0));
 };
 
@@ -770,8 +782,26 @@ proto.pb.RoomBaseInfo.prototype.getEndTime = function() {
  * @param {number} value
  * @return {!proto.pb.RoomBaseInfo} returns this
  */
-proto.pb.RoomBaseInfo.prototype.setEndTime = function(value) {
+proto.pb.RoomBaseInfo.prototype.setStartTime = function(value) {
   return jspb.Message.setProto3IntField(this, 10, value);
+};
+
+
+/**
+ * optional int32 end_time = 11;
+ * @return {number}
+ */
+proto.pb.RoomBaseInfo.prototype.getEndTime = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 11, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.pb.RoomBaseInfo} returns this
+ */
+proto.pb.RoomBaseInfo.prototype.setEndTime = function(value) {
+  return jspb.Message.setProto3IntField(this, 11, value);
 };
 
 
@@ -807,9 +837,10 @@ proto.pb.PlayerResumeGame.prototype.toObject = function(opt_includeInstance) {
  */
 proto.pb.PlayerResumeGame.toObject = function(includeInstance, msg) {
   var f, obj = {
-    playerId: jspb.Message.getFieldWithDefault(msg, 1, 0),
-    roomId: jspb.Message.getFieldWithDefault(msg, 2, ""),
-    sequenceNumber: jspb.Message.getFieldWithDefault(msg, 3, 0)
+    sourceUid: jspb.Message.getFieldWithDefault(msg, 1, 0),
+    playerId: jspb.Message.getFieldWithDefault(msg, 2, 0),
+    roomId: jspb.Message.getFieldWithDefault(msg, 3, ""),
+    sequenceNumber: jspb.Message.getFieldWithDefault(msg, 4, 0)
   };
 
   if (includeInstance) {
@@ -848,13 +879,17 @@ proto.pb.PlayerResumeGame.deserializeBinaryFromReader = function(msg, reader) {
     switch (field) {
     case 1:
       var value = /** @type {number} */ (reader.readInt32());
-      msg.setPlayerId(value);
+      msg.setSourceUid(value);
       break;
     case 2:
+      var value = /** @type {number} */ (reader.readInt32());
+      msg.setPlayerId(value);
+      break;
+    case 3:
       var value = /** @type {string} */ (reader.readString());
       msg.setRoomId(value);
       break;
-    case 3:
+    case 4:
       var value = /** @type {number} */ (reader.readInt32());
       msg.setSequenceNumber(value);
       break;
@@ -887,24 +922,31 @@ proto.pb.PlayerResumeGame.prototype.serializeBinary = function() {
  */
 proto.pb.PlayerResumeGame.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
-  f = message.getPlayerId();
+  f = message.getSourceUid();
   if (f !== 0) {
     writer.writeInt32(
       1,
       f
     );
   }
+  f = message.getPlayerId();
+  if (f !== 0) {
+    writer.writeInt32(
+      2,
+      f
+    );
+  }
   f = message.getRoomId();
   if (f.length > 0) {
     writer.writeString(
-      2,
+      3,
       f
     );
   }
   f = message.getSequenceNumber();
   if (f !== 0) {
     writer.writeInt32(
-      3,
+      4,
       f
     );
   }
@@ -912,10 +954,10 @@ proto.pb.PlayerResumeGame.serializeBinaryToWriter = function(message, writer) {
 
 
 /**
- * optional int32 player_id = 1;
+ * optional int32 source_uid = 1;
  * @return {number}
  */
-proto.pb.PlayerResumeGame.prototype.getPlayerId = function() {
+proto.pb.PlayerResumeGame.prototype.getSourceUid = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 1, 0));
 };
 
@@ -924,17 +966,35 @@ proto.pb.PlayerResumeGame.prototype.getPlayerId = function() {
  * @param {number} value
  * @return {!proto.pb.PlayerResumeGame} returns this
  */
-proto.pb.PlayerResumeGame.prototype.setPlayerId = function(value) {
+proto.pb.PlayerResumeGame.prototype.setSourceUid = function(value) {
   return jspb.Message.setProto3IntField(this, 1, value);
 };
 
 
 /**
- * optional string room_id = 2;
+ * optional int32 player_id = 2;
+ * @return {number}
+ */
+proto.pb.PlayerResumeGame.prototype.getPlayerId = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 2, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.pb.PlayerResumeGame} returns this
+ */
+proto.pb.PlayerResumeGame.prototype.setPlayerId = function(value) {
+  return jspb.Message.setProto3IntField(this, 2, value);
+};
+
+
+/**
+ * optional string room_id = 3;
  * @return {string}
  */
 proto.pb.PlayerResumeGame.prototype.getRoomId = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 2, ""));
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 3, ""));
 };
 
 
@@ -943,16 +1003,16 @@ proto.pb.PlayerResumeGame.prototype.getRoomId = function() {
  * @return {!proto.pb.PlayerResumeGame} returns this
  */
 proto.pb.PlayerResumeGame.prototype.setRoomId = function(value) {
-  return jspb.Message.setProto3StringField(this, 2, value);
+  return jspb.Message.setProto3StringField(this, 3, value);
 };
 
 
 /**
- * optional int32 sequence_number = 3;
+ * optional int32 sequence_number = 4;
  * @return {number}
  */
 proto.pb.PlayerResumeGame.prototype.getSequenceNumber = function() {
-  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 3, 0));
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 4, 0));
 };
 
 
@@ -961,7 +1021,7 @@ proto.pb.PlayerResumeGame.prototype.getSequenceNumber = function() {
  * @return {!proto.pb.PlayerResumeGame} returns this
  */
 proto.pb.PlayerResumeGame.prototype.setSequenceNumber = function(value) {
-  return jspb.Message.setProto3IntField(this, 3, value);
+  return jspb.Message.setProto3IntField(this, 4, value);
 };
 
 
@@ -997,8 +1057,9 @@ proto.pb.PlayerReady.prototype.toObject = function(opt_includeInstance) {
  */
 proto.pb.PlayerReady.toObject = function(includeInstance, msg) {
   var f, obj = {
-    playerId: jspb.Message.getFieldWithDefault(msg, 1, 0),
-    roomId: jspb.Message.getFieldWithDefault(msg, 2, "")
+    sourceUid: jspb.Message.getFieldWithDefault(msg, 1, 0),
+    playerId: jspb.Message.getFieldWithDefault(msg, 2, 0),
+    roomId: jspb.Message.getFieldWithDefault(msg, 3, "")
   };
 
   if (includeInstance) {
@@ -1037,9 +1098,13 @@ proto.pb.PlayerReady.deserializeBinaryFromReader = function(msg, reader) {
     switch (field) {
     case 1:
       var value = /** @type {number} */ (reader.readInt32());
-      msg.setPlayerId(value);
+      msg.setSourceUid(value);
       break;
     case 2:
+      var value = /** @type {number} */ (reader.readInt32());
+      msg.setPlayerId(value);
+      break;
+    case 3:
       var value = /** @type {string} */ (reader.readString());
       msg.setRoomId(value);
       break;
@@ -1072,17 +1137,24 @@ proto.pb.PlayerReady.prototype.serializeBinary = function() {
  */
 proto.pb.PlayerReady.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
-  f = message.getPlayerId();
+  f = message.getSourceUid();
   if (f !== 0) {
     writer.writeInt32(
       1,
       f
     );
   }
+  f = message.getPlayerId();
+  if (f !== 0) {
+    writer.writeInt32(
+      2,
+      f
+    );
+  }
   f = message.getRoomId();
   if (f.length > 0) {
     writer.writeString(
-      2,
+      3,
       f
     );
   }
@@ -1090,10 +1162,10 @@ proto.pb.PlayerReady.serializeBinaryToWriter = function(message, writer) {
 
 
 /**
- * optional int32 player_id = 1;
+ * optional int32 source_uid = 1;
  * @return {number}
  */
-proto.pb.PlayerReady.prototype.getPlayerId = function() {
+proto.pb.PlayerReady.prototype.getSourceUid = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 1, 0));
 };
 
@@ -1102,17 +1174,35 @@ proto.pb.PlayerReady.prototype.getPlayerId = function() {
  * @param {number} value
  * @return {!proto.pb.PlayerReady} returns this
  */
-proto.pb.PlayerReady.prototype.setPlayerId = function(value) {
+proto.pb.PlayerReady.prototype.setSourceUid = function(value) {
   return jspb.Message.setProto3IntField(this, 1, value);
 };
 
 
 /**
- * optional string room_id = 2;
+ * optional int32 player_id = 2;
+ * @return {number}
+ */
+proto.pb.PlayerReady.prototype.getPlayerId = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 2, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.pb.PlayerReady} returns this
+ */
+proto.pb.PlayerReady.prototype.setPlayerId = function(value) {
+  return jspb.Message.setProto3IntField(this, 2, value);
+};
+
+
+/**
+ * optional string room_id = 3;
  * @return {string}
  */
 proto.pb.PlayerReady.prototype.getRoomId = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 2, ""));
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 3, ""));
 };
 
 
@@ -1121,7 +1211,7 @@ proto.pb.PlayerReady.prototype.getRoomId = function() {
  * @return {!proto.pb.PlayerReady} returns this
  */
 proto.pb.PlayerReady.prototype.setRoomId = function(value) {
-  return jspb.Message.setProto3StringField(this, 2, value);
+  return jspb.Message.setProto3StringField(this, 3, value);
 };
 
 
@@ -1157,10 +1247,11 @@ proto.pb.ReqRoomHistory.prototype.toObject = function(opt_includeInstance) {
  */
 proto.pb.ReqRoomHistory.toObject = function(includeInstance, msg) {
   var f, obj = {
-    playerId: jspb.Message.getFieldWithDefault(msg, 1, 0),
-    roomId: jspb.Message.getFieldWithDefault(msg, 2, ""),
-    sequenceNumberstart: jspb.Message.getFieldWithDefault(msg, 3, 0),
-    sequenceNumberend: jspb.Message.getFieldWithDefault(msg, 4, 0)
+    sourceUid: jspb.Message.getFieldWithDefault(msg, 1, 0),
+    playerId: jspb.Message.getFieldWithDefault(msg, 2, 0),
+    roomId: jspb.Message.getFieldWithDefault(msg, 3, ""),
+    sequenceNumberstart: jspb.Message.getFieldWithDefault(msg, 4, 0),
+    sequenceNumberend: jspb.Message.getFieldWithDefault(msg, 5, 0)
   };
 
   if (includeInstance) {
@@ -1199,17 +1290,21 @@ proto.pb.ReqRoomHistory.deserializeBinaryFromReader = function(msg, reader) {
     switch (field) {
     case 1:
       var value = /** @type {number} */ (reader.readInt32());
-      msg.setPlayerId(value);
+      msg.setSourceUid(value);
       break;
     case 2:
+      var value = /** @type {number} */ (reader.readInt32());
+      msg.setPlayerId(value);
+      break;
+    case 3:
       var value = /** @type {string} */ (reader.readString());
       msg.setRoomId(value);
       break;
-    case 3:
+    case 4:
       var value = /** @type {number} */ (reader.readInt32());
       msg.setSequenceNumberstart(value);
       break;
-    case 4:
+    case 5:
       var value = /** @type {number} */ (reader.readInt32());
       msg.setSequenceNumberend(value);
       break;
@@ -1242,31 +1337,38 @@ proto.pb.ReqRoomHistory.prototype.serializeBinary = function() {
  */
 proto.pb.ReqRoomHistory.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
-  f = message.getPlayerId();
+  f = message.getSourceUid();
   if (f !== 0) {
     writer.writeInt32(
       1,
       f
     );
   }
+  f = message.getPlayerId();
+  if (f !== 0) {
+    writer.writeInt32(
+      2,
+      f
+    );
+  }
   f = message.getRoomId();
   if (f.length > 0) {
     writer.writeString(
-      2,
+      3,
       f
     );
   }
   f = message.getSequenceNumberstart();
   if (f !== 0) {
     writer.writeInt32(
-      3,
+      4,
       f
     );
   }
   f = message.getSequenceNumberend();
   if (f !== 0) {
     writer.writeInt32(
-      4,
+      5,
       f
     );
   }
@@ -1274,10 +1376,10 @@ proto.pb.ReqRoomHistory.serializeBinaryToWriter = function(message, writer) {
 
 
 /**
- * optional int32 player_id = 1;
+ * optional int32 source_uid = 1;
  * @return {number}
  */
-proto.pb.ReqRoomHistory.prototype.getPlayerId = function() {
+proto.pb.ReqRoomHistory.prototype.getSourceUid = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 1, 0));
 };
 
@@ -1286,17 +1388,35 @@ proto.pb.ReqRoomHistory.prototype.getPlayerId = function() {
  * @param {number} value
  * @return {!proto.pb.ReqRoomHistory} returns this
  */
-proto.pb.ReqRoomHistory.prototype.setPlayerId = function(value) {
+proto.pb.ReqRoomHistory.prototype.setSourceUid = function(value) {
   return jspb.Message.setProto3IntField(this, 1, value);
 };
 
 
 /**
- * optional string room_id = 2;
+ * optional int32 player_id = 2;
+ * @return {number}
+ */
+proto.pb.ReqRoomHistory.prototype.getPlayerId = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 2, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.pb.ReqRoomHistory} returns this
+ */
+proto.pb.ReqRoomHistory.prototype.setPlayerId = function(value) {
+  return jspb.Message.setProto3IntField(this, 2, value);
+};
+
+
+/**
+ * optional string room_id = 3;
  * @return {string}
  */
 proto.pb.ReqRoomHistory.prototype.getRoomId = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 2, ""));
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 3, ""));
 };
 
 
@@ -1305,33 +1425,15 @@ proto.pb.ReqRoomHistory.prototype.getRoomId = function() {
  * @return {!proto.pb.ReqRoomHistory} returns this
  */
 proto.pb.ReqRoomHistory.prototype.setRoomId = function(value) {
-  return jspb.Message.setProto3StringField(this, 2, value);
+  return jspb.Message.setProto3StringField(this, 3, value);
 };
 
 
 /**
- * optional int32 sequence_numberStart = 3;
+ * optional int32 sequence_numberStart = 4;
  * @return {number}
  */
 proto.pb.ReqRoomHistory.prototype.getSequenceNumberstart = function() {
-  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 3, 0));
-};
-
-
-/**
- * @param {number} value
- * @return {!proto.pb.ReqRoomHistory} returns this
- */
-proto.pb.ReqRoomHistory.prototype.setSequenceNumberstart = function(value) {
-  return jspb.Message.setProto3IntField(this, 3, value);
-};
-
-
-/**
- * optional int32 sequence_numberEnd = 4;
- * @return {number}
- */
-proto.pb.ReqRoomHistory.prototype.getSequenceNumberend = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 4, 0));
 };
 
@@ -1340,8 +1442,26 @@ proto.pb.ReqRoomHistory.prototype.getSequenceNumberend = function() {
  * @param {number} value
  * @return {!proto.pb.ReqRoomHistory} returns this
  */
-proto.pb.ReqRoomHistory.prototype.setSequenceNumberend = function(value) {
+proto.pb.ReqRoomHistory.prototype.setSequenceNumberstart = function(value) {
   return jspb.Message.setProto3IntField(this, 4, value);
+};
+
+
+/**
+ * optional int32 sequence_numberEnd = 5;
+ * @return {number}
+ */
+proto.pb.ReqRoomHistory.prototype.getSequenceNumberend = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 5, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.pb.ReqRoomHistory} returns this
+ */
+proto.pb.ReqRoomHistory.prototype.setSequenceNumberend = function(value) {
+  return jspb.Message.setProto3IntField(this, 5, value);
 };
 
 
@@ -1351,7 +1471,7 @@ proto.pb.ReqRoomHistory.prototype.setSequenceNumberend = function(value) {
  * @private {!Array<number>}
  * @const
  */
-proto.pb.RoomHistoryList.repeatedFields_ = [1];
+proto.pb.RoomHistoryList.repeatedFields_ = [2];
 
 
 
@@ -1384,6 +1504,7 @@ proto.pb.RoomHistoryList.prototype.toObject = function(opt_includeInstance) {
  */
 proto.pb.RoomHistoryList.toObject = function(includeInstance, msg) {
   var f, obj = {
+    sourceUid: jspb.Message.getFieldWithDefault(msg, 1, 0),
     listList: jspb.Message.toObjectList(msg.getListList(),
     proto.pb.RoomHistory.toObject, includeInstance)
   };
@@ -1423,6 +1544,10 @@ proto.pb.RoomHistoryList.deserializeBinaryFromReader = function(msg, reader) {
     var field = reader.getFieldNumber();
     switch (field) {
     case 1:
+      var value = /** @type {number} */ (reader.readInt32());
+      msg.setSourceUid(value);
+      break;
+    case 2:
       var value = new proto.pb.RoomHistory;
       reader.readMessage(value,proto.pb.RoomHistory.deserializeBinaryFromReader);
       msg.addList(value);
@@ -1456,10 +1581,17 @@ proto.pb.RoomHistoryList.prototype.serializeBinary = function() {
  */
 proto.pb.RoomHistoryList.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
+  f = message.getSourceUid();
+  if (f !== 0) {
+    writer.writeInt32(
+      1,
+      f
+    );
+  }
   f = message.getListList();
   if (f.length > 0) {
     writer.writeRepeatedMessage(
-      1,
+      2,
       f,
       proto.pb.RoomHistory.serializeBinaryToWriter
     );
@@ -1468,12 +1600,30 @@ proto.pb.RoomHistoryList.serializeBinaryToWriter = function(message, writer) {
 
 
 /**
- * repeated RoomHistory list = 1;
+ * optional int32 source_uid = 1;
+ * @return {number}
+ */
+proto.pb.RoomHistoryList.prototype.getSourceUid = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 1, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.pb.RoomHistoryList} returns this
+ */
+proto.pb.RoomHistoryList.prototype.setSourceUid = function(value) {
+  return jspb.Message.setProto3IntField(this, 1, value);
+};
+
+
+/**
+ * repeated RoomHistory list = 2;
  * @return {!Array<!proto.pb.RoomHistory>}
  */
 proto.pb.RoomHistoryList.prototype.getListList = function() {
   return /** @type{!Array<!proto.pb.RoomHistory>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.pb.RoomHistory, 1));
+    jspb.Message.getRepeatedWrapperField(this, proto.pb.RoomHistory, 2));
 };
 
 
@@ -1482,7 +1632,7 @@ proto.pb.RoomHistoryList.prototype.getListList = function() {
  * @return {!proto.pb.RoomHistoryList} returns this
 */
 proto.pb.RoomHistoryList.prototype.setListList = function(value) {
-  return jspb.Message.setRepeatedWrapperField(this, 1, value);
+  return jspb.Message.setRepeatedWrapperField(this, 2, value);
 };
 
 
@@ -1492,7 +1642,7 @@ proto.pb.RoomHistoryList.prototype.setListList = function(value) {
  * @return {!proto.pb.RoomHistory}
  */
 proto.pb.RoomHistoryList.prototype.addList = function(opt_value, opt_index) {
-  return jspb.Message.addToRepeatedWrapperField(this, 1, opt_value, proto.pb.RoomHistory, opt_index);
+  return jspb.Message.addToRepeatedWrapperField(this, 2, opt_value, proto.pb.RoomHistory, opt_index);
 };
 
 
@@ -1537,9 +1687,10 @@ proto.pb.RoomHistory.prototype.toObject = function(opt_includeInstance) {
  */
 proto.pb.RoomHistory.toObject = function(includeInstance, msg) {
   var f, obj = {
-    id: jspb.Message.getFieldWithDefault(msg, 1, 0),
-    action: jspb.Message.getFieldWithDefault(msg, 2, ""),
-    content: jspb.Message.getFieldWithDefault(msg, 3, "")
+    sourceUid: jspb.Message.getFieldWithDefault(msg, 1, 0),
+    id: jspb.Message.getFieldWithDefault(msg, 2, 0),
+    action: jspb.Message.getFieldWithDefault(msg, 3, ""),
+    content: jspb.Message.getFieldWithDefault(msg, 4, "")
   };
 
   if (includeInstance) {
@@ -1578,13 +1729,17 @@ proto.pb.RoomHistory.deserializeBinaryFromReader = function(msg, reader) {
     switch (field) {
     case 1:
       var value = /** @type {number} */ (reader.readInt32());
-      msg.setId(value);
+      msg.setSourceUid(value);
       break;
     case 2:
+      var value = /** @type {number} */ (reader.readInt32());
+      msg.setId(value);
+      break;
+    case 3:
       var value = /** @type {string} */ (reader.readString());
       msg.setAction(value);
       break;
-    case 3:
+    case 4:
       var value = /** @type {string} */ (reader.readString());
       msg.setContent(value);
       break;
@@ -1617,24 +1772,31 @@ proto.pb.RoomHistory.prototype.serializeBinary = function() {
  */
 proto.pb.RoomHistory.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
-  f = message.getId();
+  f = message.getSourceUid();
   if (f !== 0) {
     writer.writeInt32(
       1,
       f
     );
   }
+  f = message.getId();
+  if (f !== 0) {
+    writer.writeInt32(
+      2,
+      f
+    );
+  }
   f = message.getAction();
   if (f.length > 0) {
     writer.writeString(
-      2,
+      3,
       f
     );
   }
   f = message.getContent();
   if (f.length > 0) {
     writer.writeString(
-      3,
+      4,
       f
     );
   }
@@ -1642,10 +1804,10 @@ proto.pb.RoomHistory.serializeBinaryToWriter = function(message, writer) {
 
 
 /**
- * optional int32 id = 1;
+ * optional int32 source_uid = 1;
  * @return {number}
  */
-proto.pb.RoomHistory.prototype.getId = function() {
+proto.pb.RoomHistory.prototype.getSourceUid = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 1, 0));
 };
 
@@ -1654,34 +1816,34 @@ proto.pb.RoomHistory.prototype.getId = function() {
  * @param {number} value
  * @return {!proto.pb.RoomHistory} returns this
  */
-proto.pb.RoomHistory.prototype.setId = function(value) {
+proto.pb.RoomHistory.prototype.setSourceUid = function(value) {
   return jspb.Message.setProto3IntField(this, 1, value);
 };
 
 
 /**
- * optional string action = 2;
+ * optional int32 id = 2;
+ * @return {number}
+ */
+proto.pb.RoomHistory.prototype.getId = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 2, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.pb.RoomHistory} returns this
+ */
+proto.pb.RoomHistory.prototype.setId = function(value) {
+  return jspb.Message.setProto3IntField(this, 2, value);
+};
+
+
+/**
+ * optional string action = 3;
  * @return {string}
  */
 proto.pb.RoomHistory.prototype.getAction = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 2, ""));
-};
-
-
-/**
- * @param {string} value
- * @return {!proto.pb.RoomHistory} returns this
- */
-proto.pb.RoomHistory.prototype.setAction = function(value) {
-  return jspb.Message.setProto3StringField(this, 2, value);
-};
-
-
-/**
- * optional string content = 3;
- * @return {string}
- */
-proto.pb.RoomHistory.prototype.getContent = function() {
   return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 3, ""));
 };
 
@@ -1690,8 +1852,26 @@ proto.pb.RoomHistory.prototype.getContent = function() {
  * @param {string} value
  * @return {!proto.pb.RoomHistory} returns this
  */
-proto.pb.RoomHistory.prototype.setContent = function(value) {
+proto.pb.RoomHistory.prototype.setAction = function(value) {
   return jspb.Message.setProto3StringField(this, 3, value);
+};
+
+
+/**
+ * optional string content = 4;
+ * @return {string}
+ */
+proto.pb.RoomHistory.prototype.getContent = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 4, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.pb.RoomHistory} returns this
+ */
+proto.pb.RoomHistory.prototype.setContent = function(value) {
+  return jspb.Message.setProto3StringField(this, 4, value);
 };
 
 
@@ -1727,10 +1907,11 @@ proto.pb.GameOver.prototype.toObject = function(opt_includeInstance) {
  */
 proto.pb.GameOver.toObject = function(includeInstance, msg) {
   var f, obj = {
-    playerId: jspb.Message.getFieldWithDefault(msg, 1, 0),
-    roomId: jspb.Message.getFieldWithDefault(msg, 2, ""),
-    sequenceNumber: jspb.Message.getFieldWithDefault(msg, 3, 0),
-    result: jspb.Message.getFieldWithDefault(msg, 4, "")
+    sourceUid: jspb.Message.getFieldWithDefault(msg, 1, 0),
+    playerId: jspb.Message.getFieldWithDefault(msg, 2, 0),
+    roomId: jspb.Message.getFieldWithDefault(msg, 3, ""),
+    sequenceNumber: jspb.Message.getFieldWithDefault(msg, 4, 0),
+    result: jspb.Message.getFieldWithDefault(msg, 5, "")
   };
 
   if (includeInstance) {
@@ -1769,17 +1950,21 @@ proto.pb.GameOver.deserializeBinaryFromReader = function(msg, reader) {
     switch (field) {
     case 1:
       var value = /** @type {number} */ (reader.readInt32());
-      msg.setPlayerId(value);
+      msg.setSourceUid(value);
       break;
     case 2:
+      var value = /** @type {number} */ (reader.readInt32());
+      msg.setPlayerId(value);
+      break;
+    case 3:
       var value = /** @type {string} */ (reader.readString());
       msg.setRoomId(value);
       break;
-    case 3:
+    case 4:
       var value = /** @type {number} */ (reader.readInt32());
       msg.setSequenceNumber(value);
       break;
-    case 4:
+    case 5:
       var value = /** @type {string} */ (reader.readString());
       msg.setResult(value);
       break;
@@ -1812,31 +1997,38 @@ proto.pb.GameOver.prototype.serializeBinary = function() {
  */
 proto.pb.GameOver.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
-  f = message.getPlayerId();
+  f = message.getSourceUid();
   if (f !== 0) {
     writer.writeInt32(
       1,
       f
     );
   }
+  f = message.getPlayerId();
+  if (f !== 0) {
+    writer.writeInt32(
+      2,
+      f
+    );
+  }
   f = message.getRoomId();
   if (f.length > 0) {
     writer.writeString(
-      2,
+      3,
       f
     );
   }
   f = message.getSequenceNumber();
   if (f !== 0) {
     writer.writeInt32(
-      3,
+      4,
       f
     );
   }
   f = message.getResult();
   if (f.length > 0) {
     writer.writeString(
-      4,
+      5,
       f
     );
   }
@@ -1844,10 +2036,10 @@ proto.pb.GameOver.serializeBinaryToWriter = function(message, writer) {
 
 
 /**
- * optional int32 player_id = 1;
+ * optional int32 source_uid = 1;
  * @return {number}
  */
-proto.pb.GameOver.prototype.getPlayerId = function() {
+proto.pb.GameOver.prototype.getSourceUid = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 1, 0));
 };
 
@@ -1856,17 +2048,35 @@ proto.pb.GameOver.prototype.getPlayerId = function() {
  * @param {number} value
  * @return {!proto.pb.GameOver} returns this
  */
-proto.pb.GameOver.prototype.setPlayerId = function(value) {
+proto.pb.GameOver.prototype.setSourceUid = function(value) {
   return jspb.Message.setProto3IntField(this, 1, value);
 };
 
 
 /**
- * optional string room_id = 2;
+ * optional int32 player_id = 2;
+ * @return {number}
+ */
+proto.pb.GameOver.prototype.getPlayerId = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 2, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.pb.GameOver} returns this
+ */
+proto.pb.GameOver.prototype.setPlayerId = function(value) {
+  return jspb.Message.setProto3IntField(this, 2, value);
+};
+
+
+/**
+ * optional string room_id = 3;
  * @return {string}
  */
 proto.pb.GameOver.prototype.getRoomId = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 2, ""));
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 3, ""));
 };
 
 
@@ -1875,16 +2085,16 @@ proto.pb.GameOver.prototype.getRoomId = function() {
  * @return {!proto.pb.GameOver} returns this
  */
 proto.pb.GameOver.prototype.setRoomId = function(value) {
-  return jspb.Message.setProto3StringField(this, 2, value);
+  return jspb.Message.setProto3StringField(this, 3, value);
 };
 
 
 /**
- * optional int32 sequence_number = 3;
+ * optional int32 sequence_number = 4;
  * @return {number}
  */
 proto.pb.GameOver.prototype.getSequenceNumber = function() {
-  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 3, 0));
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 4, 0));
 };
 
 
@@ -1893,16 +2103,16 @@ proto.pb.GameOver.prototype.getSequenceNumber = function() {
  * @return {!proto.pb.GameOver} returns this
  */
 proto.pb.GameOver.prototype.setSequenceNumber = function(value) {
-  return jspb.Message.setProto3IntField(this, 3, value);
+  return jspb.Message.setProto3IntField(this, 4, value);
 };
 
 
 /**
- * optional string result = 4;
+ * optional string result = 5;
  * @return {string}
  */
 proto.pb.GameOver.prototype.getResult = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 4, ""));
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 5, ""));
 };
 
 
@@ -1911,7 +2121,7 @@ proto.pb.GameOver.prototype.getResult = function() {
  * @return {!proto.pb.GameOver} returns this
  */
 proto.pb.GameOver.prototype.setResult = function(value) {
-  return jspb.Message.setProto3StringField(this, 4, value);
+  return jspb.Message.setProto3StringField(this, 5, value);
 };
 
 
@@ -1947,8 +2157,10 @@ proto.pb.PlayerOver.prototype.toObject = function(opt_includeInstance) {
  */
 proto.pb.PlayerOver.toObject = function(includeInstance, msg) {
   var f, obj = {
-    playerId: jspb.Message.getFieldWithDefault(msg, 1, 0),
-    sequenceNumber: jspb.Message.getFieldWithDefault(msg, 2, 0)
+    sourceUid: jspb.Message.getFieldWithDefault(msg, 1, 0),
+    playerId: jspb.Message.getFieldWithDefault(msg, 2, 0),
+    sequenceNumber: jspb.Message.getFieldWithDefault(msg, 3, 0),
+    roomId: jspb.Message.getFieldWithDefault(msg, 4, "")
   };
 
   if (includeInstance) {
@@ -1987,11 +2199,19 @@ proto.pb.PlayerOver.deserializeBinaryFromReader = function(msg, reader) {
     switch (field) {
     case 1:
       var value = /** @type {number} */ (reader.readInt32());
-      msg.setPlayerId(value);
+      msg.setSourceUid(value);
       break;
     case 2:
       var value = /** @type {number} */ (reader.readInt32());
+      msg.setPlayerId(value);
+      break;
+    case 3:
+      var value = /** @type {number} */ (reader.readInt32());
       msg.setSequenceNumber(value);
+      break;
+    case 4:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setRoomId(value);
       break;
     default:
       reader.skipField();
@@ -2022,17 +2242,31 @@ proto.pb.PlayerOver.prototype.serializeBinary = function() {
  */
 proto.pb.PlayerOver.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
-  f = message.getPlayerId();
+  f = message.getSourceUid();
   if (f !== 0) {
     writer.writeInt32(
       1,
       f
     );
   }
-  f = message.getSequenceNumber();
+  f = message.getPlayerId();
   if (f !== 0) {
     writer.writeInt32(
       2,
+      f
+    );
+  }
+  f = message.getSequenceNumber();
+  if (f !== 0) {
+    writer.writeInt32(
+      3,
+      f
+    );
+  }
+  f = message.getRoomId();
+  if (f.length > 0) {
+    writer.writeString(
+      4,
       f
     );
   }
@@ -2040,10 +2274,10 @@ proto.pb.PlayerOver.serializeBinaryToWriter = function(message, writer) {
 
 
 /**
- * optional int32 player_id = 1;
+ * optional int32 source_uid = 1;
  * @return {number}
  */
-proto.pb.PlayerOver.prototype.getPlayerId = function() {
+proto.pb.PlayerOver.prototype.getSourceUid = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 1, 0));
 };
 
@@ -2052,16 +2286,16 @@ proto.pb.PlayerOver.prototype.getPlayerId = function() {
  * @param {number} value
  * @return {!proto.pb.PlayerOver} returns this
  */
-proto.pb.PlayerOver.prototype.setPlayerId = function(value) {
+proto.pb.PlayerOver.prototype.setSourceUid = function(value) {
   return jspb.Message.setProto3IntField(this, 1, value);
 };
 
 
 /**
- * optional int32 sequence_number = 2;
+ * optional int32 player_id = 2;
  * @return {number}
  */
-proto.pb.PlayerOver.prototype.getSequenceNumber = function() {
+proto.pb.PlayerOver.prototype.getPlayerId = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 2, 0));
 };
 
@@ -2070,8 +2304,44 @@ proto.pb.PlayerOver.prototype.getSequenceNumber = function() {
  * @param {number} value
  * @return {!proto.pb.PlayerOver} returns this
  */
-proto.pb.PlayerOver.prototype.setSequenceNumber = function(value) {
+proto.pb.PlayerOver.prototype.setPlayerId = function(value) {
   return jspb.Message.setProto3IntField(this, 2, value);
+};
+
+
+/**
+ * optional int32 sequence_number = 3;
+ * @return {number}
+ */
+proto.pb.PlayerOver.prototype.getSequenceNumber = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 3, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.pb.PlayerOver} returns this
+ */
+proto.pb.PlayerOver.prototype.setSequenceNumber = function(value) {
+  return jspb.Message.setProto3IntField(this, 3, value);
+};
+
+
+/**
+ * optional string room_id = 4;
+ * @return {string}
+ */
+proto.pb.PlayerOver.prototype.getRoomId = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 4, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.pb.PlayerOver} returns this
+ */
+proto.pb.PlayerOver.prototype.setRoomId = function(value) {
+  return jspb.Message.setProto3StringField(this, 4, value);
 };
 
 
@@ -2107,7 +2377,8 @@ proto.pb.OtherPlayerOffline.prototype.toObject = function(opt_includeInstance) {
  */
 proto.pb.OtherPlayerOffline.toObject = function(includeInstance, msg) {
   var f, obj = {
-    playerId: jspb.Message.getFieldWithDefault(msg, 1, 0)
+    sourceUid: jspb.Message.getFieldWithDefault(msg, 1, 0),
+    playerId: jspb.Message.getFieldWithDefault(msg, 2, 0)
   };
 
   if (includeInstance) {
@@ -2146,6 +2417,10 @@ proto.pb.OtherPlayerOffline.deserializeBinaryFromReader = function(msg, reader) 
     switch (field) {
     case 1:
       var value = /** @type {number} */ (reader.readInt32());
+      msg.setSourceUid(value);
+      break;
+    case 2:
+      var value = /** @type {number} */ (reader.readInt32());
       msg.setPlayerId(value);
       break;
     default:
@@ -2177,10 +2452,17 @@ proto.pb.OtherPlayerOffline.prototype.serializeBinary = function() {
  */
 proto.pb.OtherPlayerOffline.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
-  f = message.getPlayerId();
+  f = message.getSourceUid();
   if (f !== 0) {
     writer.writeInt32(
       1,
+      f
+    );
+  }
+  f = message.getPlayerId();
+  if (f !== 0) {
+    writer.writeInt32(
+      2,
       f
     );
   }
@@ -2188,10 +2470,10 @@ proto.pb.OtherPlayerOffline.serializeBinaryToWriter = function(message, writer) 
 
 
 /**
- * optional int32 player_id = 1;
+ * optional int32 source_uid = 1;
  * @return {number}
  */
-proto.pb.OtherPlayerOffline.prototype.getPlayerId = function() {
+proto.pb.OtherPlayerOffline.prototype.getSourceUid = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 1, 0));
 };
 
@@ -2200,8 +2482,26 @@ proto.pb.OtherPlayerOffline.prototype.getPlayerId = function() {
  * @param {number} value
  * @return {!proto.pb.OtherPlayerOffline} returns this
  */
-proto.pb.OtherPlayerOffline.prototype.setPlayerId = function(value) {
+proto.pb.OtherPlayerOffline.prototype.setSourceUid = function(value) {
   return jspb.Message.setProto3IntField(this, 1, value);
+};
+
+
+/**
+ * optional int32 player_id = 2;
+ * @return {number}
+ */
+proto.pb.OtherPlayerOffline.prototype.getPlayerId = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 2, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.pb.OtherPlayerOffline} returns this
+ */
+proto.pb.OtherPlayerOffline.prototype.setPlayerId = function(value) {
+  return jspb.Message.setProto3IntField(this, 2, value);
 };
 
 
@@ -2237,7 +2537,8 @@ proto.pb.StartBattle.prototype.toObject = function(opt_includeInstance) {
  */
 proto.pb.StartBattle.toObject = function(includeInstance, msg) {
   var f, obj = {
-    sequenceNumberStart: jspb.Message.getFieldWithDefault(msg, 1, 0)
+    sourceUid: jspb.Message.getFieldWithDefault(msg, 1, 0),
+    sequenceNumberStart: jspb.Message.getFieldWithDefault(msg, 2, 0)
   };
 
   if (includeInstance) {
@@ -2276,6 +2577,10 @@ proto.pb.StartBattle.deserializeBinaryFromReader = function(msg, reader) {
     switch (field) {
     case 1:
       var value = /** @type {number} */ (reader.readInt32());
+      msg.setSourceUid(value);
+      break;
+    case 2:
+      var value = /** @type {number} */ (reader.readInt32());
       msg.setSequenceNumberStart(value);
       break;
     default:
@@ -2307,10 +2612,17 @@ proto.pb.StartBattle.prototype.serializeBinary = function() {
  */
 proto.pb.StartBattle.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
-  f = message.getSequenceNumberStart();
+  f = message.getSourceUid();
   if (f !== 0) {
     writer.writeInt32(
       1,
+      f
+    );
+  }
+  f = message.getSequenceNumberStart();
+  if (f !== 0) {
+    writer.writeInt32(
+      2,
       f
     );
   }
@@ -2318,10 +2630,10 @@ proto.pb.StartBattle.serializeBinaryToWriter = function(message, writer) {
 
 
 /**
- * optional int32 sequence_number_start = 1;
+ * optional int32 source_uid = 1;
  * @return {number}
  */
-proto.pb.StartBattle.prototype.getSequenceNumberStart = function() {
+proto.pb.StartBattle.prototype.getSourceUid = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 1, 0));
 };
 
@@ -2330,8 +2642,26 @@ proto.pb.StartBattle.prototype.getSequenceNumberStart = function() {
  * @param {number} value
  * @return {!proto.pb.StartBattle} returns this
  */
-proto.pb.StartBattle.prototype.setSequenceNumberStart = function(value) {
+proto.pb.StartBattle.prototype.setSourceUid = function(value) {
   return jspb.Message.setProto3IntField(this, 1, value);
+};
+
+
+/**
+ * optional int32 sequence_number_start = 2;
+ * @return {number}
+ */
+proto.pb.StartBattle.prototype.getSequenceNumberStart = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 2, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.pb.StartBattle} returns this
+ */
+proto.pb.StartBattle.prototype.setSequenceNumberStart = function(value) {
+  return jspb.Message.setProto3IntField(this, 2, value);
 };
 
 
@@ -2341,7 +2671,7 @@ proto.pb.StartBattle.prototype.setSequenceNumberStart = function(value) {
  * @private {!Array<number>}
  * @const
  */
-proto.pb.EnterBattle.repeatedFields_ = [8];
+proto.pb.EnterBattle.repeatedFields_ = [9];
 
 
 
@@ -2374,14 +2704,15 @@ proto.pb.EnterBattle.prototype.toObject = function(opt_includeInstance) {
  */
 proto.pb.EnterBattle.toObject = function(includeInstance, msg) {
   var f, obj = {
-    randSeek: jspb.Message.getFieldWithDefault(msg, 1, 0),
-    roomId: jspb.Message.getFieldWithDefault(msg, 2, ""),
-    sequenceNumber: jspb.Message.getFieldWithDefault(msg, 3, 0),
-    status: jspb.Message.getFieldWithDefault(msg, 4, 0),
-    addTime: jspb.Message.getFieldWithDefault(msg, 5, 0),
-    time: jspb.Message.getFieldWithDefault(msg, 6, 0),
-    udpPort: jspb.Message.getFieldWithDefault(msg, 7, ""),
-    playerIdsList: (f = jspb.Message.getRepeatedField(msg, 8)) == null ? undefined : f
+    sourceUid: jspb.Message.getFieldWithDefault(msg, 1, 0),
+    randSeek: jspb.Message.getFieldWithDefault(msg, 2, 0),
+    roomId: jspb.Message.getFieldWithDefault(msg, 3, ""),
+    sequenceNumber: jspb.Message.getFieldWithDefault(msg, 4, 0),
+    status: jspb.Message.getFieldWithDefault(msg, 5, 0),
+    addTime: jspb.Message.getFieldWithDefault(msg, 6, 0),
+    time: jspb.Message.getFieldWithDefault(msg, 7, 0),
+    udpPort: jspb.Message.getFieldWithDefault(msg, 8, ""),
+    playerIdsList: (f = jspb.Message.getRepeatedField(msg, 9)) == null ? undefined : f
   };
 
   if (includeInstance) {
@@ -2420,33 +2751,37 @@ proto.pb.EnterBattle.deserializeBinaryFromReader = function(msg, reader) {
     switch (field) {
     case 1:
       var value = /** @type {number} */ (reader.readInt32());
-      msg.setRandSeek(value);
+      msg.setSourceUid(value);
       break;
     case 2:
+      var value = /** @type {number} */ (reader.readInt32());
+      msg.setRandSeek(value);
+      break;
+    case 3:
       var value = /** @type {string} */ (reader.readString());
       msg.setRoomId(value);
       break;
-    case 3:
+    case 4:
       var value = /** @type {number} */ (reader.readInt32());
       msg.setSequenceNumber(value);
       break;
-    case 4:
+    case 5:
       var value = /** @type {number} */ (reader.readInt32());
       msg.setStatus(value);
       break;
-    case 5:
+    case 6:
       var value = /** @type {number} */ (reader.readInt32());
       msg.setAddTime(value);
       break;
-    case 6:
+    case 7:
       var value = /** @type {number} */ (reader.readInt64());
       msg.setTime(value);
       break;
-    case 7:
+    case 8:
       var value = /** @type {string} */ (reader.readString());
       msg.setUdpPort(value);
       break;
-    case 8:
+    case 9:
       var values = /** @type {!Array<number>} */ (reader.isDelimited() ? reader.readPackedInt32() : [reader.readInt32()]);
       for (var i = 0; i < values.length; i++) {
         msg.addPlayerIds(values[i]);
@@ -2481,59 +2816,66 @@ proto.pb.EnterBattle.prototype.serializeBinary = function() {
  */
 proto.pb.EnterBattle.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
-  f = message.getRandSeek();
+  f = message.getSourceUid();
   if (f !== 0) {
     writer.writeInt32(
       1,
       f
     );
   }
+  f = message.getRandSeek();
+  if (f !== 0) {
+    writer.writeInt32(
+      2,
+      f
+    );
+  }
   f = message.getRoomId();
   if (f.length > 0) {
     writer.writeString(
-      2,
+      3,
       f
     );
   }
   f = message.getSequenceNumber();
   if (f !== 0) {
     writer.writeInt32(
-      3,
+      4,
       f
     );
   }
   f = message.getStatus();
   if (f !== 0) {
     writer.writeInt32(
-      4,
+      5,
       f
     );
   }
   f = message.getAddTime();
   if (f !== 0) {
     writer.writeInt32(
-      5,
+      6,
       f
     );
   }
   f = message.getTime();
   if (f !== 0) {
     writer.writeInt64(
-      6,
+      7,
       f
     );
   }
   f = message.getUdpPort();
   if (f.length > 0) {
     writer.writeString(
-      7,
+      8,
       f
     );
   }
   f = message.getPlayerIdsList();
   if (f.length > 0) {
     writer.writePackedInt32(
-      8,
+      9,
       f
     );
   }
@@ -2541,10 +2883,10 @@ proto.pb.EnterBattle.serializeBinaryToWriter = function(message, writer) {
 
 
 /**
- * optional int32 rand_seek = 1;
+ * optional int32 source_uid = 1;
  * @return {number}
  */
-proto.pb.EnterBattle.prototype.getRandSeek = function() {
+proto.pb.EnterBattle.prototype.getSourceUid = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 1, 0));
 };
 
@@ -2553,17 +2895,35 @@ proto.pb.EnterBattle.prototype.getRandSeek = function() {
  * @param {number} value
  * @return {!proto.pb.EnterBattle} returns this
  */
-proto.pb.EnterBattle.prototype.setRandSeek = function(value) {
+proto.pb.EnterBattle.prototype.setSourceUid = function(value) {
   return jspb.Message.setProto3IntField(this, 1, value);
 };
 
 
 /**
- * optional string room_id = 2;
+ * optional int32 rand_seek = 2;
+ * @return {number}
+ */
+proto.pb.EnterBattle.prototype.getRandSeek = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 2, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.pb.EnterBattle} returns this
+ */
+proto.pb.EnterBattle.prototype.setRandSeek = function(value) {
+  return jspb.Message.setProto3IntField(this, 2, value);
+};
+
+
+/**
+ * optional string room_id = 3;
  * @return {string}
  */
 proto.pb.EnterBattle.prototype.getRoomId = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 2, ""));
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 3, ""));
 };
 
 
@@ -2572,33 +2932,15 @@ proto.pb.EnterBattle.prototype.getRoomId = function() {
  * @return {!proto.pb.EnterBattle} returns this
  */
 proto.pb.EnterBattle.prototype.setRoomId = function(value) {
-  return jspb.Message.setProto3StringField(this, 2, value);
+  return jspb.Message.setProto3StringField(this, 3, value);
 };
 
 
 /**
- * optional int32 sequence_number = 3;
+ * optional int32 sequence_number = 4;
  * @return {number}
  */
 proto.pb.EnterBattle.prototype.getSequenceNumber = function() {
-  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 3, 0));
-};
-
-
-/**
- * @param {number} value
- * @return {!proto.pb.EnterBattle} returns this
- */
-proto.pb.EnterBattle.prototype.setSequenceNumber = function(value) {
-  return jspb.Message.setProto3IntField(this, 3, value);
-};
-
-
-/**
- * optional int32 status = 4;
- * @return {number}
- */
-proto.pb.EnterBattle.prototype.getStatus = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 4, 0));
 };
 
@@ -2607,16 +2949,16 @@ proto.pb.EnterBattle.prototype.getStatus = function() {
  * @param {number} value
  * @return {!proto.pb.EnterBattle} returns this
  */
-proto.pb.EnterBattle.prototype.setStatus = function(value) {
+proto.pb.EnterBattle.prototype.setSequenceNumber = function(value) {
   return jspb.Message.setProto3IntField(this, 4, value);
 };
 
 
 /**
- * optional int32 add_time = 5;
+ * optional int32 status = 5;
  * @return {number}
  */
-proto.pb.EnterBattle.prototype.getAddTime = function() {
+proto.pb.EnterBattle.prototype.getStatus = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 5, 0));
 };
 
@@ -2625,16 +2967,16 @@ proto.pb.EnterBattle.prototype.getAddTime = function() {
  * @param {number} value
  * @return {!proto.pb.EnterBattle} returns this
  */
-proto.pb.EnterBattle.prototype.setAddTime = function(value) {
+proto.pb.EnterBattle.prototype.setStatus = function(value) {
   return jspb.Message.setProto3IntField(this, 5, value);
 };
 
 
 /**
- * optional int64 time = 6;
+ * optional int32 add_time = 6;
  * @return {number}
  */
-proto.pb.EnterBattle.prototype.getTime = function() {
+proto.pb.EnterBattle.prototype.getAddTime = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 6, 0));
 };
 
@@ -2643,17 +2985,35 @@ proto.pb.EnterBattle.prototype.getTime = function() {
  * @param {number} value
  * @return {!proto.pb.EnterBattle} returns this
  */
-proto.pb.EnterBattle.prototype.setTime = function(value) {
+proto.pb.EnterBattle.prototype.setAddTime = function(value) {
   return jspb.Message.setProto3IntField(this, 6, value);
 };
 
 
 /**
- * optional string udp_port = 7;
+ * optional int64 time = 7;
+ * @return {number}
+ */
+proto.pb.EnterBattle.prototype.getTime = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 7, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.pb.EnterBattle} returns this
+ */
+proto.pb.EnterBattle.prototype.setTime = function(value) {
+  return jspb.Message.setProto3IntField(this, 7, value);
+};
+
+
+/**
+ * optional string udp_port = 8;
  * @return {string}
  */
 proto.pb.EnterBattle.prototype.getUdpPort = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 7, ""));
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 8, ""));
 };
 
 
@@ -2662,16 +3022,16 @@ proto.pb.EnterBattle.prototype.getUdpPort = function() {
  * @return {!proto.pb.EnterBattle} returns this
  */
 proto.pb.EnterBattle.prototype.setUdpPort = function(value) {
-  return jspb.Message.setProto3StringField(this, 7, value);
+  return jspb.Message.setProto3StringField(this, 8, value);
 };
 
 
 /**
- * repeated int32 player_ids = 8;
+ * repeated int32 player_ids = 9;
  * @return {!Array<number>}
  */
 proto.pb.EnterBattle.prototype.getPlayerIdsList = function() {
-  return /** @type {!Array<number>} */ (jspb.Message.getRepeatedField(this, 8));
+  return /** @type {!Array<number>} */ (jspb.Message.getRepeatedField(this, 9));
 };
 
 
@@ -2680,7 +3040,7 @@ proto.pb.EnterBattle.prototype.getPlayerIdsList = function() {
  * @return {!proto.pb.EnterBattle} returns this
  */
 proto.pb.EnterBattle.prototype.setPlayerIdsList = function(value) {
-  return jspb.Message.setField(this, 8, value || []);
+  return jspb.Message.setField(this, 9, value || []);
 };
 
 
@@ -2690,7 +3050,7 @@ proto.pb.EnterBattle.prototype.setPlayerIdsList = function(value) {
  * @return {!proto.pb.EnterBattle} returns this
  */
 proto.pb.EnterBattle.prototype.addPlayerIds = function(value, opt_index) {
-  return jspb.Message.addToRepeatedField(this, 8, value, opt_index);
+  return jspb.Message.addToRepeatedField(this, 9, value, opt_index);
 };
 
 
@@ -2709,7 +3069,7 @@ proto.pb.EnterBattle.prototype.clearPlayerIdsList = function() {
  * @private {!Array<number>}
  * @const
  */
-proto.pb.LogicFrame.repeatedFields_ = [4];
+proto.pb.LogicFrame.repeatedFields_ = [5];
 
 
 
@@ -2742,9 +3102,10 @@ proto.pb.LogicFrame.prototype.toObject = function(opt_includeInstance) {
  */
 proto.pb.LogicFrame.toObject = function(includeInstance, msg) {
   var f, obj = {
-    id: jspb.Message.getFieldWithDefault(msg, 1, 0),
-    roomId: jspb.Message.getFieldWithDefault(msg, 2, ""),
-    sequenceNumber: jspb.Message.getFieldWithDefault(msg, 3, 0),
+    sourceUid: jspb.Message.getFieldWithDefault(msg, 1, 0),
+    id: jspb.Message.getFieldWithDefault(msg, 2, 0),
+    roomId: jspb.Message.getFieldWithDefault(msg, 3, ""),
+    sequenceNumber: jspb.Message.getFieldWithDefault(msg, 4, 0),
     operationsList: jspb.Message.toObjectList(msg.getOperationsList(),
     proto.pb.Operation.toObject, includeInstance)
   };
@@ -2785,17 +3146,21 @@ proto.pb.LogicFrame.deserializeBinaryFromReader = function(msg, reader) {
     switch (field) {
     case 1:
       var value = /** @type {number} */ (reader.readInt32());
-      msg.setId(value);
+      msg.setSourceUid(value);
       break;
     case 2:
+      var value = /** @type {number} */ (reader.readInt32());
+      msg.setId(value);
+      break;
+    case 3:
       var value = /** @type {string} */ (reader.readString());
       msg.setRoomId(value);
       break;
-    case 3:
+    case 4:
       var value = /** @type {number} */ (reader.readInt32());
       msg.setSequenceNumber(value);
       break;
-    case 4:
+    case 5:
       var value = new proto.pb.Operation;
       reader.readMessage(value,proto.pb.Operation.deserializeBinaryFromReader);
       msg.addOperations(value);
@@ -2829,31 +3194,38 @@ proto.pb.LogicFrame.prototype.serializeBinary = function() {
  */
 proto.pb.LogicFrame.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
-  f = message.getId();
+  f = message.getSourceUid();
   if (f !== 0) {
     writer.writeInt32(
       1,
       f
     );
   }
+  f = message.getId();
+  if (f !== 0) {
+    writer.writeInt32(
+      2,
+      f
+    );
+  }
   f = message.getRoomId();
   if (f.length > 0) {
     writer.writeString(
-      2,
+      3,
       f
     );
   }
   f = message.getSequenceNumber();
   if (f !== 0) {
     writer.writeInt32(
-      3,
+      4,
       f
     );
   }
   f = message.getOperationsList();
   if (f.length > 0) {
     writer.writeRepeatedMessage(
-      4,
+      5,
       f,
       proto.pb.Operation.serializeBinaryToWriter
     );
@@ -2862,10 +3234,10 @@ proto.pb.LogicFrame.serializeBinaryToWriter = function(message, writer) {
 
 
 /**
- * optional int32 id = 1;
+ * optional int32 source_uid = 1;
  * @return {number}
  */
-proto.pb.LogicFrame.prototype.getId = function() {
+proto.pb.LogicFrame.prototype.getSourceUid = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 1, 0));
 };
 
@@ -2874,17 +3246,35 @@ proto.pb.LogicFrame.prototype.getId = function() {
  * @param {number} value
  * @return {!proto.pb.LogicFrame} returns this
  */
-proto.pb.LogicFrame.prototype.setId = function(value) {
+proto.pb.LogicFrame.prototype.setSourceUid = function(value) {
   return jspb.Message.setProto3IntField(this, 1, value);
 };
 
 
 /**
- * optional string room_id = 2;
+ * optional int32 id = 2;
+ * @return {number}
+ */
+proto.pb.LogicFrame.prototype.getId = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 2, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.pb.LogicFrame} returns this
+ */
+proto.pb.LogicFrame.prototype.setId = function(value) {
+  return jspb.Message.setProto3IntField(this, 2, value);
+};
+
+
+/**
+ * optional string room_id = 3;
  * @return {string}
  */
 proto.pb.LogicFrame.prototype.getRoomId = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 2, ""));
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 3, ""));
 };
 
 
@@ -2893,16 +3283,16 @@ proto.pb.LogicFrame.prototype.getRoomId = function() {
  * @return {!proto.pb.LogicFrame} returns this
  */
 proto.pb.LogicFrame.prototype.setRoomId = function(value) {
-  return jspb.Message.setProto3StringField(this, 2, value);
+  return jspb.Message.setProto3StringField(this, 3, value);
 };
 
 
 /**
- * optional int32 sequence_number = 3;
+ * optional int32 sequence_number = 4;
  * @return {number}
  */
 proto.pb.LogicFrame.prototype.getSequenceNumber = function() {
-  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 3, 0));
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 4, 0));
 };
 
 
@@ -2911,17 +3301,17 @@ proto.pb.LogicFrame.prototype.getSequenceNumber = function() {
  * @return {!proto.pb.LogicFrame} returns this
  */
 proto.pb.LogicFrame.prototype.setSequenceNumber = function(value) {
-  return jspb.Message.setProto3IntField(this, 3, value);
+  return jspb.Message.setProto3IntField(this, 4, value);
 };
 
 
 /**
- * repeated Operation operations = 4;
+ * repeated Operation operations = 5;
  * @return {!Array<!proto.pb.Operation>}
  */
 proto.pb.LogicFrame.prototype.getOperationsList = function() {
   return /** @type{!Array<!proto.pb.Operation>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.pb.Operation, 4));
+    jspb.Message.getRepeatedWrapperField(this, proto.pb.Operation, 5));
 };
 
 
@@ -2930,7 +3320,7 @@ proto.pb.LogicFrame.prototype.getOperationsList = function() {
  * @return {!proto.pb.LogicFrame} returns this
 */
 proto.pb.LogicFrame.prototype.setOperationsList = function(value) {
-  return jspb.Message.setRepeatedWrapperField(this, 4, value);
+  return jspb.Message.setRepeatedWrapperField(this, 5, value);
 };
 
 
@@ -2940,7 +3330,7 @@ proto.pb.LogicFrame.prototype.setOperationsList = function(value) {
  * @return {!proto.pb.Operation}
  */
 proto.pb.LogicFrame.prototype.addOperations = function(opt_value, opt_index) {
-  return jspb.Message.addToRepeatedWrapperField(this, 4, opt_value, proto.pb.Operation, opt_index);
+  return jspb.Message.addToRepeatedWrapperField(this, 5, opt_value, proto.pb.Operation, opt_index);
 };
 
 
@@ -2985,10 +3375,11 @@ proto.pb.Operation.prototype.toObject = function(opt_includeInstance) {
  */
 proto.pb.Operation.toObject = function(includeInstance, msg) {
   var f, obj = {
-    id: jspb.Message.getFieldWithDefault(msg, 1, 0),
-    event: jspb.Message.getFieldWithDefault(msg, 2, ""),
-    value: jspb.Message.getFieldWithDefault(msg, 3, ""),
-    playerId: jspb.Message.getFieldWithDefault(msg, 4, 0)
+    sourceUid: jspb.Message.getFieldWithDefault(msg, 1, 0),
+    id: jspb.Message.getFieldWithDefault(msg, 2, 0),
+    event: jspb.Message.getFieldWithDefault(msg, 3, ""),
+    value: jspb.Message.getFieldWithDefault(msg, 4, ""),
+    playerId: jspb.Message.getFieldWithDefault(msg, 5, 0)
   };
 
   if (includeInstance) {
@@ -3027,17 +3418,21 @@ proto.pb.Operation.deserializeBinaryFromReader = function(msg, reader) {
     switch (field) {
     case 1:
       var value = /** @type {number} */ (reader.readInt32());
-      msg.setId(value);
+      msg.setSourceUid(value);
       break;
     case 2:
-      var value = /** @type {string} */ (reader.readString());
-      msg.setEvent(value);
+      var value = /** @type {number} */ (reader.readInt32());
+      msg.setId(value);
       break;
     case 3:
       var value = /** @type {string} */ (reader.readString());
-      msg.setValue(value);
+      msg.setEvent(value);
       break;
     case 4:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setValue(value);
+      break;
+    case 5:
       var value = /** @type {number} */ (reader.readInt32());
       msg.setPlayerId(value);
       break;
@@ -3070,31 +3465,38 @@ proto.pb.Operation.prototype.serializeBinary = function() {
  */
 proto.pb.Operation.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
-  f = message.getId();
+  f = message.getSourceUid();
   if (f !== 0) {
     writer.writeInt32(
       1,
       f
     );
   }
-  f = message.getEvent();
-  if (f.length > 0) {
-    writer.writeString(
+  f = message.getId();
+  if (f !== 0) {
+    writer.writeInt32(
       2,
       f
     );
   }
-  f = message.getValue();
+  f = message.getEvent();
   if (f.length > 0) {
     writer.writeString(
       3,
       f
     );
   }
+  f = message.getValue();
+  if (f.length > 0) {
+    writer.writeString(
+      4,
+      f
+    );
+  }
   f = message.getPlayerId();
   if (f !== 0) {
     writer.writeInt32(
-      4,
+      5,
       f
     );
   }
@@ -3102,10 +3504,10 @@ proto.pb.Operation.serializeBinaryToWriter = function(message, writer) {
 
 
 /**
- * optional int32 id = 1;
+ * optional int32 source_uid = 1;
  * @return {number}
  */
-proto.pb.Operation.prototype.getId = function() {
+proto.pb.Operation.prototype.getSourceUid = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 1, 0));
 };
 
@@ -3114,34 +3516,34 @@ proto.pb.Operation.prototype.getId = function() {
  * @param {number} value
  * @return {!proto.pb.Operation} returns this
  */
-proto.pb.Operation.prototype.setId = function(value) {
+proto.pb.Operation.prototype.setSourceUid = function(value) {
   return jspb.Message.setProto3IntField(this, 1, value);
 };
 
 
 /**
- * optional string event = 2;
+ * optional int32 id = 2;
+ * @return {number}
+ */
+proto.pb.Operation.prototype.getId = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 2, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.pb.Operation} returns this
+ */
+proto.pb.Operation.prototype.setId = function(value) {
+  return jspb.Message.setProto3IntField(this, 2, value);
+};
+
+
+/**
+ * optional string event = 3;
  * @return {string}
  */
 proto.pb.Operation.prototype.getEvent = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 2, ""));
-};
-
-
-/**
- * @param {string} value
- * @return {!proto.pb.Operation} returns this
- */
-proto.pb.Operation.prototype.setEvent = function(value) {
-  return jspb.Message.setProto3StringField(this, 2, value);
-};
-
-
-/**
- * optional string value = 3;
- * @return {string}
- */
-proto.pb.Operation.prototype.getValue = function() {
   return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 3, ""));
 };
 
@@ -3150,17 +3552,35 @@ proto.pb.Operation.prototype.getValue = function() {
  * @param {string} value
  * @return {!proto.pb.Operation} returns this
  */
-proto.pb.Operation.prototype.setValue = function(value) {
+proto.pb.Operation.prototype.setEvent = function(value) {
   return jspb.Message.setProto3StringField(this, 3, value);
 };
 
 
 /**
- * optional int32 player_id = 4;
+ * optional string value = 4;
+ * @return {string}
+ */
+proto.pb.Operation.prototype.getValue = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 4, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.pb.Operation} returns this
+ */
+proto.pb.Operation.prototype.setValue = function(value) {
+  return jspb.Message.setProto3StringField(this, 4, value);
+};
+
+
+/**
+ * optional int32 player_id = 5;
  * @return {number}
  */
 proto.pb.Operation.prototype.getPlayerId = function() {
-  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 4, 0));
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 5, 0));
 };
 
 
@@ -3169,7 +3589,7 @@ proto.pb.Operation.prototype.getPlayerId = function() {
  * @return {!proto.pb.Operation} returns this
  */
 proto.pb.Operation.prototype.setPlayerId = function(value) {
-  return jspb.Message.setProto3IntField(this, 4, value);
+  return jspb.Message.setProto3IntField(this, 5, value);
 };
 
 
@@ -3205,7 +3625,8 @@ proto.pb.ReadyTimeout.prototype.toObject = function(opt_includeInstance) {
  */
 proto.pb.ReadyTimeout.toObject = function(includeInstance, msg) {
   var f, obj = {
-    roomId: jspb.Message.getFieldWithDefault(msg, 1, "")
+    sourceUid: jspb.Message.getFieldWithDefault(msg, 1, 0),
+    roomId: jspb.Message.getFieldWithDefault(msg, 2, "")
   };
 
   if (includeInstance) {
@@ -3243,6 +3664,10 @@ proto.pb.ReadyTimeout.deserializeBinaryFromReader = function(msg, reader) {
     var field = reader.getFieldNumber();
     switch (field) {
     case 1:
+      var value = /** @type {number} */ (reader.readInt32());
+      msg.setSourceUid(value);
+      break;
+    case 2:
       var value = /** @type {string} */ (reader.readString());
       msg.setRoomId(value);
       break;
@@ -3275,10 +3700,17 @@ proto.pb.ReadyTimeout.prototype.serializeBinary = function() {
  */
 proto.pb.ReadyTimeout.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
+  f = message.getSourceUid();
+  if (f !== 0) {
+    writer.writeInt32(
+      1,
+      f
+    );
+  }
   f = message.getRoomId();
   if (f.length > 0) {
     writer.writeString(
-      1,
+      2,
       f
     );
   }
@@ -3286,11 +3718,29 @@ proto.pb.ReadyTimeout.serializeBinaryToWriter = function(message, writer) {
 
 
 /**
- * optional string room_id = 1;
+ * optional int32 source_uid = 1;
+ * @return {number}
+ */
+proto.pb.ReadyTimeout.prototype.getSourceUid = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 1, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.pb.ReadyTimeout} returns this
+ */
+proto.pb.ReadyTimeout.prototype.setSourceUid = function(value) {
+  return jspb.Message.setProto3IntField(this, 1, value);
+};
+
+
+/**
+ * optional string room_id = 2;
  * @return {string}
  */
 proto.pb.ReadyTimeout.prototype.getRoomId = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 1, ""));
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 2, ""));
 };
 
 
@@ -3299,7 +3749,7 @@ proto.pb.ReadyTimeout.prototype.getRoomId = function() {
  * @return {!proto.pb.ReadyTimeout} returns this
  */
 proto.pb.ReadyTimeout.prototype.setRoomId = function(value) {
-  return jspb.Message.setProto3StringField(this, 1, value);
+  return jspb.Message.setProto3StringField(this, 2, value);
 };
 
 
@@ -3309,7 +3759,7 @@ proto.pb.ReadyTimeout.prototype.setRoomId = function(value) {
  * @private {!Array<number>}
  * @const
  */
-proto.pb.RestartGame.repeatedFields_ = [2];
+proto.pb.RestartGame.repeatedFields_ = [3];
 
 
 
@@ -3342,8 +3792,9 @@ proto.pb.RestartGame.prototype.toObject = function(opt_includeInstance) {
  */
 proto.pb.RestartGame.toObject = function(includeInstance, msg) {
   var f, obj = {
-    roomId: jspb.Message.getFieldWithDefault(msg, 1, ""),
-    playerIdsList: (f = jspb.Message.getRepeatedField(msg, 2)) == null ? undefined : f
+    sourceUid: jspb.Message.getFieldWithDefault(msg, 1, 0),
+    roomId: jspb.Message.getFieldWithDefault(msg, 2, ""),
+    playerIdsList: (f = jspb.Message.getRepeatedField(msg, 3)) == null ? undefined : f
   };
 
   if (includeInstance) {
@@ -3381,10 +3832,14 @@ proto.pb.RestartGame.deserializeBinaryFromReader = function(msg, reader) {
     var field = reader.getFieldNumber();
     switch (field) {
     case 1:
+      var value = /** @type {number} */ (reader.readInt32());
+      msg.setSourceUid(value);
+      break;
+    case 2:
       var value = /** @type {string} */ (reader.readString());
       msg.setRoomId(value);
       break;
-    case 2:
+    case 3:
       var values = /** @type {!Array<number>} */ (reader.isDelimited() ? reader.readPackedInt32() : [reader.readInt32()]);
       for (var i = 0; i < values.length; i++) {
         msg.addPlayerIds(values[i]);
@@ -3419,17 +3874,24 @@ proto.pb.RestartGame.prototype.serializeBinary = function() {
  */
 proto.pb.RestartGame.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
+  f = message.getSourceUid();
+  if (f !== 0) {
+    writer.writeInt32(
+      1,
+      f
+    );
+  }
   f = message.getRoomId();
   if (f.length > 0) {
     writer.writeString(
-      1,
+      2,
       f
     );
   }
   f = message.getPlayerIdsList();
   if (f.length > 0) {
     writer.writePackedInt32(
-      2,
+      3,
       f
     );
   }
@@ -3437,11 +3899,29 @@ proto.pb.RestartGame.serializeBinaryToWriter = function(message, writer) {
 
 
 /**
- * optional string room_id = 1;
+ * optional int32 source_uid = 1;
+ * @return {number}
+ */
+proto.pb.RestartGame.prototype.getSourceUid = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 1, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.pb.RestartGame} returns this
+ */
+proto.pb.RestartGame.prototype.setSourceUid = function(value) {
+  return jspb.Message.setProto3IntField(this, 1, value);
+};
+
+
+/**
+ * optional string room_id = 2;
  * @return {string}
  */
 proto.pb.RestartGame.prototype.getRoomId = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 1, ""));
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 2, ""));
 };
 
 
@@ -3450,16 +3930,16 @@ proto.pb.RestartGame.prototype.getRoomId = function() {
  * @return {!proto.pb.RestartGame} returns this
  */
 proto.pb.RestartGame.prototype.setRoomId = function(value) {
-  return jspb.Message.setProto3StringField(this, 1, value);
+  return jspb.Message.setProto3StringField(this, 2, value);
 };
 
 
 /**
- * repeated int32 player_ids = 2;
+ * repeated int32 player_ids = 3;
  * @return {!Array<number>}
  */
 proto.pb.RestartGame.prototype.getPlayerIdsList = function() {
-  return /** @type {!Array<number>} */ (jspb.Message.getRepeatedField(this, 2));
+  return /** @type {!Array<number>} */ (jspb.Message.getRepeatedField(this, 3));
 };
 
 
@@ -3468,7 +3948,7 @@ proto.pb.RestartGame.prototype.getPlayerIdsList = function() {
  * @return {!proto.pb.RestartGame} returns this
  */
 proto.pb.RestartGame.prototype.setPlayerIdsList = function(value) {
-  return jspb.Message.setField(this, 2, value || []);
+  return jspb.Message.setField(this, 3, value || []);
 };
 
 
@@ -3478,7 +3958,7 @@ proto.pb.RestartGame.prototype.setPlayerIdsList = function(value) {
  * @return {!proto.pb.RestartGame} returns this
  */
 proto.pb.RestartGame.prototype.addPlayerIds = function(value, opt_index) {
-  return jspb.Message.addToRepeatedField(this, 2, value, opt_index);
+  return jspb.Message.addToRepeatedField(this, 3, value, opt_index);
 };
 
 

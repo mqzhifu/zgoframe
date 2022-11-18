@@ -121,6 +121,7 @@ func RegGinHttpRoute() {
 		router.TwinAgora(PrivateGroup)
 		router.User(PrivateGroup)
 		router.Mail(PrivateGroup)
+		router.FrameSync(PrivateGroup)
 	}
 	//3方回调的请求
 	nobodyGroup := global.V.Gin.Group("")

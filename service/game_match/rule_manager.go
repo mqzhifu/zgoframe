@@ -12,8 +12,10 @@ import (
 
 type Rule struct {
 	model.GameMatchRule `json:"model.game_match_rule"`
+	Prefix              string         `json:"prefix"`
 	Status              int            `json:"status"`
-	DemonDebugTime      int            `json:"demon_debug_time"`
+	DemonDebugTime      int            `json:"demon_debug_time"`      //守护协程，在没有处理数据时，需要输出日志，太多，每X秒输出一次
+	DemonDebugShowTime  int            `json:"demon_debug_show_time"` //配合上面一起使用，用于记录一次的输出时间
 	QueueSign           *QueueSign     `json:"-"`
 	QueueSuccess        *QueueSuccess  `json:"-"`
 	Push                *Push          `json:"-"`
@@ -84,10 +86,12 @@ func (ruleManager *RuleManager) InitData() (err error) {
 		}
 
 		oneRule := Rule{}
+		oneRule.DemonDebugTime = ruleManager.Option.GameMatch.Option.RuleDebugShow
+		oneRule.Prefix = ruleManager.Option.GameMatch.prefix + "_rule_" + strconv.Itoa(rule.Id)
 		oneRule.Status = service.GAME_MATCH_RULE_STATUS_INIT
 		oneRule.RuleManager = ruleManager
 		oneRule.GameMatchRule = rule
-		oneRule.DemonDebugTime = 20
+		oneRule.DemonDebugTime = 5
 		err = ruleManager.CheckRule(oneRule)
 		if err != nil {
 			return err
@@ -108,6 +112,14 @@ func (ruleManager *RuleManager) InitData() (err error) {
 	return nil
 }
 
+//每10秒 输出一次，避免日志过多
+func (rule *Rule) NothingToDoLog(msg string) {
+	now := util.GetNowTimeSecondToInt()
+	if now%rule.DemonDebugTime == 0 && now != rule.DemonDebugShowTime {
+		rule.DemonDebugShowTime = now
+		rule.RuleManager.Log.Info(msg)
+	}
+}
 func (ruleManager *RuleManager) GetDataByDb() (list []model.GameMatchRule, err error) {
 	err = ruleManager.Option.Gorm.Where("status = 1").Find(&list).Error
 	if err != nil {
@@ -239,7 +251,7 @@ func (ruleManager *RuleManager) CheckRule(rule Rule) error {
 		return ruleManager.Err.New(608) //614
 	}
 
-	if rule.TeamMaxPeople > ruleManager.Option.GameMatch.RuleTeamMaxPeople {
+	if rule.TeamMaxPeople > ruleManager.Option.GameMatch.Option.RuleTeamMaxPeople {
 		return ruleManager.Err.New(615)
 	}
 
@@ -256,24 +268,24 @@ func (ruleManager *RuleManager) CheckRule(rule Rule) error {
 			return errors.New("组队互相撕杀，仅支持两个队伍，每个队伍最大支持5人， 剩2 肯定是 < 10人的")
 		}
 	} else if rule.Type == service.RULE_TYPE_TEAM_EACH_OTHER {
-		if rule.ConditionPeople > ruleManager.Option.GameMatch.RulePersonConditionMax {
-			return ruleManager.Err.NewReplace(611, ruleManager.Err.MakeOneStringReplace(strconv.Itoa(ruleManager.Option.GameMatch.RulePersonConditionMax)))
+		if rule.ConditionPeople > ruleManager.Option.GameMatch.Option.RulePersonConditionMax {
+			return ruleManager.Err.NewReplace(611, ruleManager.Err.MakeOneStringReplace(strconv.Itoa(ruleManager.Option.GameMatch.Option.RulePersonConditionMax)))
 		}
 	} else {
 		return ruleManager.Err.New(607)
 	}
 
-	if rule.MatchTimeout < ruleManager.Option.GameMatch.RuleMatchTimeoutMin || rule.MatchTimeout > ruleManager.Option.GameMatch.RuleMatchTimeoutMax {
+	if rule.MatchTimeout < ruleManager.Option.GameMatch.Option.RuleMatchTimeoutMin || rule.MatchTimeout > ruleManager.Option.GameMatch.Option.RuleMatchTimeoutMax {
 		msg := make(map[int]string)
-		msg[0] = strconv.Itoa(ruleManager.Option.GameMatch.RuleMatchTimeoutMin)
-		msg[1] = strconv.Itoa(ruleManager.Option.GameMatch.RuleMatchTimeoutMax)
+		msg[0] = strconv.Itoa(ruleManager.Option.GameMatch.Option.RuleMatchTimeoutMin)
+		msg[1] = strconv.Itoa(ruleManager.Option.GameMatch.Option.RuleMatchTimeoutMax)
 		return ruleManager.Err.NewReplace(612, msg)
 	}
 
-	if rule.SuccessTimeout < ruleManager.Option.GameMatch.RuleSuccessTimeoutMin || rule.SuccessTimeout > ruleManager.Option.GameMatch.RuleSuccessTimeoutMax {
+	if rule.SuccessTimeout < ruleManager.Option.GameMatch.Option.RuleSuccessTimeoutMin || rule.SuccessTimeout > ruleManager.Option.GameMatch.Option.RuleSuccessTimeoutMax {
 		msg := make(map[int]string)
-		msg[0] = strconv.Itoa(ruleManager.Option.GameMatch.RuleSuccessTimeoutMin)
-		msg[1] = strconv.Itoa(ruleManager.Option.GameMatch.RuleSuccessTimeoutMax)
+		msg[0] = strconv.Itoa(ruleManager.Option.GameMatch.Option.RuleSuccessTimeoutMin)
+		msg[1] = strconv.Itoa(ruleManager.Option.GameMatch.Option.RuleSuccessTimeoutMax)
 		return ruleManager.Err.NewReplace(613, msg)
 	}
 
@@ -282,7 +294,7 @@ func (ruleManager *RuleManager) CheckRule(rule Rule) error {
 			return ruleManager.Err.New(617)
 		}
 
-		if rule.WeightScoreMax > ruleManager.Option.GameMatch.WeightMaxValue {
+		if rule.WeightScoreMax > ruleManager.Option.GameMatch.Option.WeightMaxValue {
 			return errors.New("rule > WeightMaxValue")
 		}
 	}

@@ -38,7 +38,7 @@ func NewQueueSign(rule *Rule) *QueueSign {
 	queueSign.Log = rule.RuleManager.Option.GameMatch.Option.Log
 	queueSign.Err = rule.RuleManager.Option.GameMatch.Err
 	queueSign.CloseChan = make(chan int)
-	queueSign.Prefix = "sign"
+	queueSign.Prefix = rule.Prefix + "_sign"
 	return queueSign
 }
 
@@ -503,10 +503,7 @@ func (queueSign *QueueSign) CheckTimeout() {
 	}
 
 	if len(res) == 0 {
-		//每 10秒 输出一行日志，不然日志太多
-		if now%10 == 0 {
-			queueSign.Log.Warn("queueSign CheckTimeout empty , no need process")
-		}
+		queueSign.Rule.NothingToDoLog("queueSign CheckTimeout empty , no need process")
 		return
 	}
 	//走到这里，证明，redis 中已有 玩家 报名失效了，需要做处理了

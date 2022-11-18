@@ -1,9 +1,9 @@
 //=========
-function Sync (playerId,token,data,DomIdPreObj,contentType,protocolType,playerInfo){
+function Sync (playerId,token,GatewayConfig,DomIdPreObj,contentType,protocolType,playerInfo,actionMap,frameSyncConfig){
     var self = this;
     this.wsObj = null;//js内置ws 对象
     //ws 连接 s 端地址
-    this.hostUri = "ws://"+data.outIp + ":"+ data.wsPort + data.wsUri;
+    this.hostUri = "ws://"+GatewayConfig.outIp + ":"+ GatewayConfig.wsPort + GatewayConfig.wsUri;
     this.statusDesc = {
         1:"init",
         2:"wsLInkSuccess",
@@ -40,7 +40,7 @@ function Sync (playerId,token,data,DomIdPreObj,contentType,protocolType,playerIn
     this.playerCommandPushLock = 0;
     //下面是帧同步初始化信息，是由S端供给
     this.roomId = "";
-    this.actionMap = data.actionMap;
+    this.actionMap = actionMap;
     this.sequenceNumber = 0;
     this.randSeek = 0;
     this.sessionId = "";

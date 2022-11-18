@@ -8,8 +8,8 @@ import (
 )
 
 type ErrInfo struct {
-	Code int
-	Msg  string
+	Code int    `json:"code"`
+	Msg  string `json:"msg"`
 }
 
 func (errInfo *ErrInfo) Error() string {
@@ -21,9 +21,9 @@ func (errInfo *ErrInfo) GetCode() int {
 }
 
 type ErrMsg struct {
-	LangPathFile string
-	Log          *zap.Logger
-	Pool         map[int]ErrInfo
+	LangPathFile string          `json:"lang_path_file"`
+	Log          *zap.Logger     `json:"-"`
+	Pool         map[int]ErrInfo `json:"pool"`
 }
 
 func NewErrMsg(log *zap.Logger, langPathFile string) (*ErrMsg, error) {

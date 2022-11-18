@@ -61,11 +61,13 @@
     //后端HTTP 域名
     var domain = window.location.host;
     //S端URL - 配置信息,IP 端口 协议类型
-    var serverHostUri = "http://"+domain + "/gateway/config";
+    var gatewayConfigHostUri = "http://"+domain + "/gateway/config";
     //S端URL - 通讯协议的协议号
     var actionMapHostUri = "http://"+domain + "/gateway/action/map";
     //S端URL - 登陆接口
     var loginUrl = "http://"+domain + "/base/login"
+    //rule
+    var ruleHostUri = "http://"+domain + "/game/match/rule/";
     //用户名公共前缀
     var playerNamePrefix = "frame_sync_"
     // var playerNumber = 1;
@@ -95,6 +97,10 @@
         "moveDown":"moveDown_",
     };
 
+    var GatewayConfig = {};//网关配置信息，用于长连接
+    var ActionMap = {};//长连接的 函数 配置信息
+    var Rule = {};
+    var RuleId = 2;
     function GetPlayerNameByIndex(index){
         return playerNamePrefix + index;
     }
@@ -103,13 +109,15 @@
     function init(){
         showLocalConfig();
         playerLogin();//玩家登陆，初始化信息 name token
-        initServerConfig();//获取 后端 连接相关信息, 非异步
+        initGatewayConfig();//获取 后端 连接相关信息, 非异步
         initActionMap();//获取 长连接 接口ID 号等，用于映射, 非异步
+        initRule();//rule 配置信息
 
+        return 1;
         //基础信息，获取结束，开始 初始化 玩家同步相关信息
         for (var i=1;i<=playerMax;i++){
             var playerInfo = playerList[GetPlayerNameByIndex(i)];
-            initPlayer(playerInfo,"p"+i,ServerConfig);
+            initPlayer(playerInfo,"p"+i);
         }
     }
 
@@ -119,23 +127,37 @@
         $("#local_config_table").html(html);
     }
 
-    var ServerConfig = {};
-    function initServerConfig(){
+    function initRule(){
         $.ajax({
             type: "GET",
             async:false,
             headers: {
                 "X-Token":playerList[GetPlayerNameByIndex(1)].token,
             },
-            url:serverHostUri,
+            url:ruleHostUri + RuleId ,
+            success: function(data){
+                console.log("initRule:",data);
+            }
+        });
+    }
+
+
+    function initGatewayConfig(){
+        $.ajax({
+            type: "GET",
+            async:false,
+            headers: {
+                "X-Token":playerList[GetPlayerNameByIndex(1)].token,
+            },
+            url:gatewayConfigHostUri,
             success: function(data){
                 // alert(data.code);
                 processHtml(data.data);
-                ServerConfig = data.data;
+                GatewayConfig = data.data;
             }
         });
 
-        function processHtml (data){``
+        function processHtml (data){
 
             var showServerCfg = ["outIp","wsUri","wsPort","offLineWaitTime","matchGroupPeople","fps","roomReadyTimeout","connTimeout"]
             var html = "";
@@ -165,18 +187,18 @@
             },
             url:actionMapHostUri,
             success: function(dataActionMap){
-                ServerConfig.actionMap = dataActionMap.data;
+                ActionMap = dataActionMap.data;
             }
         });
     }
     //初始化一个玩家的场景
-    function initPlayer(player,divId,data){
+    function initPlayer(player,divId){
         //创建一个玩家相关的所有DIV的ID，主要是ID 是由前缀+PID 动态生成 的
         var DomIdPreObj = getPlayerDomIdPreObj(player.id);
         DomIdPreObj.playerId = player.id;
 
         console.log("token:",player.token);
-        var wsObj = new Sync(player.id, player.token, data, DomIdPreObj,contentType,protocolType,player);
+        var wsObj = new Sync(player.id, player.token, GatewayConfig, DomIdPreObj,contentType,protocolType,player,ActionMap);
 
         var html = getTemplateHtml();
         html = ReplaceTemplateHtml(html,DomIdPreObj);

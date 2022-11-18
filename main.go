@@ -63,6 +63,8 @@ var initializeVar *initialize.Initialize
 // @tag.description 3方回调/推送通知
 // @tag.name GameMatch
 // @tag.description 游戏匹配机制
+// @tag.name FrameSync
+// @tag.description 帧同步
 // @tag.name persistence
 // @tag.description 持久化(文件/日志收集
 // @tag.name file

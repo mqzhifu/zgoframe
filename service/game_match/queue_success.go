@@ -48,7 +48,7 @@ func NewQueueSuccess(rule *Rule) *QueueSuccess {
 	queueSuccess.Log = rule.RuleManager.Option.GameMatch.Option.Log
 	queueSuccess.Err = rule.RuleManager.Option.GameMatch.Err
 	queueSuccess.CloseChan = make(chan int)
-	queueSuccess.prefix = "success"
+	queueSuccess.prefix = rule.Prefix + "_success"
 	queueSuccess.RedisIdSeparator = rule.RuleManager.Option.GameMatch.Option.RedisIdSeparator
 	queueSuccess.RedisPayloadSeparation = rule.RuleManager.Option.GameMatch.Option.RedisPayloadSeparation
 	return queueSuccess
@@ -303,7 +303,7 @@ func (queueSuccess *QueueSuccess) Demon() {
 			goto forEnd
 		default:
 			queueSuccess.CheckTimeout()
-			time.Sleep(time.Millisecond * time.Duration(queueSuccess.Rule.RuleManager.Option.GameMatch.LoopSleepTime))
+			time.Sleep(time.Millisecond * time.Duration(queueSuccess.Rule.RuleManager.Option.GameMatch.Option.LoopSleepTime))
 		}
 	}
 forEnd:
@@ -324,9 +324,7 @@ func (queueSuccess *QueueSuccess) CheckTimeout() {
 		return
 	}
 	if len(res) == 0 {
-		if now%queueSuccess.Rule.DemonDebugTime == 0 { //每10秒 输出一次，避免日志过多
-			queueSuccess.Log.Info(queueSuccess.prefix + " timeout empty , no need process")
-		}
+		queueSuccess.Rule.NothingToDoLog(queueSuccess.prefix + " timeout empty , no need process")
 		return
 	}
 	queueSuccess.Log.Info("queueSuccess timeout group element total : " + strconv.Itoa(len(res)))

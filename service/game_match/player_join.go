@@ -58,7 +58,7 @@ func (gameMatch *GameMatch) PlayerJoin(form pb.GameMatchSign) (group Group, err 
 		return group, gameMatch.Err.NewReplace(410, errMsgMap)
 	}
 	//这里有个小问题，目前仅支持：每个组最多5人，回头我再优化
-	if lenPlayers > gameMatch.RuleTeamMaxPeople {
+	if lenPlayers > gameMatch.Option.RuleTeamMaxPeople {
 		return group, gameMatch.Err.New(411)
 	}
 
@@ -118,8 +118,8 @@ func (gameMatch *GameMatch) PlayerJoin(form pb.GameMatchSign) (group Group, err 
 		var playerWeightValue []float32
 		for k, p := range playerList {
 			onePlayerWeight := gameMatch.getPlayerWeightByFormula(rule.Formula, p.WeightAttrs)
-			if onePlayerWeight > float32(gameMatch.WeightMaxValue) {
-				onePlayerWeight = float32(gameMatch.WeightMaxValue)
+			if onePlayerWeight > float32(gameMatch.Option.WeightMaxValue) {
+				onePlayerWeight = float32(gameMatch.Option.WeightMaxValue)
 			}
 			weight += onePlayerWeight
 			playerWeightValue = append(playerWeightValue, onePlayerWeight)
@@ -238,7 +238,7 @@ func (gameMatch *GameMatch) Cancel(form pb.GameMatchPlayerCancel) error {
 //注： formula 不支持小数点，变量用尖括号：( <age> * 20 ) + ( <level> * 50)
 func (gameMatch *GameMatch) getPlayerWeightByFormula(formula string, MatchAttr map[string]int32) float32 {
 	//mylog.Debug("getPlayerWeightByFormula , formula:",formula)
-	grep := gameMatch.FormulaFirst + "([\\s\\S]*?)" + gameMatch.FormulaEnd
+	grep := gameMatch.Option.FormulaFirst + "([\\s\\S]*?)" + gameMatch.Option.FormulaEnd
 	var imgRE = regexp.MustCompile(grep)
 	findRs := imgRE.FindAllStringSubmatch(formula, -1)
 	//util.MyPrint("parse PlayerWeightByFormula : ", findRs)

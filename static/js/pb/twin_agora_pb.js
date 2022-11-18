@@ -281,7 +281,9 @@ proto.pb.Heartbeat.prototype.toObject = function(opt_includeInstance) {
  */
 proto.pb.Heartbeat.toObject = function(includeInstance, msg) {
   var f, obj = {
-    time: jspb.Message.getFieldWithDefault(msg, 1, 0)
+    sourceUid: jspb.Message.getFieldWithDefault(msg, 1, 0),
+    time: jspb.Message.getFieldWithDefault(msg, 2, 0),
+    reqTime: jspb.Message.getFieldWithDefault(msg, 3, 0)
   };
 
   if (includeInstance) {
@@ -319,8 +321,16 @@ proto.pb.Heartbeat.deserializeBinaryFromReader = function(msg, reader) {
     var field = reader.getFieldNumber();
     switch (field) {
     case 1:
+      var value = /** @type {number} */ (reader.readInt32());
+      msg.setSourceUid(value);
+      break;
+    case 2:
       var value = /** @type {number} */ (reader.readInt64());
       msg.setTime(value);
+      break;
+    case 3:
+      var value = /** @type {number} */ (reader.readInt64());
+      msg.setReqTime(value);
       break;
     default:
       reader.skipField();
@@ -351,10 +361,24 @@ proto.pb.Heartbeat.prototype.serializeBinary = function() {
  */
 proto.pb.Heartbeat.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
+  f = message.getSourceUid();
+  if (f !== 0) {
+    writer.writeInt32(
+      1,
+      f
+    );
+  }
   f = message.getTime();
   if (f !== 0) {
     writer.writeInt64(
-      1,
+      2,
+      f
+    );
+  }
+  f = message.getReqTime();
+  if (f !== 0) {
+    writer.writeInt64(
+      3,
       f
     );
   }
@@ -362,10 +386,10 @@ proto.pb.Heartbeat.serializeBinaryToWriter = function(message, writer) {
 
 
 /**
- * optional int64 time = 1;
+ * optional int32 source_uid = 1;
  * @return {number}
  */
-proto.pb.Heartbeat.prototype.getTime = function() {
+proto.pb.Heartbeat.prototype.getSourceUid = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 1, 0));
 };
 
@@ -374,8 +398,44 @@ proto.pb.Heartbeat.prototype.getTime = function() {
  * @param {number} value
  * @return {!proto.pb.Heartbeat} returns this
  */
-proto.pb.Heartbeat.prototype.setTime = function(value) {
+proto.pb.Heartbeat.prototype.setSourceUid = function(value) {
   return jspb.Message.setProto3IntField(this, 1, value);
+};
+
+
+/**
+ * optional int64 time = 2;
+ * @return {number}
+ */
+proto.pb.Heartbeat.prototype.getTime = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 2, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.pb.Heartbeat} returns this
+ */
+proto.pb.Heartbeat.prototype.setTime = function(value) {
+  return jspb.Message.setProto3IntField(this, 2, value);
+};
+
+
+/**
+ * optional int64 req_time = 3;
+ * @return {number}
+ */
+proto.pb.Heartbeat.prototype.getReqTime = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 3, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.pb.Heartbeat} returns this
+ */
+proto.pb.Heartbeat.prototype.setReqTime = function(value) {
+  return jspb.Message.setProto3IntField(this, 3, value);
 };
 
 
@@ -411,8 +471,11 @@ proto.pb.FDCloseEvent.prototype.toObject = function(opt_includeInstance) {
  */
 proto.pb.FDCloseEvent.toObject = function(includeInstance, msg) {
   var f, obj = {
-    userId: jspb.Message.getFieldWithDefault(msg, 1, 0),
-    source: jspb.Message.getFieldWithDefault(msg, 2, 0)
+    sourceUid: jspb.Message.getFieldWithDefault(msg, 1, 0),
+    userId: jspb.Message.getFieldWithDefault(msg, 2, 0),
+    source: jspb.Message.getFieldWithDefault(msg, 3, 0),
+    contentType: jspb.Message.getFieldWithDefault(msg, 4, 0),
+    protocolType: jspb.Message.getFieldWithDefault(msg, 5, 0)
   };
 
   if (includeInstance) {
@@ -451,11 +514,23 @@ proto.pb.FDCloseEvent.deserializeBinaryFromReader = function(msg, reader) {
     switch (field) {
     case 1:
       var value = /** @type {number} */ (reader.readInt32());
-      msg.setUserId(value);
+      msg.setSourceUid(value);
       break;
     case 2:
       var value = /** @type {number} */ (reader.readInt32());
+      msg.setUserId(value);
+      break;
+    case 3:
+      var value = /** @type {number} */ (reader.readInt32());
       msg.setSource(value);
+      break;
+    case 4:
+      var value = /** @type {number} */ (reader.readInt32());
+      msg.setContentType(value);
+      break;
+    case 5:
+      var value = /** @type {number} */ (reader.readInt32());
+      msg.setProtocolType(value);
       break;
     default:
       reader.skipField();
@@ -486,17 +561,38 @@ proto.pb.FDCloseEvent.prototype.serializeBinary = function() {
  */
 proto.pb.FDCloseEvent.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
-  f = message.getUserId();
+  f = message.getSourceUid();
   if (f !== 0) {
     writer.writeInt32(
       1,
       f
     );
   }
-  f = message.getSource();
+  f = message.getUserId();
   if (f !== 0) {
     writer.writeInt32(
       2,
+      f
+    );
+  }
+  f = message.getSource();
+  if (f !== 0) {
+    writer.writeInt32(
+      3,
+      f
+    );
+  }
+  f = message.getContentType();
+  if (f !== 0) {
+    writer.writeInt32(
+      4,
+      f
+    );
+  }
+  f = message.getProtocolType();
+  if (f !== 0) {
+    writer.writeInt32(
+      5,
       f
     );
   }
@@ -504,10 +600,10 @@ proto.pb.FDCloseEvent.serializeBinaryToWriter = function(message, writer) {
 
 
 /**
- * optional int32 user_id = 1;
+ * optional int32 source_uid = 1;
  * @return {number}
  */
-proto.pb.FDCloseEvent.prototype.getUserId = function() {
+proto.pb.FDCloseEvent.prototype.getSourceUid = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 1, 0));
 };
 
@@ -516,16 +612,16 @@ proto.pb.FDCloseEvent.prototype.getUserId = function() {
  * @param {number} value
  * @return {!proto.pb.FDCloseEvent} returns this
  */
-proto.pb.FDCloseEvent.prototype.setUserId = function(value) {
+proto.pb.FDCloseEvent.prototype.setSourceUid = function(value) {
   return jspb.Message.setProto3IntField(this, 1, value);
 };
 
 
 /**
- * optional int32 source = 2;
+ * optional int32 user_id = 2;
  * @return {number}
  */
-proto.pb.FDCloseEvent.prototype.getSource = function() {
+proto.pb.FDCloseEvent.prototype.getUserId = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 2, 0));
 };
 
@@ -534,8 +630,62 @@ proto.pb.FDCloseEvent.prototype.getSource = function() {
  * @param {number} value
  * @return {!proto.pb.FDCloseEvent} returns this
  */
-proto.pb.FDCloseEvent.prototype.setSource = function(value) {
+proto.pb.FDCloseEvent.prototype.setUserId = function(value) {
   return jspb.Message.setProto3IntField(this, 2, value);
+};
+
+
+/**
+ * optional int32 source = 3;
+ * @return {number}
+ */
+proto.pb.FDCloseEvent.prototype.getSource = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 3, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.pb.FDCloseEvent} returns this
+ */
+proto.pb.FDCloseEvent.prototype.setSource = function(value) {
+  return jspb.Message.setProto3IntField(this, 3, value);
+};
+
+
+/**
+ * optional int32 content_type = 4;
+ * @return {number}
+ */
+proto.pb.FDCloseEvent.prototype.getContentType = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 4, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.pb.FDCloseEvent} returns this
+ */
+proto.pb.FDCloseEvent.prototype.setContentType = function(value) {
+  return jspb.Message.setProto3IntField(this, 4, value);
+};
+
+
+/**
+ * optional int32 protocol_type = 5;
+ * @return {number}
+ */
+proto.pb.FDCloseEvent.prototype.getProtocolType = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 5, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.pb.FDCloseEvent} returns this
+ */
+proto.pb.FDCloseEvent.prototype.setProtocolType = function(value) {
+  return jspb.Message.setProto3IntField(this, 5, value);
 };
 
 
@@ -571,7 +721,8 @@ proto.pb.FDCreateEvent.prototype.toObject = function(opt_includeInstance) {
  */
 proto.pb.FDCreateEvent.toObject = function(includeInstance, msg) {
   var f, obj = {
-    userId: jspb.Message.getFieldWithDefault(msg, 1, 0)
+    sourceUid: jspb.Message.getFieldWithDefault(msg, 1, 0),
+    userId: jspb.Message.getFieldWithDefault(msg, 2, 0)
   };
 
   if (includeInstance) {
@@ -610,6 +761,10 @@ proto.pb.FDCreateEvent.deserializeBinaryFromReader = function(msg, reader) {
     switch (field) {
     case 1:
       var value = /** @type {number} */ (reader.readInt32());
+      msg.setSourceUid(value);
+      break;
+    case 2:
+      var value = /** @type {number} */ (reader.readInt32());
       msg.setUserId(value);
       break;
     default:
@@ -641,10 +796,17 @@ proto.pb.FDCreateEvent.prototype.serializeBinary = function() {
  */
 proto.pb.FDCreateEvent.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
-  f = message.getUserId();
+  f = message.getSourceUid();
   if (f !== 0) {
     writer.writeInt32(
       1,
+      f
+    );
+  }
+  f = message.getUserId();
+  if (f !== 0) {
+    writer.writeInt32(
+      2,
       f
     );
   }
@@ -652,10 +814,10 @@ proto.pb.FDCreateEvent.serializeBinaryToWriter = function(message, writer) {
 
 
 /**
- * optional int32 user_id = 1;
+ * optional int32 source_uid = 1;
  * @return {number}
  */
-proto.pb.FDCreateEvent.prototype.getUserId = function() {
+proto.pb.FDCreateEvent.prototype.getSourceUid = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 1, 0));
 };
 
@@ -664,8 +826,26 @@ proto.pb.FDCreateEvent.prototype.getUserId = function() {
  * @param {number} value
  * @return {!proto.pb.FDCreateEvent} returns this
  */
-proto.pb.FDCreateEvent.prototype.setUserId = function(value) {
+proto.pb.FDCreateEvent.prototype.setSourceUid = function(value) {
   return jspb.Message.setProto3IntField(this, 1, value);
+};
+
+
+/**
+ * optional int32 user_id = 2;
+ * @return {number}
+ */
+proto.pb.FDCreateEvent.prototype.getUserId = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 2, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.pb.FDCreateEvent} returns this
+ */
+proto.pb.FDCreateEvent.prototype.setUserId = function(value) {
+  return jspb.Message.setProto3IntField(this, 2, value);
 };
 
 
@@ -701,12 +881,13 @@ proto.pb.PingReq.prototype.toObject = function(opt_includeInstance) {
  */
 proto.pb.PingReq.toObject = function(includeInstance, msg) {
   var f, obj = {
-    requestId: jspb.Message.getFieldWithDefault(msg, 1, ""),
-    traceId: jspb.Message.getFieldWithDefault(msg, 2, ""),
-    clientReqTime: jspb.Message.getFieldWithDefault(msg, 3, 0),
-    clientReceiveTime: jspb.Message.getFieldWithDefault(msg, 4, 0),
-    serverReceiveTime: jspb.Message.getFieldWithDefault(msg, 5, 0),
-    serverResponseTime: jspb.Message.getFieldWithDefault(msg, 6, 0)
+    sourceUid: jspb.Message.getFieldWithDefault(msg, 1, 0),
+    requestId: jspb.Message.getFieldWithDefault(msg, 2, ""),
+    traceId: jspb.Message.getFieldWithDefault(msg, 3, ""),
+    clientReqTime: jspb.Message.getFieldWithDefault(msg, 4, 0),
+    clientReceiveTime: jspb.Message.getFieldWithDefault(msg, 5, 0),
+    serverReceiveTime: jspb.Message.getFieldWithDefault(msg, 6, 0),
+    serverResponseTime: jspb.Message.getFieldWithDefault(msg, 7, 0)
   };
 
   if (includeInstance) {
@@ -744,26 +925,30 @@ proto.pb.PingReq.deserializeBinaryFromReader = function(msg, reader) {
     var field = reader.getFieldNumber();
     switch (field) {
     case 1:
-      var value = /** @type {string} */ (reader.readString());
-      msg.setRequestId(value);
+      var value = /** @type {number} */ (reader.readInt32());
+      msg.setSourceUid(value);
       break;
     case 2:
       var value = /** @type {string} */ (reader.readString());
-      msg.setTraceId(value);
+      msg.setRequestId(value);
       break;
     case 3:
-      var value = /** @type {number} */ (reader.readInt64());
-      msg.setClientReqTime(value);
+      var value = /** @type {string} */ (reader.readString());
+      msg.setTraceId(value);
       break;
     case 4:
       var value = /** @type {number} */ (reader.readInt64());
-      msg.setClientReceiveTime(value);
+      msg.setClientReqTime(value);
       break;
     case 5:
       var value = /** @type {number} */ (reader.readInt64());
-      msg.setServerReceiveTime(value);
+      msg.setClientReceiveTime(value);
       break;
     case 6:
+      var value = /** @type {number} */ (reader.readInt64());
+      msg.setServerReceiveTime(value);
+      break;
+    case 7:
       var value = /** @type {number} */ (reader.readInt64());
       msg.setServerResponseTime(value);
       break;
@@ -796,45 +981,52 @@ proto.pb.PingReq.prototype.serializeBinary = function() {
  */
 proto.pb.PingReq.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
-  f = message.getRequestId();
-  if (f.length > 0) {
-    writer.writeString(
+  f = message.getSourceUid();
+  if (f !== 0) {
+    writer.writeInt32(
       1,
       f
     );
   }
-  f = message.getTraceId();
+  f = message.getRequestId();
   if (f.length > 0) {
     writer.writeString(
       2,
       f
     );
   }
-  f = message.getClientReqTime();
-  if (f !== 0) {
-    writer.writeInt64(
+  f = message.getTraceId();
+  if (f.length > 0) {
+    writer.writeString(
       3,
       f
     );
   }
-  f = message.getClientReceiveTime();
+  f = message.getClientReqTime();
   if (f !== 0) {
     writer.writeInt64(
       4,
       f
     );
   }
-  f = message.getServerReceiveTime();
+  f = message.getClientReceiveTime();
   if (f !== 0) {
     writer.writeInt64(
       5,
       f
     );
   }
-  f = message.getServerResponseTime();
+  f = message.getServerReceiveTime();
   if (f !== 0) {
     writer.writeInt64(
       6,
+      f
+    );
+  }
+  f = message.getServerResponseTime();
+  if (f !== 0) {
+    writer.writeInt64(
+      7,
       f
     );
   }
@@ -842,28 +1034,28 @@ proto.pb.PingReq.serializeBinaryToWriter = function(message, writer) {
 
 
 /**
- * optional string request_id = 1;
+ * optional int32 source_uid = 1;
+ * @return {number}
+ */
+proto.pb.PingReq.prototype.getSourceUid = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 1, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.pb.PingReq} returns this
+ */
+proto.pb.PingReq.prototype.setSourceUid = function(value) {
+  return jspb.Message.setProto3IntField(this, 1, value);
+};
+
+
+/**
+ * optional string request_id = 2;
  * @return {string}
  */
 proto.pb.PingReq.prototype.getRequestId = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 1, ""));
-};
-
-
-/**
- * @param {string} value
- * @return {!proto.pb.PingReq} returns this
- */
-proto.pb.PingReq.prototype.setRequestId = function(value) {
-  return jspb.Message.setProto3StringField(this, 1, value);
-};
-
-
-/**
- * optional string trace_id = 2;
- * @return {string}
- */
-proto.pb.PingReq.prototype.getTraceId = function() {
   return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 2, ""));
 };
 
@@ -872,34 +1064,34 @@ proto.pb.PingReq.prototype.getTraceId = function() {
  * @param {string} value
  * @return {!proto.pb.PingReq} returns this
  */
-proto.pb.PingReq.prototype.setTraceId = function(value) {
+proto.pb.PingReq.prototype.setRequestId = function(value) {
   return jspb.Message.setProto3StringField(this, 2, value);
 };
 
 
 /**
- * optional int64 client_req_time = 3;
+ * optional string trace_id = 3;
+ * @return {string}
+ */
+proto.pb.PingReq.prototype.getTraceId = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 3, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.pb.PingReq} returns this
+ */
+proto.pb.PingReq.prototype.setTraceId = function(value) {
+  return jspb.Message.setProto3StringField(this, 3, value);
+};
+
+
+/**
+ * optional int64 client_req_time = 4;
  * @return {number}
  */
 proto.pb.PingReq.prototype.getClientReqTime = function() {
-  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 3, 0));
-};
-
-
-/**
- * @param {number} value
- * @return {!proto.pb.PingReq} returns this
- */
-proto.pb.PingReq.prototype.setClientReqTime = function(value) {
-  return jspb.Message.setProto3IntField(this, 3, value);
-};
-
-
-/**
- * optional int64 client_receive_time = 4;
- * @return {number}
- */
-proto.pb.PingReq.prototype.getClientReceiveTime = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 4, 0));
 };
 
@@ -908,16 +1100,16 @@ proto.pb.PingReq.prototype.getClientReceiveTime = function() {
  * @param {number} value
  * @return {!proto.pb.PingReq} returns this
  */
-proto.pb.PingReq.prototype.setClientReceiveTime = function(value) {
+proto.pb.PingReq.prototype.setClientReqTime = function(value) {
   return jspb.Message.setProto3IntField(this, 4, value);
 };
 
 
 /**
- * optional int64 server_receive_time = 5;
+ * optional int64 client_receive_time = 5;
  * @return {number}
  */
-proto.pb.PingReq.prototype.getServerReceiveTime = function() {
+proto.pb.PingReq.prototype.getClientReceiveTime = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 5, 0));
 };
 
@@ -926,16 +1118,16 @@ proto.pb.PingReq.prototype.getServerReceiveTime = function() {
  * @param {number} value
  * @return {!proto.pb.PingReq} returns this
  */
-proto.pb.PingReq.prototype.setServerReceiveTime = function(value) {
+proto.pb.PingReq.prototype.setClientReceiveTime = function(value) {
   return jspb.Message.setProto3IntField(this, 5, value);
 };
 
 
 /**
- * optional int64 server_response_time = 6;
+ * optional int64 server_receive_time = 6;
  * @return {number}
  */
-proto.pb.PingReq.prototype.getServerResponseTime = function() {
+proto.pb.PingReq.prototype.getServerReceiveTime = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 6, 0));
 };
 
@@ -944,8 +1136,26 @@ proto.pb.PingReq.prototype.getServerResponseTime = function() {
  * @param {number} value
  * @return {!proto.pb.PingReq} returns this
  */
-proto.pb.PingReq.prototype.setServerResponseTime = function(value) {
+proto.pb.PingReq.prototype.setServerReceiveTime = function(value) {
   return jspb.Message.setProto3IntField(this, 6, value);
+};
+
+
+/**
+ * optional int64 server_response_time = 7;
+ * @return {number}
+ */
+proto.pb.PingReq.prototype.getServerResponseTime = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 7, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.pb.PingReq} returns this
+ */
+proto.pb.PingReq.prototype.setServerResponseTime = function(value) {
+  return jspb.Message.setProto3IntField(this, 7, value);
 };
 
 
@@ -981,12 +1191,13 @@ proto.pb.PongRes.prototype.toObject = function(opt_includeInstance) {
  */
 proto.pb.PongRes.toObject = function(includeInstance, msg) {
   var f, obj = {
-    requestId: jspb.Message.getFieldWithDefault(msg, 1, ""),
-    traceId: jspb.Message.getFieldWithDefault(msg, 2, ""),
-    clientReqTime: jspb.Message.getFieldWithDefault(msg, 3, 0),
-    clientReceiveTime: jspb.Message.getFieldWithDefault(msg, 4, 0),
-    serverReceiveTime: jspb.Message.getFieldWithDefault(msg, 5, 0),
-    serverResponseTime: jspb.Message.getFieldWithDefault(msg, 6, 0)
+    sourceUid: jspb.Message.getFieldWithDefault(msg, 1, 0),
+    requestId: jspb.Message.getFieldWithDefault(msg, 2, ""),
+    traceId: jspb.Message.getFieldWithDefault(msg, 3, ""),
+    clientReqTime: jspb.Message.getFieldWithDefault(msg, 4, 0),
+    clientReceiveTime: jspb.Message.getFieldWithDefault(msg, 5, 0),
+    serverReceiveTime: jspb.Message.getFieldWithDefault(msg, 6, 0),
+    serverResponseTime: jspb.Message.getFieldWithDefault(msg, 7, 0)
   };
 
   if (includeInstance) {
@@ -1024,26 +1235,30 @@ proto.pb.PongRes.deserializeBinaryFromReader = function(msg, reader) {
     var field = reader.getFieldNumber();
     switch (field) {
     case 1:
-      var value = /** @type {string} */ (reader.readString());
-      msg.setRequestId(value);
+      var value = /** @type {number} */ (reader.readInt32());
+      msg.setSourceUid(value);
       break;
     case 2:
       var value = /** @type {string} */ (reader.readString());
-      msg.setTraceId(value);
+      msg.setRequestId(value);
       break;
     case 3:
-      var value = /** @type {number} */ (reader.readInt64());
-      msg.setClientReqTime(value);
+      var value = /** @type {string} */ (reader.readString());
+      msg.setTraceId(value);
       break;
     case 4:
       var value = /** @type {number} */ (reader.readInt64());
-      msg.setClientReceiveTime(value);
+      msg.setClientReqTime(value);
       break;
     case 5:
       var value = /** @type {number} */ (reader.readInt64());
-      msg.setServerReceiveTime(value);
+      msg.setClientReceiveTime(value);
       break;
     case 6:
+      var value = /** @type {number} */ (reader.readInt64());
+      msg.setServerReceiveTime(value);
+      break;
+    case 7:
       var value = /** @type {number} */ (reader.readInt64());
       msg.setServerResponseTime(value);
       break;
@@ -1076,45 +1291,52 @@ proto.pb.PongRes.prototype.serializeBinary = function() {
  */
 proto.pb.PongRes.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
-  f = message.getRequestId();
-  if (f.length > 0) {
-    writer.writeString(
+  f = message.getSourceUid();
+  if (f !== 0) {
+    writer.writeInt32(
       1,
       f
     );
   }
-  f = message.getTraceId();
+  f = message.getRequestId();
   if (f.length > 0) {
     writer.writeString(
       2,
       f
     );
   }
-  f = message.getClientReqTime();
-  if (f !== 0) {
-    writer.writeInt64(
+  f = message.getTraceId();
+  if (f.length > 0) {
+    writer.writeString(
       3,
       f
     );
   }
-  f = message.getClientReceiveTime();
+  f = message.getClientReqTime();
   if (f !== 0) {
     writer.writeInt64(
       4,
       f
     );
   }
-  f = message.getServerReceiveTime();
+  f = message.getClientReceiveTime();
   if (f !== 0) {
     writer.writeInt64(
       5,
       f
     );
   }
-  f = message.getServerResponseTime();
+  f = message.getServerReceiveTime();
   if (f !== 0) {
     writer.writeInt64(
       6,
+      f
+    );
+  }
+  f = message.getServerResponseTime();
+  if (f !== 0) {
+    writer.writeInt64(
+      7,
       f
     );
   }
@@ -1122,28 +1344,28 @@ proto.pb.PongRes.serializeBinaryToWriter = function(message, writer) {
 
 
 /**
- * optional string request_id = 1;
+ * optional int32 source_uid = 1;
+ * @return {number}
+ */
+proto.pb.PongRes.prototype.getSourceUid = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 1, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.pb.PongRes} returns this
+ */
+proto.pb.PongRes.prototype.setSourceUid = function(value) {
+  return jspb.Message.setProto3IntField(this, 1, value);
+};
+
+
+/**
+ * optional string request_id = 2;
  * @return {string}
  */
 proto.pb.PongRes.prototype.getRequestId = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 1, ""));
-};
-
-
-/**
- * @param {string} value
- * @return {!proto.pb.PongRes} returns this
- */
-proto.pb.PongRes.prototype.setRequestId = function(value) {
-  return jspb.Message.setProto3StringField(this, 1, value);
-};
-
-
-/**
- * optional string trace_id = 2;
- * @return {string}
- */
-proto.pb.PongRes.prototype.getTraceId = function() {
   return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 2, ""));
 };
 
@@ -1152,34 +1374,34 @@ proto.pb.PongRes.prototype.getTraceId = function() {
  * @param {string} value
  * @return {!proto.pb.PongRes} returns this
  */
-proto.pb.PongRes.prototype.setTraceId = function(value) {
+proto.pb.PongRes.prototype.setRequestId = function(value) {
   return jspb.Message.setProto3StringField(this, 2, value);
 };
 
 
 /**
- * optional int64 client_req_time = 3;
+ * optional string trace_id = 3;
+ * @return {string}
+ */
+proto.pb.PongRes.prototype.getTraceId = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 3, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.pb.PongRes} returns this
+ */
+proto.pb.PongRes.prototype.setTraceId = function(value) {
+  return jspb.Message.setProto3StringField(this, 3, value);
+};
+
+
+/**
+ * optional int64 client_req_time = 4;
  * @return {number}
  */
 proto.pb.PongRes.prototype.getClientReqTime = function() {
-  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 3, 0));
-};
-
-
-/**
- * @param {number} value
- * @return {!proto.pb.PongRes} returns this
- */
-proto.pb.PongRes.prototype.setClientReqTime = function(value) {
-  return jspb.Message.setProto3IntField(this, 3, value);
-};
-
-
-/**
- * optional int64 client_receive_time = 4;
- * @return {number}
- */
-proto.pb.PongRes.prototype.getClientReceiveTime = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 4, 0));
 };
 
@@ -1188,16 +1410,16 @@ proto.pb.PongRes.prototype.getClientReceiveTime = function() {
  * @param {number} value
  * @return {!proto.pb.PongRes} returns this
  */
-proto.pb.PongRes.prototype.setClientReceiveTime = function(value) {
+proto.pb.PongRes.prototype.setClientReqTime = function(value) {
   return jspb.Message.setProto3IntField(this, 4, value);
 };
 
 
 /**
- * optional int64 server_receive_time = 5;
+ * optional int64 client_receive_time = 5;
  * @return {number}
  */
-proto.pb.PongRes.prototype.getServerReceiveTime = function() {
+proto.pb.PongRes.prototype.getClientReceiveTime = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 5, 0));
 };
 
@@ -1206,16 +1428,16 @@ proto.pb.PongRes.prototype.getServerReceiveTime = function() {
  * @param {number} value
  * @return {!proto.pb.PongRes} returns this
  */
-proto.pb.PongRes.prototype.setServerReceiveTime = function(value) {
+proto.pb.PongRes.prototype.setClientReceiveTime = function(value) {
   return jspb.Message.setProto3IntField(this, 5, value);
 };
 
 
 /**
- * optional int64 server_response_time = 6;
+ * optional int64 server_receive_time = 6;
  * @return {number}
  */
-proto.pb.PongRes.prototype.getServerResponseTime = function() {
+proto.pb.PongRes.prototype.getServerReceiveTime = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 6, 0));
 };
 
@@ -1224,8 +1446,26 @@ proto.pb.PongRes.prototype.getServerResponseTime = function() {
  * @param {number} value
  * @return {!proto.pb.PongRes} returns this
  */
-proto.pb.PongRes.prototype.setServerResponseTime = function(value) {
+proto.pb.PongRes.prototype.setServerReceiveTime = function(value) {
   return jspb.Message.setProto3IntField(this, 6, value);
+};
+
+
+/**
+ * optional int64 server_response_time = 7;
+ * @return {number}
+ */
+proto.pb.PongRes.prototype.getServerResponseTime = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 7, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.pb.PongRes} returns this
+ */
+proto.pb.PongRes.prototype.setServerResponseTime = function(value) {
+  return jspb.Message.setProto3IntField(this, 7, value);
 };
 
 
@@ -2020,11 +2260,12 @@ proto.pb.PushMsg.prototype.toObject = function(opt_includeInstance) {
  */
 proto.pb.PushMsg.toObject = function(includeInstance, msg) {
   var f, obj = {
-    code: jspb.Message.getFieldWithDefault(msg, 1, 0),
-    uid: jspb.Message.getFieldWithDefault(msg, 2, 0),
-    roomId: jspb.Message.getFieldWithDefault(msg, 3, ""),
-    eventId: jspb.Message.getFieldWithDefault(msg, 4, 0),
-    content: jspb.Message.getFieldWithDefault(msg, 5, "")
+    sourceUid: jspb.Message.getFieldWithDefault(msg, 1, 0),
+    code: jspb.Message.getFieldWithDefault(msg, 2, 0),
+    uid: jspb.Message.getFieldWithDefault(msg, 3, 0),
+    roomId: jspb.Message.getFieldWithDefault(msg, 4, ""),
+    eventId: jspb.Message.getFieldWithDefault(msg, 5, 0),
+    content: jspb.Message.getFieldWithDefault(msg, 6, "")
   };
 
   if (includeInstance) {
@@ -2063,21 +2304,25 @@ proto.pb.PushMsg.deserializeBinaryFromReader = function(msg, reader) {
     switch (field) {
     case 1:
       var value = /** @type {number} */ (reader.readInt32());
-      msg.setCode(value);
+      msg.setSourceUid(value);
       break;
     case 2:
       var value = /** @type {number} */ (reader.readInt32());
-      msg.setUid(value);
+      msg.setCode(value);
       break;
     case 3:
+      var value = /** @type {number} */ (reader.readInt32());
+      msg.setUid(value);
+      break;
+    case 4:
       var value = /** @type {string} */ (reader.readString());
       msg.setRoomId(value);
       break;
-    case 4:
+    case 5:
       var value = /** @type {number} */ (reader.readInt32());
       msg.setEventId(value);
       break;
-    case 5:
+    case 6:
       var value = /** @type {string} */ (reader.readString());
       msg.setContent(value);
       break;
@@ -2110,38 +2355,45 @@ proto.pb.PushMsg.prototype.serializeBinary = function() {
  */
 proto.pb.PushMsg.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
-  f = message.getCode();
+  f = message.getSourceUid();
   if (f !== 0) {
     writer.writeInt32(
       1,
       f
     );
   }
-  f = message.getUid();
+  f = message.getCode();
   if (f !== 0) {
     writer.writeInt32(
       2,
       f
     );
   }
+  f = message.getUid();
+  if (f !== 0) {
+    writer.writeInt32(
+      3,
+      f
+    );
+  }
   f = message.getRoomId();
   if (f.length > 0) {
     writer.writeString(
-      3,
+      4,
       f
     );
   }
   f = message.getEventId();
   if (f !== 0) {
     writer.writeInt32(
-      4,
+      5,
       f
     );
   }
   f = message.getContent();
   if (f.length > 0) {
     writer.writeString(
-      5,
+      6,
       f
     );
   }
@@ -2149,10 +2401,10 @@ proto.pb.PushMsg.serializeBinaryToWriter = function(message, writer) {
 
 
 /**
- * optional int32 code = 1;
+ * optional int32 source_uid = 1;
  * @return {number}
  */
-proto.pb.PushMsg.prototype.getCode = function() {
+proto.pb.PushMsg.prototype.getSourceUid = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 1, 0));
 };
 
@@ -2161,16 +2413,16 @@ proto.pb.PushMsg.prototype.getCode = function() {
  * @param {number} value
  * @return {!proto.pb.PushMsg} returns this
  */
-proto.pb.PushMsg.prototype.setCode = function(value) {
+proto.pb.PushMsg.prototype.setSourceUid = function(value) {
   return jspb.Message.setProto3IntField(this, 1, value);
 };
 
 
 /**
- * optional int32 uid = 2;
+ * optional int32 code = 2;
  * @return {number}
  */
-proto.pb.PushMsg.prototype.getUid = function() {
+proto.pb.PushMsg.prototype.getCode = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 2, 0));
 };
 
@@ -2179,17 +2431,35 @@ proto.pb.PushMsg.prototype.getUid = function() {
  * @param {number} value
  * @return {!proto.pb.PushMsg} returns this
  */
-proto.pb.PushMsg.prototype.setUid = function(value) {
+proto.pb.PushMsg.prototype.setCode = function(value) {
   return jspb.Message.setProto3IntField(this, 2, value);
 };
 
 
 /**
- * optional string room_id = 3;
+ * optional int32 uid = 3;
+ * @return {number}
+ */
+proto.pb.PushMsg.prototype.getUid = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 3, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.pb.PushMsg} returns this
+ */
+proto.pb.PushMsg.prototype.setUid = function(value) {
+  return jspb.Message.setProto3IntField(this, 3, value);
+};
+
+
+/**
+ * optional string room_id = 4;
  * @return {string}
  */
 proto.pb.PushMsg.prototype.getRoomId = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 3, ""));
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 4, ""));
 };
 
 
@@ -2198,16 +2468,16 @@ proto.pb.PushMsg.prototype.getRoomId = function() {
  * @return {!proto.pb.PushMsg} returns this
  */
 proto.pb.PushMsg.prototype.setRoomId = function(value) {
-  return jspb.Message.setProto3StringField(this, 3, value);
+  return jspb.Message.setProto3StringField(this, 4, value);
 };
 
 
 /**
- * optional int32 event_id = 4;
+ * optional int32 event_id = 5;
  * @return {number}
  */
 proto.pb.PushMsg.prototype.getEventId = function() {
-  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 4, 0));
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 5, 0));
 };
 
 
@@ -2216,16 +2486,16 @@ proto.pb.PushMsg.prototype.getEventId = function() {
  * @return {!proto.pb.PushMsg} returns this
  */
 proto.pb.PushMsg.prototype.setEventId = function(value) {
-  return jspb.Message.setProto3IntField(this, 4, value);
+  return jspb.Message.setProto3IntField(this, 5, value);
 };
 
 
 /**
- * optional string content = 5;
+ * optional string content = 6;
  * @return {string}
  */
 proto.pb.PushMsg.prototype.getContent = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 5, ""));
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 6, ""));
 };
 
 
@@ -2234,7 +2504,7 @@ proto.pb.PushMsg.prototype.getContent = function() {
  * @return {!proto.pb.PushMsg} returns this
  */
 proto.pb.PushMsg.prototype.setContent = function(value) {
-  return jspb.Message.setProto3StringField(this, 5, value);
+  return jspb.Message.setProto3StringField(this, 6, value);
 };
 
 
@@ -2270,9 +2540,10 @@ proto.pb.RoomHeartbeatReq.prototype.toObject = function(opt_includeInstance) {
  */
 proto.pb.RoomHeartbeatReq.toObject = function(includeInstance, msg) {
   var f, obj = {
-    time: jspb.Message.getFieldWithDefault(msg, 1, 0),
-    roomId: jspb.Message.getFieldWithDefault(msg, 2, ""),
-    uid: jspb.Message.getFieldWithDefault(msg, 3, 0)
+    sourceUid: jspb.Message.getFieldWithDefault(msg, 1, 0),
+    time: jspb.Message.getFieldWithDefault(msg, 2, 0),
+    roomId: jspb.Message.getFieldWithDefault(msg, 3, ""),
+    uid: jspb.Message.getFieldWithDefault(msg, 4, 0)
   };
 
   if (includeInstance) {
@@ -2310,14 +2581,18 @@ proto.pb.RoomHeartbeatReq.deserializeBinaryFromReader = function(msg, reader) {
     var field = reader.getFieldNumber();
     switch (field) {
     case 1:
+      var value = /** @type {number} */ (reader.readInt32());
+      msg.setSourceUid(value);
+      break;
+    case 2:
       var value = /** @type {number} */ (reader.readInt64());
       msg.setTime(value);
       break;
-    case 2:
+    case 3:
       var value = /** @type {string} */ (reader.readString());
       msg.setRoomId(value);
       break;
-    case 3:
+    case 4:
       var value = /** @type {number} */ (reader.readInt32());
       msg.setUid(value);
       break;
@@ -2350,24 +2625,31 @@ proto.pb.RoomHeartbeatReq.prototype.serializeBinary = function() {
  */
 proto.pb.RoomHeartbeatReq.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
+  f = message.getSourceUid();
+  if (f !== 0) {
+    writer.writeInt32(
+      1,
+      f
+    );
+  }
   f = message.getTime();
   if (f !== 0) {
     writer.writeInt64(
-      1,
+      2,
       f
     );
   }
   f = message.getRoomId();
   if (f.length > 0) {
     writer.writeString(
-      2,
+      3,
       f
     );
   }
   f = message.getUid();
   if (f !== 0) {
     writer.writeInt32(
-      3,
+      4,
       f
     );
   }
@@ -2375,10 +2657,10 @@ proto.pb.RoomHeartbeatReq.serializeBinaryToWriter = function(message, writer) {
 
 
 /**
- * optional int64 time = 1;
+ * optional int32 source_uid = 1;
  * @return {number}
  */
-proto.pb.RoomHeartbeatReq.prototype.getTime = function() {
+proto.pb.RoomHeartbeatReq.prototype.getSourceUid = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 1, 0));
 };
 
@@ -2387,17 +2669,35 @@ proto.pb.RoomHeartbeatReq.prototype.getTime = function() {
  * @param {number} value
  * @return {!proto.pb.RoomHeartbeatReq} returns this
  */
-proto.pb.RoomHeartbeatReq.prototype.setTime = function(value) {
+proto.pb.RoomHeartbeatReq.prototype.setSourceUid = function(value) {
   return jspb.Message.setProto3IntField(this, 1, value);
 };
 
 
 /**
- * optional string room_id = 2;
+ * optional int64 time = 2;
+ * @return {number}
+ */
+proto.pb.RoomHeartbeatReq.prototype.getTime = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 2, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.pb.RoomHeartbeatReq} returns this
+ */
+proto.pb.RoomHeartbeatReq.prototype.setTime = function(value) {
+  return jspb.Message.setProto3IntField(this, 2, value);
+};
+
+
+/**
+ * optional string room_id = 3;
  * @return {string}
  */
 proto.pb.RoomHeartbeatReq.prototype.getRoomId = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 2, ""));
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 3, ""));
 };
 
 
@@ -2406,16 +2706,16 @@ proto.pb.RoomHeartbeatReq.prototype.getRoomId = function() {
  * @return {!proto.pb.RoomHeartbeatReq} returns this
  */
 proto.pb.RoomHeartbeatReq.prototype.setRoomId = function(value) {
-  return jspb.Message.setProto3StringField(this, 2, value);
+  return jspb.Message.setProto3StringField(this, 3, value);
 };
 
 
 /**
- * optional int32 uid = 3;
+ * optional int32 uid = 4;
  * @return {number}
  */
 proto.pb.RoomHeartbeatReq.prototype.getUid = function() {
-  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 3, 0));
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 4, 0));
 };
 
 
@@ -2424,7 +2724,7 @@ proto.pb.RoomHeartbeatReq.prototype.getUid = function() {
  * @return {!proto.pb.RoomHeartbeatReq} returns this
  */
 proto.pb.RoomHeartbeatReq.prototype.setUid = function(value) {
-  return jspb.Message.setProto3IntField(this, 3, value);
+  return jspb.Message.setProto3IntField(this, 4, value);
 };
 
 
@@ -2460,8 +2760,9 @@ proto.pb.CancelCallPeopleReq.prototype.toObject = function(opt_includeInstance) 
  */
 proto.pb.CancelCallPeopleReq.toObject = function(includeInstance, msg) {
   var f, obj = {
-    uid: jspb.Message.getFieldWithDefault(msg, 1, 0),
-    roomId: jspb.Message.getFieldWithDefault(msg, 2, "")
+    sourceUid: jspb.Message.getFieldWithDefault(msg, 1, 0),
+    uid: jspb.Message.getFieldWithDefault(msg, 2, 0),
+    roomId: jspb.Message.getFieldWithDefault(msg, 3, "")
   };
 
   if (includeInstance) {
@@ -2500,9 +2801,13 @@ proto.pb.CancelCallPeopleReq.deserializeBinaryFromReader = function(msg, reader)
     switch (field) {
     case 1:
       var value = /** @type {number} */ (reader.readInt32());
-      msg.setUid(value);
+      msg.setSourceUid(value);
       break;
     case 2:
+      var value = /** @type {number} */ (reader.readInt32());
+      msg.setUid(value);
+      break;
+    case 3:
       var value = /** @type {string} */ (reader.readString());
       msg.setRoomId(value);
       break;
@@ -2535,17 +2840,24 @@ proto.pb.CancelCallPeopleReq.prototype.serializeBinary = function() {
  */
 proto.pb.CancelCallPeopleReq.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
-  f = message.getUid();
+  f = message.getSourceUid();
   if (f !== 0) {
     writer.writeInt32(
       1,
       f
     );
   }
+  f = message.getUid();
+  if (f !== 0) {
+    writer.writeInt32(
+      2,
+      f
+    );
+  }
   f = message.getRoomId();
   if (f.length > 0) {
     writer.writeString(
-      2,
+      3,
       f
     );
   }
@@ -2553,10 +2865,10 @@ proto.pb.CancelCallPeopleReq.serializeBinaryToWriter = function(message, writer)
 
 
 /**
- * optional int32 uid = 1;
+ * optional int32 source_uid = 1;
  * @return {number}
  */
-proto.pb.CancelCallPeopleReq.prototype.getUid = function() {
+proto.pb.CancelCallPeopleReq.prototype.getSourceUid = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 1, 0));
 };
 
@@ -2565,17 +2877,35 @@ proto.pb.CancelCallPeopleReq.prototype.getUid = function() {
  * @param {number} value
  * @return {!proto.pb.CancelCallPeopleReq} returns this
  */
-proto.pb.CancelCallPeopleReq.prototype.setUid = function(value) {
+proto.pb.CancelCallPeopleReq.prototype.setSourceUid = function(value) {
   return jspb.Message.setProto3IntField(this, 1, value);
 };
 
 
 /**
- * optional string room_id = 2;
+ * optional int32 uid = 2;
+ * @return {number}
+ */
+proto.pb.CancelCallPeopleReq.prototype.getUid = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 2, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.pb.CancelCallPeopleReq} returns this
+ */
+proto.pb.CancelCallPeopleReq.prototype.setUid = function(value) {
+  return jspb.Message.setProto3IntField(this, 2, value);
+};
+
+
+/**
+ * optional string room_id = 3;
  * @return {string}
  */
 proto.pb.CancelCallPeopleReq.prototype.getRoomId = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 2, ""));
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 3, ""));
 };
 
 
@@ -2584,7 +2914,7 @@ proto.pb.CancelCallPeopleReq.prototype.getRoomId = function() {
  * @return {!proto.pb.CancelCallPeopleReq} returns this
  */
 proto.pb.CancelCallPeopleReq.prototype.setRoomId = function(value) {
-  return jspb.Message.setProto3StringField(this, 2, value);
+  return jspb.Message.setProto3StringField(this, 3, value);
 };
 
 
@@ -2620,8 +2950,9 @@ proto.pb.CallVote.prototype.toObject = function(opt_includeInstance) {
  */
 proto.pb.CallVote.toObject = function(includeInstance, msg) {
   var f, obj = {
-    uid: jspb.Message.getFieldWithDefault(msg, 1, 0),
-    roomId: jspb.Message.getFieldWithDefault(msg, 2, "")
+    sourceUid: jspb.Message.getFieldWithDefault(msg, 1, 0),
+    uid: jspb.Message.getFieldWithDefault(msg, 2, 0),
+    roomId: jspb.Message.getFieldWithDefault(msg, 3, "")
   };
 
   if (includeInstance) {
@@ -2660,9 +2991,13 @@ proto.pb.CallVote.deserializeBinaryFromReader = function(msg, reader) {
     switch (field) {
     case 1:
       var value = /** @type {number} */ (reader.readInt32());
-      msg.setUid(value);
+      msg.setSourceUid(value);
       break;
     case 2:
+      var value = /** @type {number} */ (reader.readInt32());
+      msg.setUid(value);
+      break;
+    case 3:
       var value = /** @type {string} */ (reader.readString());
       msg.setRoomId(value);
       break;
@@ -2695,17 +3030,24 @@ proto.pb.CallVote.prototype.serializeBinary = function() {
  */
 proto.pb.CallVote.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
-  f = message.getUid();
+  f = message.getSourceUid();
   if (f !== 0) {
     writer.writeInt32(
       1,
       f
     );
   }
+  f = message.getUid();
+  if (f !== 0) {
+    writer.writeInt32(
+      2,
+      f
+    );
+  }
   f = message.getRoomId();
   if (f.length > 0) {
     writer.writeString(
-      2,
+      3,
       f
     );
   }
@@ -2713,10 +3055,10 @@ proto.pb.CallVote.serializeBinaryToWriter = function(message, writer) {
 
 
 /**
- * optional int32 uid = 1;
+ * optional int32 source_uid = 1;
  * @return {number}
  */
-proto.pb.CallVote.prototype.getUid = function() {
+proto.pb.CallVote.prototype.getSourceUid = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 1, 0));
 };
 
@@ -2725,17 +3067,35 @@ proto.pb.CallVote.prototype.getUid = function() {
  * @param {number} value
  * @return {!proto.pb.CallVote} returns this
  */
-proto.pb.CallVote.prototype.setUid = function(value) {
+proto.pb.CallVote.prototype.setSourceUid = function(value) {
   return jspb.Message.setProto3IntField(this, 1, value);
 };
 
 
 /**
- * optional string room_id = 2;
+ * optional int32 uid = 2;
+ * @return {number}
+ */
+proto.pb.CallVote.prototype.getUid = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 2, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.pb.CallVote} returns this
+ */
+proto.pb.CallVote.prototype.setUid = function(value) {
+  return jspb.Message.setProto3IntField(this, 2, value);
+};
+
+
+/**
+ * optional string room_id = 3;
  * @return {string}
  */
 proto.pb.CallVote.prototype.getRoomId = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 2, ""));
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 3, ""));
 };
 
 
@@ -2744,7 +3104,7 @@ proto.pb.CallVote.prototype.getRoomId = function() {
  * @return {!proto.pb.CallVote} returns this
  */
 proto.pb.CallVote.prototype.setRoomId = function(value) {
-  return jspb.Message.setProto3StringField(this, 2, value);
+  return jspb.Message.setProto3StringField(this, 3, value);
 };
 
 
@@ -2780,11 +3140,12 @@ proto.pb.CallPeopleReq.prototype.toObject = function(opt_includeInstance) {
  */
 proto.pb.CallPeopleReq.toObject = function(includeInstance, msg) {
   var f, obj = {
-    uid: jspb.Message.getFieldWithDefault(msg, 1, 0),
-    targetUid: jspb.Message.getFieldWithDefault(msg, 2, 0),
-    channel: jspb.Message.getFieldWithDefault(msg, 3, ""),
-    peopleType: jspb.Message.getFieldWithDefault(msg, 4, 0),
-    peopleRole: jspb.Message.getFieldWithDefault(msg, 5, 0)
+    sourceUid: jspb.Message.getFieldWithDefault(msg, 1, 0),
+    uid: jspb.Message.getFieldWithDefault(msg, 2, 0),
+    targetUid: jspb.Message.getFieldWithDefault(msg, 3, 0),
+    channel: jspb.Message.getFieldWithDefault(msg, 4, ""),
+    peopleType: jspb.Message.getFieldWithDefault(msg, 5, 0),
+    peopleRole: jspb.Message.getFieldWithDefault(msg, 6, 0)
   };
 
   if (includeInstance) {
@@ -2823,21 +3184,25 @@ proto.pb.CallPeopleReq.deserializeBinaryFromReader = function(msg, reader) {
     switch (field) {
     case 1:
       var value = /** @type {number} */ (reader.readInt32());
-      msg.setUid(value);
+      msg.setSourceUid(value);
       break;
     case 2:
       var value = /** @type {number} */ (reader.readInt32());
-      msg.setTargetUid(value);
+      msg.setUid(value);
       break;
     case 3:
+      var value = /** @type {number} */ (reader.readInt32());
+      msg.setTargetUid(value);
+      break;
+    case 4:
       var value = /** @type {string} */ (reader.readString());
       msg.setChannel(value);
       break;
-    case 4:
+    case 5:
       var value = /** @type {number} */ (reader.readInt32());
       msg.setPeopleType(value);
       break;
-    case 5:
+    case 6:
       var value = /** @type {number} */ (reader.readInt32());
       msg.setPeopleRole(value);
       break;
@@ -2870,38 +3235,45 @@ proto.pb.CallPeopleReq.prototype.serializeBinary = function() {
  */
 proto.pb.CallPeopleReq.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
-  f = message.getUid();
+  f = message.getSourceUid();
   if (f !== 0) {
     writer.writeInt32(
       1,
       f
     );
   }
-  f = message.getTargetUid();
+  f = message.getUid();
   if (f !== 0) {
     writer.writeInt32(
       2,
       f
     );
   }
+  f = message.getTargetUid();
+  if (f !== 0) {
+    writer.writeInt32(
+      3,
+      f
+    );
+  }
   f = message.getChannel();
   if (f.length > 0) {
     writer.writeString(
-      3,
+      4,
       f
     );
   }
   f = message.getPeopleType();
   if (f !== 0) {
     writer.writeInt32(
-      4,
+      5,
       f
     );
   }
   f = message.getPeopleRole();
   if (f !== 0) {
     writer.writeInt32(
-      5,
+      6,
       f
     );
   }
@@ -2909,10 +3281,10 @@ proto.pb.CallPeopleReq.serializeBinaryToWriter = function(message, writer) {
 
 
 /**
- * optional int32 uid = 1;
+ * optional int32 source_uid = 1;
  * @return {number}
  */
-proto.pb.CallPeopleReq.prototype.getUid = function() {
+proto.pb.CallPeopleReq.prototype.getSourceUid = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 1, 0));
 };
 
@@ -2921,16 +3293,16 @@ proto.pb.CallPeopleReq.prototype.getUid = function() {
  * @param {number} value
  * @return {!proto.pb.CallPeopleReq} returns this
  */
-proto.pb.CallPeopleReq.prototype.setUid = function(value) {
+proto.pb.CallPeopleReq.prototype.setSourceUid = function(value) {
   return jspb.Message.setProto3IntField(this, 1, value);
 };
 
 
 /**
- * optional int32 target_uid = 2;
+ * optional int32 uid = 2;
  * @return {number}
  */
-proto.pb.CallPeopleReq.prototype.getTargetUid = function() {
+proto.pb.CallPeopleReq.prototype.getUid = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 2, 0));
 };
 
@@ -2939,17 +3311,35 @@ proto.pb.CallPeopleReq.prototype.getTargetUid = function() {
  * @param {number} value
  * @return {!proto.pb.CallPeopleReq} returns this
  */
-proto.pb.CallPeopleReq.prototype.setTargetUid = function(value) {
+proto.pb.CallPeopleReq.prototype.setUid = function(value) {
   return jspb.Message.setProto3IntField(this, 2, value);
 };
 
 
 /**
- * optional string channel = 3;
+ * optional int32 target_uid = 3;
+ * @return {number}
+ */
+proto.pb.CallPeopleReq.prototype.getTargetUid = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 3, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.pb.CallPeopleReq} returns this
+ */
+proto.pb.CallPeopleReq.prototype.setTargetUid = function(value) {
+  return jspb.Message.setProto3IntField(this, 3, value);
+};
+
+
+/**
+ * optional string channel = 4;
  * @return {string}
  */
 proto.pb.CallPeopleReq.prototype.getChannel = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 3, ""));
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 4, ""));
 };
 
 
@@ -2958,33 +3348,15 @@ proto.pb.CallPeopleReq.prototype.getChannel = function() {
  * @return {!proto.pb.CallPeopleReq} returns this
  */
 proto.pb.CallPeopleReq.prototype.setChannel = function(value) {
-  return jspb.Message.setProto3StringField(this, 3, value);
+  return jspb.Message.setProto3StringField(this, 4, value);
 };
 
 
 /**
- * optional int32 people_type = 4;
+ * optional int32 people_type = 5;
  * @return {number}
  */
 proto.pb.CallPeopleReq.prototype.getPeopleType = function() {
-  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 4, 0));
-};
-
-
-/**
- * @param {number} value
- * @return {!proto.pb.CallPeopleReq} returns this
- */
-proto.pb.CallPeopleReq.prototype.setPeopleType = function(value) {
-  return jspb.Message.setProto3IntField(this, 4, value);
-};
-
-
-/**
- * optional int32 people_role = 5;
- * @return {number}
- */
-proto.pb.CallPeopleReq.prototype.getPeopleRole = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 5, 0));
 };
 
@@ -2993,8 +3365,26 @@ proto.pb.CallPeopleReq.prototype.getPeopleRole = function() {
  * @param {number} value
  * @return {!proto.pb.CallPeopleReq} returns this
  */
-proto.pb.CallPeopleReq.prototype.setPeopleRole = function(value) {
+proto.pb.CallPeopleReq.prototype.setPeopleType = function(value) {
   return jspb.Message.setProto3IntField(this, 5, value);
+};
+
+
+/**
+ * optional int32 people_role = 6;
+ * @return {number}
+ */
+proto.pb.CallPeopleReq.prototype.getPeopleRole = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 6, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.pb.CallPeopleReq} returns this
+ */
+proto.pb.CallPeopleReq.prototype.setPeopleRole = function(value) {
+  return jspb.Message.setProto3IntField(this, 6, value);
 };
 
 
@@ -3030,11 +3420,12 @@ proto.pb.CallPeopleRes.prototype.toObject = function(opt_includeInstance) {
  */
 proto.pb.CallPeopleRes.toObject = function(includeInstance, msg) {
   var f, obj = {
-    receiveUid: jspb.Message.getFieldWithDefault(msg, 1, ""),
-    channel: jspb.Message.getFieldWithDefault(msg, 2, ""),
-    errCode: jspb.Message.getFieldWithDefault(msg, 3, 0),
-    errMsg: jspb.Message.getFieldWithDefault(msg, 4, ""),
-    roomId: jspb.Message.getFieldWithDefault(msg, 5, "")
+    sourceUid: jspb.Message.getFieldWithDefault(msg, 1, 0),
+    receiveUid: jspb.Message.getFieldWithDefault(msg, 2, ""),
+    channel: jspb.Message.getFieldWithDefault(msg, 3, ""),
+    errCode: jspb.Message.getFieldWithDefault(msg, 4, 0),
+    errMsg: jspb.Message.getFieldWithDefault(msg, 5, ""),
+    roomId: jspb.Message.getFieldWithDefault(msg, 6, "")
   };
 
   if (includeInstance) {
@@ -3072,22 +3463,26 @@ proto.pb.CallPeopleRes.deserializeBinaryFromReader = function(msg, reader) {
     var field = reader.getFieldNumber();
     switch (field) {
     case 1:
-      var value = /** @type {string} */ (reader.readString());
-      msg.setReceiveUid(value);
+      var value = /** @type {number} */ (reader.readInt32());
+      msg.setSourceUid(value);
       break;
     case 2:
       var value = /** @type {string} */ (reader.readString());
-      msg.setChannel(value);
+      msg.setReceiveUid(value);
       break;
     case 3:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setChannel(value);
+      break;
+    case 4:
       var value = /** @type {number} */ (reader.readInt32());
       msg.setErrCode(value);
       break;
-    case 4:
+    case 5:
       var value = /** @type {string} */ (reader.readString());
       msg.setErrMsg(value);
       break;
-    case 5:
+    case 6:
       var value = /** @type {string} */ (reader.readString());
       msg.setRoomId(value);
       break;
@@ -3120,38 +3515,45 @@ proto.pb.CallPeopleRes.prototype.serializeBinary = function() {
  */
 proto.pb.CallPeopleRes.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
-  f = message.getReceiveUid();
-  if (f.length > 0) {
-    writer.writeString(
+  f = message.getSourceUid();
+  if (f !== 0) {
+    writer.writeInt32(
       1,
       f
     );
   }
-  f = message.getChannel();
+  f = message.getReceiveUid();
   if (f.length > 0) {
     writer.writeString(
       2,
       f
     );
   }
+  f = message.getChannel();
+  if (f.length > 0) {
+    writer.writeString(
+      3,
+      f
+    );
+  }
   f = message.getErrCode();
   if (f !== 0) {
     writer.writeInt32(
-      3,
+      4,
       f
     );
   }
   f = message.getErrMsg();
   if (f.length > 0) {
     writer.writeString(
-      4,
+      5,
       f
     );
   }
   f = message.getRoomId();
   if (f.length > 0) {
     writer.writeString(
-      5,
+      6,
       f
     );
   }
@@ -3159,28 +3561,28 @@ proto.pb.CallPeopleRes.serializeBinaryToWriter = function(message, writer) {
 
 
 /**
- * optional string receive_uid = 1;
+ * optional int32 source_uid = 1;
+ * @return {number}
+ */
+proto.pb.CallPeopleRes.prototype.getSourceUid = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 1, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.pb.CallPeopleRes} returns this
+ */
+proto.pb.CallPeopleRes.prototype.setSourceUid = function(value) {
+  return jspb.Message.setProto3IntField(this, 1, value);
+};
+
+
+/**
+ * optional string receive_uid = 2;
  * @return {string}
  */
 proto.pb.CallPeopleRes.prototype.getReceiveUid = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 1, ""));
-};
-
-
-/**
- * @param {string} value
- * @return {!proto.pb.CallPeopleRes} returns this
- */
-proto.pb.CallPeopleRes.prototype.setReceiveUid = function(value) {
-  return jspb.Message.setProto3StringField(this, 1, value);
-};
-
-
-/**
- * optional string channel = 2;
- * @return {string}
- */
-proto.pb.CallPeopleRes.prototype.getChannel = function() {
   return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 2, ""));
 };
 
@@ -3189,17 +3591,35 @@ proto.pb.CallPeopleRes.prototype.getChannel = function() {
  * @param {string} value
  * @return {!proto.pb.CallPeopleRes} returns this
  */
-proto.pb.CallPeopleRes.prototype.setChannel = function(value) {
+proto.pb.CallPeopleRes.prototype.setReceiveUid = function(value) {
   return jspb.Message.setProto3StringField(this, 2, value);
 };
 
 
 /**
- * optional int32 err_code = 3;
+ * optional string channel = 3;
+ * @return {string}
+ */
+proto.pb.CallPeopleRes.prototype.getChannel = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 3, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.pb.CallPeopleRes} returns this
+ */
+proto.pb.CallPeopleRes.prototype.setChannel = function(value) {
+  return jspb.Message.setProto3StringField(this, 3, value);
+};
+
+
+/**
+ * optional int32 err_code = 4;
  * @return {number}
  */
 proto.pb.CallPeopleRes.prototype.getErrCode = function() {
-  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 3, 0));
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 4, 0));
 };
 
 
@@ -3208,33 +3628,15 @@ proto.pb.CallPeopleRes.prototype.getErrCode = function() {
  * @return {!proto.pb.CallPeopleRes} returns this
  */
 proto.pb.CallPeopleRes.prototype.setErrCode = function(value) {
-  return jspb.Message.setProto3IntField(this, 3, value);
+  return jspb.Message.setProto3IntField(this, 4, value);
 };
 
 
 /**
- * optional string err_msg = 4;
+ * optional string err_msg = 5;
  * @return {string}
  */
 proto.pb.CallPeopleRes.prototype.getErrMsg = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 4, ""));
-};
-
-
-/**
- * @param {string} value
- * @return {!proto.pb.CallPeopleRes} returns this
- */
-proto.pb.CallPeopleRes.prototype.setErrMsg = function(value) {
-  return jspb.Message.setProto3StringField(this, 4, value);
-};
-
-
-/**
- * optional string room_id = 5;
- * @return {string}
- */
-proto.pb.CallPeopleRes.prototype.getRoomId = function() {
   return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 5, ""));
 };
 
@@ -3243,8 +3645,26 @@ proto.pb.CallPeopleRes.prototype.getRoomId = function() {
  * @param {string} value
  * @return {!proto.pb.CallPeopleRes} returns this
  */
-proto.pb.CallPeopleRes.prototype.setRoomId = function(value) {
+proto.pb.CallPeopleRes.prototype.setErrMsg = function(value) {
   return jspb.Message.setProto3StringField(this, 5, value);
+};
+
+
+/**
+ * optional string room_id = 6;
+ * @return {string}
+ */
+proto.pb.CallPeopleRes.prototype.getRoomId = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 6, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.pb.CallPeopleRes} returns this
+ */
+proto.pb.CallPeopleRes.prototype.setRoomId = function(value) {
+  return jspb.Message.setProto3StringField(this, 6, value);
 };
 
 
@@ -3280,8 +3700,9 @@ proto.pb.PeopleEntry.prototype.toObject = function(opt_includeInstance) {
  */
 proto.pb.PeopleEntry.toObject = function(includeInstance, msg) {
   var f, obj = {
-    uid: jspb.Message.getFieldWithDefault(msg, 1, 0),
-    channel: jspb.Message.getFieldWithDefault(msg, 2, ""),
+    sourceUid: jspb.Message.getFieldWithDefault(msg, 1, 0),
+    uid: jspb.Message.getFieldWithDefault(msg, 2, 0),
+    channel: jspb.Message.getFieldWithDefault(msg, 3, ""),
     roomId: jspb.Message.getFieldWithDefault(msg, 4, "")
   };
 
@@ -3321,9 +3742,13 @@ proto.pb.PeopleEntry.deserializeBinaryFromReader = function(msg, reader) {
     switch (field) {
     case 1:
       var value = /** @type {number} */ (reader.readInt32());
-      msg.setUid(value);
+      msg.setSourceUid(value);
       break;
     case 2:
+      var value = /** @type {number} */ (reader.readInt32());
+      msg.setUid(value);
+      break;
+    case 3:
       var value = /** @type {string} */ (reader.readString());
       msg.setChannel(value);
       break;
@@ -3360,17 +3785,24 @@ proto.pb.PeopleEntry.prototype.serializeBinary = function() {
  */
 proto.pb.PeopleEntry.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
-  f = message.getUid();
+  f = message.getSourceUid();
   if (f !== 0) {
     writer.writeInt32(
       1,
       f
     );
   }
+  f = message.getUid();
+  if (f !== 0) {
+    writer.writeInt32(
+      2,
+      f
+    );
+  }
   f = message.getChannel();
   if (f.length > 0) {
     writer.writeString(
-      2,
+      3,
       f
     );
   }
@@ -3385,10 +3817,10 @@ proto.pb.PeopleEntry.serializeBinaryToWriter = function(message, writer) {
 
 
 /**
- * optional int32 uid = 1;
+ * optional int32 source_uid = 1;
  * @return {number}
  */
-proto.pb.PeopleEntry.prototype.getUid = function() {
+proto.pb.PeopleEntry.prototype.getSourceUid = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 1, 0));
 };
 
@@ -3397,17 +3829,35 @@ proto.pb.PeopleEntry.prototype.getUid = function() {
  * @param {number} value
  * @return {!proto.pb.PeopleEntry} returns this
  */
-proto.pb.PeopleEntry.prototype.setUid = function(value) {
+proto.pb.PeopleEntry.prototype.setSourceUid = function(value) {
   return jspb.Message.setProto3IntField(this, 1, value);
 };
 
 
 /**
- * optional string channel = 2;
+ * optional int32 uid = 2;
+ * @return {number}
+ */
+proto.pb.PeopleEntry.prototype.getUid = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 2, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.pb.PeopleEntry} returns this
+ */
+proto.pb.PeopleEntry.prototype.setUid = function(value) {
+  return jspb.Message.setProto3IntField(this, 2, value);
+};
+
+
+/**
+ * optional string channel = 3;
  * @return {string}
  */
 proto.pb.PeopleEntry.prototype.getChannel = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 2, ""));
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 3, ""));
 };
 
 
@@ -3416,7 +3866,7 @@ proto.pb.PeopleEntry.prototype.getChannel = function() {
  * @return {!proto.pb.PeopleEntry} returns this
  */
 proto.pb.PeopleEntry.prototype.setChannel = function(value) {
-  return jspb.Message.setProto3StringField(this, 2, value);
+  return jspb.Message.setProto3StringField(this, 3, value);
 };
 
 
@@ -3470,8 +3920,9 @@ proto.pb.PeopleLeaveRes.prototype.toObject = function(opt_includeInstance) {
  */
 proto.pb.PeopleLeaveRes.toObject = function(includeInstance, msg) {
   var f, obj = {
-    uid: jspb.Message.getFieldWithDefault(msg, 1, 0),
-    channel: jspb.Message.getFieldWithDefault(msg, 2, ""),
+    sourceUid: jspb.Message.getFieldWithDefault(msg, 1, 0),
+    uid: jspb.Message.getFieldWithDefault(msg, 2, 0),
+    channel: jspb.Message.getFieldWithDefault(msg, 3, ""),
     roomId: jspb.Message.getFieldWithDefault(msg, 4, "")
   };
 
@@ -3511,9 +3962,13 @@ proto.pb.PeopleLeaveRes.deserializeBinaryFromReader = function(msg, reader) {
     switch (field) {
     case 1:
       var value = /** @type {number} */ (reader.readInt32());
-      msg.setUid(value);
+      msg.setSourceUid(value);
       break;
     case 2:
+      var value = /** @type {number} */ (reader.readInt32());
+      msg.setUid(value);
+      break;
+    case 3:
       var value = /** @type {string} */ (reader.readString());
       msg.setChannel(value);
       break;
@@ -3550,17 +4005,24 @@ proto.pb.PeopleLeaveRes.prototype.serializeBinary = function() {
  */
 proto.pb.PeopleLeaveRes.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
-  f = message.getUid();
+  f = message.getSourceUid();
   if (f !== 0) {
     writer.writeInt32(
       1,
       f
     );
   }
+  f = message.getUid();
+  if (f !== 0) {
+    writer.writeInt32(
+      2,
+      f
+    );
+  }
   f = message.getChannel();
   if (f.length > 0) {
     writer.writeString(
-      2,
+      3,
       f
     );
   }
@@ -3575,10 +4037,10 @@ proto.pb.PeopleLeaveRes.serializeBinaryToWriter = function(message, writer) {
 
 
 /**
- * optional int32 uid = 1;
+ * optional int32 source_uid = 1;
  * @return {number}
  */
-proto.pb.PeopleLeaveRes.prototype.getUid = function() {
+proto.pb.PeopleLeaveRes.prototype.getSourceUid = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 1, 0));
 };
 
@@ -3587,17 +4049,35 @@ proto.pb.PeopleLeaveRes.prototype.getUid = function() {
  * @param {number} value
  * @return {!proto.pb.PeopleLeaveRes} returns this
  */
-proto.pb.PeopleLeaveRes.prototype.setUid = function(value) {
+proto.pb.PeopleLeaveRes.prototype.setSourceUid = function(value) {
   return jspb.Message.setProto3IntField(this, 1, value);
 };
 
 
 /**
- * optional string channel = 2;
+ * optional int32 uid = 2;
+ * @return {number}
+ */
+proto.pb.PeopleLeaveRes.prototype.getUid = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 2, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.pb.PeopleLeaveRes} returns this
+ */
+proto.pb.PeopleLeaveRes.prototype.setUid = function(value) {
+  return jspb.Message.setProto3IntField(this, 2, value);
+};
+
+
+/**
+ * optional string channel = 3;
  * @return {string}
  */
 proto.pb.PeopleLeaveRes.prototype.getChannel = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 2, ""));
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 3, ""));
 };
 
 
@@ -3606,7 +4086,7 @@ proto.pb.PeopleLeaveRes.prototype.getChannel = function() {
  * @return {!proto.pb.PeopleLeaveRes} returns this
  */
 proto.pb.PeopleLeaveRes.prototype.setChannel = function(value) {
-  return jspb.Message.setProto3StringField(this, 2, value);
+  return jspb.Message.setProto3StringField(this, 3, value);
 };
 
 
@@ -3660,11 +4140,12 @@ proto.pb.CallReply.prototype.toObject = function(opt_includeInstance) {
  */
 proto.pb.CallReply.toObject = function(includeInstance, msg) {
   var f, obj = {
-    sendUid: jspb.Message.getFieldWithDefault(msg, 1, 0),
-    targetUid: jspb.Message.getFieldWithDefault(msg, 2, 0),
-    content: jspb.Message.getFieldWithDefault(msg, 3, ""),
-    msgType: jspb.Message.getFieldWithDefault(msg, 4, 0),
-    roomId: jspb.Message.getFieldWithDefault(msg, 5, "")
+    sourceUid: jspb.Message.getFieldWithDefault(msg, 1, 0),
+    sendUid: jspb.Message.getFieldWithDefault(msg, 2, 0),
+    targetUid: jspb.Message.getFieldWithDefault(msg, 3, 0),
+    content: jspb.Message.getFieldWithDefault(msg, 4, ""),
+    msgType: jspb.Message.getFieldWithDefault(msg, 5, 0),
+    roomId: jspb.Message.getFieldWithDefault(msg, 6, "")
   };
 
   if (includeInstance) {
@@ -3703,21 +4184,25 @@ proto.pb.CallReply.deserializeBinaryFromReader = function(msg, reader) {
     switch (field) {
     case 1:
       var value = /** @type {number} */ (reader.readInt32());
-      msg.setSendUid(value);
+      msg.setSourceUid(value);
       break;
     case 2:
       var value = /** @type {number} */ (reader.readInt32());
-      msg.setTargetUid(value);
+      msg.setSendUid(value);
       break;
     case 3:
+      var value = /** @type {number} */ (reader.readInt32());
+      msg.setTargetUid(value);
+      break;
+    case 4:
       var value = /** @type {string} */ (reader.readString());
       msg.setContent(value);
       break;
-    case 4:
+    case 5:
       var value = /** @type {number} */ (reader.readInt32());
       msg.setMsgType(value);
       break;
-    case 5:
+    case 6:
       var value = /** @type {string} */ (reader.readString());
       msg.setRoomId(value);
       break;
@@ -3750,38 +4235,45 @@ proto.pb.CallReply.prototype.serializeBinary = function() {
  */
 proto.pb.CallReply.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
-  f = message.getSendUid();
+  f = message.getSourceUid();
   if (f !== 0) {
     writer.writeInt32(
       1,
       f
     );
   }
-  f = message.getTargetUid();
+  f = message.getSendUid();
   if (f !== 0) {
     writer.writeInt32(
       2,
       f
     );
   }
+  f = message.getTargetUid();
+  if (f !== 0) {
+    writer.writeInt32(
+      3,
+      f
+    );
+  }
   f = message.getContent();
   if (f.length > 0) {
     writer.writeString(
-      3,
+      4,
       f
     );
   }
   f = message.getMsgType();
   if (f !== 0) {
     writer.writeInt32(
-      4,
+      5,
       f
     );
   }
   f = message.getRoomId();
   if (f.length > 0) {
     writer.writeString(
-      5,
+      6,
       f
     );
   }
@@ -3789,10 +4281,10 @@ proto.pb.CallReply.serializeBinaryToWriter = function(message, writer) {
 
 
 /**
- * optional int32 send_uid = 1;
+ * optional int32 source_uid = 1;
  * @return {number}
  */
-proto.pb.CallReply.prototype.getSendUid = function() {
+proto.pb.CallReply.prototype.getSourceUid = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 1, 0));
 };
 
@@ -3801,16 +4293,16 @@ proto.pb.CallReply.prototype.getSendUid = function() {
  * @param {number} value
  * @return {!proto.pb.CallReply} returns this
  */
-proto.pb.CallReply.prototype.setSendUid = function(value) {
+proto.pb.CallReply.prototype.setSourceUid = function(value) {
   return jspb.Message.setProto3IntField(this, 1, value);
 };
 
 
 /**
- * optional int32 target_uid = 2;
+ * optional int32 send_uid = 2;
  * @return {number}
  */
-proto.pb.CallReply.prototype.getTargetUid = function() {
+proto.pb.CallReply.prototype.getSendUid = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 2, 0));
 };
 
@@ -3819,17 +4311,35 @@ proto.pb.CallReply.prototype.getTargetUid = function() {
  * @param {number} value
  * @return {!proto.pb.CallReply} returns this
  */
-proto.pb.CallReply.prototype.setTargetUid = function(value) {
+proto.pb.CallReply.prototype.setSendUid = function(value) {
   return jspb.Message.setProto3IntField(this, 2, value);
 };
 
 
 /**
- * optional string content = 3;
+ * optional int32 target_uid = 3;
+ * @return {number}
+ */
+proto.pb.CallReply.prototype.getTargetUid = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 3, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.pb.CallReply} returns this
+ */
+proto.pb.CallReply.prototype.setTargetUid = function(value) {
+  return jspb.Message.setProto3IntField(this, 3, value);
+};
+
+
+/**
+ * optional string content = 4;
  * @return {string}
  */
 proto.pb.CallReply.prototype.getContent = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 3, ""));
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 4, ""));
 };
 
 
@@ -3838,16 +4348,16 @@ proto.pb.CallReply.prototype.getContent = function() {
  * @return {!proto.pb.CallReply} returns this
  */
 proto.pb.CallReply.prototype.setContent = function(value) {
-  return jspb.Message.setProto3StringField(this, 3, value);
+  return jspb.Message.setProto3StringField(this, 4, value);
 };
 
 
 /**
- * optional int32 msg_type = 4;
+ * optional int32 msg_type = 5;
  * @return {number}
  */
 proto.pb.CallReply.prototype.getMsgType = function() {
-  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 4, 0));
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 5, 0));
 };
 
 
@@ -3856,16 +4366,16 @@ proto.pb.CallReply.prototype.getMsgType = function() {
  * @return {!proto.pb.CallReply} returns this
  */
 proto.pb.CallReply.prototype.setMsgType = function(value) {
-  return jspb.Message.setProto3IntField(this, 4, value);
+  return jspb.Message.setProto3IntField(this, 5, value);
 };
 
 
 /**
- * optional string room_id = 5;
+ * optional string room_id = 6;
  * @return {string}
  */
 proto.pb.CallReply.prototype.getRoomId = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 5, ""));
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 6, ""));
 };
 
 
@@ -3874,7 +4384,7 @@ proto.pb.CallReply.prototype.getRoomId = function() {
  * @return {!proto.pb.CallReply} returns this
  */
 proto.pb.CallReply.prototype.setRoomId = function(value) {
-  return jspb.Message.setProto3StringField(this, 5, value);
+  return jspb.Message.setProto3StringField(this, 6, value);
 };
 
 

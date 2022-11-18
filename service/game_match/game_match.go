@@ -50,39 +50,40 @@ import (
 */
 
 type GameMatchOption struct {
-	ProjectId              int
-	Log                    *zap.Logger            //log 实例
-	Redis                  *util.MyRedisGo        //redis 实例
-	Gorm                   *gorm.DB               //mysql 实例
-	Metrics                *util.MyMetrics        //统计 实例
-	ServiceDiscovery       *util.ServiceDiscovery //服务发现 实例
-	StaticPath             string                 //静态文件公共目录
-	RuleDataSourceType     int                    //rule的数据来源类型
-	RedisPrefix            string                 //redis公共的前缀，主要是怕key重复
-	RedisTextSeparator     string                 //结构体不能直接存到redis中，得手动分隔存进去。不存JSON是因为浪费空间
-	RedisKeySeparator      string                 //redis key 的分隔符号
-	RedisIdSeparator       string                 //一个大的结构被转化成字符串后，有些元素是复合结构，如IDS。得有个分隔符
-	RedisPayloadSeparation string                 //也是redis内容的分隔符，但它包含了其它的内容，与其它内容的分隔符冲突，所以得新起一个
-	PersistenceType        int                    //持久化类型，0关闭
-	FrameSyncRoom          *frame_sync.RoomManager
-	RequestServiceAdapter  *service.RequestServiceAdapter //请求3方服务 适配器
+	ProjectId              int                            `json:"project_id"`
+	StaticPath             string                         `json:"static_path"`               //静态文件公共目录,用于读取语言包
+	RuleDataSourceType     int                            `json:"rule_data_source_type"`     //rule的数据来源类型
+	PersistenceType        int                            `json:"persistence_type"`          //持久化类型，0关闭
+	RedisPrefix            string                         `json:"redis_prefix"`              //redis公共的前缀，主要是怕key重复
+	RedisTextSeparator     string                         `json:"redis_text_separator"`      //结构体不能直接存到redis中，得手动分隔存进去。不存JSON是因为浪费空间
+	RedisKeySeparator      string                         `json:"redis_key_separator"`       //redis key 的分隔符号
+	RedisIdSeparator       string                         `json:"redis_id_separator"`        //一个大的结构被转化成字符串后，有些元素是复合结构，如IDS。得有个分隔符
+	RedisPayloadSeparation string                         `json:"redis_payload_separation"`  //也是redis内容的分隔符，但它包含了其它的内容，与其它内容的分隔符冲突，所以得新起一个
+	LoopSleepTime          int                            `json:"loop_sleep_time"`           //有些死循环守护协程，需要睡眠的场景,毫秒
+	FormulaFirst           string                         `json:"formula_first"`             //游戏匹配-计算权重公式-前缀
+	FormulaEnd             string                         `json:"formula_end"`               //游戏匹配-计算权重公式-后缀
+	WeightMaxValue         int                            `json:"weight_max_value"`          //玩家权重上限值
+	RuleDebugShow          int                            `json:"rule_debug_show"`           //守护协程，在没有处理数据时，需要输出日志，太多，每X秒输出一次
+	RuleTeamMaxPeople      int                            `json:"rule_team_max_people"`      //一个小组允许最大人数
+	RulePersonConditionMax int                            `json:"rule_person_condition_max"` //N人组团，最大人数
+	RuleMatchTimeoutMax    int                            `json:"rule_match_timeout_max"`    //报名，最大超时时间
+	RuleMatchTimeoutMin    int                            `json:"rule_match_timeout_min"`    //报名，最小时间
+	RuleSuccessTimeoutMax  int                            `json:"rule_success_timeout_max"`  //匹配成功后，最大超时时间
+	RuleSuccessTimeoutMin  int                            `json:"rule_success_timeout_min"`  //匹配成功后，最短超时时间
+	FrameSyncRoom          *frame_sync.RoomManager        `json:"-"`                         //帧同步
+	RequestServiceAdapter  *service.RequestServiceAdapter `json:"-"`                         //请求3方服务 适配器
+	Log                    *zap.Logger                    `json:"-"`                         //log 实例
+	Redis                  *util.MyRedisGo                `json:"-"`                         //redis 实例
+	Gorm                   *gorm.DB                       `json:"-"`                         //mysql 实例
+	Metrics                *util.MyMetrics                `json:"-"`                         //统计 实例
+	ServiceDiscovery       *util.ServiceDiscovery         `json:"-"`                         //服务发现 实例
 }
 
 type GameMatch struct {
-	Option                 GameMatchOption //初始化 配置参数
-	Err                    *util.ErrMsg    //错误处理类
-	RuleManager            *RuleManager    //管理一条 rule 的所有控制，如：报名 匹配 推送 等等
-	prefix                 string          //前缀字符串
-	LoopSleepTime          int             //有些死循环需要睡眠的场景,毫秒
-	FormulaFirst           string          //游戏匹配-计算权重公式-前缀
-	FormulaEnd             string          //游戏匹配-计算权重公式-后缀
-	RuleTeamMaxPeople      int             //一个小组允许最大人数
-	RulePersonConditionMax int             //N人组团，最大人数
-	RuleMatchTimeoutMax    int             //报名，最大超时时间
-	RuleMatchTimeoutMin    int             //报名，最小时间
-	RuleSuccessTimeoutMax  int             //匹配成功后，最大超时时间
-	RuleSuccessTimeoutMin  int             //匹配成功后，最短超时时间
-	WeightMaxValue         int             //玩家权重上限值
+	Option      GameMatchOption //初始化 配置参数
+	Err         *util.ErrMsg    //错误处理类
+	RuleManager *RuleManager    //管理一条 rule 的所有控制，如：报名 匹配 推送 等等
+	prefix      string          //前缀字符串
 	//RuleTeamVSPersonMax    int             //组队互相PK，每个队最多人数
 }
 
@@ -90,20 +91,21 @@ func NewGameMatch(option GameMatchOption) (*GameMatch, error) {
 	option.Log.Info("NewGameMatch : ")
 
 	gameMatch := new(GameMatch)
-	gameMatch.Option = option
 
 	gameMatch.prefix = "gameMatch"
-	gameMatch.LoopSleepTime = 200
-	gameMatch.FormulaFirst = "<"                                      //游戏匹配-计算权重公式-前缀
-	gameMatch.FormulaEnd = ">"                                        //游戏匹配-计算权重公式-后缀
-	gameMatch.RuleTeamMaxPeople = 5                                   //一个小组允许最大人数
-	gameMatch.RulePersonConditionMax = 100                            //N人组团，最大人数
-	gameMatch.RuleMatchTimeoutMax = 100                               //报名，最大超时时间
-	gameMatch.RuleMatchTimeoutMin = 3                                 //报名，最小时间
-	gameMatch.RuleSuccessTimeoutMax = 300                             //匹配成功后，最大超时时间
-	gameMatch.RuleSuccessTimeoutMin = 10                              //匹配成功后，最短超时时间
-	gameMatch.WeightMaxValue = 100                                    //权限最终的值，不能大于 100
-	gameMatch.Option.PersistenceType = service.PERSISTENCE_TYPE_MYSQL //数据 - 持久化
+	option.LoopSleepTime = 200
+	option.RuleDebugShow = 5
+	option.FormulaFirst = "<"                               //游戏匹配-计算权重公式-前缀
+	option.FormulaEnd = ">"                                 //游戏匹配-计算权重公式-后缀
+	option.RuleTeamMaxPeople = 5                            //一个小组允许最大人数
+	option.RulePersonConditionMax = 100                     //N人组团，最大人数
+	option.RuleMatchTimeoutMax = 100                        //报名，最大超时时间
+	option.RuleMatchTimeoutMin = 3                          //报名，最小时间
+	option.RuleSuccessTimeoutMax = 300                      //匹配成功后，最大超时时间
+	option.RuleSuccessTimeoutMin = 10                       //匹配成功后，最短超时时间
+	option.WeightMaxValue = 100                             //权限最终的值，不能大于 100
+	option.PersistenceType = service.PERSISTENCE_TYPE_MYSQL //数据 - 持久化
+	gameMatch.Option = option
 	//语言包
 	lang, err := util.NewErrMsg(option.Log, option.StaticPath+"/data/game_match_cn.lang")
 	if err != nil {
@@ -132,6 +134,16 @@ func NewGameMatch(option GameMatchOption) (*GameMatch, error) {
 //退出
 func (gameMatch *GameMatch) Quit(source int) {
 	gameMatch.RuleManager.Quit()
+}
+
+//获取语言包
+func (gameMatch *GameMatch) GetLang() map[int]util.ErrInfo {
+	return gameMatch.Err.Pool
+}
+
+//获取配置信息
+func (gameMatch *GameMatch) GetOption() GameMatchOption {
+	return gameMatch.Option
 }
 
 //持久化数据 - 组

@@ -17,16 +17,16 @@ type FrameSync struct {
 }
 
 type FrameSyncOption struct {
-	ProjectId             int                            `json:"project_id"`      //项目Id,给玩家推送消失的时候使用
-	FPS                   int32                          `json:"fps"`             //frame pre second
-	LockMode              int32                          `json:"lockMode"`        //锁模式，乐观|悲观
-	MapSize               int32                          `json:"mapSize"`         //地址大小，给前端初始化使用
-	Store                 int32                          `json:"store"`           //持久化，玩家每帧的动作，暂未使用
-	OffLineWaitTime       int32                          `json:"offLineWaitTime"` //lockStep 玩家掉线后，其它玩家等待最长时间
-	RequestServiceAdapter *service.RequestServiceAdapter `json:"-"`               //请求3方服务 适配器
+	ProjectId             int                            `json:"project_id"`         //项目Id,给玩家推送消失的时候使用
+	FPS                   int32                          `json:"fps"`                //frame pre second
+	LockMode              int32                          `json:"lock_mode"`          //锁模式，乐观|悲观
+	MapSize               int32                          `json:"map_size"`           //地址大小，给前端初始化使用
+	Store                 int32                          `json:"store"`              //持久化，玩家每帧的动作，暂未使用
+	OffLineWaitTime       int32                          `json:"off_line_wait_time"` //lockStep 玩家掉线后，其它玩家等待最长时间
+	RequestServiceAdapter *service.RequestServiceAdapter `json:"-"`                  //请求3方服务 适配器
 	Log                   *zap.Logger                    `json:"-"`
 	RoomManage            *RoomManager                   `json:"-"` //外部指针-房间服务
-	//Netway          *util.NetWay //网关 - 连接层 -  消息收发
+	Room                  *Room                          `json:"-"`
 }
 
 //断点调试
@@ -62,10 +62,9 @@ func NewFrameSync(Option FrameSyncOption) *FrameSync {
 	return sync
 }
 
-////设置：父类
-//func (sync *FrameSync) SetNetway(netway *util.NetWay) {
-//	sync.Option.Netway = netway
-//}
+func (sync *FrameSync) GetOption() FrameSyncOption {
+	return sync.Option
+}
 
 //进入战场后，场景渲染完后，进入准确状态
 func (sync *FrameSync) PlayerReady(requestPlayerReady pb.PlayerReady) error {

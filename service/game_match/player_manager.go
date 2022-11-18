@@ -27,14 +27,14 @@ type Player struct {
 }
 
 type PlayerManager struct {
-	RedisKeySeparator  string
-	RedisPrefix        string
-	RedisTextSeparator string
 	Log                *zap.Logger //log 实例
 	Redis              *util.MyRedisGo
 	GameMatch          *GameMatch //父类
 	Rule               *Rule      //父类
 	Err                *util.ErrMsg
+	RedisKeySeparator  string
+	RedisPrefix        string
+	RedisTextSeparator string
 	CloseChan          chan int
 	prefix             string
 }

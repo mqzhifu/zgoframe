@@ -280,7 +280,9 @@ proto.pb.Heartbeat.prototype.toObject = function(opt_includeInstance) {
  */
 proto.pb.Heartbeat.toObject = function(includeInstance, msg) {
   var f, obj = {
-    time: jspb.Message.getFieldWithDefault(msg, 1, 0)
+    sourceUid: jspb.Message.getFieldWithDefault(msg, 1, 0),
+    time: jspb.Message.getFieldWithDefault(msg, 2, 0),
+    reqTime: jspb.Message.getFieldWithDefault(msg, 3, 0)
   };
 
   if (includeInstance) {
@@ -318,8 +320,16 @@ proto.pb.Heartbeat.deserializeBinaryFromReader = function(msg, reader) {
     var field = reader.getFieldNumber();
     switch (field) {
     case 1:
+      var value = /** @type {number} */ (reader.readInt32());
+      msg.setSourceUid(value);
+      break;
+    case 2:
       var value = /** @type {number} */ (reader.readInt64());
       msg.setTime(value);
+      break;
+    case 3:
+      var value = /** @type {number} */ (reader.readInt64());
+      msg.setReqTime(value);
       break;
     default:
       reader.skipField();
@@ -350,10 +360,24 @@ proto.pb.Heartbeat.prototype.serializeBinary = function() {
  */
 proto.pb.Heartbeat.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
+  f = message.getSourceUid();
+  if (f !== 0) {
+    writer.writeInt32(
+      1,
+      f
+    );
+  }
   f = message.getTime();
   if (f !== 0) {
     writer.writeInt64(
-      1,
+      2,
+      f
+    );
+  }
+  f = message.getReqTime();
+  if (f !== 0) {
+    writer.writeInt64(
+      3,
       f
     );
   }
@@ -361,10 +385,10 @@ proto.pb.Heartbeat.serializeBinaryToWriter = function(message, writer) {
 
 
 /**
- * optional int64 time = 1;
+ * optional int32 source_uid = 1;
  * @return {number}
  */
-proto.pb.Heartbeat.prototype.getTime = function() {
+proto.pb.Heartbeat.prototype.getSourceUid = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 1, 0));
 };
 
@@ -373,8 +397,44 @@ proto.pb.Heartbeat.prototype.getTime = function() {
  * @param {number} value
  * @return {!proto.pb.Heartbeat} returns this
  */
-proto.pb.Heartbeat.prototype.setTime = function(value) {
+proto.pb.Heartbeat.prototype.setSourceUid = function(value) {
   return jspb.Message.setProto3IntField(this, 1, value);
+};
+
+
+/**
+ * optional int64 time = 2;
+ * @return {number}
+ */
+proto.pb.Heartbeat.prototype.getTime = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 2, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.pb.Heartbeat} returns this
+ */
+proto.pb.Heartbeat.prototype.setTime = function(value) {
+  return jspb.Message.setProto3IntField(this, 2, value);
+};
+
+
+/**
+ * optional int64 req_time = 3;
+ * @return {number}
+ */
+proto.pb.Heartbeat.prototype.getReqTime = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 3, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.pb.Heartbeat} returns this
+ */
+proto.pb.Heartbeat.prototype.setReqTime = function(value) {
+  return jspb.Message.setProto3IntField(this, 3, value);
 };
 
 
@@ -410,8 +470,11 @@ proto.pb.FDCloseEvent.prototype.toObject = function(opt_includeInstance) {
  */
 proto.pb.FDCloseEvent.toObject = function(includeInstance, msg) {
   var f, obj = {
-    userId: jspb.Message.getFieldWithDefault(msg, 1, 0),
-    source: jspb.Message.getFieldWithDefault(msg, 2, 0)
+    sourceUid: jspb.Message.getFieldWithDefault(msg, 1, 0),
+    userId: jspb.Message.getFieldWithDefault(msg, 2, 0),
+    source: jspb.Message.getFieldWithDefault(msg, 3, 0),
+    contentType: jspb.Message.getFieldWithDefault(msg, 4, 0),
+    protocolType: jspb.Message.getFieldWithDefault(msg, 5, 0)
   };
 
   if (includeInstance) {
@@ -450,11 +513,23 @@ proto.pb.FDCloseEvent.deserializeBinaryFromReader = function(msg, reader) {
     switch (field) {
     case 1:
       var value = /** @type {number} */ (reader.readInt32());
-      msg.setUserId(value);
+      msg.setSourceUid(value);
       break;
     case 2:
       var value = /** @type {number} */ (reader.readInt32());
+      msg.setUserId(value);
+      break;
+    case 3:
+      var value = /** @type {number} */ (reader.readInt32());
       msg.setSource(value);
+      break;
+    case 4:
+      var value = /** @type {number} */ (reader.readInt32());
+      msg.setContentType(value);
+      break;
+    case 5:
+      var value = /** @type {number} */ (reader.readInt32());
+      msg.setProtocolType(value);
       break;
     default:
       reader.skipField();
@@ -485,17 +560,38 @@ proto.pb.FDCloseEvent.prototype.serializeBinary = function() {
  */
 proto.pb.FDCloseEvent.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
-  f = message.getUserId();
+  f = message.getSourceUid();
   if (f !== 0) {
     writer.writeInt32(
       1,
       f
     );
   }
-  f = message.getSource();
+  f = message.getUserId();
   if (f !== 0) {
     writer.writeInt32(
       2,
+      f
+    );
+  }
+  f = message.getSource();
+  if (f !== 0) {
+    writer.writeInt32(
+      3,
+      f
+    );
+  }
+  f = message.getContentType();
+  if (f !== 0) {
+    writer.writeInt32(
+      4,
+      f
+    );
+  }
+  f = message.getProtocolType();
+  if (f !== 0) {
+    writer.writeInt32(
+      5,
       f
     );
   }
@@ -503,10 +599,10 @@ proto.pb.FDCloseEvent.serializeBinaryToWriter = function(message, writer) {
 
 
 /**
- * optional int32 user_id = 1;
+ * optional int32 source_uid = 1;
  * @return {number}
  */
-proto.pb.FDCloseEvent.prototype.getUserId = function() {
+proto.pb.FDCloseEvent.prototype.getSourceUid = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 1, 0));
 };
 
@@ -515,16 +611,16 @@ proto.pb.FDCloseEvent.prototype.getUserId = function() {
  * @param {number} value
  * @return {!proto.pb.FDCloseEvent} returns this
  */
-proto.pb.FDCloseEvent.prototype.setUserId = function(value) {
+proto.pb.FDCloseEvent.prototype.setSourceUid = function(value) {
   return jspb.Message.setProto3IntField(this, 1, value);
 };
 
 
 /**
- * optional int32 source = 2;
+ * optional int32 user_id = 2;
  * @return {number}
  */
-proto.pb.FDCloseEvent.prototype.getSource = function() {
+proto.pb.FDCloseEvent.prototype.getUserId = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 2, 0));
 };
 
@@ -533,8 +629,62 @@ proto.pb.FDCloseEvent.prototype.getSource = function() {
  * @param {number} value
  * @return {!proto.pb.FDCloseEvent} returns this
  */
-proto.pb.FDCloseEvent.prototype.setSource = function(value) {
+proto.pb.FDCloseEvent.prototype.setUserId = function(value) {
   return jspb.Message.setProto3IntField(this, 2, value);
+};
+
+
+/**
+ * optional int32 source = 3;
+ * @return {number}
+ */
+proto.pb.FDCloseEvent.prototype.getSource = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 3, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.pb.FDCloseEvent} returns this
+ */
+proto.pb.FDCloseEvent.prototype.setSource = function(value) {
+  return jspb.Message.setProto3IntField(this, 3, value);
+};
+
+
+/**
+ * optional int32 content_type = 4;
+ * @return {number}
+ */
+proto.pb.FDCloseEvent.prototype.getContentType = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 4, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.pb.FDCloseEvent} returns this
+ */
+proto.pb.FDCloseEvent.prototype.setContentType = function(value) {
+  return jspb.Message.setProto3IntField(this, 4, value);
+};
+
+
+/**
+ * optional int32 protocol_type = 5;
+ * @return {number}
+ */
+proto.pb.FDCloseEvent.prototype.getProtocolType = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 5, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.pb.FDCloseEvent} returns this
+ */
+proto.pb.FDCloseEvent.prototype.setProtocolType = function(value) {
+  return jspb.Message.setProto3IntField(this, 5, value);
 };
 
 
@@ -570,7 +720,8 @@ proto.pb.FDCreateEvent.prototype.toObject = function(opt_includeInstance) {
  */
 proto.pb.FDCreateEvent.toObject = function(includeInstance, msg) {
   var f, obj = {
-    userId: jspb.Message.getFieldWithDefault(msg, 1, 0)
+    sourceUid: jspb.Message.getFieldWithDefault(msg, 1, 0),
+    userId: jspb.Message.getFieldWithDefault(msg, 2, 0)
   };
 
   if (includeInstance) {
@@ -609,6 +760,10 @@ proto.pb.FDCreateEvent.deserializeBinaryFromReader = function(msg, reader) {
     switch (field) {
     case 1:
       var value = /** @type {number} */ (reader.readInt32());
+      msg.setSourceUid(value);
+      break;
+    case 2:
+      var value = /** @type {number} */ (reader.readInt32());
       msg.setUserId(value);
       break;
     default:
@@ -640,10 +795,17 @@ proto.pb.FDCreateEvent.prototype.serializeBinary = function() {
  */
 proto.pb.FDCreateEvent.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
-  f = message.getUserId();
+  f = message.getSourceUid();
   if (f !== 0) {
     writer.writeInt32(
       1,
+      f
+    );
+  }
+  f = message.getUserId();
+  if (f !== 0) {
+    writer.writeInt32(
+      2,
       f
     );
   }
@@ -651,10 +813,10 @@ proto.pb.FDCreateEvent.serializeBinaryToWriter = function(message, writer) {
 
 
 /**
- * optional int32 user_id = 1;
+ * optional int32 source_uid = 1;
  * @return {number}
  */
-proto.pb.FDCreateEvent.prototype.getUserId = function() {
+proto.pb.FDCreateEvent.prototype.getSourceUid = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 1, 0));
 };
 
@@ -663,8 +825,26 @@ proto.pb.FDCreateEvent.prototype.getUserId = function() {
  * @param {number} value
  * @return {!proto.pb.FDCreateEvent} returns this
  */
-proto.pb.FDCreateEvent.prototype.setUserId = function(value) {
+proto.pb.FDCreateEvent.prototype.setSourceUid = function(value) {
   return jspb.Message.setProto3IntField(this, 1, value);
+};
+
+
+/**
+ * optional int32 user_id = 2;
+ * @return {number}
+ */
+proto.pb.FDCreateEvent.prototype.getUserId = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 2, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.pb.FDCreateEvent} returns this
+ */
+proto.pb.FDCreateEvent.prototype.setUserId = function(value) {
+  return jspb.Message.setProto3IntField(this, 2, value);
 };
 
 
@@ -700,12 +880,13 @@ proto.pb.PingReq.prototype.toObject = function(opt_includeInstance) {
  */
 proto.pb.PingReq.toObject = function(includeInstance, msg) {
   var f, obj = {
-    requestId: jspb.Message.getFieldWithDefault(msg, 1, ""),
-    traceId: jspb.Message.getFieldWithDefault(msg, 2, ""),
-    clientReqTime: jspb.Message.getFieldWithDefault(msg, 3, 0),
-    clientReceiveTime: jspb.Message.getFieldWithDefault(msg, 4, 0),
-    serverReceiveTime: jspb.Message.getFieldWithDefault(msg, 5, 0),
-    serverResponseTime: jspb.Message.getFieldWithDefault(msg, 6, 0)
+    sourceUid: jspb.Message.getFieldWithDefault(msg, 1, 0),
+    requestId: jspb.Message.getFieldWithDefault(msg, 2, ""),
+    traceId: jspb.Message.getFieldWithDefault(msg, 3, ""),
+    clientReqTime: jspb.Message.getFieldWithDefault(msg, 4, 0),
+    clientReceiveTime: jspb.Message.getFieldWithDefault(msg, 5, 0),
+    serverReceiveTime: jspb.Message.getFieldWithDefault(msg, 6, 0),
+    serverResponseTime: jspb.Message.getFieldWithDefault(msg, 7, 0)
   };
 
   if (includeInstance) {
@@ -743,26 +924,30 @@ proto.pb.PingReq.deserializeBinaryFromReader = function(msg, reader) {
     var field = reader.getFieldNumber();
     switch (field) {
     case 1:
-      var value = /** @type {string} */ (reader.readString());
-      msg.setRequestId(value);
+      var value = /** @type {number} */ (reader.readInt32());
+      msg.setSourceUid(value);
       break;
     case 2:
       var value = /** @type {string} */ (reader.readString());
-      msg.setTraceId(value);
+      msg.setRequestId(value);
       break;
     case 3:
-      var value = /** @type {number} */ (reader.readInt64());
-      msg.setClientReqTime(value);
+      var value = /** @type {string} */ (reader.readString());
+      msg.setTraceId(value);
       break;
     case 4:
       var value = /** @type {number} */ (reader.readInt64());
-      msg.setClientReceiveTime(value);
+      msg.setClientReqTime(value);
       break;
     case 5:
       var value = /** @type {number} */ (reader.readInt64());
-      msg.setServerReceiveTime(value);
+      msg.setClientReceiveTime(value);
       break;
     case 6:
+      var value = /** @type {number} */ (reader.readInt64());
+      msg.setServerReceiveTime(value);
+      break;
+    case 7:
       var value = /** @type {number} */ (reader.readInt64());
       msg.setServerResponseTime(value);
       break;
@@ -795,45 +980,52 @@ proto.pb.PingReq.prototype.serializeBinary = function() {
  */
 proto.pb.PingReq.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
-  f = message.getRequestId();
-  if (f.length > 0) {
-    writer.writeString(
+  f = message.getSourceUid();
+  if (f !== 0) {
+    writer.writeInt32(
       1,
       f
     );
   }
-  f = message.getTraceId();
+  f = message.getRequestId();
   if (f.length > 0) {
     writer.writeString(
       2,
       f
     );
   }
-  f = message.getClientReqTime();
-  if (f !== 0) {
-    writer.writeInt64(
+  f = message.getTraceId();
+  if (f.length > 0) {
+    writer.writeString(
       3,
       f
     );
   }
-  f = message.getClientReceiveTime();
+  f = message.getClientReqTime();
   if (f !== 0) {
     writer.writeInt64(
       4,
       f
     );
   }
-  f = message.getServerReceiveTime();
+  f = message.getClientReceiveTime();
   if (f !== 0) {
     writer.writeInt64(
       5,
       f
     );
   }
-  f = message.getServerResponseTime();
+  f = message.getServerReceiveTime();
   if (f !== 0) {
     writer.writeInt64(
       6,
+      f
+    );
+  }
+  f = message.getServerResponseTime();
+  if (f !== 0) {
+    writer.writeInt64(
+      7,
       f
     );
   }
@@ -841,28 +1033,28 @@ proto.pb.PingReq.serializeBinaryToWriter = function(message, writer) {
 
 
 /**
- * optional string request_id = 1;
+ * optional int32 source_uid = 1;
+ * @return {number}
+ */
+proto.pb.PingReq.prototype.getSourceUid = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 1, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.pb.PingReq} returns this
+ */
+proto.pb.PingReq.prototype.setSourceUid = function(value) {
+  return jspb.Message.setProto3IntField(this, 1, value);
+};
+
+
+/**
+ * optional string request_id = 2;
  * @return {string}
  */
 proto.pb.PingReq.prototype.getRequestId = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 1, ""));
-};
-
-
-/**
- * @param {string} value
- * @return {!proto.pb.PingReq} returns this
- */
-proto.pb.PingReq.prototype.setRequestId = function(value) {
-  return jspb.Message.setProto3StringField(this, 1, value);
-};
-
-
-/**
- * optional string trace_id = 2;
- * @return {string}
- */
-proto.pb.PingReq.prototype.getTraceId = function() {
   return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 2, ""));
 };
 
@@ -871,34 +1063,34 @@ proto.pb.PingReq.prototype.getTraceId = function() {
  * @param {string} value
  * @return {!proto.pb.PingReq} returns this
  */
-proto.pb.PingReq.prototype.setTraceId = function(value) {
+proto.pb.PingReq.prototype.setRequestId = function(value) {
   return jspb.Message.setProto3StringField(this, 2, value);
 };
 
 
 /**
- * optional int64 client_req_time = 3;
+ * optional string trace_id = 3;
+ * @return {string}
+ */
+proto.pb.PingReq.prototype.getTraceId = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 3, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.pb.PingReq} returns this
+ */
+proto.pb.PingReq.prototype.setTraceId = function(value) {
+  return jspb.Message.setProto3StringField(this, 3, value);
+};
+
+
+/**
+ * optional int64 client_req_time = 4;
  * @return {number}
  */
 proto.pb.PingReq.prototype.getClientReqTime = function() {
-  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 3, 0));
-};
-
-
-/**
- * @param {number} value
- * @return {!proto.pb.PingReq} returns this
- */
-proto.pb.PingReq.prototype.setClientReqTime = function(value) {
-  return jspb.Message.setProto3IntField(this, 3, value);
-};
-
-
-/**
- * optional int64 client_receive_time = 4;
- * @return {number}
- */
-proto.pb.PingReq.prototype.getClientReceiveTime = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 4, 0));
 };
 
@@ -907,16 +1099,16 @@ proto.pb.PingReq.prototype.getClientReceiveTime = function() {
  * @param {number} value
  * @return {!proto.pb.PingReq} returns this
  */
-proto.pb.PingReq.prototype.setClientReceiveTime = function(value) {
+proto.pb.PingReq.prototype.setClientReqTime = function(value) {
   return jspb.Message.setProto3IntField(this, 4, value);
 };
 
 
 /**
- * optional int64 server_receive_time = 5;
+ * optional int64 client_receive_time = 5;
  * @return {number}
  */
-proto.pb.PingReq.prototype.getServerReceiveTime = function() {
+proto.pb.PingReq.prototype.getClientReceiveTime = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 5, 0));
 };
 
@@ -925,16 +1117,16 @@ proto.pb.PingReq.prototype.getServerReceiveTime = function() {
  * @param {number} value
  * @return {!proto.pb.PingReq} returns this
  */
-proto.pb.PingReq.prototype.setServerReceiveTime = function(value) {
+proto.pb.PingReq.prototype.setClientReceiveTime = function(value) {
   return jspb.Message.setProto3IntField(this, 5, value);
 };
 
 
 /**
- * optional int64 server_response_time = 6;
+ * optional int64 server_receive_time = 6;
  * @return {number}
  */
-proto.pb.PingReq.prototype.getServerResponseTime = function() {
+proto.pb.PingReq.prototype.getServerReceiveTime = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 6, 0));
 };
 
@@ -943,8 +1135,26 @@ proto.pb.PingReq.prototype.getServerResponseTime = function() {
  * @param {number} value
  * @return {!proto.pb.PingReq} returns this
  */
-proto.pb.PingReq.prototype.setServerResponseTime = function(value) {
+proto.pb.PingReq.prototype.setServerReceiveTime = function(value) {
   return jspb.Message.setProto3IntField(this, 6, value);
+};
+
+
+/**
+ * optional int64 server_response_time = 7;
+ * @return {number}
+ */
+proto.pb.PingReq.prototype.getServerResponseTime = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 7, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.pb.PingReq} returns this
+ */
+proto.pb.PingReq.prototype.setServerResponseTime = function(value) {
+  return jspb.Message.setProto3IntField(this, 7, value);
 };
 
 
@@ -980,12 +1190,13 @@ proto.pb.PongRes.prototype.toObject = function(opt_includeInstance) {
  */
 proto.pb.PongRes.toObject = function(includeInstance, msg) {
   var f, obj = {
-    requestId: jspb.Message.getFieldWithDefault(msg, 1, ""),
-    traceId: jspb.Message.getFieldWithDefault(msg, 2, ""),
-    clientReqTime: jspb.Message.getFieldWithDefault(msg, 3, 0),
-    clientReceiveTime: jspb.Message.getFieldWithDefault(msg, 4, 0),
-    serverReceiveTime: jspb.Message.getFieldWithDefault(msg, 5, 0),
-    serverResponseTime: jspb.Message.getFieldWithDefault(msg, 6, 0)
+    sourceUid: jspb.Message.getFieldWithDefault(msg, 1, 0),
+    requestId: jspb.Message.getFieldWithDefault(msg, 2, ""),
+    traceId: jspb.Message.getFieldWithDefault(msg, 3, ""),
+    clientReqTime: jspb.Message.getFieldWithDefault(msg, 4, 0),
+    clientReceiveTime: jspb.Message.getFieldWithDefault(msg, 5, 0),
+    serverReceiveTime: jspb.Message.getFieldWithDefault(msg, 6, 0),
+    serverResponseTime: jspb.Message.getFieldWithDefault(msg, 7, 0)
   };
 
   if (includeInstance) {
@@ -1023,26 +1234,30 @@ proto.pb.PongRes.deserializeBinaryFromReader = function(msg, reader) {
     var field = reader.getFieldNumber();
     switch (field) {
     case 1:
-      var value = /** @type {string} */ (reader.readString());
-      msg.setRequestId(value);
+      var value = /** @type {number} */ (reader.readInt32());
+      msg.setSourceUid(value);
       break;
     case 2:
       var value = /** @type {string} */ (reader.readString());
-      msg.setTraceId(value);
+      msg.setRequestId(value);
       break;
     case 3:
-      var value = /** @type {number} */ (reader.readInt64());
-      msg.setClientReqTime(value);
+      var value = /** @type {string} */ (reader.readString());
+      msg.setTraceId(value);
       break;
     case 4:
       var value = /** @type {number} */ (reader.readInt64());
-      msg.setClientReceiveTime(value);
+      msg.setClientReqTime(value);
       break;
     case 5:
       var value = /** @type {number} */ (reader.readInt64());
-      msg.setServerReceiveTime(value);
+      msg.setClientReceiveTime(value);
       break;
     case 6:
+      var value = /** @type {number} */ (reader.readInt64());
+      msg.setServerReceiveTime(value);
+      break;
+    case 7:
       var value = /** @type {number} */ (reader.readInt64());
       msg.setServerResponseTime(value);
       break;
@@ -1075,45 +1290,52 @@ proto.pb.PongRes.prototype.serializeBinary = function() {
  */
 proto.pb.PongRes.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
-  f = message.getRequestId();
-  if (f.length > 0) {
-    writer.writeString(
+  f = message.getSourceUid();
+  if (f !== 0) {
+    writer.writeInt32(
       1,
       f
     );
   }
-  f = message.getTraceId();
+  f = message.getRequestId();
   if (f.length > 0) {
     writer.writeString(
       2,
       f
     );
   }
-  f = message.getClientReqTime();
-  if (f !== 0) {
-    writer.writeInt64(
+  f = message.getTraceId();
+  if (f.length > 0) {
+    writer.writeString(
       3,
       f
     );
   }
-  f = message.getClientReceiveTime();
+  f = message.getClientReqTime();
   if (f !== 0) {
     writer.writeInt64(
       4,
       f
     );
   }
-  f = message.getServerReceiveTime();
+  f = message.getClientReceiveTime();
   if (f !== 0) {
     writer.writeInt64(
       5,
       f
     );
   }
-  f = message.getServerResponseTime();
+  f = message.getServerReceiveTime();
   if (f !== 0) {
     writer.writeInt64(
       6,
+      f
+    );
+  }
+  f = message.getServerResponseTime();
+  if (f !== 0) {
+    writer.writeInt64(
+      7,
       f
     );
   }
@@ -1121,28 +1343,28 @@ proto.pb.PongRes.serializeBinaryToWriter = function(message, writer) {
 
 
 /**
- * optional string request_id = 1;
+ * optional int32 source_uid = 1;
+ * @return {number}
+ */
+proto.pb.PongRes.prototype.getSourceUid = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 1, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.pb.PongRes} returns this
+ */
+proto.pb.PongRes.prototype.setSourceUid = function(value) {
+  return jspb.Message.setProto3IntField(this, 1, value);
+};
+
+
+/**
+ * optional string request_id = 2;
  * @return {string}
  */
 proto.pb.PongRes.prototype.getRequestId = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 1, ""));
-};
-
-
-/**
- * @param {string} value
- * @return {!proto.pb.PongRes} returns this
- */
-proto.pb.PongRes.prototype.setRequestId = function(value) {
-  return jspb.Message.setProto3StringField(this, 1, value);
-};
-
-
-/**
- * optional string trace_id = 2;
- * @return {string}
- */
-proto.pb.PongRes.prototype.getTraceId = function() {
   return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 2, ""));
 };
 
@@ -1151,34 +1373,34 @@ proto.pb.PongRes.prototype.getTraceId = function() {
  * @param {string} value
  * @return {!proto.pb.PongRes} returns this
  */
-proto.pb.PongRes.prototype.setTraceId = function(value) {
+proto.pb.PongRes.prototype.setRequestId = function(value) {
   return jspb.Message.setProto3StringField(this, 2, value);
 };
 
 
 /**
- * optional int64 client_req_time = 3;
+ * optional string trace_id = 3;
+ * @return {string}
+ */
+proto.pb.PongRes.prototype.getTraceId = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 3, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.pb.PongRes} returns this
+ */
+proto.pb.PongRes.prototype.setTraceId = function(value) {
+  return jspb.Message.setProto3StringField(this, 3, value);
+};
+
+
+/**
+ * optional int64 client_req_time = 4;
  * @return {number}
  */
 proto.pb.PongRes.prototype.getClientReqTime = function() {
-  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 3, 0));
-};
-
-
-/**
- * @param {number} value
- * @return {!proto.pb.PongRes} returns this
- */
-proto.pb.PongRes.prototype.setClientReqTime = function(value) {
-  return jspb.Message.setProto3IntField(this, 3, value);
-};
-
-
-/**
- * optional int64 client_receive_time = 4;
- * @return {number}
- */
-proto.pb.PongRes.prototype.getClientReceiveTime = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 4, 0));
 };
 
@@ -1187,16 +1409,16 @@ proto.pb.PongRes.prototype.getClientReceiveTime = function() {
  * @param {number} value
  * @return {!proto.pb.PongRes} returns this
  */
-proto.pb.PongRes.prototype.setClientReceiveTime = function(value) {
+proto.pb.PongRes.prototype.setClientReqTime = function(value) {
   return jspb.Message.setProto3IntField(this, 4, value);
 };
 
 
 /**
- * optional int64 server_receive_time = 5;
+ * optional int64 client_receive_time = 5;
  * @return {number}
  */
-proto.pb.PongRes.prototype.getServerReceiveTime = function() {
+proto.pb.PongRes.prototype.getClientReceiveTime = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 5, 0));
 };
 
@@ -1205,16 +1427,16 @@ proto.pb.PongRes.prototype.getServerReceiveTime = function() {
  * @param {number} value
  * @return {!proto.pb.PongRes} returns this
  */
-proto.pb.PongRes.prototype.setServerReceiveTime = function(value) {
+proto.pb.PongRes.prototype.setClientReceiveTime = function(value) {
   return jspb.Message.setProto3IntField(this, 5, value);
 };
 
 
 /**
- * optional int64 server_response_time = 6;
+ * optional int64 server_receive_time = 6;
  * @return {number}
  */
-proto.pb.PongRes.prototype.getServerResponseTime = function() {
+proto.pb.PongRes.prototype.getServerReceiveTime = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 6, 0));
 };
 
@@ -1223,8 +1445,26 @@ proto.pb.PongRes.prototype.getServerResponseTime = function() {
  * @param {number} value
  * @return {!proto.pb.PongRes} returns this
  */
-proto.pb.PongRes.prototype.setServerResponseTime = function(value) {
+proto.pb.PongRes.prototype.setServerReceiveTime = function(value) {
   return jspb.Message.setProto3IntField(this, 6, value);
+};
+
+
+/**
+ * optional int64 server_response_time = 7;
+ * @return {number}
+ */
+proto.pb.PongRes.prototype.getServerResponseTime = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 7, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.pb.PongRes} returns this
+ */
+proto.pb.PongRes.prototype.setServerResponseTime = function(value) {
+  return jspb.Message.setProto3IntField(this, 7, value);
 };
 
 

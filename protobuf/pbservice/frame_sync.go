@@ -31,6 +31,10 @@ func (frameSync *FrameSync)CS_RoomBaseInfo(ctx context.Context,roomBaseInfo *pb.
     empty := &pb.Empty{}
     return empty,nil
 }
+func (frameSync *FrameSync)CS_PlayerState(ctx context.Context,playerBase *pb.PlayerBase) (*pb.Empty,error){
+    empty := &pb.Empty{}
+    return empty,nil
+}
 func (frameSync *FrameSync)SC_ReadyTimeout(ctx context.Context,readyTimeout *pb.ReadyTimeout) (*pb.Empty,error){
     empty := &pb.Empty{}
     return empty,nil
@@ -72,6 +76,10 @@ func (frameSync *FrameSync)SC_RestartGame(ctx context.Context,restartGame *pb.Re
     return empty,nil
 }
 func (frameSync *FrameSync)SC_GameOver(ctx context.Context,gameOver *pb.GameOver) (*pb.Empty,error){
+    empty := &pb.Empty{}
+    return empty,nil
+}
+func (frameSync *FrameSync)SC_PlayerState(ctx context.Context,playerState *pb.PlayerState) (*pb.Empty,error){
     empty := &pb.Empty{}
     return empty,nil
 }

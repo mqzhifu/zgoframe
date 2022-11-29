@@ -377,7 +377,7 @@ func (push *Push) ServiceDiscoveryRequestUser(element PushElement) (httpRs util.
 		thisResult := success.strToStruct(payload)
 		resultInfo, _ := success.GetResultById(thisResult.Id, 1, 0)
 
-		newRoom := push.Rule.RuleManager.Option.GameMatch.Option.FrameSyncRoom.NewEmptyRoom()
+		newRoom := push.Rule.RuleManager.Option.GameMatch.Option.FrameSync.RoomManage.NewEmptyRoom()
 		util.MyPrint("newRoom:", newRoom)
 		newRoom.RuleId = int32(push.Rule.Id)
 		for _, uid := range resultInfo.PlayerIds {

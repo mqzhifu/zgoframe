@@ -17,7 +17,6 @@ type MyService struct {
 	User                  *user_center.User           //用户中心
 	Sms                   *msg_center.Sms             //短信服务
 	Email                 *msg_center.Email           //电子邮件服务
-	RoomManage            *frame_sync.RoomManager     //房间服务
 	Match                 *gamematch.GameMatch        //匹配服务
 	Gateway               *gateway.Gateway            //网关服务
 	TwinAgora             *seed_business.TwinAgora    //广州 120远程专家指导
@@ -26,6 +25,8 @@ type MyService struct {
 	Mail                  *msg_center.Mail            //站内信
 	GameMatch             *gamematch.GameMatch
 	RequestServiceAdapter *service.RequestServiceAdapter //请求3方服务 适配器
+	FrameSync             *frame_sync.FrameSync
+	//RoomManage            *frame_sync.RoomManager     //房间服务
 }
 
 var GateDefaultProtocol = int32(util.PROTOCOL_WEBSOCKET)
@@ -93,11 +94,12 @@ func NewMyService() *MyService {
 		GrpcManager:         V.GrpcManager,
 		Log:                 V.Zap,
 	}
+	CreateGameService(myService)
 	//网关
 	if C.Gateway.Status == "open" {
 		gateway := gateway.NewGateway(V.GrpcManager, V.Zap, myService.RequestServiceAdapter)
 		gateway.MyServiceList.Match = myService.Match
-		gateway.MyServiceList.RoomManage = myService.RoomManage
+		gateway.MyServiceList.FrameSync = myService.FrameSync
 		gateway.MyServiceList.TwinAgora = myService.TwinAgora
 
 		myService.Gateway = gateway
@@ -107,7 +109,6 @@ func NewMyService() *MyService {
 			util.ExitPrint("InitGateway err:" + err.Error())
 		}
 	}
-	CreateGame(myService)
 
 	myService.Cicd, err = InitCicd()
 
@@ -164,14 +165,15 @@ func (myService *MyService) RegisterService() {
 }
 
 //游戏类的服务,一个游戏至少得有：房间、匹配、帧同步
-func CreateGame(myService *MyService) (err error) {
+func CreateGameService(myService *MyService) (err error) {
 	//帧同步 - 房间服务 - room要先实例化,math frame_sync 都强依赖room
-	roomManagerOption := frame_sync.RoomManagerOption{
+	frameSyncOption := frame_sync.FrameSyncOption{
 		Log:                   V.Zap,
 		RequestServiceAdapter: myService.RequestServiceAdapter,
 		Gorm:                  V.Gorm,
 	}
-	myService.RoomManage = frame_sync.NewRoomManager(roomManagerOption)
+	myService.FrameSync = frame_sync.NewFrameSync(frameSyncOption)
+
 	//匹配服务 , 依赖 RoomManage
 	//matchOption := service.MatchOption{
 	//	RequestServiceAdapter: myService.RequestServiceAdapter,
@@ -195,7 +197,7 @@ func CreateGame(myService *MyService) (err error) {
 		RedisPrefix:            "gm",
 		RedisKeySeparator:      "_",
 		RedisTextSeparator:     "#",
-		FrameSyncRoom:          myService.RoomManage,
+		FrameSync:              myService.FrameSync,
 		RedisIdSeparator:       ",",
 		RedisPayloadSeparation: "%",
 	}

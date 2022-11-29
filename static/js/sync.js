@@ -1,42 +1,43 @@
 //=========
-function Sync (playerId,token,GatewayConfig,DomIdPreObj,contentType,protocolType,playerInfo,actionMap,frameSyncConfig){
+function Sync (playerId,token,GatewayConfig,DomIdPreObj,contentType,protocolType,playerInfo,actionMap,ruleConfig,mapSize,content_type_desc,protocol_type_desc){
     var self = this;
     this.wsObj = null;//js内置ws 对象
     //ws 连接 s 端地址
     this.hostUri = "ws://"+GatewayConfig.outIp + ":"+ GatewayConfig.wsPort + GatewayConfig.wsUri;
     this.statusDesc = {
-        1:"init",
-        2:"wsLInkSuccess",
-        3:"loginSuccess",
-        4:"loginFailed",
-        5:"matchSign",
-        6:"cancelSign",
-        7:"ready",
-        8:"startBattle",
-        9:"end",
+        1 :"init",
+        2 :"wsLInkSuccess",
+        3 :"loginSuccess",
+        4 :"loginFailed",
+        5 :"matchSign",
+        6 :"cancelSign",
+        7 :"ready",
+        8 :"startBattle",
+        9 :"end",
         10:"close",
     };
     this.playerInfo = playerInfo;
     this.status = 1;//1初始化 2等待准备 3运行中  4结束
     this.playerId = playerId;//玩家ID
-    this.matchGroupPeople = data.roomPeople;//一个副本的人数
+    this.matchGroupPeople = ruleConfig.condition_people;//一个副本的人数
     this.heartbeatLoopFunc = null;//心跳回调函数
-    this.offLineWaitTime = data.offLineWaitTime;//lockStep 玩家掉线后，其它玩家等待最长时间
+    this.offLineWaitTime = ruleConfig.off_line_wait_time;//lockStep 玩家掉线后，其它玩家等待最长时间
     //以上都是S端返回的一些配置值
 
     this.token = token;//玩家的凭证
-    this.tableMax = data.mapSize;//地址的表格大小
+    this.tableMax = mapSize;//地图的表格大小 5 X 5
     this.otherPlayerOffline = 0;//其它玩家调线
     this.pushLogicFrameLoopFunc = null;//定时循环 - 推送玩家操作函数
     this.playerOperationsQueue = [];//一个帧时间内，收集玩家的操作指令 队列
-    this.closeFlag = 0;//关闭标识，0正常1手动关闭2后端关闭
-
+    this.closeFlag = 0;
+    //关闭标识，0正常1手动关闭2后端关闭
+    this.contentTypeDesc = content_type_desc;
     this.tableId = "";
     this.domIdObj = DomIdPreObj ;
     this.playerLocation = new Object();//每个玩家的位置信息
     this.operationsInc = 0;//玩家操作指令自增ID
     this.logicFrameLoopTimeMs = 0;//毫秒，多少时间内收集一次玩家操作，推送到S端
-    this.FPS = data.fps;//每秒多少逻辑帧
+    this.FPS = ruleConfig.fps;//每秒多少逻辑帧
     this.playerCommandPushLock = 0;
     //下面是帧同步初始化信息，是由S端供给
     this.roomId = "";
@@ -110,7 +111,7 @@ function Sync (playerId,token,GatewayConfig,DomIdPreObj,contentType,protocolType
         var funcId = id.toString().substring(2);
         var session = "1234567890"
         console.log("serviceId:",serviceId,"funcId:",funcId , parseInt(funcId));
-        if (contentTypeDesc[self.contentType] == "json"){
+        if (self.contentTypeDesc[self.contentType] == "json"){
             content = contentObj.toObject();
             content = JSON.stringify(content);
             //这里有个坑，注意下
@@ -119,11 +120,6 @@ function Sync (playerId,token,GatewayConfig,DomIdPreObj,contentType,protocolType
                 content = content.replace("operationsList","operations");
                 console.log(content);
             }
-
-
-
-
-
 
 
             var contentLenByte = intToByte4( content.length);
@@ -167,7 +163,7 @@ function Sync (playerId,token,GatewayConfig,DomIdPreObj,contentType,protocolType
             console.log("<sendMsg final>",content);
 
             self.wsObj.send(content);
-        }else if ( contentTypeDesc[self.contentType]  == "protobuf"){
+        }else if ( self.contentTypeDesc[self.contentType]  == "protobuf"){
             // content = contentObj.serializeBinary();
             // var protocolCtrl = contentType +  "" + protocolType + id;
             // if (action != "login" ){
@@ -234,7 +230,7 @@ function Sync (playerId,token,GatewayConfig,DomIdPreObj,contentType,protocolType
         //19 以后为内容体
         //结尾会添加一个字节：\f ,可用于 TCP 粘包 分隔
 
-        if (contentTypeDesc[self.contentType] == 'protobuf'){
+        if (self.contentTypeDesc[self.contentType] == 'protobuf'){
             var reader = new FileReader();
             reader.readAsArrayBuffer(ev.data);
             reader.onloadend = function(e) {
@@ -255,7 +251,7 @@ function Sync (playerId,token,GatewayConfig,DomIdPreObj,contentType,protocolType
                 // msgObj.content =  responseProtoClass.deserializeBinary(content).toObject();
                 // self.router(msgObj);
             };
-        }else if(contentTypeDesc[self.contentType] == "json"){
+        }else if(self.contentTypeDesc[self.contentType] == "json"){
             var reader = new FileReader();
             reader.readAsArrayBuffer(ev.data);
             reader.onloadend = function(e) {
@@ -369,7 +365,7 @@ function Sync (playerId,token,GatewayConfig,DomIdPreObj,contentType,protocolType
     };
     this.rPushRoomHistory = function(logicFrame){
         console.log("rPushRoomHistory:");
-        if(contentTypeDesc[self.contentType] =="protobuf"){
+        if(self.contentTypeDesc[self.contentType] =="protobuf"){
             logicFrame.list = logicFrame.listList;
         }
         var list = logicFrame.list;
@@ -401,10 +397,10 @@ function Sync (playerId,token,GatewayConfig,DomIdPreObj,contentType,protocolType
         // var playerConnInfo = logicFrame.player;
         // self.sessionId = playerConnInfo.sessionId;
 
-        var now = Date.now();
-        var requestClientPing = new proto.pb.Ping();
-        requestClientPing.setAddTime(now);
-        this.sendMsg("CS_Ping",requestClientPing);
+        // var now = Date.now();
+        // var requestClientPing = new proto.pb.Ping();
+        // requestClientPing.setAddTime(now);
+        // this.sendMsg("CS_Ping",requestClientPing);
         this.upStatus(3);
 
         //这里是有问题的，roomId我在外层写死了均为空，应该是动态从后端拿，且最好是短连接去取，回头优化
@@ -445,7 +441,7 @@ function Sync (playerId,token,GatewayConfig,DomIdPreObj,contentType,protocolType
         self.upOptBntHref(exceptionOffLineId,msg,self.closeFD);
     };
     this.rPushRoomInfo = function(logicFrame){
-        if(contentTypeDesc[self.contentType] =="protobuf"){
+        if(self.contentTypeDesc[self.contentType] =="protobuf"){
             logicFrame.playerList = logicFrame.playerListList;
         }
         self.initLocalGlobalVar(logicFrame);
@@ -466,7 +462,7 @@ function Sync (playerId,token,GatewayConfig,DomIdPreObj,contentType,protocolType
     this.rPushLogicFrame = function(logicFrame,source){//接收S端逻辑帧
         console.log("logicFrame:",logicFrame);
         var pre = self.descPre;
-        if(contentTypeDesc[self.contentType] =="protobuf"){
+        if(self.contentTypeDesc[self.contentType] =="protobuf"){
             if (source != "rPushRoomHistory"){
                 logicFrame.operations = logicFrame.operationsList;
             }
@@ -539,7 +535,7 @@ function Sync (playerId,token,GatewayConfig,DomIdPreObj,contentType,protocolType
     };
     this.rEnterBattle = function(logicFrame){
         console.log("rEnterBattle logicFrame:",logicFrame , " self.contentType:",self.contentType)
-        if(contentTypeDesc[self.contentType] =="protobuf"){
+        if(self.contentTypeDesc[self.contentType] =="protobuf"){
             console.log("rEnterBattle in protobuf ")
             logicFrame.playerList = logicFrame.playerListList;
         }

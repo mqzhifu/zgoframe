@@ -215,20 +215,20 @@ func (grpcManager *GrpcManager) CallServiceFuncGameMatch(funcName string, balanc
 			return data, err
 		}
 		data, err = grpcClient.CS_PlayerMatchSignCancel(ctx, &request)
-	case "SC_PlayerMatchSignFailed":
-		request := pb.GameMatchOptResult{}
-		err := json.Unmarshal(postData, &request)
-		if err != nil {
-			return data, err
-		}
-		data, err = grpcClient.SC_PlayerMatchSignFailed(ctx, &request)
-	case "SC_PlayerMatchingFailed":
-		request := pb.GameMatchOptResult{}
-		err := json.Unmarshal(postData, &request)
-		if err != nil {
-			return data, err
-		}
-		data, err = grpcClient.SC_PlayerMatchingFailed(ctx, &request)
+	//case "SC_PlayerMatchSignFailed":
+	//	request := pb.GameMatchOptResult{}
+	//	err := json.Unmarshal(postData, &request)
+	//	if err != nil {
+	//		return data, err
+	//	}
+	//	data, err = grpcClient.SC_PlayerMatchSignFailed(ctx, &request)
+	//case "SC_PlayerMatchingFailed":
+	//	request := pb.GameMatchOptResult{}
+	//	err := json.Unmarshal(postData, &request)
+	//	if err != nil {
+	//		return data, err
+	//	}
+	//	data, err = grpcClient.SC_PlayerMatchingFailed(ctx, &request)
 
 	default:
 		return data, errors.New("func name router failed.")

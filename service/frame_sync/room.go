@@ -50,7 +50,7 @@ type Room struct {
 	LogicFrameHistory []*pb.RoomHistory `json:"logicFrameHistory"` //玩家的历史所有记录
 	EndTotal          string            `json:"rs"`                //本房间的一局游戏，最终的比赛结果
 	RoomManager       *RoomManager      `json:"-"`                 //父类
-	FrameSync         *FrameSync        `json:"-"`
+	Sync              *Sync             `json:"-"`
 }
 
 type RoomManager struct {
@@ -216,18 +216,17 @@ func (roomManager *RoomManager) AddOne(room *Room) error {
 
 	//user -> sign ->Match -> Room -> Rsync
 	//帧同步服务 - 强-依赖room
-	syncOption := FrameSyncOption{
+	syncOption := SyncOption{
 		RequestServiceAdapter: room.RoomManager.Option.RequestServiceAdapter,
 		//ProjectId:             C.System.ProjectId,
 		Log:        room.RoomManager.Option.Log,
 		Room:       room,
 		RoomManage: room.RoomManager,
 		FPS:        int32(rule.Fps),
-		MapSize:    5,
 	}
 
-	room.FrameSync = NewFrameSync(syncOption)
-	room.FrameSync.StartOne(room)
+	room.Sync = NewSync(syncOption)
+	room.Sync.StartOne(room)
 
 	return nil
 }

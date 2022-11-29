@@ -16,13 +16,14 @@ if(location.href.substring(0,5) == "https"){
     http_protocol = "https";
 }
 var URI_MAP = {
-    "gateway_config":http_protocol + "://"+domain + "/gateway/config",
+    "gateway_config": http_protocol + "://"+domain + "/gateway/config",
     "gateway_action_map":http_protocol + "://"+domain + "/gateway/action/map",//URI - 网关 protobuf 映射表
     "user_login":http_protocol + "://"+domain + "/base/login",//登陆
     "gateway_fd_list":http_protocol + "://"+domain + "/gateway/fd/list",//长连接用户
     "gateway_send_msg":http_protocol + "://"+domain + "/gateway/send/msg",//长连接推送消息
     "gateway_total":http_protocol + "://"+domain + "/gateway/total",//长连接 metrics
     "twin_agora_config":http_protocol + "://"+domain + "/twin/agora/config",//声网房间长连接配置
+    "rule":http_protocol + "://"+domain + "/game/match/rule",
 };
 
 var UserList = {

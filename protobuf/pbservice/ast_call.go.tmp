@@ -117,6 +117,13 @@ func (grpcManager *GrpcManager) CallServiceFuncFrameSync(funcName string,balance
             return data,err
         }
         data ,err = grpcClient.CS_RoomBaseInfo(ctx,&request)
+    case "CS_PlayerState":
+        request := pb.PlayerBase{}
+        err := json.Unmarshal(postData,&request)
+        if err != nil{
+            return data,err
+        }
+        data ,err = grpcClient.CS_PlayerState(ctx,&request)
     case "SC_ReadyTimeout":
         request := pb.ReadyTimeout{}
         err := json.Unmarshal(postData,&request)
@@ -194,6 +201,13 @@ func (grpcManager *GrpcManager) CallServiceFuncFrameSync(funcName string,balance
             return data,err
         }
         data ,err = grpcClient.SC_GameOver(ctx,&request)
+    case "SC_PlayerState":
+        request := pb.PlayerState{}
+        err := json.Unmarshal(postData,&request)
+        if err != nil{
+            return data,err
+        }
+        data ,err = grpcClient.SC_PlayerState(ctx,&request)
 
     default:
             return data,errors.New("func name router failed.")

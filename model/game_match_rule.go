@@ -15,9 +15,10 @@ type GameMatchRule struct {
 	WeightTeamAggregation string `json:"weight_team_aggregation" form:"weight_team_aggregation" db:"define:varchar(50);comment:每个小组的最终权重计算聚合方法 sum min max average;defaultValue:''"` //权重的计算是以：人，为单位，但报名是以组为单位，当计算好每个人的权重后，最终求整组的权重值
 	WeightScoreMin        int    `json:"weight_score_min" form:"weight_score_min" db:"define:int;comment:权重最小值;defaultValue:0"`                                                      //权重值范围：最小值，范围： 1-100
 	WeightScoreMax        int    `json:"weight_score_max" form:"weight_score_max" db:"define:int;comment:权重最大值;defaultValue:0"`                                                      //权重值范围：最大值，范围： 1-100
-	WeightAutoAssign      bool   `json:"WeightAutoAssign" form:"WeightAutoAssign" db:"define:int;comment:权重自动匹配;defaultValue:0"`                                                     //当权重值范围内，没有任何玩家，是否接收，自动调度分配，这样能提高匹配成功率
+	WeightAutoAssign      bool   `json:"weight_auto_assign" form:"WeightAutoAssign" db:"define:int;comment:权重自动匹配;defaultValue:0"`                                                   //当权重值范围内，没有任何玩家，是否接收，自动调度分配，这样能提高匹配成功率
 	Fps                   int    `json:"fps" form:"fps" db:"define:tinyint(1);comment:帧同步速率;defaultValue:0"`                                                                         //帧同步速率
-	ReadyTimeout          int    `json:"ready_timeout"  form:"fps"  db:"define:int;comment:进入房间准备超时间;defaultValue:0"  `                                                              //进入房间准备超时间
+	ReadyTimeout          int    `json:"ready_timeout"  form:"fps"  db:"define:int;comment:进入房间准备超时间;defaultValue:0"`                                                                //进入房间准备超时间
+	OffLineWaitTime       int    `json:"off_line_wait_time"  form:"off_line_wait_time"  db:"define:int;comment:某玩家掉线等待时长(秒);defaultValue:0"`                                         //某玩家掉线等待时长(秒)
 }
 
 func (gameMatchRule *GameMatchRule) TableOptions() map[string]string {

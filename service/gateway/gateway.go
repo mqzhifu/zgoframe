@@ -81,7 +81,7 @@ func (gateway *Gateway) StartSocket(netWayOption util.NetWayOption) (*util.NetWa
 //广播给所有服务，如：心跳 PING PONG 关闭事件(不广播给gateway)
 func (gateway *Gateway) BroadcastService(msg pb.Msg, conn *util.Conn) {
 	gateway.Log.Debug("BroadcastService funcId:" + strconv.Itoa(int(msg.FuncId)))
-	//gateway.RouterServiceSync(msg, conn)
+	gateway.RouterServiceSync(msg, conn)
 	//gateway.RouterServiceGameMatch(msg, conn)
 	gateway.RouterServiceTwinAgora(msg, conn)
 }
@@ -299,9 +299,11 @@ func (gateway *Gateway) RouterServiceSync(msg pb.Msg, conn *util.Conn) (data []b
 	requestPlayerMatchSign := pb.GameMatchSign{}
 	requestPlayerMatchSignCancel := pb.GameMatchPlayerCancel{}
 
-	requestFDCloseEvent := pb.FDCloseEvent{}
-	reqHeartbeat := pb.Heartbeat{}
+	reqPlayerBase := pb.PlayerBase{}
+
 	reqFDCreateEvent := pb.FDCreateEvent{}
+	reqHeartbeat := pb.Heartbeat{}
+	requestFDCloseEvent := pb.FDCloseEvent{}
 
 	protoServiceFunc, _ := gateway.Netway.Option.ProtoMap.GetServiceFuncById(int(msg.SidFid))
 	switch protoServiceFunc.FuncName {
@@ -325,6 +327,8 @@ func (gateway *Gateway) RouterServiceSync(msg pb.Msg, conn *util.Conn) (data []b
 		err = gateway.Netway.ProtocolManager.ParserContentMsg(msg, &requestFDCloseEvent, conn.UserId)
 	case "CS_Heartbeat":
 		err = gateway.Netway.ProtocolManager.ParserContentMsg(msg, &reqHeartbeat, conn.UserId)
+	case "CS_PlayerState":
+		err = gateway.Netway.ProtocolManager.ParserContentMsg(msg, &reqPlayerBase, conn.UserId)
 	case "FdCreate":
 		err = gateway.Netway.ProtocolManager.ParserContentMsg(msg, &reqFDCreateEvent, conn.UserId)
 	default:
@@ -353,9 +357,14 @@ func (gateway *Gateway) RouterServiceSync(msg pb.Msg, conn *util.Conn) (data []b
 	case "CS_RoomBaseInfo":
 		requestRoomBaseInfo.SourceUid = conn.UserId
 		err = gateway.MyServiceList.RoomManage.GetRoom(requestRoomBaseInfo)
+	case "CS_PlayerState":
+		gateway.MyServiceList.FrameSync.GetPlayerBase(reqPlayerBase)
 	case "FDClose":
+		err = gateway.MyServiceList.FrameSync.CloseFD(requestFDCloseEvent)
 	case "CS_Heartbeat":
+		err = gateway.MyServiceList.FrameSync.Heartbeat(reqHeartbeat)
 	case "FdCreate":
+		err = gateway.MyServiceList.FrameSync.CreateFD(reqFDCreateEvent)
 	default:
 		return data, errors.New(gateway.MakeRouterErrNotFound(prefix, protoServiceFunc.FuncName, "2"))
 	}

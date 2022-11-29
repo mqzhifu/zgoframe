@@ -11,17 +11,17 @@ import (
 )
 
 type Rule struct {
-	model.GameMatchRule `json:"model.game_match_rule"`
-	Prefix              string         `json:"prefix"`
-	Status              int            `json:"status"`
-	DemonDebugTime      int            `json:"demon_debug_time"`      //守护协程，在没有处理数据时，需要输出日志，太多，每X秒输出一次
-	DemonDebugShowTime  int            `json:"demon_debug_show_time"` //配合上面一起使用，用于记录一次的输出时间
-	QueueSign           *QueueSign     `json:"-"`
-	QueueSuccess        *QueueSuccess  `json:"-"`
-	Push                *Push          `json:"-"`
-	Match               *Match         `json:"-"`
-	PlayerManager       *PlayerManager `json:"-"`
-	RuleManager         *RuleManager   `json:"-"`
+	model.GameMatchRule
+	Prefix             string         `json:"prefix"`
+	Status             int            `json:"status"`
+	DemonDebugTime     int            `json:"demon_debug_time"`      //守护协程，在没有处理数据时，需要输出日志，太多，每X秒输出一次
+	DemonDebugShowTime int            `json:"demon_debug_show_time"` //配合上面一起使用，用于记录一次的输出时间
+	QueueSign          *QueueSign     `json:"-"`
+	QueueSuccess       *QueueSuccess  `json:"-"`
+	Push               *Push          `json:"-"`
+	Match              *Match         `json:"-"`
+	PlayerManager      *PlayerManager `json:"-"`
+	RuleManager        *RuleManager   `json:"-"`
 }
 
 type RuleManagerOption struct {

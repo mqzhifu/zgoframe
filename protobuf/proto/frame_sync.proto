@@ -13,6 +13,7 @@ service FrameSync {
     rpc CS_PlayerOver              ( PlayerOver)            returns (Empty) {}//玩家死亡
     rpc CS_RoomHistory             ( ReqRoomHistory)        returns (Empty) {}//房间历史记录，如：玩家操作信息
     rpc CS_RoomBaseInfo            ( RoomBaseInfo)          returns (Empty) {}//获取一个房间的基础信息
+    rpc CS_PlayerState             ( PlayerBase)          returns (Empty) {}//获取一个玩家当前的状态
 
     rpc SC_ReadyTimeout            ( ReadyTimeout)          returns (Empty) {}//准备超时
     rpc SC_EnterBattle             ( EnterBattle)           returns (Empty) {}//开始游戏前初始化
@@ -25,6 +26,7 @@ service FrameSync {
     rpc SC_StartBattle             ( StartBattle)           returns (Empty) {}//开始战斗
     rpc SC_RestartGame             ( RestartGame)           returns (Empty) {}//玩家均已在线，重新开始游戏
     rpc SC_GameOver                ( GameOver)              returns (Empty) {}//一局游戏结束
+    rpc SC_PlayerState             ( PlayerState)           returns (Empty) {}//一个玩家当前的状态
 }
 
 message RoomBaseInfo{
@@ -39,6 +41,18 @@ message RoomBaseInfo{
     string      room_id             = 9;
     int32       start_time          =10;
     int32       end_time 	        =11;
+}
+
+message PlayerBase{
+    int32   source_uid        = 1;
+    int32   player_id         = 2;
+}
+
+message PlayerState{
+    int32   player_id           = 1;
+    int32   add_time            = 2;
+    int32   status              = 3;
+    string  room_id             = 4;
 }
 
 message PlayerResumeGame{

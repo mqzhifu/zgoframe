@@ -70,7 +70,7 @@ type GameMatchOption struct {
 	RuleMatchTimeoutMin    int                            `json:"rule_match_timeout_min"`    //报名，最小时间
 	RuleSuccessTimeoutMax  int                            `json:"rule_success_timeout_max"`  //匹配成功后，最大超时时间
 	RuleSuccessTimeoutMin  int                            `json:"rule_success_timeout_min"`  //匹配成功后，最短超时时间
-	FrameSyncRoom          *frame_sync.RoomManager        `json:"-"`                         //帧同步
+	FrameSync              *frame_sync.FrameSync          `json:"-"`                         //帧同步
 	RequestServiceAdapter  *service.RequestServiceAdapter `json:"-"`                         //请求3方服务 适配器
 	Log                    *zap.Logger                    `json:"-"`                         //log 实例
 	Redis                  *util.MyRedisGo                `json:"-"`                         //redis 实例

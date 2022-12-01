@@ -14,10 +14,10 @@ import (
 )
 
 type MyService struct {
-	User                  *user_center.User           //用户中心
-	Sms                   *msg_center.Sms             //短信服务
-	Email                 *msg_center.Email           //电子邮件服务
-	Match                 *gamematch.GameMatch        //匹配服务
+	User  *user_center.User //用户中心
+	Sms   *msg_center.Sms   //短信服务
+	Email *msg_center.Email //电子邮件服务
+	//Match                 *gamematch.GameMatch        //匹配服务
 	Gateway               *gateway.Gateway            //网关服务
 	TwinAgora             *seed_business.TwinAgora    //广州 120远程专家指导
 	ConfigCenter          *config_center.ConfigCenter //配置中心
@@ -98,7 +98,7 @@ func NewMyService() *MyService {
 	//网关
 	if C.Gateway.Status == "open" {
 		gateway := gateway.NewGateway(V.GrpcManager, V.Zap, myService.RequestServiceAdapter)
-		gateway.MyServiceList.Match = myService.Match
+		gateway.MyServiceList.GameMatch = myService.GameMatch
 		gateway.MyServiceList.FrameSync = myService.FrameSync
 		gateway.MyServiceList.TwinAgora = myService.TwinAgora
 

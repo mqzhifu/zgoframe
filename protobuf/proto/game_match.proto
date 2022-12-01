@@ -10,7 +10,7 @@ service GameMatch {
     rpc CS_PlayerMatchSign         ( GameMatchSign)        returns (Empty) {}//玩家匹配报名
     rpc CS_PlayerMatchSignCancel   ( GameMatchPlayerCancel)  returns (Empty) {}//玩家匹配取消报名
 
-    rpc SC_GameMatchOptResult   ( GameMatchOptResult) returns (Empty) {}//玩家报名(匹配)失败
+    rpc SC_GameMatchOptResult   ( GameMatchOptResult) returns (Empty) {}//玩家报名(匹配)结果(成功/失败)
 }
 
 message GameMatchSign{
@@ -18,7 +18,7 @@ message GameMatchSign{
     int32       rule_id                         = 2;
     int32       group_id                        = 3;
     string      addition                        = 4;
-    repeated    GameMatchSignPlayer player_list = 5;
+    repeated    GameMatchSignPlayer player_sets = 5;
 }
 
 message GameMatchSignPlayer{

@@ -36,7 +36,7 @@ func (gameMatch *GameMatch) PlayerJoin(form pb.GameMatchSign) (group Group, err 
 		return group, gameMatch.Err.New(624)
 	}
 
-	lenPlayers := len(form.PlayerList)
+	lenPlayers := len(form.PlayerSets)
 	if lenPlayers <= 0 {
 		return group, gameMatch.Err.New(401)
 	}
@@ -74,7 +74,7 @@ func (gameMatch *GameMatch) PlayerJoin(form pb.GameMatchSign) (group Group, err 
 	gameMatch.Option.Log.Info("check base info finish , start check player status :")
 	//检查，所有玩家的状态
 	var playerList []Player
-	for _, httpPlayer := range form.PlayerList {
+	for _, httpPlayer := range form.PlayerSets {
 		if httpPlayer.Uid <= 0 {
 			return group, gameMatch.Err.New(412)
 		}
@@ -220,6 +220,7 @@ func (gameMatch *GameMatch) PlayerJoin(form pb.GameMatchSign) (group Group, err 
 }
 
 func (gameMatch *GameMatch) Cancel(form pb.GameMatchPlayerCancel) error {
+	gameMatch.Option.Log.Info("gameMatch Cancel form.groupId" + strconv.Itoa(int(form.GroupId)) + "form.rule" + strconv.Itoa(int(form.RuleId)) + "form.SourceUid" + strconv.Itoa(int(form.SourceUid)))
 	if form.RuleId <= 0 {
 		return errors.New("rule id empty")
 	}
@@ -267,5 +268,5 @@ func (gameMatch *GameMatch) DebugShowQueueInfo(rule *Rule, form pb.GameMatchSign
 
 	groupsTotal := rule.QueueSign.getAllGroupsWeightCnt() //报名 小组总数
 	playersTotal := rule.QueueSign.getAllPlayersCnt()     //报名 玩家总数
-	gameMatch.Option.Log.Debug("ShowQueueInfo , groupId:" + strconv.Itoa(int(form.GroupId)) + " , playersLen : " + strconv.Itoa(len(form.PlayerList)) + " ,queue cnt : groupsTotal" + strconv.Itoa(groupsTotal) + " , playersTotal" + strconv.Itoa(playersTotal))
+	gameMatch.Option.Log.Debug("ShowQueueInfo , groupId:" + strconv.Itoa(int(form.GroupId)) + " , playersLen : " + strconv.Itoa(len(form.PlayerSets)) + " ,queue cnt : groupsTotal" + strconv.Itoa(groupsTotal) + " , playersTotal" + strconv.Itoa(playersTotal))
 }

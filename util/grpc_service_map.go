@@ -128,13 +128,13 @@ func (grpcManager *GrpcManager) CallServiceFuncFrameSync(funcName string, balanc
 			return data, err
 		}
 		data, err = grpcClient.SC_LogicFrame(ctx, &request)
-	case "SC_RoomHistory":
-		request := pb.RoomHistoryList{}
-		err := json.Unmarshal(postData, &request)
-		if err != nil {
-			return data, err
-		}
-		data, err = grpcClient.SC_RoomHistory(ctx, &request)
+	//case "SC_RoomHistory":
+	//	request := pb.RoomHistoryList{}
+	//	err := json.Unmarshal(postData, &request)
+	//	if err != nil {
+	//		return data, err
+	//	}
+	//	data, err = grpcClient.SC_RoomHistory(ctx, &request)
 	case "SC_RoomBaseInfo":
 		request := pb.RoomBaseInfo{}
 		err := json.Unmarshal(postData, &request)

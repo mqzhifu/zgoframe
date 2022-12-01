@@ -19,7 +19,7 @@
 20136|FrameSync|SC_PlayerState|PlayerState|Empty|一个玩家当前的状态
 10100|GameMatch|CS_PlayerMatchSign|GameMatchSign|Empty|玩家匹配报名
 10102|GameMatch|CS_PlayerMatchSignCancel|GameMatchPlayerCancel|Empty|玩家匹配取消报名
-10104|GameMatch|SC_GameMatchOptResult|GameMatchOptResult|Empty|玩家报名(匹配)失败
+10104|GameMatch|SC_GameMatchOptResult|GameMatchOptResult|Empty|玩家报名(匹配)结果(成功/失败)
 90100|Gateway|CS_Login|Login|LoginRes|登陆
 90102|Gateway|CS_Ping|PingReq|PongRes|客户端PING服务端
 90104|Gateway|CS_Pong|PongRes|PingReq|C端响应S端PIN

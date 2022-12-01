@@ -28,7 +28,7 @@ type Room struct {
 	AddTime                int32               `json:"addTime"`          //创建时间
 	StartTime              int32               `json:"startTime"`        //开始游戏时间
 	EndTime                int32               `json:"endTime"`          //游戏结束时间
-	ReadyTimeout           int32               `json:"readyTimeout"`     //房间创建，玩家进入，需要每个玩家点击准备：超时时间
+	ReadyTimeout           int                 `json:"readyTimeout"`     //房间创建，玩家进入，需要每个玩家点击准备：超时时间
 	Status                 int32               `json:"status"`           //状态
 	PlayerList             []*Player           `json:"playerList"`       //玩家列表
 	PlayerIds              []int32             `json:"player_ids"`       //玩家列表IDS，跟上面一样，只是 方便计算
@@ -99,7 +99,7 @@ func (roomManager *RoomManager) NewEmptyRoom() *Room {
 	room.StatusLock = &sync.Mutex{}
 	room.EndTotal = ""
 	room.RuleId = 0
-	room.ReadyTimeout = 0
+	room.ReadyTimeout = util.GetNowTimeSecondToInt() + 10
 	//readyTimeout := int32(util.GetNowTimeSecondToInt()) + roomManager.Option.ReadyTimeout
 
 	room.RoomManager = roomManager
@@ -217,12 +217,12 @@ func (roomManager *RoomManager) AddOne(room *Room) error {
 	//user -> sign ->Match -> Room -> Rsync
 	//帧同步服务 - 强-依赖room
 	syncOption := SyncOption{
-		RequestServiceAdapter: room.RoomManager.Option.RequestServiceAdapter,
 		//ProjectId:             C.System.ProjectId,
-		Log:        room.RoomManager.Option.Log,
-		Room:       room,
-		RoomManage: room.RoomManager,
-		FPS:        int32(rule.Fps),
+		RequestServiceAdapter: room.RoomManager.Option.RequestServiceAdapter,
+		Log:                   room.RoomManager.Option.Log,
+		Room:                  room,
+		RoomManage:            room.RoomManager,
+		FPS:                   int32(rule.Fps),
 	}
 
 	room.Sync = NewSync(syncOption)

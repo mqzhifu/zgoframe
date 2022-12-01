@@ -362,6 +362,7 @@ func (push *Push) ServiceDiscoveryRequestUser(element PushElement) (httpRs util.
 	payload := strings.Replace(element.Payload, push.RedisPayloadSeparation, push.RedisTextSeparator, -1)
 	success := push.Rule.QueueSuccess
 	if element.Category == service.PushCategorySignTimeout {
+		push.Log.Debug("push ServiceDiscoveryRequestUser element.Category == service.PushCategorySignTimeout")
 		groupInfo := push.Rule.RuleManager.Option.GameMatch.GroupStrToStruct(payload)
 		playerIds := push.Rule.RuleManager.Option.GameMatch.GetGroupPlayerIds(groupInfo)
 		gameMatchOptResult := pb.GameMatchOptResult{
@@ -390,6 +391,7 @@ func (push *Push) ServiceDiscoveryRequestUser(element PushElement) (httpRs util.
 			}
 			push.Rule.RuleManager.Option.RequestServiceAdapter.GatewaySendMsgByUid(int32(uid), "SC_GameMatchOptResult", gameMatchOptResult)
 		}
+		push.Rule.RuleManager.Option.GameMatch.Option.FrameSync.RoomManage.AddOne(newRoom)
 
 	} else {
 		push.Log.Error("element.Category error.")

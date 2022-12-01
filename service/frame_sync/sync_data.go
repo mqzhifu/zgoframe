@@ -143,7 +143,7 @@ func (sync *Sync) checkReadyTimeout(room *Room) {
 			goto end
 		default:
 			now := util.GetNowTimeSecondToInt()
-			if now > int(room.ReadyTimeout) {
+			if now > room.ReadyTimeout {
 				sync.Option.Log.Error("room ready timeout id :" + room.Id)
 				requestReadyTimeout := pb.ReadyTimeout{
 					RoomId: room.Id,
@@ -567,8 +567,8 @@ func (sync *Sync) addOneRoomHistory(room *Room, action, content string) {
 func (sync *Sync) RoomHistory(requestRoomHistory pb.ReqRoomHistory) error {
 	roomId := requestRoomHistory.RoomId
 	room, _ := sync.Option.RoomManage.GetById(roomId)
-	responsePushRoomHistory := pb.RoomHistoryList{}
-	responsePushRoomHistory.List = room.LogicFrameHistory
+	responsePushRoomHistory := pb.RoomHistorySets{}
+	responsePushRoomHistory.Sets = room.LogicFrameHistory
 	sync.Option.RequestServiceAdapter.GatewaySendMsgByUid(requestRoomHistory.SourceUid, "SC_RoomHistory", &responsePushRoomHistory)
 	return nil
 }
@@ -612,25 +612,26 @@ func (sync *Sync) PlayerResumeGame(requestPlayerResumeGame pb.PlayerResumeGame) 
 }
 
 func (sync *Sync) testFirstLogicFrame(room *Room) {
-	////初始结束后，这里方便测试，再补一帧，所有玩家的随机位置
-	//if room.PlayerList[0].Id < 999 {
-	//	var operations []*pb.Operation
-	//	for _, player := range room.PlayerList {
-	//		location := strconv.Itoa(util.GetRandInt32Num(sync.Option.MapSize)) + "," + strconv.Itoa(util.GetRandInt32Num(sync.Option.MapSize))
-	//		operation := pb.Operation{
-	//			Id:       logicFrameMsgDefaultId,
-	//			Event:    "move",
-	//			Value:    location,
-	//			PlayerId: int32(player.Id),
-	//		}
-	//		operations = append(operations, &operation)
-	//	}
-	//	logicFrameMsg := pb.LogicFrame{
-	//		Id:             operationDefaultId,
-	//		RoomId:         room.Id,
-	//		SequenceNumber: int32(room.SequenceNumber),
-	//		Operations:     operations,
-	//	}
-	//	sync.boardCastInRoom(room.Id, "SC_LogicFrame", &logicFrameMsg)
-	//}
+	//初始结束后，这里方便测试，再补一帧，所有玩家的随机位置
+	if room.PlayerList[0].Id < 999 {
+		var operations []*pb.Operation
+		for _, player := range room.PlayerList {
+			//location := strconv.Itoa(util.GetRandInt32Num(sync.Option.MapSize)) + "," + strconv.Itoa(util.GetRandInt32Num(sync.Option.MapSize))
+			location := strconv.Itoa(util.GetRandInt32Num(7)) + "," + strconv.Itoa(util.GetRandInt32Num(7)) //MapSize，这个值我回头想想怎么处理，先写死，前端也必须跟这个相同
+			operation := pb.Operation{
+				Id:       logicFrameMsgDefaultId,
+				Event:    "move",
+				Value:    location,
+				PlayerId: int32(player.Id),
+			}
+			operations = append(operations, &operation)
+		}
+		logicFrameMsg := pb.LogicFrame{
+			Id:             operationDefaultId,
+			RoomId:         room.Id,
+			SequenceNumber: int32(room.SequenceNumber),
+			Operations:     operations,
+		}
+		sync.boardCastInRoom(room.Id, "SC_LogicFrame", &logicFrameMsg)
+	}
 }

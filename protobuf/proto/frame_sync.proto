@@ -18,7 +18,7 @@ service FrameSync {
     rpc SC_ReadyTimeout            ( ReadyTimeout)          returns (Empty) {}//准备超时
     rpc SC_EnterBattle             ( EnterBattle)           returns (Empty) {}//开始游戏前初始化
     rpc SC_LogicFrame              ( LogicFrame)            returns (Empty) {}//推送逻辑帧
-    rpc SC_RoomHistory             ( RoomHistoryList)       returns (Empty) {}//推送逻辑帧
+    rpc SC_RoomHistory             ( RoomHistorySets)       returns (Empty) {}//推送逻辑帧
     rpc SC_RoomBaseInfo            ( RoomBaseInfo)          returns (Empty) {}//房间信息
     rpc SC_OtherPlayerOffline      ( OtherPlayerOffline)    returns (Empty) {}//其它玩家掉线
     rpc SC_OtherPlayerOver         ( PlayerOver)            returns (Empty) {}//其它玩家已死亡
@@ -76,9 +76,9 @@ message ReqRoomHistory{
     int32 sequence_numberEnd    = 5;
 }
 
-message RoomHistoryList{
+message RoomHistorySets{
     int32   source_uid          = 1;
-    repeated RoomHistory list   = 2;
+    repeated RoomHistory Sets   = 2;
 }
 
 message RoomHistory{

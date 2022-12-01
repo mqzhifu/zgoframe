@@ -17,7 +17,7 @@ import (
 //这是个快捷变量，目前所有代码均在一起，直接挂在这个变量上即可，后期所有服务分拆出去，网关没那么多附加功能此变量就没用了
 type MyServiceList struct {
 	//Match      *Match
-	Match      *gamematch.GameMatch
+	GameMatch  *gamematch.GameMatch
 	FrameSync  *frame_sync.FrameSync
 	RoomManage *frame_sync.RoomManager
 	TwinAgora  *seed_business.TwinAgora
@@ -275,10 +275,13 @@ func (gateway *Gateway) RouterServiceGameMatch(msg pb.Msg, conn *util.Conn) (dat
 
 	switch protoServiceFunc.FuncName {
 	case "CS_PlayerMatchSign":
-		gateway.MyServiceList.Match.PlayerJoin(requestPlayerMatchSign)
+		_, e := gateway.MyServiceList.GameMatch.PlayerJoin(requestPlayerMatchSign)
+		if e != nil {
+			gateway.Log.Debug("PlayerJoin return e: " + e.Error())
+		}
 	case "CS_PlayerMatchSignCancel":
 		requestPlayerMatchSignCancel.SourceUid = conn.UserId
-		gateway.MyServiceList.Match.Cancel(requestPlayerMatchSignCancel)
+		gateway.MyServiceList.GameMatch.Cancel(requestPlayerMatchSignCancel)
 
 	default:
 		return data, errors.New(gateway.MakeRouterErrNotFound(prefix, protoServiceFunc.FuncName, "2"))
@@ -296,8 +299,8 @@ func (gateway *Gateway) RouterServiceSync(msg pb.Msg, conn *util.Conn) (data []b
 	requestPlayerOver := pb.PlayerOver{}
 	requestRoomHistory := pb.ReqRoomHistory{}
 	requestRoomBaseInfo := pb.RoomBaseInfo{}
-	requestPlayerMatchSign := pb.GameMatchSign{}
-	requestPlayerMatchSignCancel := pb.GameMatchPlayerCancel{}
+	//requestPlayerMatchSign := pb.GameMatchSign{}
+	//requestPlayerMatchSignCancel := pb.GameMatchPlayerCancel{}
 
 	reqPlayerBase := pb.PlayerBase{}
 
@@ -319,10 +322,10 @@ func (gateway *Gateway) RouterServiceSync(msg pb.Msg, conn *util.Conn) (data []b
 		err = gateway.Netway.ProtocolManager.ParserContentMsg(msg, &requestRoomHistory, conn.UserId)
 	case "CS_RoomBaseInfo":
 		err = gateway.Netway.ProtocolManager.ParserContentMsg(msg, &requestRoomBaseInfo, conn.UserId)
-	case "CS_PlayerMatchSign":
-		err = gateway.Netway.ProtocolManager.ParserContentMsg(msg, &requestPlayerMatchSign, conn.UserId)
-	case "CS_PlayerMatchSignCancel":
-		err = gateway.Netway.ProtocolManager.ParserContentMsg(msg, &requestPlayerMatchSignCancel, conn.UserId)
+	//case "CS_PlayerMatchSign":
+	//	err = gateway.Netway.ProtocolManager.ParserContentMsg(msg, &requestPlayerMatchSign, conn.UserId)
+	//case "CS_PlayerMatchSignCancel":
+	//	err = gateway.Netway.ProtocolManager.ParserContentMsg(msg, &requestPlayerMatchSignCancel, conn.UserId)
 	case "FDClose":
 		err = gateway.Netway.ProtocolManager.ParserContentMsg(msg, &requestFDCloseEvent, conn.UserId)
 	case "CS_Heartbeat":

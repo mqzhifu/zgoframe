@@ -43,7 +43,8 @@ func NewRequestServiceAdapter(ServiceDiscovery *util.ServiceDiscovery, grpcManag
 	return requestService
 }
 func (requestService *RequestServiceAdapter) GatewaySendMsgByUids(uids string, funcName string, requestData interface{}) {
-	uidsArr := strings.Split("uids", ",")
+	requestService.Log.Debug("RequestServiceAdapter GatewaySendMsgByUids :" + uids + " funcName:" + funcName)
+	uidsArr := strings.Split(uids, ",")
 	for _, uidStr := range uidsArr {
 		uid, _ := strconv.Atoi(uidStr)
 		n := GatewayMsg{

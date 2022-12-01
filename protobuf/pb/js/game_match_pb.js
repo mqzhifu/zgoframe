@@ -148,7 +148,7 @@ proto.pb.GameMatchSign.toObject = function(includeInstance, msg) {
     ruleId: jspb.Message.getFieldWithDefault(msg, 2, 0),
     groupId: jspb.Message.getFieldWithDefault(msg, 3, 0),
     addition: jspb.Message.getFieldWithDefault(msg, 4, ""),
-    playerListList: jspb.Message.toObjectList(msg.getPlayerListList(),
+    playerSetsList: jspb.Message.toObjectList(msg.getPlayerSetsList(),
     proto.pb.GameMatchSignPlayer.toObject, includeInstance)
   };
 
@@ -205,7 +205,7 @@ proto.pb.GameMatchSign.deserializeBinaryFromReader = function(msg, reader) {
     case 5:
       var value = new proto.pb.GameMatchSignPlayer;
       reader.readMessage(value,proto.pb.GameMatchSignPlayer.deserializeBinaryFromReader);
-      msg.addPlayerList(value);
+      msg.addPlayerSets(value);
       break;
     default:
       reader.skipField();
@@ -264,7 +264,7 @@ proto.pb.GameMatchSign.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
-  f = message.getPlayerListList();
+  f = message.getPlayerSetsList();
   if (f.length > 0) {
     writer.writeRepeatedMessage(
       5,
@@ -348,10 +348,10 @@ proto.pb.GameMatchSign.prototype.setAddition = function(value) {
 
 
 /**
- * repeated GameMatchSignPlayer player_list = 5;
+ * repeated GameMatchSignPlayer player_sets = 5;
  * @return {!Array<!proto.pb.GameMatchSignPlayer>}
  */
-proto.pb.GameMatchSign.prototype.getPlayerListList = function() {
+proto.pb.GameMatchSign.prototype.getPlayerSetsList = function() {
   return /** @type{!Array<!proto.pb.GameMatchSignPlayer>} */ (
     jspb.Message.getRepeatedWrapperField(this, proto.pb.GameMatchSignPlayer, 5));
 };
@@ -361,7 +361,7 @@ proto.pb.GameMatchSign.prototype.getPlayerListList = function() {
  * @param {!Array<!proto.pb.GameMatchSignPlayer>} value
  * @return {!proto.pb.GameMatchSign} returns this
 */
-proto.pb.GameMatchSign.prototype.setPlayerListList = function(value) {
+proto.pb.GameMatchSign.prototype.setPlayerSetsList = function(value) {
   return jspb.Message.setRepeatedWrapperField(this, 5, value);
 };
 
@@ -371,7 +371,7 @@ proto.pb.GameMatchSign.prototype.setPlayerListList = function(value) {
  * @param {number=} opt_index
  * @return {!proto.pb.GameMatchSignPlayer}
  */
-proto.pb.GameMatchSign.prototype.addPlayerList = function(opt_value, opt_index) {
+proto.pb.GameMatchSign.prototype.addPlayerSets = function(opt_value, opt_index) {
   return jspb.Message.addToRepeatedWrapperField(this, 5, opt_value, proto.pb.GameMatchSignPlayer, opt_index);
 };
 
@@ -380,8 +380,8 @@ proto.pb.GameMatchSign.prototype.addPlayerList = function(opt_value, opt_index) 
  * Clears the list making it empty but non-null.
  * @return {!proto.pb.GameMatchSign} returns this
  */
-proto.pb.GameMatchSign.prototype.clearPlayerListList = function() {
-  return this.setPlayerListList([]);
+proto.pb.GameMatchSign.prototype.clearPlayerSetsList = function() {
+  return this.setPlayerSetsList([]);
 };
 
 

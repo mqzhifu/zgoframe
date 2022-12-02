@@ -232,7 +232,7 @@ func (gateway *Gateway) RouterServiceGateway(msg pb.Msg, conn *util.Conn) (data 
 		gateway.BroadcastService(msg, conn)
 	case "CS_Ping":
 		requestClientPing.SourceUid = conn.UserId
-		gateway.clientPing(requestClientPing, conn)
+		gateway.clientPing(requestClientPing)
 	case "CS_Pong":
 		requestClientPong.SourceUid = conn.UserId
 		gateway.ClientPong(requestClientPong, conn)
@@ -394,14 +394,14 @@ func (gateway *Gateway) heartbeat(requestClientHeartbeat pb.Heartbeat, conn *uti
 	conn.SendMsgCompressByUid(conn.UserId, "SC_Heartbeat", &responseHeartbeat)
 }
 
-func (gateway *Gateway) clientPing(ping pb.PingReq, conn *util.Conn) {
+func (gateway *Gateway) clientPing(ping pb.PingReq) {
 	responseServerPong := pb.PongRes{
 		ClientReqTime:      ping.ClientReqTime,
 		ClientReceiveTime:  ping.ClientReceiveTime,
 		ServerReceiveTime:  util.GetNowMillisecond(),
 		ServerResponseTime: util.GetNowMillisecond(),
 	}
-	conn.SendMsgCompressByUid(conn.UserId, "SC_Pong", &responseServerPong)
+	gateway.RequestServiceAdapter.GatewaySendMsgByUid(ping.SourceUid, "SC_Pong", &responseServerPong)
 }
 
 //balanceFactor:负载均衡 方法

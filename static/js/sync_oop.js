@@ -20,7 +20,7 @@ function Sync (playerId,token,GatewayConfig,DomIdPreObj,contentType,protocolType
     this.playerOperationsQueue = [];//一个帧时间内，收集玩家的操作指令 队列
     this.closeFlag = 0;//关闭标识，0正常1手动关闭2后端关闭
     this.tableId = "";
-    this.myClose = 0;//区分关闭事件，是自己触发，还是对方触发的
+    this.myClose = 0;//区分关闭事件，1. 是自己主动触发，2. S端(对方)触发的
     this.playerLocation = new Object();//每个玩家的位置信息
     this.operationsInc = 0;//玩家操作指令自增ID
     this.logicFrameLoopTimeMs = 0;//毫秒，多少时间内收集一次玩家操作，推送到S端
@@ -54,7 +54,7 @@ function Sync (playerId,token,GatewayConfig,DomIdPreObj,contentType,protocolType
     this.show("玩家"+playerId + " Sync 构造函数完成.");
 
 }
-//创建ws长连接，也算是入口函数，才有后续的所有操作
+//创建ws长连接，也算是入口函数，得选建立WS连接，才有后续的所有操作
 Sync.prototype.create = function(){
     this.show("创建 ws 连接");
     if (this.status != 1 && this.status != 10){
@@ -68,6 +68,10 @@ Sync.prototype.create = function(){
     this.show("create new WebSocket"+this.hostUri ," FPS:",this.FPS , " ms:",this.logicFrameLoopTimeMs, " contentType:",this.contentType, " protocolType:",this.protocolType)
     //创建ws连接
     this.wsObj = new WebSocket(this.hostUri);
+    //设置 连接建立成功回调
+    this.wsObj.onopen = function(){
+        parent.wsOpen();
+    };
     //设置 关闭回调
     this.wsObj.onclose = function(ev){
         parent.close(ev)
@@ -76,15 +80,20 @@ Sync.prototype.create = function(){
     this.wsObj.onmessage = function(ev){
         parent.onmessage(ev)
     };
-    //设置 连接建立成功回调
-    this.wsObj.onopen = function(){
-        parent.wsOpen();
-    };
+    //创建连接发生了错误
     this.wsObj.onerror = function(ev){
         alert("wsObj.onerror");
         parent.log("error:"+ev);
     };
 }
+
+//玩家操作 - 主动关闭
+Sync.prototype.closeFD = function (){
+    this.show("closeFD");
+    this.myClearInterval();
+    this.myClose = 1;
+    this.wsObj.close();
+};
 
 //ws 接收到服务端关闭
 Sync.prototype.close = function(ev){
@@ -99,35 +108,30 @@ Sync.prototype.close = function(ev){
         this.upOptBnt("服务端关闭，游戏结束，连接断开",1)
     }
 };
-
-Sync.prototype.upOptBntHref = function(domId,value,clickCallback){
-    var bntContent = "<a href='javascript:void(0);' onclick='' id='"+domId+"'>"+value+"</a>";
-    this.upOptBnt(bntContent, 1);
-    $("#"+domId).click(clickCallback);
+//连接成功后，会执行此函数
+Sync.prototype.wsOpen = function(){
+    this.show("onOpen , ws connect server : Success  ",1);
+    this.upStatus(2);
+    //强依赖，proto 文件
+    var LoginObj = new proto.pb.Login();
+    LoginObj.setToken(this.token) ;
+    this.sendMsg("CS_Login",LoginObj);
 };
-
-//更新操作按钮文字，解除 点击事件
-Sync.prototype.upOptBnt = function(content,clearClick){
-    $("#"+this.domIdObj.optBntId).html(content);
-    if(clearClick == 1){
-        $("#"+this.domIdObj.optBntId).unbind("click");
-    }
-};
-
 //接收S端WS消息
+//解析C端发送的数据，这一层，对于用户层的 content 数据不做处理
+//1-4字节：当前包数据总长度，~可用于：TCP粘包的情况
+//5字节：content type
+//6字节：protocol type
+//7字节 :服务Id
+//8-9字节 :函数Id
+//10-19：预留，还没想好，可以存sessionId，也可以换成UID
+//19 以后为内容体
+//结尾会添加一个字节：\f ,可用于 TCP 粘包 分隔
 Sync.prototype.onmessage = function(ev){
     // console.log("onmessage , ev :",ev );
     var msgObj = this.newMsgObj();
     var parent = this;
-    //解析C端发送的数据，这一层，对于用户层的 content 数据不做处理
-    //1-4字节：当前包数据总长度，~可用于：TCP粘包的情况
-    //5字节：content type
-    //6字节：protocol type
-    //7字节 :服务Id
-    //8-9字节 :函数Id
-    //10-19：预留，还没想好，可以存sessionId，也可以换成UID
-    //19 以后为内容体
-    //结尾会添加一个字节：\f ,可用于 TCP 粘包 分隔
+
     var debugInfo = "onmessage ";
     if (this.contentTypeDesc[this.contentType] == 'protobuf'){
         debugInfo += " contentType: protobuf";
@@ -197,60 +201,16 @@ Sync.prototype.onmessage = function(ev){
         return alert("contentType err");
     }
 };
+//================== 以上是ws callback 基础函数 ====================================================
 
-Sync.prototype.newMsgObj = function (){
-    var msg = new proto.pb.Msg();
-    return msg.toObject();
-};
-
-Sync.prototype.showComplex = function(str,complexType,showNoticeMsg = 0){
-    console.log(this.descPre + " " + str ,complexType)
-    if (showNoticeMsg){
-        this.noticeMsg(str);
-    }
-}
-
-Sync.prototype.show = function(str,showNoticeMsg = 0){
-    console.log(this.descPre + " " + str)
-    if (showNoticeMsg){
-        this.noticeMsg(str);
-    }
-}
-
-Sync.prototype.noticeMsg = function(str){
-    $("#"+this.domIdObj.msgNotice).html(str);
-}
-
-
-//连接成功后，会执行此函数
-Sync.prototype.wsOpen = function(){
-    this.show("onOpen , ws connect server : Success  ",1);
-    this.upStatus(2);
-    //强依赖，proto 文件
-    var requestLoginObj = new proto.pb.Login();
-    requestLoginObj.setToken(this.token) ;
-    this.sendMsg("CS_Login",requestLoginObj);
-};
-
+//接收S端消息后，开始进行路由，具体由哪个方法接收并处理
 Sync.prototype.router = function(msgObj){
     var action = this.actionMap.server[msgObj.sidFid].func_name;
     this.showComplex("router , action:"+action,msgObj);
-
+    //这里用了动态调用函数，减少代码量
     eval( "this."+action+"(msgObj.content)" );
-    // }else if( action == 'SC_Ping'){//获取一个当前玩家的状态，如：是否有历史未结束的游戏
-    //     this.rServerPing(content);
     // }else if ( action == 'SC_RoomBaseInfo' ){
     //     this.rPushRoomInfo(content);
-    // }else if ( action == 'SC_OtherPlayerOffline' ){
-    //     this.rOtherPlayerOffline(content);
-    // }else if( "SC_GameOver" == action){
-    //     this.rGameOver(content);
-    // }else if( "SC_KickOff" == action){
-    //     this.rKickOff(content);
-    // }else if( "SC_Pong" == action){
-    //     this.rServerPong(content)
-    // }else if( "SC_OtherPlayerResumeGame" == action){
-    //     this.rOtherPlayerResumeGame(content)
     // }else if( "SC_RoomHistory" == action){
     //     this.rPushRoomHistory(content);
     //     // alert("接收到，玩家-房间-历史操作记录~");
@@ -258,6 +218,7 @@ Sync.prototype.router = function(msgObj){
     //     return alert("action error."+action);
     // }
 }
+
 //S推送-登陆结果
 Sync.prototype.SC_Login = function(LoginRes){
     if (LoginRes.code != 200) {
@@ -273,17 +234,29 @@ Sync.prototype.SC_Login = function(LoginRes){
     playerBase.setPlayerId(  this.playerId);
     this.sendMsg("CS_PlayerState",playerBase);
 
-    // var now = Date.now();
-    // var requestClientPing = new proto.pb.Ping();
-    // requestClientPing.setAddTime(now);
+    //做一次PING 测试一下
+    // var requestClientPing = new proto.pb.PingReq();
+    // requestClientPing.setClientReqTime(Date.now());
     // this.sendMsg("CS_Ping",requestClientPing);
 
+    //创建定时：心跳函数
     // this.heartbeatLoopFunc = setInterval(this.heartbeat.bind(this), this.ClientHeartbeatTime * 1000);
 };
 //S推送-心跳
 Sync.prototype.SC_Heartbeat = function(Heartbeat){
     this.showComplex("rHeartbeat:",Heartbeat);
 }
+//S端响应自己的PING
+Sync.prototype.SC_Pong = function(PongRes){
+    this.showComplex("SC_Pong:",PongRes);
+}
+//S端发起了PING，C端要响应
+Sync.prototype.SC_Ping = function(PingReq){
+    var PongRes = new proto.pb.PongRes()
+    this.sendMsg("CS_Pong:",PongRes);
+}
+
+
 //S推送-玩家当前的状态信息
 Sync.prototype.SC_PlayerState = function(PlayerState){
     this.showComplex("ServerPlayerState ",PlayerState,1)
@@ -352,6 +325,7 @@ Sync.prototype.SC_ReadyTimeout = function(){
 Sync.prototype.SC_StartBattle = function(StartBattle){
     this.upStatus(8);
     this.pushLogicFrameLoopFunc = setInterval(this.playerCommandPush.bind(this),this.logicFrameLoopTimeMs);
+    this.showComplex("this.pushLogicFrameLoopFunc===================",this.pushLogicFrameLoopFunc);
     var exceptionOffLineId = "exceptionOffLineId"+this.playerId;
     var msg = "模拟，异常掉线";
     this.noticeMsg("游戏已开始，数据同步中...")
@@ -411,8 +385,54 @@ Sync.prototype.SC_LogicFrame = function(logicFrame,source){//接收S端逻辑帧
     }
 };
 
-//======================== 以上都是接收S端消息通知 ========================
+Sync.prototype.SC_OtherPlayerOver = function(PlayerOver){
+    this.showComplex("OtherPlayerOver:",PlayerOver);
+}
 
+Sync.prototype.SC_GameOver = function(ev){
+    this.myClearInterval()
+    this.upOptBnt("游戏结束2",1)
+    // return alert("have player game end...");
+};
+
+Sync.prototype.SC_KickOff = function(KickOff){
+    this.showComplex("您被踢下线喽",KickOff,1)
+    return alert("您被踢下线喽~");
+};
+
+Sync.prototype.SC_OtherPlayerResumeGame = function(PlayerResumeGame){
+    if(PlayerResumeGame.playerId != this.playerId){
+        var tdId = self.tableId + "_" + self.playerLocation[content.playerId];
+        var tdObj = $("#"+tdId)
+        tdObj.css("background", "red");
+    }
+}
+
+Sync.prototype.SC_OtherPlayerOffline = function(OtherPlayerOffline){
+    this.otherPlayerOffline = OtherPlayerOffline.playerId;
+    this.show("其它玩家掉线了："+OtherPlayerOffline.playerId +"，略等："+this.offLineWaitTime +"秒",1);
+
+    var tdId = this.tableId + "_" + this.playerLocation[OtherPlayerOffline.playerId];
+    var tdObj = $("#"+tdId)
+    tdObj.css("background", "#A9A9A9");
+    // var lightTd =self.getMapTdId(self.tableId,LocationStart,LocationEnd);
+    // console.log(pre+"  "+lightTd);
+    // var tdObj = $("#"+lightTd);
+    // if(commands[i].playerId == playerId){
+    //     tdObj.css("background", "green");
+    // }else{
+    //     tdObj.css("background", "red");
+    // }
+};
+
+//======================== 以上都是接收S端消息通知 ========================
+//心跳执行函数
+Sync.prototype.heartbeat = function(){
+    var now = Date.now();
+    var requestClientHeartbeat = new proto.pb.Heartbeat();
+    requestClientHeartbeat.setTime(now);
+    this.sendMsg("CS_Heartbeat",requestClientHeartbeat);
+};
 
 
 Sync.prototype.ready = function(){
@@ -425,28 +445,6 @@ Sync.prototype.ready = function(){
     this.noticeMsg("不能取消，只能等成功或超时");
 
     this.upOptBntHref("","等待其它玩家准备",null);
-};
-
-
-
-Sync.prototype.initLocalGlobalVar = function(EnterBattle){
-    console.log("initLocalGlobalVar:",EnterBattle)
-    for(var i=0;i<EnterBattle.playerIds.length;i++){
-        this.playerLocation[""+EnterBattle.playerIds[i]+""] = "empty"
-    }
-    // return 1;
-    this.randSeek  = EnterBattle.randSeek;
-    $("#"+this.domIdObj.randSeekId).html(this.randSeek);
-
-
-    this.sequenceNumber  = EnterBattle.sequenceNumber;
-    $("#"+this.domIdObj.seqId).html(this.sequenceNumber);
-
-    this.roomId = EnterBattle.roomId;
-    $("#"+this.domIdObj.roomId).html(this.roomId);
-
-    var str =  " roomId:" +EnterBattle.roomId+ ", RandSeek:"+    this.randSeek +" , SequenceNumber"+    this.sequenceNumber ;
-    console.log(str);
 };
 
 
@@ -494,6 +492,42 @@ Sync.prototype.cancelSign = function(){
     this.upOptBntHref(matchSignBntId,hrefBody,this.matchSign);
 };
 
+Sync.prototype.upOptBntHref = function(domId,value,clickCallback){
+    var bntContent = "<a href='javascript:void(0);' onclick='' id='"+domId+"'>"+value+"</a>";
+    this.upOptBnt(bntContent, 1);
+    $("#"+domId).click(clickCallback);
+};
+
+//更新操作按钮文字，解除 点击事件
+Sync.prototype.upOptBnt = function(content,clearClick){
+    $("#"+this.domIdObj.optBntId).html(content);
+    if(clearClick == 1){
+        $("#"+this.domIdObj.optBntId).unbind("click");
+    }
+};
+
+Sync.prototype.newMsgObj = function (){
+    var msg = new proto.pb.Msg();
+    return msg.toObject();
+};
+
+Sync.prototype.showComplex = function(str,complexType,showNoticeMsg = 0){
+    console.log(this.descPre + " " + str ,complexType)
+    if (showNoticeMsg){
+        this.noticeMsg(str);
+    }
+}
+
+Sync.prototype.show = function(str,showNoticeMsg = 0){
+    console.log(this.descPre + " " + str)
+    if (showNoticeMsg){
+        this.noticeMsg(str);
+    }
+}
+
+Sync.prototype.noticeMsg = function(str){
+    $("#"+this.domIdObj.msgNotice).html(str);
+}
 
 
 Sync.prototype.sendMsg =  function ( action,contentObj  ){
@@ -606,6 +640,47 @@ Sync.prototype.sendMsg =  function ( action,contentObj  ){
         // self.wsObj.send(mergedArray);
     }
 };
+
+
+
+Sync.prototype.myClearInterval = function (){
+    if(this.pushLogicFrameLoopFunc){
+        window.clearInterval(this.pushLogicFrameLoopFunc);
+        this.showComplex("myClearInterval this.pushLogicFrameLoopFunc ===================",this.pushLogicFrameLoopFunc)
+        this.pushLogicFrameLoopFunc = null;
+    }
+
+    if(this.pushLogicFrameLoopFunc){
+        window.clearInterval(this.heartbeatLoopFunc);
+        this.showComplex("myClearInterval this.heartbeatLoopFunc ===================",this.heartbeatLoopFunc)
+        this.heartbeatLoopFunc = null;
+    }
+}
+
+
+
+
+Sync.prototype.initLocalGlobalVar = function(EnterBattle){
+    this.show("initLocalGlobalVar:",EnterBattle)
+    for(var i=0;i<EnterBattle.playerIds.length;i++){
+        this.playerLocation[""+EnterBattle.playerIds[i]+""] = "empty"
+    }
+    // return 1;
+    this.randSeek  = EnterBattle.randSeek;
+    $("#"+this.domIdObj.randSeekId).html(this.randSeek);
+
+
+    this.sequenceNumber  = EnterBattle.sequenceNumber;
+    $("#"+this.domIdObj.seqId).html(this.sequenceNumber);
+
+    this.roomId = EnterBattle.roomId;
+    $("#"+this.domIdObj.roomId).html(this.roomId);
+
+    var str =  " roomId:" +EnterBattle.roomId+ ", RandSeek:"+    this.randSeek +" , SequenceNumber"+    this.sequenceNumber ;
+    this.show(str);
+};
+
+
 //玩家报名，得有个groupId，先暂时由前端生成随机数，后期我想想如何处理
 Sync.prototype.makeGroupId = function(){
     return Math.round(Math.random()*8999+1000);
@@ -616,17 +691,6 @@ Sync.prototype.upStatus = function(status){
     this.status = status;
 };
 
-//心跳执行函数
-Sync.prototype.heartbeat = function(){
-    var now = Date.now();
-    var requestClientHeartbeat = new proto.pb.Heartbeat();
-    requestClientHeartbeat.setTime(now);
-    this.sendMsg("CS_Heartbeat",requestClientHeartbeat);
-};
-
-Sync.prototype.rKickOff = function(ev){
-    return alert("您被踢下线喽~");
-};
 
 Sync.prototype.getPlayerDescById = function (id){
     return "(player_"+ id+")";
@@ -649,21 +713,6 @@ Sync.prototype.getActionId = function (action,category){
 Sync.prototype.getActionName = function (actionId,category){
     var data = this.actionMap[category];
     return data[actionId].func_name;
-};
-
-
-Sync.prototype.myClearInterval = function (){
-    var a = clearInterval(this.pushLogicFrameLoopFunc);
-    console.log("=================================",a,this.pushLogicFrameLoopFunc);
-    // a = clearInterval(this.heartbeatLoopFunc);
-    // console.log(a)
-}
-//玩家操作 - 主动关闭
-Sync.prototype.closeFD = function (){
-    this.show("closeFD");
-    this.myClearInterval();
-    this.myClose = 1;
-    this.wsObj.close();
 };
 
 Sync.prototype.getMap = function (tableId) {
@@ -695,7 +744,7 @@ Sync.prototype.playerCommandPush = function (){
     PlayerOperations.setSequenceNumber(this.sequenceNumber);
 
     if(this.playerCommandPushLock == 1){//是否锁住了
-        console.log("send msg lock...please wait server back login frame");
+        this.show("send msg lock...please wait server back login frame");
         return
     }
     if (this.playerOperationsQueue.length > 0){
@@ -804,12 +853,12 @@ Sync.prototype.move = function ( dirObj ){
 Sync.prototype.gameOverAndClear = function(){
     this.upStatus(9);
 
-    var requestGameOver = new proto.pb.GameOver()
-    requestGameOver.setRoomId(this.roomId);
-    requestGameOver.setSequenceNumber(this.sequenceNumber);
-    requestGameOver.setResult("ccccccWin");
-    this.sendMsg("CS_GameOver", requestGameOver);
 
+    var PlayerOver = new proto.pb.PlayerOver()
+    PlayerOver.setRoomId(this.roomId);
+    PlayerOver.setPlayerId(this.playerId);
+    PlayerOver.setSequenceNumber(this.sequenceNumber);
+    this.sendMsg("CS_PlayerOver", PlayerOver);
 
     var msg = "完犊子了，撞车了...这游戏得结束了....";
     this.noticeMsg(msg)
@@ -823,13 +872,7 @@ Sync.prototype.gameOverAndClear = function(){
 
 
     // //=================== 以下都是 接收S端的处理函数========================================
-    // this.rOtherPlayerResumeGame = function(content){
-    //     if(content.playerId != self.playerId){
-    //         var tdId = self.tableId + "_" + self.playerLocation[content.playerId];
-    //         var tdObj = $("#"+tdId)
-    //         tdObj.css("background", "red");
-    //     }
-    // };
+
 
     // this.rPushRoomHistory = function(logicFrame){
     //     console.log("rPushRoomHistory:");
@@ -888,30 +931,7 @@ Sync.prototype.gameOverAndClear = function(){
     // };
 
     //
-    // this.rOtherPlayerOffline = function(logicFrame){
-    //     //房间内有其它玩家掉线了
-    //     console.log("in test:",logicFrame.playerId,logicFrame)
-    //     self.otherPlayerOffline = logicFrame.playerId;
-    //     alert("其它玩家掉线了："+logicFrame.playerId +"，略等："+self.offLineWaitTime +"秒");
-    //
-    //     var tdId = self.tableId + "_" + self.playerLocation[logicFrame.playerId];
-    //     var tdObj = $("#"+tdId)
-    //     tdObj.css("background", "#A9A9A9");
-    //     // var lightTd =self.getMapTdId(self.tableId,LocationStart,LocationEnd);
-    //     // console.log(pre+"  "+lightTd);
-    //     // var tdObj = $("#"+lightTd);
-    //     // if(commands[i].playerId == playerId){
-    //     //     tdObj.css("background", "green");
-    //     // }else{
-    //     //     tdObj.css("background", "red");
-    //     // }
-    // };
-    // this.rGameOver = function(ev){
-    //     clearInterval(self.pushLogicFrameLoopFunc);
-    //     self.upOptBnt("游戏结束2",1)
-    //     return alert("have player game end...");
-    // };
-    //
+
 
 
 

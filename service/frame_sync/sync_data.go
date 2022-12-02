@@ -396,14 +396,14 @@ func (sync *Sync) roomEnd(roomId string, sendCloseChan int) {
 }
 
 //玩家操作后，触发C端主动发送游戏结束事件
-func (sync *Sync) GameOver(requestGameOver pb.GameOver, conn *util.Conn) {
+func (sync *Sync) GameOver(requestGameOver pb.GameOver) {
 	responseGameOver := pb.GameOver{
 		PlayerId:       requestGameOver.PlayerId,
 		RoomId:         requestGameOver.RoomId,
 		SequenceNumber: requestGameOver.SequenceNumber,
 		Result:         requestGameOver.Result,
 	}
-	sync.boardCastInRoom(requestGameOver.RoomId, "SC_gameOver", &responseGameOver)
+	sync.boardCastInRoom(requestGameOver.RoomId, "SC_GameOver", &responseGameOver)
 
 	sync.roomEnd(requestGameOver.RoomId, 1)
 }
@@ -414,6 +414,15 @@ func (sync *Sync) PlayerOver(requestGameOver pb.PlayerOver) error {
 	roomId := requestGameOver.RoomId
 	responseOtherPlayerOver := pb.PlayerOver{PlayerId: requestGameOver.PlayerId}
 	sync.boardCastInRoom(roomId, "SC_OtherPlayerOver", &responseOtherPlayerOver)
+
+	//这里先假设，只要有一个玩家死亡游戏即结束
+	GameOver := pb.GameOver{
+		SourceUid: requestGameOver.SourceUid,
+		PlayerId:  requestGameOver.PlayerId,
+		RoomId:    requestGameOver.RoomId,
+	}
+
+	sync.GameOver(GameOver)
 	return nil
 }
 

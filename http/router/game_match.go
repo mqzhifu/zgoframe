@@ -21,5 +21,6 @@ func FrameSync(Router *gin.RouterGroup) {
 	gameMatchRouter := Router.Group("/frame/sync")
 	{
 		gameMatchRouter.GET("config", v1.FrameSyncConfig)
+		gameMatchRouter.POST("room/history", v1.FrameSyncRoomHistory)
 	}
 }

@@ -15,32 +15,32 @@ import (
 	"zgoframe/util"
 )
 
-type Player struct {
-	Id     int32
-	Status int
-	RoomId string
-}
+//type Player struct {
+//	Id     int32
+//	Status int
+//	RoomId string
+//}
 
 type Room struct {
-	Id                     string              `json:"id"`               //房间ID
-	RuleId                 int32               `json:"rule_id"`          //分类
-	Rule                   model.GameMatchRule `json:"rule"`             //分类
-	AddTime                int32               `json:"addTime"`          //创建时间
-	StartTime              int32               `json:"startTime"`        //开始游戏时间
-	EndTime                int32               `json:"endTime"`          //游戏结束时间
-	ReadyTimeout           int                 `json:"readyTimeout"`     //房间创建，玩家进入，需要每个玩家点击准备：超时时间
-	Status                 int32               `json:"status"`           //状态
-	PlayerList             []*Player           `json:"playerList"`       //玩家列表
-	PlayerIds              []int32             `json:"player_ids"`       //玩家列表IDS，跟上面一样，只是 方便计算
-	SequenceNumber         int                 `json:"sequenceNumber"`   //当前帧：顺序号
-	PlayersReadyList       map[int32]int32     `json:"playersReadyList"` //存储：玩家<准备>状态的列表
-	PlayersReadyListRWLock *sync.RWMutex       `json:"-"`                //准备状态的时候，是轮询，得加锁
-	ReadyCloseChan         chan int            `json:"-"`                //玩家都准备后，要关闭轮询的协程，关闭信号管道
-	StatusLock             *sync.Mutex         `json:"-"`                //修改状态得加锁
-	RandSeek               int32               `json:"randSeek"`         //随机数种子
-	PlayersAckList         map[int32]int32     `json:"playersAckList"`   //玩家确认列表
-	PlayersAckStatus       int                 `json:"playersAckStatus"` //玩家确认列表的状态
-	PlayersAckListRWLock   *sync.RWMutex       `json:"-"`                //玩家一帧内的确认操作，需要加锁
+	Id           string              `json:"id"`           //房间ID
+	RuleId       int32               `json:"rule_id"`      //分类
+	Rule         model.GameMatchRule `json:"rule"`         //分类
+	AddTime      int32               `json:"addTime"`      //创建时间
+	StartTime    int32               `json:"startTime"`    //开始游戏时间
+	EndTime      int32               `json:"endTime"`      //游戏结束时间
+	ReadyTimeout int                 `json:"readyTimeout"` //房间创建，玩家进入，需要每个玩家点击准备：超时时间
+	Status       int32               `json:"status"`       //状态
+	//PlayerList             []int32             `json:"playerList"`       //玩家列表
+	PlayerIds              []int32         `json:"player_ids"`       //玩家列表IDS，跟上面一样，只是 方便计算
+	SequenceNumber         int             `json:"sequenceNumber"`   //当前帧：顺序号
+	PlayersReadyList       map[int32]int32 `json:"playersReadyList"` //存储：玩家<准备>状态的列表
+	PlayersReadyListRWLock *sync.RWMutex   `json:"-"`                //准备状态的时候，是轮询，得加锁
+	ReadyCloseChan         chan int        `json:"-"`                //玩家都准备后，要关闭轮询的协程，关闭信号管道
+	StatusLock             *sync.Mutex     `json:"-"`                //修改状态得加锁
+	RandSeek               int32           `json:"randSeek"`         //随机数种子
+	PlayersAckList         map[int32]int32 `json:"playersAckList"`   //玩家确认列表
+	PlayersAckStatus       int             `json:"playersAckStatus"` //玩家确认列表的状态
+	PlayersAckListRWLock   *sync.RWMutex   `json:"-"`                //玩家一帧内的确认操作，需要加锁
 	//接收玩家操作指令-集合
 	LogicFrameWaitTime    int64      `json:"logicFrameWaitTime"`  //每一帧的等待总时长，虽然C端定时发送每帧数据，但有可能某个玩家的某帧发送的数据丢失，造成两边空等，得有个计时
 	CloseChan             chan int   `json:"-"`                   //关闭信号管道
@@ -116,12 +116,12 @@ func CreateRoomId() string {
 }
 
 func (room *Room) AddPlayer(id int) {
-	p := Player{
-		Id:     int32(id),
-		Status: service.PLAYER_STATUS_ONLINE,
-		RoomId: "",
-	}
-	room.PlayerList = append(room.PlayerList, &p)
+	//p := Player{
+	//	Id:     int32(id),
+	//	Status: service.PLAYER_STATUS_ONLINE,
+	//	RoomId: "",
+	//}
+	room.PlayerIds = append(room.PlayerIds, int32(id))
 }
 
 func (room *Room) GetStatus(status int32) {
@@ -142,7 +142,7 @@ func (roomManager *RoomManager) GetRoom(requestGetRoom pb.RoomBaseInfo) error {
 	roomId := requestGetRoom.RoomId
 	room, _ := roomManager.GetById(roomId)
 
-	ResponsePushRoomInfo := pb.RoomBaseInfo{
+	roomBaseInfo := pb.RoomBaseInfo{
 		Id:             room.Id,
 		SequenceNumber: int32(room.SequenceNumber),
 		AddTime:        room.AddTime,
@@ -152,7 +152,7 @@ func (roomManager *RoomManager) GetRoom(requestGetRoom pb.RoomBaseInfo) error {
 		RandSeek: room.RandSeek,
 		RoomId:   room.Id,
 	}
-	roomManager.Option.RequestServiceAdapter.GatewaySendMsgByUid(requestGetRoom.SourceUid, "pushRoomInfo", &ResponsePushRoomInfo)
+	roomManager.Option.RequestServiceAdapter.GatewaySendMsgByUid(requestGetRoom.SourceUid, "SC_RoomBaseInfo", &roomBaseInfo)
 	//conn.SendMsgCompressByUid(requestGetRoom.SourceUid, "pushRoomInfo", &ResponsePushRoomInfo)
 	return nil
 }
@@ -185,7 +185,7 @@ func (roomManager *RoomManager) Shutdown() {
 //给集合添加一个新的 游戏副本
 //一局新游戏（副本）创建成功，告知玩家进入战场，等待 所有玩家准备确认
 func (roomManager *RoomManager) AddOne(room *Room) error {
-	roomManager.Option.Log.Info("addPoolElement")
+	roomManager.Option.Log.Info("roomManager addPoolElement id:" + room.Id)
 	_, empty := roomManager.GetById(room.Id)
 	if !empty {
 		msg := "new roomId exist in mySyncRoomPool : " + room.Id
@@ -201,12 +201,14 @@ func (roomManager *RoomManager) AddOne(room *Room) error {
 		return err
 	}
 	room.Rule = rule
-	uids := []int32{}
-	for _, v := range room.PlayerList {
-		v.UpPlayerRoomId(room.Id)
-		uids = append(uids, int32(v.Id))
+	//uids := []int32{}
+	for _, pid := range room.PlayerIds {
+		roomManager.Option.FrameSync.PlayerConnManager.UpRoomId(pid, room.Id)
+		//v.UpPlayerRoomId(room.Id)
+		roomManager.Option.Log.Debug("UpPlayerRoomId uid:" + strconv.Itoa(int(pid)) + " roomId:" + room.Id)
+		//uids = append(uids, int32(pid))
 	}
-	room.PlayerIds = uids
+	//room.PlayerIds = uids
 	room.UpStatus(service.ROOM_STATUS_READY)
 	roomManager.Pool[room.Id] = room
 
@@ -230,6 +232,6 @@ func (roomManager *RoomManager) AddOne(room *Room) error {
 	return nil
 }
 
-func (player *Player) UpPlayerRoomId(roomId string) {
-	player.RoomId = roomId
-}
+//func (player *Player) UpPlayerRoomId(roomId string) {
+//	player.RoomId = roomId
+//}

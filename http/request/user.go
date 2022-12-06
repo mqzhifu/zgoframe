@@ -73,7 +73,7 @@ type LoginSMS struct {
 
 //@description  3方平台登陆
 type LoginThird struct {
-	Code      string `json:"Code"`
+	Code      string `json:"code"`
 	Platform  string `json:"platform"`
 	Captcha   string `json:"captcha"`
 	CaptchaId string `json:"captchaId"`
@@ -189,3 +189,10 @@ type CheckEmailExist struct {
 //	RuleId  int `json:"rule_id" desc:"ruleId，后台录入的时候，自动生成"`
 //	GroupId int `json:"group_id" desc:"报名时候的，小组ID"`
 //}
+type FrameSyncRoomHistory struct {
+	RoomId              string `json:"roomId"`
+	SequenceNumberStart int32  `json:"sequenceNumberStart"`
+	SequenceNumberEnd   int32  `json:"sequenceNumberEnd"`
+	SourceUid           int32  `json:"sourceUid"`
+	PlayerId            int32  `json:"playerId"`
+}

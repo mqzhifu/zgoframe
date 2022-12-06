@@ -20,7 +20,7 @@ Sync.prototype.SC_Login = function(LoginRes){
     // this.sendMsg("CS_Ping",requestClientPing);
 
     //创建定时：心跳函数
-    this.heartbeatLoopFunc = setInterval(this.heartbeat.bind(this), this.ClientHeartbeatTime * 1000);
+    // this.heartbeatLoopFunc = setInterval(this.heartbeat.bind(this), this.ClientHeartbeatTime * 1000);
 };
 //S推送-心跳
 Sync.prototype.SC_Heartbeat = function(Heartbeat){
@@ -68,7 +68,6 @@ Sync.prototype.SC_PlayerState = function(PlayerState){
         this.show("检测出，有未结束的一局游戏，开始恢复中...,先获取房间信息:rooId:"+this.serverPlayerState.roomId,1)
         var RoomBaseInfo = new proto.pb.RoomBaseInfo();
         RoomBaseInfo.setRoomId(PlayerState.roomId);
-        RoomBaseInfo.setPlayerId(this.playerId);
         this.sendMsg("CS_RoomBaseInfo",RoomBaseInfo);
 
     }else{
@@ -203,8 +202,33 @@ Sync.prototype.SC_RoomBaseInfo = function(RoomBaseInfo ){
     ReqRoomHistory.setSequenceNumberstart(0);
     ReqRoomHistory.setSequenceNumberend(-1);
     ReqRoomHistory.setPlayerId(this.playerId);
-
-    this.sendMsg("CS_RoomHistory",ReqRoomHistory);
+    //这里拉回来的数量量略有点大，不好处理，改成短连接吧
+    // this.sendMsg("CS_RoomHistory",ReqRoomHistory);
+    // content = JSON.stringify(content);
+    var postData = ReqRoomHistory.toObject();
+    // console.log("SC_RoomBaseInfo postData: ",postData);
+    var parent = this;
+    $.ajax({
+        dataType: "json",
+        url: URI_MAP["game_frame_sync_history"],
+        type: 'POST',
+        headers: {
+            "X-Token":this.token,
+        },
+        sync:false,
+        data:JSON.stringify(postData) ,
+        success: function (res) {
+            var msgObj = {"sets":res.data};
+            parent.SC_RoomHistory(msgObj);
+            // console.log("game_frame_sync_history res: ",res);
+            // for(var i=0;i<res.data.length;i++){
+            //     var row = res.data[i].content;
+            //     console.log(row);
+            // }
+            // var data = eval( "(" + res.data + ")" );
+            // console.log("game_frame_sync_history data:",data);
+        }
+    });
 
     this.noticeMsg("游戏恢复中，已拉取回房间基础信息，开始拉取游戏历史逻辑帧...")
 
@@ -216,10 +240,10 @@ Sync.prototype.SC_RoomHistory = function(RoomHistorySets ){
     }
     var list = RoomHistorySets.sets;
     for(var i=0;i<list.length;i++){
-        if (  list[i].action == "pushLogicFrame"){
+        // if (  list[i].event == "pushLogicFrame"){
             var data = eval( "(" + list[i].content + ")" );
             this.SC_LogicFrame(data,2);
-        }
+        // }
     }
     this.noticeMsg("游戏恢复成功，通知其它玩家，并重新开始继续游戏...")
     //播放完成，告知其它玩家，我上线了，可以重新开始游戏
@@ -233,12 +257,14 @@ Sync.prototype.SC_RoomHistory = function(RoomHistorySets ){
 }
 
 Sync.prototype.SC_OtherPlayerOver = function(PlayerOver){
-    this.showComplex("OtherPlayerOver:",PlayerOver);
+    this.showComplex("OtherPlayerOver: ",PlayerOver);
+    this.noticeMsg("有玩家死亡了 , player_id:"+ PlayerOver.playerId);
 }
 
 Sync.prototype.SC_GameOver = function(GameOver){
     this.myClearInterval()
     this.upOptBnt("游戏结束2",1)
+    this.noticeMsg("某玩家触发了撞车，所以游戏要结束了",1)
     // return alert("have player game end...");
 };
 

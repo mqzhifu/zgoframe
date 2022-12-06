@@ -4,6 +4,7 @@ import (
 	"errors"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
+	"strconv"
 	"zgoframe/protobuf/pb"
 	"zgoframe/service"
 )
@@ -67,16 +68,23 @@ func (sync *FrameSync) CreateFD(fd pb.FDCreateEvent) error {
 	sync.PlayerConnManager.AddOne(fd.UserId)
 	return nil
 }
+
 func (sync *FrameSync) CloseFD(FDCloseEvent pb.FDCloseEvent) error {
-	user, empty := sync.PlayerConnManager.GetById(FDCloseEvent.UserId)
-	if empty {
-		sync.Option.Log.Error("user id not in PlayerConnManager pool")
-		return errors.New("user id not in PlayerConnManager pool")
+
+	user, exist := sync.PlayerConnManager.GetById(FDCloseEvent.UserId)
+	if !exist {
+		msg := "userId not in PlayerConnManager pool id:" + strconv.Itoa(int(FDCloseEvent.UserId))
+		sync.Option.Log.Error(msg)
+		return errors.New(msg)
 	}
+	sync.Option.Log.Debug("sync CloseFD id: " + strconv.Itoa(int(FDCloseEvent.UserId)) + " roomId: " + user.RoomId)
 	if user.RoomId != "" {
+		sync.Option.Log.Debug("sync CloseFD roomId:" + user.RoomId)
 		room, empty := sync.RoomManage.GetById(user.RoomId)
 		if empty {
-			return errors.New("user id not in RoomManage pool")
+			msg := "roomId not in RoomManage pool : roomId = " + user.RoomId
+			sync.Option.Log.Error(msg)
+			return errors.New(msg)
 		}
 		room.Sync.CloseOne(FDCloseEvent)
 	}
@@ -117,6 +125,7 @@ func (sync *FrameSync) PlayerOver(PlayerOver pb.PlayerOver) error {
 }
 
 func (sync *FrameSync) RoomHistory(ReqRoomHistory pb.ReqRoomHistory) error {
-	//room,_ := sync.RoomManage.GetById(ReqRoomHistory.RoomId)
+	room, _ := sync.RoomManage.GetById(ReqRoomHistory.RoomId)
+	room.Sync.RoomHistory(ReqRoomHistory)
 	return nil
 }

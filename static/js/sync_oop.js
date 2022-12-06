@@ -1,4 +1,4 @@
-//=========
+//帧同步
 function Sync (playerId,token,GatewayConfig,DomIdPreObj,contentType,protocolType,playerInfo,actionMap,ruleConfig,mapSize,content_type_desc,protocol_type_desc) {
     this.status = 1;//1初始化 2等待准备 3运行中  4结束
     this.statusDesc = {
@@ -94,6 +94,7 @@ Sync.prototype.create = function(){
 Sync.prototype.closeFD = function (){
     this.show("closeFD");
     this.myClearInterval();
+    this.upStatus(11);
     this.myClose = 1;
     this.wsObj.close();
 };
@@ -106,9 +107,11 @@ Sync.prototype.close = function(ev){
         var reConnBntId = "reconn_"+this.playerId;
         var msg = "重连接";
         this.upOptBntHref(reConnBntId,msg,this.create.bind(this));
+        this.noticeMsg("游戏进行中，玩家主动断开了连接...")
     }else{
         this.closeFlag = 2;
         this.upOptBnt("服务端关闭，游戏结束，连接断开",1)
+        this.noticeMsg("服务端断开了连接")
     }
 };
 //连接成功后，会执行此函数
@@ -131,7 +134,7 @@ Sync.prototype.wsOpen = function(){
 //19 以后为内容体
 //结尾会添加一个字节：\f ,可用于 TCP 粘包 分隔
 Sync.prototype.onmessage = function(ev){
-    // console.log("onmessage , ev :",ev );
+
     var msg = new proto.pb.Msg();
     var msgObj = msg.toObject();
     var parent = this;
@@ -180,6 +183,7 @@ Sync.prototype.onmessage = function(ev){
             msgObj.sessionId = processBufferString(sessionBytes,0)
             var content = processBufferRange(dataBuffer,19,19+msgObj.dataLength);
             content = processBufferString(content,0);
+            console.log("onmessage dataLength:" +msgObj.dataLength +"content :",content );
             // console.log("lenDataBuffer:",dataBuffer.length," content:",content);
             msgObj.content =  eval("("+content+")");
 
@@ -212,7 +216,7 @@ Sync.prototype.router = function(msgObj){
     //这里用了动态调用函数，减少代码量
     eval( "this."+action+"(msgObj.content)" );
 }
-//================== 以上是ws callback 基础函数 ====================================================
+//================== 以上是 ws callback 基础函数 ====================================================
 
 
 //获取当前C端到S端的RTT值，此值目前取的是过往10次成功的心跳的差值，最后再计算出一个平均值
@@ -311,6 +315,7 @@ Sync.prototype.cancelSign = function(){
     var matchSignBntId = "matchSign_"+this.playerId;
     var hrefBody = "连接成功，重新匹配报名";
 
+    this.noticeMsg("等待报名...")
     this.upOptBntHref(matchSignBntId,hrefBody,this.matchSign.bind(this));
 };
 //进入准备状态，主动触发
@@ -325,7 +330,7 @@ Sync.prototype.ready = function(){
 
     this.upOptBntHref("","等待其它玩家准备",null);
 };
-//两个玩家，位移碰撞了，触发了游戏结束
+//两个玩家，位移碰撞了，触发了游戏结束，但此函数是 移动的玩家主动检测到了游戏结束，实际后端也会结束游戏，再发一个消息
 Sync.prototype.gameOverAndClear = function(){
     this.upStatus(10);
 
@@ -477,7 +482,7 @@ Sync.prototype.sendMsg =  function ( action,contentObj  ){
 
 
 
-        this.showComplex("debug JSON.stringify:",content)
+        // this.showComplex("debug JSON.stringify:",content)
 
         var contentLenByte = intToByte4( content.length);
         var contentTypeByte = intToOneByteArr(contentType);
@@ -546,7 +551,7 @@ Sync.prototype.move = function ( dirObj ){
         return alert("WS FD 已关闭...");
     }
 
-    if (this.status != 8){
+    if (this.status != 9){
         return alert("status err , != startBattle ， 游戏还未开始，请等待一下...");
     }
 

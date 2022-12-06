@@ -24,6 +24,7 @@ var URI_MAP = {
     "gateway_total":http_protocol + "://"+domain + "/gateway/total",//长连接 metrics
     "twin_agora_config":http_protocol + "://"+domain + "/twin/agora/config",//声网房间长连接配置
     "rule":http_protocol + "://"+domain + "/game/match/rule",
+    "game_frame_sync_history":http_protocol + "://"+domain + "/frame/sync/room/history",
 };
 
 var UserList = {

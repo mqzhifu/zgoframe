@@ -17,10 +17,10 @@ import (
 //这是个快捷变量，目前所有代码均在一起，直接挂在这个变量上即可，后期所有服务分拆出去，网关没那么多附加功能此变量就没用了
 type MyServiceList struct {
 	//Match      *Match
-	GameMatch  *gamematch.GameMatch
-	FrameSync  *frame_sync.FrameSync
-	RoomManage *frame_sync.RoomManager
-	TwinAgora  *seed_business.TwinAgora
+	GameMatch *gamematch.GameMatch
+	FrameSync *frame_sync.FrameSync
+	//RoomManage *frame_sync.RoomManager
+	TwinAgora *seed_business.TwinAgora
 }
 
 type Gateway struct {
@@ -54,7 +54,7 @@ func (gateway *Gateway) ListeningMsg() {
 			conn, exist := gateway.Netway.ConnManager.GetConnPoolById(GatewayMsg.Uid)
 			if !exist {
 				gateway.Log.Error("ListeningMsg conn empty uid:" + strconv.Itoa(int(GatewayMsg.Uid)))
-				return
+				break
 			}
 			conn.SendMsgCompressByUid(GatewayMsg.Uid, GatewayMsg.ActionName, GatewayMsg.Data)
 		case ServiceMsg := <-gateway.RequestServiceAdapter.QueueServiceMsg:
@@ -310,6 +310,10 @@ func (gateway *Gateway) RouterServiceSync(msg pb.Msg, conn *util.Conn) (data []b
 
 	protoServiceFunc, _ := gateway.Netway.Option.ProtoMap.GetServiceFuncById(int(msg.SidFid))
 	switch protoServiceFunc.FuncName {
+	//case "CS_PlayerMatchSign":
+	//	err = gateway.Netway.ProtocolManager.ParserContentMsg(msg, &requestPlayerMatchSign, conn.UserId)
+	//case "CS_PlayerMatchSignCancel":
+	//	err = gateway.Netway.ProtocolManager.ParserContentMsg(msg, &requestPlayerMatchSignCancel, conn.UserId)
 	case "CS_PlayerOperations":
 		err = gateway.Netway.ProtocolManager.ParserContentMsg(msg, &requestLogicFrame, conn.UserId)
 	case "CS_PlayerResumeGame":
@@ -322,11 +326,7 @@ func (gateway *Gateway) RouterServiceSync(msg pb.Msg, conn *util.Conn) (data []b
 		err = gateway.Netway.ProtocolManager.ParserContentMsg(msg, &requestRoomHistory, conn.UserId)
 	case "CS_RoomBaseInfo":
 		err = gateway.Netway.ProtocolManager.ParserContentMsg(msg, &requestRoomBaseInfo, conn.UserId)
-	//case "CS_PlayerMatchSign":
-	//	err = gateway.Netway.ProtocolManager.ParserContentMsg(msg, &requestPlayerMatchSign, conn.UserId)
-	//case "CS_PlayerMatchSignCancel":
-	//	err = gateway.Netway.ProtocolManager.ParserContentMsg(msg, &requestPlayerMatchSignCancel, conn.UserId)
-	case "FDClose":
+	case "FdClose":
 		err = gateway.Netway.ProtocolManager.ParserContentMsg(msg, &requestFDCloseEvent, conn.UserId)
 	case "CS_Heartbeat":
 		err = gateway.Netway.ProtocolManager.ParserContentMsg(msg, &reqHeartbeat, conn.UserId)
@@ -359,10 +359,10 @@ func (gateway *Gateway) RouterServiceSync(msg pb.Msg, conn *util.Conn) (data []b
 		err = gateway.MyServiceList.FrameSync.RoomHistory(requestRoomHistory)
 	case "CS_RoomBaseInfo":
 		requestRoomBaseInfo.SourceUid = conn.UserId
-		err = gateway.MyServiceList.RoomManage.GetRoom(requestRoomBaseInfo)
+		err = gateway.MyServiceList.FrameSync.RoomManage.GetRoom(requestRoomBaseInfo)
 	case "CS_PlayerState":
 		gateway.MyServiceList.FrameSync.GetPlayerBase(reqPlayerBase)
-	case "FDClose":
+	case "FdClose":
 		err = gateway.MyServiceList.FrameSync.CloseFD(requestFDCloseEvent)
 	case "CS_Heartbeat":
 		err = gateway.MyServiceList.FrameSync.Heartbeat(reqHeartbeat)

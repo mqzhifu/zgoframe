@@ -14,4 +14,6 @@ func Callback(Router *gin.RouterGroup) {
 		//BaseRouter.POST("agora/rtc/test", v1.AgoraCallbackRTCTest)
 
 	}
+
+	//BaseRouter.GET("avicon.ico", v1.AgoraCallbackCloud)
 }

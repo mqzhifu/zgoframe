@@ -42,10 +42,10 @@ type Room struct {
 	PlayersAckStatus       int                 `json:"playersAckStatus"` //玩家确认列表的状态
 	PlayersAckListRWLock   *sync.RWMutex       `json:"-"`                //玩家一帧内的确认操作，需要加锁
 	//接收玩家操作指令-集合
-	LogicFrameWaitTime         int64      `json:"logicFrameWaitTime"` //每一帧的等待总时长，虽然C端定时发送每帧数据，但有可能某个玩家的某帧发送的数据丢失，造成两边空等，得有个计时
-	CloseChan                  chan int   `json:"-"`                  //关闭信号管道
-	WaitPlayerOfflineCloseChan chan int   `json:"-"`                  //<一局游戏，某个玩家掉线，其它玩家等待它的时间>
-	PlayersOperationQueue      *list.List `json:"-"`                  //用于存储玩家一个逻辑帧内推送的：玩家操作指令
+	LogicFrameWaitTime    int64      `json:"logicFrameWaitTime"`  //每一帧的等待总时长，虽然C端定时发送每帧数据，但有可能某个玩家的某帧发送的数据丢失，造成两边空等，得有个计时
+	CloseChan             chan int   `json:"-"`                   //关闭信号管道
+	WaitPlayerOffline     int        `json:"wait_player_offline"` //<一局游戏，某个玩家掉线，其它玩家等待它的时间>
+	PlayersOperationQueue *list.List `json:"-"`                   //用于存储玩家一个逻辑帧内推送的：玩家操作指令
 	//本局游戏，历史记录，玩家的所有操作
 	LogicFrameHistory []*pb.RoomHistory `json:"logicFrameHistory"` //玩家的历史所有记录
 	EndTotal          string            `json:"rs"`                //本房间的一局游戏，最终的比赛结果
@@ -62,7 +62,7 @@ type RoomManagerOption struct {
 	RequestServiceAdapter *service.RequestServiceAdapter //请求3方服务 适配器
 	Log                   *zap.Logger
 	Gorm                  *gorm.DB
-	//FrameSync             *FrameSync
+	FrameSync             *FrameSync
 	//ReadyTimeout          int32 //房间人数满足了，等待 所有玩家确认，超时时间
 	//RoomPeople            int32 //房间有多少人后，可以开始游戏了
 	//MapSize               int32 `json:"mapSize"` //帧同步，地图大小，给前端初始化使用（测试使用）
@@ -169,7 +169,6 @@ func (roomManager *RoomManager) GetById(roomId string) (room *Room, empty bool) 
 
 func (roomManager *RoomManager) Shutdown() {
 	roomManager.Option.Log.Warn("shutdown mySync")
-	//sync.CloseChan <- 1
 	if len(roomManager.Pool) <= 0 {
 		return
 	}

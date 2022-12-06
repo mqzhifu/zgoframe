@@ -76,6 +76,8 @@ func GetNewHttpGIN(zapLog *zap.Logger, prefix string) (*gin.Engine, error) {
 	ginRouter.Use(ZapLog())
 	//设置静态目录，等待请求
 	ginRouter.StaticFS(staticFSUriName, http.Dir(staticPath))
+	//favicon.ico
+	ginRouter.StaticFile("/favicon.ico", "./static/favicon.ico")
 	//加载swagger api 工具
 	ginRouter.GET(swaggerUri, ginSwagger.WrapHandler(swaggerFiles.Handler))
 	//设置跨域

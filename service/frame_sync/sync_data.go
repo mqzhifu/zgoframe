@@ -17,14 +17,13 @@ type Sync struct {
 }
 
 type SyncOption struct {
-	ProjectId             int                            `json:"project_id"`         //项目Id,给玩家推送消失的时候使用
-	FPS                   int32                          `json:"fps"`                //frame pre second
-	LockMode              int32                          `json:"lock_mode"`          //锁模式，乐观|悲观
-	Store                 int32                          `json:"store"`              //持久化，玩家每帧的动作，暂未使用
-	OffLineWaitTime       int32                          `json:"off_line_wait_time"` //lockStep 玩家掉线后，其它玩家等待最长时间
-	RequestServiceAdapter *service.RequestServiceAdapter `json:"-"`                  //请求3方服务 适配器
-	RoomManage            *RoomManager                   `json:"-"`                  //外部指针-房间服务
-	Room                  *Room                          `json:"-"`                  //父类，ROOM，每个同步的单元是一个房间
+	ProjectId             int                            `json:"project_id"` //项目Id,给玩家推送消失的时候使用
+	FPS                   int32                          `json:"fps"`        //frame pre second
+	LockMode              int32                          `json:"lock_mode"`  //锁模式，乐观|悲观
+	Store                 int32                          `json:"store"`      //持久化，玩家每帧的动作，暂未使用
+	RequestServiceAdapter *service.RequestServiceAdapter `json:"-"`          //请求3方服务 适配器
+	RoomManage            *RoomManager                   `json:"-"`          //外部指针-房间服务
+	Room                  *Room                          `json:"-"`          //父类，ROOM，每个同步的单元是一个房间
 	Log                   *zap.Logger                    `json:"-"`
 	//MapSize               int32                          `json:"map_size"` //地址大小，给前端初始化使用
 }
@@ -57,8 +56,6 @@ func NewSync(Option SyncOption) *Sync {
 	if sync.Option.FPS > 80 { //
 		Option.Log.Error("fps > 80 ")
 	}
-	//用于关闭
-	sync.CloseChan = make(chan int)
 	return sync
 }
 
@@ -173,18 +170,23 @@ end:
 //同步 玩家 操作 定时器
 func (sync *Sync) logicFrameLoop(room *Room) {
 	fpsTime := 1000 / sync.Option.FPS
-	i := 0
+	//i := 0
 	for {
 		select {
 		case <-room.CloseChan:
 			goto end
 		default:
-			sleepMsTime := sync.logicFrameLoopReal(room, fpsTime)
-			sleepMsTimeD := time.Duration(sleepMsTime)
-			if sleepMsTime > 0 {
-				time.Sleep(sleepMsTimeD * time.Millisecond)
+			err := sync.logicFrameLoopReal(room)
+			if err != nil {
+				goto end
 			}
-			i++
+			time.Sleep(time.Duration(fpsTime) * time.Millisecond)
+			//sleepMsTime := sync.logicFrameLoopReal(room, fpsTime)
+			//sleepMsTimeD := time.Duration(sleepMsTime)
+			//if sleepMsTime > 0 {
+			//	time.Sleep(sleepMsTimeD * time.Millisecond)
+			//}
+			//i++
 			//if i > 10{
 			//	zlib.ExitPrint(1111)
 			//}
@@ -195,12 +197,12 @@ end:
 }
 
 //同上
-func (sync *Sync) logicFrameLoopReal(room *Room, fpsTime int32) int32 {
+func (sync *Sync) logicFrameLoopReal(room *Room) error {
 	queue := room.PlayersOperationQueue
 	end := queue.Len()
 	sync.Option.Log.Debug("logicFrameLoopReal len:" + strconv.Itoa(end))
 	if end <= 0 {
-		return fpsTime
+		return nil
 	}
 
 	if sync.Option.LockMode == service.LOCK_MODE_PESSIMISTIC {
@@ -212,11 +214,22 @@ func (sync *Sync) logicFrameLoopReal(room *Room, fpsTime int32) int32 {
 			}
 		}
 		room.PlayersAckListRWLock.RUnlock()
-		if ack < len(room.PlayersAckList) {
+		if ack < len(room.PlayersAckList) { //正常一帧时间内，未收到全部玩家的当前帧消息
+			if room.WaitPlayerOffline > 0 { //代表，有玩家掉线
+				if util.GetNowTimeSecondToInt() > room.WaitPlayerOffline { //等待玩家也是有超时的，一但超时，游戏直接结束
+					requestGameOver := pb.GameOver{
+						SourceUid: 9999,
+						RoomId:    room.Id,
+					}
+					sync.GameOver(requestGameOver)
+					return errors.New("WaitPlayerOffline timeout , game over")
+				}
+			}
+
 			logicFrameWaitTime := util.GetNowMillisecond() - room.LogicFrameWaitTime
 			if logicFrameWaitTime > 1000 {
 				/*一秒内依然没有收齐所有玩家的当前帧，这里有可能：
-				1. 有玩家丢帧了，网络波动造成：网络包丢失
+				1. 有玩家丢帧了，网络波动造成：网络包丢失，C/S 都有可能丢包
 				2. 也可能是玩家掉线了，{连接关闭}事件未发出，S端也暂未收到，连接未断
 				3. 也可能是网络卡顿，造成RTT过长，连接未断
 				解决：
@@ -227,7 +240,7 @@ func (sync *Sync) logicFrameLoopReal(room *Room, fpsTime int32) int32 {
 				*/
 			}
 			sync.Option.Log.Error("还有玩家未发送操作记录,当前确认人数:" + strconv.Itoa(ack))
-			return fpsTime
+			return nil
 		}
 	}
 
@@ -276,7 +289,7 @@ func (sync *Sync) logicFrameLoopReal(room *Room, fpsTime int32) int32 {
 	//sync.boardCastFrameInRoom(room.Id, "SC_PushLogicFrame", &logicFrame)
 	sync.boardCastFrameInRoom(room.Id, "SC_LogicFrame", &logicFrame)
 
-	return fpsTime
+	return nil
 }
 
 //定时，接收玩家的操作记录
@@ -379,6 +392,12 @@ func (sync *Sync) roomEnd(roomId string, sendCloseChan int) {
 		sync.Option.Log.Error("roomEnd status err " + roomId)
 		return
 	}
+
+	//给 房间FPS 协程 发送停止死循环信号
+	if sendCloseChan == 1 { //这里要立刻停了推送逻辑帧死循环
+		room.CloseChan <- 1
+	}
+
 	room.UpStatus(service.ROOM_STATUS_END)
 	room.EndTime = int32(util.GetNowTimeSecondToInt())
 	for _, v := range room.PlayerList {
@@ -387,16 +406,34 @@ func (sync *Sync) roomEnd(roomId string, sendCloseChan int) {
 	}
 
 	if sync.Option.Store == 1 {
+		//playerIds, _ := json.Marshal(&room.PlayerIds)
+		//playersAckList, _ := json.Marshal(&room.PlayersReadyList)
+		//logicFrameHistory, _ := json.Marshal(&room.LogicFrameHistory)
+		//
+		//GameSyncRoom := model.GameSyncRoom{
+		//	Status:            int(room.Status),
+		//	RuleId:            int(room.RuleId),
+		//	AddTime:           int(room.AddTime),
+		//	StartTime:         int(room.StartTime),
+		//	EndTime:           int(room.EndTime),
+		//	ReadyTimeout:      room.ReadyTimeout,
+		//	SequenceNumber:    room.SequenceNumber,
+		//	RandSeek:          int(room.RandSeek),
+		//	WaitPlayerOffline: room.WaitPlayerOffline,
+		//	EndTotal:          room.EndTotal,
+		//	PlayerIds:         string(playerIds),
+		//	PlayersAckList:    string(playersAckList),
+		//	LogicFrameHistory: string(logicFrameHistory),
+		//}
+		//sync.Option.Room.RoomManager.Option.FrameSync.Option.Gorm.Create(&GameSyncRoom)
+	}
 
-	}
-	//给 房间FPS 协程 发送停止死循环信号
-	if sendCloseChan == 1 {
-		room.CloseChan <- 1
-	}
 }
 
 //玩家操作后，触发C端主动发送游戏结束事件
 func (sync *Sync) GameOver(requestGameOver pb.GameOver) {
+	sync.roomEnd(requestGameOver.RoomId, 1) //先要把房间结束了，停掉协程推送帧
+
 	responseGameOver := pb.GameOver{
 		PlayerId:       requestGameOver.PlayerId,
 		RoomId:         requestGameOver.RoomId,
@@ -405,7 +442,6 @@ func (sync *Sync) GameOver(requestGameOver pb.GameOver) {
 	}
 	sync.boardCastInRoom(requestGameOver.RoomId, "SC_GameOver", &responseGameOver)
 
-	sync.roomEnd(requestGameOver.RoomId, 1)
 }
 
 //玩家触发了该角色死亡
@@ -453,20 +489,19 @@ func (sync *Sync) roomOnlinePlayers(room *Room) []int32 {
 }
 
 //玩家断开连接后
-func (sync *Sync) CloseOne(conn *util.Conn) {
+func (sync *Sync) CloseOne(FDCloseEvent pb.FDCloseEvent) {
 	sync.Option.Log.Warn("sync.close one")
-	//根据连接中的playerId，在用户缓存池中，查找该连接是否有未结束的游戏房间ID
+	//根据连接中的 playerId，在用户缓存池中，查找该连接是否有未结束的游戏房间ID
 	//roomId := myPlayerManager.GetRoomIdByPlayerId(conn.UserId)
-	roomId := conn.RoomId
-	if roomId == "" {
+	if sync.Option.Room.Id == "" {
 		//这里会先执行roomEnd，然后清空了player roomId 所有获取不到
-		sync.Option.Log.Warn("roomid = empty " + strconv.Itoa(int(conn.UserId)))
+		sync.Option.Log.Warn("roomid = empty " + strconv.Itoa(int(FDCloseEvent.UserId)))
 		return
 	}
 	//根据roomId 查找房间信息
-	room, empty := sync.Option.RoomManage.GetById(roomId)
+	room, empty := sync.Option.RoomManage.GetById(sync.Option.Room.Id)
 	if empty {
-		sync.Option.Log.Warn("room == empty , " + roomId)
+		sync.Option.Log.Warn("room == empty , " + sync.Option.Room.Id)
 		return
 	}
 	sync.Option.Log.Info("room.Status:" + strconv.Itoa(int(room.Status)))
@@ -477,23 +512,24 @@ func (sync *Sync) CloseOne(conn *util.Conn) {
 		playerOnLineCount := len(playerOnLine)
 		//playerOnLineCount-- //这里因为，已有一个玩家关闭中，但是还未处理
 		sync.Option.Log.Info("has check roomEnd , playerOnLineCount : " + strconv.Itoa(playerOnLineCount))
-		if playerOnLineCount <= 1 { //这里这个判断有点不好处理，按说应该是<=0，也就是netway.close 应该先关闭了在线状态，但是如果全关了，后面可能要发消息就不行了
-			sync.roomEnd(roomId, 1)
+		if playerOnLineCount <= 1 { //这里这个判断有点不好处理，按说应该是<=0，也就是 netway.close 应该先关闭了在线状态，但是如果全关了，后面可能要发消息就不行了
+			sync.roomEnd(sync.Option.Room.Id, 1)
 		} else {
 			if room.Status == service.ROOM_STATUS_EXECING {
 				room.UpStatus(service.ROOM_STATUS_PAUSE)
-				responseOtherPlayerOffline := pb.OtherPlayerOffline{
-					PlayerId: conn.UserId,
-				}
-				sync.boardCastInRoom(roomId, "SC_OtherPlayerOffline", &responseOtherPlayerOffline)
 			}
+			room.WaitPlayerOffline = util.GetNowTimeSecondToInt() + room.RoomManager.Option.FrameSync.Option.OffLineWaitTime
+			responseOtherPlayerOffline := pb.OtherPlayerOffline{
+				PlayerId: FDCloseEvent.UserId,
+			}
+			sync.boardCastInRoom(sync.Option.Room.Id, "SC_OtherPlayerOffline", &responseOtherPlayerOffline)
 		}
 	} else {
 		sync.Option.Log.Error("room.Status exception~~~")
 		//能走到这个条件，肯定是发生过异常
 		if room.Status == service.ROOM_STATUS_INIT {
 			//本该room进入ready状态，但异常了
-			sync.roomEnd(roomId, 0)
+			sync.roomEnd(sync.Option.Room.Id, 0)
 		} else if room.Status == service.ROOM_STATUS_END {
 			//roomEnd 结算方法没有执行完毕，没有清空player的room id
 			for _, v := range room.PlayerList {
@@ -600,6 +636,7 @@ func (sync *Sync) PlayerResumeGame(requestPlayerResumeGame pb.PlayerResumeGame) 
 			for _, v := range room.PlayerList {
 				playerIds = append(playerIds, int32(v.Id))
 			}
+			room.WaitPlayerOffline = 0
 		}
 	}
 

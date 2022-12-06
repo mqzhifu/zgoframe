@@ -73,3 +73,146 @@ function formatUnixTime(us){
     return format;
 
 }
+
+
+//下面这些都是一些字节的处理，主动是给帧同步 protobuf 使用的
+
+
+function stringToUint8Array(str){
+    var arr = [];
+    for (var i = 0, j = str.length; i < j; ++i) {
+        arr.push(str.charCodeAt(i));
+    }
+
+    var tmpUint8Array = new Uint8Array(arr);
+    return tmpUint8Array
+}
+
+function processBufferString (dataBuffer,start,end){
+    var str = "";
+    for (var i = start; i < dataBuffer.length; i++) {
+        if (i >= end){
+            break;
+        }
+        str += String.fromCharCode(dataBuffer[i]);
+    }
+    return str;
+}
+
+function processBufferInt(dataBuffer,start,en){
+    var str = "";
+    for (var i = start; i < dataBuffer.length; i++) {
+        if (i >= end){
+            break;
+        }
+        str += dataBuffer[i];
+    }
+    return str;
+}
+
+function processBuffer(dataBuffer,start){
+    //创建content ArrayBuffer和Uint8Array
+    var contentArrayBuffer = new ArrayBuffer( dataBuffer.length - start );
+    var contentUint8Array = new Uint8Array(contentArrayBuffer);
+    var j = 0;
+    for (var i = start; i < dataBuffer.length; i++) {
+        contentUint8Array[j] = dataBuffer[i];
+        j++;
+    }
+    return contentUint8Array;
+}
+
+function processBufferRange(dataBuffer,start,end){
+    //创建content ArrayBuffer和Uint8Array
+    var contentArrayBuffer = new ArrayBuffer( end - start );
+    var contentUint8Array = new Uint8Array(contentArrayBuffer);
+    var j = 0;
+    for (var i = start; i < end; i++) {
+        contentUint8Array[j] = dataBuffer[i];
+        j++;
+    }
+    return contentUint8Array;
+}
+
+// function intToByte(i) {
+//     var b = i & 0xFF;
+//     var c = 0;
+//     if (b >= 128) {
+//         c = b % 128;
+//         c = -1 * (128 - c);
+//     } else {
+//         c = b;
+//     }
+//     return c;
+// }
+
+function intToOneByteArr(i){
+    var targets = new Uint8Array(1);
+    targets[0] = i & 0xFF
+    return targets;
+}
+
+function intToTwoByteArr(i){
+    var targets = new Uint8Array(2);
+    targets[0] = (i >> 8 & 0xFF);
+    targets[1] = i & 0xFF
+    return targets;
+}
+
+
+function intToByte4(i) {
+    var targets = new Uint8Array(4);
+    targets[0] = (i >> 24 & 0xFF);
+    targets[1] = (i >> 16 & 0xFF);
+    targets[2] = (i >> 8 & 0xFF);
+    targets[3] = (i & 0xFF);
+    return targets;
+}
+
+function Byte4ToInt(d) {
+    var targets = new Array(4);
+    targets[0] = (d[0] << 24 & 0xFF);
+    targets[1] = (d[1] << 16 & 0xFF);
+    targets[2] = (d[2] << 8 & 0xFF);
+    targets[3] = (d[3] & 0xFF);
+    return targets[0] + targets[1] +targets[2] +targets[3];
+}
+
+function Byte1ToInt(d) {
+    var targets = new Array(1);
+    targets[0] = (d[0] & 0xFF);
+    return targets[0] ;
+}
+
+function Byte2ToInt(d) {
+    var targets = new Array(2);
+    targets[0] = (d[0] << 8 & 0xFF);
+    targets[1] = (d[1] & 0xFF);
+    // alert(targets[0]);
+    // alert(targets[1]);
+    return targets[0] + targets[1]  ;
+}
+
+function concatenate(...arrays) {
+    let totalLen = 0;
+    for (let arr of arrays)
+
+        totalLen += arr.byteLength;
+
+    let res = new Uint8Array(totalLen)
+
+    let offset = 0
+
+    for (let arr of arrays) {
+
+        let uint8Arr = new Uint8Array(arr)
+
+        res.set(uint8Arr, offset)
+
+        offset += arr.byteLength
+
+    }
+
+    return res.buffer
+
+}

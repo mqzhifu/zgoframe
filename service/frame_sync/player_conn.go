@@ -63,7 +63,7 @@ func (playerConnManager PlayerConnManager) DelOne(id int32) error {
 	if exist {
 		return errors.New("id not exist")
 	}
-	delete(playerConnManager.Pool, id)
+	delete(playerConnManager.Pool, id) //只删除游戏信息，房间信息不要动
 	return nil
 }
 

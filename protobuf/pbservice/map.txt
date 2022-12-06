@@ -15,7 +15,7 @@
 20128|FrameSync|SC_OtherPlayerResumeGame|PlayerResumeGame|Empty|通知其它玩家，有玩家断线后已恢复
 20130|FrameSync|SC_StartBattle|StartBattle|Empty|开始战斗
 20132|FrameSync|SC_RestartGame|RestartGame|Empty|玩家均已在线，重新开始游戏
-20134|FrameSync|SC_GameOver|GameOver|Empty|一局游戏结束
+20134|FrameSync|SC_GameOver|guochan2048.com|Empty|一局游戏结束
 20136|FrameSync|SC_PlayerState|PlayerState|Empty|一个玩家当前的状态
 10100|GameMatch|CS_PlayerMatchSign|GameMatchSign|Empty|玩家匹配报名
 10102|GameMatch|CS_PlayerMatchSignCancel|GameMatchPlayerCancel|Empty|玩家匹配取消报名

@@ -1,6 +1,7 @@
 package frame_sync
 
 import (
+	"errors"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 	"zgoframe/protobuf/pb"
@@ -19,7 +20,7 @@ type FrameSyncOption struct {
 	FPS                   int32                          `json:"fps"`                //frame pre second
 	LockMode              int32                          `json:"lock_mode"`          //锁模式，乐观|悲观
 	Store                 int32                          `json:"store"`              //持久化，玩家每帧的动作，暂未使用
-	OffLineWaitTime       int32                          `json:"off_line_wait_time"` //lockStep 玩家掉线后，其它玩家等待最长时间
+	OffLineWaitTime       int                            `json:"off_line_wait_time"` //lockStep 玩家掉线后，其它玩家等待最长时间
 	Gorm                  *gorm.DB                       `json:"-"`                  //
 	RequestServiceAdapter *service.RequestServiceAdapter `json:"-"`                  //请求3方服务 适配器
 	Log                   *zap.Logger                    `json:"-"`
@@ -40,6 +41,7 @@ func NewFrameSync(Option FrameSyncOption) *FrameSync {
 		Log:                   Option.Log,
 		RequestServiceAdapter: Option.RequestServiceAdapter,
 		Gorm:                  Option.Gorm,
+		FrameSync:             sync,
 	}
 	sync.RoomManage = NewRoomManager(roomManagerOption)
 
@@ -66,6 +68,18 @@ func (sync *FrameSync) CreateFD(fd pb.FDCreateEvent) error {
 	return nil
 }
 func (sync *FrameSync) CloseFD(FDCloseEvent pb.FDCloseEvent) error {
+	user, empty := sync.PlayerConnManager.GetById(FDCloseEvent.UserId)
+	if empty {
+		sync.Option.Log.Error("user id not in PlayerConnManager pool")
+		return errors.New("user id not in PlayerConnManager pool")
+	}
+	if user.RoomId != "" {
+		room, empty := sync.RoomManage.GetById(user.RoomId)
+		if empty {
+			return errors.New("user id not in RoomManage pool")
+		}
+		room.Sync.CloseOne(FDCloseEvent)
+	}
 	sync.PlayerConnManager.DelOne(FDCloseEvent.UserId)
 	return nil
 }

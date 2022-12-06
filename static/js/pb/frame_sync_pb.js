@@ -283,7 +283,12 @@ proto.pb.Heartbeat.toObject = function(includeInstance, msg) {
   var f, obj = {
     sourceUid: jspb.Message.getFieldWithDefault(msg, 1, 0),
     time: jspb.Message.getFieldWithDefault(msg, 2, 0),
-    reqTime: jspb.Message.getFieldWithDefault(msg, 3, 0)
+    reqTime: jspb.Message.getFieldWithDefault(msg, 3, 0),
+    clientReqTime: jspb.Message.getFieldWithDefault(msg, 4, 0),
+    clientReceiveTime: jspb.Message.getFieldWithDefault(msg, 5, 0),
+    serverReceiveTime: jspb.Message.getFieldWithDefault(msg, 6, 0),
+    serverResponseTime: jspb.Message.getFieldWithDefault(msg, 7, 0),
+    requestId: jspb.Message.getFieldWithDefault(msg, 8, "")
   };
 
   if (includeInstance) {
@@ -332,6 +337,26 @@ proto.pb.Heartbeat.deserializeBinaryFromReader = function(msg, reader) {
       var value = /** @type {number} */ (reader.readInt64());
       msg.setReqTime(value);
       break;
+    case 4:
+      var value = /** @type {number} */ (reader.readInt64());
+      msg.setClientReqTime(value);
+      break;
+    case 5:
+      var value = /** @type {number} */ (reader.readInt64());
+      msg.setClientReceiveTime(value);
+      break;
+    case 6:
+      var value = /** @type {number} */ (reader.readInt64());
+      msg.setServerReceiveTime(value);
+      break;
+    case 7:
+      var value = /** @type {number} */ (reader.readInt64());
+      msg.setServerResponseTime(value);
+      break;
+    case 8:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setRequestId(value);
+      break;
     default:
       reader.skipField();
       break;
@@ -379,6 +404,41 @@ proto.pb.Heartbeat.serializeBinaryToWriter = function(message, writer) {
   if (f !== 0) {
     writer.writeInt64(
       3,
+      f
+    );
+  }
+  f = message.getClientReqTime();
+  if (f !== 0) {
+    writer.writeInt64(
+      4,
+      f
+    );
+  }
+  f = message.getClientReceiveTime();
+  if (f !== 0) {
+    writer.writeInt64(
+      5,
+      f
+    );
+  }
+  f = message.getServerReceiveTime();
+  if (f !== 0) {
+    writer.writeInt64(
+      6,
+      f
+    );
+  }
+  f = message.getServerResponseTime();
+  if (f !== 0) {
+    writer.writeInt64(
+      7,
+      f
+    );
+  }
+  f = message.getRequestId();
+  if (f.length > 0) {
+    writer.writeString(
+      8,
       f
     );
   }
@@ -436,6 +496,96 @@ proto.pb.Heartbeat.prototype.getReqTime = function() {
  */
 proto.pb.Heartbeat.prototype.setReqTime = function(value) {
   return jspb.Message.setProto3IntField(this, 3, value);
+};
+
+
+/**
+ * optional int64 client_req_time = 4;
+ * @return {number}
+ */
+proto.pb.Heartbeat.prototype.getClientReqTime = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 4, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.pb.Heartbeat} returns this
+ */
+proto.pb.Heartbeat.prototype.setClientReqTime = function(value) {
+  return jspb.Message.setProto3IntField(this, 4, value);
+};
+
+
+/**
+ * optional int64 client_receive_time = 5;
+ * @return {number}
+ */
+proto.pb.Heartbeat.prototype.getClientReceiveTime = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 5, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.pb.Heartbeat} returns this
+ */
+proto.pb.Heartbeat.prototype.setClientReceiveTime = function(value) {
+  return jspb.Message.setProto3IntField(this, 5, value);
+};
+
+
+/**
+ * optional int64 server_receive_time = 6;
+ * @return {number}
+ */
+proto.pb.Heartbeat.prototype.getServerReceiveTime = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 6, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.pb.Heartbeat} returns this
+ */
+proto.pb.Heartbeat.prototype.setServerReceiveTime = function(value) {
+  return jspb.Message.setProto3IntField(this, 6, value);
+};
+
+
+/**
+ * optional int64 server_response_time = 7;
+ * @return {number}
+ */
+proto.pb.Heartbeat.prototype.getServerResponseTime = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 7, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.pb.Heartbeat} returns this
+ */
+proto.pb.Heartbeat.prototype.setServerResponseTime = function(value) {
+  return jspb.Message.setProto3IntField(this, 7, value);
+};
+
+
+/**
+ * optional string request_id = 8;
+ * @return {string}
+ */
+proto.pb.Heartbeat.prototype.getRequestId = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 8, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.pb.Heartbeat} returns this
+ */
+proto.pb.Heartbeat.prototype.setRequestId = function(value) {
+  return jspb.Message.setProto3StringField(this, 8, value);
 };
 
 

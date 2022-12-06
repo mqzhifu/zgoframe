@@ -168,8 +168,11 @@ func (myService *MyService) RegisterService() {
 func CreateGameService(myService *MyService) (err error) {
 	//帧同步 - 房间服务 - room要先实例化,math frame_sync 都强依赖room
 	frameSyncOption := frame_sync.FrameSyncOption{
+		LockMode:              service.LOCK_MODE_PESSIMISTIC,
+		Store:                 1,
 		Log:                   V.Zap,
 		RequestServiceAdapter: myService.RequestServiceAdapter,
+		OffLineWaitTime:       10,
 		Gorm:                  V.Gorm,
 	}
 	myService.FrameSync = frame_sync.NewFrameSync(frameSyncOption)

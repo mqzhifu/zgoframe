@@ -387,8 +387,11 @@ func (gateway *Gateway) heartbeat(requestClientHeartbeat pb.Heartbeat, conn *uti
 
 	gateway.Log.Debug("gateway heartbeat , now64:", zap.Int64("now", now64), zap.Int64(" client_time", requestClientHeartbeat.Time), zap.Int64(" RTT:", conn.RTT))
 	responseHeartbeat := pb.Heartbeat{
-		ReqTime: requestClientHeartbeat.Time,
-		Time:    now64,
+		Time:              now64,
+		ReqTime:           requestClientHeartbeat.ClientReqTime,
+		ClientReqTime:     requestClientHeartbeat.ClientReqTime,
+		ServerReceiveTime: now64,
+		RequestId:         requestClientHeartbeat.RequestId,
 	}
 
 	conn.SendMsgCompressByUid(conn.UserId, "SC_Heartbeat", &responseHeartbeat)

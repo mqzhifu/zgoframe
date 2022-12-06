@@ -2,20 +2,23 @@
 function Sync (playerId,token,GatewayConfig,DomIdPreObj,contentType,protocolType,playerInfo,actionMap,ruleConfig,mapSize,content_type_desc,protocol_type_desc) {
     this.status = 1;//1初始化 2等待准备 3运行中  4结束
     this.statusDesc = {
-        1: "init",
-        2: "wsLInkSuccess",
-        3: "loginSuccess",
-        4: "loginFailed",
-        5: "matchSign",
-        6: "cancelSign",
-        7: "ready",
-        8: "startBattle",
-        9: "end",
-        10: "close",
+        1: "初始化",//
+        2: "ws连接成功",//
+        3: "登陆成功",//
+        4: "登陆失败",//
+        5: "未结束游戏，恢复中",
+        6: "报名匹配中",//
+        7: "取消匹配",//
+        8: "准备中",//
+        9: "开始游戏中",//
+        10: "游戏已结束",//
+        11: "连接关闭了",//
     };
     this.heartbeatLoopFunc = null;//心跳回调函数
+    this.heartbeatHistory = []//记录每次心跳的数据
+    this.heartbeatQueue = [];
     this.tableMax = mapSize;//地图的表格大小 5 X 5
-    this.otherPlayerOffline = 0;//其它玩家调线
+    this.otherPlayerOffline = 0;//标识一下，有其它玩家调线
     this.pushLogicFrameLoopFunc = null;//定时循环 - 推送玩家操作函数
     this.playerOperationsQueue = [];//一个帧时间内，收集玩家的操作指令 队列
     this.closeFlag = 0;//关闭标识，0正常1手动关闭2后端关闭
@@ -57,7 +60,7 @@ function Sync (playerId,token,GatewayConfig,DomIdPreObj,contentType,protocolType
 //创建ws长连接，也算是入口函数，得选建立WS连接，才有后续的所有操作
 Sync.prototype.create = function(){
     this.show("创建 ws 连接");
-    if (this.status != 1 && this.status != 10){
+    if (this.status != 1 && this.status != 11){
         return this.show("status错误， status  !=  init or close",1)
     }
     var parent = this
@@ -102,7 +105,7 @@ Sync.prototype.close = function(ev){
     if (this.myClose == 1){//自己关闭的WS
         var reConnBntId = "reconn_"+this.playerId;
         var msg = "重连接";
-        this.upOptBntHref(reConnBntId,msg,this.create);
+        this.upOptBntHref(reConnBntId,msg,this.create.bind(this));
     }else{
         this.closeFlag = 2;
         this.upOptBnt("服务端关闭，游戏结束，连接断开",1)
@@ -129,7 +132,8 @@ Sync.prototype.wsOpen = function(){
 //结尾会添加一个字节：\f ,可用于 TCP 粘包 分隔
 Sync.prototype.onmessage = function(ev){
     // console.log("onmessage , ev :",ev );
-    var msgObj = this.newMsgObj();
+    var msg = new proto.pb.Msg();
+    var msgObj = msg.toObject();
     var parent = this;
 
     var debugInfo = "onmessage ";
@@ -201,256 +205,74 @@ Sync.prototype.onmessage = function(ev){
         return alert("contentType err");
     }
 };
-//================== 以上是ws callback 基础函数 ====================================================
-
 //接收S端消息后，开始进行路由，具体由哪个方法接收并处理
 Sync.prototype.router = function(msgObj){
     var action = this.actionMap.server[msgObj.sidFid].func_name;
     this.showComplex("router , action:"+action,msgObj);
     //这里用了动态调用函数，减少代码量
     eval( "this."+action+"(msgObj.content)" );
-    // }else if ( action == 'SC_RoomBaseInfo' ){
-    //     this.rPushRoomInfo(content);
-    // }else if( "SC_RoomHistory" == action){
-    //     this.rPushRoomHistory(content);
-    //     // alert("接收到，玩家-房间-历史操作记录~");
-    // }else{
-    //     return alert("action error."+action);
-    // }
 }
+//================== 以上是ws callback 基础函数 ====================================================
 
-//S推送-登陆结果
-Sync.prototype.SC_Login = function(LoginRes){
-    if (LoginRes.code != 200) {
-        this.upStatus(4);
-        var msg = "登陆失败 , code: "+LoginRes.code + " , errMsg: "+LoginRes.errMsg;
-        return this.show(msg);
+
+//获取当前C端到S端的RTT值，此值目前取的是过往10次成功的心跳的差值，最后再计算出一个平均值
+Sync.prototype.getRTT = function(){
+    if(!this.heartbeatHistory || this.heartbeatHistory.length <= 0){
+        return 0;
     }
 
-    this.show("登陆成功，开始摘取玩家状态信息",1)
-
-    this.upStatus(3);
-    var playerBase = new proto.pb.PlayerBase();
-    playerBase.setPlayerId(  this.playerId);
-    this.sendMsg("CS_PlayerState",playerBase);
-
-    //做一次PING 测试一下
-    // var requestClientPing = new proto.pb.PingReq();
-    // requestClientPing.setClientReqTime(Date.now());
-    // this.sendMsg("CS_Ping",requestClientPing);
-
-    //创建定时：心跳函数
-    // this.heartbeatLoopFunc = setInterval(this.heartbeat.bind(this), this.ClientHeartbeatTime * 1000);
-};
-//S推送-心跳
-Sync.prototype.SC_Heartbeat = function(Heartbeat){
-    this.showComplex("rHeartbeat:",Heartbeat);
-}
-//S端响应自己的PING
-Sync.prototype.SC_Pong = function(PongRes){
-    this.showComplex("SC_Pong:",PongRes);
-}
-//S端发起了PING，C端要响应
-Sync.prototype.SC_Ping = function(PingReq){
-    var PongRes = new proto.pb.PongRes()
-    this.sendMsg("CS_Pong:",PongRes);
-}
-
-
-//S推送-玩家当前的状态信息
-Sync.prototype.SC_PlayerState = function(PlayerState){
-    this.showComplex("ServerPlayerState ",PlayerState,1)
-    this.serverPlayerState = PlayerState;
-    //这里是有问题的，roomId我在外层写死了均为空，应该是动态从后端拿，且最好是短连接去取，回头优化
-    if (this.serverPlayerState.roomId){
-        alert("检测出，有未结束的一局游戏，开始恢复中...,先获取房间信息:rooId:"+this.serverPlayerState.roomId);
-        var requestGetRoom = new proto.pb.RoomBaseInfo();
-        requestGetRoom.setRoomId(playerConnInfo.roomId);
-        requestGetRoom.setPlayerId(playerId);
-        this.sendMsg("CS_RoomBaseInfo",requestGetRoom);
-        //     var msg = {"roomId":playerConnInfo.roomId,"playerId":playerId};
-    }else{
-        var matchSignBntId = "matchSign_"+this.playerId;
-        var hrefBody = "匹配报名";
-        this.noticeMsg("连接成功，等待报名...")
-        this.upOptBntHref(matchSignBntId,hrefBody,this.matchSign.bind(this));
+    var rttTotal = 0;
+    var times = 0;
+    for(var i=0;i<this.heartbeatHistory.length;i++){
+        rttTotal += this.heartbeatHistory[i].server_receive_time -  this.heartbeatHistory[i].client_req_time;
+        times++;
     }
+    return  rttTotal / times;
 }
-//S推送-匹配的结果：1. 未成团，匹配失败 2匹配成功了，等帧同步服务再发消息通知
-Sync.prototype.SC_GameMatchOptResult = function(GameMatchOptResult){
-    if(GameMatchOptResult.code != 200){
-
-        var matchSignBntId = "matchSign_"+this.playerId;
-        var hrefBody = "重新匹配报名";
-
-        this.upOptBntHref(matchSignBntId,hrefBody,this.matchSign.bind(this));
-
-        this.noticeMsg("匹配失败 , GameMatchOptResult, msg: "+GameMatchOptResult.msg + " code:"+ GameMatchOptResult.code);
-        return false;
-    }
-    this.show("匹配成功");
-    this.noticeMsg("等待S端推送初始化数据...")
-    this.roomId = GameMatchOptResult.roomId;
+//创建一个空的心跳包数据结构
+Sync.prototype.createEmptyHeartbeatQueueElement = function (){
+    var now = Date.now();
+    var obj = new proto.pb.Heartbeat();
+    obj.setClientReqTime(now);
+    obj.setRequestId(now+ "");
+    return obj;
 }
-//匹配成功，房间游戏基础信息S端已建立，告知C端，可进入准备状态，且初始化本地信息
-Sync.prototype.SC_EnterBattle = function(EnterBattle){
-    this.show("SC_EnterBattle EnterBattle:",EnterBattle , " contentType:",this.contentType)
-    if(this.contentTypeDesc[this.contentType] =="protobuf"){
-        console.log("rEnterBattle in protobuf ")
-        EnterBattle.playerList = EnterBattle.playerListList;
+//将心跳包添加到队列中
+Sync.prototype.addHeartbeatQueueElement = function (){
+    var obj = this.createEmptyHeartbeatQueueElement();
+    var res = {"heartbeat":obj,"err":0};
+    // console.log("heartbeatQueue:",this.heartbeatQueue);
+    if(!this.heartbeatQueue.length){
+        this.heartbeatQueue = [obj];
+        return res;
     }
-
-    this.initLocalGlobalVar(EnterBattle);
-
-    var readySignBntId = "ready_"+this.playerId;
-    var hrefBody = "准备";
-    this.noticeMsg("匹配成功，已接收S端初始化数据...")
-    this.upOptBntHref(readySignBntId,hrefBody,this.ready.bind(this));
+    //这里最多能有3次的 heartbeat
+    if(this.heartbeatQueue.length > 3){
+        res.err = 1;
+        return res;
+    }
+    this.heartbeatQueue.push(obj);
+    return res;
 }
 
-Sync.prototype.SC_ReadyTimeout = function(){
-    console.log("rReadyTimeout:");
-
-    this.upStatus(3);
-
-    var matchSignBntId = "matchSign_"+this.playerId;
-    var hrefBody = "等待准备超时，重新匹配报名";
-
-    this.upOptBntHref(matchSignBntId,hrefBody,this.matchSign);
-
-    this.noticeMsg("抱歉，<准备时间>已超时");
-    // return alert("抱歉，<准备时间>已超时");
-}
-
-Sync.prototype.SC_StartBattle = function(StartBattle){
-    this.upStatus(8);
-    this.pushLogicFrameLoopFunc = setInterval(this.playerCommandPush.bind(this),this.logicFrameLoopTimeMs);
-    this.showComplex("this.pushLogicFrameLoopFunc===================",this.pushLogicFrameLoopFunc);
-    var exceptionOffLineId = "exceptionOffLineId"+this.playerId;
-    var msg = "模拟，异常掉线";
-    this.noticeMsg("游戏已开始，数据同步中...")
-    this.upOptBntHref(exceptionOffLineId,msg,this.closeFD);
-};
-//source:1正常接收服务器推送，2玩家掉线恢复使用
-Sync.prototype.SC_LogicFrame = function(logicFrame,source){//接收S端逻辑帧
-    this.showComplex("logicFrame:",logicFrame);
-    if(this.contentTypeDesc[this.contentType] =="protobuf"){
-        if (source != "rPushRoomHistory"){
-            logicFrame.operations = logicFrame.operationsList;
-        }
-    }
-    var operations = logicFrame.operations;
-    this.sequenceNumber  = logicFrame.sequenceNumber;
-    $("#"+this.domIdObj.seqId).html(this.sequenceNumber);//更新当前逻辑帧号，并页面显示，用于测试
-
-    this.playerCommandPushLock = 0;//解锁，恢复玩家收集指令队列
-    if (!operations || typeof (operations) == "undefined" ){
-        return this.show("SC_LogicFrame operations empty")
-    }
-    this.show("rPushLogicFrame ,sequenceNumber:"+this.sequenceNumber+ ", operationsLen:" +  operations.length);
-    for(var i=0;i<operations.length;i++){
-        var playerId = operations[i].playerId;
-        var str = " i=" + i + " , id: "+operations[i].id + " , event:"+operations[i].event + " , value:"+ operations[i].value + " , playerId:" + playerId;
-        this.show(str);
-        if ("move" == operations[i].event ){
-            var LocationArr = operations[i].value.split(",");
-            var LocationStart = LocationArr[0];
-            var LocationEnd = LocationArr[1];
-
-            // var lightTd = "map"+id +"_"+LocationStart + "_"+LocationEnd;
-            var lightTd =this.getMapTdId(this.tableId,LocationStart,LocationEnd);
-            this.show( lightTd);
-            var tdObj = $("#"+lightTd);
-            if(playerId == this.playerId){//地图格子上，自己用绿色标记
-                tdObj.css("background", "green");
-            }else{
-                tdObj.css("background", "red");//地图格子上，其它人用绿色标记
-            }
-            var playerLocation = this.playerLocation;
-            if (playerLocation[playerId] == "empty"){
-                //证明是第一次移动，没有之前的数据
-            }else{
-                // playerLocation = getPlayerLocation(playerId);
-                // alert(commands[i].playerId);
-                var playerLocationArr = playerLocation[playerId].split("_");
-                //非首次移动，这次移动后，要把之前所有位置清掉
-                var lightTd = this.getMapTdId(this.tableId,playerLocationArr[0],playerLocationArr[1]);
-                var tdObj = $("#"+lightTd);
-                tdObj.css("background", "");
-            }
-            playerLocation[playerId] = LocationStart + "_"+LocationEnd;
-        }else if(operations[i].event == "empty"){
-
-        }
-    }
-};
-
-Sync.prototype.SC_OtherPlayerOver = function(PlayerOver){
-    this.showComplex("OtherPlayerOver:",PlayerOver);
-}
-
-Sync.prototype.SC_GameOver = function(ev){
-    this.myClearInterval()
-    this.upOptBnt("游戏结束2",1)
-    // return alert("have player game end...");
-};
-
-Sync.prototype.SC_KickOff = function(KickOff){
-    this.showComplex("您被踢下线喽",KickOff,1)
-    return alert("您被踢下线喽~");
-};
-
-Sync.prototype.SC_OtherPlayerResumeGame = function(PlayerResumeGame){
-    if(PlayerResumeGame.playerId != this.playerId){
-        var tdId = self.tableId + "_" + self.playerLocation[content.playerId];
-        var tdObj = $("#"+tdId)
-        tdObj.css("background", "red");
-    }
-}
-
-Sync.prototype.SC_OtherPlayerOffline = function(OtherPlayerOffline){
-    this.otherPlayerOffline = OtherPlayerOffline.playerId;
-    this.show("其它玩家掉线了："+OtherPlayerOffline.playerId +"，略等："+this.offLineWaitTime +"秒",1);
-
-    var tdId = this.tableId + "_" + this.playerLocation[OtherPlayerOffline.playerId];
-    var tdObj = $("#"+tdId)
-    tdObj.css("background", "#A9A9A9");
-    // var lightTd =self.getMapTdId(self.tableId,LocationStart,LocationEnd);
-    // console.log(pre+"  "+lightTd);
-    // var tdObj = $("#"+lightTd);
-    // if(commands[i].playerId == playerId){
-    //     tdObj.css("background", "green");
-    // }else{
-    //     tdObj.css("background", "red");
-    // }
-};
-
-//======================== 以上都是接收S端消息通知 ========================
 //心跳执行函数
 Sync.prototype.heartbeat = function(){
-    var now = Date.now();
-    var requestClientHeartbeat = new proto.pb.Heartbeat();
-    requestClientHeartbeat.setTime(now);
-    this.sendMsg("CS_Heartbeat",requestClientHeartbeat);
+    var obj = this.addHeartbeatQueueElement();
+    if (obj.err ){//走到这里，证明3次心跳均未收到S端响应包，即：大概率是网络出了问题，可能是自己也可能是S端。
+        this.closeFD()
+    }else{
+        // var requestClientHeartbeat = new proto.pb.Heartbeat();
+        // requestClientHeartbeat.setClientReqTime(obj.client_req_time);
+        // requestClientHeartbeat.setRequestId(obj.request_id);
+        // this.sendMsg("CS_Heartbeat",requestClientHeartbeat);
+        this.sendMsg("CS_Heartbeat",obj.heartbeat);
+    }
 };
+//================== 以上都是心跳处理相关  ==================
 
-
-Sync.prototype.ready = function(){
-    this.upStatus(7);
-    var requestPlayerReady = new proto.pb.PlayerReady();
-    requestPlayerReady.setPlayerId(this.playerId);
-    requestPlayerReady.setRoomId(this.roomId);
-    this.sendMsg("CS_PlayerReady",requestPlayerReady);
-
-    this.noticeMsg("不能取消，只能等成功或超时");
-
-    this.upOptBntHref("","等待其它玩家准备",null);
-};
-
-
-
+//报名，主动触发
 Sync.prototype.matchSign = function(){
-    this.upStatus(5)
+    this.upStatus(6)
 
     this.matchSignGroupId = this.makeGroupId()
 
@@ -477,9 +299,9 @@ Sync.prototype.matchSign = function(){
     this.noticeMsg("匹配中....")
     this.upOptBntHref(cancelBntId,hrefBody,this.cancelSign.bind(this));
 };
-//取消报名
+//取消报名，主动触发
 Sync.prototype.cancelSign = function(){
-    this.upStatus(6);
+    this.upStatus(7);
 
     var gameMatchPlayerCancel = new proto.pb.GameMatchPlayerCancel();
     gameMatchPlayerCancel.setRuleId(this.ruleId);
@@ -489,45 +311,118 @@ Sync.prototype.cancelSign = function(){
     var matchSignBntId = "matchSign_"+this.playerId;
     var hrefBody = "连接成功，重新匹配报名";
 
-    this.upOptBntHref(matchSignBntId,hrefBody,this.matchSign);
+    this.upOptBntHref(matchSignBntId,hrefBody,this.matchSign.bind(this));
 };
+//进入准备状态，主动触发
+Sync.prototype.ready = function(){
+    this.upStatus(8);
+    var requestPlayerReady = new proto.pb.PlayerReady();
+    requestPlayerReady.setPlayerId(this.playerId);
+    requestPlayerReady.setRoomId(this.roomId);
+    this.sendMsg("CS_PlayerReady",requestPlayerReady);
 
-Sync.prototype.upOptBntHref = function(domId,value,clickCallback){
-    var bntContent = "<a href='javascript:void(0);' onclick='' id='"+domId+"'>"+value+"</a>";
-    this.upOptBnt(bntContent, 1);
-    $("#"+domId).click(clickCallback);
+    this.noticeMsg("不能取消，只能等成功或超时");
+
+    this.upOptBntHref("","等待其它玩家准备",null);
 };
+//两个玩家，位移碰撞了，触发了游戏结束
+Sync.prototype.gameOverAndClear = function(){
+    this.upStatus(10);
 
-//更新操作按钮文字，解除 点击事件
-Sync.prototype.upOptBnt = function(content,clearClick){
-    $("#"+this.domIdObj.optBntId).html(content);
-    if(clearClick == 1){
-        $("#"+this.domIdObj.optBntId).unbind("click");
+
+    var PlayerOver = new proto.pb.PlayerOver()
+    PlayerOver.setRoomId(this.roomId);
+    PlayerOver.setPlayerId(this.playerId);
+    PlayerOver.setSequenceNumber(this.sequenceNumber);
+    this.sendMsg("CS_PlayerOver", PlayerOver);
+
+    var msg = "完犊子了，撞车了...这游戏得结束了....";
+    this.noticeMsg(msg)
+
+    this.myClearInterval();
+    this.upOptBnt("游戏结束1",1)
+
+    // return alert("完犊子了，撞车了...这游戏得结束了....");
+};
+//收集玩家游戏中的操作指令
+Sync.prototype.playerCommandPush = function (){
+
+    var PlayerOperations = new proto.pb.LogicFrame();
+    PlayerOperations.setId(9999);//此值目前没用上
+    PlayerOperations.setRoomId(this.roomId);
+    PlayerOperations.setSequenceNumber(this.sequenceNumber);
+
+    if(this.playerCommandPushLock == 1){//是否锁住了
+        this.show("send msg lock...please wait server back login frame");
+        return
     }
+    if (this.playerOperationsQueue.length > 0){
+        // {"id":self.operationsInc,"event":"move","value":newLocation,"playerId":self.playerId}
+        var operations = new Array(this.playerOperationsQueue.length)
+        for(var i=0;i<this.playerOperationsQueue.length;i++){
+            var operation = new proto.pb.Operation();
+            operation.setId(this.playerOperationsQueue[i].id);
+            operation.setEvent(this.playerOperationsQueue[i].event);
+            operation.setValue(this.playerOperationsQueue[i].value);
+            operation.setPlayerId(this.playerId);
+            // operations.push(operation);
+            operations[i] = operation;
+        }
+        PlayerOperations.setOperationsList(operations);
+        // loginFrame.operations = self.playerOperationsQueue;
+        this.playerOperationsQueue = [];//将当前：队列里的 玩家操作数据，清空
+    }else{//当前玩家在此帧没有产生操作数据
+        var operations = new Array(1);//创建一个长度为1的数组
+        var operation = new proto.pb.Operation();
+        operation.setId(1);
+        operation.setEvent("empty");//empty和-1 代表，当前帧，该玩家没有任何操作
+        operation.setValue("-1");
+        operation.setPlayerId(this.playerId);
+        // operations.push(operation);
+        operations[0] = operation;
+        // console.log(operations)
+        PlayerOperations.setOperationsList(operations);
+        // var emptyCommand = [{"id":1,"event":"empty","value":"-1","playerId":self.playerId}];
+        // loginFrame.operations = emptyCommand;
+    }
+    this.sendMsg("CS_PlayerOperations",PlayerOperations);//发送一帧玩家操作数据
+    this.playerCommandPushLock = 1;//发完包，直接锁住，等待S端返回信息，才解锁
 };
+//清除定时函数
+Sync.prototype.myClearInterval = function (){
+    if(this.pushLogicFrameLoopFunc){
+        window.clearInterval(this.pushLogicFrameLoopFunc);
+        this.showComplex("myClearInterval this.pushLogicFrameLoopFunc ===================",this.pushLogicFrameLoopFunc)
+        this.pushLogicFrameLoopFunc = null;
+    }
 
-Sync.prototype.newMsgObj = function (){
-    var msg = new proto.pb.Msg();
-    return msg.toObject();
-};
-
-Sync.prototype.showComplex = function(str,complexType,showNoticeMsg = 0){
-    console.log(this.descPre + " " + str ,complexType)
-    if (showNoticeMsg){
-        this.noticeMsg(str);
+    if(this.heartbeatLoopFunc){
+        window.clearInterval(this.heartbeatLoopFunc);
+        this.showComplex("myClearInterval this.heartbeatLoopFunc ===================",this.heartbeatLoopFunc)
+        this.heartbeatLoopFunc = null;
     }
 }
-
-Sync.prototype.show = function(str,showNoticeMsg = 0){
-    console.log(this.descPre + " " + str)
-    if (showNoticeMsg){
-        this.noticeMsg(str);
+//游戏战局进入准备期，初始化-本地变量数据，等待所有玩家准备后，即开始游戏了
+Sync.prototype.initLocalGlobalVar = function(EnterBattle){
+    this.show("initLocalGlobalVar:",EnterBattle)
+    for(var i=0;i<EnterBattle.playerIds.length;i++){
+        this.playerLocation[""+EnterBattle.playerIds[i]+""] = "empty"
     }
-}
+    // return 1;
+    this.randSeek  = EnterBattle.randSeek;
+    $("#"+this.domIdObj.randSeekId).html(this.randSeek);
 
-Sync.prototype.noticeMsg = function(str){
-    $("#"+this.domIdObj.msgNotice).html(str);
-}
+
+    this.sequenceNumber  = EnterBattle.sequenceNumber;
+    $("#"+this.domIdObj.seqId).html(this.sequenceNumber);
+
+    this.roomId = EnterBattle.roomId;
+    $("#"+this.domIdObj.roomId).html(this.roomId);
+
+    var str =  " roomId:" +EnterBattle.roomId+ ", RandSeek:"+    this.randSeek +" , SequenceNumber"+    this.sequenceNumber ;
+    this.show(str);
+};
+
 
 
 Sync.prototype.sendMsg =  function ( action,contentObj  ){
@@ -640,145 +535,6 @@ Sync.prototype.sendMsg =  function ( action,contentObj  ){
         // self.wsObj.send(mergedArray);
     }
 };
-
-
-
-Sync.prototype.myClearInterval = function (){
-    if(this.pushLogicFrameLoopFunc){
-        window.clearInterval(this.pushLogicFrameLoopFunc);
-        this.showComplex("myClearInterval this.pushLogicFrameLoopFunc ===================",this.pushLogicFrameLoopFunc)
-        this.pushLogicFrameLoopFunc = null;
-    }
-
-    if(this.pushLogicFrameLoopFunc){
-        window.clearInterval(this.heartbeatLoopFunc);
-        this.showComplex("myClearInterval this.heartbeatLoopFunc ===================",this.heartbeatLoopFunc)
-        this.heartbeatLoopFunc = null;
-    }
-}
-
-
-
-
-Sync.prototype.initLocalGlobalVar = function(EnterBattle){
-    this.show("initLocalGlobalVar:",EnterBattle)
-    for(var i=0;i<EnterBattle.playerIds.length;i++){
-        this.playerLocation[""+EnterBattle.playerIds[i]+""] = "empty"
-    }
-    // return 1;
-    this.randSeek  = EnterBattle.randSeek;
-    $("#"+this.domIdObj.randSeekId).html(this.randSeek);
-
-
-    this.sequenceNumber  = EnterBattle.sequenceNumber;
-    $("#"+this.domIdObj.seqId).html(this.sequenceNumber);
-
-    this.roomId = EnterBattle.roomId;
-    $("#"+this.domIdObj.roomId).html(this.roomId);
-
-    var str =  " roomId:" +EnterBattle.roomId+ ", RandSeek:"+    this.randSeek +" , SequenceNumber"+    this.sequenceNumber ;
-    this.show(str);
-};
-
-
-//玩家报名，得有个groupId，先暂时由前端生成随机数，后期我想想如何处理
-Sync.prototype.makeGroupId = function(){
-    return Math.round(Math.random()*8999+1000);
-}
-//更新当前状态
-Sync.prototype.upStatus = function(status){
-    this.show("up status ,  old status:" + this.status   +  "("+ this.statusDesc[this.status]+") , new status:"  + status + "("+ this.statusDesc[status] + ")");
-    this.status = status;
-};
-
-
-Sync.prototype.getPlayerDescById = function (id){
-    return "(player_"+ id+")";
-};
-Sync.prototype.getMapTdId = function (tableId,i,j){
-    return tableId + "_" + i +"_" + j;
-}
-
-Sync.prototype.getActionId = function (action,category){
-    var data = this.actionMap[category];
-    for(let key  in data){
-        if (data[key].func_name == action){
-            return data[key].id;
-        }
-    }
-    this.show("getActionId is empty, action:"+action + " category:"+category)
-    return "";
-};
-
-Sync.prototype.getActionName = function (actionId,category){
-    var data = this.actionMap[category];
-    return data[actionId].func_name;
-};
-
-Sync.prototype.getMap = function (tableId) {
-    this.tableId = tableId;
-    var tableObj = $("#" + tableId);
-    var matrix = new Array();
-    var matrixSize = this.tableMax;
-    var inc = 0;
-    for (var i = 0; i < matrixSize; i++) {
-        matrix[i] = new Array();
-        var trTemp = $("<tr></tr>");
-        for (var j = 0; j < matrixSize; j++) {
-            // var tdId = tableId + "_" + i +"_" + j;
-            var tdId = this.getMapTdId(tableId,i,j);
-            matrix[i][j] = inc;
-            trTemp.append("<td id='"+tdId+"'>"+ i +","+j +"</td>");
-            inc++;1
-        }
-        // alert(trTemp);
-        trTemp.appendTo(tableObj);
-    }
-};
-
-Sync.prototype.playerCommandPush = function (){
-
-    var PlayerOperations = new proto.pb.LogicFrame();
-    PlayerOperations.setId(9999);//此值目前没用上
-    PlayerOperations.setRoomId(this.roomId);
-    PlayerOperations.setSequenceNumber(this.sequenceNumber);
-
-    if(this.playerCommandPushLock == 1){//是否锁住了
-        this.show("send msg lock...please wait server back login frame");
-        return
-    }
-    if (this.playerOperationsQueue.length > 0){
-        // {"id":self.operationsInc,"event":"move","value":newLocation,"playerId":self.playerId}
-        var operations = new Array(this.playerOperationsQueue.length)
-        for(var i=0;i<this.playerOperationsQueue.length;i++){
-            var operation = new proto.pb.Operation();
-            operation.setId(this.playerOperationsQueue[i].id);
-            operation.setEvent(this.playerOperationsQueue[i].event);
-            operation.setValue(this.playerOperationsQueue[i].value);
-            operation.setPlayerId(this.playerId);
-            // operations.push(operation);
-            operations[i] = operation;
-        }
-        PlayerOperations.setOperationsList(operations);
-        // loginFrame.operations = self.playerOperationsQueue;
-        this.playerOperationsQueue = [];//将当前：队列里的 玩家操作数据，清空
-    }else{//当前玩家在此帧没有产生操作数据
-        var operations = new Array(1);//创建一个长度为1的数组
-        var operation = new proto.pb.Operation();
-        operation.setId(1);
-        operation.setEvent("empty");//empty和-1 代表，当前帧，该玩家没有任何操作
-        operation.setValue("-1");
-        operation.setPlayerId(this.playerId);
-        // operations.push(operation);
-        operations[0] = operation;
-        // console.log(operations)
-        PlayerOperations.setOperationsList(operations);
-        // var emptyCommand = [{"id":1,"event":"empty","value":"-1","playerId":self.playerId}];
-        // loginFrame.operations = emptyCommand;
-    }
-    this.sendMsg("CS_PlayerOperations",PlayerOperations);//发送一帧玩家操作数据
-    this.playerCommandPushLock = 1;//发完包，直接锁住，等待S端返回信息，才解锁
-};
 //玩家移动
 Sync.prototype.move = function ( dirObj ){
     this.show("in move");
@@ -849,93 +605,97 @@ Sync.prototype.move = function ( dirObj ){
     tdObj.css("background", "");
 }
 
-//两个玩家，位移碰撞了，触发了游戏结束
-Sync.prototype.gameOverAndClear = function(){
-    this.upStatus(9);
 
+Sync.prototype.getActionId = function (action,category){
+    var data = this.actionMap[category];
+    for(let key  in data){
+        if (data[key].func_name == action){
+            return data[key].id;
+        }
+    }
+    this.show("getActionId is empty, action:"+action + " category:"+category)
+    return "";
+};
 
-    var PlayerOver = new proto.pb.PlayerOver()
-    PlayerOver.setRoomId(this.roomId);
-    PlayerOver.setPlayerId(this.playerId);
-    PlayerOver.setSequenceNumber(this.sequenceNumber);
-    this.sendMsg("CS_PlayerOver", PlayerOver);
-
-    var msg = "完犊子了，撞车了...这游戏得结束了....";
-    this.noticeMsg(msg)
-
-    this.myClearInterval();
-    this.upOptBnt("游戏结束1",1)
-
-    // return alert("完犊子了，撞车了...这游戏得结束了....");
+Sync.prototype.getActionName = function (actionId,category){
+    var data = this.actionMap[category];
+    return data[actionId].func_name;
 };
 
 
-
-    // //=================== 以下都是 接收S端的处理函数========================================
-
-
-    // this.rPushRoomHistory = function(logicFrame){
-    //     console.log("rPushRoomHistory:");
-    //     if(self.contentTypeDesc[self.contentType] =="protobuf"){
-    //         logicFrame.list = logicFrame.listList;
-    //     }
-    //     var list = logicFrame.list;
-    //     for(var i=0;i<list.length;i++){
-    //         // console.log( "rPushRoomHistory:" + logicFrame[i].Action);
-    //         if (  list[i].action == "pushLogicFrame"){
-    //             var data = eval( "(" + list[i].content + ")" );
-    //             // console.log("rPushRoomHistory data:",data);
-    //             self.rPushLogicFrame(data,"rPushRoomHistory");
-    //             }
-    //     }
-    //     var requestPlayerResumeGame = new proto.pb.PlayerResumeGame();
-    //     requestPlayerResumeGame.setRoomId(self.roomId);
-    //     requestPlayerResumeGame.setSequenceNumber(self.sequenceNumber);
-    //     requestPlayerResumeGame.setPlayerId(self.playerId);
-    //     self.sendMsg("CS_PlayerResumeGame",requestPlayerResumeGame);
-    // };
+Sync.prototype.getMapTdId = function (tableId,i,j){
+    return tableId + "_" + i +"_" + j;
+}
 
 
-    // this.rServerPong = function(logicFrame){
-    //     console.log("rServerPong:",logicFrame)
-    // };
-    // this.rServerPing = function(logicFrame){
-    //     var now = Date.now();
-    //
-    //     var requestClientPong = new proto.pb.Pong();
-    //     requestClientPong.setClientReceiveTime(now);
-    //     requestClientPong.setAddTime(logicFrame.addTime);
-    //     requestClientPong.setRttTimeout(logicFrame.rttTimeout);
-    //     requestClientPong.setRttTimes(logicFrame.rttTimes);
-    //     this.sendMsg("CS_Pong",requestClientPong);
-    //     //     logicFrame.clientReceiveTime =  now
-    // };
-    // this.rPushRoomInfo = function(logicFrame){
-    //     if(self.contentTypeDesc[self.contentType] =="protobuf"){
-    //         logicFrame.playerList = logicFrame.playerListList;
-    //     }
-    //     self.initLocalGlobalVar(logicFrame);
-    //     var requestRoomHistory = new proto.pb.RoomHistory();
-    //     requestRoomHistory.setRoomId(self.roomId);
-    //     requestRoomHistory.setSequenceNumberstart(0);
-    //     requestRoomHistory.setSequenceNumberend(-1);
-    //     requestRoomHistory.setPlayerId(self.playerId);
-    //     // var history ={"roomId":self.roomId,"sequenceNumber":0,"playerId":self.playerId };
-    //     // self.sendMsg("getRoomHistory",history);
-    //     self.sendMsg("CS_RoomHistory",requestRoomHistory);
-    //
-    //     var readySignBntId = "ready_"+self.playerId;
-    //     var hrefBody = "匹配成功，准备";
-    //
-    //     self.upOptBntHref(readySignBntId,hrefBody,self.ready);
-    // };
+Sync.prototype.getMap = function (tableId) {
+    this.tableId = tableId;
+    var tableObj = $("#" + tableId);
+    var matrix = new Array();
+    var matrixSize = this.tableMax;
+    var inc = 0;
+    for (var i = 0; i < matrixSize; i++) {
+        matrix[i] = new Array();
+        var trTemp = $("<tr></tr>");
+        for (var j = 0; j < matrixSize; j++) {
+            // var tdId = tableId + "_" + i +"_" + j;
+            var tdId = this.getMapTdId(tableId,i,j);
+            matrix[i][j] = inc;
+            trTemp.append("<td id='"+tdId+"'>"+ i +","+j +"</td>");
+            inc++;1
+        }
+        // alert(trTemp);
+        trTemp.appendTo(tableObj);
+    }
+};
 
-    //
+Sync.prototype.upOptBntHref = function(domId,value,clickCallback){
+    var bntContent = "<a href='javascript:void(0);' onclick='' id='"+domId+"'>"+value+"</a>";
+    this.upOptBnt(bntContent, 1);
+    $("#"+domId).click(clickCallback);
+};
 
+//更新操作按钮文字，解除 点击事件
+Sync.prototype.upOptBnt = function(content,clearClick){
+    $("#"+this.domIdObj.optBntId).html(content);
+    if(clearClick == 1){
+        $("#"+this.domIdObj.optBntId).unbind("click");
+    }
+};
 
+//玩家报名，得有个groupId，先暂时由前端生成随机数，后期我想想如何处理
+Sync.prototype.makeGroupId = function(){
+    return Math.round(Math.random()*8999+1000);
+}
+//更新当前状态
+Sync.prototype.upStatus = function(status){
+    this.show("up status ,  old status:" + this.status   +  "("+ this.statusDesc[this.status]+") , new status:"  + status + "("+ this.statusDesc[status] + ")");
+    this.status = status;
+};
 
+//==== debug ==========
+Sync.prototype.showComplex = function(str,complexType,showNoticeMsg = 0){
+    console.log(this.descPre + " " + str ,complexType)
+    if (showNoticeMsg){
+        this.noticeMsg(str);
+    }
+}
 
+Sync.prototype.getPlayerDescById = function (id){
+    return "(player_"+ id+")";
+};
 
+Sync.prototype.show = function(str,showNoticeMsg = 0){
+    console.log(this.descPre + " " + str)
+    if (showNoticeMsg){
+        this.noticeMsg(str);
+    }
+}
+
+Sync.prototype.noticeMsg = function(str){
+    $("#"+this.domIdObj.msgNotice).html(str);
+}
+//==== debug ==========
 
 if ("WebSocket" in window) {
     console.log("browser support the websocket.");
@@ -944,141 +704,3 @@ if ("WebSocket" in window) {
     alert("您的浏览器不支持 WebSocket!");
 }
 
-function stringToUint8Array(str){
-    var arr = [];
-    for (var i = 0, j = str.length; i < j; ++i) {
-        arr.push(str.charCodeAt(i));
-    }
-
-    var tmpUint8Array = new Uint8Array(arr);
-    return tmpUint8Array
-}
-
-function processBufferString (dataBuffer,start,end){
-    var str = "";
-    for (var i = start; i < dataBuffer.length; i++) {
-        if (i >= end){
-            break;
-        }
-        str += String.fromCharCode(dataBuffer[i]);
-    }
-    return str;
-}
-
-function processBufferInt(dataBuffer,start,en){
-    var str = "";
-    for (var i = start; i < dataBuffer.length; i++) {
-        if (i >= end){
-            break;
-        }
-        str += dataBuffer[i];
-    }
-    return str;
-}
-
-function processBuffer(dataBuffer,start){
-    //创建content ArrayBuffer和Uint8Array
-    var contentArrayBuffer = new ArrayBuffer( dataBuffer.length - start );
-    var contentUint8Array = new Uint8Array(contentArrayBuffer);
-    var j = 0;
-    for (var i = start; i < dataBuffer.length; i++) {
-        contentUint8Array[j] = dataBuffer[i];
-        j++;
-    }
-    return contentUint8Array;
-}
-
-function processBufferRange(dataBuffer,start,end){
-    //创建content ArrayBuffer和Uint8Array
-    var contentArrayBuffer = new ArrayBuffer( end - start );
-    var contentUint8Array = new Uint8Array(contentArrayBuffer);
-    var j = 0;
-    for (var i = start; i < end; i++) {
-        contentUint8Array[j] = dataBuffer[i];
-        j++;
-    }
-    return contentUint8Array;
-}
-
-// function intToByte(i) {
-//     var b = i & 0xFF;
-//     var c = 0;
-//     if (b >= 128) {
-//         c = b % 128;
-//         c = -1 * (128 - c);
-//     } else {
-//         c = b;
-//     }
-//     return c;
-// }
-
-function intToOneByteArr(i){
-    var targets = new Uint8Array(1);
-    targets[0] = i & 0xFF
-    return targets;
-}
-
-function intToTwoByteArr(i){
-    var targets = new Uint8Array(2);
-    targets[0] = (i >> 8 & 0xFF);
-    targets[1] = i & 0xFF
-    return targets;
-}
-
-
-function intToByte4(i) {
-    var targets = new Uint8Array(4);
-    targets[0] = (i >> 24 & 0xFF);
-    targets[1] = (i >> 16 & 0xFF);
-    targets[2] = (i >> 8 & 0xFF);
-    targets[3] = (i & 0xFF);
-    return targets;
-}
-
-function Byte4ToInt(d) {
-    var targets = new Array(4);
-    targets[0] = (d[0] << 24 & 0xFF);
-    targets[1] = (d[1] << 16 & 0xFF);
-    targets[2] = (d[2] << 8 & 0xFF);
-    targets[3] = (d[3] & 0xFF);
-    return targets[0] + targets[1] +targets[2] +targets[3];
-}
-
-function Byte1ToInt(d) {
-    var targets = new Array(1);
-    targets[0] = (d[0] & 0xFF);
-    return targets[0] ;
-}
-
-function Byte2ToInt(d) {
-    var targets = new Array(2);
-    targets[0] = (d[0] << 8 & 0xFF);
-    targets[1] = (d[1] & 0xFF);
-    // alert(targets[0]);
-    // alert(targets[1]);
-    return targets[0] + targets[1]  ;
-}
-
-function concatenate(...arrays) {
-    let totalLen = 0;
-    for (let arr of arrays)
-
-        totalLen += arr.byteLength;
-
-    let res = new Uint8Array(totalLen)
-
-    let offset = 0
-
-    for (let arr of arrays) {
-
-        let uint8Arr = new Uint8Array(arr)
-
-        res.set(uint8Arr, offset)
-
-        offset += arr.byteLength
-
-    }
-
-    return res.buffer
-
-}

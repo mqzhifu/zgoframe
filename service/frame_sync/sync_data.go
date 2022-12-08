@@ -576,7 +576,7 @@ func (sync *Sync) boardCastInRoom(roomId string, action string, contentStruct in
 			sync.Option.Log.Error("player offline")
 			continue
 		}
-		sync.Option.RequestServiceAdapter.GatewaySendMsgByUid(player.Id, action, contentStruct)
+		sync.Option.RequestServiceAdapter.GatewaySendMsgByUid(player.Id, action, &contentStruct)
 	}
 	//content ,_:= json.Marshal(contentStruct)
 	content, _ := json.Marshal(util.JsonCamelCase{contentStruct})
@@ -606,7 +606,7 @@ func (sync *Sync) boardCastFrameInRoom(roomId string, action string, contentStru
 			continue
 		}
 		util.MyPrint("boardCastFrameInRoom contentStruct:", contentStruct)
-		sync.Option.RequestServiceAdapter.GatewaySendMsgByUid(player.Id, action, contentStruct)
+		sync.Option.RequestServiceAdapter.GatewaySendMsgByUid(player.Id, action, &contentStruct)
 
 	}
 
@@ -639,8 +639,7 @@ func (sync *Sync) RoomHistory(roomHistory pb.ReqRoomHistory) error {
 	responsePushRoomHistory := pb.RoomHistorySets{}
 	responsePushRoomHistory.Sets = room.LogicFrameHistory
 
-	util.MyPrint(responsePushRoomHistory)
-
+	//util.MyPrint(responsePushRoomHistory)
 	sync.Option.RequestServiceAdapter.GatewaySendMsgByUid(roomHistory.SourceUid, "SC_RoomHistory", &responsePushRoomHistory)
 	return nil
 }

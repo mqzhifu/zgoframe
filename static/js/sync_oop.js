@@ -141,10 +141,10 @@ Sync.prototype.onmessage = function(ev){
 
     var debugInfo = "onmessage ";
     if (this.contentTypeDesc[this.contentType] == 'protobuf'){
-        debugInfo += " contentType: protobuf";
         var reader = new FileReader();
         reader.readAsArrayBuffer(ev.data);
         reader.onloadend = function(e) {
+            debugInfo += " contentType: protobuf";
             // var dataBuffer = new Uint8Array(reader.result);
             //
             // msgObj.contentType = processBufferString(dataBuffer,0,1);
@@ -160,7 +160,38 @@ Sync.prototype.onmessage = function(ev){
             // var responseProtoClass = eval(className);
             // //将进制流转换成对象
             // msgObj.content =  responseProtoClass.deserializeBinary(content).toObject();
-            // self.router(msgObj);
+
+
+            var dataBuffer = new Uint8Array(reader.result);
+
+            var bytes4 = processBufferRange(dataBuffer,0,4);
+            msgObj.dataLength = Byte4ToInt(bytes4);
+            var bytes1 = processBufferRange(dataBuffer,4,5);
+            msgObj.contentType = Byte1ToInt(bytes1);
+            var bytes1 = processBufferRange(dataBuffer,5,6);
+            msgObj.protocolType = Byte1ToInt(bytes1);
+            var bytes1 = processBufferRange(dataBuffer,6,7);
+            msgObj.serviceId = Byte1ToInt(bytes1);
+            var bytes2 = processBufferRange(dataBuffer,7,9);
+            msgObj.funcId = Byte2ToInt(bytes2);
+            var sessionBytes = processBufferRange(dataBuffer,9,19);
+            msgObj.sessionId = processBufferString(sessionBytes,0);
+
+            msgObj.sidFid = msgObj.serviceId + "" + msgObj.funcId;
+            var content = processBufferRange(dataBuffer,19,19+msgObj.dataLength);
+            var actionMap = parent.getActionById(msgObj.sidFid,"server")
+            // console.log("actionMap:",actionMap , " sid:",msgObj.sidFid)
+
+            // console.log("onmessage dataLength:" , msgObj.dataLength , " content :",content );
+            var className =  "proto.pb." + actionMap.request;
+            // console.log("className:" ,className)
+            var RequestClass = eval( className);
+            // console.log("RequestClass:",RequestClass);
+            content = RequestClass.deserializeBinary(content);
+            content = content.toObject()
+            // console.log("content: " ,content)
+            msgObj.content = content
+            parent.router(msgObj);
         };
     }else if(this.contentTypeDesc[this.contentType] == "json"){
         debugInfo += " contentType: json ";
@@ -214,6 +245,7 @@ Sync.prototype.router = function(msgObj){
     var action = this.actionMap.server[msgObj.sidFid].func_name;
     this.showComplex("router , action:"+action,msgObj);
     //这里用了动态调用函数，减少代码量
+    console.log("msgObj.content: ",msgObj.content)
     eval( "this."+action+"(msgObj.content)" );
 }
 //================== 以上是 ws callback 基础函数 ====================================================
@@ -480,10 +512,6 @@ Sync.prototype.sendMsg =  function ( action,contentObj  ){
         content = content.replace("List","");
         content = content.replace("Map","");
 
-
-
-        // this.showComplex("debug JSON.stringify:",content)
-
         var contentLenByte = intToByte4( content.length);
         var contentTypeByte = intToOneByteArr(contentType);
         var protocolTypeByte = intToOneByteArr(protocolType);
@@ -492,25 +520,11 @@ Sync.prototype.sendMsg =  function ( action,contentObj  ){
         var sessionByte = stringToUint8Array(session);
         var contentByte = stringToUint8Array(content);
 
-        // console.log("bbyte:",contentLenByte,contentTypeByte,protocolTypeByte,serviceIdByte,funcIdByte);
-        // concatenate(contentLenByte,contentTypeByte[3]);
-        // content =  concatenate(contentLenByte,contentTypeByte[3],protocolTypeByte[3],serviceIdByte[3],funcIdByte[3],sessionByte,contentByte);
         var endStr = new Uint8Array(1);
         endStr[0] = "\f";
         content =  concatenate(contentLenByte,contentTypeByte,protocolTypeByte,serviceIdByte,funcIdByte,sessionByte,contentByte,endStr)  ;
 
-        // content = contentLenByte +"" + contentTypeByte + "" + protocolTypeByte + "" +serviceIdByte + "" + funcIdByte +"" +sessionByte + contentByte+ "\f";
-
-        // var finalContent = contentLenByte + contentTypeByte +  "" + protocolTypeByte + serviceIdByte + "" +  funcIdByte + sessionByte + contentByte  + "\f";
-
-
-        // var protocolCtrl = contentType +  "" + protocolType + id;
-        // if (action == "login" ){
-        //     content = contentLen + protocolCtrl + content;
-        // }else{
-        //     content = contentLen + protocolCtrl + self.sessionId +  content;
-        // }
-        //下面未使用
+        //下面未使用，协议体内 如 contentType 这种就1跟2，用字节传输浪费资源，改成 bit 操作性能更好
         // var contentTypeByte = contentType << 5;
         // console.log("aLeftL:",aLeft);
         // var firstbyte = contentTypeByte | protocolType;
@@ -527,17 +541,43 @@ Sync.prototype.sendMsg =  function ( action,contentObj  ){
         this.wsObj.send(content);
     }else if ( this.contentTypeDesc[this.contentType]  == "protobuf"){
         debugLog += " contentType: protobuf ";
-        // content = contentObj.serializeBinary();
+        content = contentObj.serializeBinary();
         // var protocolCtrl = contentType +  "" + protocolType + id;
-        // if (action != "login" ){
-        //     protocolCtrl = protocolCtrl + self.sessionId  ;
+        // var idBinary = new Uint8Array(protocolCtrl.length);
+        // for(var i=0;i< protocolCtrl.length;i++){
+        //     idBinary[i] = protocolCtrl[i];
         // }
-        // var idBinary = stringToUint8Array(protocolCtrl);
-        // var mergedArray = new Uint8Array(idBinary.length + content.length);
-        // mergedArray.set(idBinary);
-        // mergedArray.set(content, idBinary.length);
+        // // var idBinary = stringToUint8Array(protocolCtrl);
+        // var endStr = new Uint8Array(1);
+        // endStr[0] = "\f";
         //
-        // self.wsObj.send(mergedArray);
+        //
+        // var totalLength = 4 + idBinary.length + content.length + endStr.length;
+        // var dataLengthArr = intToByte4(totalLength);
+        //
+        // console.log("protocolCtrl:",protocolCtrl, " idBinary:",idBinary + " totalLength:",totalLength, " test:",dataLengthArr.length + idBinary.length);
+        // var mergedArray = new Uint8Array(totalLength);
+        //
+        // mergedArray.set(dataLengthArr);
+        // mergedArray.set(idBinary,dataLengthArr.length);
+        // mergedArray.set(content,dataLengthArr.length + idBinary.length)
+
+        var contentLenByte = intToByte4( content.length);
+        var contentTypeByte = intToOneByteArr(contentType);
+        var protocolTypeByte = intToOneByteArr(protocolType);
+        var serviceIdByte = intToOneByteArr(parseInt(serviceId));
+        var funcIdByte = intToTwoByteArr(parseInt(funcId));
+        var sessionByte = stringToUint8Array(session);
+        // var contentByte = stringToUint8Array(content);
+
+        var endStr = new Uint8Array(1);
+        endStr[0] = "\f";
+        content =  concatenate(contentLenByte,contentTypeByte,protocolTypeByte,serviceIdByte,funcIdByte,sessionByte,content,endStr)  ;
+
+
+        this.showComplex("<sendMsg final>" + debugLog + " " , content);
+
+        this.wsObj.send(content);
     }
 };
 //玩家移动
@@ -610,6 +650,16 @@ Sync.prototype.move = function ( dirObj ){
     tdObj.css("background", "");
 }
 
+Sync.prototype.getActionById = function(id,category){
+    var data = this.actionMap[category];
+    for(let key  in data){
+        if (key == id){
+            return data[key];
+        }
+    }
+    this.show("getActionById is empty, action:"+action + " category:"+category)
+    return "";
+}
 
 Sync.prototype.getActionId = function (action,category){
     var data = this.actionMap[category];
@@ -701,6 +751,12 @@ Sync.prototype.noticeMsg = function(str){
     $("#"+this.domIdObj.msgNotice).html(str);
 }
 //==== debug ==========
+
+// var ss = "0123";
+// for(var i=0;i<ss.length;i++){
+//     console.log(ss.charCodeAt(i));
+// }
+
 
 if ("WebSocket" in window) {
     console.log("browser support the websocket.");

@@ -146,7 +146,7 @@ func (grpcManager *GrpcManager) CallServiceFuncFrameSync(funcName string,balance
         }
         data ,err = grpcClient.SC_LogicFrame(ctx,&request)
     case "SC_RoomHistory":
-        request := pb.RoomHistoryList{}
+        request := pb.RoomHistorySets{}
         err := json.Unmarshal(postData,&request)
         if err != nil{
             return data,err

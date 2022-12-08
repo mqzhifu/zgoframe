@@ -36,7 +36,7 @@ type ProtoServiceFunc struct {
 	Id          int    `json:"id"`
 	FuncId      int    `json:"func_id"`
 	FuncName    string `json:"func_name"`
-	Request     string `json:"demo"`
+	Request     string `json:"request"`
 	Response    string `json:"response"`
 	Desc        string `json:"desc"`
 }

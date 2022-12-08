@@ -2,8 +2,9 @@
 /*
 脚本执行：
 php makepbservice.php pb ~/data/www/golang/zgoframe/protobuf/proto ~/data/www/golang/zgoframe/protobuf/pbservice
+php makepbservice.php pb /data/www/golang/zgoframe/protobuf/proto /data/www/golang/zgoframe/protobuf/pbservice
 
-功能描述：快速生成protobuf中间文件等工具集
+功能描述：快速生成protobuf中间文件等工具集(比较懒，就不用GOLANG写了)
 
 1. 编译 目录下，所有的.proto ，生成  pb.go
 2. 生成grpc 服务的 快捷实现go文件
@@ -13,7 +14,7 @@ php makepbservice.php pb ~/data/www/golang/zgoframe/protobuf/proto ~/data/www/go
 
 ps:以上所有功能，均依赖：.proto 描述文件
 
-注：正则匹配一个service 块时，结尾必须是：} ，上一行必须是\n结束
+注：正则匹配一个 service 块时，结尾必须是：} ，上一行必须是\n结束
 */
 
 define("DEBUG",1);
@@ -45,57 +46,59 @@ $callServiceFuncTotalStr = "";
 
 //编译proto 生成 PB 文件的SHELL脚本
 // $compileCommand = "export PATH=\$PATH:/Users/mayanyan/go/bin; cd /Users/mayanyan/data/www/golang/src/zgoframe/protobuf; protoc --go_out=plugins=grpc:./pb ./proto/#proto_file_name#";
+//pp("compileCommand:$compileCommand");
 
-pp("packageName:$packageName , protoFilePath:$protoFilePath , outPath:$outPath");
-pp("compileCommand:$compileCommand");
+pp("packageName:$packageName , protoFilePath:$protoFilePath , outPath:$outPath serviceImplementPackage:$serviceImplementPackage");
+
 
 //读取一个目录下的所有文件
 //$match = null;
 $protoPathFileList = getDirFiles($protoFilePath);
 if (count($protoPathFileList) <=0 ){
-    exit("count(protoPathFileList) <=0");
+    exit("count(protoPathFileList) <=0 , 目录下的：.proto 一个没有 ");
 }
 
 $callGrpcServiceCase = "";
 
-//处理每一个.proto 文件
+//处理每一个.proto 文件,目前是：一个 .proto 代表是一个 微服务
 $ServiceFastCallSwitchCase = array();
 foreach ($protoPathFileList as $k=>$fileName){
     //验证proto文件名
     $fileArr = explode(".",$fileName);
     if (count($fileArr) != 2){
-        exit("file name err:$fileName");
+        exit("处理 proto 目录文件时出错：file name err:$fileName");
     }
     if ( $fileArr[1] != "proto" ) {
-        exit("file exit name must = .proto");
+        exit("处理 proto 目录文件时出错：file exit name must = .proto");
     }
-     if ( $fileArr[0] == "common" ) {
-        echo "ignore common service\n";
-        continue;
-     }
+    if ( $fileArr[0] == "common" ) {
+    echo "ignore common service\n";
+    continue;
+    }
+    $serviceName = $fileArr[0];//文件名，即服务名
     //编译proto生成pb 文件
     #compileProtoFile($compileCommand,$fileName);
     //开始具体处理一个文件里的内容，做:编译、分析等处理，注：一个文件里可能包括多个服务
-    $serviceList = oneService($outPath,$protoFilePath,$fileArr[0],$packageName);
-    if (!$serviceList || count($serviceList) <= 0){
-        continue;
-    }
-    //生成快捷调用代码 + 函数映射ID
-    foreach ($serviceList as $serviceName=>$info){
-        dynamicCallGrpcService($serviceName,$info,$packageName);
-
-        $MountClientSwitchCaseStr = $template->MountClientSwitchCase();
-        $MountClientSwitchCaseStr = str_replace("#service_name#",$serviceName,$MountClientSwitchCaseStr);
-        $MountClientSwitchCaseStr = str_replace("#package_name#",$packageName,$MountClientSwitchCaseStr);
-
-        $GetClientStr = $template->GetClient();
-        $GetClientStr = str_replace("#service_name#",$serviceName,$GetClientStr);
-        $GetClientStr = str_replace("#package_name#",$packageName,$GetClientStr);
-
-        $ServiceFastCallSwitchCase[$serviceName] = array('MountClientSwitchCase'=>$MountClientSwitchCaseStr,"GetClient"=>$GetClientStr);
-
-        mapFunctionId($serviceName,$info,$mapIdSeparate);
-    }
+    $serviceList = parserOneServiceFileContent($outPath,$protoFilePath,$serviceName,$packageName,$mapIdSeparate);
+//    if (!$serviceList || count($serviceList) <= 0){
+//        continue;
+//    }
+//    //生成快捷调用代码 + 函数映射ID
+//    foreach ($serviceList as $serviceName=>$info){
+//        dynamicCallGrpcService($serviceName,$info,$packageName);
+//
+//        $MountClientSwitchCaseStr = $template->MountClientSwitchCase();
+//        $MountClientSwitchCaseStr = str_replace("#service_name#",$serviceName,$MountClientSwitchCaseStr);
+//        $MountClientSwitchCaseStr = str_replace("#package_name#",$packageName,$MountClientSwitchCaseStr);
+//
+//        $GetClientStr = $template->GetClient();
+//        $GetClientStr = str_replace("#service_name#",$serviceName,$GetClientStr);
+//        $GetClientStr = str_replace("#package_name#",$packageName,$GetClientStr);
+//
+//        $ServiceFastCallSwitchCase[$serviceName] = array('MountClientSwitchCase'=>$MountClientSwitchCaseStr,"GetClient"=>$GetClientStr);
+//
+//        mapFunctionId($serviceName,$info,$mapIdSeparate);
+//    }
 }
 
 createServiceFastCallSwitch($ServiceFastCallSwitchCase,$outPath);
@@ -199,11 +202,11 @@ function mapFunctionId($serviceName,$serviceFuncListInfo,$mapIdSeparate){
 //    $GLOBALS["mapServiceIdNo"]++;
 }
 //具体分析/处理一个文件中的内容
-function oneService($outPath,$protoFilePath,$protoFileNamePrefix,$packName){
+function parserOneServiceFileContent($outPath,$protoFilePath,$protoFileNamePrefix,$packName,$mapIdSeparate){
     global $template;
     global $serviceImplementPackage ;
+    global $ServiceFastCallSwitchCase;
 
-    pp("oneService:".$protoFileNamePrefix);
     //.proto文件名
     $protoFileName = $protoFilePath . "/". $protoFileNamePrefix.".proto";
     //输出路径
@@ -214,12 +217,15 @@ function oneService($outPath,$protoFilePath,$protoFileNamePrefix,$packName){
 //    preg_match_all('/package(.*);/isU',$protoFileContent,$match);
 //    $package = trim($match[1][0]);
 
+
+    pp("parserOneServiceFileContent , protoFileName:$protoFileName , outFile:$outFile " );
+
     pp("\n\n\n");
     //读取一个文件中的，若干个service 块
     preg_match_all('/service(.*){(.*)\n}/isU',$protoFileContent,$match);
 
     if (count($match[0]) == 0){
-        pp("no match any service block~");
+        pp("parserOneServiceFileContent err : 正则未匹配到 service 块，即：该 proto 文件内没有任何函数.");
         return array();
     }
     //读取一个service中的所有rpc 函数名
@@ -236,15 +242,18 @@ function oneService($outPath,$protoFilePath,$protoFileNamePrefix,$packName){
                 'out'=>trim($rpcFuncMatch[5][$k2]),
                 'desc'=>trim($rpcFuncMatch[7][$k2]),
             );
+            pp("name:".$arr["name"] . " in:".$arr["in"]. " out:".$arr["out"]. " desc:".$arr["desc"]);
+
             $service[$serviceName][] = $arr;
         }
     }
+    pp("一个 proto 文件，服务下的所有函数 分析出来了");
+    pp("给每个函数生成 go 调用 代码，网关在反向调用时，使用");
     $s = $template->separator;
-
 //    $serviceImplementPackage = "pbservice";
     //读取静态模板:一个新GO文件的，头部信息
     $go_file_content = $template->serviceImplementHeader();
-    //开始替换动态变量
+    //开始替换模板中的动态变量
     $go_file_content = str_replace($s."serviceImplementPackage".$s,$serviceImplementPackage,$go_file_content);
     $go_file_content = str_replace($s."package".$s,$packName,$go_file_content);
 
@@ -271,12 +280,36 @@ function oneService($outPath,$protoFilePath,$protoFileNamePrefix,$packName){
     }
     //生成一个文件
     file_put_contents($outFile,$go_file_content);
+
+
+
+    //生成快捷调用代码 + 函数映射ID
+    foreach ($service as $serviceName=>$info){
+        dynamicCallGrpcService($serviceName,$info,$packName);
+
+        $MountClientSwitchCaseStr = $template->MountClientSwitchCase();
+        $MountClientSwitchCaseStr = str_replace("#service_name#",$serviceName,$MountClientSwitchCaseStr);
+        $MountClientSwitchCaseStr = str_replace("#package_name#",$packName,$MountClientSwitchCaseStr);
+
+        $GetClientStr = $template->GetClient();
+        $GetClientStr = str_replace("#service_name#",$serviceName,$GetClientStr);
+        $GetClientStr = str_replace("#package_name#",$packName,$GetClientStr);
+
+        $ServiceFastCallSwitchCase[$serviceName] = array('MountClientSwitchCase'=>$MountClientSwitchCaseStr,"GetClient"=>$GetClientStr);
+
+        mapFunctionId($serviceName,$info,$mapIdSeparate);
+    }
+
+
+    pp("parserOneServiceFileContent finish.");
     return $service;
 }
+//创建 函数 映射 txt 表
 function createMapFile($outPath){
     $outFile = $outPath . "/" . "map.txt";
     file_put_contents($outFile,$GLOBALS["map"]);
 }
+//grpc switch service
 function createServiceFastCallSwitch($ServiceFastCallSwitchCase,$outPath){
     global $template;
     global $fast_call_file_name;
@@ -311,8 +344,12 @@ function getDirFiles($path){
     return $arr;
 }
 
-function pp($info){
+function pp($info,$is_br = 1 ){
     if(DEBUG == 1){
-        var_dump($info);
+        $end = "";
+        if ($is_br){
+            $end = "\n";
+        }
+        echo $info.$end;
     }
 }

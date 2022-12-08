@@ -47,7 +47,7 @@ func (frameSync *FrameSync)SC_LogicFrame(ctx context.Context,logicFrame *pb.Logi
     empty := &pb.Empty{}
     return empty,nil
 }
-func (frameSync *FrameSync)SC_RoomHistory(ctx context.Context,roomHistoryList *pb.RoomHistoryList) (*pb.Empty,error){
+func (frameSync *FrameSync)SC_RoomHistory(ctx context.Context,roomHistorySets *pb.RoomHistorySets) (*pb.Empty,error){
     empty := &pb.Empty{}
     return empty,nil
 }

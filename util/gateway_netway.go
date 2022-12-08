@@ -244,6 +244,10 @@ func (netWay *NetWay) OpenNewConn(connFD FDAdapter) {
 
 }
 
+func (netWay *NetWay) Router(msg pb.Msg, conn *Conn) (data interface{}, err error) {
+	return netWay.Option.RouterBack(msg, conn)
+}
+
 func (netWay *NetWay) heartbeat(requestClientHeartbeat pb.Heartbeat, conn *Conn) {
 	now := GetNowTimeSecondToInt()
 	conn.UpTime = int32(now)

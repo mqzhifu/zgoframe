@@ -223,7 +223,7 @@ func (gateway *Gateway) RouterServiceGateway(msg pb.Msg, conn *util.Conn) (data 
 	case "CS_Login": //
 		//长连接建立成功后，首先就得登陆，成功后，等于该FD是正常的，会创:建新绑定关系  user<==>fd。  这里有个 BUG，LOGIN 函数只能在第一次调用，回头加个限定
 		FDCreateEvent := pb.FDCreateEvent{UserId: conn.UserId, SourceUid: conn.UserId}
-		requestClientHeartbeatStrByte, _ := gateway.Netway.ConnManager.CompressContent(FDCreateEvent, conn.UserId)
+		requestClientHeartbeatStrByte, _ := gateway.Netway.ConnManager.CompressContent(&FDCreateEvent, conn.UserId)
 		msgFDCreateEvent, _, _ := gateway.Netway.ConnManager.MakeMsgByActionName(conn.UserId, "FdCreate", requestClientHeartbeatStrByte)
 		msgFDCreateEvent.SourceUid = conn.UserId
 		//将消息广播给所有微服务
@@ -241,7 +241,7 @@ func (gateway *Gateway) RouterServiceGateway(msg pb.Msg, conn *util.Conn) (data 
 		gateway.heartbeat(requestClientHeartbeat, conn)
 		//心跳还要广播给后面的所有微服务
 		requestClientPing.SourceUid = conn.UserId
-		requestClientHeartbeatStrByte, _ := gateway.Netway.ConnManager.CompressContent(requestClientHeartbeat, conn.UserId)
+		requestClientHeartbeatStrByte, _ := gateway.Netway.ConnManager.CompressContent(&requestClientHeartbeat, conn.UserId)
 		msg, _, _ := gateway.Netway.ConnManager.MakeMsgByActionName(conn.UserId, "CS_Heartbeat", requestClientHeartbeatStrByte)
 		gateway.BroadcastService(msg, conn)
 	case "CS_ProjectPushMsg":

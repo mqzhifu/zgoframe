@@ -258,6 +258,7 @@ func (connManager *ConnManager) CompressContent(contentStruct interface{}, UserI
 	} else if contentType == CONTENT_TYPE_PROTOBUF {
 		contentStruct := contentStruct.(proto.Message)
 		content, err = proto.Marshal(contentStruct)
+		MyPrint("content:", content, " length:", len(content))
 	} else {
 		err = errors.New(" contentType switch err")
 	}
@@ -306,6 +307,7 @@ func (connManager *ConnManager) ParserContentProtocol(content string) (message p
 	}
 	//数据长度
 	dataLength := BytesToInt32([]byte(content[0:4]))
+	MyPrint("connManager dataLength:", dataLength, " content: ", content)
 	if dataLength <= 0 {
 		errMsg := "dataLength <= 0"
 		return message, errors.New(errMsg)
@@ -315,6 +317,9 @@ func (connManager *ConnManager) ParserContentProtocol(content string) (message p
 	ContentType, ProtocolType := connManager.parserProtocolCtrlInfo([]byte(ctrlStream))
 	serviceId := int(content[6:7][0])
 	actionId := BytesToInt32(BytesCombine([]byte{0, 0}, []byte(content[7:9])))
+
+	MyPrint("ctrlStream:", ctrlStream, " serviceId:", serviceId)
+
 	//保留字
 	reserved := content[9:19]
 	serviceActionId, _ := strconv.Atoi(strconv.Itoa(serviceId) + strconv.Itoa(actionId))
@@ -414,9 +419,9 @@ func (conn *Conn) UpLastTime() {
 func (conn *Conn) Read() (content string, err error) {
 	// 设置消息的最大长度 - 暂无
 	//conn.Conn.SetReadDeadline(time.Now().Add(time.Second * time.Duration(mynetWay.Option.IOTimeout)))
-	_, dataByte, err := conn.Conn.ReadMessage()
-	//messageType, dataByte, err := conn.Conn.ReadMessage()
-	//_ , dataByte  , err  := conn.Conn.ReadMessage()
+	//_, dataByte, err := conn.Conn.ReadMessage()
+	messageType, dataByte, err := conn.Conn.ReadMessage()
+	MyPrint("messageType:", messageType)
 	if err != nil {
 		//myMetrics.fastLog("total.input.err.num",METRICS_OPT_INC,0)
 		conn.ConnManager.Option.Log.Error("conn.Conn.ReadMessage err: " + err.Error())
@@ -548,7 +553,7 @@ func (conn *Conn) CloseOneConn(source int) {
 		ProtocolType: conn.ProtocolType,
 	}
 	//先通知外层，FD即将要关闭了，外层网关再广播给所有微服务
-	requestClientCloseStrByte, _ := conn.ConnManager.CompressNormalContent(connCloseEvent, int(connCloseEvent.ContentType))
+	requestClientCloseStrByte, _ := conn.ConnManager.CompressNormalContent(&connCloseEvent, int(connCloseEvent.ContentType))
 	msg, _, _ := conn.ConnManager.MakeMsgByActionName(connCloseEvent.UserId, "FdClose", requestClientCloseStrByte)
 	conn.ConnManager.Option.NetWay.Router(msg, conn)
 	//通知同步服务，先做构造处理

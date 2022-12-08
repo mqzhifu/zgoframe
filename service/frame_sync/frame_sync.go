@@ -61,7 +61,7 @@ func (sync *FrameSync) GetPlayerBase(playerBase pb.PlayerBase) {
 		RoomId:   conn.RoomId,
 		PlayerId: playerBase.PlayerId,
 	}
-	sync.Option.RequestServiceAdapter.GatewaySendMsgByUid(playerBase.PlayerId, "SC_PlayerState", playerState)
+	sync.Option.RequestServiceAdapter.GatewaySendMsgByUid(playerBase.PlayerId, "SC_PlayerState", &playerState)
 }
 
 func (sync *FrameSync) CreateFD(fd pb.FDCreateEvent) error {

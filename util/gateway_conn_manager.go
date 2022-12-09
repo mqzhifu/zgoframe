@@ -603,6 +603,7 @@ func (conn *Conn) ProcessMsgLoop(ctx context.Context) {
 		case <-ctx.Done():
 			ctxHasDone = 1
 		case msg := <-conn.MsgInChan:
+			msg.SourceUid = conn.UserId
 			conn.ConnManager.Option.Log.Info("ProcessMsgLoop receive msg , SidFid:" + strconv.Itoa(int(msg.SidFid)))
 			conn.ConnManager.Option.NetWay.Router(msg, conn)
 		}

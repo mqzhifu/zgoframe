@@ -5,31 +5,34 @@ php makepbservice.php pb ~/data/www/golang/zgoframe/protobuf/proto ~/data/www/go
 php makepbservice.php pb /data/www/golang/zgoframe/protobuf/proto /data/www/golang/zgoframe/protobuf/pbservice
 
 功能描述：快速生成protobuf中间文件等工具集(比较懒，就不用GOLANG写了)
+大体上一共是2类：
+1、用 protoc 工具，编译生成 GO 和 JS 的所有 可执行文件
+2、工具附加代码
+    1. 编译 目录下，所有的.proto ，生成  pb.go (暂不在这里执行)
+    2. 对每个服务的每个函数生成对应ID，供长连接使用(生成一个txt文件)
+    3. 生成文件: (1) 所有服务的 grpc client 创建(负载的寻找 IP+PORT)  , (2) 根据服务名函数名-动态调用服务的方法
+    4. 生成: 每个服务一个文件，是对该服务的具体实现(类似抽象类，无实现)
 
-1. 编译 目录下，所有的.proto ，生成  pb.go
-2. 生成grpc 服务的 快捷实现go文件
-3. 生成一个服务的快捷调用方法go文件
-4. 对每个服务的每个函数生成对应ID，供长连接使用(生成一个txt文件)
-5. 生成动态调用一个GRPC服务的函数
+    CallGrpc -> CallServiceFuncFrameSync-> GetFrameSyncClient
 
-ps:以上所有功能，均依赖：.proto 描述文件
+>ps:以上所有功能，均依赖：.proto 描述文件
 
 注：正则匹配一个 service 块时，结尾必须是：} ，上一行必须是\n结束
 */
 
 define("DEBUG",1);
 
-//引入静态模块类(字符串)，用于动态生成GO文件、连接DB等
+//引入 静态模块类(字符串)，用于动态生成 GO 文件、连接DB等
 include 'makepbservice_template.php';
 $template = new Template();
 $db = new DB();
 
-$argcNoticeMsg = "packageName=xxxx protoFilePath=xxx  outPath=xxx  ";
+$argcNoticeMsg = "packageName=pb protoFilePath=/data/www/golang/zgoframe/protobuf/proto  outPath=/data/www/golang/zgoframe/protobuf/pbservice  ";
 if (count($argv) < 4){
     exit($argcNoticeMsg);
 }
 
-$packageName = $argv[1];//包名
+$packageName = $argv[1];//包名,目前就一个：pb
 $protoFilePath = $argv[2];//.proto文件路径
 $outPath = $argv[3];//生成输出文件的路径
 
@@ -40,18 +43,18 @@ $GLOBALS["map"] = "";
 $mapIdSeparate = "|";
 //快速生成一个服务的具体实现类（包名）
 $serviceImplementPackage = "pbservice";
-$fast_call_file_name = "ast_call.go.tmp";
+$fast_call_file_name = "ast_call.go.tmp";//最终 的 一个文件；网关动态调用 服务的函数
 $callServiceFuncTotalStr = "";
 
 
-//编译proto 生成 PB 文件的SHELL脚本
+//编译 proto 生成 PB 文件的SHELL脚本 ，这个分开执行，先不在这里执行了
 // $compileCommand = "export PATH=\$PATH:/Users/mayanyan/go/bin; cd /Users/mayanyan/data/www/golang/src/zgoframe/protobuf; protoc --go_out=plugins=grpc:./pb ./proto/#proto_file_name#";
 //pp("compileCommand:$compileCommand");
 
 pp("packageName:$packageName , protoFilePath:$protoFilePath , outPath:$outPath serviceImplementPackage:$serviceImplementPackage");
 
 
-//读取一个目录下的所有文件
+//读取 proto 目录下的所有文件 .proto 文件
 //$match = null;
 $protoPathFileList = getDirFiles($protoFilePath);
 if (count($protoPathFileList) <=0 ){
@@ -71,13 +74,14 @@ foreach ($protoPathFileList as $k=>$fileName){
     if ( $fileArr[1] != "proto" ) {
         exit("处理 proto 目录文件时出错：file exit name must = .proto");
     }
-    if ( $fileArr[0] == "common" ) {
-    echo "ignore common service\n";
-    continue;
-    }
     $serviceName = $fileArr[0];//文件名，即服务名
+    if ( $serviceName == "common" ) {//忽略 common 服务，它没有任何函数，只是单纯的结构体定义
+        echo "ignore common service\n";
+        continue;
+    }
+
     //编译proto生成pb 文件
-    #compileProtoFile($compileCommand,$fileName);
+    # compileProtoFile($compileCommand,$fileName);
     //开始具体处理一个文件里的内容，做:编译、分析等处理，注：一个文件里可能包括多个服务
     $serviceList = parserOneServiceFileContent($outPath,$protoFilePath,$serviceName,$packageName,$mapIdSeparate);
 //    if (!$serviceList || count($serviceList) <= 0){
@@ -116,6 +120,111 @@ fwrite($fd,$callGrpcService);
 
 //var_dump($callServiceFuncTotalStr);exit;
 exit(111);
+//具体分析/处理一个文件中的内容
+function parserOneServiceFileContent($outPath,$protoFilePath,$protoFileNamePrefix,$packName,$mapIdSeparate){
+    //公共变量，最后外层函数可能得用
+    global $template;
+    global $serviceImplementPackage ;
+    global $ServiceFastCallSwitchCase;
+
+    //.proto文件名
+    $protoFileName = $protoFilePath . "/". $protoFileNamePrefix.".proto";
+    //输出路径
+    $outFile = $outPath . "/" . $protoFileNamePrefix. ".go";
+    //打开该文件，获取文件内容
+    $protoFileContent = file_get_contents($protoFileName);
+    //正则：获取包名
+//    preg_match_all('/package(.*);/isU',$protoFileContent,$match);
+//    $package = trim($match[1][0]);
+
+
+    pp("parserOneServiceFileContent , protoFileName: $protoFileName , outFile:$outFile " );
+
+    pp("\n\n\n");
+    //读取一个文件中的，若干个service 块
+    preg_match_all('/service(.*){(.*)\n}/isU',$protoFileContent,$match);
+
+    if (count($match[0]) == 0){
+        pp("parserOneServiceFileContent err : 正则未匹配到 service 块，即：该 proto 文件内没有任何函数.");
+        return array();
+    }
+    //读取一个service中的所有rpc 函数名
+    $service = null;
+    foreach ($match[1] as $k =>$v){
+        $serviceName = trim($v);
+        $rpcFuncMatch = null;
+        //正则：解析一个rpc 函数 的详细信息，名称 输入 输出 描述信息
+        preg_match_all("/rpc(.*)\((.*)\)(.*)returns(.*)\((.*)\)(.*)\/\/(.*)\n/isU",$match[0][$k],$rpcFuncMatch);
+        foreach ($rpcFuncMatch[0] as $k2=>$v2){
+            $arr = array(
+                'name'=>trim($rpcFuncMatch[1][$k2]),
+                'in'=>trim($rpcFuncMatch[2][$k2]),
+                'out'=>trim($rpcFuncMatch[5][$k2]),
+                'desc'=>trim($rpcFuncMatch[7][$k2]),
+            );
+            pp("name:".$arr["name"] . " in:".$arr["in"]. " out:".$arr["out"]. " desc:".$arr["desc"]);
+
+            $service[$serviceName][] = $arr;
+        }
+    }
+    pp("一个 proto 文件，服务下的所有 函数-参数/结构体 分析出来了");
+    pp("给每个函数生成 go 调用 代码，网关在反向调用时，使用");
+    $s = $template->separator;
+//    $serviceImplementPackage = "pbservice";
+    //读取静态模板:一个新GO文件的，头部信息
+    $go_file_content = $template->serviceImplementHeader();
+    //开始替换模板中的动态变量
+    $go_file_content = str_replace($s."serviceImplementPackage".$s,$serviceImplementPackage,$go_file_content);
+    $go_file_content = str_replace($s."package".$s,$packName,$go_file_content);
+
+    //生成： 每个服务的 grpc client，每个服务中包含的函数的调用代码
+    foreach ($service as $serviceName=>$funs){
+        //每个服务的具体实现，得有一个结构体，再将所有函数挂在该结构体
+        $go_class_str = $template->serviceImplementStruct();
+        $go_class_str = str_replace($s."service_class_name".$s,$serviceName,$go_class_str);
+        $func_total_str = "\n";
+        foreach ($funs as $k=>$v){
+            $func_str = $template->serviceImplementFunc();
+            $func_str = str_replace($s."class_name".$s,lcfirst($serviceName),$func_str);
+            $func_str = str_replace($s."class_type".$s,$serviceName,$func_str);
+            $func_str = str_replace($s."func_name".$s,$v['name'],$func_str);
+            $func_str = str_replace($s."para_in_type".$s,$packName.".".$v['in'] ,$func_str);
+            $func_str = str_replace($s."para_in_name".$s,lcfirst($v['in']),$func_str);
+            $func_str = str_replace($s."return_type".$s,$packName.".".$v['out'],$func_str);
+            $func_str = str_replace($s."return_name".$s,lcfirst($v['out']),$func_str);
+            $func_total_str .= $func_str . "\n";
+        }
+        //最后将一个服务下的所有函数，统一替换进一个文件中
+        $go_class_str = str_replace($s."funcs".$s,$func_total_str,$go_class_str);
+        $go_file_content .=  $go_class_str . "\n" ;
+    }
+    //每个服务，生成一个文件
+    file_put_contents($outFile,$go_file_content);
+
+
+
+    //生成： 网关 反射 动态调用 服务 函数的快捷调用代码 + 函数映射ID表。 这里最终是统一生成 2个文件，外部处理。
+    foreach ($service as $serviceName=>$info){
+        dynamicCallGrpcService($serviceName,$info,$packName);
+
+        $MountClientSwitchCaseStr = $template->MountClientSwitchCase();
+        $MountClientSwitchCaseStr = str_replace("#service_name#",$serviceName,$MountClientSwitchCaseStr);
+        $MountClientSwitchCaseStr = str_replace("#package_name#",$packName,$MountClientSwitchCaseStr);
+
+        $GetClientStr = $template->GetClient();
+        $GetClientStr = str_replace("#service_name#",$serviceName,$GetClientStr);
+        $GetClientStr = str_replace("#package_name#",$packName,$GetClientStr);
+
+        $ServiceFastCallSwitchCase[$serviceName] = array('MountClientSwitchCase'=>$MountClientSwitchCaseStr,"GetClient"=>$GetClientStr);
+
+        mapFunctionId($serviceName,$info,$mapIdSeparate);
+    }
+
+
+    pp("parserOneServiceFileContent finish.");
+    return $service;
+}
+
 //动态调用grpc 服务 方法
 function dynamicCallGrpcService($serviceName, $serviceInfo,$packageName){
     global $template,$callServiceFuncTotalStr,$callGrpcServiceCase;
@@ -201,109 +310,7 @@ function mapFunctionId($serviceName,$serviceFuncListInfo,$mapIdSeparate){
 
 //    $GLOBALS["mapServiceIdNo"]++;
 }
-//具体分析/处理一个文件中的内容
-function parserOneServiceFileContent($outPath,$protoFilePath,$protoFileNamePrefix,$packName,$mapIdSeparate){
-    global $template;
-    global $serviceImplementPackage ;
-    global $ServiceFastCallSwitchCase;
 
-    //.proto文件名
-    $protoFileName = $protoFilePath . "/". $protoFileNamePrefix.".proto";
-    //输出路径
-    $outFile = $outPath . "/" . $protoFileNamePrefix. ".go";
-    //打开该文件，获取文件内容
-    $protoFileContent = file_get_contents($protoFileName);
-    //正则：获取包名
-//    preg_match_all('/package(.*);/isU',$protoFileContent,$match);
-//    $package = trim($match[1][0]);
-
-
-    pp("parserOneServiceFileContent , protoFileName:$protoFileName , outFile:$outFile " );
-
-    pp("\n\n\n");
-    //读取一个文件中的，若干个service 块
-    preg_match_all('/service(.*){(.*)\n}/isU',$protoFileContent,$match);
-
-    if (count($match[0]) == 0){
-        pp("parserOneServiceFileContent err : 正则未匹配到 service 块，即：该 proto 文件内没有任何函数.");
-        return array();
-    }
-    //读取一个service中的所有rpc 函数名
-    $service = null;
-    foreach ($match[1] as $k =>$v){
-        $serviceName = trim($v);
-        $rpcFuncMatch = null;
-        //正则：解析一个rpc 函数 的详细信息，名称 输入 输出 描述信息
-        preg_match_all("/rpc(.*)\((.*)\)(.*)returns(.*)\((.*)\)(.*)\/\/(.*)\n/isU",$match[0][$k],$rpcFuncMatch);
-        foreach ($rpcFuncMatch[0] as $k2=>$v2){
-            $arr = array(
-                'name'=>trim($rpcFuncMatch[1][$k2]),
-                'in'=>trim($rpcFuncMatch[2][$k2]),
-                'out'=>trim($rpcFuncMatch[5][$k2]),
-                'desc'=>trim($rpcFuncMatch[7][$k2]),
-            );
-            pp("name:".$arr["name"] . " in:".$arr["in"]. " out:".$arr["out"]. " desc:".$arr["desc"]);
-
-            $service[$serviceName][] = $arr;
-        }
-    }
-    pp("一个 proto 文件，服务下的所有函数 分析出来了");
-    pp("给每个函数生成 go 调用 代码，网关在反向调用时，使用");
-    $s = $template->separator;
-//    $serviceImplementPackage = "pbservice";
-    //读取静态模板:一个新GO文件的，头部信息
-    $go_file_content = $template->serviceImplementHeader();
-    //开始替换模板中的动态变量
-    $go_file_content = str_replace($s."serviceImplementPackage".$s,$serviceImplementPackage,$go_file_content);
-    $go_file_content = str_replace($s."package".$s,$packName,$go_file_content);
-
-    //处理具体的每个函数的详细信息
-    foreach ($service as $serviceName=>$funs){
-        //每个服务的具体实现，得有一个结构体，再将所有函数挂在该结构体
-        $go_class_str = $template->serviceImplementStruct();
-        $go_class_str = str_replace($s."service_class_name".$s,$serviceName,$go_class_str);
-        $func_total_str = "\n";
-        foreach ($funs as $k=>$v){
-            $func_str = $template->serviceImplementFunc();
-            $func_str = str_replace($s."class_name".$s,lcfirst($serviceName),$func_str);
-            $func_str = str_replace($s."class_type".$s,$serviceName,$func_str);
-            $func_str = str_replace($s."func_name".$s,$v['name'],$func_str);
-            $func_str = str_replace($s."para_in_type".$s,$packName.".".$v['in'] ,$func_str);
-            $func_str = str_replace($s."para_in_name".$s,lcfirst($v['in']),$func_str);
-            $func_str = str_replace($s."return_type".$s,$packName.".".$v['out'],$func_str);
-            $func_str = str_replace($s."return_name".$s,lcfirst($v['out']),$func_str);
-            $func_total_str .= $func_str . "\n";
-        }
-        //最后将一个服务下的所有函数，统一替换进一个文件中
-        $go_class_str = str_replace($s."funcs".$s,$func_total_str,$go_class_str);
-        $go_file_content .=  $go_class_str . "\n" ;
-    }
-    //生成一个文件
-    file_put_contents($outFile,$go_file_content);
-
-
-
-    //生成快捷调用代码 + 函数映射ID
-    foreach ($service as $serviceName=>$info){
-        dynamicCallGrpcService($serviceName,$info,$packName);
-
-        $MountClientSwitchCaseStr = $template->MountClientSwitchCase();
-        $MountClientSwitchCaseStr = str_replace("#service_name#",$serviceName,$MountClientSwitchCaseStr);
-        $MountClientSwitchCaseStr = str_replace("#package_name#",$packName,$MountClientSwitchCaseStr);
-
-        $GetClientStr = $template->GetClient();
-        $GetClientStr = str_replace("#service_name#",$serviceName,$GetClientStr);
-        $GetClientStr = str_replace("#package_name#",$packName,$GetClientStr);
-
-        $ServiceFastCallSwitchCase[$serviceName] = array('MountClientSwitchCase'=>$MountClientSwitchCaseStr,"GetClient"=>$GetClientStr);
-
-        mapFunctionId($serviceName,$info,$mapIdSeparate);
-    }
-
-
-    pp("parserOneServiceFileContent finish.");
-    return $service;
-}
 //创建 函数 映射 txt 表
 function createMapFile($outPath){
     $outFile = $outPath . "/" . "map.txt";

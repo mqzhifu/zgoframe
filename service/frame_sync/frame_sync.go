@@ -66,6 +66,7 @@ func (sync *FrameSync) GetPlayerBase(playerBase pb.PlayerBase) {
 
 func (sync *FrameSync) CreateFD(fd pb.FDCreateEvent) error {
 	sync.PlayerConnManager.AddOne(fd.UserId)
+	//sync.Option.Log.Debug("CreateFD rs:" + err.Error())
 	return nil
 }
 

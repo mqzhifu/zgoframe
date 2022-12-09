@@ -307,7 +307,7 @@ func (connManager *ConnManager) ParserContentProtocol(content string) (message p
 	}
 	//数据长度
 	dataLength := BytesToInt32([]byte(content[0:4]))
-	MyPrint("connManager dataLength:", dataLength, " content: ", content)
+	//MyPrint("connManager dataLength:", dataLength, " content: ", content)
 	if dataLength <= 0 {
 		errMsg := "dataLength <= 0"
 		return message, errors.New(errMsg)
@@ -419,9 +419,9 @@ func (conn *Conn) UpLastTime() {
 func (conn *Conn) Read() (content string, err error) {
 	// 设置消息的最大长度 - 暂无
 	//conn.Conn.SetReadDeadline(time.Now().Add(time.Second * time.Duration(mynetWay.Option.IOTimeout)))
-	//_, dataByte, err := conn.Conn.ReadMessage()
-	messageType, dataByte, err := conn.Conn.ReadMessage()
-	MyPrint("messageType:", messageType)
+	_, dataByte, err := conn.Conn.ReadMessage()
+	//messageType, dataByte, err := conn.Conn.ReadMessage()
+	//MyPrint("messageType:", messageType)
 	if err != nil {
 		//myMetrics.fastLog("total.input.err.num",METRICS_OPT_INC,0)
 		conn.ConnManager.Option.Log.Error("conn.Conn.ReadMessage err: " + err.Error())

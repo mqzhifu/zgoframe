@@ -97,7 +97,7 @@ func (protocolManager *ProtocolManager) udpHandler() {
 
 //=======================================
 //协议层的解包已经结束，这个时候需要将content内容进行转换成MSG结构
-func (protocolManager *ProtocolManager) ParserContentMsg(msg pb.Msg, out interface{}, playerId int32) error {
+func (protocolManager *ProtocolManager) ParserContentMsg(msg pb.Msg, out interface{}) error {
 	content := msg.Content
 	var err error
 	//protocolCtrlInfo := myPlayerManager.GetPlayerCtrlInfoById(playerId)

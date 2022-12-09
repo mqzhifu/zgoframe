@@ -315,6 +315,7 @@ func (netWay *NetWay) loginPre(conn *Conn) (jwt request.CustomClaims, firstMsg p
 		netWay.loginPreFailedSendMsg(err.Error(), CLOSE_SOURCE_FD_PARSE_CONTENT, conn)
 		return jwt, firstMsg, err
 	}
+
 	//这里可能有个极端问题，连接成功后，C端立刻就得发消息，FD 读取消息可能会出现延迟，因为READ是异步，可能第一时间没有读到C端发来的数据
 	protoServiceFunc, _ := netWay.Option.ProtoMap.GetServiceFuncById(int(msg.SidFid))
 	if protoServiceFunc.FuncName != "CS_Login" { //进到这里，肯定是有新连接被创建且回调了公共函数
@@ -325,7 +326,7 @@ func (netWay *NetWay) loginPre(conn *Conn) (jwt request.CustomClaims, firstMsg p
 	////具体的执行过程，要走一遍gateway 的router ,开始：登陆/验证 过程
 	//jwtDataInterface, err := netWay.Router(msg, conn)
 	requestLogin := pb.Login{}
-	err = netWay.ProtocolManager.ParserContentMsg(msg, &requestLogin, conn.UserId)
+	err = netWay.ProtocolManager.ParserContentMsg(msg, &requestLogin)
 	if err != nil {
 		netWay.loginPreFailedSendMsg(err.Error(), CLOSE_SOURCE_FIRST_PARSER_LOGIN, conn)
 		return jwt, firstMsg, err
@@ -341,6 +342,7 @@ func (netWay *NetWay) loginPre(conn *Conn) (jwt request.CustomClaims, firstMsg p
 	//	netWay.loginPreFailedSendMsg(err.Error(), CLOSE_SOURCE_AUTH_FAILED, conn)
 	//	return jwt, firstMsg, err
 	//}
+	msg.SourceUid = int32(jwt.Id)
 	netWay.Option.Log.Info("login jwt auth ok~~")
 	return jwt, msg, nil
 }

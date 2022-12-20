@@ -164,7 +164,7 @@ func (connManager *ConnManager) addConnPool(NewConn *Conn) error {
 			Time: GetNowMillisecond(),
 		}
 		//给旧连接发送消息通知,这条消息不一定能发出去，因为后面马上就会接关闭FD，最好是同步执行，不要异步发送这条消息
-		oldConn.SendMsgCompressByConn("SC_KickOff", &responseKickOff)
+		oldConn.SendMsgCompressByName("Gateway", "SC_KickOff", &responseKickOff)
 		oldConn.CloseOneConn(CLOSE_SOURCE_OVERRIDE)
 	}
 	connManager.Option.Log.Info("addConnPool : " + strconv.Itoa(int(NewConn.UserId)))
@@ -316,21 +316,20 @@ func (connManager *ConnManager) ParserContentProtocol(content string) (message p
 	ctrlStream := content[4:6]
 	ContentType, ProtocolType := connManager.parserProtocolCtrlInfo([]byte(ctrlStream))
 	serviceId := int(content[6:7][0])
-	actionId := BytesToInt32(BytesCombine([]byte{0, 0}, []byte(content[7:9])))
+	funcId := BytesToInt32(BytesCombine([]byte{0, 0}, []byte(content[7:9])))
 
-	MyPrint("ctrlStream:", ctrlStream, " serviceId:", serviceId)
+	//MyPrint("ctrlStream:", ctrlStream, " serviceId:", serviceId)
 
 	//保留字
 	reserved := content[9:19]
-	serviceActionId, _ := strconv.Atoi(strconv.Itoa(serviceId) + strconv.Itoa(actionId))
+	sidFid, _ := strconv.Atoi(strconv.Itoa(serviceId) + strconv.Itoa(funcId))
 
 	connManager.Option.Log.Warn(
 		"contentLen:" + strconv.Itoa(len(content)) + " ,ContentType:" + strconv.Itoa(int(ContentType)) + " ,ProtocolType:" + strconv.Itoa(int(ProtocolType)) +
-			" , dataLength:" + strconv.Itoa(dataLength) + " actionId:" + strconv.Itoa(actionId) + " serviceId:" + strconv.Itoa(serviceId) + " session:" + reserved)
-	_, empty := connManager.Option.ProtoMap.GetServiceFuncById(serviceActionId) //这里只是提前检测一下service funcId 是否正确
+			" , dataLength:" + strconv.Itoa(dataLength) + " funcId:" + strconv.Itoa(funcId) + " serviceId:" + strconv.Itoa(serviceId) + " session:" + reserved)
+	_, empty := connManager.Option.ProtoMap.GetServiceFuncById(sidFid) //这里只是提前检测一下service funcId 是否正确
 	if empty {
-		errMsg := "actionId ProtocolActions.GetActionName empty!!!"
-		//protocolManager.Option.Log.Error(errMsg,actionId)
+		errMsg := "sidFid GetServiceFuncById empty!!!"
 		return message, errors.New(errMsg)
 	}
 	//提取数据,ps: tcp 会自动删除末尾分隔符，而ws会有分隔符的
@@ -338,8 +337,8 @@ func (connManager *ConnManager) ParserContentProtocol(content string) (message p
 	connManager.Option.Log.Debug("ParserContentProtocol content:" + string(data))
 	msg := pb.Msg{
 		Id:           0,
-		SidFid:       int32(serviceActionId),
-		FuncId:       int32(actionId),
+		SidFid:       int32(sidFid),
+		FuncId:       int32(funcId),
 		ServiceId:    int32(serviceId),
 		DataLength:   int32(dataLength),
 		Content:      data,
@@ -368,8 +367,9 @@ func (connManager *ConnManager) PackContentMsg(msg pb.Msg) []byte {
 	protocolTypeBytes := byte(msg.ProtocolType)
 	//actionIdByte := Int32ToBytes(msg.ActionId)
 	//actionIdByte = actionIdByte[2:4]
-	funcId, _ := strconv.Atoi(strconv.Itoa(int(msg.FuncId))[2:])
-	actionIdByte := Int32ToBytes(int32(funcId))[2:]
+	//funcId, _ := strconv.Atoi(strconv.Itoa(int(msg.FuncId))[2:])
+	//actionIdByte := Int32ToBytes(int32(funcId))[2:]
+	actionIdByte := Int32ToBytes(msg.FuncId)[2:]
 	reserved := []byte("reserved--")
 	serviceIdBytes := Int32ToBytes(msg.ServiceId)[3]
 	ln := connManager.Option.MsgSeparator
@@ -554,7 +554,7 @@ func (conn *Conn) CloseOneConn(source int) {
 	}
 	//先通知外层，FD即将要关闭了，外层网关再广播给所有微服务
 	requestClientCloseStrByte, _ := conn.ConnManager.CompressNormalContent(&connCloseEvent, int(connCloseEvent.ContentType))
-	msg, _, _ := conn.ConnManager.MakeMsgByActionName(connCloseEvent.UserId, "FdClose", requestClientCloseStrByte)
+	msg, _, _ := conn.ConnManager.MakeMsgByServiceFuncName(connCloseEvent.UserId, "Gateway", "FdClose", requestClientCloseStrByte)
 	conn.ConnManager.Option.NetWay.Router(msg, conn)
 	//通知同步服务，先做构造处理
 	//mySync.CloseOne(conn)//这里可能还要再发消息
@@ -622,109 +622,61 @@ func (conn *Conn) CloseHandler(code int, text string) error {
 }
 
 //===================================================================
-//发送一条消息给一个玩家，根据conn，同时将消息内容进行编码与压缩
-//大部分通信都是这个方法
-func (conn *Conn) SendMsgCompressByConn(actionName string, contentStruct interface{}) error {
-	if conn.UserId <= 0 {
-		return conn.ConnManager.MakeError("conn.UserId <= 0")
-	}
-	conn.ConnManager.Option.Log.Info("SendMsgCompressByConn  actionName:" + actionName)
-	//conn.UserId=0 时，由函数内部做兼容，主要是用来取content type ,protocol type
-	contentByte, err := conn.ConnManager.CompressContent(contentStruct, conn.UserId)
-	if err != nil {
-		return err
-	}
-	return conn.SendMsg(actionName, contentByte)
-}
-
-//发送一条消息给一个玩家，根据UserId，同时将消息内容进行编码与压缩
-func (conn *Conn) SendMsgCompressByUid(UserId int32, action string, contentStruct interface{}) error {
-	if UserId <= 0 {
-		return conn.ConnManager.MakeError("conn UserId <= 0")
-	}
-
-	conn.ConnManager.Option.Log.Info("SendMsgCompressByUid UserId:" + strconv.Itoa(int(UserId)) + " action:" + action)
-	contentByte, err := conn.ConnManager.CompressContent(contentStruct, UserId)
-	if err != nil {
-		return err
-	}
-	return conn.SendMsgByUid(UserId, action, contentByte)
-}
-
-//发送一条消息给一个玩家,根据UserId,且不做压缩处理
-func (conn *Conn) SendMsgByUid(UserId int32, action string, content []byte) error {
-	conn, ok := conn.ConnManager.GetConnPoolById(UserId)
-	if !ok {
-		return conn.ConnManager.MakeError("conn not in pool,maybe del.")
-	}
-	return conn.SendMsg(action, content)
-}
-
-//发送一条消息给一个玩家,根据UserId,且不做压缩处理
-//SendMsg的别名方法，不确定还有什么用，可能其它程序还在用吧
-func (conn *Conn) SendMsgByConn(action string, content []byte) {
-	conn.SendMsg(action, content)
-}
-
-func (connManager *ConnManager) MakeMsgByActionName(userId int32, action string, content []byte) (msg pb.Msg, protocolCtrlInfo ProtocolCtrlInfo, err error) {
-	//获取协议号结构体
-	actionMap, empty := connManager.Option.ProtoMap.GetServiceFuncByFuncName(action)
+//给一个玩家:发送一条消息，根据服务名\函数名，同时将消息内容进行编码与压缩
+func (conn *Conn) SendMsgCompressByName(serviceName string, funcName string, contentStruct interface{}) error {
+	serviceDesc, empty := conn.ConnManager.Option.ProtoMap.GetServiceByName(serviceName, funcName)
 	if empty {
-		return msg, protocolCtrlInfo, connManager.MakeError("GetActionId is  empty:" + action)
+		return conn.ConnManager.MakeError("GetServiceByName is  empty:" + funcName)
 	}
-	protocolCtrlInfo = connManager.GetPlayerCtrlInfoById(userId)
-
-	//SidFid, _ := strconv.Atoi(strconv.Itoa(actionMap.ServiceId) + strconv.Itoa(actionMap.Id))
-	msg = pb.Msg{
-		//SidFid:       int32(SidFid),
-		DataLength:   int32(len(content)),
-		Content:      string(content),
-		SidFid:       int32(actionMap.Id),
-		ServiceId:    int32(actionMap.ServiceId),
-		FuncId:       int32(actionMap.Id),
-		ContentType:  protocolCtrlInfo.ContentType,
-		ProtocolType: protocolCtrlInfo.ProtocolType,
-	}
-
-	return msg, protocolCtrlInfo, nil
+	return conn.SendMsgCompress(serviceDesc, contentStruct, 1)
 }
 
-func (connManager *ConnManager) MakeMsgByActionId(userId int32, actionId int, content []byte) (msg pb.Msg, protocolCtrlInfo ProtocolCtrlInfo, err error) {
-	//获取协议号结构体
-	actionMap, empty := connManager.Option.ProtoMap.GetServiceFuncById(actionId)
+//给一个玩家:发送一条消息，根据服务ID\函数ID，同时将消息内容进行编码与压缩
+func (conn *Conn) SendMsgCompressBySidFid(serviceId int, funcId int, contentStruct interface{}) error {
+	serviceDesc, empty := conn.ConnManager.Option.ProtoMap.GetServiceFuncBySidFid(serviceId, funcId)
 	if empty {
-		return msg, protocolCtrlInfo, connManager.MakeError("GetActionId is  empty:" + strconv.Itoa(actionId))
+		return conn.ConnManager.MakeError("GetServiceByName is  empty:" + strconv.Itoa(serviceId))
 	}
-	protocolCtrlInfo = connManager.GetPlayerCtrlInfoById(userId)
-
-	//SidFid, _ := strconv.Atoi(strconv.Itoa(actionMap.ServiceId) + strconv.Itoa(actionMap.Id))
-	msg = pb.Msg{
-		//SidFid:       int32(SidFid),
-		DataLength:   int32(len(content)),
-		Content:      string(content),
-		SidFid:       int32(actionMap.Id),
-		ServiceId:    int32(actionMap.ServiceId),
-		FuncId:       int32(actionMap.Id),
-		ContentType:  protocolCtrlInfo.ContentType,
-		ProtocolType: protocolCtrlInfo.ProtocolType,
-	}
-
-	return msg, protocolCtrlInfo, nil
+	return conn.SendMsgCompress(serviceDesc, contentStruct, 1)
 }
 
 //这里才是，最终给一个User发送一条消息
 //此方法轻易不要调用，因为没有做容错，比如：conn 不在pool中，直接调用 ProtoMap/uid=0 等，会把程序带崩溃了
-func (conn *Conn) SendMsg(action string, content []byte) error {
-	if conn.Status == CONN_STATUS_CLOSE {
-		conn.ConnManager.Option.Log.Error("Conn status =CONN_STATUS_CLOSE.")
-		return conn.ConnManager.MakeError("Conn status =CONN_STATUS_CLOSE.")
+func (conn *Conn) SendMsgCompress(protoServiceFunc ProtoServiceFunc, contentStruct interface{}, Compress int) error {
+	conn.ConnManager.Option.Log.Debug("SendMsgCompress , Compress:" + strconv.Itoa(Compress))
+	var content []byte
+	var err error
+
+	conn.ConnManager.Option.Log.Info("SendMsgCompressByConn  serviceName :" + protoServiceFunc.ServiceName + "  funcName:" + protoServiceFunc.FuncName + " Compress:" + strconv.Itoa(Compress))
+	//conn.UserId=0 时，由函数内部做兼容，主要是用来取content type ,protocol type
+	if Compress > 0 {
+		content, err = conn.ConnManager.CompressContent(contentStruct, conn.UserId)
+		if err != nil {
+			return err
+		}
+	} else {
+		content = contentStruct.([]byte)
 	}
 
-	msg, protocolCtrlInfo, err := conn.ConnManager.MakeMsgByActionName(conn.UserId, action, content)
+	return conn.SendMsg(protoServiceFunc, content)
+}
+func (conn *Conn) SendMsg(protoServiceFunc ProtoServiceFunc, content []byte) error {
+	if protoServiceFunc.FuncName != "SC_Login" { //登陆结果函数，略特殊，如果是登陆失败了，就没有 userId
+		if conn.UserId <= 0 {
+			return conn.ConnManager.MakeError("conn.UserId <= 0")
+		}
+	}
+
+	if conn.Status == CONN_STATUS_CLOSE {
+		conn.ConnManager.Option.Log.Error("Conn status = CONN_STATUS_CLOSE.")
+		return conn.ConnManager.MakeError("Conn status = CONN_STATUS_CLOSE.")
+	}
+
+	msg, protocolCtrlInfo, err := conn.ConnManager.MakeMsgByServiceFuncName(conn.UserId, protoServiceFunc.ServiceName, protoServiceFunc.FuncName, content)
 	if err != nil {
 		return err
 	}
-	debugMsg := "SendMsg , ContentType:" + strconv.Itoa(int(protocolCtrlInfo.ContentType)) + " ProtocolType: " + strconv.Itoa(int(protocolCtrlInfo.ProtocolType)) + " , actionId:" + strconv.Itoa(int(msg.Id)) + " , userId:" + strconv.Itoa(int(conn.UserId)) + " , actionName:" + action
+	debugMsg := "SendMsg , ContentType:" + strconv.Itoa(int(protocolCtrlInfo.ContentType)) + " ProtocolType: " + strconv.Itoa(int(protocolCtrlInfo.ProtocolType)) + " , sidFid:" + strconv.Itoa(int(msg.SidFid)) + " , userId:" + strconv.Itoa(int(conn.UserId))
 	conn.ConnManager.Option.Log.Info(debugMsg)
 
 	contentBytes := conn.ConnManager.PackContentMsg(msg)
@@ -732,9 +684,52 @@ func (conn *Conn) SendMsg(action string, content []byte) error {
 	//这里先注释掉，发现WS协议，传输内容必须统一：要么全是字符，要么就是二进制，而我的协议中 头消息是二进制的，内容如果是json那就是字符，貌似WS不行
 	//if protocolCtrlInfo.ContentType == CONTENT_TYPE_PROTOBUF {
 	return conn.Write(contentBytes, websocket.BinaryMessage)
-	//} else {
-	//	conn.Write(contentBytes, websocket.TextMessage)
-	//}
+}
+
+func (connManager *ConnManager) MakeMsgByServiceFuncName(userId int32, service string, funcName string, content []byte) (msg pb.Msg, protocolCtrlInfo ProtocolCtrlInfo, err error) {
+	//获取协议号结构体
+	serviceDesc, empty := connManager.Option.ProtoMap.GetServiceByName(service, funcName)
+	if empty {
+		return msg, protocolCtrlInfo, connManager.MakeError("GetServiceByName is  empty:" + funcName)
+	}
+	protocolCtrlInfo = connManager.GetPlayerCtrlInfoById(userId)
+
+	//SidFid, _ := strconv.Atoi(strconv.Itoa(actionMap.ServiceId) + strconv.Itoa(actionMap.Id))
+	msg = pb.Msg{
+		//SidFid:       int32(SidFid),
+		DataLength:   int32(len(content)),
+		Content:      string(content),
+		SidFid:       int32(serviceDesc.Id),
+		ServiceId:    int32(serviceDesc.ServiceId),
+		FuncId:       int32(serviceDesc.FuncId),
+		ContentType:  protocolCtrlInfo.ContentType,
+		ProtocolType: protocolCtrlInfo.ProtocolType,
+	}
+
+	return msg, protocolCtrlInfo, nil
+}
+
+func (connManager *ConnManager) MakeMsgBySidFid(userId int32, sidFid int, content []byte) (msg pb.Msg, protocolCtrlInfo ProtocolCtrlInfo, err error) {
+	//获取协议号结构体
+	actionMap, empty := connManager.Option.ProtoMap.GetServiceFuncById(sidFid)
+	if empty {
+		return msg, protocolCtrlInfo, connManager.MakeError("GetServiceFuncById is  empty:" + strconv.Itoa(sidFid))
+	}
+	protocolCtrlInfo = connManager.GetPlayerCtrlInfoById(userId)
+
+	//SidFid, _ := strconv.Atoi(strconv.Itoa(actionMap.ServiceId) + strconv.Itoa(actionMap.Id))
+	msg = pb.Msg{
+		//SidFid:       int32(SidFid),
+		DataLength:   int32(len(content)),
+		Content:      string(content),
+		SidFid:       int32(actionMap.Id),
+		ServiceId:    int32(actionMap.ServiceId),
+		FuncId:       int32(actionMap.Id),
+		ContentType:  protocolCtrlInfo.ContentType,
+		ProtocolType: protocolCtrlInfo.ProtocolType,
+	}
+
+	return msg, protocolCtrlInfo, nil
 }
 
 //这里才是，真正的往sock FD息(严格说：跟用户没关联了) 里写内容，也就是发送消
@@ -761,3 +756,32 @@ func (conn *Conn) Write(content []byte, messageType int) error {
 
 	return conn.Conn.WriteMessage(messageType, content)
 }
+
+////发送一条消息给一个玩家,根据UserId,且不做压缩处理
+////SendMsg的别名方法，不确定还有什么用，可能其它程序还在用吧
+//func (conn *Conn) SendMsgByConn(serviceName string, funcName string, content []byte) {
+//	conn.SendMsg(serviceName, funcName, content)
+//}
+
+////发送一条消息给一个玩家，根据UserId，同时将消息内容进行编码与压缩
+//func (conn *Conn) SendMsgCompressByUid(UserId int32, serviceName string, funcName string, contentStruct interface{}) error {
+//	if UserId <= 0 {
+//		return conn.ConnManager.MakeError("conn UserId <= 0")
+//	}
+//
+//	conn.ConnManager.Option.Log.Info("SendMsgCompressByUid UserId:" + strconv.Itoa(int(UserId)) + " funcName:" + funcName)
+//	contentByte, err := conn.ConnManager.CompressContent(contentStruct, UserId)
+//	if err != nil {
+//		return err
+//	}
+//	return conn.SendMsgByUid(UserId, serviceName, funcName, contentByte)
+//}
+//
+////发送一条消息给一个玩家,根据UserId,但不做压缩处理
+//func (conn *Conn) SendMsgByUid(UserId int32, serviceName string, funcName string, content []byte) error {
+//	conn, ok := conn.ConnManager.GetConnPoolById(UserId)
+//	if !ok {
+//		return conn.ConnManager.MakeError("conn not in pool,maybe del.")
+//	}
+//	return conn.SendMsgByName(serviceName, funcName, content)
+//}

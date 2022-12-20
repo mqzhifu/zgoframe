@@ -288,6 +288,8 @@ func (cicdManager *CicdManager) SuperVisorProcess(form request.CicdSuperVisor) (
 
 	return err
 }
+
+//浏览器会请求此函数，拿到所有服务器和服务列表，用于部署
 func (cicdManager *CicdManager) LocalAllServerServiceList() (list LocalServerServiceList, err error) {
 	list.ServiceList = make(map[int]model.Project)
 	list.ServerList = make(map[int]util.Server)

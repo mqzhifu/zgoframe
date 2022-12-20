@@ -35,6 +35,10 @@ func (frameSync *FrameSync)CS_PlayerState(ctx context.Context,playerBase *pb.Pla
     empty := &pb.Empty{}
     return empty,nil
 }
+func (frameSync *FrameSync)CS_Heartbeat(ctx context.Context,heartbeat *pb.Heartbeat) (*pb.Empty,error){
+    empty := &pb.Empty{}
+    return empty,nil
+}
 func (frameSync *FrameSync)SC_ReadyTimeout(ctx context.Context,readyTimeout *pb.ReadyTimeout) (*pb.Empty,error){
     empty := &pb.Empty{}
     return empty,nil
@@ -80,6 +84,18 @@ func (frameSync *FrameSync)SC_GameOver(ctx context.Context,gameOver *pb.GameOver
     return empty,nil
 }
 func (frameSync *FrameSync)SC_PlayerState(ctx context.Context,playerState *pb.PlayerState) (*pb.Empty,error){
+    empty := &pb.Empty{}
+    return empty,nil
+}
+func (frameSync *FrameSync)SC_Heartbeat(ctx context.Context,heartbeat *pb.Heartbeat) (*pb.Empty,error){
+    empty := &pb.Empty{}
+    return empty,nil
+}
+func (frameSync *FrameSync)FdClose(ctx context.Context,fDCloseEvent *pb.FDCloseEvent) (*pb.Empty,error){
+    empty := &pb.Empty{}
+    return empty,nil
+}
+func (frameSync *FrameSync)FdCreate(ctx context.Context,fDCreateEvent *pb.FDCreateEvent) (*pb.Empty,error){
     empty := &pb.Empty{}
     return empty,nil
 }

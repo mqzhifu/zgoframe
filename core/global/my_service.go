@@ -18,14 +18,15 @@ type MyService struct {
 	Sms   *msg_center.Sms   //短信服务
 	Email *msg_center.Email //电子邮件服务
 	//Match                 *gamematch.GameMatch        //匹配服务
-	Gateway               *gateway.Gateway            //网关服务
-	TwinAgora             *seed_business.TwinAgora    //广州 120远程专家指导
-	ConfigCenter          *config_center.ConfigCenter //配置中心
-	Cicd                  *cicd.CicdManager           //自动部署
-	Mail                  *msg_center.Mail            //站内信
-	GameMatch             *gamematch.GameMatch
-	RequestServiceAdapter *service.RequestServiceAdapter //请求3方服务 适配器
-	FrameSync             *frame_sync.FrameSync
+	Gateway      *gateway.Gateway            //网关服务
+	TwinAgora    *seed_business.TwinAgora    //广州 120远程专家指导
+	ConfigCenter *config_center.ConfigCenter //配置中心
+	Cicd         *cicd.CicdManager           //自动部署
+	Mail         *msg_center.Mail            //站内信
+	GameMatch    *gamematch.GameMatch
+	//RequestServiceAdapter *service.RequestServiceAdapter //请求3方服务 适配器
+	ServiceBridge *service.Bridge
+	FrameSync     *frame_sync.FrameSync
 	//RoomManage            *frame_sync.RoomManager     //房间服务
 }
 
@@ -37,7 +38,16 @@ func NewMyService() *MyService {
 	var err error
 	myService := new(MyService)
 	//创建一个 请求3方服务 的适配器，服务之间的请求/调用
-	myService.RequestServiceAdapter = service.NewRequestServiceAdapter(V.ServiceDiscovery, V.GrpcManager, service.REQ_SERVICE_METHOD_INNER, C.System.ProjectId, V.Zap)
+	//myService.RequestServiceAdapter = service.NewRequestServiceAdapter(V.ServiceDiscovery, V.GrpcManager, service.REQ_SERVICE_METHOD_INNER, C.System.ProjectId, V.Zap)
+	ServiceBridgeOp := service.BridgeOption{
+		ProtoMap:         V.ProtoMap,
+		ProjectId:        V.Project.Id,
+		ServiceDiscovery: V.ServiceDiscovery,
+		GrpcManager:      V.GrpcManager,
+		Flag:             service.REQ_SERVICE_METHOD_NATIVE,
+		Log:              V.Zap,
+	}
+	myService.ServiceBridge, _ = service.NewBridge(ServiceBridgeOp)
 	//用户服务
 	myService.User = user_center.NewUser(V.Gorm, V.Redis)
 	//站内信服务
@@ -62,10 +72,12 @@ func NewMyService() *MyService {
 	}
 	//远程呼叫专家
 	twinAgoraOption := seed_business.TwinAgoraOption{
-		Log:                   V.Zap,
-		Gorm:                  V.Gorm,
-		StaticPath:            C.Http.StaticPath,
-		RequestServiceAdapter: myService.RequestServiceAdapter,
+		Log:        V.Zap,
+		Gorm:       V.Gorm,
+		StaticPath: C.Http.StaticPath,
+		ProtoMap:   V.ProtoMap,
+		//RequestServiceAdapter: myService.RequestServiceAdapter,
+		ServiceBridge: myService.ServiceBridge,
 	}
 	myService.TwinAgora, err = seed_business.NewTwinAgora(twinAgoraOption)
 	if err != nil {
@@ -97,11 +109,11 @@ func NewMyService() *MyService {
 	CreateGameService(myService)
 	//网关
 	if C.Gateway.Status == "open" {
-		gateway := gateway.NewGateway(V.GrpcManager, V.Zap, myService.RequestServiceAdapter)
-		gateway.MyServiceList.GameMatch = myService.GameMatch
-		gateway.MyServiceList.FrameSync = myService.FrameSync
-		gateway.MyServiceList.TwinAgora = myService.TwinAgora
-
+		//gateway := gateway.NewGateway(V.GrpcManager, V.Zap, myService.RequestServiceAdapter)
+		//gateway.MyServiceList.GameMatch = myService.GameMatch
+		//gateway.MyServiceList.FrameSync = myService.FrameSync
+		//gateway.MyServiceList.TwinAgora = myService.TwinAgora
+		gateway := gateway.NewGateway(V.GrpcManager, V.Zap, myService.ServiceBridge)
 		myService.Gateway = gateway
 
 		_, err := gateway.StartSocket(netWayOption)
@@ -168,12 +180,14 @@ func (myService *MyService) RegisterService() {
 func CreateGameService(myService *MyService) (err error) {
 	//帧同步 - 房间服务 - room要先实例化,math frame_sync 都强依赖room
 	frameSyncOption := frame_sync.FrameSyncOption{
-		LockMode:              service.LOCK_MODE_PESSIMISTIC,
-		Store:                 1,
-		Log:                   V.Zap,
-		RequestServiceAdapter: myService.RequestServiceAdapter,
-		OffLineWaitTime:       10,
-		Gorm:                  V.Gorm,
+		LockMode:      service.LOCK_MODE_PESSIMISTIC,
+		Store:         1,
+		Log:           V.Zap,
+		ServiceBridge: myService.ServiceBridge,
+		//RequestServiceAdapter: myService.RequestServiceAdapter,
+		OffLineWaitTime: 10,
+		Gorm:            V.Gorm,
+		ProtoMap:        V.ProtoMap,
 	}
 	myService.FrameSync = frame_sync.NewFrameSync(frameSyncOption)
 
@@ -189,7 +203,8 @@ func CreateGameService(myService *MyService) (err error) {
 
 	//这个是真的匹配服务
 	gmOp := gamematch.GameMatchOption{
-		RequestServiceAdapter:  myService.RequestServiceAdapter,
+		//RequestServiceAdapter:  myService.RequestServiceAdapter,
+		ServiceBridge:          myService.ServiceBridge,
 		Log:                    V.Zap,
 		Redis:                  V.RedisGo,
 		Gorm:                   V.Gorm,
@@ -203,6 +218,7 @@ func CreateGameService(myService *MyService) (err error) {
 		FrameSync:              myService.FrameSync,
 		RedisIdSeparator:       ",",
 		RedisPayloadSeparation: "%",
+		ProtoMap:               V.ProtoMap,
 	}
 	myService.GameMatch, err = gamematch.NewGameMatch(gmOp)
 	if err != nil {

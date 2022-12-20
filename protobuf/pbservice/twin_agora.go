@@ -23,6 +23,10 @@ func (twinAgora *TwinAgora)SC_CancelCallPeople(ctx context.Context,cancelCallPeo
     empty := &pb.Empty{}
     return empty,nil
 }
+func (twinAgora *TwinAgora)CS_Heartbeat(ctx context.Context,heartbeat *pb.Heartbeat) (*pb.Empty,error){
+    empty := &pb.Empty{}
+    return empty,nil
+}
 func (twinAgora *TwinAgora)CS_PeopleEntry(ctx context.Context,peopleEntry *pb.PeopleEntry) (*pb.Empty,error){
     empty := &pb.Empty{}
     return empty,nil
@@ -64,6 +68,14 @@ func (twinAgora *TwinAgora)CS_RoomHeartbeat(ctx context.Context,roomHeartbeatReq
     return empty,nil
 }
 func (twinAgora *TwinAgora)SC_PushMsg(ctx context.Context,pushMsg *pb.PushMsg) (*pb.Empty,error){
+    empty := &pb.Empty{}
+    return empty,nil
+}
+func (twinAgora *TwinAgora)FdClose(ctx context.Context,fDCloseEvent *pb.FDCloseEvent) (*pb.Empty,error){
+    empty := &pb.Empty{}
+    return empty,nil
+}
+func (twinAgora *TwinAgora)FdCreate(ctx context.Context,fDCreateEvent *pb.FDCreateEvent) (*pb.Empty,error){
     empty := &pb.Empty{}
     return empty,nil
 }

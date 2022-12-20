@@ -5,6 +5,7 @@ package util
 */
 import (
 	"encoding/json"
+	"errors"
 	"github.com/golang/protobuf/proto"
 	"github.com/gorilla/websocket"
 	"go.uber.org/zap"
@@ -98,6 +99,18 @@ func (protocolManager *ProtocolManager) udpHandler() {
 //=======================================
 //协议层的解包已经结束，这个时候需要将content内容进行转换成MSG结构
 func (protocolManager *ProtocolManager) ParserContentMsg(msg pb.Msg, out interface{}) error {
+	err := ConnParserContentMsg(msg, out)
+	if err != nil {
+		protocolManager.Option.Log.Error(err.Error())
+		return err
+	}
+	//protocolManager.Option.Log.Debug("protocolManager parserMsgContent ， content:" + content)
+	return nil
+}
+
+//=======================================
+//协议层的解包已经结束，这个时候需要将content内容进行转换成MSG结构
+func ConnParserContentMsg(msg pb.Msg, out interface{}) error {
 	content := msg.Content
 	var err error
 	//protocolCtrlInfo := myPlayerManager.GetPlayerCtrlInfoById(playerId)
@@ -109,15 +122,12 @@ func (protocolManager *ProtocolManager) ParserContentMsg(msg pb.Msg, out interfa
 		aaa := out.(proto.Message)
 		err = proto.Unmarshal([]byte(content), aaa)
 	} else {
-		protocolManager.Option.Log.Error("parserContent err")
+		return errors.New("parserContent err")
 	}
 
 	if err != nil {
-		protocolManager.Option.Log.Error("parserMsgContent:" + err.Error())
-		return err
+		return errors.New("parserMsgContent:" + err.Error())
 	}
-
-	protocolManager.Option.Log.Debug("protocolManager parserMsgContent ， content:" + content)
 
 	return nil
 }

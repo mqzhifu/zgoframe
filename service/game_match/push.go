@@ -3,6 +3,7 @@ package gamematch
 import (
 	"encoding/json"
 	"errors"
+	"github.com/golang/protobuf/proto"
 	"github.com/gomodule/redigo/redis"
 	"go.uber.org/zap"
 	"strconv"
@@ -365,13 +366,18 @@ func (push *Push) ServiceDiscoveryRequestUser(element PushElement) (httpRs util.
 		push.Log.Debug("push ServiceDiscoveryRequestUser element.Category == service.PushCategorySignTimeout")
 		groupInfo := push.Rule.RuleManager.Option.GameMatch.GroupStrToStruct(payload)
 		playerIds := push.Rule.RuleManager.Option.GameMatch.GetGroupPlayerIds(groupInfo)
-		gameMatchOptResult := pb.GameMatchOptResult{
-			GroupId: int32(groupInfo.Id),
-			RoomId:  "",
-			Code:    400,
-			Msg:     "sign timeout",
+		//push.Rule.RuleManager.Option.RequestServiceAdapter.GatewaySendMsgByUids(playerIds, "SC_GameMatchOptResult", &gameMatchOptResult)
+
+		for _, v := range playerIds {
+			gameMatchOptResult := pb.GameMatchOptResult{
+				GroupId: int32(groupInfo.Id),
+				RoomId:  "",
+				Code:    400,
+				Msg:     "sign timeout",
+			}
+			data, _ := proto.Marshal(&gameMatchOptResult)
+			push.Rule.RuleManager.Option.ServiceBridge.CallGateway("GameMatch", "SC_GameMatchOptResult", 9999, v, string(data), "", 0)
 		}
-		push.Rule.RuleManager.Option.RequestServiceAdapter.GatewaySendMsgByUids(playerIds, "SC_GameMatchOptResult", &gameMatchOptResult)
 	} else if element.Category == service.PushCategorySuccessTimeout {
 		return httpRs, nil
 	} else if element.Category == service.PushCategorySuccess {
@@ -389,7 +395,9 @@ func (push *Push) ServiceDiscoveryRequestUser(element PushElement) (httpRs util.
 				Code:   200,
 				Msg:    "success",
 			}
-			push.Rule.RuleManager.Option.RequestServiceAdapter.GatewaySendMsgByUid(int32(uid), "SC_GameMatchOptResult", &gameMatchOptResult)
+			data, _ := proto.Marshal(&gameMatchOptResult)
+			push.Rule.RuleManager.Option.ServiceBridge.CallGateway("GameMatch", "SC_GameMatchOptResult", 9999, int32(uid), string(data), "", 0)
+			//push.Rule.RuleManager.Option.RequestServiceAdapter.GatewaySendMsgByUid(int32(uid), "SC_GameMatchOptResult", &gameMatchOptResult)
 		}
 		push.Rule.RuleManager.Option.GameMatch.Option.FrameSync.RoomManage.AddOne(newRoom)
 

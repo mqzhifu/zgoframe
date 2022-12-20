@@ -204,10 +204,10 @@ func GatewaySendMsg(c *gin.Context) {
 
 		ServiceIdFuncId, _ := strconv.Atoi(strconv.Itoa(int(form.ServiceId)) + strconv.Itoa(int(form.FuncId)))
 		requestClientCloseStrByte, _ := conn.ConnManager.CompressNormalContent(form.Msg, int(conn.ContentType))
-		finalMsg, _, _ := conn.ConnManager.MakeMsgByActionId(int32(uid), ServiceIdFuncId, requestClientCloseStrByte)
+		finalMsg, _, _ := conn.ConnManager.MakeMsgBySidFid(int32(uid), ServiceIdFuncId, requestClientCloseStrByte)
 
 		projectPushMsgStr, _ := proto.Marshal(&finalMsg)
-		conn.SendMsg("SC_ProjectPush", projectPushMsgStr)
+		conn.SendMsgCompressByName("Gateway", "SC_ProjectPush", projectPushMsgStr)
 	}
 
 	httpresponse.OkWithAll(connManager.Pool, "ok", c)

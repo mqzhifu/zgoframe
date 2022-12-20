@@ -164,16 +164,47 @@ func (protoMap *ProtoMap) GetServiceFuncMap() map[int]ProtoServiceFunc {
 }
 
 //根据函数名，获取一条记录，这种方法不太严谨，按说应该 服务名+函数名，保证唯一 ，但代码已经写了，先这样，后期优化
-func (protoMap *ProtoMap) GetServiceFuncByFuncName(funcName string) (protoServiceFunc ProtoServiceFunc, empty bool) {
+func (protoMap *ProtoMap) GetServiceByName(serviceName string, funcName string) (protoServiceFunc ProtoServiceFunc, empty bool) {
 	for _, v := range protoMap.ServiceFuncMap {
-		if v.FuncName == funcName {
+		if v.FuncName == funcName && v.ServiceName == serviceName {
 			return v, false
 		}
 	}
 	return protoServiceFunc, true
 }
 
+//根据函数名，获取一条记录，这种方法不太严谨，按说应该 服务名+函数名，保证唯一 ，但代码已经写了，先这样，后期优化
+func (protoMap *ProtoMap) GetServiceNameByServiceId(serviceId int) (n string, empty bool) {
+	for _, v := range protoMap.ServiceFuncMap {
+		if v.ServiceId == serviceId {
+			return v.ServiceName, false
+		}
+	}
+	return "", true
+}
+
+//根据函数名，获取一条记录，这种方法不太严谨，按说应该 服务名+函数名，保证唯一 ，但代码已经写了，先这样，后期优化
+func (protoMap *ProtoMap) GetServiceIdByServiceName(serviceName string) (n int, empty bool) {
+	for _, v := range protoMap.ServiceFuncMap {
+		if v.ServiceName == serviceName {
+			return v.ServiceId, false
+		}
+	}
+	return 0, true
+}
+
 func (protoMap *ProtoMap) GetServiceFuncById(id int) (protoServiceFunc ProtoServiceFunc, empty bool) {
+	am, ok := protoMap.ServiceFuncMap[id]
+	if ok {
+		return am, false
+	} else {
+		return am, true
+	}
+}
+
+func (protoMap *ProtoMap) GetServiceFuncBySidFid(serviceId int, FuncId int) (protoServiceFunc ProtoServiceFunc, empty bool) {
+	id := protoMap.GetIdByMergeSidFid(serviceId, FuncId)
+
 	am, ok := protoMap.ServiceFuncMap[id]
 	if ok {
 		return am, false
@@ -189,6 +220,11 @@ func (protoMap *ProtoMap) GetIdByMergeSidFid(serviceId int, funcId int) int {
 
 func (protoMap *ProtoMap) GetIdByMergeStringSidFid(serviceId string, funcId string) int {
 	id, _ := strconv.Atoi(serviceId + funcId)
+	return id
+}
+
+func (protoMap *ProtoMap) GetIdBySidFid(serviceId int, funcId int) int {
+	id, _ := strconv.Atoi(strconv.Itoa(serviceId) + strconv.Itoa(funcId))
 	return id
 }
 

@@ -28,7 +28,7 @@ func (grpcManager *GrpcManager) GetGameMatchClient(name string, balanceFactor st
 	return client.(pb.GameMatchClient), nil
 }
 
-//获取一个服务的grpc client : Gateway
+//获取一个服务的 grpc client : Gateway
 func (grpcManager *GrpcManager) GetGatewayClient(name string, balanceFactor string) (pb.GatewayClient, error) {
 	client, err := grpcManager.GetClientByLoadBalance(name, balanceFactor)
 	if err != nil {

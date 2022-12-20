@@ -1856,17 +1856,20 @@ proto.pb.Msg.prototype.toObject = function(opt_includeInstance) {
  */
 proto.pb.Msg.toObject = function(includeInstance, msg) {
   var f, obj = {
-    sourceUid: jspb.Message.getFieldWithDefault(msg, 1, 0),
-    id: jspb.Message.getFieldWithDefault(msg, 2, 0),
-    sidFid: jspb.Message.getFieldWithDefault(msg, 3, 0),
-    dataLength: jspb.Message.getFieldWithDefault(msg, 4, 0),
-    contentType: jspb.Message.getFieldWithDefault(msg, 5, 0),
-    protocolType: jspb.Message.getFieldWithDefault(msg, 6, 0),
-    serviceId: jspb.Message.getFieldWithDefault(msg, 7, 0),
-    funcId: jspb.Message.getFieldWithDefault(msg, 8, 0),
-    reserved: jspb.Message.getFieldWithDefault(msg, 9, ""),
-    content: jspb.Message.getFieldWithDefault(msg, 10, ""),
-    endChar: jspb.Message.getFieldWithDefault(msg, 11, "")
+    id: jspb.Message.getFieldWithDefault(msg, 1, 0),
+    sourceUid: jspb.Message.getFieldWithDefault(msg, 2, 0),
+    targetUid: jspb.Message.getFieldWithDefault(msg, 3, 0),
+    sidFid: jspb.Message.getFieldWithDefault(msg, 4, 0),
+    dataLength: jspb.Message.getFieldWithDefault(msg, 5, 0),
+    contentType: jspb.Message.getFieldWithDefault(msg, 6, 0),
+    protocolType: jspb.Message.getFieldWithDefault(msg, 7, 0),
+    serviceId: jspb.Message.getFieldWithDefault(msg, 8, 0),
+    funcId: jspb.Message.getFieldWithDefault(msg, 9, 0),
+    reserved: jspb.Message.getFieldWithDefault(msg, 10, ""),
+    content: jspb.Message.getFieldWithDefault(msg, 11, ""),
+    endChar: jspb.Message.getFieldWithDefault(msg, 12, ""),
+    sourceServiceId: jspb.Message.getFieldWithDefault(msg, 13, 0),
+    sourceFuncId: jspb.Message.getFieldWithDefault(msg, 14, 0)
   };
 
   if (includeInstance) {
@@ -1905,47 +1908,59 @@ proto.pb.Msg.deserializeBinaryFromReader = function(msg, reader) {
     switch (field) {
     case 1:
       var value = /** @type {number} */ (reader.readInt32());
-      msg.setSourceUid(value);
+      msg.setId(value);
       break;
     case 2:
       var value = /** @type {number} */ (reader.readInt32());
-      msg.setId(value);
+      msg.setSourceUid(value);
       break;
     case 3:
       var value = /** @type {number} */ (reader.readInt32());
-      msg.setSidFid(value);
+      msg.setTargetUid(value);
       break;
     case 4:
       var value = /** @type {number} */ (reader.readInt32());
-      msg.setDataLength(value);
+      msg.setSidFid(value);
       break;
     case 5:
       var value = /** @type {number} */ (reader.readInt32());
-      msg.setContentType(value);
+      msg.setDataLength(value);
       break;
     case 6:
       var value = /** @type {number} */ (reader.readInt32());
-      msg.setProtocolType(value);
+      msg.setContentType(value);
       break;
     case 7:
       var value = /** @type {number} */ (reader.readInt32());
-      msg.setServiceId(value);
+      msg.setProtocolType(value);
       break;
     case 8:
       var value = /** @type {number} */ (reader.readInt32());
-      msg.setFuncId(value);
+      msg.setServiceId(value);
       break;
     case 9:
-      var value = /** @type {string} */ (reader.readString());
-      msg.setReserved(value);
+      var value = /** @type {number} */ (reader.readInt32());
+      msg.setFuncId(value);
       break;
     case 10:
       var value = /** @type {string} */ (reader.readString());
-      msg.setContent(value);
+      msg.setReserved(value);
       break;
     case 11:
       var value = /** @type {string} */ (reader.readString());
+      msg.setContent(value);
+      break;
+    case 12:
+      var value = /** @type {string} */ (reader.readString());
       msg.setEndChar(value);
+      break;
+    case 13:
+      var value = /** @type {number} */ (reader.readInt32());
+      msg.setSourceServiceId(value);
+      break;
+    case 14:
+      var value = /** @type {number} */ (reader.readInt32());
+      msg.setSourceFuncId(value);
       break;
     default:
       reader.skipField();
@@ -1976,80 +1991,101 @@ proto.pb.Msg.prototype.serializeBinary = function() {
  */
 proto.pb.Msg.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
-  f = message.getSourceUid();
+  f = message.getId();
   if (f !== 0) {
     writer.writeInt32(
       1,
       f
     );
   }
-  f = message.getId();
+  f = message.getSourceUid();
   if (f !== 0) {
     writer.writeInt32(
       2,
       f
     );
   }
-  f = message.getSidFid();
+  f = message.getTargetUid();
   if (f !== 0) {
     writer.writeInt32(
       3,
       f
     );
   }
-  f = message.getDataLength();
+  f = message.getSidFid();
   if (f !== 0) {
     writer.writeInt32(
       4,
       f
     );
   }
-  f = message.getContentType();
+  f = message.getDataLength();
   if (f !== 0) {
     writer.writeInt32(
       5,
       f
     );
   }
-  f = message.getProtocolType();
+  f = message.getContentType();
   if (f !== 0) {
     writer.writeInt32(
       6,
       f
     );
   }
-  f = message.getServiceId();
+  f = message.getProtocolType();
   if (f !== 0) {
     writer.writeInt32(
       7,
       f
     );
   }
-  f = message.getFuncId();
+  f = message.getServiceId();
   if (f !== 0) {
     writer.writeInt32(
       8,
       f
     );
   }
-  f = message.getReserved();
-  if (f.length > 0) {
-    writer.writeString(
+  f = message.getFuncId();
+  if (f !== 0) {
+    writer.writeInt32(
       9,
       f
     );
   }
-  f = message.getContent();
+  f = message.getReserved();
   if (f.length > 0) {
     writer.writeString(
       10,
       f
     );
   }
-  f = message.getEndChar();
+  f = message.getContent();
   if (f.length > 0) {
     writer.writeString(
       11,
+      f
+    );
+  }
+  f = message.getEndChar();
+  if (f.length > 0) {
+    writer.writeString(
+      12,
+      f
+    );
+  }
+  f = message.getSourceServiceId();
+  if (f !== 0) {
+    writer.writeInt32(
+      13,
+      f
+    );
+  }
+  f = message.getSourceFuncId();
+  if (f !== 0) {
+    writer.writeInt32(
+      14,
       f
     );
   }
@@ -2057,10 +2093,10 @@ proto.pb.Msg.serializeBinaryToWriter = function(message, writer) {
 
 
 /**
- * optional int32 source_uid = 1;
+ * optional int32 id = 1;
  * @return {number}
  */
-proto.pb.Msg.prototype.getSourceUid = function() {
+proto.pb.Msg.prototype.getId = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 1, 0));
 };
 
@@ -2069,16 +2105,16 @@ proto.pb.Msg.prototype.getSourceUid = function() {
  * @param {number} value
  * @return {!proto.pb.Msg} returns this
  */
-proto.pb.Msg.prototype.setSourceUid = function(value) {
+proto.pb.Msg.prototype.setId = function(value) {
   return jspb.Message.setProto3IntField(this, 1, value);
 };
 
 
 /**
- * optional int32 id = 2;
+ * optional int32 source_uid = 2;
  * @return {number}
  */
-proto.pb.Msg.prototype.getId = function() {
+proto.pb.Msg.prototype.getSourceUid = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 2, 0));
 };
 
@@ -2087,16 +2123,16 @@ proto.pb.Msg.prototype.getId = function() {
  * @param {number} value
  * @return {!proto.pb.Msg} returns this
  */
-proto.pb.Msg.prototype.setId = function(value) {
+proto.pb.Msg.prototype.setSourceUid = function(value) {
   return jspb.Message.setProto3IntField(this, 2, value);
 };
 
 
 /**
- * optional int32 sid_fid = 3;
+ * optional int32 target_uid = 3;
  * @return {number}
  */
-proto.pb.Msg.prototype.getSidFid = function() {
+proto.pb.Msg.prototype.getTargetUid = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 3, 0));
 };
 
@@ -2105,16 +2141,16 @@ proto.pb.Msg.prototype.getSidFid = function() {
  * @param {number} value
  * @return {!proto.pb.Msg} returns this
  */
-proto.pb.Msg.prototype.setSidFid = function(value) {
+proto.pb.Msg.prototype.setTargetUid = function(value) {
   return jspb.Message.setProto3IntField(this, 3, value);
 };
 
 
 /**
- * optional int32 data_length = 4;
+ * optional int32 sid_fid = 4;
  * @return {number}
  */
-proto.pb.Msg.prototype.getDataLength = function() {
+proto.pb.Msg.prototype.getSidFid = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 4, 0));
 };
 
@@ -2123,16 +2159,16 @@ proto.pb.Msg.prototype.getDataLength = function() {
  * @param {number} value
  * @return {!proto.pb.Msg} returns this
  */
-proto.pb.Msg.prototype.setDataLength = function(value) {
+proto.pb.Msg.prototype.setSidFid = function(value) {
   return jspb.Message.setProto3IntField(this, 4, value);
 };
 
 
 /**
- * optional int32 content_type = 5;
+ * optional int32 data_length = 5;
  * @return {number}
  */
-proto.pb.Msg.prototype.getContentType = function() {
+proto.pb.Msg.prototype.getDataLength = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 5, 0));
 };
 
@@ -2141,16 +2177,16 @@ proto.pb.Msg.prototype.getContentType = function() {
  * @param {number} value
  * @return {!proto.pb.Msg} returns this
  */
-proto.pb.Msg.prototype.setContentType = function(value) {
+proto.pb.Msg.prototype.setDataLength = function(value) {
   return jspb.Message.setProto3IntField(this, 5, value);
 };
 
 
 /**
- * optional int32 protocol_type = 6;
+ * optional int32 content_type = 6;
  * @return {number}
  */
-proto.pb.Msg.prototype.getProtocolType = function() {
+proto.pb.Msg.prototype.getContentType = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 6, 0));
 };
 
@@ -2159,16 +2195,16 @@ proto.pb.Msg.prototype.getProtocolType = function() {
  * @param {number} value
  * @return {!proto.pb.Msg} returns this
  */
-proto.pb.Msg.prototype.setProtocolType = function(value) {
+proto.pb.Msg.prototype.setContentType = function(value) {
   return jspb.Message.setProto3IntField(this, 6, value);
 };
 
 
 /**
- * optional int32 service_id = 7;
+ * optional int32 protocol_type = 7;
  * @return {number}
  */
-proto.pb.Msg.prototype.getServiceId = function() {
+proto.pb.Msg.prototype.getProtocolType = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 7, 0));
 };
 
@@ -2177,16 +2213,16 @@ proto.pb.Msg.prototype.getServiceId = function() {
  * @param {number} value
  * @return {!proto.pb.Msg} returns this
  */
-proto.pb.Msg.prototype.setServiceId = function(value) {
+proto.pb.Msg.prototype.setProtocolType = function(value) {
   return jspb.Message.setProto3IntField(this, 7, value);
 };
 
 
 /**
- * optional int32 func_id = 8;
+ * optional int32 service_id = 8;
  * @return {number}
  */
-proto.pb.Msg.prototype.getFuncId = function() {
+proto.pb.Msg.prototype.getServiceId = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 8, 0));
 };
 
@@ -2195,34 +2231,34 @@ proto.pb.Msg.prototype.getFuncId = function() {
  * @param {number} value
  * @return {!proto.pb.Msg} returns this
  */
-proto.pb.Msg.prototype.setFuncId = function(value) {
+proto.pb.Msg.prototype.setServiceId = function(value) {
   return jspb.Message.setProto3IntField(this, 8, value);
 };
 
 
 /**
- * optional string reserved = 9;
+ * optional int32 func_id = 9;
+ * @return {number}
+ */
+proto.pb.Msg.prototype.getFuncId = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 9, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.pb.Msg} returns this
+ */
+proto.pb.Msg.prototype.setFuncId = function(value) {
+  return jspb.Message.setProto3IntField(this, 9, value);
+};
+
+
+/**
+ * optional string reserved = 10;
  * @return {string}
  */
 proto.pb.Msg.prototype.getReserved = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 9, ""));
-};
-
-
-/**
- * @param {string} value
- * @return {!proto.pb.Msg} returns this
- */
-proto.pb.Msg.prototype.setReserved = function(value) {
-  return jspb.Message.setProto3StringField(this, 9, value);
-};
-
-
-/**
- * optional string content = 10;
- * @return {string}
- */
-proto.pb.Msg.prototype.getContent = function() {
   return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 10, ""));
 };
 
@@ -2231,16 +2267,16 @@ proto.pb.Msg.prototype.getContent = function() {
  * @param {string} value
  * @return {!proto.pb.Msg} returns this
  */
-proto.pb.Msg.prototype.setContent = function(value) {
+proto.pb.Msg.prototype.setReserved = function(value) {
   return jspb.Message.setProto3StringField(this, 10, value);
 };
 
 
 /**
- * optional string end_char = 11;
+ * optional string content = 11;
  * @return {string}
  */
-proto.pb.Msg.prototype.getEndChar = function() {
+proto.pb.Msg.prototype.getContent = function() {
   return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 11, ""));
 };
 
@@ -2249,8 +2285,62 @@ proto.pb.Msg.prototype.getEndChar = function() {
  * @param {string} value
  * @return {!proto.pb.Msg} returns this
  */
-proto.pb.Msg.prototype.setEndChar = function(value) {
+proto.pb.Msg.prototype.setContent = function(value) {
   return jspb.Message.setProto3StringField(this, 11, value);
+};
+
+
+/**
+ * optional string end_char = 12;
+ * @return {string}
+ */
+proto.pb.Msg.prototype.getEndChar = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 12, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.pb.Msg} returns this
+ */
+proto.pb.Msg.prototype.setEndChar = function(value) {
+  return jspb.Message.setProto3StringField(this, 12, value);
+};
+
+
+/**
+ * optional int32 source_service_id = 13;
+ * @return {number}
+ */
+proto.pb.Msg.prototype.getSourceServiceId = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 13, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.pb.Msg} returns this
+ */
+proto.pb.Msg.prototype.setSourceServiceId = function(value) {
+  return jspb.Message.setProto3IntField(this, 13, value);
+};
+
+
+/**
+ * optional int32 source_func_id = 14;
+ * @return {number}
+ */
+proto.pb.Msg.prototype.getSourceFuncId = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 14, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.pb.Msg} returns this
+ */
+proto.pb.Msg.prototype.setSourceFuncId = function(value) {
+  return jspb.Message.setProto3IntField(this, 14, value);
 };
 
 

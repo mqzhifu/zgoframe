@@ -540,7 +540,7 @@ Sync.prototype.sendMsg =  function ( action,contentObj  ){
 
         this.wsObj.send(content);
     }else if ( this.contentTypeDesc[this.contentType]  == "protobuf"){
-        debugLog += " contentType: protobuf ";
+        var debugLog = " contentType: protobuf ";
         content = contentObj.serializeBinary();
         // var protocolCtrl = contentType +  "" + protocolType + id;
         // var idBinary = new Uint8Array(protocolCtrl.length);

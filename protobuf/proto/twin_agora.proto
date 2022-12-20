@@ -10,6 +10,7 @@ service TwinAgora {
     rpc SC_CallPeople          (CallPeopleRes)          returns (Empty) {}//返回：呼叫者，刚刚呼叫的结果
     rpc CS_CancelCallPeople    (CancelCallPeopleReq)    returns (Empty) {}//取消呼叫，之前客户端呼叫某人/某些人，进行：音视频通话，突然放弃了
     rpc SC_CancelCallPeople    (CancelCallPeopleReq)    returns (Empty) {}//告知<被呼叫者>：之前的呼叫失效，呼叫者突然放弃了
+    rpc CS_Heartbeat    (Heartbeat)    returns (Empty) {}//心跳
 
     rpc CS_PeopleEntry         (PeopleEntry)            returns (Empty) {}//某人进入了一个房间/频道
     rpc SC_PeopleEntry         (PeopleEntry)            returns (Empty) {}//某人进入了一个房间/频道，通知给C端
@@ -24,6 +25,9 @@ service TwinAgora {
 
     rpc CS_RoomHeartbeat       (RoomHeartbeatReq)       returns (Empty) {}//一个房间的心跳，因为使用声网，后端无法感知
     rpc SC_PushMsg              (PushMsg)               returns (Empty) {}//推送消息给C端，这里主要是推送错误消息
+
+    rpc FdClose             (FDCloseEvent)    returns (Empty) {}//C端长连接关闭，这个并不是C端发起的请求，而是网关获取事件，直接推送到后端服务的
+    rpc FdCreate            (FDCreateEvent)   returns (Empty) {}//C端建立了长连接，并已经登陆成功
 
 }
 //S端推送给C端一些事件

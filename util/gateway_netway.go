@@ -33,7 +33,8 @@ type NetWayOption struct {
 	ProtoMap            *ProtoMap    `json:"-"`                     //外部指针,协议号转换
 	Log                 *zap.Logger  `json:"-"`                     //外部指针,日志
 	//网关接收FD消息后，回调，路由分发具体微服务
-	RouterBack func(msg pb.Msg, conn *Conn) (data interface{}, err error) `json:"-"`
+	//RouterBack func(msg pb.Msg) (data interface{}, err error) `json:"-"`
+	RouterBack func(msg pb.Msg, balanceFactor string, flag int) (data interface{}, err error) `json:"-"`
 
 	//MapSize          int32 `json:"mapSize"`          //帧同步，地图大小，给前端初始化使用，测试使用
 	//OffLineWaitTime  int32 `json:"offLineWaitTime"`  //lockStep 玩家掉线后，其它玩家等待最长时间
@@ -169,8 +170,6 @@ func (netWay *NetWay) OpenNewConn(connFD FDAdapter) {
 	myMetrics.CounterInc("new_fd")
 	netWay.Option.Log.Info("OpenNewConn:" + connFD.RemoteAddr())
 
-	var loginRes pb.LoginRes
-
 	if netWay.Status == NETWAY_STATUS_CLOSE { //当前网关已经关闭了，还有新的连接进来
 		//记录：创建FD失败次数
 		netWay.Metrics.CounterInc("create_fd_failed")
@@ -212,7 +211,7 @@ func (netWay *NetWay) OpenNewConn(connFD FDAdapter) {
 	NewConn.UserId = int32(jwtData.Id)
 	//将新的连接加入到连接池中，并且与玩家ID绑定
 	netWay.ConnManager.addConnPool(NewConn)
-	//if err != nil{
+	//if err != nil{//这里是有重复登陆的情况，以前是不允许，报错。现在换成了直接踢，不报错了
 	//	loginRes = pb.ResponseLoginRes{
 	//		Code: 500,
 	//		ErrMsg: err.Error(),
@@ -221,22 +220,25 @@ func (netWay *NetWay) OpenNewConn(connFD FDAdapter) {
 	//	netWay.CloseOneConn(NewConn, CLOSE_SOURCE_OVERRIDE)
 	//	return
 	//}
+
 	//更新当前连接的属性值
+	//这里以前是直接发，但后面改成了 网关代理发给后端的模式，后端还未收到fd create的时候，这里如果直接发，C端很会收到包，立刻再发新包，后端就会出错
+	//var loginRes pb.LoginRes
 	NewConn.ProtocolType = firstMsg.ProtocolType
 	NewConn.ContentType = firstMsg.ContentType
-	loginRes = pb.LoginRes{
-		Code:   200,
-		ErrMsg: "",
-		Uid:    NewConn.UserId,
-	}
-	//告知玩家：登陆结果
-	NewConn.SendMsgCompressByUid(NewConn.UserId, "SC_Login", &loginRes)
+	//loginRes = pb.LoginRes{
+	//	Code:   200,
+	//	ErrMsg: "",
+	//	Uid:    NewConn.UserId,
+	//}
+	////告知玩家：登陆结果
+	//NewConn.SendMsgCompressByName("Gateway", "SC_Login", &loginRes)
 	//统计 当前FD 数量/历史FD数量
 	netWay.Metrics.CounterInc("create_fd_ok")
 
 	//具体的执行过程，要走一遍gateway 的router ,开始：登陆/验证 过程
 	netWay.Router(firstMsg, NewConn)
-
+	//netWay.Option.RouterBack(firstMsg, "", 1)
 	//初始化即登陆成功的响应均完成后，开始该连接的 消息IO 协程
 	go NewConn.IOLoop()
 	//netWay.serverPingRtt(time.Duration(rttMinTimeSecond),NewWsConn,1)
@@ -244,8 +246,9 @@ func (netWay *NetWay) OpenNewConn(connFD FDAdapter) {
 
 }
 
+//这个是快捷方法类似   gateway_conn_mannger.go  CloseOneConn 方法会调用
 func (netWay *NetWay) Router(msg pb.Msg, conn *Conn) (data interface{}, err error) {
-	return netWay.Option.RouterBack(msg, conn)
+	return netWay.Option.RouterBack(msg, "", 3)
 }
 
 func (netWay *NetWay) heartbeat(requestClientHeartbeat pb.Heartbeat, conn *Conn) {
@@ -256,7 +259,7 @@ func (netWay *NetWay) heartbeat(requestClientHeartbeat pb.Heartbeat, conn *Conn)
 		Time: int64(now),
 	}
 
-	conn.SendMsgCompressByUid(conn.UserId, "SC_Headerbeat", &responseHeartbeat)
+	conn.SendMsgCompressByName("Gateway", "SC_Headerbeat", &responseHeartbeat)
 }
 
 //=================================
@@ -296,7 +299,7 @@ func (netWay *NetWay) loginPreFailedSendMsg(msg string, closeSource int, conn *C
 	}
 	netWay.Metrics.CounterInc("create_fd_failed")
 	netWay.Option.Log.Error("loginPreFailed:" + strconv.Itoa(code) + " " + msg)
-	conn.SendMsgCompressByConn("SC_Login", &loginRes)
+	conn.SendMsgCompressByName("Gateway", "SC_Login", &loginRes)
 	netWay.Option.Log.Info("sleep Millisecond * 500 wait msg sending...")
 	time.Sleep(time.Millisecond * 500) //这里休息半秒，保证普通消息先发出去，且前端正常收到，不然可能：<fd关闭>消息早于消息到达前端
 	conn.CloseOneConn(closeSource)

@@ -4,6 +4,7 @@ import "C"
 import (
 	"container/list"
 	"errors"
+	"github.com/golang/protobuf/proto"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 	"strconv"
@@ -59,10 +60,11 @@ type RoomManager struct {
 }
 
 type RoomManagerOption struct {
-	RequestServiceAdapter *service.RequestServiceAdapter //请求3方服务 适配器
-	Log                   *zap.Logger
-	Gorm                  *gorm.DB
-	FrameSync             *FrameSync
+	//RequestServiceAdapter *service.RequestServiceAdapter //请求3方服务 适配器
+	ServiceBridge *service.Bridge
+	Log           *zap.Logger
+	Gorm          *gorm.DB
+	FrameSync     *FrameSync
 	//ReadyTimeout          int32 //房间人数满足了，等待 所有玩家确认，超时时间
 	//RoomPeople            int32 //房间有多少人后，可以开始游戏了
 	//MapSize               int32 `json:"mapSize"` //帧同步，地图大小，给前端初始化使用（测试使用）
@@ -152,7 +154,9 @@ func (roomManager *RoomManager) GetRoom(requestGetRoom pb.RoomBaseInfo) error {
 		RandSeek: room.RandSeek,
 		RoomId:   room.Id,
 	}
-	roomManager.Option.RequestServiceAdapter.GatewaySendMsgByUid(requestGetRoom.SourceUid, "SC_RoomBaseInfo", &roomBaseInfo)
+	//roomManager.Option.RequestServiceAdapter.GatewaySendMsgByUid(requestGetRoom.SourceUid, "SC_RoomBaseInfo", &roomBaseInfo)
+	data, _ := proto.Marshal(&roomBaseInfo)
+	roomManager.Option.ServiceBridge.CallByName("Gateway", "SC_RoomBaseInfo", string(data), "", 0)
 	//conn.SendMsgCompressByUid(requestGetRoom.SourceUid, "pushRoomInfo", &ResponsePushRoomInfo)
 	return nil
 }
@@ -219,11 +223,12 @@ func (roomManager *RoomManager) AddOne(room *Room) error {
 	//帧同步服务 - 强-依赖room
 	syncOption := SyncOption{
 		//ProjectId:             C.System.ProjectId,
-		RequestServiceAdapter: room.RoomManager.Option.RequestServiceAdapter,
-		Log:                   room.RoomManager.Option.Log,
-		Room:                  room,
-		RoomManage:            room.RoomManager,
-		FPS:                   int32(rule.Fps),
+		//RequestServiceAdapter: room.RoomManager.Option.RequestServiceAdapter,
+		ServiceBridge: room.RoomManager.Option.ServiceBridge,
+		Log:           room.RoomManager.Option.Log,
+		Room:          room,
+		RoomManage:    room.RoomManager,
+		FPS:           int32(rule.Fps),
 	}
 
 	room.Sync = NewSync(syncOption)

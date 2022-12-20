@@ -2,11 +2,13 @@ package frame_sync
 
 import (
 	"errors"
+	"github.com/golang/protobuf/proto"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 	"strconv"
 	"zgoframe/protobuf/pb"
 	"zgoframe/service"
+	"zgoframe/util"
 )
 
 type FrameSync struct {
@@ -17,14 +19,16 @@ type FrameSync struct {
 }
 
 type FrameSyncOption struct {
-	ProjectId             int                            `json:"project_id"`         //项目Id,给玩家推送消失的时候使用
-	FPS                   int32                          `json:"fps"`                //frame pre second
-	LockMode              int32                          `json:"lock_mode"`          //锁模式，乐观|悲观
-	Store                 int32                          `json:"store"`              //持久化，玩家每帧的动作，暂未使用
-	OffLineWaitTime       int                            `json:"off_line_wait_time"` //lockStep 玩家掉线后，其它玩家等待最长时间
-	Gorm                  *gorm.DB                       `json:"-"`                  //
-	RequestServiceAdapter *service.RequestServiceAdapter `json:"-"`                  //请求3方服务 适配器
-	Log                   *zap.Logger                    `json:"-"`
+	ProtoMap        *util.ProtoMap `json:"-"`
+	ProjectId       int            `json:"project_id"`         //项目Id,给玩家推送消失的时候使用
+	FPS             int32          `json:"fps"`                //frame pre second
+	LockMode        int32          `json:"lock_mode"`          //锁模式，乐观|悲观
+	Store           int32          `json:"store"`              //持久化，玩家每帧的动作，暂未使用
+	OffLineWaitTime int            `json:"off_line_wait_time"` //lockStep 玩家掉线后，其它玩家等待最长时间
+	Gorm            *gorm.DB       `json:"-"`                  //
+	//RequestServiceAdapter *service.RequestServiceAdapter `json:"-"`                  //请求3方服务 适配器
+	ServiceBridge *service.Bridge
+	Log           *zap.Logger `json:"-"`
 
 	//MapSize               int32                          `json:"map_size"` //地址大小，给前端初始化使用
 }
@@ -39,10 +43,11 @@ func NewFrameSync(Option FrameSyncOption) *FrameSync {
 
 	//帧同步 - 房间服务 - room要先实例化,math frame_sync 都强依赖room
 	roomManagerOption := RoomManagerOption{
-		Log:                   Option.Log,
-		RequestServiceAdapter: Option.RequestServiceAdapter,
-		Gorm:                  Option.Gorm,
-		FrameSync:             sync,
+		Log: Option.Log,
+		//RequestServiceAdapter: Option.RequestServiceAdapter,
+		ServiceBridge: Option.ServiceBridge,
+		Gorm:          Option.Gorm,
+		FrameSync:     sync,
 	}
 	sync.RoomManage = NewRoomManager(roomManagerOption)
 
@@ -50,6 +55,7 @@ func NewFrameSync(Option FrameSyncOption) *FrameSync {
 
 	//用于关闭
 	sync.CloseChan = make(chan int)
+	go sync.ListeningBridgeMsg()
 	return sync
 }
 
@@ -61,7 +67,9 @@ func (sync *FrameSync) GetPlayerBase(playerBase pb.PlayerBase) {
 		RoomId:   conn.RoomId,
 		PlayerId: playerBase.PlayerId,
 	}
-	sync.Option.RequestServiceAdapter.GatewaySendMsgByUid(playerBase.PlayerId, "SC_PlayerState", &playerState)
+	data, _ := proto.Marshal(&playerState)
+	//sync.Option.RequestServiceAdapter.GatewaySendMsgByUid(playerBase.PlayerId, "SC_PlayerState", &playerState)
+	sync.Option.ServiceBridge.CallGateway("FrameSync", "SC_PlayerState", 9999, playerBase.SourceUid, string(data), "", 0)
 }
 
 func (sync *FrameSync) CreateFD(fd pb.FDCreateEvent) error {

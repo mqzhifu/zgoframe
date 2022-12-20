@@ -3,6 +3,7 @@ package seed_business
 import (
 	"context"
 	"errors"
+	"github.com/golang/protobuf/proto"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 	"strconv"
@@ -15,19 +16,19 @@ import (
 )
 
 type TwinAgora struct {
-	Op                    TwinAgoraOption
-	Gorm                  *gorm.DB
-	RTCUserPool           map[int]*RTCUser               //用户池
-	RTCRoomPool           map[string]*RTCRoom            //房间池
-	CallTimeout           int                            //一次呼叫，超时时间
-	ExecTimeout           int                            //一次通话，超时时间
-	ResAcceptTimeout      int                            //专家端收到  确定  取消  请求后，超时时间
-	EntryTimeout          int                            //专家端同意了通话，此时对端迟迟未进入房间
-	UserHeartbeatTimeout  int                            //一个用户建立的长连接，超时时间
-	Separate              string                         //一个房间信息转换成字符串的：分隔符
-	RequestServiceAdapter *service.RequestServiceAdapter //请求3方服务 适配器
-	CancelFunc            context.CancelFunc
-	CancelCtx             context.Context
+	Op                   TwinAgoraOption
+	Gorm                 *gorm.DB
+	RTCUserPool          map[int]*RTCUser    //用户池
+	RTCRoomPool          map[string]*RTCRoom //房间池
+	CallTimeout          int                 //一次呼叫，超时时间
+	ExecTimeout          int                 //一次通话，超时时间
+	ResAcceptTimeout     int                 //专家端收到  确定  取消  请求后，超时时间
+	EntryTimeout         int                 //专家端同意了通话，此时对端迟迟未进入房间
+	UserHeartbeatTimeout int                 //一个用户建立的长连接，超时时间
+	Separate             string              //一个房间信息转换成字符串的：分隔符
+	//RequestServiceAdapter *service.RequestServiceAdapter //请求3方服务 适配器
+	CancelFunc context.CancelFunc
+	CancelCtx  context.Context
 	//ConnManager           *util.ConnManager
 	//Err                  map[int]string
 	Log  *zap.Logger
@@ -60,10 +61,12 @@ type RTCRoom struct {
 }
 
 type TwinAgoraOption struct {
-	Gorm                  *gorm.DB
-	Log                   *zap.Logger
-	StaticPath            string
-	RequestServiceAdapter *service.RequestServiceAdapter
+	ProtoMap   *util.ProtoMap `json:"-"`
+	Gorm       *gorm.DB
+	Log        *zap.Logger
+	StaticPath string
+	//RequestServiceAdapter *service.RequestServiceAdapter
+	ServiceBridge *service.Bridge
 }
 
 func NewTwinAgora(op TwinAgoraOption) (*TwinAgora, error) {
@@ -77,7 +80,8 @@ func NewTwinAgora(op TwinAgoraOption) (*TwinAgora, error) {
 	twinAgora.Separate = "##"                         //一个房间信息转换成字符串的：分隔符
 	twinAgora.RTCRoomPool = make(map[string]*RTCRoom) //房间池
 	twinAgora.RTCUserPool = make(map[int]*RTCUser)    //用户池
-	twinAgora.RequestServiceAdapter = op.RequestServiceAdapter
+	//twinAgora.RequestServiceAdapter = op.RequestServiceAdapter
+
 	twinAgora.Log = op.Log
 	twinAgora.Op = op
 
@@ -91,6 +95,7 @@ func NewTwinAgora(op TwinAgoraOption) (*TwinAgora, error) {
 	}
 	twinAgora.Lang = lang
 
+	go twinAgora.ListeningBridgeMsg()
 	return twinAgora, nil
 }
 
@@ -243,7 +248,9 @@ func (twinAgora *TwinAgora) PushMsg(uid int, code int, eventId int, content stri
 		EventId: int32(eventId),
 		Content: content,
 	}
-	twinAgora.RequestServiceAdapter.GatewaySendMsgByUid(int32(uid), "SC_PushMsg", pushMsg)
+	data, _ := proto.Marshal(&pushMsg)
+	//twinAgora.RequestServiceAdapter.GatewaySendMsgByUid(int32(uid), "SC_PushMsg", pushMsg)
+	twinAgora.Op.ServiceBridge.CallByName("Gateway", "SC_PushMsg", string(data), "", 0)
 	//conn.GatewaySendMsgByUid(int32(uid), "SC_PushMsg", pushMsg)
 }
 
@@ -302,7 +309,9 @@ func (twinAgora *TwinAgora) RoomEnd(roomId string, endStatus int) {
 			peopleLeaveRes.Channel = roomInfo.Channel
 			peopleLeaveRes.RoomId = roomInfo.Id
 
-			twinAgora.RequestServiceAdapter.GatewaySendMsgByUid(int32(uid), "SC_PeopleLeave", peopleLeaveRes)
+			data, _ := proto.Marshal(&peopleLeaveRes)
+			twinAgora.Op.ServiceBridge.CallByName("Gateway", "SC_PeopleLeave", string(data), "", 0)
+			//twinAgora.RequestServiceAdapter.GatewaySendMsgByUid(int32(uid), "SC_PeopleLeave", peopleLeaveRes)
 			//conn.GatewaySendMsgByUid(int32(uid), "SC_PeopleLeave", peopleLeaveRes)
 			//}
 			myRTCUser.RoomId = ""

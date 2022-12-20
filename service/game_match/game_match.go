@@ -50,33 +50,35 @@ import (
 */
 
 type GameMatchOption struct {
-	ProjectId              int                            `json:"project_id"`
-	StaticPath             string                         `json:"static_path"`               //静态文件公共目录,用于读取语言包
-	RuleDataSourceType     int                            `json:"rule_data_source_type"`     //rule的数据来源类型
-	PersistenceType        int                            `json:"persistence_type"`          //持久化类型，0关闭
-	RedisPrefix            string                         `json:"redis_prefix"`              //redis公共的前缀，主要是怕key重复
-	RedisTextSeparator     string                         `json:"redis_text_separator"`      //结构体不能直接存到redis中，得手动分隔存进去。不存JSON是因为浪费空间
-	RedisKeySeparator      string                         `json:"redis_key_separator"`       //redis key 的分隔符号
-	RedisIdSeparator       string                         `json:"redis_id_separator"`        //一个大的结构被转化成字符串后，有些元素是复合结构，如IDS。得有个分隔符
-	RedisPayloadSeparation string                         `json:"redis_payload_separation"`  //也是redis内容的分隔符，但它包含了其它的内容，与其它内容的分隔符冲突，所以得新起一个
-	LoopSleepTime          int                            `json:"loop_sleep_time"`           //有些死循环守护协程，需要睡眠的场景,毫秒
-	FormulaFirst           string                         `json:"formula_first"`             //游戏匹配-计算权重公式-前缀
-	FormulaEnd             string                         `json:"formula_end"`               //游戏匹配-计算权重公式-后缀
-	WeightMaxValue         int                            `json:"weight_max_value"`          //玩家权重上限值
-	RuleDebugShow          int                            `json:"rule_debug_show"`           //守护协程，在没有处理数据时，需要输出日志，太多，每X秒输出一次
-	RuleTeamMaxPeople      int                            `json:"rule_team_max_people"`      //一个小组允许最大人数
-	RulePersonConditionMax int                            `json:"rule_person_condition_max"` //N人组团，最大人数
-	RuleMatchTimeoutMax    int                            `json:"rule_match_timeout_max"`    //报名，最大超时时间
-	RuleMatchTimeoutMin    int                            `json:"rule_match_timeout_min"`    //报名，最小时间
-	RuleSuccessTimeoutMax  int                            `json:"rule_success_timeout_max"`  //匹配成功后，最大超时时间
-	RuleSuccessTimeoutMin  int                            `json:"rule_success_timeout_min"`  //匹配成功后，最短超时时间
-	FrameSync              *frame_sync.FrameSync          `json:"-"`                         //帧同步
-	RequestServiceAdapter  *service.RequestServiceAdapter `json:"-"`                         //请求3方服务 适配器
-	Log                    *zap.Logger                    `json:"-"`                         //log 实例
-	Redis                  *util.MyRedisGo                `json:"-"`                         //redis 实例
-	Gorm                   *gorm.DB                       `json:"-"`                         //mysql 实例
-	Metrics                *util.MyMetrics                `json:"-"`                         //统计 实例
-	ServiceDiscovery       *util.ServiceDiscovery         `json:"-"`                         //服务发现 实例
+	ProjectId              int                   `json:"project_id"`
+	StaticPath             string                `json:"static_path"`               //静态文件公共目录,用于读取语言包
+	RuleDataSourceType     int                   `json:"rule_data_source_type"`     //rule的数据来源类型
+	PersistenceType        int                   `json:"persistence_type"`          //持久化类型，0关闭
+	RedisPrefix            string                `json:"redis_prefix"`              //redis公共的前缀，主要是怕key重复
+	RedisTextSeparator     string                `json:"redis_text_separator"`      //结构体不能直接存到redis中，得手动分隔存进去。不存JSON是因为浪费空间
+	RedisKeySeparator      string                `json:"redis_key_separator"`       //redis key 的分隔符号
+	RedisIdSeparator       string                `json:"redis_id_separator"`        //一个大的结构被转化成字符串后，有些元素是复合结构，如IDS。得有个分隔符
+	RedisPayloadSeparation string                `json:"redis_payload_separation"`  //也是redis内容的分隔符，但它包含了其它的内容，与其它内容的分隔符冲突，所以得新起一个
+	LoopSleepTime          int                   `json:"loop_sleep_time"`           //有些死循环守护协程，需要睡眠的场景,毫秒
+	FormulaFirst           string                `json:"formula_first"`             //游戏匹配-计算权重公式-前缀
+	FormulaEnd             string                `json:"formula_end"`               //游戏匹配-计算权重公式-后缀
+	WeightMaxValue         int                   `json:"weight_max_value"`          //玩家权重上限值
+	RuleDebugShow          int                   `json:"rule_debug_show"`           //守护协程，在没有处理数据时，需要输出日志，太多，每X秒输出一次
+	RuleTeamMaxPeople      int                   `json:"rule_team_max_people"`      //一个小组允许最大人数
+	RulePersonConditionMax int                   `json:"rule_person_condition_max"` //N人组团，最大人数
+	RuleMatchTimeoutMax    int                   `json:"rule_match_timeout_max"`    //报名，最大超时时间
+	RuleMatchTimeoutMin    int                   `json:"rule_match_timeout_min"`    //报名，最小时间
+	RuleSuccessTimeoutMax  int                   `json:"rule_success_timeout_max"`  //匹配成功后，最大超时时间
+	RuleSuccessTimeoutMin  int                   `json:"rule_success_timeout_min"`  //匹配成功后，最短超时时间
+	FrameSync              *frame_sync.FrameSync `json:"-"`                         //帧同步
+	ServiceBridge          *service.Bridge
+	//RequestServiceAdapter  *service.RequestServiceAdapter `json:"-"`                         //请求3方服务 适配器
+	Log              *zap.Logger            `json:"-"` //log 实例
+	Redis            *util.MyRedisGo        `json:"-"` //redis 实例
+	Gorm             *gorm.DB               `json:"-"` //mysql 实例
+	Metrics          *util.MyMetrics        `json:"-"` //统计 实例
+	ServiceDiscovery *util.ServiceDiscovery `json:"-"` //服务发现 实例
+	ProtoMap         *util.ProtoMap         `json:"-"`
 }
 
 type GameMatch struct {
@@ -113,9 +115,10 @@ func NewGameMatch(option GameMatchOption) (*GameMatch, error) {
 	}
 	gameMatch.Err = lang
 	ruleManagerOption := RuleManagerOption{
-		Gorm:                  option.Gorm,
-		GameMatch:             gameMatch,
-		RequestServiceAdapter: option.RequestServiceAdapter,
+		Gorm:      option.Gorm,
+		GameMatch: gameMatch,
+		//RequestServiceAdapter: option.RequestServiceAdapter,
+		ServiceBridge: option.ServiceBridge,
 	}
 
 	gameMatch.RuleManager, err = NewRuleManager(ruleManagerOption)
@@ -128,6 +131,7 @@ func NewGameMatch(option GameMatchOption) (*GameMatch, error) {
 
 	gameMatch.RuleManager.StartupAll()
 
+	go gameMatch.ListeningBridgeMsg()
 	return gameMatch, nil
 }
 

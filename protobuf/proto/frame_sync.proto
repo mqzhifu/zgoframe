@@ -14,6 +14,7 @@ service FrameSync {
     rpc CS_RoomHistory             ( ReqRoomHistory)        returns (Empty) {}//房间历史记录，如：玩家操作信息
     rpc CS_RoomBaseInfo            ( RoomBaseInfo)          returns (Empty) {}//获取一个房间的基础信息
     rpc CS_PlayerState             ( PlayerBase)          returns (Empty) {}//获取一个玩家当前的状态
+    rpc CS_Heartbeat    (Heartbeat)    returns (Empty) {}//心跳
 
     rpc SC_ReadyTimeout            ( ReadyTimeout)          returns (Empty) {}//准备超时
     rpc SC_EnterBattle             ( EnterBattle)           returns (Empty) {}//开始游戏前初始化
@@ -27,6 +28,10 @@ service FrameSync {
     rpc SC_RestartGame             ( RestartGame)           returns (Empty) {}//玩家均已在线，重新开始游戏
     rpc SC_GameOver                ( GameOver)              returns (Empty) {}//一局游戏结束
     rpc SC_PlayerState             ( PlayerState)           returns (Empty) {}//一个玩家当前的状态
+    rpc SC_Heartbeat         (Heartbeat)    returns (Empty) {}//心跳
+
+    rpc FdClose             (FDCloseEvent)    returns (Empty) {}//C端长连接关闭，这个并不是C端发起的请求，而是网关获取事件，直接推送到后端服务的
+    rpc FdCreate            (FDCreateEvent)   returns (Empty) {}//C端建立了长连接，并已经登陆成功
 }
 
 message RoomBaseInfo{

@@ -2,6 +2,7 @@ package seed_business
 
 import (
 	"errors"
+	"github.com/golang/protobuf/proto"
 	uuid "github.com/satori/go.uuid"
 	"go.uber.org/zap"
 	"strconv"
@@ -20,7 +21,9 @@ func (twinAgora *TwinAgora) CallPeople(callPeopleReq pb.CallPeopleReq) {
 		callPeopleRes.ErrCode = 400
 		callPeopleRes.ErrMsg = twinAgora.Lang.NewString(400)
 		twinAgora.MakeError(callPeopleRes.ErrMsg)
-		twinAgora.RequestServiceAdapter.GatewaySendMsgByUid(callPeopleReq.SourceUid, "SC_CallPeople", callPeopleRes)
+		//twinAgora.RequestServiceAdapter.GatewaySendMsgByUid(callPeopleReq.SourceUid, "SC_CallPeople", callPeopleRes)
+		data, _ := proto.Marshal(&callPeopleRes)
+		twinAgora.Op.ServiceBridge.CallGateway("TwinAgora", "SC_CallPeople", 9999, callPeopleReq.SourceUid, string(data), "", 0)
 		return
 	}
 
@@ -28,7 +31,9 @@ func (twinAgora *TwinAgora) CallPeople(callPeopleReq pb.CallPeopleReq) {
 		callPeopleRes.ErrCode = 420
 		callPeopleRes.ErrMsg = twinAgora.Lang.NewString(420)
 		twinAgora.MakeError(callPeopleRes.ErrMsg)
-		twinAgora.RequestServiceAdapter.GatewaySendMsgByUid(callPeopleReq.SourceUid, "SC_CallPeople", callPeopleRes)
+		//twinAgora.RequestServiceAdapter.GatewaySendMsgByUid(callPeopleReq.SourceUid, "SC_CallPeople", callPeopleRes)
+		data, _ := proto.Marshal(&callPeopleRes)
+		twinAgora.Op.ServiceBridge.CallGateway("TwinAgora", "SC_CallPeople", 9999, callPeopleReq.SourceUid, string(data), "", 0)
 		return
 	}
 
@@ -36,7 +41,9 @@ func (twinAgora *TwinAgora) CallPeople(callPeopleReq pb.CallPeopleReq) {
 		callPeopleRes.ErrCode = 421
 		callPeopleRes.ErrMsg = twinAgora.Lang.NewString(421)
 		twinAgora.MakeError(callPeopleRes.ErrMsg)
-		twinAgora.RequestServiceAdapter.GatewaySendMsgByUid(callPeopleReq.SourceUid, "SC_CallPeople", callPeopleRes)
+		//twinAgora.RequestServiceAdapter.GatewaySendMsgByUid(callPeopleReq.SourceUid, "SC_CallPeople", callPeopleRes)
+		data, _ := proto.Marshal(&callPeopleRes)
+		twinAgora.Op.ServiceBridge.CallGateway("TwinAgora", "SC_CallPeople", 9999, callPeopleReq.SourceUid, string(data), "", 0)
 		return
 	}
 
@@ -47,7 +54,9 @@ func (twinAgora *TwinAgora) CallPeople(callPeopleReq pb.CallPeopleReq) {
 			callPeopleRes.ErrCode = 501
 			callPeopleRes.ErrMsg = twinAgora.Lang.NewReplaceOneString(501, myRTCUser.RoomId)
 			twinAgora.MakeError(callPeopleRes.ErrMsg)
-			twinAgora.RequestServiceAdapter.GatewaySendMsgByUid(callPeopleReq.SourceUid, "SC_CallPeople", callPeopleRes)
+			//twinAgora.RequestServiceAdapter.GatewaySendMsgByUid(callPeopleReq.SourceUid, "SC_CallPeople", callPeopleRes)
+			data, _ := proto.Marshal(&callPeopleRes)
+			twinAgora.Op.ServiceBridge.CallGateway("TwinAgora", "SC_CallPeople", 9999, callPeopleReq.SourceUid, string(data), "", 0)
 			return
 		}
 
@@ -55,7 +64,9 @@ func (twinAgora *TwinAgora) CallPeople(callPeopleReq pb.CallPeopleReq) {
 			callPeopleRes.ErrCode = 514
 			callPeopleRes.ErrMsg = twinAgora.Lang.NewReplaceOneString(514, myRTCUser.RoomId)
 			twinAgora.MakeError(callPeopleRes.ErrMsg)
-			twinAgora.RequestServiceAdapter.GatewaySendMsgByUid(callPeopleReq.SourceUid, "SC_CallPeople", callPeopleRes)
+			//twinAgora.RequestServiceAdapter.GatewaySendMsgByUid(callPeopleReq.SourceUid, "SC_CallPeople", callPeopleRes)
+			data, _ := proto.Marshal(&callPeopleRes)
+			twinAgora.Op.ServiceBridge.CallGateway("TwinAgora", "SC_CallPeople", 9999, callPeopleReq.SourceUid, string(data), "", 0)
 			return
 		}
 
@@ -63,7 +74,9 @@ func (twinAgora *TwinAgora) CallPeople(callPeopleReq pb.CallPeopleReq) {
 			callPeopleRes.ErrCode = 513
 			callPeopleRes.ErrMsg = twinAgora.Lang.NewReplaceOneString(513, myRTCUser.RoomId)
 			twinAgora.MakeError(callPeopleRes.ErrMsg)
-			twinAgora.RequestServiceAdapter.GatewaySendMsgByUid(callPeopleReq.SourceUid, "SC_CallPeople", callPeopleRes)
+			//twinAgora.RequestServiceAdapter.GatewaySendMsgByUid(callPeopleReq.SourceUid, "SC_CallPeople", callPeopleRes)
+			data, _ := proto.Marshal(&callPeopleRes)
+			twinAgora.Op.ServiceBridge.CallGateway("TwinAgora", "SC_CallPeople", 9999, callPeopleReq.SourceUid, string(data), "", 0)
 			return
 		}
 		//该房间状态已经结束了，但未做清算处理(持久化)，这里做个容错吧
@@ -71,7 +84,9 @@ func (twinAgora *TwinAgora) CallPeople(callPeopleReq pb.CallPeopleReq) {
 			callPeopleRes.ErrCode = 510
 			callPeopleRes.ErrMsg = twinAgora.Lang.NewReplaceOneString(510, RTCRoomInfo.Id)
 			twinAgora.MakeError(callPeopleRes.ErrMsg)
-			twinAgora.RequestServiceAdapter.GatewaySendMsgByUid(callPeopleReq.SourceUid, "SC_CallPeople", callPeopleRes)
+			//twinAgora.RequestServiceAdapter.GatewaySendMsgByUid(callPeopleReq.SourceUid, "SC_CallPeople", callPeopleRes)
+			data, _ := proto.Marshal(&callPeopleRes)
+			twinAgora.Op.ServiceBridge.CallGateway("TwinAgora", "SC_CallPeople", 9999, callPeopleReq.SourceUid, string(data), "", 0)
 			return
 		}
 	}
@@ -82,7 +97,9 @@ func (twinAgora *TwinAgora) CallPeople(callPeopleReq pb.CallPeopleReq) {
 		callPeopleRes.ErrCode = 402
 		callPeopleRes.ErrMsg = twinAgora.Lang.NewString(402)
 		twinAgora.MakeError(callPeopleRes.ErrMsg)
-		twinAgora.RequestServiceAdapter.GatewaySendMsgByUid(callPeopleReq.SourceUid, "SC_CallPeople", callPeopleRes)
+		//twinAgora.RequestServiceAdapter.GatewaySendMsgByUid(callPeopleReq.SourceUid, "SC_CallPeople", callPeopleRes)
+		data, _ := proto.Marshal(&callPeopleRes)
+		twinAgora.Op.ServiceBridge.CallGateway("TwinAgora", "SC_CallPeople", 9999, callPeopleReq.Uid, string(data), "", 0)
 		return
 	}
 
@@ -103,7 +120,9 @@ func (twinAgora *TwinAgora) CallPeople(callPeopleReq pb.CallPeopleReq) {
 		callPeopleRes.ErrCode = 403
 		callPeopleRes.ErrMsg = twinAgora.Lang.NewString(403)
 		twinAgora.MakeError(callPeopleRes.ErrMsg)
-		twinAgora.RequestServiceAdapter.GatewaySendMsgByUid(callPeopleReq.SourceUid, "SC_CallPeople", callPeopleRes)
+		//twinAgora.RequestServiceAdapter.GatewaySendMsgByUid(callPeopleReq.SourceUid, "SC_CallPeople", callPeopleRes)
+		data, _ := proto.Marshal(&callPeopleRes)
+		twinAgora.Op.ServiceBridge.CallGateway("TwinAgora", "SC_CallPeople", 9999, callPeopleReq.SourceUid, string(data), "", 0)
 		return
 	}
 
@@ -111,7 +130,9 @@ func (twinAgora *TwinAgora) CallPeople(callPeopleReq pb.CallPeopleReq) {
 		callPeopleRes.ErrCode = 422
 		callPeopleRes.ErrMsg = twinAgora.Lang.NewReplaceOneString(422, onlineUserDoctorListUids)
 		twinAgora.MakeError(callPeopleRes.ErrMsg)
-		twinAgora.RequestServiceAdapter.GatewaySendMsgByUid(callPeopleReq.SourceUid, "SC_CallPeople", callPeopleRes)
+		//twinAgora.RequestServiceAdapter.GatewaySendMsgByUid(callPeopleReq.SourceUid, "SC_CallPeople", callPeopleRes)
+		data, _ := proto.Marshal(&callPeopleRes)
+		twinAgora.Op.ServiceBridge.CallGateway("TwinAgora", "SC_CallPeople", 9999, callPeopleReq.SourceUid, string(data), "", 0)
 		return
 	}
 
@@ -122,7 +143,10 @@ func (twinAgora *TwinAgora) CallPeople(callPeopleReq pb.CallPeopleReq) {
 		callReply := pb.CallReply{}
 		callReply.RoomId = myRTCRoom.Id
 		callReply.Content = strconv.Itoa(int(callPeopleReq.Uid)) + " calling....... please reply:" + callPeopleReq.Channel
-		twinAgora.RequestServiceAdapter.GatewaySendMsgByUid(int32(user.Id), "SC_CallReply", callReply)
+		//twinAgora.RequestServiceAdapter.GatewaySendMsgByUid(int32(user.Id), "SC_CallReply", callReply)
+
+		data, _ := proto.Marshal(&callReply)
+		twinAgora.Op.ServiceBridge.CallGateway("TwinAgora", "SC_CallReply", 9999, int32(user.Id), string(data), "", 0)
 	}
 
 	myRTCUser.RoomId = myRTCRoom.Id
@@ -132,7 +156,9 @@ func (twinAgora *TwinAgora) CallPeople(callPeopleReq pb.CallPeopleReq) {
 	callPeopleRes.ErrMsg = "waiting doctor reply"
 	callPeopleRes.ReceiveUid = receiveUidsStr[0 : len(receiveUidsStr)-1]
 
-	twinAgora.RequestServiceAdapter.GatewaySendMsgByUid(callPeopleReq.SourceUid, "SC_CallPeople", callPeopleRes)
+	//twinAgora.RequestServiceAdapter.GatewaySendMsgByUid(callPeopleReq.SourceUid, "SC_CallPeople", callPeopleRes)
+	data, _ := proto.Marshal(&callPeopleRes)
+	twinAgora.Op.ServiceBridge.CallGateway("TwinAgora", "SC_CallPeople", 9999, callPeopleReq.SourceUid, string(data), "", 0)
 
 	return
 }
@@ -206,7 +232,9 @@ func (twinAgora *TwinAgora) CancelCallPeople(cancelCallPeopleReq pb.CancelCallPe
 		if int(cancelCallPeopleReq.Uid) == uid {
 			continue
 		}
-		twinAgora.RequestServiceAdapter.GatewaySendMsgByUid(int32(uid), "SC_CancelCallPeople", cancelCallPeopleReq)
+		//twinAgora.RequestServiceAdapter.GatewaySendMsgByUid(int32(uid), "SC_CancelCallPeople", cancelCallPeopleReq)
+		data, _ := proto.Marshal(&cancelCallPeopleReq)
+		twinAgora.Op.ServiceBridge.CallGateway("TwinAgora", "SC_CancelCallPeople", 9999, int32(uid), string(data), "", 0)
 	}
 	//清空user的roomId值，RoomEnd只会清空掉已进入房间的用户，而此时房间虽然存在，但没有人进入，用户直接取消了，把给清空一下
 	myRTCUser.RoomId = ""
@@ -246,7 +274,9 @@ func (twinAgora *TwinAgora) PeopleEntry(peopleEntry pb.PeopleEntry) error {
 		if int(peopleEntry.SourceUid) == uid {
 			continue
 		}
-		twinAgora.RequestServiceAdapter.GatewaySendMsgByUid(int32(uid), "SC_PeopleEntry", peopleEntry)
+		//twinAgora.RequestServiceAdapter.GatewaySendMsgByUid(int32(uid), "SC_PeopleEntry", peopleEntry)
+		data, _ := proto.Marshal(&peopleEntry)
+		twinAgora.Op.ServiceBridge.CallGateway("TwinAgora", "SC_PeopleEntry", 9999, int32(uid), string(data), "", 0)
 	}
 	RTCRoomInfo.OnlineUids = append(RTCRoomInfo.OnlineUids, int(peopleEntry.Uid))
 
@@ -352,7 +382,10 @@ func (twinAgora *TwinAgora) CallPeopleAccept(callVote pb.CallVote) error {
 	RTCRoomInfo.ReceiveUidsAccept = append(RTCRoomInfo.ReceiveUidsAccept, int(callVote.Uid))
 	//util.MyPrint("RTCRoomInfo.ReceiveUidsAccept:", RTCRoomInfo.ReceiveUidsAccept)
 	//RTCRoomInfo.Uids = append(RTCRoomInfo.Uids, int(callVote.Uid))
-	twinAgora.RequestServiceAdapter.GatewaySendMsgByUid(int32(RTCRoomInfo.CallUid), "SC_CallPeopleAccept", callVote)
+	//twinAgora.RequestServiceAdapter.GatewaySendMsgByUid(int32(RTCRoomInfo.CallUid), "SC_CallPeopleAccept", callVote)
+	data, _ := proto.Marshal(&callVote)
+	twinAgora.Op.ServiceBridge.CallGateway("TwinAgora", "SC_CallPeopleAccept", 9999, int32(RTCRoomInfo.CallUid), string(data), "", 0)
+
 	//目前是1v1视频，只要有一个接收，即把房间状态标识为运行中，这里后期优化一下吧
 	RTCRoomInfo.Status = service.RTC_ROOM_STATUS_EXECING
 	return nil
@@ -370,7 +403,10 @@ func (twinAgora *TwinAgora) CallPeopleDeny(callVote pb.CallVote) error {
 		return twinAgora.MakeError(twinAgora.Lang.NewReplaceOneString(512, callVote.RoomId))
 	}
 	RTCRoomInfo.ReceiveUidsDeny = append(RTCRoomInfo.ReceiveUidsDeny, int(callVote.Uid))
-	twinAgora.RequestServiceAdapter.GatewaySendMsgByUid(int32(RTCRoomInfo.CallUid), "SC_CallPeopleDeny", callVote)
+	//twinAgora.RequestServiceAdapter.GatewaySendMsgByUid(int32(RTCRoomInfo.CallUid), "SC_CallPeopleDeny", callVote)
+	data, _ := proto.Marshal(&callVote)
+	twinAgora.Op.ServiceBridge.CallGateway("TwinAgora", "SC_CallPeopleDeny", 9999, int32(RTCRoomInfo.CallUid), string(data), "", 0)
+
 	twinAgora.RoomEnd(callVote.RoomId, service.RTC_ROOM_END_STATUS_DENY)
 	return err
 

@@ -1,5 +1,15 @@
 package service
 
+/*
+网关->调用 后端服务 或 后端服务调用 -> 网关
+
+这种调用的方式分成了两大类
+	1. 纯内部进程函数调用，其实也就是后端服务与网关未分离，都是一个程序
+	2. 网络调用
+		(1) http
+		(2) grpc
+*/
+
 import (
 	"errors"
 	"go.uber.org/zap"
@@ -42,6 +52,8 @@ func NewRequestServiceAdapter(ServiceDiscovery *util.ServiceDiscovery, grpcManag
 	//requestService.Gateway = gateway
 	return requestService
 }
+
+//网关内部调用服务
 func (requestService *RequestServiceAdapter) GatewaySendMsgByUids(uids string, funcName string, requestData interface{}) {
 	requestService.Log.Debug("RequestServiceAdapter GatewaySendMsgByUids :" + uids + " funcName:" + funcName)
 	uidsArr := strings.Split(uids, ",")
@@ -56,6 +68,7 @@ func (requestService *RequestServiceAdapter) GatewaySendMsgByUids(uids string, f
 	}
 }
 
+//网关内部调用服务
 func (requestService *RequestServiceAdapter) GatewaySendMsgByUid(uid int32, funcName string, requestData interface{}) {
 	n := GatewayMsg{
 		Uid:        uid,
@@ -65,6 +78,7 @@ func (requestService *RequestServiceAdapter) GatewaySendMsgByUid(uid int32, func
 	requestService.QueueGatewayMsg <- n
 }
 
+//网络远程调用
 func (requestService *RequestServiceAdapter) RemoteCall(serviceName string, funcName string, balanceFactor string, requestData interface{}, httpUri string) (interface{}, error) {
 	switch requestService.Flag {
 	case REQ_SERVICE_METHOD_HTTP:
@@ -73,7 +87,7 @@ func (requestService *RequestServiceAdapter) RemoteCall(serviceName string, func
 		http.Post(httpUri, requestData)
 	case REQ_SERVICE_METHOD_GRPC:
 		requestService.GrpcManager.CallGrpc(serviceName, funcName, balanceFactor, requestData.([]byte))
-	case REQ_SERVICE_METHOD_INNER:
+	case REQ_SERVICE_METHOD_NATIVE:
 		serviceMsg := ServiceMsg{
 			ServiceName: serviceName,
 			FuncName:    funcName,

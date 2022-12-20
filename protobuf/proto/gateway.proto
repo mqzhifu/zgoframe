@@ -19,6 +19,7 @@ service Gateway {
     rpc SC_KickOff           (KickOff)      returns (Empty) {}//该玩家在其它地方登陆，踢掉了当前连接
 
     rpc SC_ProjectPush       (ProjectPushMsg)  returns (Empty) {}//service通知网关，给某些用户推送消息
+    rpc SC_SendMsg       (Msg)  returns (Empty) {}//service 通知网关，给某些用户发送特定消息
 
     rpc FdClose             (FDCloseEvent)    returns (Empty) {}//C端长连接关闭，这个并不是C端发起的请求，而是网关获取事件，直接推送到后端服务的
     rpc FdCreate            (FDCreateEvent)   returns (Empty) {}//C端建立了长连接，并已经登陆成功
@@ -27,17 +28,20 @@ service Gateway {
 
 //长连接传输内容：一条标准的内容
 message Msg{
-    int32   source_uid       = 1;
-    int32   id               = 2;//未使用，保留
-    int32   sid_fid          = 3;//无实际用，方便开发，service_id+func_id
-    int32   data_length      = 4;//内容的总长度
-    int32   content_type     = 5;//内容类型
-    int32   protocol_type    = 6;//协议类型
-    int32   service_id       = 7;//服务ID
-    int32   func_id          = 8;//函数ID
-    string  reserved         = 9;//保留字段，未使用，后期可存sessionId
-    string  content          =10;//具体传输内容
-    string  end_char         =11;//包结束字符，用于TCP粘包，无实际作用，只是保证消息完整性
+    int32   id                  = 1;//未使用，保留
+    int32   source_uid          = 2;//来源UID，socket 基类在收包
+    int32   target_uid          = 3;//后端要给前端推送消息时，得用网关服务中转，同时要把C端的UID打进去
+    int32   sid_fid             = 4;//无实际用，方便开发，service_id+func_id
+    int32   data_length         = 5;//内容的总长度
+    int32   content_type        = 6;//内容类型
+    int32   protocol_type       = 7;//协议类型
+    int32   service_id          = 8;//服务ID
+    int32   func_id             = 9;//函数ID
+    string  reserved            =10;//保留字段，未使用，后期可存sessionId
+    string  content             =11;//具体传输内容
+    string  end_char            =12;//包结束字符，用于TCP粘包，无实际作用，只是保证消息完整性
+    int32   source_service_id   =13;//来源服务ID，后端要给前端推送消息时，得用网关服务中转
+    int32   source_func_id      =14;//来源函数ID，后端要给前端推送消息时，得用网关服务中转，
 }
 
 message Login{

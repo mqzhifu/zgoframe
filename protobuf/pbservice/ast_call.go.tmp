@@ -124,6 +124,13 @@ func (grpcManager *GrpcManager) CallServiceFuncFrameSync(funcName string,balance
             return data,err
         }
         data ,err = grpcClient.CS_PlayerState(ctx,&request)
+    case "CS_Heartbeat":
+        request := pb.Heartbeat{}
+        err := json.Unmarshal(postData,&request)
+        if err != nil{
+            return data,err
+        }
+        data ,err = grpcClient.CS_Heartbeat(ctx,&request)
     case "SC_ReadyTimeout":
         request := pb.ReadyTimeout{}
         err := json.Unmarshal(postData,&request)
@@ -208,6 +215,27 @@ func (grpcManager *GrpcManager) CallServiceFuncFrameSync(funcName string,balance
             return data,err
         }
         data ,err = grpcClient.SC_PlayerState(ctx,&request)
+    case "SC_Heartbeat":
+        request := pb.Heartbeat{}
+        err := json.Unmarshal(postData,&request)
+        if err != nil{
+            return data,err
+        }
+        data ,err = grpcClient.SC_Heartbeat(ctx,&request)
+    case "FdClose":
+        request := pb.FDCloseEvent{}
+        err := json.Unmarshal(postData,&request)
+        if err != nil{
+            return data,err
+        }
+        data ,err = grpcClient.FdClose(ctx,&request)
+    case "FdCreate":
+        request := pb.FDCreateEvent{}
+        err := json.Unmarshal(postData,&request)
+        if err != nil{
+            return data,err
+        }
+        data ,err = grpcClient.FdCreate(ctx,&request)
 
     default:
             return data,errors.New("func name router failed.")
@@ -238,6 +266,13 @@ func (grpcManager *GrpcManager) CallServiceFuncGameMatch(funcName string,balance
             return data,err
         }
         data ,err = grpcClient.CS_PlayerMatchSignCancel(ctx,&request)
+    case "CS_Heartbeat":
+        request := pb.Heartbeat{}
+        err := json.Unmarshal(postData,&request)
+        if err != nil{
+            return data,err
+        }
+        data ,err = grpcClient.CS_Heartbeat(ctx,&request)
     case "SC_GameMatchOptResult":
         request := pb.GameMatchOptResult{}
         err := json.Unmarshal(postData,&request)
@@ -245,6 +280,27 @@ func (grpcManager *GrpcManager) CallServiceFuncGameMatch(funcName string,balance
             return data,err
         }
         data ,err = grpcClient.SC_GameMatchOptResult(ctx,&request)
+    case "SC_Heartbeat":
+        request := pb.Heartbeat{}
+        err := json.Unmarshal(postData,&request)
+        if err != nil{
+            return data,err
+        }
+        data ,err = grpcClient.SC_Heartbeat(ctx,&request)
+    case "FdClose":
+        request := pb.FDCloseEvent{}
+        err := json.Unmarshal(postData,&request)
+        if err != nil{
+            return data,err
+        }
+        data ,err = grpcClient.FdClose(ctx,&request)
+    case "FdCreate":
+        request := pb.FDCreateEvent{}
+        err := json.Unmarshal(postData,&request)
+        if err != nil{
+            return data,err
+        }
+        data ,err = grpcClient.FdCreate(ctx,&request)
 
     default:
             return data,errors.New("func name router failed.")
@@ -389,6 +445,13 @@ func (grpcManager *GrpcManager) CallServiceFuncTwinAgora(funcName string,balance
             return data,err
         }
         data ,err = grpcClient.SC_CancelCallPeople(ctx,&request)
+    case "CS_Heartbeat":
+        request := pb.Heartbeat{}
+        err := json.Unmarshal(postData,&request)
+        if err != nil{
+            return data,err
+        }
+        data ,err = grpcClient.CS_Heartbeat(ctx,&request)
     case "CS_PeopleEntry":
         request := pb.PeopleEntry{}
         err := json.Unmarshal(postData,&request)
@@ -466,6 +529,20 @@ func (grpcManager *GrpcManager) CallServiceFuncTwinAgora(funcName string,balance
             return data,err
         }
         data ,err = grpcClient.SC_PushMsg(ctx,&request)
+    case "FdClose":
+        request := pb.FDCloseEvent{}
+        err := json.Unmarshal(postData,&request)
+        if err != nil{
+            return data,err
+        }
+        data ,err = grpcClient.FdClose(ctx,&request)
+    case "FdCreate":
+        request := pb.FDCreateEvent{}
+        err := json.Unmarshal(postData,&request)
+        if err != nil{
+            return data,err
+        }
+        data ,err = grpcClient.FdCreate(ctx,&request)
 
     default:
             return data,errors.New("func name router failed.")

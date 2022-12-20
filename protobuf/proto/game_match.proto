@@ -9,8 +9,13 @@ service GameMatch {
 
     rpc CS_PlayerMatchSign         ( GameMatchSign)        returns (Empty) {}//玩家匹配报名
     rpc CS_PlayerMatchSignCancel   ( GameMatchPlayerCancel)  returns (Empty) {}//玩家匹配取消报名
+    rpc CS_Heartbeat    (Heartbeat)    returns (Empty) {}//心跳
 
     rpc SC_GameMatchOptResult   ( GameMatchOptResult) returns (Empty) {}//玩家报名(匹配)结果(成功/失败)
+    rpc SC_Heartbeat         (Heartbeat)    returns (Empty) {}//心跳
+
+    rpc FdClose             (FDCloseEvent)    returns (Empty) {}//C端长连接关闭，这个并不是C端发起的请求，而是网关获取事件，直接推送到后端服务的
+    rpc FdCreate            (FDCreateEvent)   returns (Empty) {}//C端建立了长连接，并已经登陆成功
 }
 
 message GameMatchSign{

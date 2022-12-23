@@ -3,7 +3,6 @@ package seed_business
 import (
 	"context"
 	"errors"
-	"github.com/golang/protobuf/proto"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 	"strconv"
@@ -241,17 +240,17 @@ func (twinAgora *TwinAgora) RoomHeartbeat(heartbeat pb.RoomHeartbeatReq) {
 
 //给客户端推送消息，主要是一些错误信息
 func (twinAgora *TwinAgora) PushMsg(uid int, code int, eventId int, content string) {
-	util.MyPrint("PushMsg uid:", uid, ", code ", code, " , eventId:", eventId, " , content:", content)
-	pushMsg := pb.PushMsg{
-		Code:    int32(code),
-		Uid:     int32(uid),
-		EventId: int32(eventId),
-		Content: content,
-	}
-	data, _ := proto.Marshal(&pushMsg)
-	//twinAgora.RequestServiceAdapter.GatewaySendMsgByUid(int32(uid), "SC_PushMsg", pushMsg)
-	twinAgora.Op.ServiceBridge.CallByName("Gateway", "SC_PushMsg", string(data), "", 0)
-	//conn.GatewaySendMsgByUid(int32(uid), "SC_PushMsg", pushMsg)
+	//util.MyPrint("PushMsg uid:", uid, ", code ", code, " , eventId:", eventId, " , content:", content)
+	//pushMsg := pb.PushMsg{
+	//	Code:    int32(code),
+	//	Uid:     int32(uid),
+	//	EventId: int32(eventId),
+	//	Content: content,
+	//}
+	//data, _ := proto.Marshal(&pushMsg)
+	////twinAgora.RequestServiceAdapter.GatewaySendMsgByUid(int32(uid), "SC_PushMsg", pushMsg)
+	//twinAgora.Op.ServiceBridge.CallByName("Gateway", "SC_PushMsg", string(data), "", 0)
+	////conn.GatewaySendMsgByUid(int32(uid), "SC_PushMsg", pushMsg)
 }
 
 //连接断开或超时处理
@@ -309,8 +308,11 @@ func (twinAgora *TwinAgora) RoomEnd(roomId string, endStatus int) {
 			peopleLeaveRes.Channel = roomInfo.Channel
 			peopleLeaveRes.RoomId = roomInfo.Id
 
-			data, _ := proto.Marshal(&peopleLeaveRes)
-			twinAgora.Op.ServiceBridge.CallByName("Gateway", "SC_PeopleLeave", string(data), "", 0)
+			//data, _ := proto.Marshal(&peopleLeaveRes)
+			//twinAgora.Op.ServiceBridge.CallByName("Gateway", "SC_PeopleLeave", string(data), "", 0)
+			callGatewayMsg := service.CallGatewayMsg{ServiceName: "TwinAgora", FunName: "SC_PeopleLeave", SourceUid: int32(uid), Data: &peopleLeaveRes}
+			twinAgora.Op.ServiceBridge.CallGateway(callGatewayMsg)
+
 			//twinAgora.RequestServiceAdapter.GatewaySendMsgByUid(int32(uid), "SC_PeopleLeave", peopleLeaveRes)
 			//conn.GatewaySendMsgByUid(int32(uid), "SC_PeopleLeave", peopleLeaveRes)
 			//}

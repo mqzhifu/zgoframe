@@ -317,6 +317,20 @@ func (grpcManager *GrpcManager) CallServiceFuncGateway(funcName string,balanceFa
 
     ctx := context.Background()
     switch funcName {
+    case "FdClose":
+        request := pb.FDCloseEvent{}
+        err := json.Unmarshal(postData,&request)
+        if err != nil{
+            return data,err
+        }
+        data ,err = grpcClient.FdClose(ctx,&request)
+    case "FdCreate":
+        request := pb.FDCreateEvent{}
+        err := json.Unmarshal(postData,&request)
+        if err != nil{
+            return data,err
+        }
+        data ,err = grpcClient.FdCreate(ctx,&request)
     case "CS_Login":
         request := pb.Login{}
         err := json.Unmarshal(postData,&request)
@@ -380,27 +394,20 @@ func (grpcManager *GrpcManager) CallServiceFuncGateway(funcName string,balanceFa
             return data,err
         }
         data ,err = grpcClient.SC_KickOff(ctx,&request)
-    case "SC_ProjectPush":
+    case "SC_ProjectPushMsg":
         request := pb.ProjectPushMsg{}
         err := json.Unmarshal(postData,&request)
         if err != nil{
             return data,err
         }
-        data ,err = grpcClient.SC_ProjectPush(ctx,&request)
-    case "FdClose":
-        request := pb.FDCloseEvent{}
+        data ,err = grpcClient.SC_ProjectPushMsg(ctx,&request)
+    case "SC_SendMsg":
+        request := pb.Msg{}
         err := json.Unmarshal(postData,&request)
         if err != nil{
             return data,err
         }
-        data ,err = grpcClient.FdClose(ctx,&request)
-    case "FdCreate":
-        request := pb.FDCreateEvent{}
-        err := json.Unmarshal(postData,&request)
-        if err != nil{
-            return data,err
-        }
-        data ,err = grpcClient.FdCreate(ctx,&request)
+        data ,err = grpcClient.SC_SendMsg(ctx,&request)
 
     default:
             return data,errors.New("func name router failed.")
@@ -417,34 +424,6 @@ func (grpcManager *GrpcManager) CallServiceFuncTwinAgora(funcName string,balance
 
     ctx := context.Background()
     switch funcName {
-    case "CS_CallPeople":
-        request := pb.CallPeopleReq{}
-        err := json.Unmarshal(postData,&request)
-        if err != nil{
-            return data,err
-        }
-        data ,err = grpcClient.CS_CallPeople(ctx,&request)
-    case "SC_CallPeople":
-        request := pb.CallPeopleRes{}
-        err := json.Unmarshal(postData,&request)
-        if err != nil{
-            return data,err
-        }
-        data ,err = grpcClient.SC_CallPeople(ctx,&request)
-    case "CS_CancelCallPeople":
-        request := pb.CancelCallPeopleReq{}
-        err := json.Unmarshal(postData,&request)
-        if err != nil{
-            return data,err
-        }
-        data ,err = grpcClient.CS_CancelCallPeople(ctx,&request)
-    case "SC_CancelCallPeople":
-        request := pb.CancelCallPeopleReq{}
-        err := json.Unmarshal(postData,&request)
-        if err != nil{
-            return data,err
-        }
-        data ,err = grpcClient.SC_CancelCallPeople(ctx,&request)
     case "CS_Heartbeat":
         request := pb.Heartbeat{}
         err := json.Unmarshal(postData,&request)
@@ -452,6 +431,20 @@ func (grpcManager *GrpcManager) CallServiceFuncTwinAgora(funcName string,balance
             return data,err
         }
         data ,err = grpcClient.CS_Heartbeat(ctx,&request)
+    case "CS_CallPeople":
+        request := pb.CallPeopleReq{}
+        err := json.Unmarshal(postData,&request)
+        if err != nil{
+            return data,err
+        }
+        data ,err = grpcClient.CS_CallPeople(ctx,&request)
+    case "CS_CancelCallPeople":
+        request := pb.CancelCallPeopleReq{}
+        err := json.Unmarshal(postData,&request)
+        if err != nil{
+            return data,err
+        }
+        data ,err = grpcClient.CS_CancelCallPeople(ctx,&request)
     case "CS_PeopleEntry":
         request := pb.PeopleEntry{}
         err := json.Unmarshal(postData,&request)
@@ -459,13 +452,6 @@ func (grpcManager *GrpcManager) CallServiceFuncTwinAgora(funcName string,balance
             return data,err
         }
         data ,err = grpcClient.CS_PeopleEntry(ctx,&request)
-    case "SC_PeopleEntry":
-        request := pb.PeopleEntry{}
-        err := json.Unmarshal(postData,&request)
-        if err != nil{
-            return data,err
-        }
-        data ,err = grpcClient.SC_PeopleEntry(ctx,&request)
     case "CS_PeopleLeave":
         request := pb.PeopleLeaveRes{}
         err := json.Unmarshal(postData,&request)
@@ -473,6 +459,48 @@ func (grpcManager *GrpcManager) CallServiceFuncTwinAgora(funcName string,balance
             return data,err
         }
         data ,err = grpcClient.CS_PeopleLeave(ctx,&request)
+    case "CS_CallPeopleAccept":
+        request := pb.CallVote{}
+        err := json.Unmarshal(postData,&request)
+        if err != nil{
+            return data,err
+        }
+        data ,err = grpcClient.CS_CallPeopleAccept(ctx,&request)
+    case "CS_CallPeopleDeny":
+        request := pb.CallVote{}
+        err := json.Unmarshal(postData,&request)
+        if err != nil{
+            return data,err
+        }
+        data ,err = grpcClient.CS_CallPeopleDeny(ctx,&request)
+    case "CS_RoomHeartbeat":
+        request := pb.RoomHeartbeatReq{}
+        err := json.Unmarshal(postData,&request)
+        if err != nil{
+            return data,err
+        }
+        data ,err = grpcClient.CS_RoomHeartbeat(ctx,&request)
+    case "SC_CallPeople":
+        request := pb.CallPeopleRes{}
+        err := json.Unmarshal(postData,&request)
+        if err != nil{
+            return data,err
+        }
+        data ,err = grpcClient.SC_CallPeople(ctx,&request)
+    case "SC_CancelCallPeople":
+        request := pb.CancelCallPeopleReq{}
+        err := json.Unmarshal(postData,&request)
+        if err != nil{
+            return data,err
+        }
+        data ,err = grpcClient.SC_CancelCallPeople(ctx,&request)
+    case "SC_PeopleEntry":
+        request := pb.PeopleEntry{}
+        err := json.Unmarshal(postData,&request)
+        if err != nil{
+            return data,err
+        }
+        data ,err = grpcClient.SC_PeopleEntry(ctx,&request)
     case "SC_PeopleLeave":
         request := pb.PeopleLeaveRes{}
         err := json.Unmarshal(postData,&request)
@@ -487,13 +515,6 @@ func (grpcManager *GrpcManager) CallServiceFuncTwinAgora(funcName string,balance
             return data,err
         }
         data ,err = grpcClient.SC_CallReply(ctx,&request)
-    case "CS_CallPeopleAccefpt":
-        request := pb.CallVote{}
-        err := json.Unmarshal(postData,&request)
-        if err != nil{
-            return data,err
-        }
-        data ,err = grpcClient.CS_CallPeopleAccefpt(ctx,&request)
     case "SC_CallPeopleAccept":
         request := pb.CallVote{}
         err := json.Unmarshal(postData,&request)
@@ -501,13 +522,6 @@ func (grpcManager *GrpcManager) CallServiceFuncTwinAgora(funcName string,balance
             return data,err
         }
         data ,err = grpcClient.SC_CallPeopleAccept(ctx,&request)
-    case "CS_CallPeopleDeny":
-        request := pb.CallVote{}
-        err := json.Unmarshal(postData,&request)
-        if err != nil{
-            return data,err
-        }
-        data ,err = grpcClient.CS_CallPeopleDeny(ctx,&request)
     case "SC_CallPeopleDeny":
         request := pb.CallVote{}
         err := json.Unmarshal(postData,&request)
@@ -515,20 +529,6 @@ func (grpcManager *GrpcManager) CallServiceFuncTwinAgora(funcName string,balance
             return data,err
         }
         data ,err = grpcClient.SC_CallPeopleDeny(ctx,&request)
-    case "CS_RoomHeartbeat":
-        request := pb.RoomHeartbeatReq{}
-        err := json.Unmarshal(postData,&request)
-        if err != nil{
-            return data,err
-        }
-        data ,err = grpcClient.CS_RoomHeartbeat(ctx,&request)
-    case "SC_PushMsg":
-        request := pb.PushMsg{}
-        err := json.Unmarshal(postData,&request)
-        if err != nil{
-            return data,err
-        }
-        data ,err = grpcClient.SC_PushMsg(ctx,&request)
     case "FdClose":
         request := pb.FDCloseEvent{}
         err := json.Unmarshal(postData,&request)

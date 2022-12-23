@@ -96,10 +96,10 @@ Sync.prototype.SC_GameMatchOptResult = function(GameMatchOptResult){
 //匹配成功，房间游戏基础信息S端已建立，告知C端，可进入准备状态，且初始化本地信息
 Sync.prototype.SC_EnterBattle = function(EnterBattle){
     this.show("SC_EnterBattle EnterBattle:",EnterBattle , " contentType:",this.contentType)
-    if(this.contentTypeDesc[this.contentType] =="protobuf"){
-        console.log("rEnterBattle in protobuf ")
-        EnterBattle.playerList = EnterBattle.playerListList;
-    }
+    // if(this.contentTypeDesc[this.contentType] =="protobuf"){
+    //     console.log("SC_EnterBattle data in protobuf ")
+    //     EnterBattle.playerIds = EnterBattle.playeridsList;
+    // }
 
     this.initLocalGlobalVar(EnterBattle);
 

@@ -134,25 +134,16 @@ Sync.prototype.wsOpen = function(){
 //19 以后为内容体
 //结尾会添加一个字节：\f ,可用于 TCP 粘包 分隔
 Sync.prototype.onmessage = function(ev){
-
     var msg = new proto.pb.Msg();
     var msgObj = msg.toObject();
     var parent = this;
 
-    var debugInfo = "onmessage ";
+    var debugInfo = "<onmessage> ";
     if (this.contentTypeDesc[this.contentType] == 'protobuf'){
         var reader = new FileReader();
         reader.readAsArrayBuffer(ev.data);
         reader.onloadend = function(e) {
-            debugInfo += " contentType: protobuf";
             // var dataBuffer = new Uint8Array(reader.result);
-            //
-            // msgObj.contentType = processBufferString(dataBuffer,0,1);
-            // msgObj.protocolType = processBufferString(dataBuffer,1,2);
-            // msgObj.actionId = processBufferString(dataBuffer,2,6);
-            // msgObj.sessionId = processBufferString(dataBuffer,6,38);
-            // var content = processBuffer(dataBuffer,38);
-            // msgObj.action = self.getActionName(msgObj.actionId,"server")
             // //首字母转大写
             // var actionLow = msgObj.action.substring(0, 1).toUpperCase() + msgObj.action.substring(1)
             // //拼接成最终classname
@@ -163,6 +154,8 @@ Sync.prototype.onmessage = function(ev){
 
 
             var dataBuffer = new Uint8Array(reader.result);
+
+            debugInfo += "  dataBufferLength:"+dataBuffer.length+" contentType: protobuf ";
 
             var bytes4 = processBufferRange(dataBuffer,0,4);
             msgObj.dataLength = Byte4ToInt(bytes4);
@@ -176,18 +169,23 @@ Sync.prototype.onmessage = function(ev){
             msgObj.funcId = Byte2ToInt(bytes2);
             var sessionBytes = processBufferRange(dataBuffer,9,19);
             msgObj.sessionId = processBufferString(sessionBytes,0);
-
             msgObj.sidFid = msgObj.serviceId + "" + msgObj.funcId;
             var content = processBufferRange(dataBuffer,19,19+msgObj.dataLength);
             var actionMap = parent.getActionById(msgObj.sidFid,"server")
-            // console.log("actionMap:",actionMap , " sid:",msgObj.sidFid)
-
-            // console.log("onmessage dataLength:" , msgObj.dataLength , " content :",content );
             var className =  "proto.pb." + actionMap.request;
-            // console.log("className:" ,className)
             var RequestClass = eval( className);
-            // console.log("RequestClass:",RequestClass);
+
+            debugInfo += " msg.dataLength: "+ msgObj.dataLength + " msg.contentType: " + msgObj.contentType + " msg.protocolType: "+msgObj.protocolType + " serviceId: " + msgObj.serviceId + " funcId:" +  msgObj.funcId +" ";
+            debugInfo += "service_name: "+ actionMap.service_name + " func_name:" + actionMap.func_name + " className:"+className;
+            parent.show(debugInfo);
+
+
+            // var aa = proto.pb.EnterBattle()
+            // aa.getPlayer
+
+
             content = RequestClass.deserializeBinary(content);
+            // console.log("=====content:",content);
             content = content.toObject()
             // console.log("content: " ,content)
             msgObj.content = content
@@ -242,11 +240,31 @@ Sync.prototype.onmessage = function(ev){
 };
 //接收S端消息后，开始进行路由，具体由哪个方法接收并处理
 Sync.prototype.router = function(msgObj){
-    var action = this.actionMap.server[msgObj.sidFid].func_name;
-    this.showComplex("router , action:"+action,msgObj);
+    var action = this.actionMap.server[msgObj.sidFid];
+    this.showComplex("router , serviceName:"+ action.service_name  +" funcName:" +action.func_name + " , msgObj" , msgObj);
+
+    //protobuf 类型，如果是数组，它会在对象的key值 末尾自动加上 List
+    if(this.contentTypeDesc[this.contentType] =="protobuf"){
+        var keyword = "List";
+        for (let key in msgObj.content) {
+            var location = key.indexOf(keyword);//查看 key 中包含 List 关键字的位置
+            if(location == -1){
+                continue;
+            }
+
+            if(location != key.length - keyword.length ){
+                continue;
+            }
+            var newKeyValue = key.substring(0,location);
+            msgObj.content[newKeyValue] = msgObj.content[key];
+
+            this.show("search keyword :"+keyword + " , need replace ,newKeyValue:"+newKeyValue);
+        }
+    }
+
     //这里用了动态调用函数，减少代码量
-    console.log("msgObj.content: ",msgObj.content)
-    eval( "this."+action+"(msgObj.content)" );
+    // console.log("msgObj.content: ",msgObj.content)
+    eval( "this."+action.func_name+"(msgObj.content)" );
 }
 //================== 以上是 ws callback 基础函数 ====================================================
 
@@ -441,7 +459,7 @@ Sync.prototype.myClearInterval = function (){
 }
 //游戏战局进入准备期，初始化-本地变量数据，等待所有玩家准备后，即开始游戏了
 Sync.prototype.initLocalGlobalVar = function(EnterBattle){
-    this.show("initLocalGlobalVar:",EnterBattle)
+    this.showComplex("initLocalGlobalVar:",EnterBattle)
     for(var i=0;i<EnterBattle.playerIds.length;i++){
         this.playerLocation[""+EnterBattle.playerIds[i]+""] = "empty"
     }
@@ -463,12 +481,17 @@ Sync.prototype.initLocalGlobalVar = function(EnterBattle){
 
 
 Sync.prototype.sendMsg =  function ( action,contentObj  ){
+    var prefix = " <sendMsg> action: "+ action;
     var id = this.getActionId(action,"client");
     if (!id){
-        this.show("sendMsg err:id empty action:"+action);
+        this.show(prefix+"err:get action empty ");
         return false;
     }
-    // console.log( contentObj.toObject())
+    if(!contentObj){
+        this.show(prefix+" err:contentObj empty.")
+        return false;
+    }
+
     var content = null;
 
     //解析C端发送的数据，这一层，对于用户层的content数据不做处理
@@ -484,11 +507,10 @@ Sync.prototype.sendMsg =  function ( action,contentObj  ){
     var serviceId = id.toString().substring(0,2);
     var funcId = id.toString().substring(2);
     var session = "1234567890";
-    this.show( " <sendMsg> action: "+ action  + " fullId: " + id + " serviceId: " + serviceId + " funcId: " + funcId   );
+    var debugInfo =  prefix + " fullId: " + id + " serviceId: " + serviceId + " funcId: " + funcId + " contentType:"+this.contentTypeDesc[this.contentType]  ;
     if (this.contentTypeDesc[this.contentType] == "json"){
-        var debugLog = " contentType: json ";
         content = contentObj.toObject();
-        this.showComplex("debug contentObj.toObject():",content)
+        // this.showComplex("debug contentObj.toObject():",content)
 
         //js 编译完的 proto 类文件，正常使用二进制的protobuf传输是OK的，但是要直接当成json使用，它有几个问题：
         //1. 所有的数组类型，它自动给 key 加了list
@@ -511,6 +533,9 @@ Sync.prototype.sendMsg =  function ( action,contentObj  ){
         //这里有个坑，注意下. JS编译proto文件后，会把 数组类型 自动加上：List 关键字，而 map 类型会 多加一个 map ,这里得去掉
         content = content.replace("List","");
         content = content.replace("Map","");
+
+
+        this.showComplex(debugInfo + " content:", content);
 
         var contentLenByte = intToByte4( content.length);
         var contentTypeByte = intToOneByteArr(contentType);
@@ -536,11 +561,11 @@ Sync.prototype.sendMsg =  function ( action,contentObj  ){
         // console.log("myArrayBuffer:",myArrayBuffer,",b_s:",b_s);
         // var emptyByte = intToByte(0);
         // content =  b_s +emptyByte + content;
-        this.showComplex("<sendMsg final>" + debugLog + " " , content);
 
         this.wsObj.send(content);
     }else if ( this.contentTypeDesc[this.contentType]  == "protobuf"){
-        var debugLog = " contentType: protobuf ";
+        this.showComplex(debugInfo + " contentObj:", contentObj.toObject());
+
         content = contentObj.serializeBinary();
         // var protocolCtrl = contentType +  "" + protocolType + id;
         // var idBinary = new Uint8Array(protocolCtrl.length);
@@ -575,7 +600,7 @@ Sync.prototype.sendMsg =  function ( action,contentObj  ){
         content =  concatenate(contentLenByte,contentTypeByte,protocolTypeByte,serviceIdByte,funcIdByte,sessionByte,content,endStr)  ;
 
 
-        this.showComplex("<sendMsg final>" + debugLog + " " , content);
+        // this.showComplex("<sendMsg final>" + debugLog + " " , content);
 
         this.wsObj.send(content);
     }
@@ -643,7 +668,7 @@ Sync.prototype.move = function ( dirObj ){
 
     this.show("dir:"+dir+"oldLocation"+nowLocationStr+" , newLocation:"+newLocation);
     this.playerOperationsQueue.push({"id":this.operationsInc,"event":"move","value":newLocation,"playerId":this.playerId});
-    this.operationsInc++;
+    this.operationsInc++ ;
     var playerLocationArr = playerLocation[this.playerId].split("_");
     var lightTd = this.getMapTdId(this.tableId,playerLocationArr[0],playerLocationArr[1]);
     var tdObj = $("#"+lightTd);

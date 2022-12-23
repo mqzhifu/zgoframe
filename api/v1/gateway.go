@@ -4,9 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"github.com/golang/protobuf/proto"
-	"strconv"
-	"strings"
 	"zgoframe/core/global"
 	httpresponse "zgoframe/http/response"
 	"zgoframe/protobuf/pb"
@@ -153,25 +150,25 @@ func GatewayFDList(c *gin.Context) {
 // @Success 200 {string} bbbb " "
 func GatewaySendMsg(c *gin.Context) {
 	connManager := global.V.MyService.Gateway.Netway.ConnManager
-	if len(connManager.Pool) <= 0 {
-		msg := "失败，user pool = 0"
-		httpresponse.FailWithMessage(msg, c)
-		return
-	}
+	//if len(connManager.Pool) <= 0 {
+	//	msg := "失败，user pool = 0"
+	//	httpresponse.FailWithMessage(msg, c)
+	//	return
+	//}
 
 	var form pb.ProjectPushMsg
 	c.ShouldBind(&form)
-	if form.ServiceId <= 0 {
-		httpresponse.FailWithMessage("ServiceId empty!!!", c)
+	if form.SourceUid <= 0 {
+		httpresponse.FailWithMessage("SourceUid empty!!!", c)
 		return
 	}
 
-	if form.FuncId <= 0 {
-		httpresponse.FailWithMessage("FuncId empty!!!", c)
+	if form.SourceProjectId <= 0 {
+		httpresponse.FailWithMessage("SourceProjectId empty!!!", c)
 		return
 	}
 
-	if form.Msg == "" {
+	if form.Content == "" {
 		httpresponse.FailWithMessage("Content empty!!!", c)
 		return
 	}
@@ -180,35 +177,18 @@ func GatewaySendMsg(c *gin.Context) {
 		httpresponse.FailWithMessage("TargetUids empty!!!", c)
 		return
 	}
-	TargetUidArr := strings.Split(form.TargetUids, ",")
-	uids := []int{}
-	for _, uidStr := range TargetUidArr {
-		uid, _ := strconv.Atoi(uidStr)
-		if uid <= 0 {
-			httpresponse.FailWithMessage("uid <=0", c)
-			return
-		}
-		uids = append(uids, uid)
+
+	formBytes, _ := json.Marshal(&form)
+	protoMap, _ := global.V.ProtoMap.GetServiceByName("Gateway", "SC_ProjectPushMsg")
+	SifFId := global.V.ProtoMap.GetIdBySidFid(protoMap.ServiceId, protoMap.FuncId)
+	msg := pb.Msg{
+		ServiceId:   int32(protoMap.ServiceId),
+		FuncId:      int32(protoMap.FuncId),
+		SidFid:      int32(SifFId),
+		Content:     string(formBytes),
+		ContentType: util.CONTENT_TYPE_JSON,
 	}
 
-	for _, uid := range uids {
-		conn, exist := connManager.Pool[int32(uid)]
-		if !exist {
-			httpresponse.FailWithMessage("uid not in pool ,maybe not connect socket", c)
-			return
-		}
-
-		msg := pb.Msg{}
-		msg.ServiceId = form.ServiceId
-		msg.FuncId = form.FuncId
-
-		ServiceIdFuncId, _ := strconv.Atoi(strconv.Itoa(int(form.ServiceId)) + strconv.Itoa(int(form.FuncId)))
-		requestClientCloseStrByte, _ := conn.ConnManager.CompressNormalContent(form.Msg, int(conn.ContentType))
-		finalMsg, _, _ := conn.ConnManager.MakeMsgBySidFid(int32(uid), ServiceIdFuncId, requestClientCloseStrByte)
-
-		projectPushMsgStr, _ := proto.Marshal(&finalMsg)
-		conn.SendMsgCompressByName("Gateway", "SC_ProjectPush", projectPushMsgStr)
-	}
-
+	global.V.MyService.Gateway.NativeServiceFuncRouter(msg)
 	httpresponse.OkWithAll(connManager.Pool, "ok", c)
 }

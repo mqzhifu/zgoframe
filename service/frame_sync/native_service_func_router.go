@@ -2,6 +2,7 @@ package frame_sync
 
 import (
 	"errors"
+	"strconv"
 	"time"
 	"zgoframe/protobuf/pb"
 	"zgoframe/service"
@@ -21,6 +22,7 @@ func (frameSync *FrameSync) ListeningBridgeMsg() {
 
 //帧同步的路由
 func (frameSync *FrameSync) NativeServiceFuncRouter(msg pb.Msg) (data []byte, err error) {
+	frameSync.Option.Log.Debug("frameSync NativeServiceFuncRouter msg.SourceUid:" + strconv.Itoa(int(msg.SourceUid)) + " targetUid:" + strconv.Itoa(int(msg.TargetUid)))
 	prefix := "RouterServiceSync "
 	requestLogicFrame := pb.LogicFrame{}
 	requestPlayerResumeGame := pb.PlayerResumeGame{}
@@ -28,21 +30,13 @@ func (frameSync *FrameSync) NativeServiceFuncRouter(msg pb.Msg) (data []byte, er
 	requestPlayerOver := pb.PlayerOver{}
 	requestRoomHistory := pb.ReqRoomHistory{}
 	requestRoomBaseInfo := pb.RoomBaseInfo{}
-	//requestPlayerMatchSign := pb.GameMatchSign{}
-	//requestPlayerMatchSignCancel := pb.GameMatchPlayerCancel{}
-
 	reqPlayerBase := pb.PlayerBase{}
-
 	reqFDCreateEvent := pb.FDCreateEvent{}
 	reqHeartbeat := pb.Heartbeat{}
 	requestFDCloseEvent := pb.FDCloseEvent{}
 
 	protoServiceFunc, _ := frameSync.Option.ProtoMap.GetServiceFuncById(int(msg.SidFid))
 	switch protoServiceFunc.FuncName {
-	//case "CS_PlayerMatchSign":
-	//	err = util.ConnParserContentMsg(msg, &requestPlayerMatchSign, conn.UserId)
-	//case "CS_PlayerMatchSignCancel":
-	//	err = util.ConnParserContentMsg(msg, &requestPlayerMatchSignCancel, conn.UserId)
 	case "CS_PlayerOperations":
 		err = util.ConnParserContentMsg(msg, &requestLogicFrame)
 	case "CS_PlayerResumeGame":
@@ -69,6 +63,17 @@ func (frameSync *FrameSync) NativeServiceFuncRouter(msg pb.Msg) (data []byte, er
 	if err != nil {
 		frameSync.Option.Log.Error(prefix + " , ParserContentMsg err:" + err.Error())
 	}
+
+	requestLogicFrame.SourceUid = msg.SourceUid
+	requestPlayerResumeGame.SourceUid = msg.SourceUid
+	requestPlayerReady.SourceUid = msg.SourceUid
+	requestPlayerOver.SourceUid = msg.SourceUid
+	requestRoomHistory.SourceUid = msg.SourceUid
+	requestRoomBaseInfo.SourceUid = msg.SourceUid
+	reqPlayerBase.SourceUid = msg.SourceUid
+	reqFDCreateEvent.SourceUid = msg.SourceUid
+	reqHeartbeat.SourceUid = msg.SourceUid
+	requestFDCloseEvent.SourceUid = msg.SourceUid
 
 	switch protoServiceFunc.FuncName {
 	case "CS_PlayerOperations":

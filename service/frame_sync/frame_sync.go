@@ -2,7 +2,6 @@ package frame_sync
 
 import (
 	"errors"
-	"github.com/golang/protobuf/proto"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 	"strconv"
@@ -67,9 +66,12 @@ func (sync *FrameSync) GetPlayerBase(playerBase pb.PlayerBase) {
 		RoomId:   conn.RoomId,
 		PlayerId: playerBase.PlayerId,
 	}
-	data, _ := proto.Marshal(&playerState)
+	//util.MyPrint("============:===------")
+	//util.PrintStruct(playerBase, ":")
+	//data, _ := proto.Marshal(&playerState)
 	//sync.Option.RequestServiceAdapter.GatewaySendMsgByUid(playerBase.PlayerId, "SC_PlayerState", &playerState)
-	sync.Option.ServiceBridge.CallGateway("FrameSync", "SC_PlayerState", 9999, playerBase.SourceUid, string(data), "", 0)
+	callGatewayMsg := service.CallGatewayMsg{ServiceName: "FrameSync", FunName: "SC_PlayerState", TargetUid: playerBase.SourceUid, Data: &playerState}
+	sync.Option.ServiceBridge.CallGateway(callGatewayMsg)
 }
 
 func (sync *FrameSync) CreateFD(fd pb.FDCreateEvent) error {

@@ -258,7 +258,7 @@ func (connManager *ConnManager) CompressContent(contentStruct interface{}, UserI
 	} else if contentType == CONTENT_TYPE_PROTOBUF {
 		contentStruct := contentStruct.(proto.Message)
 		content, err = proto.Marshal(contentStruct)
-		MyPrint("content:", content, " length:", len(content))
+		//MyPrint("content:", content, " length:", len(content))
 	} else {
 		err = errors.New(" contentType switch err")
 	}
@@ -518,6 +518,7 @@ func (conn *Conn) ReadLoop(ctx context.Context) {
 				conn.ConnManager.Option.Log.Warn("parserContent err :" + err.Error())
 				continue
 			}
+			//MyPrint("=====conn.UserId:", conn.UserId)
 			msg.SourceUid = conn.UserId
 			//写入队列，等待其它协程处理，继续死循环
 			conn.MsgInChan <- msg

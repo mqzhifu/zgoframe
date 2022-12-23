@@ -69,10 +69,12 @@ foreach ($protoPathFileList as $k=>$fileName){
     //验证proto文件名
     $fileArr = explode(".",$fileName);
     if (count($fileArr) != 2){
-        exit("处理 proto 目录文件时出错：file name err:$fileName");
+        var_dump("处理 proto 目录文件时出错：file name err:$fileName");
+        continue;
     }
     if ( $fileArr[1] != "proto" ) {
-        exit("处理 proto 目录文件时出错：file exit name must = .proto");
+        var_dump("处理 proto 目录文件时出错：file exit name must = .proto");
+        continue;
     }
     $serviceName = $fileArr[0];//文件名，即服务名
     if ( $serviceName == "common" ) {//忽略 common 服务，它没有任何函数，只是单纯的结构体定义

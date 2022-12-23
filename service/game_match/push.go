@@ -3,7 +3,6 @@ package gamematch
 import (
 	"encoding/json"
 	"errors"
-	"github.com/golang/protobuf/proto"
 	"github.com/gomodule/redigo/redis"
 	"go.uber.org/zap"
 	"strconv"
@@ -375,8 +374,11 @@ func (push *Push) ServiceDiscoveryRequestUser(element PushElement) (httpRs util.
 				Code:    400,
 				Msg:     "sign timeout",
 			}
-			data, _ := proto.Marshal(&gameMatchOptResult)
-			push.Rule.RuleManager.Option.ServiceBridge.CallGateway("GameMatch", "SC_GameMatchOptResult", 9999, v, string(data), "", 0)
+			//data, _ := proto.Marshal(&gameMatchOptResult)v
+			//push.Rule.RuleManager.Option.ServiceBridge.CallGateway("GameMatch", "SC_GameMatchOptResult", 9999, v, string(data), "", 0)
+
+			callGatewayMsg := service.CallGatewayMsg{ServiceName: "GameMatch", FunName: "SC_GameMatchOptResult", TargetUid: v, Data: &gameMatchOptResult}
+			push.Rule.RuleManager.Option.ServiceBridge.CallGateway(callGatewayMsg)
 		}
 	} else if element.Category == service.PushCategorySuccessTimeout {
 		return httpRs, nil
@@ -395,9 +397,12 @@ func (push *Push) ServiceDiscoveryRequestUser(element PushElement) (httpRs util.
 				Code:   200,
 				Msg:    "success",
 			}
-			data, _ := proto.Marshal(&gameMatchOptResult)
-			push.Rule.RuleManager.Option.ServiceBridge.CallGateway("GameMatch", "SC_GameMatchOptResult", 9999, int32(uid), string(data), "", 0)
+			//data, _ := proto.Marshal(&gameMatchOptResult)
+			//push.Rule.RuleManager.Option.ServiceBridge.CallGateway("GameMatch", "SC_GameMatchOptResult", 9999, int32(uid), string(data), "", 0)
 			//push.Rule.RuleManager.Option.RequestServiceAdapter.GatewaySendMsgByUid(int32(uid), "SC_GameMatchOptResult", &gameMatchOptResult)
+
+			callGatewayMsg := service.CallGatewayMsg{ServiceName: "GameMatch", FunName: "SC_GameMatchOptResult", TargetUid: int32(uid), Data: &gameMatchOptResult}
+			push.Rule.RuleManager.Option.ServiceBridge.CallGateway(callGatewayMsg)
 		}
 		push.Rule.RuleManager.Option.GameMatch.Option.FrameSync.RoomManage.AddOne(newRoom)
 

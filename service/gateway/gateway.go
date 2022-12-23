@@ -71,7 +71,7 @@ func NewGateway(grpcManager *util.GrpcManager, log *zap.Logger, serviceBridge *s
 func (gateway *Gateway) StartSocket(netWayOption util.NetWayOption) (*util.NetWay, error) {
 	gateway.Log.Info("gateway StartSocket:")
 	//netWayOption.RouterBack = gateway.Router //公共回调 路由器，用于给最底层的长连接公共类回调
-	netWayOption.RouterBack = gateway.ServiceBridge.Call
+	netWayOption.RouterBack = gateway.ServiceBridge.RouterBack
 	//创建长连接:底层-公共类
 	gateway.NetWayOption = netWayOption
 	netWay, err := util.NewNetWay(netWayOption)
@@ -92,7 +92,8 @@ func (gateway *Gateway) BroadcastService(funcName string, msg pb.Msg) {
 	msg.ServiceId = int32(serviceDesc.ServiceId)
 	msg.FuncId = int32(serviceDesc.FuncId)
 	msg.SidFid = int32(gateway.NetWayOption.ProtoMap.GetIdBySidFid(serviceDesc.ServiceId, serviceDesc.FuncId))
-	gateway.ServiceBridge.Call(msg, "", 0)
+
+	gateway.ServiceBridge.Call(service.CallMsg{Msg: msg})
 
 	serviceDesc, _ = gateway.NetWayOption.ProtoMap.GetServiceByName("GameMatch", funcName)
 	if empty {
@@ -101,7 +102,7 @@ func (gateway *Gateway) BroadcastService(funcName string, msg pb.Msg) {
 	msg.ServiceId = int32(serviceDesc.ServiceId)
 	msg.FuncId = int32(serviceDesc.FuncId)
 	msg.SidFid = int32(gateway.NetWayOption.ProtoMap.GetIdBySidFid(serviceDesc.ServiceId, serviceDesc.FuncId))
-	gateway.ServiceBridge.Call(msg, "", 0)
+	gateway.ServiceBridge.Call(service.CallMsg{Msg: msg})
 
 	//serviceDesc, _ = gateway.NetWayOption.ProtoMap.GetServiceByName("TwinAgora", funcName)
 	//if empty {

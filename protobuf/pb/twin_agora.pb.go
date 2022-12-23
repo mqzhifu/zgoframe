@@ -24,86 +24,6 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
 
-//S端推送给C端一些事件
-type PushMsg struct {
-	SourceUid            int32    `protobuf:"varint,1,opt,name=source_uid,json=sourceUid,proto3" json:"source_uid,omitempty"`
-	Code                 int32    `protobuf:"varint,2,opt,name=code,proto3" json:"code,omitempty"`
-	Uid                  int32    `protobuf:"varint,3,opt,name=uid,proto3" json:"uid,omitempty"`
-	RoomId               string   `protobuf:"bytes,4,opt,name=room_id,json=roomId,proto3" json:"room_id,omitempty"`
-	EventId              int32    `protobuf:"varint,5,opt,name=event_id,json=eventId,proto3" json:"event_id,omitempty"`
-	Content              string   `protobuf:"bytes,6,opt,name=content,proto3" json:"content,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
-}
-
-func (m *PushMsg) Reset()         { *m = PushMsg{} }
-func (m *PushMsg) String() string { return proto.CompactTextString(m) }
-func (*PushMsg) ProtoMessage()    {}
-func (*PushMsg) Descriptor() ([]byte, []int) {
-	return fileDescriptor_223ae5106ca5efe7, []int{0}
-}
-
-func (m *PushMsg) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_PushMsg.Unmarshal(m, b)
-}
-func (m *PushMsg) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_PushMsg.Marshal(b, m, deterministic)
-}
-func (m *PushMsg) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_PushMsg.Merge(m, src)
-}
-func (m *PushMsg) XXX_Size() int {
-	return xxx_messageInfo_PushMsg.Size(m)
-}
-func (m *PushMsg) XXX_DiscardUnknown() {
-	xxx_messageInfo_PushMsg.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_PushMsg proto.InternalMessageInfo
-
-func (m *PushMsg) GetSourceUid() int32 {
-	if m != nil {
-		return m.SourceUid
-	}
-	return 0
-}
-
-func (m *PushMsg) GetCode() int32 {
-	if m != nil {
-		return m.Code
-	}
-	return 0
-}
-
-func (m *PushMsg) GetUid() int32 {
-	if m != nil {
-		return m.Uid
-	}
-	return 0
-}
-
-func (m *PushMsg) GetRoomId() string {
-	if m != nil {
-		return m.RoomId
-	}
-	return ""
-}
-
-func (m *PushMsg) GetEventId() int32 {
-	if m != nil {
-		return m.EventId
-	}
-	return 0
-}
-
-func (m *PushMsg) GetContent() string {
-	if m != nil {
-		return m.Content
-	}
-	return ""
-}
-
 //房间心跳
 type RoomHeartbeatReq struct {
 	SourceUid            int32    `protobuf:"varint,1,opt,name=source_uid,json=sourceUid,proto3" json:"source_uid,omitempty"`
@@ -119,7 +39,7 @@ func (m *RoomHeartbeatReq) Reset()         { *m = RoomHeartbeatReq{} }
 func (m *RoomHeartbeatReq) String() string { return proto.CompactTextString(m) }
 func (*RoomHeartbeatReq) ProtoMessage()    {}
 func (*RoomHeartbeatReq) Descriptor() ([]byte, []int) {
-	return fileDescriptor_223ae5106ca5efe7, []int{1}
+	return fileDescriptor_223ae5106ca5efe7, []int{0}
 }
 
 func (m *RoomHeartbeatReq) XXX_Unmarshal(b []byte) error {
@@ -182,7 +102,7 @@ func (m *CancelCallPeopleReq) Reset()         { *m = CancelCallPeopleReq{} }
 func (m *CancelCallPeopleReq) String() string { return proto.CompactTextString(m) }
 func (*CancelCallPeopleReq) ProtoMessage()    {}
 func (*CancelCallPeopleReq) Descriptor() ([]byte, []int) {
-	return fileDescriptor_223ae5106ca5efe7, []int{2}
+	return fileDescriptor_223ae5106ca5efe7, []int{1}
 }
 
 func (m *CancelCallPeopleReq) XXX_Unmarshal(b []byte) error {
@@ -238,7 +158,7 @@ func (m *CallVote) Reset()         { *m = CallVote{} }
 func (m *CallVote) String() string { return proto.CompactTextString(m) }
 func (*CallVote) ProtoMessage()    {}
 func (*CallVote) Descriptor() ([]byte, []int) {
-	return fileDescriptor_223ae5106ca5efe7, []int{3}
+	return fileDescriptor_223ae5106ca5efe7, []int{2}
 }
 
 func (m *CallVote) XXX_Unmarshal(b []byte) error {
@@ -297,7 +217,7 @@ func (m *CallPeopleReq) Reset()         { *m = CallPeopleReq{} }
 func (m *CallPeopleReq) String() string { return proto.CompactTextString(m) }
 func (*CallPeopleReq) ProtoMessage()    {}
 func (*CallPeopleReq) Descriptor() ([]byte, []int) {
-	return fileDescriptor_223ae5106ca5efe7, []int{4}
+	return fileDescriptor_223ae5106ca5efe7, []int{3}
 }
 
 func (m *CallPeopleReq) XXX_Unmarshal(b []byte) error {
@@ -377,7 +297,7 @@ func (m *CallPeopleRes) Reset()         { *m = CallPeopleRes{} }
 func (m *CallPeopleRes) String() string { return proto.CompactTextString(m) }
 func (*CallPeopleRes) ProtoMessage()    {}
 func (*CallPeopleRes) Descriptor() ([]byte, []int) {
-	return fileDescriptor_223ae5106ca5efe7, []int{5}
+	return fileDescriptor_223ae5106ca5efe7, []int{4}
 }
 
 func (m *CallPeopleRes) XXX_Unmarshal(b []byte) error {
@@ -455,7 +375,7 @@ func (m *PeopleEntry) Reset()         { *m = PeopleEntry{} }
 func (m *PeopleEntry) String() string { return proto.CompactTextString(m) }
 func (*PeopleEntry) ProtoMessage()    {}
 func (*PeopleEntry) Descriptor() ([]byte, []int) {
-	return fileDescriptor_223ae5106ca5efe7, []int{6}
+	return fileDescriptor_223ae5106ca5efe7, []int{5}
 }
 
 func (m *PeopleEntry) XXX_Unmarshal(b []byte) error {
@@ -519,7 +439,7 @@ func (m *PeopleLeaveRes) Reset()         { *m = PeopleLeaveRes{} }
 func (m *PeopleLeaveRes) String() string { return proto.CompactTextString(m) }
 func (*PeopleLeaveRes) ProtoMessage()    {}
 func (*PeopleLeaveRes) Descriptor() ([]byte, []int) {
-	return fileDescriptor_223ae5106ca5efe7, []int{7}
+	return fileDescriptor_223ae5106ca5efe7, []int{6}
 }
 
 func (m *PeopleLeaveRes) XXX_Unmarshal(b []byte) error {
@@ -585,7 +505,7 @@ func (m *CallReply) Reset()         { *m = CallReply{} }
 func (m *CallReply) String() string { return proto.CompactTextString(m) }
 func (*CallReply) ProtoMessage()    {}
 func (*CallReply) Descriptor() ([]byte, []int) {
-	return fileDescriptor_223ae5106ca5efe7, []int{8}
+	return fileDescriptor_223ae5106ca5efe7, []int{7}
 }
 
 func (m *CallReply) XXX_Unmarshal(b []byte) error {
@@ -649,7 +569,6 @@ func (m *CallReply) GetRoomId() string {
 }
 
 func init() {
-	proto.RegisterType((*PushMsg)(nil), "pb.PushMsg")
 	proto.RegisterType((*RoomHeartbeatReq)(nil), "pb.RoomHeartbeatReq")
 	proto.RegisterType((*CancelCallPeopleReq)(nil), "pb.CancelCallPeopleReq")
 	proto.RegisterType((*CallVote)(nil), "pb.CallVote")
@@ -663,51 +582,48 @@ func init() {
 func init() { proto.RegisterFile("twin_agora.proto", fileDescriptor_223ae5106ca5efe7) }
 
 var fileDescriptor_223ae5106ca5efe7 = []byte{
-	// 703 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x56, 0xcd, 0x4e, 0xdb, 0x40,
-	0x10, 0x6e, 0x7e, 0x88, 0xe3, 0x49, 0x42, 0xc3, 0x82, 0x44, 0x40, 0x42, 0x20, 0x1f, 0x2a, 0xc4,
-	0x21, 0xf4, 0x47, 0x3d, 0x71, 0xa2, 0x86, 0xa8, 0x48, 0xad, 0x84, 0x1c, 0xe8, 0xa1, 0x97, 0x95,
-	0x63, 0x4f, 0x83, 0x25, 0xdb, 0x6b, 0xd6, 0x0b, 0x28, 0xef, 0xd2, 0xa7, 0xe8, 0xa1, 0x97, 0x3e,
-	0x5c, 0xab, 0x5d, 0x3b, 0x89, 0x37, 0x69, 0x48, 0x68, 0xb9, 0xed, 0xcc, 0x7e, 0xdf, 0xce, 0xe7,
-	0x99, 0xd9, 0x59, 0x43, 0x5b, 0x3c, 0x04, 0x31, 0x75, 0x87, 0x8c, 0xbb, 0xdd, 0x84, 0x33, 0xc1,
-	0x48, 0x39, 0x19, 0xec, 0x36, 0x3d, 0x16, 0x45, 0x2c, 0xce, 0x3c, 0xd6, 0xf7, 0x12, 0x18, 0x97,
-	0x77, 0xe9, 0xcd, 0xe7, 0x74, 0x48, 0xf6, 0x00, 0x52, 0x76, 0xc7, 0x3d, 0xa4, 0x77, 0x81, 0xdf,
-	0x29, 0x1d, 0x94, 0x0e, 0xd7, 0x1c, 0x33, 0xf3, 0x5c, 0x07, 0x3e, 0x21, 0x50, 0xf5, 0x98, 0x8f,
-	0x9d, 0xb2, 0xda, 0x50, 0x6b, 0xd2, 0x86, 0x8a, 0xc4, 0x56, 0x94, 0x4b, 0x2e, 0xc9, 0x36, 0x18,
-	0x9c, 0xb1, 0x88, 0x06, 0x7e, 0xa7, 0x7a, 0x50, 0x3a, 0x34, 0x9d, 0x9a, 0x34, 0x2f, 0x7c, 0xb2,
-	0x03, 0x75, 0xbc, 0xc7, 0x58, 0xc8, 0x9d, 0x35, 0x85, 0x37, 0x94, 0x7d, 0xe1, 0x93, 0x0e, 0x18,
-	0x1e, 0x8b, 0x05, 0xc6, 0xa2, 0x53, 0x53, 0x9c, 0xb1, 0x69, 0x25, 0xd0, 0x76, 0x18, 0x8b, 0x3e,
-	0xa2, 0xcb, 0xc5, 0x00, 0x5d, 0xe1, 0xe0, 0xed, 0x0a, 0x32, 0x45, 0x10, 0x65, 0x32, 0x2b, 0x8e,
-	0x5a, 0x17, 0x45, 0x55, 0x34, 0x51, 0xb9, 0xfe, 0xea, 0x44, 0xbf, 0x45, 0x61, 0xd3, 0x76, 0x63,
-	0x0f, 0x43, 0xdb, 0x0d, 0xc3, 0x4b, 0x64, 0x49, 0x88, 0x2b, 0x04, 0xcd, 0xcf, 0x29, 0xff, 0x35,
-	0x0f, 0x5a, 0x48, 0xeb, 0x0a, 0xea, 0xf2, 0xe8, 0x2f, 0x4c, 0xe0, 0x33, 0x9e, 0xfa, 0xab, 0x04,
-	0xad, 0xff, 0x54, 0xbc, 0x07, 0x20, 0x5c, 0x3e, 0x44, 0x41, 0xa7, 0x25, 0x35, 0x33, 0x8f, 0x24,
-	0xc8, 0x22, 0xdd, 0xb8, 0x71, 0x8c, 0x61, 0x5e, 0xd8, 0xb1, 0x49, 0xf6, 0xa1, 0x91, 0xa8, 0xb0,
-	0x54, 0x8c, 0x12, 0xcc, 0x8b, 0x0b, 0x99, 0xeb, 0x6a, 0x94, 0x60, 0x01, 0xc0, 0x59, 0x88, 0xaa,
-	0xc6, 0x13, 0x80, 0xc3, 0x42, 0xb4, 0x7e, 0xce, 0xa8, 0x4f, 0x97, 0xa9, 0xdf, 0x87, 0x06, 0x47,
-	0x0f, 0x83, 0xfb, 0x6c, 0xbf, 0xac, 0x04, 0x41, 0xee, 0x9a, 0x51, 0x5b, 0xd1, 0xd5, 0xca, 0x3e,
-	0xe4, 0x9c, 0xaa, 0x56, 0xae, 0xe6, 0x7d, 0xc8, 0xb9, 0x2d, 0xbb, 0x79, 0x1b, 0xe4, 0x92, 0x46,
-	0xe9, 0x50, 0x7d, 0x84, 0xe9, 0xd4, 0x90, 0x73, 0x79, 0x33, 0x0a, 0x69, 0xaf, 0x69, 0x69, 0xbf,
-	0x85, 0x46, 0xa6, 0xf9, 0x3c, 0x16, 0x7c, 0xf4, 0xf4, 0x9c, 0x2f, 0x96, 0xb9, 0xe8, 0x1e, 0x59,
-	0x02, 0xd6, 0xb3, 0x90, 0x9f, 0xd0, 0xbd, 0x5f, 0x25, 0x57, 0xcf, 0x12, 0xf5, 0x47, 0x09, 0x4c,
-	0x59, 0x21, 0x07, 0x93, 0x70, 0xe9, 0x77, 0xee, 0x40, 0x3d, 0xc5, 0xd8, 0xa7, 0xd3, 0xb0, 0x86,
-	0xb4, 0xaf, 0x57, 0x6b, 0xb2, 0x7c, 0x12, 0x54, 0xb5, 0x49, 0x20, 0xcf, 0x8c, 0xd2, 0x61, 0xb1,
-	0xc3, 0x8c, 0x28, 0x1d, 0xaa, 0xf6, 0x5a, 0x54, 0x9d, 0xb7, 0xbf, 0x6b, 0x60, 0x5e, 0x3d, 0x04,
-	0xf1, 0xa9, 0x1c, 0x81, 0xe4, 0x18, 0x5a, 0x76, 0x9f, 0x4e, 0xdb, 0x8c, 0x6c, 0x74, 0x93, 0x41,
-	0x57, 0xbb, 0x34, 0xbb, 0xa6, 0x74, 0x9d, 0x47, 0x89, 0x18, 0x59, 0x2f, 0x24, 0xa1, 0x6f, 0x3f,
-	0x4a, 0x48, 0x75, 0xc2, 0x09, 0x6c, 0xaa, 0x08, 0xfa, 0xf8, 0x20, 0xdb, 0x19, 0x6d, 0x6e, 0xa8,
-	0xcc, 0x91, 0x55, 0xb4, 0x7f, 0x22, 0x1f, 0x41, 0xd3, 0xee, 0xd3, 0xc9, 0x98, 0x24, 0x2d, 0xb9,
-	0x39, 0x31, 0x75, 0x6c, 0x17, 0xd6, 0xed, 0x3e, 0x2d, 0xb6, 0xed, 0x4b, 0xb9, 0x5d, 0x70, 0xcc,
-	0xe1, 0xfb, 0xf6, 0x13, 0xf0, 0x6f, 0x0a, 0xe7, 0xab, 0x1e, 0x25, 0x64, 0x8a, 0x1f, 0x37, 0xed,
-	0x1c, 0x65, 0x12, 0x62, 0x45, 0xca, 0x11, 0x34, 0xf3, 0xe2, 0x64, 0x2d, 0xd9, 0x1a, 0xd7, 0x46,
-	0x99, 0xb3, 0xc7, 0x6f, 0x69, 0x95, 0x3f, 0xf5, 0x3c, 0xfc, 0x96, 0x08, 0xd2, 0x1c, 0x73, 0xe4,
-	0x30, 0xd6, 0x29, 0xaf, 0xf3, 0x6a, 0x14, 0x29, 0x8f, 0x33, 0xba, 0xb0, 0xa1, 0x05, 0x39, 0xc3,
-	0x78, 0xb4, 0x04, 0xaf, 0x45, 0x58, 0x86, 0x7f, 0x0f, 0x6d, 0xbb, 0x4f, 0xb5, 0xd7, 0x90, 0x6c,
-	0x49, 0xc0, 0xec, 0x03, 0xa9, 0xd3, 0x5e, 0x01, 0xc8, 0xd4, 0xe6, 0x4f, 0x7c, 0x43, 0xa5, 0x35,
-	0x33, 0x74, 0xdc, 0x21, 0x18, 0x3d, 0xdf, 0x0e, 0x59, 0x8a, 0xa4, 0x2d, 0xfd, 0xbd, 0x33, 0x65,
-	0x9c, 0xcb, 0x27, 0x7a, 0x36, 0xf3, 0xf5, 0x9e, 0x6f, 0x73, 0x74, 0x45, 0x7e, 0x23, 0x7a, 0x67,
-	0x99, 0x35, 0x8f, 0xfd, 0x60, 0x7c, 0x5d, 0xeb, 0x1e, 0x9f, 0x24, 0x83, 0x41, 0x4d, 0xfd, 0x6e,
-	0xbc, 0xfb, 0x13, 0x00, 0x00, 0xff, 0xff, 0xb6, 0x71, 0xb6, 0x1e, 0x94, 0x08, 0x00, 0x00,
+	// 641 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x55, 0xcd, 0x4e, 0xdb, 0x40,
+	0x10, 0x6e, 0x12, 0x88, 0xe3, 0x21, 0xa1, 0x61, 0xa9, 0x44, 0x40, 0x42, 0xa0, 0x9c, 0x22, 0x0e,
+	0xa1, 0x3f, 0xea, 0x89, 0x13, 0x35, 0x44, 0xad, 0xd4, 0x4a, 0x95, 0x03, 0x3d, 0xf4, 0x62, 0x39,
+	0xf6, 0xc8, 0xb5, 0x64, 0xef, 0x2e, 0xeb, 0x05, 0x94, 0xd7, 0xea, 0xa1, 0x97, 0xbe, 0x47, 0x9f,
+	0xa7, 0xda, 0x5d, 0x27, 0x78, 0x13, 0x01, 0xa1, 0xe5, 0x96, 0x99, 0x9d, 0x6f, 0xe6, 0x9b, 0x6f,
+	0xc6, 0x13, 0xe8, 0xca, 0xdb, 0x94, 0x06, 0x61, 0xc2, 0x44, 0x38, 0xe4, 0x82, 0x49, 0x46, 0xea,
+	0x7c, 0xb2, 0xd7, 0x8e, 0x58, 0x9e, 0x33, 0x6a, 0x3c, 0x7d, 0x0e, 0x5d, 0x9f, 0xb1, 0xfc, 0x23,
+	0x86, 0x42, 0x4e, 0x30, 0x94, 0x3e, 0x5e, 0x91, 0x7d, 0x80, 0x82, 0x5d, 0x8b, 0x08, 0x83, 0xeb,
+	0x34, 0xee, 0xd5, 0x0e, 0x6b, 0x83, 0x75, 0xdf, 0x35, 0x9e, 0xcb, 0x34, 0x26, 0x04, 0xd6, 0x64,
+	0x9a, 0x63, 0xaf, 0x7e, 0x58, 0x1b, 0x34, 0x7c, 0xfd, 0x9b, 0xec, 0x80, 0x23, 0x18, 0xcb, 0x83,
+	0x34, 0xee, 0x35, 0x0e, 0x6b, 0x03, 0xd7, 0x6f, 0x2a, 0xf3, 0x53, 0x4c, 0xba, 0xd0, 0x50, 0x49,
+	0xd6, 0x74, 0x12, 0xf5, 0xb3, 0x1f, 0xc0, 0xb6, 0x17, 0xd2, 0x08, 0x33, 0x2f, 0xcc, 0xb2, 0xaf,
+	0xc8, 0x78, 0x86, 0x2b, 0x14, 0x2d, 0xf3, 0xd4, 0xe7, 0x79, 0xee, 0x2d, 0xd9, 0xbf, 0x80, 0x96,
+	0x4a, 0xfd, 0x8d, 0x49, 0x7c, 0xc6, 0xac, 0xbf, 0x6b, 0xd0, 0xf9, 0x4f, 0xc6, 0xfb, 0x00, 0x32,
+	0x14, 0x09, 0x4a, 0x0d, 0x68, 0x18, 0x80, 0xf1, 0x28, 0x40, 0x0f, 0x9c, 0xe8, 0x47, 0x48, 0x29,
+	0x66, 0x5a, 0x2e, 0xd7, 0x9f, 0x99, 0xe4, 0x00, 0x36, 0xb8, 0x2e, 0x1b, 0xc8, 0x29, 0xc7, 0xde,
+	0xba, 0x46, 0x82, 0x71, 0x5d, 0x4c, 0x39, 0x56, 0x02, 0x04, 0xcb, 0xb0, 0xd7, 0xac, 0x06, 0xf8,
+	0x2c, 0xc3, 0xfe, 0xaf, 0x05, 0xf6, 0xc5, 0x63, 0xec, 0x0f, 0x60, 0x43, 0x60, 0x84, 0xe9, 0x8d,
+	0x79, 0xaf, 0x6b, 0x42, 0x50, 0xba, 0x16, 0xd8, 0x36, 0x6c, 0xb6, 0xbb, 0xd0, 0x42, 0x21, 0x82,
+	0x88, 0xc5, 0x58, 0xce, 0xdd, 0x41, 0x21, 0x3c, 0x16, 0xeb, 0x35, 0x51, 0x4f, 0x79, 0x91, 0xe8,
+	0x26, 0x5c, 0xbf, 0x89, 0x42, 0x7c, 0x29, 0x92, 0xaa, 0xec, 0x4d, 0x4b, 0xf6, 0x2b, 0xd8, 0x30,
+	0x9c, 0xcf, 0xa9, 0x14, 0xd3, 0xa7, 0x6b, 0x7e, 0x3f, 0xcd, 0x4a, 0xc9, 0x35, 0xab, 0xa4, 0x84,
+	0x4d, 0x53, 0xf2, 0x33, 0x86, 0x37, 0xab, 0x68, 0xf5, 0x2c, 0x55, 0x7f, 0xd6, 0xc0, 0x55, 0x13,
+	0xf2, 0x91, 0x67, 0x8f, 0xf6, 0xb9, 0x0b, 0xad, 0x02, 0x69, 0x1c, 0xdc, 0x95, 0x75, 0x94, 0x7d,
+	0xb9, 0xda, 0x92, 0x31, 0x2a, 0x91, 0xca, 0xf9, 0x92, 0x19, 0x53, 0xe5, 0xcc, 0x8b, 0xa4, 0xba,
+	0x61, 0x4e, 0x5e, 0x24, 0x7a, 0xbd, 0xee, 0x9b, 0xce, 0xdb, 0x3f, 0x4d, 0x70, 0x2f, 0x6e, 0x53,
+	0x7a, 0xaa, 0x6e, 0x0c, 0x39, 0x82, 0xb6, 0x37, 0x0e, 0xe6, 0xa7, 0x84, 0x74, 0x86, 0x7c, 0x32,
+	0x9c, 0x9b, 0x7b, 0xae, 0x32, 0xcf, 0x73, 0x2e, 0xa7, 0xfd, 0x17, 0xe4, 0x18, 0x3a, 0xde, 0x38,
+	0xb8, 0x5b, 0x49, 0xb2, 0xa5, 0x5e, 0xad, 0x0f, 0xcc, 0x06, 0x9c, 0xc0, 0xb6, 0x06, 0xd8, 0x97,
+	0x83, 0xec, 0x18, 0xd8, 0xd2, 0x3d, 0xb1, 0xc1, 0x43, 0xd8, 0xf4, 0xc6, 0x41, 0x75, 0x91, 0x5e,
+	0xaa, 0xe7, 0x8a, 0xc3, 0x8e, 0x7f, 0x53, 0x89, 0xd7, 0x5b, 0x40, 0xc8, 0x5d, 0xfc, 0x6c, 0x2d,
+	0x6c, 0xc8, 0xeb, 0x92, 0xdf, 0x8c, 0xc3, 0x69, 0x14, 0x21, 0x97, 0xa4, 0x3d, 0x6b, 0x4b, 0x9d,
+	0xa3, 0x45, 0x52, 0x5b, 0x16, 0xe2, 0x0c, 0xe9, 0xf4, 0xa1, 0xf8, 0xf7, 0xd0, 0xf5, 0xc6, 0x81,
+	0x75, 0xad, 0xc9, 0x2b, 0x15, 0xb0, 0x78, 0xc0, 0x97, 0x94, 0x1e, 0x7b, 0x0f, 0x2a, 0x5d, 0x2c,
+	0x29, 0xad, 0x01, 0xff, 0xaa, 0xf4, 0xd8, 0x7b, 0x9a, 0xd2, 0xf3, 0xf8, 0x15, 0x95, 0x3e, 0x82,
+	0x76, 0xd9, 0x90, 0xf9, 0x56, 0x3a, 0xb3, 0x7e, 0xb4, 0xb9, 0x34, 0x15, 0xab, 0xf9, 0x95, 0xa6,
+	0x62, 0x21, 0x1e, 0x9b, 0xca, 0x00, 0x9c, 0x51, 0xec, 0x65, 0xac, 0x40, 0xd2, 0x55, 0xfe, 0xd1,
+	0x99, 0x36, 0xce, 0x6f, 0x90, 0xca, 0x45, 0xde, 0xad, 0x51, 0xec, 0x09, 0x0c, 0x65, 0x39, 0x83,
+	0xd1, 0x99, 0xb1, 0x96, 0x63, 0x3f, 0x38, 0xdf, 0xd7, 0x87, 0xc7, 0x27, 0x7c, 0x32, 0x69, 0xea,
+	0xbf, 0xe9, 0x77, 0x7f, 0x03, 0x00, 0x00, 0xff, 0xff, 0x53, 0x35, 0x6f, 0xeb, 0xcc, 0x07, 0x00,
+	0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -722,22 +638,21 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type TwinAgoraClient interface {
-	CS_CallPeople(ctx context.Context, in *CallPeopleReq, opts ...grpc.CallOption) (*Empty, error)
-	SC_CallPeople(ctx context.Context, in *CallPeopleRes, opts ...grpc.CallOption) (*Empty, error)
-	CS_CancelCallPeople(ctx context.Context, in *CancelCallPeopleReq, opts ...grpc.CallOption) (*Empty, error)
-	SC_CancelCallPeople(ctx context.Context, in *CancelCallPeopleReq, opts ...grpc.CallOption) (*Empty, error)
 	CS_Heartbeat(ctx context.Context, in *Heartbeat, opts ...grpc.CallOption) (*Empty, error)
+	CS_CallPeople(ctx context.Context, in *CallPeopleReq, opts ...grpc.CallOption) (*Empty, error)
+	CS_CancelCallPeople(ctx context.Context, in *CancelCallPeopleReq, opts ...grpc.CallOption) (*Empty, error)
 	CS_PeopleEntry(ctx context.Context, in *PeopleEntry, opts ...grpc.CallOption) (*Empty, error)
-	SC_PeopleEntry(ctx context.Context, in *PeopleEntry, opts ...grpc.CallOption) (*Empty, error)
 	CS_PeopleLeave(ctx context.Context, in *PeopleLeaveRes, opts ...grpc.CallOption) (*Empty, error)
+	CS_CallPeopleAccept(ctx context.Context, in *CallVote, opts ...grpc.CallOption) (*Empty, error)
+	CS_CallPeopleDeny(ctx context.Context, in *CallVote, opts ...grpc.CallOption) (*Empty, error)
+	CS_RoomHeartbeat(ctx context.Context, in *RoomHeartbeatReq, opts ...grpc.CallOption) (*Empty, error)
+	SC_CallPeople(ctx context.Context, in *CallPeopleRes, opts ...grpc.CallOption) (*Empty, error)
+	SC_CancelCallPeople(ctx context.Context, in *CancelCallPeopleReq, opts ...grpc.CallOption) (*Empty, error)
+	SC_PeopleEntry(ctx context.Context, in *PeopleEntry, opts ...grpc.CallOption) (*Empty, error)
 	SC_PeopleLeave(ctx context.Context, in *PeopleLeaveRes, opts ...grpc.CallOption) (*Empty, error)
 	SC_CallReply(ctx context.Context, in *CallReply, opts ...grpc.CallOption) (*Empty, error)
-	CS_CallPeopleAccefpt(ctx context.Context, in *CallVote, opts ...grpc.CallOption) (*Empty, error)
 	SC_CallPeopleAccept(ctx context.Context, in *CallVote, opts ...grpc.CallOption) (*Empty, error)
-	CS_CallPeopleDeny(ctx context.Context, in *CallVote, opts ...grpc.CallOption) (*Empty, error)
 	SC_CallPeopleDeny(ctx context.Context, in *CallVote, opts ...grpc.CallOption) (*Empty, error)
-	CS_RoomHeartbeat(ctx context.Context, in *RoomHeartbeatReq, opts ...grpc.CallOption) (*Empty, error)
-	SC_PushMsg(ctx context.Context, in *PushMsg, opts ...grpc.CallOption) (*Empty, error)
 	FdClose(ctx context.Context, in *FDCloseEvent, opts ...grpc.CallOption) (*Empty, error)
 	FdCreate(ctx context.Context, in *FDCreateEvent, opts ...grpc.CallOption) (*Empty, error)
 }
@@ -750,18 +665,18 @@ func NewTwinAgoraClient(cc *grpc.ClientConn) TwinAgoraClient {
 	return &twinAgoraClient{cc}
 }
 
-func (c *twinAgoraClient) CS_CallPeople(ctx context.Context, in *CallPeopleReq, opts ...grpc.CallOption) (*Empty, error) {
+func (c *twinAgoraClient) CS_Heartbeat(ctx context.Context, in *Heartbeat, opts ...grpc.CallOption) (*Empty, error) {
 	out := new(Empty)
-	err := c.cc.Invoke(ctx, "/pb.TwinAgora/CS_CallPeople", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/pb.TwinAgora/CS_Heartbeat", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *twinAgoraClient) SC_CallPeople(ctx context.Context, in *CallPeopleRes, opts ...grpc.CallOption) (*Empty, error) {
+func (c *twinAgoraClient) CS_CallPeople(ctx context.Context, in *CallPeopleReq, opts ...grpc.CallOption) (*Empty, error) {
 	out := new(Empty)
-	err := c.cc.Invoke(ctx, "/pb.TwinAgora/SC_CallPeople", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/pb.TwinAgora/CS_CallPeople", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -777,24 +692,6 @@ func (c *twinAgoraClient) CS_CancelCallPeople(ctx context.Context, in *CancelCal
 	return out, nil
 }
 
-func (c *twinAgoraClient) SC_CancelCallPeople(ctx context.Context, in *CancelCallPeopleReq, opts ...grpc.CallOption) (*Empty, error) {
-	out := new(Empty)
-	err := c.cc.Invoke(ctx, "/pb.TwinAgora/SC_CancelCallPeople", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *twinAgoraClient) CS_Heartbeat(ctx context.Context, in *Heartbeat, opts ...grpc.CallOption) (*Empty, error) {
-	out := new(Empty)
-	err := c.cc.Invoke(ctx, "/pb.TwinAgora/CS_Heartbeat", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *twinAgoraClient) CS_PeopleEntry(ctx context.Context, in *PeopleEntry, opts ...grpc.CallOption) (*Empty, error) {
 	out := new(Empty)
 	err := c.cc.Invoke(ctx, "/pb.TwinAgora/CS_PeopleEntry", in, out, opts...)
@@ -804,18 +701,63 @@ func (c *twinAgoraClient) CS_PeopleEntry(ctx context.Context, in *PeopleEntry, o
 	return out, nil
 }
 
-func (c *twinAgoraClient) SC_PeopleEntry(ctx context.Context, in *PeopleEntry, opts ...grpc.CallOption) (*Empty, error) {
+func (c *twinAgoraClient) CS_PeopleLeave(ctx context.Context, in *PeopleLeaveRes, opts ...grpc.CallOption) (*Empty, error) {
 	out := new(Empty)
-	err := c.cc.Invoke(ctx, "/pb.TwinAgora/SC_PeopleEntry", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/pb.TwinAgora/CS_PeopleLeave", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *twinAgoraClient) CS_PeopleLeave(ctx context.Context, in *PeopleLeaveRes, opts ...grpc.CallOption) (*Empty, error) {
+func (c *twinAgoraClient) CS_CallPeopleAccept(ctx context.Context, in *CallVote, opts ...grpc.CallOption) (*Empty, error) {
 	out := new(Empty)
-	err := c.cc.Invoke(ctx, "/pb.TwinAgora/CS_PeopleLeave", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/pb.TwinAgora/CS_CallPeopleAccept", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *twinAgoraClient) CS_CallPeopleDeny(ctx context.Context, in *CallVote, opts ...grpc.CallOption) (*Empty, error) {
+	out := new(Empty)
+	err := c.cc.Invoke(ctx, "/pb.TwinAgora/CS_CallPeopleDeny", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *twinAgoraClient) CS_RoomHeartbeat(ctx context.Context, in *RoomHeartbeatReq, opts ...grpc.CallOption) (*Empty, error) {
+	out := new(Empty)
+	err := c.cc.Invoke(ctx, "/pb.TwinAgora/CS_RoomHeartbeat", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *twinAgoraClient) SC_CallPeople(ctx context.Context, in *CallPeopleRes, opts ...grpc.CallOption) (*Empty, error) {
+	out := new(Empty)
+	err := c.cc.Invoke(ctx, "/pb.TwinAgora/SC_CallPeople", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *twinAgoraClient) SC_CancelCallPeople(ctx context.Context, in *CancelCallPeopleReq, opts ...grpc.CallOption) (*Empty, error) {
+	out := new(Empty)
+	err := c.cc.Invoke(ctx, "/pb.TwinAgora/SC_CancelCallPeople", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *twinAgoraClient) SC_PeopleEntry(ctx context.Context, in *PeopleEntry, opts ...grpc.CallOption) (*Empty, error) {
+	out := new(Empty)
+	err := c.cc.Invoke(ctx, "/pb.TwinAgora/SC_PeopleEntry", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -840,15 +782,6 @@ func (c *twinAgoraClient) SC_CallReply(ctx context.Context, in *CallReply, opts 
 	return out, nil
 }
 
-func (c *twinAgoraClient) CS_CallPeopleAccefpt(ctx context.Context, in *CallVote, opts ...grpc.CallOption) (*Empty, error) {
-	out := new(Empty)
-	err := c.cc.Invoke(ctx, "/pb.TwinAgora/CS_CallPeopleAccefpt", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *twinAgoraClient) SC_CallPeopleAccept(ctx context.Context, in *CallVote, opts ...grpc.CallOption) (*Empty, error) {
 	out := new(Empty)
 	err := c.cc.Invoke(ctx, "/pb.TwinAgora/SC_CallPeopleAccept", in, out, opts...)
@@ -858,36 +791,9 @@ func (c *twinAgoraClient) SC_CallPeopleAccept(ctx context.Context, in *CallVote,
 	return out, nil
 }
 
-func (c *twinAgoraClient) CS_CallPeopleDeny(ctx context.Context, in *CallVote, opts ...grpc.CallOption) (*Empty, error) {
-	out := new(Empty)
-	err := c.cc.Invoke(ctx, "/pb.TwinAgora/CS_CallPeopleDeny", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *twinAgoraClient) SC_CallPeopleDeny(ctx context.Context, in *CallVote, opts ...grpc.CallOption) (*Empty, error) {
 	out := new(Empty)
 	err := c.cc.Invoke(ctx, "/pb.TwinAgora/SC_CallPeopleDeny", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *twinAgoraClient) CS_RoomHeartbeat(ctx context.Context, in *RoomHeartbeatReq, opts ...grpc.CallOption) (*Empty, error) {
-	out := new(Empty)
-	err := c.cc.Invoke(ctx, "/pb.TwinAgora/CS_RoomHeartbeat", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *twinAgoraClient) SC_PushMsg(ctx context.Context, in *PushMsg, opts ...grpc.CallOption) (*Empty, error) {
-	out := new(Empty)
-	err := c.cc.Invoke(ctx, "/pb.TwinAgora/SC_PushMsg", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -914,22 +820,21 @@ func (c *twinAgoraClient) FdCreate(ctx context.Context, in *FDCreateEvent, opts 
 
 // TwinAgoraServer is the server API for TwinAgora service.
 type TwinAgoraServer interface {
-	CS_CallPeople(context.Context, *CallPeopleReq) (*Empty, error)
-	SC_CallPeople(context.Context, *CallPeopleRes) (*Empty, error)
-	CS_CancelCallPeople(context.Context, *CancelCallPeopleReq) (*Empty, error)
-	SC_CancelCallPeople(context.Context, *CancelCallPeopleReq) (*Empty, error)
 	CS_Heartbeat(context.Context, *Heartbeat) (*Empty, error)
+	CS_CallPeople(context.Context, *CallPeopleReq) (*Empty, error)
+	CS_CancelCallPeople(context.Context, *CancelCallPeopleReq) (*Empty, error)
 	CS_PeopleEntry(context.Context, *PeopleEntry) (*Empty, error)
-	SC_PeopleEntry(context.Context, *PeopleEntry) (*Empty, error)
 	CS_PeopleLeave(context.Context, *PeopleLeaveRes) (*Empty, error)
+	CS_CallPeopleAccept(context.Context, *CallVote) (*Empty, error)
+	CS_CallPeopleDeny(context.Context, *CallVote) (*Empty, error)
+	CS_RoomHeartbeat(context.Context, *RoomHeartbeatReq) (*Empty, error)
+	SC_CallPeople(context.Context, *CallPeopleRes) (*Empty, error)
+	SC_CancelCallPeople(context.Context, *CancelCallPeopleReq) (*Empty, error)
+	SC_PeopleEntry(context.Context, *PeopleEntry) (*Empty, error)
 	SC_PeopleLeave(context.Context, *PeopleLeaveRes) (*Empty, error)
 	SC_CallReply(context.Context, *CallReply) (*Empty, error)
-	CS_CallPeopleAccefpt(context.Context, *CallVote) (*Empty, error)
 	SC_CallPeopleAccept(context.Context, *CallVote) (*Empty, error)
-	CS_CallPeopleDeny(context.Context, *CallVote) (*Empty, error)
 	SC_CallPeopleDeny(context.Context, *CallVote) (*Empty, error)
-	CS_RoomHeartbeat(context.Context, *RoomHeartbeatReq) (*Empty, error)
-	SC_PushMsg(context.Context, *PushMsg) (*Empty, error)
 	FdClose(context.Context, *FDCloseEvent) (*Empty, error)
 	FdCreate(context.Context, *FDCreateEvent) (*Empty, error)
 }
@@ -938,29 +843,38 @@ type TwinAgoraServer interface {
 type UnimplementedTwinAgoraServer struct {
 }
 
+func (*UnimplementedTwinAgoraServer) CS_Heartbeat(ctx context.Context, req *Heartbeat) (*Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CS_Heartbeat not implemented")
+}
 func (*UnimplementedTwinAgoraServer) CS_CallPeople(ctx context.Context, req *CallPeopleReq) (*Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CS_CallPeople not implemented")
-}
-func (*UnimplementedTwinAgoraServer) SC_CallPeople(ctx context.Context, req *CallPeopleRes) (*Empty, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method SC_CallPeople not implemented")
 }
 func (*UnimplementedTwinAgoraServer) CS_CancelCallPeople(ctx context.Context, req *CancelCallPeopleReq) (*Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CS_CancelCallPeople not implemented")
 }
-func (*UnimplementedTwinAgoraServer) SC_CancelCallPeople(ctx context.Context, req *CancelCallPeopleReq) (*Empty, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method SC_CancelCallPeople not implemented")
-}
-func (*UnimplementedTwinAgoraServer) CS_Heartbeat(ctx context.Context, req *Heartbeat) (*Empty, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method CS_Heartbeat not implemented")
-}
 func (*UnimplementedTwinAgoraServer) CS_PeopleEntry(ctx context.Context, req *PeopleEntry) (*Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CS_PeopleEntry not implemented")
 }
-func (*UnimplementedTwinAgoraServer) SC_PeopleEntry(ctx context.Context, req *PeopleEntry) (*Empty, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method SC_PeopleEntry not implemented")
-}
 func (*UnimplementedTwinAgoraServer) CS_PeopleLeave(ctx context.Context, req *PeopleLeaveRes) (*Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CS_PeopleLeave not implemented")
+}
+func (*UnimplementedTwinAgoraServer) CS_CallPeopleAccept(ctx context.Context, req *CallVote) (*Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CS_CallPeopleAccept not implemented")
+}
+func (*UnimplementedTwinAgoraServer) CS_CallPeopleDeny(ctx context.Context, req *CallVote) (*Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CS_CallPeopleDeny not implemented")
+}
+func (*UnimplementedTwinAgoraServer) CS_RoomHeartbeat(ctx context.Context, req *RoomHeartbeatReq) (*Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CS_RoomHeartbeat not implemented")
+}
+func (*UnimplementedTwinAgoraServer) SC_CallPeople(ctx context.Context, req *CallPeopleRes) (*Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SC_CallPeople not implemented")
+}
+func (*UnimplementedTwinAgoraServer) SC_CancelCallPeople(ctx context.Context, req *CancelCallPeopleReq) (*Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SC_CancelCallPeople not implemented")
+}
+func (*UnimplementedTwinAgoraServer) SC_PeopleEntry(ctx context.Context, req *PeopleEntry) (*Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SC_PeopleEntry not implemented")
 }
 func (*UnimplementedTwinAgoraServer) SC_PeopleLeave(ctx context.Context, req *PeopleLeaveRes) (*Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SC_PeopleLeave not implemented")
@@ -968,23 +882,11 @@ func (*UnimplementedTwinAgoraServer) SC_PeopleLeave(ctx context.Context, req *Pe
 func (*UnimplementedTwinAgoraServer) SC_CallReply(ctx context.Context, req *CallReply) (*Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SC_CallReply not implemented")
 }
-func (*UnimplementedTwinAgoraServer) CS_CallPeopleAccefpt(ctx context.Context, req *CallVote) (*Empty, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method CS_CallPeopleAccefpt not implemented")
-}
 func (*UnimplementedTwinAgoraServer) SC_CallPeopleAccept(ctx context.Context, req *CallVote) (*Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SC_CallPeopleAccept not implemented")
 }
-func (*UnimplementedTwinAgoraServer) CS_CallPeopleDeny(ctx context.Context, req *CallVote) (*Empty, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method CS_CallPeopleDeny not implemented")
-}
 func (*UnimplementedTwinAgoraServer) SC_CallPeopleDeny(ctx context.Context, req *CallVote) (*Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SC_CallPeopleDeny not implemented")
-}
-func (*UnimplementedTwinAgoraServer) CS_RoomHeartbeat(ctx context.Context, req *RoomHeartbeatReq) (*Empty, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method CS_RoomHeartbeat not implemented")
-}
-func (*UnimplementedTwinAgoraServer) SC_PushMsg(ctx context.Context, req *PushMsg) (*Empty, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method SC_PushMsg not implemented")
 }
 func (*UnimplementedTwinAgoraServer) FdClose(ctx context.Context, req *FDCloseEvent) (*Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method FdClose not implemented")
@@ -995,6 +897,24 @@ func (*UnimplementedTwinAgoraServer) FdCreate(ctx context.Context, req *FDCreate
 
 func RegisterTwinAgoraServer(s *grpc.Server, srv TwinAgoraServer) {
 	s.RegisterService(&_TwinAgora_serviceDesc, srv)
+}
+
+func _TwinAgora_CS_Heartbeat_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Heartbeat)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TwinAgoraServer).CS_Heartbeat(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/pb.TwinAgora/CS_Heartbeat",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TwinAgoraServer).CS_Heartbeat(ctx, req.(*Heartbeat))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _TwinAgora_CS_CallPeople_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -1011,24 +931,6 @@ func _TwinAgora_CS_CallPeople_Handler(srv interface{}, ctx context.Context, dec 
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(TwinAgoraServer).CS_CallPeople(ctx, req.(*CallPeopleReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _TwinAgora_SC_CallPeople_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CallPeopleRes)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(TwinAgoraServer).SC_CallPeople(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/pb.TwinAgora/SC_CallPeople",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TwinAgoraServer).SC_CallPeople(ctx, req.(*CallPeopleRes))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1051,42 +953,6 @@ func _TwinAgora_CS_CancelCallPeople_Handler(srv interface{}, ctx context.Context
 	return interceptor(ctx, in, info, handler)
 }
 
-func _TwinAgora_SC_CancelCallPeople_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CancelCallPeopleReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(TwinAgoraServer).SC_CancelCallPeople(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/pb.TwinAgora/SC_CancelCallPeople",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TwinAgoraServer).SC_CancelCallPeople(ctx, req.(*CancelCallPeopleReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _TwinAgora_CS_Heartbeat_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Heartbeat)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(TwinAgoraServer).CS_Heartbeat(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/pb.TwinAgora/CS_Heartbeat",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TwinAgoraServer).CS_Heartbeat(ctx, req.(*Heartbeat))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _TwinAgora_CS_PeopleEntry_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(PeopleEntry)
 	if err := dec(in); err != nil {
@@ -1105,24 +971,6 @@ func _TwinAgora_CS_PeopleEntry_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
-func _TwinAgora_SC_PeopleEntry_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(PeopleEntry)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(TwinAgoraServer).SC_PeopleEntry(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/pb.TwinAgora/SC_PeopleEntry",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TwinAgoraServer).SC_PeopleEntry(ctx, req.(*PeopleEntry))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _TwinAgora_CS_PeopleLeave_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(PeopleLeaveRes)
 	if err := dec(in); err != nil {
@@ -1137,6 +985,114 @@ func _TwinAgora_CS_PeopleLeave_Handler(srv interface{}, ctx context.Context, dec
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(TwinAgoraServer).CS_PeopleLeave(ctx, req.(*PeopleLeaveRes))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _TwinAgora_CS_CallPeopleAccept_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CallVote)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TwinAgoraServer).CS_CallPeopleAccept(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/pb.TwinAgora/CS_CallPeopleAccept",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TwinAgoraServer).CS_CallPeopleAccept(ctx, req.(*CallVote))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _TwinAgora_CS_CallPeopleDeny_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CallVote)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TwinAgoraServer).CS_CallPeopleDeny(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/pb.TwinAgora/CS_CallPeopleDeny",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TwinAgoraServer).CS_CallPeopleDeny(ctx, req.(*CallVote))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _TwinAgora_CS_RoomHeartbeat_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RoomHeartbeatReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TwinAgoraServer).CS_RoomHeartbeat(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/pb.TwinAgora/CS_RoomHeartbeat",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TwinAgoraServer).CS_RoomHeartbeat(ctx, req.(*RoomHeartbeatReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _TwinAgora_SC_CallPeople_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CallPeopleRes)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TwinAgoraServer).SC_CallPeople(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/pb.TwinAgora/SC_CallPeople",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TwinAgoraServer).SC_CallPeople(ctx, req.(*CallPeopleRes))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _TwinAgora_SC_CancelCallPeople_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CancelCallPeopleReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TwinAgoraServer).SC_CancelCallPeople(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/pb.TwinAgora/SC_CancelCallPeople",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TwinAgoraServer).SC_CancelCallPeople(ctx, req.(*CancelCallPeopleReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _TwinAgora_SC_PeopleEntry_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PeopleEntry)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TwinAgoraServer).SC_PeopleEntry(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/pb.TwinAgora/SC_PeopleEntry",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TwinAgoraServer).SC_PeopleEntry(ctx, req.(*PeopleEntry))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1177,24 +1133,6 @@ func _TwinAgora_SC_CallReply_Handler(srv interface{}, ctx context.Context, dec f
 	return interceptor(ctx, in, info, handler)
 }
 
-func _TwinAgora_CS_CallPeopleAccefpt_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CallVote)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(TwinAgoraServer).CS_CallPeopleAccefpt(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/pb.TwinAgora/CS_CallPeopleAccefpt",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TwinAgoraServer).CS_CallPeopleAccefpt(ctx, req.(*CallVote))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _TwinAgora_SC_CallPeopleAccept_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CallVote)
 	if err := dec(in); err != nil {
@@ -1213,24 +1151,6 @@ func _TwinAgora_SC_CallPeopleAccept_Handler(srv interface{}, ctx context.Context
 	return interceptor(ctx, in, info, handler)
 }
 
-func _TwinAgora_CS_CallPeopleDeny_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CallVote)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(TwinAgoraServer).CS_CallPeopleDeny(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/pb.TwinAgora/CS_CallPeopleDeny",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TwinAgoraServer).CS_CallPeopleDeny(ctx, req.(*CallVote))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _TwinAgora_SC_CallPeopleDeny_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CallVote)
 	if err := dec(in); err != nil {
@@ -1245,42 +1165,6 @@ func _TwinAgora_SC_CallPeopleDeny_Handler(srv interface{}, ctx context.Context, 
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(TwinAgoraServer).SC_CallPeopleDeny(ctx, req.(*CallVote))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _TwinAgora_CS_RoomHeartbeat_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(RoomHeartbeatReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(TwinAgoraServer).CS_RoomHeartbeat(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/pb.TwinAgora/CS_RoomHeartbeat",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TwinAgoraServer).CS_RoomHeartbeat(ctx, req.(*RoomHeartbeatReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _TwinAgora_SC_PushMsg_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(PushMsg)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(TwinAgoraServer).SC_PushMsg(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/pb.TwinAgora/SC_PushMsg",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TwinAgoraServer).SC_PushMsg(ctx, req.(*PushMsg))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1326,36 +1210,48 @@ var _TwinAgora_serviceDesc = grpc.ServiceDesc{
 	HandlerType: (*TwinAgoraServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "CS_CallPeople",
-			Handler:    _TwinAgora_CS_CallPeople_Handler,
+			MethodName: "CS_Heartbeat",
+			Handler:    _TwinAgora_CS_Heartbeat_Handler,
 		},
 		{
-			MethodName: "SC_CallPeople",
-			Handler:    _TwinAgora_SC_CallPeople_Handler,
+			MethodName: "CS_CallPeople",
+			Handler:    _TwinAgora_CS_CallPeople_Handler,
 		},
 		{
 			MethodName: "CS_CancelCallPeople",
 			Handler:    _TwinAgora_CS_CancelCallPeople_Handler,
 		},
 		{
-			MethodName: "SC_CancelCallPeople",
-			Handler:    _TwinAgora_SC_CancelCallPeople_Handler,
-		},
-		{
-			MethodName: "CS_Heartbeat",
-			Handler:    _TwinAgora_CS_Heartbeat_Handler,
-		},
-		{
 			MethodName: "CS_PeopleEntry",
 			Handler:    _TwinAgora_CS_PeopleEntry_Handler,
 		},
 		{
-			MethodName: "SC_PeopleEntry",
-			Handler:    _TwinAgora_SC_PeopleEntry_Handler,
-		},
-		{
 			MethodName: "CS_PeopleLeave",
 			Handler:    _TwinAgora_CS_PeopleLeave_Handler,
+		},
+		{
+			MethodName: "CS_CallPeopleAccept",
+			Handler:    _TwinAgora_CS_CallPeopleAccept_Handler,
+		},
+		{
+			MethodName: "CS_CallPeopleDeny",
+			Handler:    _TwinAgora_CS_CallPeopleDeny_Handler,
+		},
+		{
+			MethodName: "CS_RoomHeartbeat",
+			Handler:    _TwinAgora_CS_RoomHeartbeat_Handler,
+		},
+		{
+			MethodName: "SC_CallPeople",
+			Handler:    _TwinAgora_SC_CallPeople_Handler,
+		},
+		{
+			MethodName: "SC_CancelCallPeople",
+			Handler:    _TwinAgora_SC_CancelCallPeople_Handler,
+		},
+		{
+			MethodName: "SC_PeopleEntry",
+			Handler:    _TwinAgora_SC_PeopleEntry_Handler,
 		},
 		{
 			MethodName: "SC_PeopleLeave",
@@ -1366,28 +1262,12 @@ var _TwinAgora_serviceDesc = grpc.ServiceDesc{
 			Handler:    _TwinAgora_SC_CallReply_Handler,
 		},
 		{
-			MethodName: "CS_CallPeopleAccefpt",
-			Handler:    _TwinAgora_CS_CallPeopleAccefpt_Handler,
-		},
-		{
 			MethodName: "SC_CallPeopleAccept",
 			Handler:    _TwinAgora_SC_CallPeopleAccept_Handler,
 		},
 		{
-			MethodName: "CS_CallPeopleDeny",
-			Handler:    _TwinAgora_CS_CallPeopleDeny_Handler,
-		},
-		{
 			MethodName: "SC_CallPeopleDeny",
 			Handler:    _TwinAgora_SC_CallPeopleDeny_Handler,
-		},
-		{
-			MethodName: "CS_RoomHeartbeat",
-			Handler:    _TwinAgora_CS_RoomHeartbeat_Handler,
-		},
-		{
-			MethodName: "SC_PushMsg",
-			Handler:    _TwinAgora_SC_PushMsg_Handler,
 		},
 		{
 			MethodName: "FdClose",

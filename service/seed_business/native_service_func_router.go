@@ -64,6 +64,16 @@ func (twinAgora *TwinAgora) NativeServiceFuncRouter(msg pb.Msg) (data []byte, er
 		return data, err
 	}
 
+	reqCallPeople.SourceUid = msg.SourceUid
+	reqFDCloseEvent.SourceUid = msg.SourceUid
+	reqHeartbeat.SourceUid = msg.SourceUid
+	reqFDCreateEvent.SourceUid = msg.SourceUid
+	reqCallVote.SourceUid = msg.SourceUid
+	reqRoomHeartbeat.SourceUid = msg.SourceUid
+	reqCancelCallPeople.SourceUid = msg.SourceUid
+	reqPeopleEntry.SourceUid = msg.SourceUid
+	reqPeopleLeaveRes.SourceUid = msg.SourceUid
+
 	switch protoServiceFunc.FuncName {
 	case "CS_CallPeople":
 		twinAgora.CallPeople(reqCallPeople)

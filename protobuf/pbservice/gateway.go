@@ -7,6 +7,14 @@ import (
 type Gateway struct{}
 
 
+func (gateway *Gateway)FdClose(ctx context.Context,fDCloseEvent *pb.FDCloseEvent) (*pb.Empty,error){
+    empty := &pb.Empty{}
+    return empty,nil
+}
+func (gateway *Gateway)FdCreate(ctx context.Context,fDCreateEvent *pb.FDCreateEvent) (*pb.Empty,error){
+    empty := &pb.Empty{}
+    return empty,nil
+}
 func (gateway *Gateway)CS_Login(ctx context.Context,login *pb.Login) (*pb.LoginRes,error){
     loginRes := &pb.LoginRes{}
     return loginRes,nil
@@ -43,15 +51,11 @@ func (gateway *Gateway)SC_KickOff(ctx context.Context,kickOff *pb.KickOff) (*pb.
     empty := &pb.Empty{}
     return empty,nil
 }
-func (gateway *Gateway)SC_ProjectPush(ctx context.Context,projectPushMsg *pb.ProjectPushMsg) (*pb.Empty,error){
+func (gateway *Gateway)SC_ProjectPushMsg(ctx context.Context,projectPushMsg *pb.ProjectPushMsg) (*pb.Empty,error){
     empty := &pb.Empty{}
     return empty,nil
 }
-func (gateway *Gateway)FdClose(ctx context.Context,fDCloseEvent *pb.FDCloseEvent) (*pb.Empty,error){
-    empty := &pb.Empty{}
-    return empty,nil
-}
-func (gateway *Gateway)FdCreate(ctx context.Context,fDCreateEvent *pb.FDCreateEvent) (*pb.Empty,error){
+func (gateway *Gateway)SC_SendMsg(ctx context.Context,msg *pb.Msg) (*pb.Empty,error){
     empty := &pb.Empty{}
     return empty,nil
 }

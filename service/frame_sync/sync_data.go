@@ -3,7 +3,6 @@ package frame_sync
 import (
 	"encoding/json"
 	"errors"
-	"github.com/golang/protobuf/proto"
 	"go.uber.org/zap"
 	"strconv"
 	"time"
@@ -93,9 +92,9 @@ func (sync *Sync) PlayerReady(requestPlayerReady pb.PlayerReady) error {
 	responseStartBattle := pb.StartBattle{
 		SequenceNumberStart: int32(0),
 	}
-	data, _ := proto.Marshal(&responseStartBattle)
+	//data, _ := proto.Marshal(&responseStartBattle)
 	//sync.boardCastFrameInRoom(room.Id, "SC_StartBattle", &responseStartBattle)
-	sync.boardCastFrameInRoom(room.Id, "SC_StartBattle", data)
+	sync.boardCastFrameInRoom(room.Id, "SC_StartBattle", &responseStartBattle)
 	room.UpStatus(service.ROOM_STATUS_EXECING)
 	room.StartTime = int32(util.GetNowTimeSecondToInt())
 
@@ -132,9 +131,9 @@ func (sync *Sync) StartOne(room *Room) {
 		//推送房间信息
 	}
 
-	data, _ := proto.Marshal(&responseClientInitRoomData)
+	//data, _ := proto.Marshal(&responseClientInitRoomData)
 	//sync.boardCastInRoom(room.Id, "SC_EnterBattle", &responseClientInitRoomData)
-	sync.boardCastInRoom(room.Id, "SC_EnterBattle", data)
+	sync.boardCastInRoom(room.Id, "SC_EnterBattle", &responseClientInitRoomData)
 	go sync.checkReadyTimeout(room)
 }
 
@@ -152,9 +151,9 @@ func (sync *Sync) checkReadyTimeout(room *Room) {
 				requestReadyTimeout := pb.ReadyTimeout{
 					RoomId: room.Id,
 				}
-				data, _ := proto.Marshal(&requestReadyTimeout)
+				//data, _ := proto.Marshal(&requestReadyTimeout)
 				//sync.boardCastInRoom(room.Id, "SC_ReadyTimeout", &requestReadyTimeout)
-				sync.boardCastInRoom(room.Id, "SC_ReadyTimeout", data)
+				sync.boardCastInRoom(room.Id, "SC_ReadyTimeout", &requestReadyTimeout)
 				sync.roomEnd(room.Id, 0)
 				goto end
 			}
@@ -188,7 +187,7 @@ func (sync *Sync) logicFrameLoop(room *Room) {
 		default:
 			if room.WaitPlayerOffline > 0 { //代表，有玩家掉线
 				if util.GetNowTimeSecondToInt() > room.WaitPlayerOffline { //等待玩家也是有超时的，一但超时，游戏直接结束
-					sync.Option.Log.Warn("====WaitPlayerOffline " + strconv.Itoa(room.WaitPlayerOffline))
+					//sync.Option.Log.Warn("====WaitPlayerOffline " + strconv.Itoa(room.WaitPlayerOffline))
 					requestGameOver := pb.GameOver{
 						SourceUid: 9999,
 						RoomId:    room.Id,
@@ -287,7 +286,7 @@ func (sync *Sync) logicFrameLoopReal(room *Room) error {
 
 		tmpElement := element.Next()
 		queue.Remove(element)
-		util.MyPrint("tmpElement:", tmpElement, " len:", queue.Len(), "i:", i)
+		//util.MyPrint("tmpElement:", tmpElement, " len:", queue.Len(), "i:", i)
 		element = tmpElement
 
 		i++
@@ -295,11 +294,11 @@ func (sync *Sync) logicFrameLoopReal(room *Room) error {
 	room.LogicFrameWaitTime = util.GetNowMillisecond() //每帧的等待时间清0，因为走到这里证明所有玩家本帧数据均已经收齐了
 	sync.upSyncRoomPoolElementPlayersAckStatus(room.Id, service.PLAYERS_ACK_STATUS_OK)
 
-	util.MyPrint("operations:", operations)
+	//util.MyPrint("operations:", operations)
 	logicFrame.Operations = operations
 	//sync.boardCastFrameInRoom(room.Id, "SC_PushLogicFrame", &logicFrame)
-	data, _ := proto.Marshal(&logicFrame)
-	sync.boardCastFrameInRoom(room.Id, "SC_PushLogicFrame", data)
+	//data, _ := proto.Marshal(&logicFrame)
+	sync.boardCastFrameInRoom(room.Id, "SC_LogicFrame", &logicFrame)
 
 	return nil
 }
@@ -454,9 +453,9 @@ func (sync *Sync) GameOver(requestGameOver pb.GameOver) {
 		SequenceNumber: requestGameOver.SequenceNumber,
 		Result:         requestGameOver.Result,
 	}
-	data, _ := proto.Marshal(&responseGameOver)
+	//data, _ := proto.Marshal(&responseGameOver)
 	//sync.boardCastInRoom(requestGameOver.RoomId, "SC_GameOver", &responseGameOver)
-	sync.boardCastInRoom(requestGameOver.RoomId, "SC_GameOver", data)
+	sync.boardCastInRoom(requestGameOver.RoomId, "SC_GameOver", responseGameOver)
 
 	sync.roomEnd(requestGameOver.RoomId, 1) //先要把房间结束了，停掉协程推送帧
 
@@ -467,9 +466,9 @@ func (sync *Sync) PlayerOver(requestGameOver pb.PlayerOver) error {
 	//roomId := mySyncPlayerRoom[requestGameOver.PlayerId]
 	roomId := requestGameOver.RoomId
 	responseOtherPlayerOver := pb.PlayerOver{PlayerId: requestGameOver.PlayerId}
-	data, _ := proto.Marshal(&responseOtherPlayerOver)
+	//data, _ := proto.Marshal(&responseOtherPlayerOver)
 	//sync.boardCastInRoom(roomId, "SC_OtherPlayerOver", &responseOtherPlayerOver)
-	sync.boardCastInRoom(roomId, "SC_OtherPlayerOver", data)
+	sync.boardCastInRoom(roomId, "SC_OtherPlayerOver", &responseOtherPlayerOver)
 	//这里先假设，只要有一个玩家死亡游戏即结束
 	GameOver := pb.GameOver{
 		SourceUid: requestGameOver.SourceUid,
@@ -484,7 +483,7 @@ func (sync *Sync) PlayerOver(requestGameOver pb.PlayerOver) error {
 //更新一个逻辑帧的确认状态
 func (sync *Sync) upSyncRoomPoolElementPlayersAckStatus(roomId string, status int) {
 	syncRoomPoolElement, _ := sync.Option.RoomManage.GetById(roomId)
-	sync.Option.Log.Warn("upSyncRoomPoolElementPlayersAckStatus ,old :" + strconv.Itoa(syncRoomPoolElement.PlayersAckStatus) + "new" + strconv.Itoa(status))
+	sync.Option.Log.Warn("upSyncRoomPoolElementPlayersAckStatus ,old :" + strconv.Itoa(syncRoomPoolElement.PlayersAckStatus) + " , new: " + strconv.Itoa(status))
 	syncRoomPoolElement.PlayersAckStatus = status
 }
 
@@ -547,9 +546,9 @@ func (sync *Sync) CloseOne(FDCloseEvent pb.FDCloseEvent) {
 			responseOtherPlayerOffline := pb.OtherPlayerOffline{
 				PlayerId: FDCloseEvent.UserId,
 			}
-			data, _ := proto.Marshal(&responseOtherPlayerOffline)
+			//data, _ := proto.Marshal(&responseOtherPlayerOffline)
 			//sync.boardCastInRoom(sync.Option.Room.Id, "SC_OtherPlayerOffline", &responseOtherPlayerOffline)
-			sync.boardCastInRoom(sync.Option.Room.Id, "SC_OtherPlayerOffline", data)
+			sync.boardCastInRoom(sync.Option.Room.Id, "SC_OtherPlayerOffline", &responseOtherPlayerOffline)
 		}
 	} else {
 		sync.Option.Log.Error("room.Status exception~~~")
@@ -572,14 +571,14 @@ func (sync *Sync) CloseOne(FDCloseEvent pb.FDCloseEvent) {
 
 //单纯的给一个房间里的人发消息，不考虑是否有顺序号的情况
 //func (sync *Sync) boardCastInRoom(roomId string, action string, contentStruct interface{}) {
-func (sync *Sync) boardCastInRoom(roomId string, action string, contentStruct []byte) {
+func (sync *Sync) boardCastInRoom(roomId string, action string, contentStruct interface{}) {
 	sync.Option.Log.Debug("boardCastInRoom id:" + roomId + " action:" + action)
 	room, empty := sync.Option.RoomManage.GetById(roomId)
 	if empty {
 		sync.Option.Log.Error("syncRoomPoolElement is empty!!!")
 		return
 	}
-	util.MyPrint("====room.PlayerIds", room.PlayerIds)
+	//util.MyPrint("====room.PlayerIds", room.PlayerIds)
 	for _, pid := range room.PlayerIds {
 		player, exist := sync.Option.RoomManage.Option.FrameSync.PlayerConnManager.GetById(pid)
 		if !exist {
@@ -594,7 +593,10 @@ func (sync *Sync) boardCastInRoom(roomId string, action string, contentStruct []
 		//sync.Option.RequestServiceAdapter.GatewaySendMsgByUid(player.Id, action, &contentStruct)
 
 		//data, _ := proto.Marshal(&playerState)
-		sync.Option.ServiceBridge.CallByName("Gateway", "SC_PlayerState", string(contentStruct), "", 0)
+		//sync.Option.ServiceBridge.CallByName("Gateway", "SC_PlayerState", string(contentStruct), "", 0)
+		callGatewayMsg := service.CallGatewayMsg{ServiceName: "FrameSync", FunName: action, TargetUid: pid, Data: contentStruct}
+		sync.Option.ServiceBridge.CallGateway(callGatewayMsg)
+
 	}
 	//content ,_:= json.Marshal(contentStruct)
 	content, _ := json.Marshal(util.JsonCamelCase{contentStruct})
@@ -603,7 +605,7 @@ func (sync *Sync) boardCastInRoom(roomId string, action string, contentStruct []
 
 //给一个副本里的所有玩家广播数据，且该数据必须得有C端ACK
 //func (sync *Sync) boardCastFrameInRoom(roomId string, action string, contentStruct interface{}) {
-func (sync *Sync) boardCastFrameInRoom(roomId string, action string, contentStruct []byte) {
+func (sync *Sync) boardCastFrameInRoom(roomId string, action string, contentStruct interface{}) {
 	sync.Option.Log.Warn("boardCastFrameInRoom , roomId:" + roomId + " action:" + action)
 	syncRoomPoolElement, empty := sync.Option.RoomManage.GetById(roomId)
 	if empty {
@@ -624,9 +626,11 @@ func (sync *Sync) boardCastFrameInRoom(roomId string, action string, contentStru
 			sync.Option.Log.Error("player offline")
 			continue
 		}
-		util.MyPrint("boardCastFrameInRoom contentStruct:", contentStruct)
+		//util.MyPrint("boardCastFrameInRoom contentStruct:", contentStruct)
 		//sync.Option.RequestServiceAdapter.GatewaySendMsgByUid(player.Id, action, &contentStruct)
-		sync.Option.ServiceBridge.CallByName("Gateway", action, string(contentStruct), "", 0)
+		//sync.Option.ServiceBridge.CallByName("Gateway", action, string(contentStruct), "", 0)
+		callGatewayMsg := service.CallGatewayMsg{ServiceName: "FrameSync", FunName: action, TargetUid: pid, Data: contentStruct}
+		sync.Option.ServiceBridge.CallGateway(callGatewayMsg)
 
 	}
 
@@ -659,10 +663,14 @@ func (sync *Sync) RoomHistory(roomHistory pb.ReqRoomHistory) error {
 	responsePushRoomHistory := pb.RoomHistorySets{}
 	responsePushRoomHistory.Sets = room.LogicFrameHistory
 
-	data, _ := proto.Marshal(&responsePushRoomHistory)
+	//data, _ := proto.Marshal(&responsePushRoomHistory)
 	//util.MyPrint(responsePushRoomHistory)
 	//sync.Option.RequestServiceAdapter.GatewaySendMsgByUid(roomHistory.SourceUid, "SC_RoomHistory", &responsePushRoomHistory)
-	sync.Option.ServiceBridge.CallByName("Gateway", "SC_RoomHistory", string(data), "", 0)
+	//sync.Option.ServiceBridge.CallByName("Gateway", "SC_RoomHistory", string(data), "", 0)
+
+	callGatewayMsg := service.CallGatewayMsg{ServiceName: "FrameSync", FunName: "SC_RoomHistory", TargetUid: roomHistory.SourceUid, Data: &responsePushRoomHistory}
+	sync.Option.ServiceBridge.CallGateway(callGatewayMsg)
+
 	return nil
 }
 
@@ -693,17 +701,17 @@ func (sync *Sync) PlayerResumeGame(requestPlayerResumeGame pb.PlayerResumeGame) 
 		SequenceNumber: requestPlayerResumeGame.SequenceNumber,
 		RoomId:         requestPlayerResumeGame.RoomId,
 	}
-	data, _ := proto.Marshal(&responseOtherPlayerResumeGame)
+	//data, _ := proto.Marshal(&responseOtherPlayerResumeGame)
 	//sync.boardCastInRoom(room.Id, "SC_OtherPlayerResumeGame", &responseOtherPlayerResumeGame)
-	sync.boardCastInRoom(room.Id, "SC_OtherPlayerResumeGame", data)
+	sync.boardCastInRoom(room.Id, "SC_OtherPlayerResumeGame", &responseOtherPlayerResumeGame)
 	if restartGame == 1 {
 		responseRestartGame := pb.RestartGame{
 			RoomId:    requestPlayerResumeGame.RoomId,
 			PlayerIds: playerIds,
 		}
 		//sync.boardCastInRoom(room.Id, "SC_RestartGame", &responseRestartGame)
-		data, _ := proto.Marshal(&responseRestartGame)
-		sync.boardCastInRoom(room.Id, "SC_RestartGame", data)
+		//data, _ := proto.Marshal(&responseRestartGame)
+		sync.boardCastInRoom(room.Id, "SC_RestartGame", &responseRestartGame)
 	}
 	return nil
 
@@ -730,8 +738,8 @@ func (sync *Sync) testFirstLogicFrame(room *Room) {
 			SequenceNumber: int32(room.SequenceNumber),
 			Operations:     operations,
 		}
-		data, _ := proto.Marshal(&logicFrameMsg)
+		//data, _ := proto.Marshal(&logicFrameMsg)
 		//sync.boardCastInRoom(room.Id, "SC_LogicFrame", &logicFrameMsg)
-		sync.boardCastInRoom(room.Id, "SC_LogicFrame", data)
+		sync.boardCastInRoom(room.Id, "SC_LogicFrame", &logicFrameMsg)
 	}
 }

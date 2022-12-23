@@ -49,6 +49,12 @@ func (gameMatch *GameMatch) NativeServiceFuncRouter(msg pb.Msg) (data []byte, er
 		return data, err
 	}
 
+	requestPlayerMatchSign.SourceUid = msg.SourceUid
+	requestPlayerMatchSignCancel.SourceUid = msg.SourceUid
+	reqFDCreateEvent.SourceUid = msg.SourceUid
+	reqHeartbeat.SourceUid = msg.SourceUid
+	requestFDCloseEvent.SourceUid = msg.SourceUid
+
 	switch protoServiceFunc.FuncName {
 	case "CS_PlayerMatchSign":
 		_, e := gameMatch.PlayerJoin(requestPlayerMatchSign)

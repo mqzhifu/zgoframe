@@ -1,28 +1,27 @@
 syntax = "proto3";
 
+//import "google/protobuf/any.proto";
 import "common.proto";
 
 package pb;
 option go_package ="./;pb";
 
 service Gateway {
-
-    rpc CS_Login        (Login)        returns (LoginRes) {}//登陆
-    rpc CS_Ping         (PingReq)         returns (PongRes) {}//客户端PING服务端
-    rpc CS_Pong         (PongRes)         returns (PingReq) {}//C端响应S端PIN
-    rpc CS_Heartbeat    (Heartbeat)    returns (Empty) {}//心跳
-
-    rpc SC_Login             (LoginRes)     returns (Empty) {}//登陆
-    rpc SC_Ping              (PingReq)         returns (PongRes) {}//S端测试RTT
-    rpc SC_Pong              (PongRes)         returns (PingReq) {}//S端测试RTT
-    rpc SC_Heartbeat         (Heartbeat)    returns (Empty) {}//心跳
-    rpc SC_KickOff           (KickOff)      returns (Empty) {}//该玩家在其它地方登陆，踢掉了当前连接
-
-    rpc SC_ProjectPush       (ProjectPushMsg)  returns (Empty) {}//service通知网关，给某些用户推送消息
-    rpc SC_SendMsg       (Msg)  returns (Empty) {}//service 通知网关，给某些用户发送特定消息
-
     rpc FdClose             (FDCloseEvent)    returns (Empty) {}//C端长连接关闭，这个并不是C端发起的请求，而是网关获取事件，直接推送到后端服务的
     rpc FdCreate            (FDCreateEvent)   returns (Empty) {}//C端建立了长连接，并已经登陆成功
+
+    rpc CS_Login            (Login)             returns (LoginRes) {}//登陆
+    rpc CS_Ping             (PingReq)           returns (PongRes) {}//客户端PING服务端
+    rpc CS_Pong             (PongRes)           returns (PingReq) {}//C端响应S端PIN
+    rpc CS_Heartbeat        (Heartbeat)         returns (Empty) {}//心跳
+
+    rpc SC_Login            (LoginRes)          returns (Empty) {}//登陆
+    rpc SC_Ping             (PingReq)           returns (PongRes) {}//S端测试RTT
+    rpc SC_Pong             (PongRes)           returns (PingReq) {}//S端测试RTT
+    rpc SC_Heartbeat        (Heartbeat)         returns (Empty) {}//心跳
+    rpc SC_KickOff          (KickOff)           returns (Empty) {}//该玩家在其它地方登陆，踢掉了当前连接
+    rpc SC_ProjectPushMsg   (ProjectPushMsg)    returns (Empty) {}//service通知网关，给某些用户推送消息
+    rpc SC_SendMsg          (Msg)               returns (Empty) {}//service 通知网关，给某些用户发送特定消息
 
 }
 
@@ -41,7 +40,8 @@ message Msg{
     string  content             =11;//具体传输内容
     string  end_char            =12;//包结束字符，用于TCP粘包，无实际作用，只是保证消息完整性
     int32   source_service_id   =13;//来源服务ID，后端要给前端推送消息时，得用网关服务中转
-    int32   source_func_id      =14;//来源函数ID，后端要给前端推送消息时，得用网关服务中转，
+    int32   source_func_id      =14;//来源函数ID，后端要给前端推送消息时，得用网关服务中转
+    //google.protobuf.Any source_content = 15;
 }
 
 message Login{
@@ -56,12 +56,12 @@ message LoginRes{
 }
 
 message ProjectPushMsg{
-    int32   source_uid  = 1;
-    int32   project_id  = 2;
-    int32   service_id  = 3;
-    int32   func_id     = 4;
-    string  target_uids = 5;
-    string  msg         = 6;
+    int32   type                = 1;//分类ID，保留，暂不用
+    int32   source_uid          = 2;//来源用户ID
+    int32   source_project_id   = 3;//来源项目ID
+    int32   target_project_id   = 4;//目标项目ID
+    string  target_uids         = 5;//目标用户ID列表
+    string  content             = 6;//消息内容
 }
 
 message KickOff{

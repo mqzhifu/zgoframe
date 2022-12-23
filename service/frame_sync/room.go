@@ -4,7 +4,6 @@ import "C"
 import (
 	"container/list"
 	"errors"
-	"github.com/golang/protobuf/proto"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 	"strconv"
@@ -155,8 +154,12 @@ func (roomManager *RoomManager) GetRoom(requestGetRoom pb.RoomBaseInfo) error {
 		RoomId:   room.Id,
 	}
 	//roomManager.Option.RequestServiceAdapter.GatewaySendMsgByUid(requestGetRoom.SourceUid, "SC_RoomBaseInfo", &roomBaseInfo)
-	data, _ := proto.Marshal(&roomBaseInfo)
-	roomManager.Option.ServiceBridge.CallByName("Gateway", "SC_RoomBaseInfo", string(data), "", 0)
+	//data, _ := proto.Marshal(&roomBaseInfo)
+	//roomManager.Option.ServiceBridge.CallByName("Gateway", "SC_RoomBaseInfo", string(data), "", 0)
+
+	callGatewayMsg := service.CallGatewayMsg{ServiceName: "FrameSync", FunName: "SC_RoomBaseInfo", TargetUid: requestGetRoom.SourceUid, Data: &roomBaseInfo}
+	roomManager.Option.ServiceBridge.CallGateway(callGatewayMsg)
+
 	//conn.SendMsgCompressByUid(requestGetRoom.SourceUid, "pushRoomInfo", &ResponsePushRoomInfo)
 	return nil
 }

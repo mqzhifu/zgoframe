@@ -2726,12 +2726,12 @@ proto.pb.ProjectPushMsg.prototype.toObject = function(opt_includeInstance) {
  */
 proto.pb.ProjectPushMsg.toObject = function(includeInstance, msg) {
   var f, obj = {
-    sourceUid: jspb.Message.getFieldWithDefault(msg, 1, 0),
-    projectId: jspb.Message.getFieldWithDefault(msg, 2, 0),
-    serviceId: jspb.Message.getFieldWithDefault(msg, 3, 0),
-    funcId: jspb.Message.getFieldWithDefault(msg, 4, 0),
+    type: jspb.Message.getFieldWithDefault(msg, 1, 0),
+    sourceUid: jspb.Message.getFieldWithDefault(msg, 2, 0),
+    sourceProjectId: jspb.Message.getFieldWithDefault(msg, 3, 0),
+    targetProjectId: jspb.Message.getFieldWithDefault(msg, 4, 0),
     targetUids: jspb.Message.getFieldWithDefault(msg, 5, ""),
-    msg: jspb.Message.getFieldWithDefault(msg, 6, "")
+    content: jspb.Message.getFieldWithDefault(msg, 6, "")
   };
 
   if (includeInstance) {
@@ -2770,19 +2770,19 @@ proto.pb.ProjectPushMsg.deserializeBinaryFromReader = function(msg, reader) {
     switch (field) {
     case 1:
       var value = /** @type {number} */ (reader.readInt32());
-      msg.setSourceUid(value);
+      msg.setType(value);
       break;
     case 2:
       var value = /** @type {number} */ (reader.readInt32());
-      msg.setProjectId(value);
+      msg.setSourceUid(value);
       break;
     case 3:
       var value = /** @type {number} */ (reader.readInt32());
-      msg.setServiceId(value);
+      msg.setSourceProjectId(value);
       break;
     case 4:
       var value = /** @type {number} */ (reader.readInt32());
-      msg.setFuncId(value);
+      msg.setTargetProjectId(value);
       break;
     case 5:
       var value = /** @type {string} */ (reader.readString());
@@ -2790,7 +2790,7 @@ proto.pb.ProjectPushMsg.deserializeBinaryFromReader = function(msg, reader) {
       break;
     case 6:
       var value = /** @type {string} */ (reader.readString());
-      msg.setMsg(value);
+      msg.setContent(value);
       break;
     default:
       reader.skipField();
@@ -2821,28 +2821,28 @@ proto.pb.ProjectPushMsg.prototype.serializeBinary = function() {
  */
 proto.pb.ProjectPushMsg.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
-  f = message.getSourceUid();
+  f = message.getType();
   if (f !== 0) {
     writer.writeInt32(
       1,
       f
     );
   }
-  f = message.getProjectId();
+  f = message.getSourceUid();
   if (f !== 0) {
     writer.writeInt32(
       2,
       f
     );
   }
-  f = message.getServiceId();
+  f = message.getSourceProjectId();
   if (f !== 0) {
     writer.writeInt32(
       3,
       f
     );
   }
-  f = message.getFuncId();
+  f = message.getTargetProjectId();
   if (f !== 0) {
     writer.writeInt32(
       4,
@@ -2856,7 +2856,7 @@ proto.pb.ProjectPushMsg.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
-  f = message.getMsg();
+  f = message.getContent();
   if (f.length > 0) {
     writer.writeString(
       6,
@@ -2867,10 +2867,10 @@ proto.pb.ProjectPushMsg.serializeBinaryToWriter = function(message, writer) {
 
 
 /**
- * optional int32 source_uid = 1;
+ * optional int32 type = 1;
  * @return {number}
  */
-proto.pb.ProjectPushMsg.prototype.getSourceUid = function() {
+proto.pb.ProjectPushMsg.prototype.getType = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 1, 0));
 };
 
@@ -2879,16 +2879,16 @@ proto.pb.ProjectPushMsg.prototype.getSourceUid = function() {
  * @param {number} value
  * @return {!proto.pb.ProjectPushMsg} returns this
  */
-proto.pb.ProjectPushMsg.prototype.setSourceUid = function(value) {
+proto.pb.ProjectPushMsg.prototype.setType = function(value) {
   return jspb.Message.setProto3IntField(this, 1, value);
 };
 
 
 /**
- * optional int32 project_id = 2;
+ * optional int32 source_uid = 2;
  * @return {number}
  */
-proto.pb.ProjectPushMsg.prototype.getProjectId = function() {
+proto.pb.ProjectPushMsg.prototype.getSourceUid = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 2, 0));
 };
 
@@ -2897,16 +2897,16 @@ proto.pb.ProjectPushMsg.prototype.getProjectId = function() {
  * @param {number} value
  * @return {!proto.pb.ProjectPushMsg} returns this
  */
-proto.pb.ProjectPushMsg.prototype.setProjectId = function(value) {
+proto.pb.ProjectPushMsg.prototype.setSourceUid = function(value) {
   return jspb.Message.setProto3IntField(this, 2, value);
 };
 
 
 /**
- * optional int32 service_id = 3;
+ * optional int32 source_project_id = 3;
  * @return {number}
  */
-proto.pb.ProjectPushMsg.prototype.getServiceId = function() {
+proto.pb.ProjectPushMsg.prototype.getSourceProjectId = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 3, 0));
 };
 
@@ -2915,16 +2915,16 @@ proto.pb.ProjectPushMsg.prototype.getServiceId = function() {
  * @param {number} value
  * @return {!proto.pb.ProjectPushMsg} returns this
  */
-proto.pb.ProjectPushMsg.prototype.setServiceId = function(value) {
+proto.pb.ProjectPushMsg.prototype.setSourceProjectId = function(value) {
   return jspb.Message.setProto3IntField(this, 3, value);
 };
 
 
 /**
- * optional int32 func_id = 4;
+ * optional int32 target_project_id = 4;
  * @return {number}
  */
-proto.pb.ProjectPushMsg.prototype.getFuncId = function() {
+proto.pb.ProjectPushMsg.prototype.getTargetProjectId = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 4, 0));
 };
 
@@ -2933,7 +2933,7 @@ proto.pb.ProjectPushMsg.prototype.getFuncId = function() {
  * @param {number} value
  * @return {!proto.pb.ProjectPushMsg} returns this
  */
-proto.pb.ProjectPushMsg.prototype.setFuncId = function(value) {
+proto.pb.ProjectPushMsg.prototype.setTargetProjectId = function(value) {
   return jspb.Message.setProto3IntField(this, 4, value);
 };
 
@@ -2957,10 +2957,10 @@ proto.pb.ProjectPushMsg.prototype.setTargetUids = function(value) {
 
 
 /**
- * optional string msg = 6;
+ * optional string content = 6;
  * @return {string}
  */
-proto.pb.ProjectPushMsg.prototype.getMsg = function() {
+proto.pb.ProjectPushMsg.prototype.getContent = function() {
   return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 6, ""));
 };
 
@@ -2969,7 +2969,7 @@ proto.pb.ProjectPushMsg.prototype.getMsg = function() {
  * @param {string} value
  * @return {!proto.pb.ProjectPushMsg} returns this
  */
-proto.pb.ProjectPushMsg.prototype.setMsg = function(value) {
+proto.pb.ProjectPushMsg.prototype.setContent = function(value) {
   return jspb.Message.setProto3StringField(this, 6, value);
 };
 

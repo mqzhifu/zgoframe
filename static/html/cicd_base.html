@@ -1,7 +1,8 @@
 <html>
 
     <head>
-        <title>cicd_new</title>
+        <title>cicd</title>
+        <script src="/static/js/common.js?r=8" type="text/javascript"></script>
         <script src="/static/js/jquery.min.js" type="text/javascript" ></script>
     </head>
     <style>
@@ -39,21 +40,32 @@
 
 <body>
 
-<a href="#" onclick="test()">点击测试</a>
+<!--<a href="#" onclick="test()">点击测试</a>-->
 <br/>
 
 <br/>
 
-server-service-superVisor :<br/>
-<table id="server_service_super_visor">
+server_list :<br/>
+<table id="cicd_server_list">
 
 </table>
 
-publish table list:<br/>
-<table class='table' id="table_publish_list">
+service_list:<br/>
+<table class='table' id="cicd_service_list">
 
 </table>
 <br/>
+
+
+super_visor_list:<br/>
+<table class='table' id="cicd_super_visor_list">
+
+</table>
+<br/>
+
+
+
+
 
 
 
@@ -62,9 +74,9 @@ publish table list:<br/>
 
 <script>
     // 后端公共HTTP接口-头信息
-    var header_X_Source_Type = "11";
-    var header_X_Project_Id = "6";
-    var header_X_Access = "imzgoframe";
+    // var header_X_Source_Type = "11";
+    // var header_X_Project_Id = "6";
+    // var header_X_Access = "imzgoframe";
     //===========================
     var serviceList = null;
     var serverList = null;
@@ -95,48 +107,120 @@ publish table list:<br/>
 
         return optBnt;
     }
-
+    //入口
     $(document).ready(function(){
-        $.ajax({
-            headers: {
-                "X-Source-Type": header_X_Source_Type,
-                "X-Project-Id": header_X_Project_Id,
-                "X-Access": header_X_Access,
-            },
-            type: "GET",
-            contentType: "application/json;charset=utf-8",
-            url: "/cicd/publish/list",
-            success: function(backData){
-                backData = eval(   backData  );
-                if(backData.code != 200){
-                    return alert("ajax req back data err");
-                }
-                // publishList = $.parseJSON(backData)
-                ProcessPublishList("table_publish_list",backData.data)
-            }
-        });
+        AjaxAdminReq(cicd_server_list,"cicd_server_list","",true,"GET");
+        AjaxAdminReq(cicd_service_list,"cicd_service_list","",true,"GET");
+        AjaxAdminReq(cicd_super_visor_list,"cicd_super_visor_list","",true,"GET");
     });
 
-    $(document).ready(function(){
-        $.ajax({
-            headers: {
-                "X-Source-Type": header_X_Source_Type,
-                "X-Project-Id": header_X_Project_Id,
-                "X-Access": header_X_Access,
-            },
-            type: "GET",
-            contentType: "application/json;charset=utf-8",
-            url: "/cicd/local/all/server/service/list",
-            success: function(backData){
-                backData = eval(   backData  );
-                if(backData.code != 200){
-                    return alert("ajax req back data err");
-                }
-                ProcessServerService( backData.data)
-            }
-        });
-    });
+    function cicd_super_visor_list(data){
+        if(!data){
+            return alert("cicd_super_visor_list data empty!");
+        }
 
+        var tableBody = "<tr><td>serverId</td></tr>";
+        for(key in data.super_visor_status){
+            tableBody += "<tr><td>"+ key + "</td>";
+            if(data.super_visor_status[key] > 0){
+                tableBody += "<td>发生错误:"+data.super_visor_status[key]+"</td></tr>";
+                continue;
+            }
+            tableBody += "<td>";
+            var server_service_super_visor = data["server_service_super_visor"][key];
+
+
+            var serviceTable = "<table><tr><td>service_id</td><td>Name</td><td>state</td></tr>";
+            for(var i=0;i<server_service_super_visor.length;i++){
+                serviceTable += "<tr>";
+                serviceTable += "<td>"+server_service_super_visor[i]["service_id"]+"</td>";
+                serviceTable += "<td>"+server_service_super_visor[i]["Name"]+"</td>";
+                serviceTable += "<td>"+server_service_super_visor[i]["State"]+"</td>";
+                serviceTable += "</tr>";
+            }
+            serviceTable += "</table>";
+
+            tableBody += serviceTable +  "</td></tr>";
+
+        }
+
+        $("#cicd_super_visor_list").html(tableBody);
+    }
+
+    function cicd_server_list(data){
+        if (!data){
+            return alert("cicd_server_list data empty!");
+        }
+        var showField = ["id","name","platform","out_ip","env","ping_status"];
+        console.log(showField,showField.length);
+        var tableBody = "<tr>";
+        for(var i = 0; i < showField.length;i++){
+            tableBody += " <td>"+showField[i]+"</td>";
+        }
+        tableBody += "</tr>";
+
+        for(key in data) {
+            tableBody += "<tr>";
+            tableBody += "<td>"+ data[key]["id"] +"</td>";
+            tableBody += "<td>"+ data[key]["name"] +"</td>";
+            tableBody += "<td>"+ data[key]["platform"] +"</td>";
+            tableBody += "<td>"+ data[key]["out_ip"] +"</td>";
+            tableBody += "<td>"+ data[key]["env"] +"</td>";
+            tableBody += "<td>"+server_ping_status_desc[ data[key]["ping_status"]] +"</td>";
+
+            tableBody += "</tr>";
+        }
+
+        $("#cicd_server_list").html(tableBody);
+    }
+
+    function cicd_service_list( data){
+        if (!data){
+            return alert("cicd_service_list data empty!");
+        }
+        var showField = ["id","name","type","desc","status","git"];
+        console.log(showField,showField.length);
+        var tableBody = "<tr>";
+        for(var i = 0; i < showField.length;i++){
+            tableBody += " <td>"+showField[i]+"</td>";
+        }
+        tableBody += "</tr>";
+
+        for(key in data) {
+            tableBody += "<tr>";
+            tableBody += "<td>"+ data[key]["id"] +"</td>";
+            tableBody += "<td>"+ data[key]["name"] +"</td>";
+            tableBody += "<td>"+ data[key]["type"] +"</td>";
+            tableBody += "<td>"+ data[key]["desc"] +"</td>";
+            tableBody += "<td>"+ data[key]["status"] +"</td>";
+            tableBody += "<td>"+ data[key]["git"] +"</td>";
+            // tableBody += "<td>"+server_ping_status_desc[ data[key]["ping_status"]] +"</td>";
+
+            tableBody += "</tr>";
+        }
+
+        $("#cicd_service_list").html(tableBody);
+    }
+
+    // $(document).ready(function(){
+    //     $.ajax({
+    //         headers: {
+    //             "X-Source-Type": header_X_Source_Type,
+    //             "X-Project-Id": header_X_Project_Id,
+    //             "X-Access": header_X_Access,
+    //         },
+    //         type: "GET",
+    //         contentType: "application/json;charset=utf-8",
+    //         url: "/cicd/local/all/server/service/list",
+    //         success: function(backData){
+    //             backData = eval(   backData  );
+    //             if(backData.code != 200){
+    //                 return alert("ajax req back data err");
+    //             }
+    //             ProcessServerService( backData.data)
+    //         }
+    //     });
+    // });
 
 
 
@@ -171,50 +255,7 @@ publish table list:<br/>
             tableBody += "</td>";
 
         }
-        // var server_ping_status = serverService.server_ping_status;
-        // var super_visor_status = serverService.super_visor_status;
-        //
-        // var serviceSuperVisorList = serverService.server_service_super_visor;
-        // var tableHtml = "<table><th>server_id</th><th>ping_status</th><th>super_visor_status</th><th>env</th><th>service_super_visor</th>";
-        //
-        // for(let serverId  in server_ping_status){//服务器
-        //     var status = server_ping_status[serverId];
-        //     var sv_status = super_visor_status[serverId]
-        //
-        //     var tr = "<tr><td>"+serverId+"</td><td>"+server_ping_status_desc[status]+"</td><td>"+super_visor_status_desc[sv_status]+"</td><td>"+envDesc[serverList[serverId].env]+"</td>";
-        //     if (status != 1){
-        //         // alert("server status err.");
-        //         tr +="<td></td></tr>";
-        //         tableHtml += tr;
-        //         continue;
-        //     }
-        //
-        //     if  (sv_status){
-        //         // alert("super_visor_status status err.");
-        //         tr +="<td></td></tr>";
-        //         tableHtml += tr;
-        //         continue;
-        //     }
-        //
-        //     tr += "<td>";
-        //     var serviceSuperVisor = serviceSuperVisorList[serverId];
-        //     // console.log("serviceSuperVisor:",serviceSuperVisor);
-        //     var processListTable = "<table>";
-        //     processListTable += "<th>name</th><th>state_code</th><th>master_src</th><th>opt</th>";
-        //
-        //     for(var i=0;i<serviceSuperVisor.length;i++){
-        //         var bnt = GetBnt(serviceSuperVisor[i].State,serverId,serviceSuperVisor[i].service_id);
-        //         processListTable += "<tr><td>"+serviceSuperVisor[i].Name+"</td><td>"+serviceSuperVisor[i].State+"</td><td>"+serviceSuperVisor[i].master_src+"</td><td>"+bnt+"</td></tr>";
-        //     }
-        //     processListTable += "</table>";
-        //
-        //     tr += processListTable;
-        //     tr += "</td>";
-        //     tableHtml += tr;
-        //
-        // }
-        //
-        // tableHtml += "</table>";
+
         $("#server_service_super_visor").html(tableBody);
     }
     function optProcess(serverId,serviceId,opt){

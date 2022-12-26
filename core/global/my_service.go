@@ -106,7 +106,7 @@ func NewMyService() *MyService {
 		GrpcManager:         V.GrpcManager,
 		Log:                 V.Zap,
 	}
-	CreateGameService(myService)
+	//CreateGameService(myService)
 	//网关
 	if C.Gateway.Status == "open" {
 		//gateway := gateway.NewGateway(V.GrpcManager, V.Zap, myService.RequestServiceAdapter)

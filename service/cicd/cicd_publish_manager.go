@@ -65,10 +65,10 @@ func (CICDPublicManager *CICDPublicManager) GetById(id int) (model.CicdPublish, 
 	return m, err
 }
 
-func (CICDPublicManager *CICDPublicManager) GetList() ([]model.CicdPublish, error) {
+func (CICDPublicManager *CICDPublicManager) GetList(limit int) ([]model.CicdPublish, error) {
 	db := CICDPublicManager.Db.Model(&model.CicdPublish{})
 	var cicdPublishList []model.CicdPublish
-	err := db.Limit(10).Order("id desc").Find(&cicdPublishList).Error
+	err := db.Limit(limit).Order("id desc").Find(&cicdPublishList).Error
 	if err != nil {
 		return cicdPublishList, err
 	}

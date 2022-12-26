@@ -10,11 +10,80 @@ import (
 )
 
 // @Tags Cicd
-// @Summary superVisor 列表
-// @Description demo
+// @Summary 部署/发布 列表
+// @Description 查看 项目的已部署 日志 列表
 // @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
 // @Param X-Project-Id header string true "项目ID" default(6)
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
+// @Param X-Second-Auth-Uname header string true "二次验证-用户名" default(test)
+// @Param X-Second-Auth-Ps header string true "二次验证-密码" default(qweASD1234560)
+// @Param X-Client-Req-Time header string true "客户端请求时间unix" default(1648277052)
+// @Produce  application/json
+// @Success 200 {object} model.CicdPublish
+// @Router /cicd/publish/list [get]
+func CicdPublishList(c *gin.Context) {
+	list := global.V.MyService.Cicd.GetPublishList(20) //取出最新的20条即可，不然数据太大
+	httpresponse.OkWithAll(list, "成功", c)
+}
+
+// @Tags Cicd
+// @Summary 查看 所有项目的 可部署 列表
+// @Description 每台机器上，有多少个服务，具体可以操作部署哪个项目到远端服务器
+// @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
+// @Param X-Project-Id header string true "项目ID" default(6)
+// @Param X-Access header string true "访问KEY" default(imzgoframe)
+// @Param X-Second-Auth-Uname header string true "二次验证-用户名" default(test)
+// @Param X-Second-Auth-Ps header string true "二次验证-密码" default(qweASD1234560)
+// @Param X-Client-Req-Time header string true "客户端请求时间unix" default(1648277052)
+// @Produce  application/json
+// @Success 200 {object} util.Service
+// @Router /cicd/local/all/server/service/list [get]
+func CicdLocalAllServerServiceList(c *gin.Context) {
+	list, _ := global.V.MyService.Cicd.LocalAllServerServiceList()
+	httpresponse.OkWithAll(list, "成功", c)
+}
+
+// @Tags Cicd
+// @Summary 所有服务(项目) 列表
+// @Description 属于基础数据，查看下 当前所有项目的状态
+// @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
+// @Param X-Project-Id header string true "项目ID" default(6)
+// @Param X-Access header string true "访问KEY" default(imzgoframe)
+// @Param X-Second-Auth-Uname header string true "二次验证-用户名" default(test)
+// @Param X-Second-Auth-Ps header string true "二次验证-密码" default(qweASD1234560)
+// @Param X-Client-Req-Time header string true "客户端请求时间unix" default(1648277052)
+// @Produce  application/json
+// @Success 200 {object} util.Service
+// @Router /cicd/service/list [get]
+func CicdServiceList(c *gin.Context) {
+	list := global.V.MyService.Cicd.GetServiceList()
+	httpresponse.OkWithAll(list, "成功", c)
+}
+
+// @Tags Cicd
+// @Summary 服务器 列表
+// @Description 属于基础数据，获取所有服务器列表，并做ping，确定状态
+// @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
+// @Param X-Project-Id header string true "项目ID" default(6)
+// @Param X-Access header string true "访问KEY" default(imzgoframe)
+// @Param X-Second-Auth-Uname header string true "二次验证-用户名" default(test)
+// @Param X-Second-Auth-Ps header string true "二次验证-密码" default(qweASD1234560)
+// @Param X-Client-Req-Time header string true "客户端请求时间unix" default(1648277052)
+// @Produce  application/json
+// @Success 200 {object} util.Server
+// @Router /cicd/server/list [get]
+func CicdServerList(c *gin.Context) {
+	list := global.V.MyService.Cicd.GetServerList()
+	httpresponse.OkWithAll(list, "成功", c)
+}
+
+// @Tags Cicd
+// @Summary 每台机器上的 superVisor
+// @Description 每台机上都会有一个 superVisor 进程，管理着所有 服务/项目，从 superVisor 视角看一下所有 项目的状态
+// @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
+// @Param X-Project-Id header string true "项目ID" default(6)
+// @Param X-Access header string true "访问KEY" default(imzgoframe)
+// @Param X-Second-Auth-Uname header string true "二次验证-用户名" default(test)
 // @Param X-Second-Auth-Ps header string true "二次验证-密码" default(qweASD1234560)
 // @Param X-Client-Req-Time header string true "客户端请求时间unix" default(1648277052)
 // @Produce  application/json
@@ -31,72 +100,33 @@ func CicdSuperVisorList(c *gin.Context) {
 }
 
 // @Tags Cicd
-// @Summary 本地编译-同步远端
-// @Description 本地编译
+// @Summary 本机操作远端的 superVisor ，管理进程
+// @Description 对远端服务器上的 superVisor，管理一个服务，如：停止进程 重启进程 启动进程
 // @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
 // @Param X-Project-Id header string true "项目ID" default(6)
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
 // @Param X-Second-Auth-Ps header string true "二次验证-密码" default(qweASD1234560)
 // @Param X-Client-Req-Time header string true "客户端请求时间unix" default(1648277052)
+// @Param data body request.CicdDeploy true "用户信息"
 // @Produce  application/json
-// @Success 200 {object} util.Service
-// @Router /cicd/local/all/server/service/list [get]
-func CicdLocalAllServerServiceList(c *gin.Context) {
-	list, _ := global.V.MyService.Cicd.LocalAllServerServiceList()
-	httpresponse.OkWithAll(list, "成功", c)
-}
+// @Success 200 {bool} bool "true:成功 false:失败"
+// @Router /cicd/superVisor/process [post]
+func CicdSuperVisorProcess(c *gin.Context) {
+	var form request.CicdSuperVisor
+	c.ShouldBind(&form)
 
-// @Tags Cicd
-// @Summary 服务 列表
-// @Description 在当前服务器上，从<部署目录>中检索出每个服务（目录名），分析出：哪些服务~已经部署
-// @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
-// @Param X-Project-Id header string true "项目ID" default(6)
-// @Param X-Access header string true "访问KEY" default(imzgoframe)
-// @Param X-Second-Auth-Ps header string true "二次验证-密码" default(qweASD1234560)
-// @Param X-Client-Req-Time header string true "客户端请求时间unix" default(1648277052)
-// @Produce  application/json
-// @Success 200 {object} util.Service
-// @Router /cicd/service/list [get]
-func CicdServiceList(c *gin.Context) {
-	list := global.V.MyService.Cicd.GetServiceList()
-	httpresponse.OkWithAll(list, "成功", c)
-}
-
-// @Tags Cicd
-// @Summary 服务器 列表
-// @Description 获取所有服务器列表，并做ping，确定状态
-// @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
-// @Param X-Project-Id header string true "项目ID" default(6)
-// @Param X-Access header string true "访问KEY" default(imzgoframe)
-// @Param X-Second-Auth-Ps header string true "二次验证-密码" default(qweASD1234560)
-// @Param X-Client-Req-Time header string true "客户端请求时间unix" default(1648277052)
-// @Produce  application/json
-// @Success 200 {object} util.Server
-// @Router /cicd/server/list [get]
-func CicdServerList(c *gin.Context) {
-	list := global.V.MyService.Cicd.GetServerList()
-	httpresponse.OkWithAll(list, "成功", c)
-}
-
-// @Tags Cicd
-// @Summary 部署/发布 列表
-// @Description 部署/发布 列表
-// @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
-// @Param X-Project-Id header string true "项目ID" default(6)
-// @Param X-Access header string true "访问KEY" default(imzgoframe)
-// @Param X-Second-Auth-Ps header string true "二次验证-密码" default(qweASD1234560)
-// @Param X-Client-Req-Time header string true "客户端请求时间unix" default(1648277052)
-// @Produce  application/json
-// @Success 200 {object} model.CicdPublish
-// @Router /cicd/publish/list [get]
-func CicdPublishList(c *gin.Context) {
-	list := global.V.MyService.Cicd.GetPublishList()
-	httpresponse.OkWithAll(list, "成功", c)
+	util.MyPrint("CicdSuperVisorProcess form:", form)
+	err := global.V.MyService.Cicd.SuperVisorProcess(form)
+	if err != nil {
+		httpresponse.FailWithMessage(err.Error(), c)
+	} else {
+		httpresponse.OkWithAll("aaaa", "成功", c)
+	}
 }
 
 // @Tags Cicd
 // @Summary 发布项目
-// @Description 发布项目
+// @Description 已部署好的项目，正式 发布
 // @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
 // @Param X-Project-Id header string true "项目ID" default(6)
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
@@ -135,7 +165,7 @@ func CicdServicePublish(c *gin.Context) {
 
 // @Tags Cicd
 // @Summary 部署一个服务
-// @Description demo
+// @Description 开始把项目部署到指定的服务器上，本机编译，最后再把代码同步到远端服务器上
 // @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
 // @Param X-Project-Id header string true "项目ID" default(6)
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
@@ -161,78 +191,10 @@ func CicdServiceDeploy(c *gin.Context) {
 
 }
 
-// @Tags Cicd
-// @Summary 操作进程
-// @Description 通过superVisor
-// @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
-// @Param X-Project-Id header string true "项目ID" default(6)
-// @Param X-Access header string true "访问KEY" default(imzgoframe)
-// @Param X-Second-Auth-Ps header string true "二次验证-密码" default(qweASD1234560)
-// @Param X-Client-Req-Time header string true "客户端请求时间unix" default(1648277052)
-// @Param data body request.CicdDeploy true "用户信息"
-// @Produce  application/json
-// @Success 200 {bool} bool "true:成功 false:失败"
-// @Router /cicd/superVisor/process [post]
-func CicdSuperVisorProcess(c *gin.Context) {
-	var form request.CicdSuperVisor
-	c.ShouldBind(&form)
-
-	util.MyPrint("CicdSuperVisorProcess form:", form)
-	err := global.V.MyService.Cicd.SuperVisorProcess(form)
-	if err != nil {
-		httpresponse.FailWithMessage(err.Error(), c)
-	} else {
-		httpresponse.OkWithAll("aaaa", "成功", c)
-	}
-}
-
-// @Tags Cicd
-// @Summary ping
-// @Description 测试对端有没有开启服务
-// @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
-// @Param X-Project-Id header string true "项目ID" default(6)
-// @Param X-Access header string true "访问KEY" default(imzgoframe)
-// @Param X-Second-Auth-Ps header string true "二次验证-密码" default(qweASD1234560)
-// @Param X-Client-Req-Time header string true "客户端请求时间unix" default(1648277052)
-// @Produce  application/json
-// @Success 200 {bool} bool "true:成功 false:失败"
-// @Router /cicd/ping [get]
-func CicdPing(c *gin.Context) {
-	httpresponse.OkWithAll("aaaa", "成功", c)
-}
-
-// @Tags Cicd
-// @Summary 本机部署的项目
-// @Description 本机部署的项目
-// @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
-// @Param X-Project-Id header string true "项目ID" default(6)
-// @Param X-Access header string true "访问KEY" default(imzgoframe)
-// @Param X-Second-Auth-Ps header string true "二次验证-密码" default(qweASD1234560)
-// @Param X-Client-Req-Time header string true "客户端请求时间unix" default(1648277052)
-// @Produce  application/json
-// @Success 200 {object} model.Project
-// @Router /cicd/local/deploy/dir/list [get]
-func CicdLocalDeployDirList(c *gin.Context) {
-	list := global.V.MyService.Cicd.GetHasDeployService()
-	httpresponse.OkWithAll(list, "成功", c)
-}
-
-// @Tags Cicd
-// @Summary 同步 本机部署的项目 -> 到目标机器
-// @Description scp
-// @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
-// @Param X-Project-Id header string true "项目ID" default(6)
-// @Param X-Access header string true "访问KEY" default(imzgoframe)
-// @Param X-Second-Auth-Ps header string true "二次验证-密码" default(qweASD1234560)
-// @Param X-Client-Req-Time header string true "客户端请求时间unix" default(1648277052)
-// @Param data body request.CicdSync true "用户信息"
-// @Produce  application/json
-// @Success 200 {bool} bool "true:成功 false:失败"
-// @Router /cicd/local/sync/target [get]
-func CicdLocalSyncTarget(c *gin.Context) {
-	var form request.CicdSync
-	c.ShouldBind(&form)
-
-	list := global.V.MyService.Cicd.LocalSyncTarget(form)
-	httpresponse.OkWithAll(list, "成功", c)
-}
+//func CicdLocalSyncTarget(c *gin.Context) {
+//	var form request.CicdSync
+//	c.ShouldBind(&form)
+//
+//	list := global.V.MyService.Cicd.LocalSyncTarget(form)
+//	httpresponse.OkWithAll(list, "成功", c)
+//}

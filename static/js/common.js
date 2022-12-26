@@ -25,6 +25,13 @@ var URI_MAP = {
     "twin_agora_config":http_protocol + "://"+domain + "/twin/agora/config",//声网房间长连接配置
     "rule":http_protocol + "://"+domain + "/game/match/rule",
     "game_frame_sync_history":http_protocol + "://"+domain + "/frame/sync/room/history",
+
+    "cicd_publish_list":http_protocol + "://"+domain +"/cicd/publish/list",
+    "cicd_server_service_list": http_protocol + "://"+domain +"/cicd/local/all/server/service/list",
+    "cicd_service_list": http_protocol + "://"+domain +"/cicd/service/list",
+    "cicd_server_list": http_protocol + "://"+domain +"/cicd/server/list",
+    "cicd_super_visor_list": http_protocol + "://"+domain +  "/cicd/superVisor/list",
+
 };
 
 var UserList = {
@@ -64,6 +71,33 @@ function UserLogin(uid,callback){
     });
 }
 
+//发起公共请求
+function AjaxAdminReq(callback,urlMapKey , useToken,async,httpMethod,httpData){
+    console.log("AjaxAdminReq");
+    $.ajax({
+        headers: {
+            "X-Second-Auth-Uname": "xiaoz",
+            "X-Second-Auth-Ps":"qwerASDFzxcv",
+            "X-Source-Type": header_X_Source_Type,
+            "X-Project-Id": header_X_Project_Id,
+            "X-Access": header_X_Access,
+        },
+        dataType: "json",
+        contentType: "application/json;charset=utf-8",
+        type: httpMethod,
+        data : httpData,
+        url:URI_MAP[urlMapKey],
+        async:async,
+        success: function(data){
+            console.log(data);
+            if (data.code != 200){
+                return alert("AjaxReq server back err:"+data.msg);
+            }
+            callback(data.data);
+        }
+    });
+}
+
 function formatUnixTime(us){
     if (us <= 0 ){
         return "--";
@@ -76,7 +110,7 @@ function formatUnixTime(us){
 }
 
 
-//下面这些都是一些字节的处理，主动是给帧同步 protobuf 使用的
+//下面这些都是一些字节的处理，主要是给帧同步 protobuf 使用的，放到公共文件中了
 
 
 function stringToUint8Array(str){

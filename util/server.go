@@ -1,7 +1,7 @@
 package util
 
 import (
-	"golang.org/x/tools/go/ssa/interp/testdata/src/errors"
+	"errors"
 	"gorm.io/gorm"
 	"zgoframe/model"
 )

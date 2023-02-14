@@ -25,13 +25,13 @@ aaaaa
         // console.log(data);
         // var d = data.data;
         // d =  eval( d)
-        var         infoObj = eval( "(" +  data.Data+  ")");
+        var         infoObj = eval( "(" +  data.FinalData+  ")");
         console.log(infoObj);
         $.ajax({
             headers: {
                 "app-id": data.AppId,
                 "timestamp": data.TimeStr,
-                "app-sign": data.Sign,
+                "app-sign": data.SignLower,
                 "Content-Type":"application/json"
             },
             type: "POST",

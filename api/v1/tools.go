@@ -4,7 +4,6 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"github.com/gin-gonic/gin"
-	"github.com/prometheus/common/log"
 	"io/ioutil"
 	"os"
 	"strconv"
@@ -82,19 +81,25 @@ func TestMiguAPIGetPara(c *gin.Context) {
 
 // @Tags Tools
 // @Summary 测试咪咕,对方返回的数据信息
-// @Description 120项目API接口
+// @Description 120项目API接口aaa
 // @Security ApiKeyAuth
 // @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
 // @Param X-Project-Id header string true "项目ID" default(6)
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
 // @Param X-Second-Auth-Uname header string true "二次验证-用户名" default(test)
 // @Param X-Second-Auth-Ps header string true "二次验证-密码" default(qweASD1234560)
+// @Param name body string true "标签名称"
 // @Produce  application/json
 // @Success 200 {object} v1.MiguRes "最终的请求参数信息"
-// @Router /tools/test/migu/api/back/data [POST]
+// @Router /tools/test/migu/api/backdata [POST]
 func ReceiveMiguBackData(c *gin.Context) {
-	body, _ := ioutil.ReadAll(c.Request.Body)
-	log.Info("请求body内容为:%s", body)
+	body, err := ioutil.ReadAll(c.Request.Body)
+	if err != nil {
+		util.MyPrint(" ioutil.ReadAll err:" + err.Error())
+	} else {
+		util.MyPrint(string(body))
+	}
+	httpresponse.Ok(c)
 }
 
 // @Tags Tools

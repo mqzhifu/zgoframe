@@ -1,19 +1,10 @@
 package v1
 
 import (
-	"bytes"
-	"crypto/aes"
-	"crypto/cipher"
-	"crypto/sha1"
-	"encoding/base64"
-	"encoding/json"
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/mojocn/base64Captcha"
 	"go.uber.org/zap"
-	"io"
 	"strconv"
-	"strings"
 	"zgoframe/core/global"
 	httpmiddleware "zgoframe/http/middleware"
 	"zgoframe/http/request"
@@ -63,102 +54,6 @@ func Captcha(c *gin.Context) {
 			ContentLength: global.C.Captcha.NumberLength,
 		}, "验证码获取成功", c)
 	}
-}
-
-type MiguRes struct {
-	AppId     string
-	Data      string
-	DataBytes []byte
-	Time      int64
-	TimeStr   string
-	Sign      string
-	FinalData string
-	SignLower string
-}
-
-// @Tags Base
-// @Summary 测试咪咕
-// @Description 120项目API接口
-// @accept application/json
-// @Param X-Source-Type header string true "来源" default(11)
-// @Param X-Project-Id header string true "项目ID"  default(6)
-// @Param X-Access header string true "访问KEY" default(imzgoframe)
-// @Param data body request.Captcha false "基础信息"
-// @Produce application/json
-// @Success 200 {object} httpresponse.Captcha "图片信息"
-// @Router /base/test/migu/api [POST]
-func TestMiguAPI(c *gin.Context) {
-	type DataStruct struct {
-		ArSn   string `json:"arSn"`
-		CpeMac string `json:"cpeMac"`
-	}
-
-	appId := "wechat_625"
-	appSecret := "b267a314-2208-4970-a0fc-b9f0e677b437"
-	data := DataStruct{ArSn: "T20230101BJ00011", CpeMac: "AC-BD-8I-FE"}
-	dataBytes, _ := json.Marshal(&data)
-	dataStr := string(dataBytes)
-
-	first16AppSecret := []byte(appSecret)[0:16]
-	encrypted := AesEncryptCBC(dataBytes, first16AppSecret)
-	base64Encrypted := base64.StdEncoding.EncodeToString(encrypted)
-	finalData := "{\"data\":" + "\"" + base64Encrypted + "\"" + "}"
-	//dataStr = "{"a":1}"
-	time := util.GetNowMillisecond()
-	timeStr := strconv.FormatInt(time, 10)
-	//timeStr := "1676340948931"
-	//String plaintext = appId + timestamp + appSecret + jsonString;
-	joinStr := appId + timeStr + appSecret + dataStr
-	sign := SHA1_1(joinStr)
-	sigLower := strings.ToLower(sign)
-	util.MyPrint("app-id:", appId, "appSecret:", appSecret, "data:", data, "time:", time, "timeStr", timeStr, "sign", sign, " sigLower:", sigLower, "FinalData:", finalData)
-
-	rs := MiguRes{
-		AppId:     appId,
-		Time:      time,
-		TimeStr:   timeStr,
-		Sign:      sign,
-		Data:      dataStr,
-		DataBytes: dataBytes,
-		FinalData: finalData,
-		SignLower: sigLower,
-	}
-
-	httpresponse.OkWithAll(rs, "ok", c)
-}
-
-func AesEncryptCBC(origData []byte, key []byte) (encrypted []byte) {
-	// 分组秘钥
-	// NewCipher该函数限制了输入k的长度必须为16, 24或者32
-	block, _ := aes.NewCipher(key)
-	blockSize := block.BlockSize()                              // 获取秘钥块的长度
-	origData = pkcs5Padding(origData, blockSize)                // 补全码
-	blockMode := cipher.NewCBCEncrypter(block, key[:blockSize]) // 加密模式
-	encrypted = make([]byte, len(origData))                     // 创建数组
-	blockMode.CryptBlocks(encrypted, origData)                  // 加密
-	return encrypted
-}
-
-func pkcs5Padding(ciphertext []byte, blockSize int) []byte {
-	padding := blockSize - len(ciphertext)%blockSize
-	padtext := bytes.Repeat([]byte{byte(padding)}, padding)
-	return append(ciphertext, padtext...)
-}
-
-func SHA1_1(s string) string {
-	t := sha1.New()
-
-	io.WriteString(t, s)
-	sign := fmt.Sprintf("%x", t.Sum(nil))
-	return sign
-}
-
-func SHA1_2(s string) string {
-	h := sha1.New()
-	h.Write([]byte(s))
-	bs := h.Sum(nil)
-	fmt.Printf("%x\n", bs)
-	return string(bs)
 }
 
 // @Tags Base

@@ -35,7 +35,5 @@ func Base(Router *gin.RouterGroup) {
 		//检查token正确性
 		BaseRouter.POST("parser/token", v1.ParserToken)
 
-		BaseRouter.POST("test/migu/api", v1.TestMiguAPI)
-
 	}
 }

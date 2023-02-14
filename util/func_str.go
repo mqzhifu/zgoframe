@@ -3,7 +3,10 @@ package util
 //公共函数：字符串 操作
 import (
 	"bytes"
+	"crypto/aes"
+	"crypto/cipher"
 	"crypto/md5"
+	"crypto/sha1"
 	"encoding/hex"
 	"fmt"
 	"io"
@@ -168,4 +171,38 @@ func HttpHeaderSureStructCovertSureMap(response request.HeaderResponse) (outMap 
 		}
 	}
 	return outMap
+}
+
+func AesEncryptCBC(origData []byte, key []byte) (encrypted []byte) {
+	// 分组秘钥
+	// NewCipher该函数限制了输入k的长度必须为16, 24或者32
+	block, _ := aes.NewCipher(key)
+	blockSize := block.BlockSize()                              // 获取秘钥块的长度
+	origData = pkcs5Padding(origData, blockSize)                // 补全码
+	blockMode := cipher.NewCBCEncrypter(block, key[:blockSize]) // 加密模式
+	encrypted = make([]byte, len(origData))                     // 创建数组
+	blockMode.CryptBlocks(encrypted, origData)                  // 加密
+	return encrypted
+}
+
+func pkcs5Padding(ciphertext []byte, blockSize int) []byte {
+	padding := blockSize - len(ciphertext)%blockSize
+	padtext := bytes.Repeat([]byte{byte(padding)}, padding)
+	return append(ciphertext, padtext...)
+}
+
+func SHA1_1(s string) string {
+	t := sha1.New()
+
+	io.WriteString(t, s)
+	sign := fmt.Sprintf("%x", t.Sum(nil))
+	return sign
+}
+
+func SHA1_2(s string) string {
+	h := sha1.New()
+	h.Write([]byte(s))
+	bs := h.Sum(nil)
+	fmt.Printf("%x\n", bs)
+	return string(bs)
 }

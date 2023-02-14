@@ -1,7 +1,11 @@
 package v1
 
 import (
+	"encoding/base64"
+	"encoding/json"
 	"github.com/gin-gonic/gin"
+	"github.com/prometheus/common/log"
+	"io/ioutil"
 	"os"
 	"strconv"
 	"strings"
@@ -13,19 +17,85 @@ import (
 	"zgoframe/util"
 )
 
+type MiguRes struct {
+	AppId     string
+	Data      string
+	DataBytes []byte
+	Time      int64
+	TimeStr   string
+	Sign      string
+	FinalData string
+	SignLower string
+}
+
 // @Tags Tools
-// @Summary 测试对端-接口
-// @Description 用于开发工具测试
+// @Summary 测试咪咕
+// @Description 120项目API接口
 // @Security ApiKeyAuth
 // @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
 // @Param X-Project-Id header string true "项目ID" default(6)
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
 // @Param X-Second-Auth-Uname header string true "二次验证-用户名" default(test)
 // @Param X-Second-Auth-Ps header string true "二次验证-密码" default(qweASD1234560)
-// @Param id path int true "项目ID"
 // @Produce  application/json
-// @Success 200 {object} model.Project
-// @Router /tools/project/info/{id} [get]
+// @Success 200 {object} v1.MiguRes "最终的请求参数信息"
+// @Router /tools/test/migu/api/para [GET]
+func TestMiguAPIGetPara(c *gin.Context) {
+	type DataStruct struct {
+		ArSn   string `json:"arSn"`
+		CpeMac string `json:"cpeMac"`
+	}
+
+	appId := "wechat_625"
+	appSecret := "b267a314-2208-4970-a0fc-b9f0e677b437"
+	data := DataStruct{ArSn: "T20230101BJ00011", CpeMac: "AC-BD-8I-FE"}
+	dataBytes, _ := json.Marshal(&data)
+	dataStr := string(dataBytes)
+
+	first16AppSecret := []byte(appSecret)[0:16]
+	encrypted := util.AesEncryptCBC(dataBytes, first16AppSecret)
+	base64Encrypted := base64.StdEncoding.EncodeToString(encrypted)
+	finalData := "{\"data\":" + "\"" + base64Encrypted + "\"" + "}"
+	//dataStr = "{"a":1}"
+	time := util.GetNowMillisecond()
+	timeStr := strconv.FormatInt(time, 10)
+	//timeStr := "1676340948931"
+	//String plaintext = appId + timestamp + appSecret + jsonString;
+	joinStr := appId + timeStr + appSecret + dataStr
+	sign := util.SHA1_1(joinStr)
+	sigLower := strings.ToLower(sign)
+	util.MyPrint("app-id:", appId, "appSecret:", appSecret, "data:", data, "time:", time, "timeStr", timeStr, "sign", sign, " sigLower:", sigLower, "FinalData:", finalData)
+
+	rs := MiguRes{
+		AppId:     appId,
+		Time:      time,
+		TimeStr:   timeStr,
+		Sign:      sign,
+		Data:      dataStr,
+		DataBytes: dataBytes,
+		FinalData: finalData,
+		SignLower: sigLower,
+	}
+
+	httpresponse.OkWithAll(rs, "ok", c)
+}
+
+// @Tags Tools
+// @Summary 测试咪咕,对方返回的数据信息
+// @Description 120项目API接口
+// @Security ApiKeyAuth
+// @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
+// @Param X-Project-Id header string true "项目ID" default(6)
+// @Param X-Access header string true "访问KEY" default(imzgoframe)
+// @Param X-Second-Auth-Uname header string true "二次验证-用户名" default(test)
+// @Param X-Second-Auth-Ps header string true "二次验证-密码" default(qweASD1234560)
+// @Produce  application/json
+// @Success 200 {object} v1.MiguRes "最终的请求参数信息"
+// @Router /tools/test/migu/api/back/data [POST]
+func ReceiveMiguBackData(c *gin.Context) {
+	body, _ := ioutil.ReadAll(c.Request.Body)
+	log.Info("请求body内容为:%s", body)
+}
 
 // @Tags Tools
 // @Summary 一个项目的详细信息

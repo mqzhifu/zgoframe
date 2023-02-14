@@ -31,7 +31,8 @@ var URI_MAP = {
     "cicd_service_list": http_protocol + "://"+domain +"/cicd/service/list",
     "cicd_server_list": http_protocol + "://"+domain +"/cicd/server/list",
     "cicd_super_visor_list": http_protocol + "://"+domain +  "/cicd/superVisor/list",
-    "test_migu" : http_protocol + "://"+domain + "/base/test/migu/api",
+    "test_migu_get_para" : http_protocol + "://"+domain + "/tools/test/migu/api/para",
+    "test_migu_send_back_data" : http_protocol + "://"+domain + "/tools/test/migu/api/para",
 
 };
 
@@ -74,7 +75,7 @@ function UserLogin(uid,callback){
 
 //发起公共请求
 function AjaxAdminReq(callback,urlMapKey , useToken,async,httpMethod,httpData){
-    console.log("AjaxAdminReq");
+    console.log("AjaxAdminReq ,urlMapKey:"+urlMapKey , "httpMethod:",httpMethod,"httpData:",httpData);
     $.ajax({
         headers: {
             "X-Second-Auth-Uname": "xiaoz",

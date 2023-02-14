@@ -17,11 +17,11 @@ aaaaa
 
 
     $(document).ready(function(){
-        AjaxAdminReq(back,"test_migu","",true,"POST");
+        AjaxAdminReq(back,"test_migu_get_para","",true,"GET");
     });
 
     function back(data){
-        // console.log(data);
+        console.log("i am back, data:",data);
         // var d = data.data;
         // d =  eval( d)
         // var infoObj = eval( "(" +  data.FinalData+  ")");
@@ -42,7 +42,12 @@ aaaaa
             async:false,
             success: function(data){
                 $("#s_back").html(data);
+                alert("im back data:");
+                alert(data.code + data.message);
+                alert(data.data);
                 console.log(data);
+
+                AjaxAdminReq(sendMiguDataToServer,"test_migu_send_back_data","",true,"POST",data);
             },
             error: function (XMLHttpRequest, textStatus, errorThrown) {
                 $("#ajax_error").html("error:");
@@ -52,7 +57,10 @@ aaaaa
             }
 
         });
+    }
 
+    function sendMiguDataToServer(data){
+        alert("send to server ok!");
     }
 
 

@@ -24,7 +24,7 @@ func Tools(Router *gin.RouterGroup) {
 		ToolsRouter.GET("test/init/db", v1.ConstInitTestDb)
 
 		ToolsRouter.GET("test/migu/api/para", v1.TestMiguAPIGetPara)
-		ToolsRouter.GET("test/migu/api/back/data ", v1.ReceiveMiguBackData)
+		ToolsRouter.POST("test/migu/api/back/data ", v1.ReceiveMiguBackData)
 
 	}
 }

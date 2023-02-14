@@ -32,7 +32,7 @@ var URI_MAP = {
     "cicd_server_list": http_protocol + "://"+domain +"/cicd/server/list",
     "cicd_super_visor_list": http_protocol + "://"+domain +  "/cicd/superVisor/list",
     "test_migu_get_para" : http_protocol + "://"+domain + "/tools/test/migu/api/para",
-    "test_migu_send_back_data" : http_protocol + "://"+domain + "/tools/test/migu/api/para",
+    "test_migu_send_back_data" : http_protocol + "://"+domain + "/tools/test/migu/api/backdata",
 
 };
 

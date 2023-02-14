@@ -172,9 +172,6 @@ func processCmdParameter(prefix string) global.CmdParameter {
 	return cmdParameter
 }
 func ttt() {
-	//ss := util.NewConstHandle()
-	//util.MyPrint(ss.EnumConstPool)
-	//util.ExitPrint(33)
 }
 
 func QuitAll(source int) {

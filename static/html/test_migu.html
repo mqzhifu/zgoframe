@@ -24,9 +24,9 @@ aaaaa
         // console.log(data);
         // var d = data.data;
         // d =  eval( d)
-        var infoObj = eval( "(" +  data.FinalData+  ")");
+        // var infoObj = eval( "(" +  data.FinalData+  ")");
         // var infoObj =  data.FinalData;
-        console.log("infoObj:",infoObj);
+        // console.log("infoObj:",infoObj);
         // return 1;
         $.ajax({
             headers: {
@@ -36,8 +36,8 @@ aaaaa
                 "Content-Type":"application/json"
             },
             type: "POST",
-            data :infoObj,
-            url:"https://dev410ar-inner.cmiiyl.com/",
+            data :data.FinalData,
+            url:"https://dev410ar-inner.cmiiyl.com/api/ambulance/api/ar/login",
             dataType: "json",
             async:false,
             success: function(data){

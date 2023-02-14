@@ -95,7 +95,7 @@ func TestMiguAPI(c *gin.Context) {
 
 	appId := "wechat_625"
 	appSecret := "b267a314-2208-4970-a0fc-b9f0e677b437"
-	data := DataStruct{ArSn: "9866-b05c932-fcc7", CpeMac: "f9866-b05-c932fcc7"}
+	data := DataStruct{ArSn: "T20230101BJ00011", CpeMac: "AC-BD-8I-FE"}
 	dataBytes, _ := json.Marshal(&data)
 	dataStr := string(dataBytes)
 

@@ -31,6 +31,7 @@ var URI_MAP = {
     "cicd_service_list": http_protocol + "://"+domain +"/cicd/service/list",
     "cicd_server_list": http_protocol + "://"+domain +"/cicd/server/list",
     "cicd_super_visor_list": http_protocol + "://"+domain +  "/cicd/superVisor/list",
+    "test_migu" : http_protocol + "://"+domain + "/base/test/migu/api",
 
 };
 

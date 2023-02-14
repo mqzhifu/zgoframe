@@ -33,7 +33,8 @@ func (initialize *Initialize) Start() error {
 	global.V.Vip = myViper //全局变量管理者
 	global.C = config      //全局变量
 	//---read config file end -----
-	//预/报警->推送器，这里是推送到3方，如：prometheus
+
+	//预警/报警->推送器，这里是推送到3方服务，如：prometheus，而不是直接发邮件/短信
 	//ps:这个要优先zap日志类优化处理，因为zap里的<钩子>有用到,主要是日志里自动触发报警，略方便
 	if global.C.Alert.Status == core.GLOBAL_CONFIG_MODEL_STATUS_OPEN {
 		global.V.AlertPush = util.NewAlertPush(global.C.Alert.Host, global.C.Alert.Port, global.C.Alert.Uri, prefix)

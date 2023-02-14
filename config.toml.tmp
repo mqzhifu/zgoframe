@@ -1,21 +1,29 @@
 #配置文件中有很多相对目录：大多是文件/图片相关(日志文件除外)，之所以用相对路径，且大部分在static下面，是因为：文件不跟着代码的版本走，每次代码更新，但是文件不能重新生成，CICD不好处理。
 #那：正常在服务器上有一个统一的位置存放静态资源，最终静态域名会指向该静态资源目录，而在项目中：则一个软连接目录
 
+#框架系统相关
 [system]
 dbType       = "mysql"
-projectId    = #projectId#
+projectId    = #projectId# #项目ID，所有的项目均要在后台申请一个ID
 errorMsgFile = "/data/lang.txt"#这是个相对路径,在static下面
 opDirName    = "operation"
 
+#域名管理
+[domain]
+static = "#domain_host#" #静态文件访问的域名
+
+#签名验证 token
 [jwt]
 status      = "open"
 key         = "chukong"
 expiresTime = 360000
 
+#读取配置文件的一个插件
 [viper]
 status  = "open"
 watch   = "open"
 
+#日志
 [zap]
 status          = "open"
 level           = "info"
@@ -30,6 +38,22 @@ Prefix          = ""
 encodeLevel     = "LowercaseLevelEncoder"
 autoAlert       = true
 
+
+#静态文件管理
+[fileManager]
+status  = "open"
+#注意：这里是一个相对路径，且没有：录层级，可以修改名字，但不可以增加层级（名字两边也不要加反斜杠）
+#两个地方会用到它：1. cicd 2. 文件上传
+#原因1：cicd 部署时：会自动创建该目录名（软连接），实际物理位置由CICD里的配置信息确定
+#原因2: 文件上传类，在本地存储文件时，得有个本机的目录，存储成功后，前端的请求是：一个host+ 相对目录名+文件名，如果host是直接指向此目录，那写绝对路径也行，但是如果host只是指向的是该目录的上一级目录（如：静态资源统一域名，不区分是否为上传/proto/js/等）,那么绝对路径肯定不行
+#此目录就在项目的根目录下，不需要你手动创建，CICD会帮忙处理，如果不使用CICD，需要手动创建(软连接)
+uploadPath = "upload" #相对路径，在static下面
+#上传文件大小，这个值最好别设置太大，同时要跟nginx同步修改不然不失效
+uploadMaxSize = 9
+downloadPath = "download"
+downloadMaxSize = 100
+
+#缓存
 [redis]
 status      = "open"
 db-number   = 1
@@ -37,21 +61,22 @@ ip          = "#redis_ip#"
 port        = "#redis_port#"
 password    = "#redis_ps#"
 
+#网页图形-验证码
 [captcha]
 status       = "open"
 numberLength = 4
 imgWidth     = 240
 imgHeight    = 80
 
-
+#短连接
 [http]
 status          = "open"
 ip              = "#http_ip#"
 port            = "#http_port#"
-staticPath      = "static"#相对路径，在项目的根目录下
+staticPath      = "static" #监听某个目录下的静态文件，提供 restful 服务。这里是个相对路径，在项目的根目录下
 reqLimitTimes   = 100
 
-#注：这里是一个二维数组，支持多mysql实例,但CICD目前只能处理一个mysql 变量替换
+#mysql 数据库，注：这里是一个二维数组，支持多mysql实例,但CICD目前只能处理一个mysql 变量替换
 [[mysql]]
 status          = "open"
 ip              = "#mysql_ip#"
@@ -66,6 +91,49 @@ logMode         = true
 logZap          = false
 masterSlave     = "master"
 
+#标量统计
+[metrics]
+status = "open"
+
+[protobuf]
+status          = "open"
+basePath        = "protobuf" #相对路径，在static下面
+pbServicePath   = "pbservice"#相对路径，在static下面
+protoPath       = "proto"    #相对路径，在static下面
+idMapFileName   = "map.txt"
+
+#邮件
+[email]
+status   = "open"
+host     = "#email_ip#"
+port     = "#email_port#"#目前用不到这个值
+from     = "#email_user#"
+ps       = "#email_ps#"
+authCode = "#email_port#" #验证码，腾讯的邮箱除了用户名密码外还要一个验证码机制
+
+#报警
+[alert]
+status  = "open"
+host    = "#alert_ip#"
+port    = "#alert_port#"
+uri     = "/api/v2/alerts"
+
+#公共网关
+[gateway]
+status    = "open"
+ListenIp  = "#gateway_listen_ip#"
+OutIp     = "#gateway_out_ip#"
+OutDomain = "#gateway_out_domain#"
+WsPort    = "#gateway_ws_port#"
+TcpPort   = "#gateway_tcp_port#"
+WsUri     = "#gateway_ws_uri#"
+
+#配置中心
+[configCenter]
+status          = "open"
+persistenceType = 3
+dataPath        = "data/config" #相对路径，在static下面
+
 [etcd]
 status      = "close"
 ip          = "#etcd_ip#"
@@ -73,15 +141,6 @@ port        = "#etcd_port#"
 username    = "#etcd_user#"
 password    = "#etcd_ps#"
 url         = ""#通过http-url，动态获取etcd配置信息
-
-[alert]
-status  = "open"
-host    = "#alert_ip#"
-port    = "#alert_port#"
-uri     = "/api/v2/alerts"
-
-[metrics]
-status = "open"
 
 [websocket]
 status  = "close"
@@ -93,74 +152,33 @@ ip                      = "#grpc_ip#"
 port                    = "#grpc_port#"
 servicePackagePrefix    = "#grpc_user#"
 
-[protobuf]
-status          = "open"
-basePath        = "protobuf" #相对路径，在static下面
-pbServicePath   = "pbservice"#相对路径，在static下面
-protoPath       = "proto"    #相对路径，在static下面
-idMapFileName   = "map.txt"
-
+#服务发现
 [serviceDiscovery]
 status = "close"
 prefix = "/service"
 
-[email]
-status   = "open"
-host     = "#email_ip#"
-port     = "#email_port#"#目前用不到这个值
-from     = "#email_user#"
-ps       = "#email_ps#"
-authCode = "#email_port#" #验证码，腾讯的邮箱除了用户名密码外还要一个验证码机制
-
+#推送标量
 [pushGateway]
 status  = "close"
 ip      = "#push_gateway_ip#"
 port    = "#push_gateway_port#"
 #依赖 protobuf 模块的 ProtoMap
 
-[gateway]
-status    = "open"
-ListenIp  = "#gateway_listen_ip#"
-OutIp     = "#gateway_out_ip#"
-OutDomain = "#gateway_out_domain#"
-WsPort    = "#gateway_ws_port#"
-TcpPort   = "#gateway_tcp_port#"
-WsUri     = "#gateway_ws_uri#"
-
 [cicd]
 status  = "close"
 
-[configCenter]
-status          = "open"
-persistenceType = 3
-dataPath        = "data/config" #相对路径，在static下面
-
-[fileManager]
-status  = "open"
-#注意：这里是一个相对路径，且没有：录层级，可以修改名字，但不可以增加层级（名字两边也不要加反斜杠）
-#两个地方会用到它：1. cicd 2. 文件上传
-#原因1：cicd 部署时：会自动创建该目录名（软连接），实际物理位置由CICD里的配置信息确定
-#原因2: 文件上传类，在本地存储文件时，得有个本机的目录，存储成功后，前端的请求是：一个host+ 相对目录名+文件名，如果host是直接指向此目录，那写绝对路径也行，但是如果host只是指向的是该目录的上一级目录（如：静态资源统一域名，不区分是否为上传/proto/js/等）,那么绝对路径肯定不行
-#此目录就在项目的根目录下，不需要你手动创建，CICD会帮忙处理，如果不使用CICD，需要手动创建(软连接)
-uploadPath = "upload" #相对路径，在static下面
-#上传文件大小，这个值最好别设置太大，同时要跟nginx同步修改不然不失效
-uploadMaxSize = 9
-downloadPath = "download"
-downloadMaxSize = 100
-
+#阿里云静态文件存储
 [aliOss]
-status  = "open"
+status  = "close"
 accessKeyId     = "#oss_user#"
 accessKeySecret = "#oss_ps#"
 endpoint        = "#oss_ip#"
 bucket          = "#oss_port#"
 selfDomain      = "ossservicebase.seedreality.com"
 
-[domain]
-static = "#domain_host#"
-
+#声网音视频流
 [agora]
-status  = "open"
+status  = "close"
 appId           = "#agora_user#"
 appCertificate  = "#agora_ps#"
 HttpKey = "#agora_aaa#"

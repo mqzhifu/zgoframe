@@ -47,6 +47,7 @@ func NewMyService() *MyService {
 		Flag:             service.REQ_SERVICE_METHOD_NATIVE,
 		Log:              V.Zap,
 	}
+	//服务之间互相调用
 	myService.ServiceBridge, _ = service.NewBridge(ServiceBridgeOp)
 	//用户服务
 	myService.User = user_center.NewUser(V.Gorm, V.Redis)

@@ -14,6 +14,20 @@ import (
 )
 
 // @Tags Tools
+// @Summary 测试对端-接口
+// @Description 用于开发工具测试
+// @Security ApiKeyAuth
+// @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
+// @Param X-Project-Id header string true "项目ID" default(6)
+// @Param X-Access header string true "访问KEY" default(imzgoframe)
+// @Param X-Second-Auth-Uname header string true "二次验证-用户名" default(test)
+// @Param X-Second-Auth-Ps header string true "二次验证-密码" default(qweASD1234560)
+// @Param id path int true "项目ID"
+// @Produce  application/json
+// @Success 200 {object} model.Project
+// @Router /tools/project/info/{id} [get]
+
+// @Tags Tools
 // @Summary 一个项目的详细信息
 // @Description 用于开发工具测试
 // @Security ApiKeyAuth

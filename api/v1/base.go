@@ -1,9 +1,13 @@
 package v1
 
 import (
+	"crypto/sha1"
+	"encoding/json"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/mojocn/base64Captcha"
 	"go.uber.org/zap"
+	"io"
 	"strconv"
 	"zgoframe/core/global"
 	httpmiddleware "zgoframe/http/middleware"
@@ -54,6 +58,70 @@ func Captcha(c *gin.Context) {
 			ContentLength: global.C.Captcha.NumberLength,
 		}, "验证码获取成功", c)
 	}
+}
+
+// @Tags Base
+// @Summary 测试咪咕
+// @Description 120项目API接口
+// @accept application/json
+// @Param X-Source-Type header string true "来源" default(11)
+// @Param X-Project-Id header string true "项目ID"  default(6)
+// @Param X-Access header string true "访问KEY" default(imzgoframe)
+// @Param data body request.Captcha false "基础信息"
+// @Produce application/json
+// @Success 200 {object} httpresponse.Captcha "图片信息"
+// @Router /base/test/migu/api [POST]
+func TestMiguAPI(c *gin.Context) {
+	type DataStruct struct {
+		Uname string
+		Age   int
+	}
+
+	appId := "wechat_625"
+	appSecret := "b267a314-2208-4970-a0fc-b9f0e677b437"
+	data := DataStruct{Uname: "xiaoz", Age: 18}
+	dataBytes, _ := json.Marshal(&data)
+	dataStr := string(dataBytes)
+	time := util.GetNowMillisecond()
+	timeStr := strconv.FormatInt(time, 10)
+	//timeStr := "1676340948931"
+	joinStr := appId + timeStr + appSecret + dataStr
+	sign := SHA1_1(joinStr)
+	util.MyPrint("app-id:", appId, "appSecret:", appSecret, "data:", data, "time:", time, "timeStr", timeStr, "sign", sign)
+
+	type res struct {
+		AppId   string
+		Data    string
+		Time    int64
+		TimeStr string
+		Sign    string
+	}
+
+	rs := res{
+		AppId:   appId,
+		Time:    time,
+		TimeStr: timeStr,
+		Sign:    sign,
+		Data:    dataStr,
+	}
+
+	httpresponse.OkWithAll(rs, "成功", c)
+}
+
+func SHA1_1(s string) string {
+	t := sha1.New()
+
+	io.WriteString(t, s)
+	sign := fmt.Sprintf("%x", t.Sum(nil))
+	return sign
+}
+
+func SHA1_2(s string) string {
+	h := sha1.New()
+	h.Write([]byte(s))
+	bs := h.Sum(nil)
+	fmt.Printf("%x\n", bs)
+	return string(bs)
 }
 
 // @Tags Base

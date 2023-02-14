@@ -21,12 +21,13 @@ aaaaa
     });
 
     function back(data){
-        return 1;
         // console.log(data);
         // var d = data.data;
         // d =  eval( d)
-        var         infoObj = eval( "(" +  data.FinalData+  ")");
-        console.log(infoObj);
+        var infoObj = eval( "(" +  data.FinalData+  ")");
+        // var infoObj =  data.FinalData;
+        console.log("infoObj:",infoObj);
+        // return 1;
         $.ajax({
             headers: {
                 "app-id": data.AppId,

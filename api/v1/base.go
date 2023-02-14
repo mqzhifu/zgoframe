@@ -102,14 +102,16 @@ func TestMiguAPI(c *gin.Context) {
 	first16AppSecret := []byte(appSecret)[0:16]
 	encrypted := AesEncryptCBC(dataBytes, first16AppSecret)
 	base64Encrypted := base64.StdEncoding.EncodeToString(encrypted)
-	finalData := "{\"data\":" + base64Encrypted + "}"
+	finalData := "{\"data\":" + "\"" + base64Encrypted + "\"" + "}"
 	//dataStr = "{"a":1}"
 	time := util.GetNowMillisecond()
 	timeStr := strconv.FormatInt(time, 10)
 	//timeStr := "1676340948931"
+	//String plaintext = appId + timestamp + appSecret + jsonString;
 	joinStr := appId + timeStr + appSecret + dataStr
 	sign := SHA1_1(joinStr)
-	util.MyPrint("app-id:", appId, "appSecret:", appSecret, "data:", data, "time:", time, "timeStr", timeStr, "sign", sign)
+	sigLower := strings.ToLower(sign)
+	util.MyPrint("app-id:", appId, "appSecret:", appSecret, "data:", data, "time:", time, "timeStr", timeStr, "sign", sign, " sigLower:", sigLower, "FinalData:", finalData)
 
 	rs := MiguRes{
 		AppId:     appId,
@@ -119,7 +121,7 @@ func TestMiguAPI(c *gin.Context) {
 		Data:      dataStr,
 		DataBytes: dataBytes,
 		FinalData: finalData,
-		SignLower: strings.ToLower(finalData),
+		SignLower: sigLower,
 	}
 
 	httpresponse.OkWithAll(rs, "ok", c)

@@ -85,6 +85,7 @@ func (gateway *Gateway) BroadcastService(funcName string, msg pb.Msg) {
 	//gateway.RouterServiceSync(msg)
 	////gateway.RouterServiceGameMatch(msg, conn)
 	//gateway.RouterServiceTwinAgora(msg)
+
 	serviceDesc, empty := gateway.NetWayOption.ProtoMap.GetServiceByName("FrameSync", funcName)
 	if empty {
 		util.ExitPrint("BroadcastService get service1 empty , name:" + funcName)
@@ -104,14 +105,14 @@ func (gateway *Gateway) BroadcastService(funcName string, msg pb.Msg) {
 	msg.SidFid = int32(gateway.NetWayOption.ProtoMap.GetIdBySidFid(serviceDesc.ServiceId, serviceDesc.FuncId))
 	gateway.ServiceBridge.Call(service.CallMsg{Msg: msg})
 
-	//serviceDesc, _ = gateway.NetWayOption.ProtoMap.GetServiceByName("TwinAgora", funcName)
-	//if empty {
-	//	util.ExitPrint("BroadcastService get service3 empty, name:" + funcName)
-	//}
-	//msg.ServiceId = int32(serviceDesc.ServiceId)
-	//msg.FuncId = int32(serviceDesc.FuncId)
-	//msg.SidFid = int32(gateway.NetWayOption.ProtoMap.GetIdBySidFid(serviceDesc.ServiceId, serviceDesc.FuncId))
-	//gateway.ServiceBridge.Call(msg, "", 0)
+	serviceDesc, _ = gateway.NetWayOption.ProtoMap.GetServiceByName("TwinAgora", funcName)
+	if empty {
+		util.ExitPrint("BroadcastService get service3 empty, name:" + funcName)
+	}
+	msg.ServiceId = int32(serviceDesc.ServiceId)
+	msg.FuncId = int32(serviceDesc.FuncId)
+	msg.SidFid = int32(gateway.NetWayOption.ProtoMap.GetIdBySidFid(serviceDesc.ServiceId, serviceDesc.FuncId))
+	gateway.ServiceBridge.Call(service.CallMsg{Msg: msg})
 
 }
 
@@ -120,10 +121,12 @@ func (gateway *Gateway) ClientPong(requestClientPong pb.PongRes) {
 }
 
 func (gateway *Gateway) heartbeat(requestClientHeartbeat pb.Heartbeat) {
+	util.MyPrint("================", requestClientHeartbeat.SourceUid)
 	conn, _ := gateway.Netway.ConnManager.GetConnPoolById(requestClientHeartbeat.SourceUid)
 
 	now := util.GetNowTimeSecondToInt()
 	now64 := util.GetNowMillisecond()
+	//util.MyPrint("=================", now, now64)
 	conn.UpTime = int32(now)
 	conn.RTT = now64 - requestClientHeartbeat.Time
 

@@ -698,6 +698,7 @@ func (connManager *ConnManager) MakeMsgByServiceFuncName(userId int32, service s
 	//SidFid, _ := strconv.Atoi(strconv.Itoa(actionMap.ServiceId) + strconv.Itoa(actionMap.Id))
 	msg = pb.Msg{
 		//SidFid:       int32(SidFid),
+		SourceUid:    userId,
 		DataLength:   int32(len(content)),
 		Content:      string(content),
 		SidFid:       int32(serviceDesc.Id),

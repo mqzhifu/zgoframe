@@ -9,26 +9,15 @@ import (
 	"time"
 )
 
+//接收报警服务
 type AlertPush struct {
-	Ip   string
-	Port string
-	Uri  string
-	Url  string
+	Ip   string //  IP
+	Port string // 端口
+	Uri  string // uri
+	Url  string // 完整的 url
 }
 
-func NewAlertPush(ip string, port string, uri string, printfPrefix string) *AlertPush {
-	alert := new(AlertPush)
-	alert.Ip = ip
-	alert.Port = port
-	alert.Uri = uri
-	url := "http://" + ip + ":" + port + "/" + uri
-	alert.Url = url
-
-	MyPrint(printfPrefix + "NewAlertPush:" + alert.Url)
-
-	return alert
-}
-
+// 一条报警服务的消息体
 type AlertMsg struct {
 	Content string `json:"-"`
 
@@ -54,6 +43,19 @@ type AlertMsgLabels struct {
 	Instance  string `json:"instance"`
 }
 
+func NewAlertPush(ip string, port string, uri string, printfPrefix string) *AlertPush {
+	alert := new(AlertPush)
+	alert.Ip = ip
+	alert.Port = port
+	alert.Uri = uri
+	url := "http://" + ip + ":" + port + "/" + uri
+	alert.Url = url
+
+	MyPrint(printfPrefix + "NewAlertPush:" + alert.Url)
+
+	return alert
+}
+
 func (alertPush *AlertPush) Push(projectId int, levelString string, content string) {
 	MyPrint("program has error,need push alert....")
 	return
@@ -67,7 +69,7 @@ func (alertPush *AlertPush) Push(projectId int, levelString string, content stri
 		Severity:    levelString,
 		TriggerType: "initiative",
 		ProjectId:   strconv.Itoa(projectId),
-		Alertname:   "serviceDIy",
+		Alertname:   "serviceDiy",
 		JobName:     "bbbb",
 		Instance:    "127.0.0.1",
 	}
@@ -110,4 +112,23 @@ func (alertPush *AlertPush) Push(projectId int, levelString string, content stri
 	//body,err:=ioutil.ReadAll(resp.Body)
 	//MyPrint(resp.Status,string(body))
 
+}
+
+func (alertPush *AlertPush) Trigger(projectId int, levelString string, content string, triggerType string, sendType int) {
+	//MyPrint("program has error,need push alert....")
+	//return
+
+	//alertMsgAnnotations := AlertMsgAnnotations{
+	//	Summary:     content,
+	//	Description: content,
+	//}
+	//
+	//alertMsgLabels := AlertMsgLabels{
+	//	Severity:    levelString,
+	//	TriggerType: triggerType,
+	//	ProjectId:   strconv.Itoa(projectId),
+	//	Alertname:   "serviceDiy",
+	//	JobName:     "bbbb",
+	//	Instance:    "127.0.0.1",
+	//}
 }

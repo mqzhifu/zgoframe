@@ -10,6 +10,7 @@
 410|you has deny,don't repeat opt:{0}
 411|you has accept,don't repeat op:{0}
 412|roomId err , is diff:{0}
+413|FDCreateEvent.UserId <= 0
 420|para PeopleType err , now only support: calling doctor (PeopleType= 2)
 421|not support para:TargetUid
 422|Currently, the number of experts online is more than 1. Currently, only 1V1 calls are supported

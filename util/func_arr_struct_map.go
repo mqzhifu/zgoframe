@@ -47,7 +47,7 @@ func ArrCovertMap(arr []int) map[int]int {
 	return mapArr
 }
 
-//将一个：一给数组(string)转成成 数组(int)
+//将一个：一给数组(string)转成 数组(int)
 func ArrStringCoverArrInt(arr []string) (arr2 []int) {
 	for i := 0; i < len(arr); i++ {
 		arr2 = append(arr2, Atoi(arr[i]))

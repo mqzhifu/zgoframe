@@ -32,7 +32,7 @@ type ViperOption struct {
 	PrintPrefix    string
 }
 
-//读取配置文件：目前权支持文件，ETCD只写了一半
+//读取配置文件：目前仅支持从文件读取配置信息，ETCD的方式只写了一半
 func GetNewViper(prefix string) (myViper *viper.Viper, config global.Config, err error) {
 	//初始化 : 配置信息
 	viperOption := ViperOption{
@@ -44,8 +44,12 @@ func GetNewViper(prefix string) (myViper *viper.Viper, config global.Config, err
 		PrintPrefix:    prefix,
 	}
 
-	//util.MyPrint("SourceType:",viperOption.SourceType, " ConfigFileType:",viperOption.ConfigFileType ," , ConfigFileName:",viperOption.ConfigFileName)
+	util.MyPrint(prefix+" GetNewViper SourceType:", viperOption.SourceType, " ConfigFileType:", viperOption.ConfigFileType, " , ConfigFileName:", viperOption.ConfigFileName)
 	myViper = viper.New()
+
+	if viperOption.ConfigFileType != "toml" && viperOption.ConfigFileType != "yaml" {
+		return myViper, config, errors.New("ConfigFileType only support : toml yaml")
+	}
 
 	if viperOption.SourceType == "file" { //直接从文件中读取配置信息
 		myViper.SetConfigType(viperOption.ConfigFileType)

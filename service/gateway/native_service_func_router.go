@@ -95,13 +95,15 @@ func (gateway *Gateway) NativeServiceFuncRouter(msg pb.Msg) (data interface{}, e
 		//requestClientPong.SourceUid = conn.UserId
 		gateway.ClientPong(requestClientPong)
 	case "CS_Heartbeat":
+		util.MyPrint("", msg.SourceUid)
+		requestClientHeartbeat.SourceUid = msg.SourceUid
 		//网关自己要维护一个心跳，主要是更新原始FD的时间、计算RTT等
 		gateway.heartbeat(requestClientHeartbeat)
 		//心跳还要广播给后面的所有微服务
 		//requestClientPing.SourceUid = conn.UserId
 		requestClientHeartbeatStrByte, _ := gateway.Netway.ConnManager.CompressContent(&requestClientHeartbeat, msg.SourceUid)
-		msg, _, _ := gateway.Netway.ConnManager.MakeMsgByServiceFuncName(msg.SourceUid, "Gateway", "CS_Heartbeat", requestClientHeartbeatStrByte)
-		gateway.BroadcastService("CS_Heartbeat", msg)
+		msgN, _, _ := gateway.Netway.ConnManager.MakeMsgByServiceFuncName(msg.SourceUid, "Gateway", "CS_Heartbeat", requestClientHeartbeatStrByte)
+		gateway.BroadcastService("CS_Heartbeat", msgN)
 	case "SC_ProjectPushMsg":
 		TargetUidArr := strings.Split(requestProjectPushMsg.TargetUids, ",")
 		uids := []int{}

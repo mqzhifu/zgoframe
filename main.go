@@ -77,7 +77,7 @@ var initializeVar *initialize.Initialize
 // @in header
 
 func main() {
-	//编译打进去的两个参数：BuildTime 编译时间，编译的git版本号
+	//编译打进去的两个参数：BuildTime 编译时间，编译的 git 版本号
 	util.MyPrint("code , BuildTime:", BuildTime, " BuildGitVersion:", BuildGitVersion)
 	//日志前缀
 	prefix := "main "
@@ -88,14 +88,13 @@ func main() {
 	//util.MyPrint(prefix+" cmd parameter:", cmdParameter)
 	//获取当前脚本执行用户信息
 	imUser, _ := user.Current()
-	util.MyPrint(prefix + "exec script user info , name: " + imUser.Name + " uid: " + imUser.Uid + " , gid :" + imUser.Gid + " ,homeDir:" + imUser.HomeDir)
+	util.MyPrint(prefix + "exec script  <user info> , name: " + imUser.Name + " uid: " + imUser.Uid + " , gid :" + imUser.Gid + " ,homeDir:" + imUser.HomeDir)
 	//当前脚本执行的路径
 	pwd, _ := os.Getwd()
 	util.MyPrint(prefix + "exec script pwd:" + pwd)
 	//开始初始化模块
 	//main主协程的 context
 	util.MyPrint(prefix + "create cancel context")
-	ttt()
 	mainCxt, mainCancelFunc := context.WithCancel(context.Background())
 	mainEnvironment := global.MainEnvironment{
 		RootDir:         pwd,
@@ -170,8 +169,6 @@ func processCmdParameter(prefix string) global.CmdParameter {
 	}
 
 	return cmdParameter
-}
-func ttt() {
 }
 
 func QuitAll(source int) {

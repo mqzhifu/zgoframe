@@ -82,21 +82,21 @@ func (bridge *Bridge) CallGateway(callGatewayMsg CallGatewayMsg) (resData interf
 	bridge.DebugInfo(debugInfo)
 
 	if callGatewayMsg.TargetUid <= 0 {
-		info := debugInfo + " , GetServiceByName-1 empty!"
+		info := debugInfo + " , CallGateway  callGatewayMsg.TargetUid -1 empty!"
 		err = bridge.MakeError(info)
 		return
 	}
 
 	serviceMapInfo, empty := bridge.Op.ProtoMap.GetServiceByName("Gateway", "SC_SendMsg")
 	if empty {
-		info := debugInfo + " , GetServiceByName-1 empty!"
+		info := debugInfo + " , ProtoMap.GetServiceByName -2 empty!"
 		err = bridge.MakeError(info)
 		return
 	}
 
 	sourceServiceMapInfo, empty := bridge.Op.ProtoMap.GetServiceByName(callGatewayMsg.ServiceName, callGatewayMsg.FunName)
 	if empty {
-		info := debugInfo + " , GetServiceByName-2 empty!"
+		info := debugInfo + " , GetServiceByName - 3 empty!"
 		err = bridge.MakeError(info)
 		return
 	}

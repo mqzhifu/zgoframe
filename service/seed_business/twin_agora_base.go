@@ -72,7 +72,7 @@ func NewTwinAgora(op TwinAgoraOption) (*TwinAgora, error) {
 	twinAgora := new(TwinAgora)
 	twinAgora.Gorm = op.Gorm           //房间数据持久化
 	twinAgora.CallTimeout = 8          //呼叫过程的超时时间
-	twinAgora.ExecTimeout = 10         //房间运行的超时时间，room_heartbeat 也使用此值
+	twinAgora.ExecTimeout = 60         //房间运行的超时时间，room_heartbeat 也使用此值
 	twinAgora.UserHeartbeatTimeout = 3 //一个用户建立的长连接，超时时间
 	twinAgora.ResAcceptTimeout = 60
 	twinAgora.EntryTimeout = 60
@@ -148,12 +148,14 @@ end:
 
 //网关监控到有C端连接，并通过了登陆验证后，会推送事件
 func (twinAgora *TwinAgora) FDCreateEvent(FDCreateEvent pb.FDCreateEvent) {
+	//util.MyPrint("FDCreateEvent=========")
 	if FDCreateEvent.UserId <= 0 {
-		twinAgora.MakeError(twinAgora.Lang.NewString(400))
+		twinAgora.MakeError(twinAgora.Lang.NewString(413))
 		return
 	}
 
-	_, ok := twinAgora.GetUserById(int(FDCreateEvent.UserId))
+	//_, ok := twinAgora.GetUserById(int(FDCreateEvent.UserId))
+	_, ok := twinAgora.RTCUserPool[int(FDCreateEvent.UserId)] //这里不调用 GetUserById 公共方法，因为会有报错，而这里大概率是 空的情况
 	if ok {
 		msgInfo := twinAgora.Lang.NewReplaceOneString(405, strconv.Itoa(int(FDCreateEvent.UserId)))
 		twinAgora.MakeError(msgInfo)
@@ -297,10 +299,26 @@ func (twinAgora *TwinAgora) RoomEnd(roomId string, endStatus int) {
 	roomInfo.EndStatus = endStatus
 
 	twinAgora.StoreHistory(roomInfo)
+	//util.MyPrint("roomInfo.OnlineUids len:", len(roomInfo.OnlineUids))
+	clearRoomIdByUids := []int{roomInfo.CallUid} //这里做个容错，只要有呼叫者，就会创建一个房间，但是如果瞬间拒绝的话，发起者的 roomId 得给一并清除了
+	for _, uid := range roomInfo.OnlineUids {    //当前在线且还在房间的
+		clearRoomIdByUids = append(clearRoomIdByUids, uid)
+	}
 
-	for _, uid := range roomInfo.OnlineUids {
+	for _, uid := range roomInfo.ReceiveUidsAccept { //当前可能不在线
+		clearRoomIdByUids = append(clearRoomIdByUids, uid)
+	}
+
+	twinAgora.Log.Debug("clearRoomIdByUids:" + util.ArrCoverStr(clearRoomIdByUids, ","))
+	//for _, uid := range roomInfo.OnlineUids {
+	for _, uid := range clearRoomIdByUids {
+		//util.MyPrint("roomInfo.needDelUids :", uid)
 		myRTCUser, ok := twinAgora.GetUserById(uid)
 		if ok {
+			if roomId != myRTCUser.RoomId {
+				twinAgora.Log.Warn("need del uid is roomId ERR , userRoomId:" + myRTCUser.RoomId + " roomId:" + roomId)
+				continue
+			}
 			//conn, ok2 := twinAgora.ConnManager.Pool[int32(uid)]
 			//if ok2 {
 			peopleLeaveRes := pb.PeopleLeaveRes{}
@@ -310,13 +328,15 @@ func (twinAgora *TwinAgora) RoomEnd(roomId string, endStatus int) {
 
 			//data, _ := proto.Marshal(&peopleLeaveRes)
 			//twinAgora.Op.ServiceBridge.CallByName("Gateway", "SC_PeopleLeave", string(data), "", 0)
-			callGatewayMsg := service.CallGatewayMsg{ServiceName: "TwinAgora", FunName: "SC_PeopleLeave", SourceUid: int32(uid), Data: &peopleLeaveRes}
+			callGatewayMsg := service.CallGatewayMsg{ServiceName: "TwinAgora", FunName: "SC_PeopleLeave", SourceUid: int32(uid), Data: &peopleLeaveRes, TargetUid: int32(uid)}
 			twinAgora.Op.ServiceBridge.CallGateway(callGatewayMsg)
 
 			//twinAgora.RequestServiceAdapter.GatewaySendMsgByUid(int32(uid), "SC_PeopleLeave", peopleLeaveRes)
 			//conn.GatewaySendMsgByUid(int32(uid), "SC_PeopleLeave", peopleLeaveRes)
 			//}
 			myRTCUser.RoomId = ""
+		} else {
+			twinAgora.Log.Warn("need del uid not in pool:" + strconv.Itoa(uid))
 		}
 	}
 	twinAgora.Log.Warn("delete room:" + roomInfo.Id)

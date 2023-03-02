@@ -23,7 +23,7 @@ func (twinAgora *TwinAgora) CallPeople(callPeopleReq pb.CallPeopleReq) {
 		//twinAgora.RequestServiceAdapter.GatewaySendMsgByUid(callPeopleReq.SourceUid, "SC_CallPeople", callPeopleRes)
 		//data, _ := proto.Marshal(&callPeopleRes)
 		//twinAgora.Op.ServiceBridge.CallGateway("TwinAgora", "SC_CallPeople", 9999, callPeopleReq.SourceUid, string(data), "", 0)
-		callGatewayMsg := service.CallGatewayMsg{ServiceName: "TwinAgora", FunName: "SC_CallPeople", SourceUid: callPeopleReq.SourceUid, Data: &callPeopleRes}
+		callGatewayMsg := service.CallGatewayMsg{ServiceName: "TwinAgora", FunName: "SC_CallPeople", TargetUid: callPeopleReq.Uid, Data: &callPeopleRes}
 		twinAgora.Op.ServiceBridge.CallGateway(callGatewayMsg)
 		return
 	}
@@ -35,7 +35,7 @@ func (twinAgora *TwinAgora) CallPeople(callPeopleReq pb.CallPeopleReq) {
 		//twinAgora.RequestServiceAdapter.GatewaySendMsgByUid(callPeopleReq.SourceUid, "SC_CallPeople", callPeopleRes)
 		//data, _ := proto.Marshal(&callPeopleRes)
 		//twinAgora.Op.ServiceBridge.CallGateway("TwinAgora", "SC_CallPeople", 9999, callPeopleReq.SourceUid, string(data), "", 0)
-		callGatewayMsg := service.CallGatewayMsg{ServiceName: "TwinAgora", FunName: "SC_CallPeople", SourceUid: callPeopleReq.SourceUid, Data: &callPeopleRes}
+		callGatewayMsg := service.CallGatewayMsg{ServiceName: "TwinAgora", FunName: "SC_CallPeople", TargetUid: callPeopleReq.Uid, Data: &callPeopleRes}
 		twinAgora.Op.ServiceBridge.CallGateway(callGatewayMsg)
 		return
 	}
@@ -47,12 +47,12 @@ func (twinAgora *TwinAgora) CallPeople(callPeopleReq pb.CallPeopleReq) {
 		//twinAgora.RequestServiceAdapter.GatewaySendMsgByUid(callPeopleReq.SourceUid, "SC_CallPeople", callPeopleRes)
 		//data, _ := proto.Marshal(&callPeopleRes)
 		//twinAgora.Op.ServiceBridge.CallGateway("TwinAgora", "SC_CallPeople", 9999, callPeopleReq.SourceUid, string(data), "", 0)
-		callGatewayMsg := service.CallGatewayMsg{ServiceName: "TwinAgora", FunName: "SC_CallPeople", SourceUid: callPeopleReq.SourceUid, Data: &callPeopleRes}
+		callGatewayMsg := service.CallGatewayMsg{ServiceName: "TwinAgora", FunName: "SC_CallPeople", TargetUid: callPeopleReq.Uid, Data: &callPeopleRes}
 		twinAgora.Op.ServiceBridge.CallGateway(callGatewayMsg)
 		return
 	}
 
-	myRTCUser, ok := twinAgora.GetUserById(int(callPeopleReq.SourceUid))
+	myRTCUser, ok := twinAgora.GetUserById(int(callPeopleReq.Uid))
 	if ok && myRTCUser.RoomId != "" {
 		RTCRoomInfo, err := twinAgora.GetRoomById(myRTCUser.RoomId)
 		if err != nil {
@@ -63,7 +63,7 @@ func (twinAgora *TwinAgora) CallPeople(callPeopleReq pb.CallPeopleReq) {
 			//data, _ := proto.Marshal(&callPeopleRes)
 			//twinAgora.Op.ServiceBridge.CallGateway("TwinAgora", "SC_CallPeople", 9999, callPeopleReq.SourceUid, string(data), "", 0)
 
-			callGatewayMsg := service.CallGatewayMsg{ServiceName: "TwinAgora", FunName: "SC_CallPeople", SourceUid: callPeopleReq.SourceUid, Data: &callPeopleRes}
+			callGatewayMsg := service.CallGatewayMsg{ServiceName: "TwinAgora", FunName: "SC_CallPeople", TargetUid: callPeopleReq.Uid, Data: &callPeopleRes}
 			twinAgora.Op.ServiceBridge.CallGateway(callGatewayMsg)
 
 			return
@@ -76,7 +76,7 @@ func (twinAgora *TwinAgora) CallPeople(callPeopleReq pb.CallPeopleReq) {
 			//twinAgora.RequestServiceAdapter.GatewaySendMsgByUid(callPeopleReq.SourceUid, "SC_CallPeople", callPeopleRes)
 			//data, _ := proto.Marshal(&callPeopleRes)
 			//twinAgora.Op.ServiceBridge.CallGateway("TwinAgora", "SC_CallPeople", 9999, callPeopleReq.SourceUid, string(data), "", 0)
-			callGatewayMsg := service.CallGatewayMsg{ServiceName: "TwinAgora", FunName: "SC_CallPeople", SourceUid: callPeopleReq.SourceUid, Data: &callPeopleRes}
+			callGatewayMsg := service.CallGatewayMsg{ServiceName: "TwinAgora", FunName: "SC_CallPeople", TargetUid: callPeopleReq.Uid, Data: &callPeopleRes}
 			twinAgora.Op.ServiceBridge.CallGateway(callGatewayMsg)
 			return
 		}
@@ -88,7 +88,7 @@ func (twinAgora *TwinAgora) CallPeople(callPeopleReq pb.CallPeopleReq) {
 			//twinAgora.RequestServiceAdapter.GatewaySendMsgByUid(callPeopleReq.SourceUid, "SC_CallPeople", callPeopleRes)
 			//data, _ := proto.Marshal(&callPeopleRes)
 			//twinAgora.Op.ServiceBridge.CallGateway("TwinAgora", "SC_CallPeople", 9999, callPeopleReq.SourceUid, string(data), "", 0)
-			callGatewayMsg := service.CallGatewayMsg{ServiceName: "TwinAgora", FunName: "SC_CallPeople", SourceUid: callPeopleReq.SourceUid, Data: &callPeopleRes}
+			callGatewayMsg := service.CallGatewayMsg{ServiceName: "TwinAgora", FunName: "SC_CallPeople", TargetUid: callPeopleReq.Uid, Data: &callPeopleRes}
 			twinAgora.Op.ServiceBridge.CallGateway(callGatewayMsg)
 			return
 		}
@@ -100,7 +100,7 @@ func (twinAgora *TwinAgora) CallPeople(callPeopleReq pb.CallPeopleReq) {
 			//twinAgora.RequestServiceAdapter.GatewaySendMsgByUid(callPeopleReq.SourceUid, "SC_CallPeople", callPeopleRes)
 			//data, _ := proto.Marshal(&callPeopleRes)
 			//twinAgora.Op.ServiceBridge.CallGateway("TwinAgora", "SC_CallPeople", 9999, callPeopleReq.SourceUid, string(data), "", 0)
-			callGatewayMsg := service.CallGatewayMsg{ServiceName: "TwinAgora", FunName: "SC_CallPeople", SourceUid: callPeopleReq.SourceUid, Data: &callPeopleRes}
+			callGatewayMsg := service.CallGatewayMsg{ServiceName: "TwinAgora", FunName: "SC_CallPeople", TargetUid: callPeopleReq.Uid, Data: &callPeopleRes}
 			twinAgora.Op.ServiceBridge.CallGateway(callGatewayMsg)
 			return
 		}
@@ -116,7 +116,7 @@ func (twinAgora *TwinAgora) CallPeople(callPeopleReq pb.CallPeopleReq) {
 		//data, _ := proto.Marshal(&callPeopleRes)
 		//twinAgora.Op.ServiceBridge.CallGateway("TwinAgora", "SC_CallPeople", 9999, callPeopleReq.Uid, string(data), "", 0)
 
-		callGatewayMsg := service.CallGatewayMsg{ServiceName: "TwinAgora", FunName: "SC_CallPeople", SourceUid: callPeopleReq.Uid, Data: &callPeopleRes}
+		callGatewayMsg := service.CallGatewayMsg{ServiceName: "TwinAgora", FunName: "SC_CallPeople", TargetUid: callPeopleReq.Uid, Data: &callPeopleRes}
 		twinAgora.Op.ServiceBridge.CallGateway(callGatewayMsg)
 		return
 	}
@@ -134,6 +134,9 @@ func (twinAgora *TwinAgora) CallPeople(callPeopleReq pb.CallPeopleReq) {
 		}
 	}
 
+	debugLogInfo := "RTCUserPool len:" + strconv.Itoa(len(twinAgora.RTCUserPool)) + "RTCUserPool len:" + strconv.Itoa(len(userDoctorList)) + "RTCUserPool len:" + strconv.Itoa(len(onlineUserDoctorList))
+	twinAgora.Log.Debug(debugLogInfo)
+
 	if len(onlineUserDoctorList) <= 0 {
 		callPeopleRes.ErrCode = 403
 		callPeopleRes.ErrMsg = twinAgora.Lang.NewString(403)
@@ -141,7 +144,7 @@ func (twinAgora *TwinAgora) CallPeople(callPeopleReq pb.CallPeopleReq) {
 		//twinAgora.RequestServiceAdapter.GatewaySendMsgByUid(callPeopleReq.SourceUid, "SC_CallPeople", callPeopleRes)
 		//data, _ := proto.Marshal(&callPeopleRes)
 		//twinAgora.Op.ServiceBridge.CallGateway("TwinAgora", "SC_CallPeople", 9999, callPeopleReq.SourceUid, string(data), "", 0)
-		callGatewayMsg := service.CallGatewayMsg{ServiceName: "TwinAgora", FunName: "SC_CallPeople", SourceUid: callPeopleReq.SourceUid, Data: &callPeopleRes}
+		callGatewayMsg := service.CallGatewayMsg{ServiceName: "TwinAgora", FunName: "SC_CallPeople", TargetUid: callPeopleReq.Uid, Data: &callPeopleRes}
 		twinAgora.Op.ServiceBridge.CallGateway(callGatewayMsg)
 		return
 	}
@@ -153,7 +156,7 @@ func (twinAgora *TwinAgora) CallPeople(callPeopleReq pb.CallPeopleReq) {
 		//twinAgora.RequestServiceAdapter.GatewaySendMsgByUid(callPeopleReq.SourceUid, "SC_CallPeople", callPeopleRes)
 		//data, _ := proto.Marshal(&callPeopleRes)
 		//twinAgora.Op.ServiceBridge.CallGateway("TwinAgora", "SC_CallPeople", 9999, callPeopleReq.SourceUid, string(data), "", 0)
-		callGatewayMsg := service.CallGatewayMsg{ServiceName: "TwinAgora", FunName: "SC_CallPeople", SourceUid: callPeopleReq.SourceUid, Data: &callPeopleRes}
+		callGatewayMsg := service.CallGatewayMsg{ServiceName: "TwinAgora", FunName: "SC_CallPeople", TargetUid: callPeopleReq.Uid, Data: &callPeopleRes}
 		twinAgora.Op.ServiceBridge.CallGateway(callGatewayMsg)
 		return
 	}
@@ -184,7 +187,7 @@ func (twinAgora *TwinAgora) CallPeople(callPeopleReq pb.CallPeopleReq) {
 	//data, _ := proto.Marshal(&callPeopleRes)
 	//twinAgora.Op.ServiceBridge.CallGateway("TwinAgora", "SC_CallPeople", 9999, callPeopleReq.SourceUid, string(data), "", 0)
 
-	callGatewayMsg := service.CallGatewayMsg{ServiceName: "TwinAgora", FunName: "SC_CallPeople", TargetUid: callPeopleReq.SourceUid, Data: &callPeopleRes}
+	callGatewayMsg := service.CallGatewayMsg{ServiceName: "TwinAgora", FunName: "SC_CallPeople", TargetUid: callPeopleReq.Uid, Data: &callPeopleRes}
 	twinAgora.Op.ServiceBridge.CallGateway(callGatewayMsg)
 
 	return
@@ -205,6 +208,7 @@ func (twinAgora *TwinAgora) CreateRTCRoom(callPeopleReq pb.CallPeopleReq, online
 		Uids:        append(receiveUids, int(callPeopleReq.Uid)),
 		Id:          uuid.NewV4().String(),
 		ReceiveUids: receiveUids,
+		//OnlineUids:  []int{int(callPeopleReq.Uid)},
 	}
 	myRTCUser, ok := twinAgora.GetUserById(int(callPeopleReq.Uid))
 	if ok {
@@ -268,8 +272,8 @@ func (twinAgora *TwinAgora) CancelCallPeople(cancelCallPeopleReq pb.CancelCallPe
 
 	}
 	//清空user的roomId值，RoomEnd只会清空掉已进入房间的用户，而此时房间虽然存在，但没有人进入，用户直接取消了，把给清空一下
-	myRTCUser.RoomId = ""
 	twinAgora.RoomEnd(cancelCallPeopleReq.RoomId, service.RTC_ROOM_END_STATUS_CANCEL)
+	//myRTCUser.RoomId = ""  //这个在roomEnd 里已经做了，不要重复，不然roomEnd 会判断，直接停了
 	return nil
 }
 
@@ -302,7 +306,7 @@ func (twinAgora *TwinAgora) PeopleEntry(peopleEntry pb.PeopleEntry) error {
 	}
 	//util.MyPrint("PeopleEntry:", RTCRoomInfo.Uids, conn.UserId)
 	for _, uid := range RTCRoomInfo.Uids {
-		if int(peopleEntry.SourceUid) == uid {
+		if int(peopleEntry.Uid) == uid {
 			continue
 		}
 		//twinAgora.RequestServiceAdapter.GatewaySendMsgByUid(int32(uid), "SC_PeopleEntry", peopleEntry)
@@ -397,6 +401,7 @@ func (twinAgora *TwinAgora) PeopleVote(callVote pb.CallVote) (error, *RTCRoom) {
 
 //被呼叫者，接收呼叫
 func (twinAgora *TwinAgora) CallPeopleAccept(callVote pb.CallVote) error {
+	twinAgora.Log.Debug("in func :CallPeopleAccept")
 	err, RTCRoomInfo := twinAgora.PeopleVote(callVote)
 	if err != nil {
 		return err
@@ -406,9 +411,9 @@ func (twinAgora *TwinAgora) CallPeopleAccept(callVote pb.CallVote) error {
 		return twinAgora.MakeError(twinAgora.Lang.NewReplaceOneString(512, callVote.RoomId))
 	}
 
-	rtcUser, exist := twinAgora.GetUserById(int(callVote.SourceUid))
+	rtcUser, exist := twinAgora.GetUserById(int(callVote.Uid))
 	if !exist {
-		return twinAgora.MakeError(twinAgora.Lang.NewReplaceOneString(401, strconv.Itoa(int(callVote.SourceUid))))
+		return twinAgora.MakeError(twinAgora.Lang.NewReplaceOneString(401, strconv.Itoa(int(callVote.Uid))))
 	}
 	rtcUser.RoomId = RTCRoomInfo.Id
 
@@ -428,6 +433,7 @@ func (twinAgora *TwinAgora) CallPeopleAccept(callVote pb.CallVote) error {
 
 //被呼叫者，拒绝呼叫
 func (twinAgora *TwinAgora) CallPeopleDeny(callVote pb.CallVote) error {
+	twinAgora.Log.Debug("in func :CallPeopleDeny")
 	err, RTCRoomInfo := twinAgora.PeopleVote(callVote)
 	if err != nil {
 		return err

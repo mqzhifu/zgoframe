@@ -54,7 +54,7 @@ func Config(c *gin.Context) {
 	//if  CheckID(formData)  {
 	httpresponse.OkWithAll(info, "结束中...", c)
 	//} else {
-	//	httpresponse.FailWithMessage("验证失败", c)
+	//	httpresponse.FailWithM≈essage("验证失败", c)
 	//}
 	//str,_ := json.Marshal(global.C)
 
@@ -81,4 +81,22 @@ func CheckID(form request.SystemConfig) bool {
 	} else {
 		return false
 	}
+}
+
+// @Summary 服务进程 - 配置信息
+// @Description 服务进程 - 配置信息
+// @Tags System
+// @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
+// @Param X-Project-Id header string true "项目ID" default(6)
+// @Param X-Access header string true "访问KEY" default(imzgoframe)
+// @Produce  application/json
+// @Success 200 {string} string "成功"
+// @Router /sys/config [post]
+func Alert(c *gin.Context) {
+	//alertMsg := util.AlertMsg{}
+	//var formData request.SystemConfig
+	//c.ShouldBind(&formData)
+	//httpresponse.OkWithAll(info, "结束中...", c)
+	//	httpresponse.FailWithMessage("验证失败", c)
+
 }

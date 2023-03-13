@@ -59,22 +59,6 @@ const (
 	RoleRtmUser = 1
 )
 
-//@parse 报警发送渠道类型
-const (
-	ALERT_LEVEL_ALL      = -1 //全部
-	ALERT_LEVEL_SMS      = 1  //短信
-	ALERT_LEVEL_EMAIL    = 2  //邮件
-	ALERT_LEVEL_FEISHU   = 4  //飞书
-	ALERT_LEVEL_WEIXIN   = 8  //微信
-	ALERT_LEVEL_DINGDING = 16 //钉钉
-)
-
-//@parse 报警发送方式类型
-const (
-	ALERT_METHOD_SYNC  = 1 //同步
-	ALERT_METHOD_ASYNC = 2 //异步
-)
-
 //@parse 环境变量-整形
 const (
 	ENV_LOCAL_INT  = 1 //开发环境
@@ -96,9 +80,26 @@ const (
 
 //@parse error
 const (
-	LOG_LEVEL_DEBUG = iota
-	LOG_LEVEL_INFO
-	LOG_LEVEL_OFF
+	LOG_LEVEL_DEBUG = 1 //调试
+	LOG_LEVEL_INFO  = 2 //信息
+	LOG_LEVEL_OFF   = 4 //关闭
+)
+
+//@parse 日志等级
+const (
+	LEVEL_INFO      = 1 << iota
+	LEVEL_DEBUG     = 2   //2
+	LEVEL_ERROR     = 4   //4
+	LEVEL_PANIC     = 8   //8
+	LEVEL_EMERGENCY = 16  //16
+	LEVEL_ALERT     = 32  //32
+	LEVEL_CRITICAL  = 64  //64
+	LEVEL_WARNING   = 128 //128
+	LEVEL_NOTICE    = 256 //256
+	LEVEL_TRACE     = 512 //512
+	LEVEL_ALL       = LEVEL_INFO | LEVEL_DEBUG | LEVEL_ERROR | LEVEL_PANIC | LEVEL_EMERGENCY | LEVEL_ALERT | LEVEL_CRITICAL | LEVEL_WARNING | LEVEL_NOTICE | LEVEL_TRACE
+	LEVEL_DEV       = LEVEL_INFO | LEVEL_DEBUG | LEVEL_ERROR | LEVEL_PANIC | LEVEL_TRACE
+	LEVEL_ONLINE    = LEVEL_INFO | LEVEL_ERROR | LEVEL_PANIC
 )
 
 //(status 冲突 暂放弃,不能删 frame_sync game_match 还在使用，后期优化吧)
@@ -126,9 +127,9 @@ const (
 
 //@parse 协议类型
 const (
-	PROTOCOL_TCP       = 1
-	PROTOCOL_UDP       = 3
-	PROTOCOL_WEBSOCKET = 2
+	PROTOCOL_TCP       = 1 //传输协议 TCP
+	PROTOCOL_UDP       = 3 //传输协议 UDP
+	PROTOCOL_WEBSOCKET = 2 //传输协议 WEB-SOCKET
 )
 
 //@parse 长连接connFD的状态
@@ -156,9 +157,9 @@ const (
 
 //@parse NETWAY类状态
 const (
-	NETWAY_STATUS_INIT  = 1
-	NETWAY_STATUS_START = 2
-	NETWAY_STATUS_CLOSE = 3
+	NETWAY_STATUS_INIT  = 1 //网关状态 初始化中
+	NETWAY_STATUS_START = 2 //网关状态 开始初始化
+	NETWAY_STATUS_CLOSE = 3 //网关状态 已关闭
 )
 
 //@parse xxxx
@@ -206,8 +207,8 @@ const (
 	CLOSE_SOURCE_CLIENT_WS_FD_GONE     = 7  //S端读取连接消息时，异常了~可能是：客户端关闭了连接
 	CLOSE_SOURCE_SEND_MESSAGE          = 8  //S端给某个连接发消息，结果失败了，这里概率是连接已经断了
 	CLOSE_SOURCE_CONN_RESET_BY_PEER    = 81 //对端，如果直接关闭网络，或者崩溃之类的，类库捕捉不到这个事件
-	CLOSE_SOURCE_CONN_SHUTDOWN         = 12
-	CLOSE_SOURCE_CONN_LOGIN_ROUTER_ERR = 13
+	CLOSE_SOURCE_CONN_SHUTDOWN         = 12 //conn 已关闭
+	CLOSE_SOURCE_CONN_LOGIN_ROUTER_ERR = 13 //登陆，路由一个方法时，未找到该方法
 	CLOSE_SOURCE_RTT_TIMEOUT           = 91 //S端已收到了RTT的响应，但已超时
 	CLOSE_SOURCE_RTT_TIMER_OUT         = 92 //RTT超时，定时器触发
 
@@ -215,51 +216,34 @@ const (
 
 //@parse http-curl类，数据传输类型
 const (
-	HTTP_DATA_CONTENT_TYPE_JSON   = 1
-	HTTP_DATA_CONTENT_TYPE_Nornal = 2
+	HTTP_DATA_CONTENT_TYPE_JSON   = 1 //JSON
+	HTTP_DATA_CONTENT_TYPE_Nornal = 2 //普通
 )
 
 //@parse 文件存储hash类型
 const (
-	FILE_HASH_NONE  = 0
-	FILE_HASH_MONTH = 1
-	FILE_HASH_DAY   = 2
-	FILE_HASH_HOUR  = 3
-)
-
-//@parse 日志等级
-const (
-	LEVEL_INFO      = 1 << iota
-	LEVEL_DEBUG     //2
-	LEVEL_ERROR     //4
-	LEVEL_PANIC     //8
-	LEVEL_EMERGENCY //16
-	LEVEL_ALERT     //32
-	LEVEL_CRITICAL  //64
-	LEVEL_WARNING   //128
-	LEVEL_NOTICE    //256
-	LEVEL_TRACE     //512
-	LEVEL_ALL       = LEVEL_INFO | LEVEL_DEBUG | LEVEL_ERROR | LEVEL_PANIC | LEVEL_EMERGENCY | LEVEL_ALERT | LEVEL_CRITICAL | LEVEL_WARNING | LEVEL_NOTICE | LEVEL_TRACE
-	LEVEL_DEV       = LEVEL_INFO | LEVEL_DEBUG | LEVEL_ERROR | LEVEL_PANIC | LEVEL_TRACE
-	LEVEL_ONLINE    = LEVEL_INFO | LEVEL_ERROR | LEVEL_PANIC
+	FILE_HASH_NONE  = 0 // 没有
+	FILE_HASH_MONTH = 1 // 月
+	FILE_HASH_DAY   = 2 //天
+	FILE_HASH_HOUR  = 3 //小时
 )
 
 //@parse
 const (
-	OUT_TARGET_SC = 1 << iota
-	OUT_TARGET_FILE
-	OUT_TARGET_NET
+	OUT_TARGET_SC   = 1 << iota
+	OUT_TARGET_FILE //文件
+	OUT_TARGET_NET  //网络传输
 
 	OUT_TARGET_ALL = OUT_TARGET_SC | OUT_TARGET_FILE | OUT_TARGET_NET
 
-	OUT_TARGET_NET_TCP = 1
-	OUT_TARGET_NET_UDP = 2
+	OUT_TARGET_NET_TCP = 1 //网络协议为TCP
+	OUT_TARGET_NET_UDP = 2 //网络协议为UDP
 )
 
 //@parse SERVER_STATUS
 const (
-	SERVER_STATUS_NORMAL = 1
-	SERVER_STATUS_CLOSE  = 2
+	SERVER_STATUS_NORMAL = 1 //正常
+	SERVER_STATUS_CLOSE  = 2 //已关闭
 )
 
 //@parse SERVER_PING服务器的状态
@@ -270,16 +254,16 @@ const (
 
 //@parse service协议类型
 const (
-	SERVICE_PROTOCOL_HTTP      = 1
-	SERVICE_PROTOCOL_GRPC      = 2
-	SERVICE_PROTOCOL_WEBSOCKET = 3
-	SERVICE_PROTOCOL_TCP       = 4
+	SERVICE_PROTOCOL_HTTP      = 1 //HTTP
+	SERVICE_PROTOCOL_GRPC      = 2 //GRPC
+	SERVICE_PROTOCOL_WEBSOCKET = 3 //WS
+	SERVICE_PROTOCOL_TCP       = 4 //TCP
 )
 
 //@parse 服务发现的类型，分布式DB
 const (
-	SERVICE_DISCOVERY_ETCD   = 1
-	SERVICE_DISCOVERY_CONSUL = 2
+	SERVICE_DISCOVERY_ETCD   = 1 //ETCD
+	SERVICE_DISCOVERY_CONSUL = 2 //CONSULE
 )
 
 //@parse 服务发现负载类型
@@ -291,8 +275,8 @@ const (
 //(主要是给CICD部署时使用，最终给前端使用)
 //@parse super_visor错误类型
 const (
-	SV_ERROR_NONE      = 0
-	SV_ERROR_INIT      = 1
-	SV_ERROR_CONN      = 2
-	SV_ERROR_NOT_FOUND = 3
+	SV_ERROR_NONE      = 0 //无
+	SV_ERROR_INIT      = 1 //初始化
+	SV_ERROR_CONN      = 2 //连接中
+	SV_ERROR_NOT_FOUND = 3 //未找到
 )

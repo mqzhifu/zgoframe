@@ -1,6 +1,6 @@
 <?php
-//golang里的常量是没法反射动态处理的，或者说处理起来很麻烦
-//这里直接用PHP分析golang代码中的常量，动态生成枚举类型的常量，给后台使用，也可以当做说明文档使用
+//golang 里的常量是没法反射动态处理的，或者说处理起来很麻烦
+//这里直接用 PHP 分析 golang 代码中的常量，动态生成枚举类型的常量，给后台使用，也可以当做说明文档使用
 
 if (count($argv) < 2){
     exit("至少有一个参数");
@@ -26,6 +26,7 @@ class ConstProcess{
     public $parse_rs = array();
 
     function ConstProcess($project_base_dir){
+        debug("start:");
         $this->project_base_dir = $project_base_dir;
         $this->init();
 //        $this->show();
@@ -54,6 +55,8 @@ class ConstProcess{
         foreach ($this->process_file_content_list as $k=>$v){
             $this->process_one($k);
         }
+
+        echo "finish\n.";
     }
     //生成GOLANG代码，这个才是最终有用的处理
     function makeGolangCode(){
@@ -193,7 +196,7 @@ EOF;
                 "const"=>array(),
                 "common_prefix" =>"",
             );
-
+            debug("const_name:".$const_name);
             $const_list_text = trim($match[2][$k]);
             $const_list_arr = explode("\n",$const_list_text);
             foreach ($const_list_arr as $k=>$line_text){
@@ -249,8 +252,9 @@ EOF;
 
 }
 
-new ConstProcess($project_base_dir);
 
+$myConstProcess = new ConstProcess($project_base_dir);
+$myConstProcess->ConstProcess($project_base_dir);
 
 function debug($str,$n = "\n"){
     echo $str . $n;

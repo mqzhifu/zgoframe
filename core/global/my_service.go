@@ -14,19 +14,21 @@ import (
 )
 
 type MyService struct {
-	User  *user_center.User //用户中心
-	Sms   *msg_center.Sms   //短信服务
-	Email *msg_center.Email //电子邮件服务
-	//Match                 *gamematch.GameMatch        //匹配服务
-	Gateway      *gateway.Gateway            //网关服务
-	TwinAgora    *seed_business.TwinAgora    //广州 120远程专家指导
-	ConfigCenter *config_center.ConfigCenter //配置中心
-	Cicd         *cicd.CicdManager           //自动部署
-	Mail         *msg_center.Mail            //站内信
-	GameMatch    *gamematch.GameMatch
-	//RequestServiceAdapter *service.RequestServiceAdapter //请求3方服务 适配器
+	User          *user_center.User //用户中心
+	Sms           *msg_center.Sms   //短信服务
+	Email         *msg_center.Email //电子邮件服务
+	AliSms        *util.AliSms
+	Gateway       *gateway.Gateway            //网关服务
+	TwinAgora     *seed_business.TwinAgora    //广州 120远程专家指导
+	ConfigCenter  *config_center.ConfigCenter //配置中心
+	Cicd          *cicd.CicdManager           //自动部署
+	Mail          *msg_center.Mail            //站内信
+	GameMatch     *gamematch.GameMatch
 	ServiceBridge *service.Bridge
 	FrameSync     *frame_sync.FrameSync
+	Alert         *msg_center.Alert
+	//Match                 *gamematch.GameMatch        //匹配服务
+	//RequestServiceAdapter *service.RequestServiceAdapter //请求3方服务 适配器
 	//RoomManage            *frame_sync.RoomManager     //房间服务
 }
 
@@ -54,9 +56,10 @@ func NewMyService() *MyService {
 	//站内信服务
 	myService.Mail = msg_center.NewMail(V.Gorm, V.Zap)
 	//短信服务
-	myService.Sms = msg_center.NewSms(V.Gorm)
+	myService.Sms = msg_center.NewSms(V.Gorm, V.AliSms, V.Zap)
 	//电子邮件服务
 	myService.Email = msg_center.NewEmail(V.Gorm, V.Email)
+	myService.AliSms = V.AliSms
 	//配置中心服务
 	configCenterOption := config_center.ConfigCenterOption{
 		EnvList:            util.GetConstListEnv(),
@@ -122,6 +125,20 @@ func NewMyService() *MyService {
 			util.ExitPrint("InitGateway err:" + err.Error())
 		}
 	}
+
+	alertOption := msg_center.AlertOption{
+		SendMsgChannel:    C.Alert.SendMsgChannel,
+		MsgTemplateRuleId: C.Alert.MsgTemplateRuleId,
+		SendSync:          C.Alert.SendSync,
+		Log:               V.Zap,
+		Sms:               myService.Sms,
+		SmsReceiver:       C.Alert.SmsReceiver,
+		Email:             myService.Email,
+		EmailReceiver:     C.Alert.EmailReceiver,
+		SendUid:           C.Alert.SendUid,
+	}
+
+	myService.Alert = msg_center.NewAlert(alertOption)
 
 	myService.Cicd, err = InitCicd()
 

@@ -106,17 +106,27 @@ idMapFileName   = "map.txt"
 [email]
 status   = "open"
 host     = "#email_ip#"
-port     = "#email_port#"#目前用不到这个值
+port     = "#email_port#" #目前用不到这个值
 from     = "#email_user#"
 ps       = "#email_ps#"
 authCode = "#email_port#" #验证码，腾讯的邮箱除了用户名密码外还要一个验证码机制
 
-#报警
-[alert]
+#报警-推送3方
+[alertPush]
 status  = "open"
 host    = "#alert_ip#"
 port    = "#alert_port#"
 uri     = "/api/v2/alerts"
+
+#报警-自己发送
+[alert]
+status  = "open"
+SendMsgChannel = 15  #发送渠道，  SMS EMAIL FEISHU WEIXIN DINGDING
+MsgTemplateRuleId = 4  #报警发送的内容(模板)，还需要动态替换变量值
+SendSync       =   true
+SmsReceiver    =   ["13522536459"]
+EmailReceiver  =   ["78878296@qq.com"]
+SendUid        =   9999
 
 #公共网关
 [gateway]
@@ -169,12 +179,18 @@ status  = "close"
 
 #阿里云静态文件存储
 [aliOss]
-status  = "close"
+status  = "open"
 accessKeyId     = "#oss_user#"
 accessKeySecret = "#oss_ps#"
 endpoint        = "#oss_ip#"
 bucket          = "#oss_port#"
 selfDomain      = "ossservicebase.seedreality.com"
+
+[aliSms]
+status  = "open"
+accessKeyId     = "#ali_sms_user#"
+accessKeySecret = "#ali_sms_ps#"
+endpoint        = "#sli_sms_ip#"
 
 #声网音视频流
 [agora]

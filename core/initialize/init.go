@@ -36,14 +36,14 @@ func (initialize *Initialize) Start() error {
 
 	//预警/报警->推送器，这里是推送到3方服务，如：prometheus，而不是直接发邮件/短信
 	//ps:这个要优先zap日志类优化处理，因为zap里的<钩子>有用到,主要是日志里自动触发报警，略方便
-	if global.C.Alert.Status == core.GLOBAL_CONFIG_MODEL_STATUS_OPEN {
-		global.V.AlertPush = util.NewAlertPush(global.C.Alert.Host, global.C.Alert.Port, global.C.Alert.Uri, prefix)
+	if global.C.AlertPush.Status == core.GLOBAL_CONFIG_MODEL_STATUS_OPEN {
+		global.V.AlertPush = util.NewAlertPush(global.C.AlertPush.Host, global.C.AlertPush.Port, global.C.AlertPush.Uri, prefix)
 	}
 	//创建main日志类
 	configZap := global.C.Zap
 	configZap.FileName = "main"
 	configZap.ModuleName = "main"
-	mainZap, configZapReturn, err := GetNewZapLog(global.V.AlertPush, configZap)
+	mainZap, configZapReturn, err := GetNewZapLog(configZap)
 	if err != nil {
 		util.MyPrint("GetNewZapLog err:", err)
 		return err
@@ -109,7 +109,7 @@ func (initialize *Initialize) Start() error {
 		configZap.FileName = "http"
 		configZap.ModuleName = "http"
 		//Http log zap 这里单独再开个zap 实例，用于专门记录http 请求
-		HttpZap, _, err := GetNewZapLog(global.V.AlertPush, configZap)
+		HttpZap, _, err := GetNewZapLog(configZap)
 		if err != nil {
 			global.V.Zap.Error(prefix + "GetNewZapLog err:" + err.Error())
 			return err
@@ -212,12 +212,11 @@ func (initialize *Initialize) Start() error {
 	}
 	//预/报警,这个是真正的直接报警，如：邮件 SMS 等，不是推送3方
 	//ps:不推荐这么用，最好都统一推送3方报警机制
-	if global.C.Alert.Status == core.GLOBAL_CONFIG_MODEL_STATUS_OPEN {
-		global.V.AlertHook = util.NewAlertHook(-1, "程序出错了：#body#", "报错", util.ALERT_METHOD_SYNC, global.V.Zap)
-		global.V.AlertHook.Email = global.V.Email
-		//global.V.AlertHook.Alert("Aaaa")
-		//util.ExitPrint(123123123)
-	}
+	//if global.C.Alert.Status == core.GLOBAL_CONFIG_MODEL_STATUS_OPEN {
+	//	global.V.AlertHook = util.NewAlertHook(-1, "程序出错了：#body#", "报错", util.ALERT_METHOD_SYNC, global.V.Zap)
+	//global.V.AlertHook.Email = global.V.Email
+	//global.V.AlertHook.Alert("Aaaa")
+	//}
 	if global.C.AliOss.Status == core.GLOBAL_CONFIG_MODEL_STATUS_OPEN {
 		op := util.AliOssOptions{
 			AccessKeyId:     global.C.AliOss.AccessKeyId,
@@ -227,6 +226,18 @@ func (initialize *Initialize) Start() error {
 			LocalDomain:     global.C.AliOss.SelfDomain,
 		}
 		global.V.AliOss = util.NewAliOss(op)
+	}
+	if global.C.AliSms.Status == core.GLOBAL_CONFIG_MODEL_STATUS_OPEN {
+		op := util.AliSmsOp{
+			AccessKeyId:     global.C.AliSms.AccessKeyId,
+			AccessKeySecret: global.C.AliSms.AccessKeySecret,
+			Endpoint:        global.C.AliSms.Endpoint,
+		}
+		global.V.AliSms, err = util.NewAliSms(op)
+		if err != nil {
+			util.MyPrint(prefix+"util.NewAliSms err:", err)
+			return err
+		}
 	}
 	//var netWayOption util.NetWayOption
 	//if global.C.Gateway.Status == global.GLOBAL_CONFIG_MODEL_STATUS_OPEN {
@@ -261,7 +272,9 @@ func (initialize *Initialize) Start() error {
 
 	return nil
 }
-
+func InitAlert(ProjectId int, Content string, Level string) {
+	global.V.MyService.Alert.LogSend(ProjectId, Content, Level)
+}
 func (initialize *Initialize) OutHttpGetBaseInfo() string {
 	//optionStr, _ := json.Marshal(initialize.Option)
 	//return string(optionStr)

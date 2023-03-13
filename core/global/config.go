@@ -1,17 +1,17 @@
 package global
 
 type Config struct {
-	Mysql   []Mysql
-	Jwt     Jwt
-	Zap     Zap
-	Captcha Captcha
-	Redis   Redis
-	System  System
-	Http    Http
-	//Casbin           Casbin
+	Mysql            []Mysql
+	Jwt              Jwt
+	Zap              Zap
+	Captcha          Captcha
+	Redis            Redis
+	System           System
+	Http             Http
 	Viper            Viper
 	Etcd             Etcd
 	Alert            Alert
+	AlertPush        AlertPush
 	Metrics          Metrics
 	Websocket        Websocket
 	Grpc             Grpc
@@ -21,12 +21,14 @@ type Config struct {
 	PushGateway      PushGateway
 	Gateway          Gateway
 	ConfigCenter     ConfigCenter
+	FileManager      FileManager
+	AliOss           AliOss
+	Cicd             Cicd
+	Agora            Agora
+	Domain           Domain
+	AliSms           AliSms
+	//Casbin           Casbin
 	//Upload           Upload
-	FileManager FileManager
-	AliOss      AliOss
-	Cicd        Cicd
-	Agora       Agora
-	Domain      Domain
 }
 
 type Protobuf struct {
@@ -158,11 +160,20 @@ type Metrics struct {
 	Status string
 }
 
-type Alert struct {
+type AlertPush struct {
 	Status string
 	Host   string
 	Port   string
 	Uri    string
+}
+
+type Alert struct {
+	SendMsgChannel    int
+	MsgTemplateRuleId int
+	SendSync          bool
+	SmsReceiver       []string
+	EmailReceiver     []string
+	SendUid           int
 }
 
 type Websocket struct {
@@ -224,6 +235,13 @@ type AliOss struct {
 	Endpoint        string
 	Bucket          string
 	SelfDomain      string
+}
+
+type AliSms struct {
+	Status          string
+	AccessKeyId     string
+	AccessKeySecret string
+	Endpoint        string
 }
 
 type Agora struct {

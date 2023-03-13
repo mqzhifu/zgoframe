@@ -56,6 +56,91 @@ func (constHandle *ConstHandle) Init() {
 	constItemList = []ConstItem{}
 
     	constItem = ConstItem{
+		Key:   "ALERT_LEVEL_ALL",
+		Value: -1,
+		Desc:  "全部",
+	}
+	constItemList = append(constItemList, constItem)
+
+	constItem = ConstItem{
+		Key:   "ALERT_LEVEL_SMS",
+		Value: 1,
+		Desc:  "短信",
+	}
+	constItemList = append(constItemList, constItem)
+
+	constItem = ConstItem{
+		Key:   "ALERT_LEVEL_EMAIL",
+		Value: 2,
+		Desc:  "邮件",
+	}
+	constItemList = append(constItemList, constItem)
+
+	constItem = ConstItem{
+		Key:   "ALERT_LEVEL_FEISHU",
+		Value: 4,
+		Desc:  "飞书",
+	}
+	constItemList = append(constItemList, constItem)
+
+	constItem = ConstItem{
+		Key:   "ALERT_LEVEL_WEIXIN",
+		Value: 8,
+		Desc:  "微信",
+	}
+	constItemList = append(constItemList, constItem)
+
+	constItem = ConstItem{
+		Key:   "ALERT_LEVEL_DINGDING",
+		Value: 16,
+		Desc:  "钉钉",
+	}
+	constItemList = append(constItemList, constItem)
+
+
+	enumConst = EnumConst{
+		CommonPrefix: "ALERT_LEVEL_",
+		Desc:         "报警发送渠道类型",
+		ConstList:    constItemList,
+		Type:          "int",
+	}
+
+	constHandle.EnumConstPool[enumConst.CommonPrefix] = enumConst
+	constItemList = []ConstItem{}
+
+    	constItem = ConstItem{
+		Key:   "ALERT_SEND_SYNC",
+		Value: 1,
+		Desc:  "同步",
+	}
+	constItemList = append(constItemList, constItem)
+
+	constItem = ConstItem{
+		Key:   "ALERT_SEND_ASYNC",
+		Value: 2,
+		Desc:  "异步",
+	}
+	constItemList = append(constItemList, constItem)
+
+
+	enumConst = EnumConst{
+		CommonPrefix: "ALERT_SEND_",
+		Desc:         "报警发送方式类型",
+		ConstList:    constItemList,
+		Type:          "int",
+	}
+
+	constHandle.EnumConstPool[enumConst.CommonPrefix] = enumConst
+	constItemList = []ConstItem{}
+
+    	constItem = ConstItem{
+		Key:   "PERSISTENCE_TYPE_OFF",
+		Value: 0,
+		Desc:  "关闭",
+	}
+	constItemList = append(constItemList, constItem)
+
+	constItem = ConstItem{
 		Key:   "PERSISTENCE_TYPE_MYSQL",
 		Value: 1,
 		Desc:  "mysql数据库",
@@ -456,21 +541,21 @@ func (constHandle *ConstHandle) Init() {
     	constItem = ConstItem{
 		Key:   "RuleStatusOnline",
 		Value: 1,
-		Desc:  "",
+		Desc:  "游戏匹配规则字段，状态，在线",
 	}
 	constItemList = append(constItemList, constItem)
 
 	constItem = ConstItem{
 		Key:   "RuleStatusOffline",
 		Value: 2,
-		Desc:  "",
+		Desc:  "游戏匹配规则字段，状态，下线",
 	}
 	constItemList = append(constItemList, constItem)
 
 	constItem = ConstItem{
 		Key:   "RuleStatusDelete",
 		Value: 3,
-		Desc:  "",
+		Desc:  "游戏匹配规则字段，状态，已删除",
 	}
 	constItemList = append(constItemList, constItem)
 
@@ -488,35 +573,35 @@ func (constHandle *ConstHandle) Init() {
     	constItem = ConstItem{
 		Key:   "FilterFlagAll",
 		Value: 1,
-		Desc:  "全匹配",
+		Desc:  "全匹配，无差别匹配，rule 没有配置权重公式时，使用",
 	}
 	constItemList = append(constItemList, constItem)
 
 	constItem = ConstItem{
 		Key:   "FilterFlagBlock",
 		Value: 2,
-		Desc:  "块-匹配",
+		Desc:  "权重公式，块-匹配",
 	}
 	constItemList = append(constItemList, constItem)
 
 	constItem = ConstItem{
 		Key:   "FilterFlagBlockInc",
 		Value: 3,
-		Desc:  "递增块匹配",
+		Desc:  "权重公式，递增块匹配",
 	}
 	constItemList = append(constItemList, constItem)
 
 	constItem = ConstItem{
 		Key:   "FilterFlagDIY",
 		Value: 4,
-		Desc:  "自定义块匹配",
+		Desc:  "权重公式，自定义块匹配",
 	}
 	constItemList = append(constItemList, constItem)
 
 
 	enumConst = EnumConst{
 		CommonPrefix: "FilterFlag",
-		Desc:         "游戏匹配-筛选策略",
+		Desc:         "游戏匹配-筛选策略(如何从匹配池里拿用户)",
 		ConstList:    constItemList,
 		Type:          "int",
 	}
@@ -525,28 +610,60 @@ func (constHandle *ConstHandle) Init() {
 	constItemList = []ConstItem{}
 
     	constItem = ConstItem{
-		Key:   "PlayerStatusNotExist",
+		Key:   "GAME_MATCH_DATA_SOURCE_TYPE_ETCD",
+		Value: 1,
+		Desc:  "游戏匹配 rule 数据来源：ETCD",
+	}
+	constItemList = append(constItemList, constItem)
+
+	constItem = ConstItem{
+		Key:   "GAME_MATCH_DATA_SOURCE_TYPE_DB",
+		Value: 2,
+		Desc:  "游戏匹配 rule 数据来源：DB",
+	}
+	constItemList = append(constItemList, constItem)
+
+	constItem = ConstItem{
+		Key:   "GAME_MATCH_DATA_SOURCE_TYPE_SERVICE",
+		Value: 3,
+		Desc:  "游戏匹配 rule 数据来源：服务",
+	}
+	constItemList = append(constItemList, constItem)
+
+
+	enumConst = EnumConst{
+		CommonPrefix: "GAME_MATCH_DATA_SOURCE_TYPE_",
+		Desc:         "游戏匹配-rule 数据来源",
+		ConstList:    constItemList,
+		Type:          "int",
+	}
+
+	constHandle.EnumConstPool[enumConst.CommonPrefix] = enumConst
+	constItemList = []ConstItem{}
+
+    	constItem = ConstItem{
+		Key:   "GAME_MATCH_PLAYER_STATUS_NOT_EXIST",
 		Value: 1,
 		Desc:  "redis中还没有该玩家信息",
 	}
 	constItemList = append(constItemList, constItem)
 
 	constItem = ConstItem{
-		Key:   "PlayerStatusSign",
+		Key:   "GAME_MATCH_PLAYER_STATUS_SIGN",
 		Value: 2,
 		Desc:  "已报名，等待匹配",
 	}
 	constItemList = append(constItemList, constItem)
 
 	constItem = ConstItem{
-		Key:   "PlayerStatusSuccess",
+		Key:   "GAME_MATCH_PLAYER_STATUS_SUCCESS",
 		Value: 3,
 		Desc:  "匹配成功，等待拿走",
 	}
 	constItemList = append(constItemList, constItem)
 
 	constItem = ConstItem{
-		Key:   "PlayerStatusInit",
+		Key:   "GAME_MATCH_PLAYER_STATUS_INIT",
 		Value: 4,
 		Desc:  "初始化阶段",
 	}
@@ -554,8 +671,65 @@ func (constHandle *ConstHandle) Init() {
 
 
 	enumConst = EnumConst{
-		CommonPrefix: "PlayerStatus",
+		CommonPrefix: "GAME_MATCH_PLAYER_STATUS_",
 		Desc:         "游戏匹配-玩家状态",
+		ConstList:    constItemList,
+		Type:          "int",
+	}
+
+	constHandle.EnumConstPool[enumConst.CommonPrefix] = enumConst
+	constItemList = []ConstItem{}
+
+    	constItem = ConstItem{
+		Key:   "GAME_MATCH_RULE_STATUS_INIT",
+		Value: 1,
+		Desc:  "初始化",
+	}
+	constItemList = append(constItemList, constItem)
+
+	constItem = ConstItem{
+		Key:   "GAME_MATCH_RULE_STATUS_EXEC",
+		Value: 2,
+		Desc:  "运行中",
+	}
+	constItemList = append(constItemList, constItem)
+
+	constItem = ConstItem{
+		Key:   "GAME_MATCH_RULE_STATUS_CLOSE",
+		Value: 3,
+		Desc:  "关闭",
+	}
+	constItemList = append(constItemList, constItem)
+
+
+	enumConst = EnumConst{
+		CommonPrefix: "GAME_MATCH_RULE_STATUS_",
+		Desc:         "一条RULE的状态",
+		ConstList:    constItemList,
+		Type:          "int",
+	}
+
+	constHandle.EnumConstPool[enumConst.CommonPrefix] = enumConst
+	constItemList = []ConstItem{}
+
+    	constItem = ConstItem{
+		Key:   "GAME_MATCH_GROUP_TYPE_SIGN",
+		Value: 1,
+		Desc:  "报名",
+	}
+	constItemList = append(constItemList, constItem)
+
+	constItem = ConstItem{
+		Key:   "GAME_MATCH_GROUP_TYPE_SUCCESS",
+		Value: 2,
+		Desc:  "报名成功",
+	}
+	constItemList = append(constItemList, constItem)
+
+
+	enumConst = EnumConst{
+		CommonPrefix: "GAME_MATCH_GROUP_TYPE_S",
+		Desc:         "游戏匹配-小组类型",
 		ConstList:    constItemList,
 		Type:          "int",
 	}
@@ -596,22 +770,36 @@ func (constHandle *ConstHandle) Init() {
 	constItemList = []ConstItem{}
 
     	constItem = ConstItem{
-		Key:   "PushStatusWait",
+		Key:   "PUSH_STATUS_WAIT",
 		Value: 1,
 		Desc:  "等待推送",
 	}
 	constItemList = append(constItemList, constItem)
 
 	constItem = ConstItem{
-		Key:   "PushStatusRetry",
+		Key:   "PUSH_STATUS_RETRY",
 		Value: 2,
 		Desc:  "已推送过，但失败了，等待重试",
 	}
 	constItemList = append(constItemList, constItem)
 
+	constItem = ConstItem{
+		Key:   "PUSH_STATUS_OK",
+		Value: 3,
+		Desc:  "推送成功",
+	}
+	constItemList = append(constItemList, constItem)
+
+	constItem = ConstItem{
+		Key:   "PUSH_STATUS_FAILED",
+		Value: 4,
+		Desc:  "推送失败",
+	}
+	constItemList = append(constItemList, constItem)
+
 
 	enumConst = EnumConst{
-		CommonPrefix: "PushStatus",
+		CommonPrefix: "PUSH_STATUS_",
 		Desc:         "游戏匹配-推送状态",
 		ConstList:    constItemList,
 		Type:          "int",
@@ -687,14 +875,14 @@ func (constHandle *ConstHandle) Init() {
     	constItem = ConstItem{
 		Key:   "RTC_PUSH_MSG_EVENT_FD_CREATE_REPEAT",
 		Value: 400,
-		Desc:  "",
+		Desc:  "FD 重复",
 	}
 	constItemList = append(constItemList, constItem)
 
 	constItem = ConstItem{
 		Key:   "RTC_PUSH_MSG_EVENT_UID_NOT_IN_MAP",
 		Value: 401,
-		Desc:  "",
+		Desc:  " uid 不在MAP中",
 	}
 	constItemList = append(constItemList, constItem)
 
@@ -702,6 +890,38 @@ func (constHandle *ConstHandle) Init() {
 	enumConst = EnumConst{
 		CommonPrefix: "RTC_PUSH_MSG_EVENT_",
 		Desc:         "RTC推送消息类型",
+		ConstList:    constItemList,
+		Type:          "int",
+	}
+
+	constHandle.EnumConstPool[enumConst.CommonPrefix] = enumConst
+	constItemList = []ConstItem{}
+
+    	constItem = ConstItem{
+		Key:   "REQ_SERVICE_METHOD_HTTP",
+		Value: 1,
+		Desc:  "http",
+	}
+	constItemList = append(constItemList, constItem)
+
+	constItem = ConstItem{
+		Key:   "REQ_SERVICE_METHOD_GRPC",
+		Value: 2,
+		Desc:  "grpc",
+	}
+	constItemList = append(constItemList, constItem)
+
+	constItem = ConstItem{
+		Key:   "REQ_SERVICE_METHOD_NATIVE",
+		Value: 3,
+		Desc:  "本地",
+	}
+	constItemList = append(constItemList, constItem)
+
+
+	enumConst = EnumConst{
+		CommonPrefix: "REQ_SERVICE_METHOD_",
+		Desc:         "请求3方服务的协议方法",
 		ConstList:    constItemList,
 		Type:          "int",
 	}
@@ -1604,84 +1824,6 @@ func (constHandle *ConstHandle) Init() {
 	constItemList = []ConstItem{}
 
     	constItem = ConstItem{
-		Key:   "ALERT_LEVEL_ALL",
-		Value: -1,
-		Desc:  "全部",
-	}
-	constItemList = append(constItemList, constItem)
-
-	constItem = ConstItem{
-		Key:   "ALERT_LEVEL_SMS",
-		Value: 1,
-		Desc:  "短信",
-	}
-	constItemList = append(constItemList, constItem)
-
-	constItem = ConstItem{
-		Key:   "ALERT_LEVEL_EMAIL",
-		Value: 2,
-		Desc:  "邮件",
-	}
-	constItemList = append(constItemList, constItem)
-
-	constItem = ConstItem{
-		Key:   "ALERT_LEVEL_FEISHU",
-		Value: 4,
-		Desc:  "飞书",
-	}
-	constItemList = append(constItemList, constItem)
-
-	constItem = ConstItem{
-		Key:   "ALERT_LEVEL_WEIXIN",
-		Value: 8,
-		Desc:  "微信",
-	}
-	constItemList = append(constItemList, constItem)
-
-	constItem = ConstItem{
-		Key:   "ALERT_LEVEL_DINGDING",
-		Value: 16,
-		Desc:  "钉钉",
-	}
-	constItemList = append(constItemList, constItem)
-
-
-	enumConst = EnumConst{
-		CommonPrefix: "ALERT_LEVEL_",
-		Desc:         "报警发送渠道类型",
-		ConstList:    constItemList,
-		Type:          "int",
-	}
-
-	constHandle.EnumConstPool[enumConst.CommonPrefix] = enumConst
-	constItemList = []ConstItem{}
-
-    	constItem = ConstItem{
-		Key:   "ALERT_METHOD_SYNC",
-		Value: 1,
-		Desc:  "同步",
-	}
-	constItemList = append(constItemList, constItem)
-
-	constItem = ConstItem{
-		Key:   "ALERT_METHOD_ASYNC",
-		Value: 2,
-		Desc:  "异步",
-	}
-	constItemList = append(constItemList, constItem)
-
-
-	enumConst = EnumConst{
-		CommonPrefix: "ALERT_METHOD_",
-		Desc:         "报警发送方式类型",
-		ConstList:    constItemList,
-		Type:          "int",
-	}
-
-	constHandle.EnumConstPool[enumConst.CommonPrefix] = enumConst
-	constItemList = []ConstItem{}
-
-    	constItem = ConstItem{
 		Key:   "ENV_LOCAL_INT",
 		Value: 1,
 		Desc:  "开发环境",
@@ -1729,22 +1871,22 @@ func (constHandle *ConstHandle) Init() {
 
     	constItem = ConstItem{
 		Key:   "LOG_LEVEL_DEBUG",
-		Value: 0,
-		Desc:  "",
+		Value: 1,
+		Desc:  "调试",
 	}
 	constItemList = append(constItemList, constItem)
 
 	constItem = ConstItem{
 		Key:   "LOG_LEVEL_INFO",
-		Value: 0,
-		Desc:  "",
+		Value: 2,
+		Desc:  "信息",
 	}
 	constItemList = append(constItemList, constItem)
 
 	constItem = ConstItem{
 		Key:   "LOG_LEVEL_OFF",
-		Value: 0,
-		Desc:  "",
+		Value: 4,
+		Desc:  "关闭",
 	}
 	constItemList = append(constItemList, constItem)
 
@@ -1752,6 +1894,108 @@ func (constHandle *ConstHandle) Init() {
 	enumConst = EnumConst{
 		CommonPrefix: "LOG_LEVEL_",
 		Desc:         "error",
+		ConstList:    constItemList,
+		Type:          "int",
+	}
+
+	constHandle.EnumConstPool[enumConst.CommonPrefix] = enumConst
+	constItemList = []ConstItem{}
+
+    	constItem = ConstItem{
+		Key:   "LEVEL_INFO",
+		Value: 1,
+		Desc:  "",
+	}
+	constItemList = append(constItemList, constItem)
+
+	constItem = ConstItem{
+		Key:   "LEVEL_DEBUG",
+		Value: 2,
+		Desc:  "2",
+	}
+	constItemList = append(constItemList, constItem)
+
+	constItem = ConstItem{
+		Key:   "LEVEL_ERROR",
+		Value: 4,
+		Desc:  "4",
+	}
+	constItemList = append(constItemList, constItem)
+
+	constItem = ConstItem{
+		Key:   "LEVEL_PANIC",
+		Value: 8,
+		Desc:  "8",
+	}
+	constItemList = append(constItemList, constItem)
+
+	constItem = ConstItem{
+		Key:   "LEVEL_EMERGENCY",
+		Value: 16,
+		Desc:  "16",
+	}
+	constItemList = append(constItemList, constItem)
+
+	constItem = ConstItem{
+		Key:   "LEVEL_ALERT",
+		Value: 32,
+		Desc:  "32",
+	}
+	constItemList = append(constItemList, constItem)
+
+	constItem = ConstItem{
+		Key:   "LEVEL_CRITICAL",
+		Value: 64,
+		Desc:  "64",
+	}
+	constItemList = append(constItemList, constItem)
+
+	constItem = ConstItem{
+		Key:   "LEVEL_WARNING",
+		Value: 128,
+		Desc:  "128",
+	}
+	constItemList = append(constItemList, constItem)
+
+	constItem = ConstItem{
+		Key:   "LEVEL_NOTICE",
+		Value: 256,
+		Desc:  "256",
+	}
+	constItemList = append(constItemList, constItem)
+
+	constItem = ConstItem{
+		Key:   "LEVEL_TRACE",
+		Value: 512,
+		Desc:  "512",
+	}
+	constItemList = append(constItemList, constItem)
+
+	constItem = ConstItem{
+		Key:   "LEVEL_ALL",
+		Value: 0,
+		Desc:  "",
+	}
+	constItemList = append(constItemList, constItem)
+
+	constItem = ConstItem{
+		Key:   "LEVEL_DEV",
+		Value: 0,
+		Desc:  "",
+	}
+	constItemList = append(constItemList, constItem)
+
+	constItem = ConstItem{
+		Key:   "LEVEL_ONLINE",
+		Value: 0,
+		Desc:  "",
+	}
+	constItemList = append(constItemList, constItem)
+
+
+	enumConst = EnumConst{
+		CommonPrefix: "LEVEL_",
+		Desc:         "日志等级",
 		ConstList:    constItemList,
 		Type:          "int",
 	}
@@ -1865,21 +2109,21 @@ func (constHandle *ConstHandle) Init() {
     	constItem = ConstItem{
 		Key:   "PROTOCOL_TCP",
 		Value: 1,
-		Desc:  "",
+		Desc:  "传输协议 TCP",
 	}
 	constItemList = append(constItemList, constItem)
 
 	constItem = ConstItem{
 		Key:   "PROTOCOL_UDP",
 		Value: 3,
-		Desc:  "",
+		Desc:  "传输协议 UDP",
 	}
 	constItemList = append(constItemList, constItem)
 
 	constItem = ConstItem{
 		Key:   "PROTOCOL_WEBSOCKET",
 		Value: 2,
-		Desc:  "",
+		Desc:  "传输协议 WEB-SOCKET",
 	}
 	constItemList = append(constItemList, constItem)
 
@@ -2000,21 +2244,21 @@ func (constHandle *ConstHandle) Init() {
     	constItem = ConstItem{
 		Key:   "NETWAY_STATUS_INIT",
 		Value: 1,
-		Desc:  "",
+		Desc:  "网关状态 初始化中",
 	}
 	constItemList = append(constItemList, constItem)
 
 	constItem = ConstItem{
 		Key:   "NETWAY_STATUS_START",
 		Value: 2,
-		Desc:  "",
+		Desc:  "网关状态 开始初始化",
 	}
 	constItemList = append(constItemList, constItem)
 
 	constItem = ConstItem{
 		Key:   "NETWAY_STATUS_CLOSE",
 		Value: 3,
-		Desc:  "",
+		Desc:  "网关状态 已关闭",
 	}
 	constItemList = append(constItemList, constItem)
 
@@ -2265,14 +2509,14 @@ func (constHandle *ConstHandle) Init() {
 	constItem = ConstItem{
 		Key:   "CLOSE_SOURCE_CONN_SHUTDOWN",
 		Value: 12,
-		Desc:  "",
+		Desc:  "conn 已关闭",
 	}
 	constItemList = append(constItemList, constItem)
 
 	constItem = ConstItem{
 		Key:   "CLOSE_SOURCE_CONN_LOGIN_ROUTER_ERR",
 		Value: 13,
-		Desc:  "",
+		Desc:  "登陆，路由一个方法时，未找到该方法",
 	}
 	constItemList = append(constItemList, constItem)
 
@@ -2304,14 +2548,14 @@ func (constHandle *ConstHandle) Init() {
     	constItem = ConstItem{
 		Key:   "HTTP_DATA_CONTENT_TYPE_JSON",
 		Value: 1,
-		Desc:  "",
+		Desc:  "JSON",
 	}
 	constItemList = append(constItemList, constItem)
 
 	constItem = ConstItem{
 		Key:   "HTTP_DATA_CONTENT_TYPE_Nornal",
 		Value: 2,
-		Desc:  "",
+		Desc:  "普通",
 	}
 	constItemList = append(constItemList, constItem)
 
@@ -2329,28 +2573,28 @@ func (constHandle *ConstHandle) Init() {
     	constItem = ConstItem{
 		Key:   "FILE_HASH_NONE",
 		Value: 0,
-		Desc:  "",
+		Desc:  " 没有",
 	}
 	constItemList = append(constItemList, constItem)
 
 	constItem = ConstItem{
 		Key:   "FILE_HASH_MONTH",
 		Value: 1,
-		Desc:  "",
+		Desc:  " 月",
 	}
 	constItemList = append(constItemList, constItem)
 
 	constItem = ConstItem{
 		Key:   "FILE_HASH_DAY",
 		Value: 2,
-		Desc:  "",
+		Desc:  "天",
 	}
 	constItemList = append(constItemList, constItem)
 
 	constItem = ConstItem{
 		Key:   "FILE_HASH_HOUR",
 		Value: 3,
-		Desc:  "",
+		Desc:  "小时",
 	}
 	constItemList = append(constItemList, constItem)
 
@@ -2366,118 +2610,16 @@ func (constHandle *ConstHandle) Init() {
 	constItemList = []ConstItem{}
 
     	constItem = ConstItem{
-		Key:   "LEVEL_INFO",
-		Value: 1,
-		Desc:  "",
-	}
-	constItemList = append(constItemList, constItem)
-
-	constItem = ConstItem{
-		Key:   "LEVEL_DEBUG",
-		Value: 0,
-		Desc:  "2",
-	}
-	constItemList = append(constItemList, constItem)
-
-	constItem = ConstItem{
-		Key:   "LEVEL_ERROR",
-		Value: 0,
-		Desc:  "4",
-	}
-	constItemList = append(constItemList, constItem)
-
-	constItem = ConstItem{
-		Key:   "LEVEL_PANIC",
-		Value: 0,
-		Desc:  "8",
-	}
-	constItemList = append(constItemList, constItem)
-
-	constItem = ConstItem{
-		Key:   "LEVEL_EMERGENCY",
-		Value: 0,
-		Desc:  "16",
-	}
-	constItemList = append(constItemList, constItem)
-
-	constItem = ConstItem{
-		Key:   "LEVEL_ALERT",
-		Value: 0,
-		Desc:  "32",
-	}
-	constItemList = append(constItemList, constItem)
-
-	constItem = ConstItem{
-		Key:   "LEVEL_CRITICAL",
-		Value: 0,
-		Desc:  "64",
-	}
-	constItemList = append(constItemList, constItem)
-
-	constItem = ConstItem{
-		Key:   "LEVEL_WARNING",
-		Value: 0,
-		Desc:  "128",
-	}
-	constItemList = append(constItemList, constItem)
-
-	constItem = ConstItem{
-		Key:   "LEVEL_NOTICE",
-		Value: 0,
-		Desc:  "256",
-	}
-	constItemList = append(constItemList, constItem)
-
-	constItem = ConstItem{
-		Key:   "LEVEL_TRACE",
-		Value: 0,
-		Desc:  "512",
-	}
-	constItemList = append(constItemList, constItem)
-
-	constItem = ConstItem{
-		Key:   "LEVEL_ALL",
-		Value: 0,
-		Desc:  "",
-	}
-	constItemList = append(constItemList, constItem)
-
-	constItem = ConstItem{
-		Key:   "LEVEL_DEV",
-		Value: 0,
-		Desc:  "",
-	}
-	constItemList = append(constItemList, constItem)
-
-	constItem = ConstItem{
-		Key:   "LEVEL_ONLINE",
-		Value: 0,
-		Desc:  "",
-	}
-	constItemList = append(constItemList, constItem)
-
-
-	enumConst = EnumConst{
-		CommonPrefix: "LEVEL_",
-		Desc:         "日志等级",
-		ConstList:    constItemList,
-		Type:          "int",
-	}
-
-	constHandle.EnumConstPool[enumConst.CommonPrefix] = enumConst
-	constItemList = []ConstItem{}
-
-    	constItem = ConstItem{
 		Key:   "SERVER_STATUS_NORMAL",
 		Value: 1,
-		Desc:  "",
+		Desc:  "正常",
 	}
 	constItemList = append(constItemList, constItem)
 
 	constItem = ConstItem{
 		Key:   "SERVER_STATUS_CLOSE",
 		Value: 2,
-		Desc:  "",
+		Desc:  "已关闭",
 	}
 	constItemList = append(constItemList, constItem)
 
@@ -2520,28 +2662,28 @@ func (constHandle *ConstHandle) Init() {
     	constItem = ConstItem{
 		Key:   "SERVICE_PROTOCOL_HTTP",
 		Value: 1,
-		Desc:  "",
+		Desc:  "HTTP",
 	}
 	constItemList = append(constItemList, constItem)
 
 	constItem = ConstItem{
 		Key:   "SERVICE_PROTOCOL_GRPC",
 		Value: 2,
-		Desc:  "",
+		Desc:  "GRPC",
 	}
 	constItemList = append(constItemList, constItem)
 
 	constItem = ConstItem{
 		Key:   "SERVICE_PROTOCOL_WEBSOCKET",
 		Value: 3,
-		Desc:  "",
+		Desc:  "WS",
 	}
 	constItemList = append(constItemList, constItem)
 
 	constItem = ConstItem{
 		Key:   "SERVICE_PROTOCOL_TCP",
 		Value: 4,
-		Desc:  "",
+		Desc:  "TCP",
 	}
 	constItemList = append(constItemList, constItem)
 
@@ -2559,14 +2701,14 @@ func (constHandle *ConstHandle) Init() {
     	constItem = ConstItem{
 		Key:   "SERVICE_DISCOVERY_ETCD",
 		Value: 1,
-		Desc:  "",
+		Desc:  "ETCD",
 	}
 	constItemList = append(constItemList, constItem)
 
 	constItem = ConstItem{
 		Key:   "SERVICE_DISCOVERY_CONSUL",
 		Value: 2,
-		Desc:  "",
+		Desc:  "CONSULE",
 	}
 	constItemList = append(constItemList, constItem)
 
@@ -2609,28 +2751,28 @@ func (constHandle *ConstHandle) Init() {
     	constItem = ConstItem{
 		Key:   "SV_ERROR_NONE",
 		Value: 0,
-		Desc:  "",
+		Desc:  "无",
 	}
 	constItemList = append(constItemList, constItem)
 
 	constItem = ConstItem{
 		Key:   "SV_ERROR_INIT",
 		Value: 1,
-		Desc:  "",
+		Desc:  "初始化",
 	}
 	constItemList = append(constItemList, constItem)
 
 	constItem = ConstItem{
 		Key:   "SV_ERROR_CONN",
 		Value: 2,
-		Desc:  "",
+		Desc:  "连接中",
 	}
 	constItemList = append(constItemList, constItem)
 
 	constItem = ConstItem{
 		Key:   "SV_ERROR_NOT_FOUND",
 		Value: 3,
-		Desc:  "",
+		Desc:  "未找到",
 	}
 	constItemList = append(constItemList, constItem)
 

@@ -1,7 +1,9 @@
 package msg_center
 
 import (
+	"encoding/json"
 	"errors"
+	"go.uber.org/zap"
 	"gorm.io/gorm"
 	"strconv"
 	"strings"
@@ -12,17 +14,24 @@ import (
 )
 
 type Sms struct {
-	Gorm *gorm.DB
+	Gorm               *gorm.DB
+	AliSms             *util.AliSms
+	Log                *zap.Logger
+	TestNotRealSendSms bool //发短信要花钱，测试的时候，可以选择正常走流程，但不真发短信
 }
 
-func NewSms(gorm *gorm.DB) *Sms {
+func NewSms(gorm *gorm.DB, aliSms *util.AliSms, log *zap.Logger) *Sms {
 	sendSms := new(Sms)
 	sendSms.Gorm = gorm
+	sendSms.AliSms = aliSms
+	sendSms.Log = log
+	sendSms.TestNotRealSendSms = true
 	return sendSms
 }
 
 func (sms *Sms) Send(projectId int, info request.SendSMS) (recordNewId int, err error) {
-	util.MyPrint("im in sendsms.send , formInfo:", info)
+	sms.Log.Debug("sms Send , projectId:" + strconv.Itoa(projectId) + " , Receiver: " + info.Receiver + " , RuleId:" + strconv.Itoa(info.RuleId))
+	//util.MyPrint("im in sendsms.send , formInfo:", info)
 	if info.RuleId <= 0 || info.Receiver == "" || info.SendIp == "" || info.SendUid <= 0 {
 		return 0, errors.New("RuleId || Receiver || SendIp || SendUid is empty")
 	}
@@ -80,6 +89,20 @@ func (sms *Sms) Send(projectId int, info request.SendSMS) (recordNewId int, err 
 		content = strings.Replace(content, "{auth_expire_time}", strconv.Itoa(rule.ExpireTime), -1)
 		smsLog.Content = content
 	}
+	backInfo := ""
+	if !sms.TestNotRealSendSms {
+		ReplaceVarBytes, _ := json.Marshal(info.ReplaceVar)
+		backInfo, err = sms.AliSms.Send(info.Receiver, rule.ThirdTemplateId, "正负无限科技", string(ReplaceVarBytes))
+		if err != nil {
+			smsLog.ThirdBackInfo = err.Error()
+			smsLog.Status = 2
+			sms.Gorm.Create(&smsLog)
+			return smsLog.Id, err
+		}
+	}
+
+	smsLog.ThirdBackInfo = backInfo
+	smsLog.Status = 1
 	//创建记录之前，先更新一下已失效的记录
 	sms.CheckExpireAndUpStatus()
 	err = sms.Gorm.Create(&smsLog).Error
@@ -133,8 +156,8 @@ func (sms *Sms) CheckRule(rule model.SmsRule) error {
 		return errors.New("rule err , 最小频率周期-发送次数 < 0")
 	}
 
-	if rule.Content == "" || rule.Title == "" || rule.Purpose <= 0 || rule.Type <= 0 {
-		return errors.New("rule err , Content || Title || Purpose || Type empty")
+	if rule.Content == "" || rule.Title == "" || rule.Type <= 0 {
+		return errors.New("rule err , Content || Title  || Type empty")
 	}
 
 	return nil
@@ -152,8 +175,7 @@ func (sms *Sms) CheckLimiterPeriod(rule model.SmsRule, receiver string) error {
 			return errors.New("gorm err:" + err.Error())
 		}
 	}
-
-	util.MyPrint("CheckLimiterPeriod count:", count, " PeriodTimes:", rule.PeriodTimes)
+	sms.Log.Info("CheckLimiterPeriod receiver:" + receiver + " , PeriodTimes:" + strconv.Itoa(rule.PeriodTimes) + " , send Count:" + strconv.Itoa(int(count)))
 	if count >= int64(rule.PeriodTimes) {
 		return errors.New("PeriodTimes err : " + strconv.Itoa(int(count)) + "  >= " + strconv.Itoa(rule.PeriodTimes))
 	}
@@ -174,7 +196,7 @@ func (sms *Sms) CheckLimiterDay(rule model.SmsRule, receiver string) error {
 			return errors.New("gorm err:" + err.Error())
 		}
 	}
-
+	sms.Log.Info("CheckLimiterDay receiver:" + receiver + " send count:" + strconv.Itoa(int(count)))
 	if count > int64(rule.DayTimes) {
 		return errors.New("DayTimes err : " + strconv.Itoa(int(count)) + "  >= " + strconv.Itoa(rule.DayTimes))
 	}

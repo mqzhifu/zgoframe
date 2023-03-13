@@ -18,10 +18,15 @@ INSERT INTO `server` (`id`, `name`, `platform`, `out_ip`, `inner_ip`, `env`, `st
        (5, '线上', 1, '8.142.161.156', '172.27.218.143', 5, 1, '', '小z', 1650006845, 1650006845, 100, 1650006845, 0, NULL);
 
 
-INSERT INTO `sms_rule` (`id`, `project_id`, `title`, `content`, `type`, `day_times`, `period`, `period_times`, `expire_time`, `memo`, `purpose`, `channel`, `third_back_info`, `third_template_id`, `third_status`, `third_reason`, `third_callback_info`, `third_callback_time`, `created_at`, `updated_at`, `deleted_at`) VALUES
-        (1, 0, '', '0', 0, 0, 10, 30, 0, '0', 0, 0, '短信注册', '1', 0, '', '{nickname},您好：欢迎注册本网站，验证码为：{auth_code},{auth_expire_time}秒后将失效，勿告诉他人，防止被骗', '1', 300, 0, 11),
-        (2, 0, '', '0', 0, 0, 10, 60, 0, '0', 0, 6, '短信登陆', '1', 0, '', '{nickname},您好：登陆验证码为：{auth_code},{auth_expire_time} 秒后将失效，勿告诉他人，防止被骗。', '1', 300, 0, 12),
-        (3, 0, '找加密码', '0', 0, 0, 10, 30, 0, '0', 0, 6, '找回密码', '1', 0, '', '找回密码', '1', 300, 0, 13);
+INSERT INTO `sms_rule` (`id`, `project_id`, `title`, `content`, `type`, `day_times`, `period`, `period_times`, `expire_time`, `memo`, `channel`, `third_back_info`, `third_template_id`, `third_status`, `third_reason`, `third_callback_info`, `third_callback_time`, `created_at`, `updated_at`, `deleted_at`) VALUES
+        (1, 6, '短信注册', '{nickname},您好：欢迎注册本网站，验证码为：{auth_code},{auth_expire_time}秒后将失效，勿告诉他人，防止被骗', 1, 10, 60, 1, 300, '0', 1, '', '1', 0, '', '', '1', 0, 0, null),
+        (2, 6, '短信登陆', '{nickname},您好：登陆验证码为：{auth_code},{auth_expire_time} 秒后将失效，勿告诉他人，防止被骗。', 1, 10, 60, 1, 300, '0', 1, '', '1', 0, '', '', '1', 0, 0, null),
+        (3, 6, '找加密码', '找回密码', 1, 10, 60, 1, 300, '0', 1, '', '', '1', '', '', '', '1', 0, null),
+        (4, 6, '报警', '报警，程序出错。级别：{level}，项目ID:{project_id}，内容：{content}', 2, 10, 60, 1, 0, '0', 1, '', 'SMS_273495087', '1',  '', '', '1', 300, 0, null);
+
+
+
+
 
 
 INSERT INTO `user` (`id`, `uuid`, `project_id`, `sex`, `birthday`, `username`, `password`, `pay_ps`, `nick_name`, `mobile`, `email`, `robot`, `status`, `guest`, `test`, `recommend`, `header_img`, `created_at`, `updated_at`, `deleted_at`) VALUES

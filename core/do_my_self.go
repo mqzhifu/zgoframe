@@ -24,12 +24,17 @@ func DoTestAction(flag string) {
 		}
 		util.MyPrint(sqlStrings)
 		util.ExitPrint("i want exit 2.")
+	case "ali_sms":
+		//AliSms := util.NewAliSms()
+		//AliSms.Send()
 	case "email":
 		test.Email()
+	case "sms":
+		test.Sms()
 	case "cicd":
 		test.Cicd()
 	case "alert_push":
-		global.V.AlertPush.Push(1, "error", "test push alert info.")
+		//global.V.AlertPush.Push(1, "error", "test push alert info.")
 	case "grpc":
 		test.Grpc()
 	case "super_visor":

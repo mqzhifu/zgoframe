@@ -134,8 +134,8 @@ func (mail *Mail) CheckRule(rule model.MailRule) error {
 		return errors.New("rule err , 最小频率周期-发送次数 < 0")
 	}
 
-	if rule.Content == "" || rule.Title == "" || rule.Purpose <= 0 || rule.Type <= 0 {
-		return errors.New("rule err , Content || Title || Purpose || Type empty")
+	if rule.Content == "" || rule.Title == "" || rule.Type <= 0 {
+		return errors.New("rule err , Content || Title   || Type empty")
 	}
 
 	if rule.PeopleType <= 0 {

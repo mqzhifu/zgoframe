@@ -13,7 +13,7 @@ import (
 	"zgoframe/util"
 )
 
-func GetNewZapLog(alert *util.AlertPush, configZap global.Zap) (logger *zap.Logger, configZapReturn global.Zap, err error) {
+func GetNewZapLog(configZap global.Zap) (logger *zap.Logger, configZapReturn global.Zap, err error) {
 	if configZap.Level == "" {
 		return nil, configZapReturn, errors.New("Level is empty")
 	}
@@ -38,11 +38,11 @@ func GetNewZapLog(alert *util.AlertPush, configZap global.Zap) (logger *zap.Logg
 		level = zap.InfoLevel
 	}
 
-	if configZap.AutoAlert {
-		if alert == nil {
-			return logger, configZapReturn, errors.New("AutoAlert is open ,but AlertPush is nil")
-		}
-	}
+	//if configZap.AutoAlert {
+	//	if alert == nil {
+	//		return logger, configZapReturn, errors.New("AutoAlert is open ,but AlertPush is nil")
+	//	}
+	//}
 
 	configZap.LevelInt8 = int8(level)
 	//每次输出日志后，回调钩子，主要用来报警
@@ -53,7 +53,8 @@ func GetNewZapLog(alert *util.AlertPush, configZap global.Zap) (logger *zap.Logg
 
 		//以下级别日志，均要报警
 		if entry.Level == zap.ErrorLevel || entry.Level == zap.PanicLevel || entry.Level == zap.FatalLevel || entry.Level == zap.DPanicLevel {
-			alert.Push(0, entry.Level.String(), entry.Message)
+			InitAlert(0, entry.Message, entry.Level.String())
+			//alert.Push(0, entry.Level.String(), entry.Message)
 		}
 		return nil
 	})

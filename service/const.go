@@ -13,7 +13,7 @@ const (
 
 	//Separation        = "#" //redis 内容-字符串分隔符
 	//PayloadSeparation = "%" //push时的内容，缓存进redis时
-	////RedisSeparation     = "_"           //redis key 分隔符
+	//RedisSeparation     = "_"           //redis key 分隔符
 	//IdsSeparation = "," //多个ID 分隔符
 
 	//微服务
@@ -28,6 +28,22 @@ const (
 	//
 	//SIGNAL_QUIT_SOURCE            = 4
 	//SIGNAL_QUIT_SOURCE_RULE_WATCH = 5
+)
+
+//@parse 报警发送渠道类型
+const (
+	ALERT_LEVEL_ALL      = -1 //全部
+	ALERT_LEVEL_SMS      = 1  //短信
+	ALERT_LEVEL_EMAIL    = 2  //邮件
+	ALERT_LEVEL_FEISHU   = 4  //飞书
+	ALERT_LEVEL_WEIXIN   = 8  //微信
+	ALERT_LEVEL_DINGDING = 16 //钉钉
+)
+
+//@parse 报警发送方式类型
+const (
+	ALERT_SEND_SYNC  = 1 //同步
+	ALERT_SEND_ASYNC = 2 //异步
 )
 
 //@parse 配置中心-数据持久化类型
@@ -121,9 +137,9 @@ const (
 
 //@parse 游戏匹配-一条rule的状态
 const (
-	RuleStatusOnline  = 1
-	RuleStatusOffline = 2
-	RuleStatusDelete  = 3
+	RuleStatusOnline  = 1 //游戏匹配规则字段，状态，在线
+	RuleStatusOffline = 2 //游戏匹配规则字段，状态，下线
+	RuleStatusDelete  = 3 //游戏匹配规则字段，状态，已删除
 )
 
 //@parse 游戏匹配-筛选策略(如何从匹配池里拿用户)
@@ -134,11 +150,11 @@ const (
 	FilterFlagDIY      = 4 //权重公式，自定义块匹配
 )
 
-//@parse 游戏匹配-rule数据来源
+//@parse 游戏匹配-rule 数据来源
 const (
-	GAME_MATCH_DATA_SOURCE_TYPE_ETCD    = 1
-	GAME_MATCH_DATA_SOURCE_TYPE_DB      = 2
-	GAME_MATCH_DATA_SOURCE_TYPE_SERVICE = 3
+	GAME_MATCH_DATA_SOURCE_TYPE_ETCD    = 1 //游戏匹配 rule 数据来源：ETCD
+	GAME_MATCH_DATA_SOURCE_TYPE_DB      = 2 //游戏匹配 rule 数据来源：DB
+	GAME_MATCH_DATA_SOURCE_TYPE_SERVICE = 3 //游戏匹配 rule 数据来源：服务
 )
 
 //@parse 游戏匹配-玩家状态
@@ -205,13 +221,13 @@ const (
 
 //@parse RTC推送消息类型
 const (
-	RTC_PUSH_MSG_EVENT_FD_CREATE_REPEAT = 400
-	RTC_PUSH_MSG_EVENT_UID_NOT_IN_MAP   = 401
+	RTC_PUSH_MSG_EVENT_FD_CREATE_REPEAT = 400 //FD 重复
+	RTC_PUSH_MSG_EVENT_UID_NOT_IN_MAP   = 401 // uid 不在MAP中
 )
 
 //@parse 请求3方服务的协议方法
 const (
-	REQ_SERVICE_METHOD_HTTP   = 1
-	REQ_SERVICE_METHOD_GRPC   = 2
-	REQ_SERVICE_METHOD_NATIVE = 3
+	REQ_SERVICE_METHOD_HTTP   = 1 //http
+	REQ_SERVICE_METHOD_GRPC   = 2 //grpc
+	REQ_SERVICE_METHOD_NATIVE = 3 //本地
 )

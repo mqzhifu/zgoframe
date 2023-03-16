@@ -82,6 +82,9 @@ func (email *Email) Send(projectId int, info request.SendEmail) (recordNewId int
 		content = strings.Replace(content, "{auth_expire_time}", strconv.Itoa(rule.ExpireTime), -1)
 		emailLog.Content = content
 	}
+
+	email.MyEmail.SendOneEmailSync(info.Receiver, rule.Title, content)
+
 	//创建记录之前，先更新一下已失效的记录
 	email.CheckExpireAndUpStatus()
 	err = email.Gorm.Create(&emailLog).Error

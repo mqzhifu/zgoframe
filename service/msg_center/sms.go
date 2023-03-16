@@ -25,7 +25,7 @@ func NewSms(gorm *gorm.DB, aliSms *util.AliSms, log *zap.Logger) *Sms {
 	sendSms.Gorm = gorm
 	sendSms.AliSms = aliSms
 	sendSms.Log = log
-	sendSms.TestNotRealSendSms = true
+	sendSms.TestNotRealSendSms = false
 	return sendSms
 }
 

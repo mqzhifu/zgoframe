@@ -2,6 +2,7 @@ package core
 
 import (
 	"zgoframe/core/global"
+	"zgoframe/http/request"
 	"zgoframe/test"
 	"zgoframe/util"
 )
@@ -16,6 +17,8 @@ func DoTestAction(flag string) {
 	//util.GetHTTPBaseAuth()
 
 	switch flag {
+	case "alert":
+		global.V.MyService.Alert.Send(6, "商品库存不足，请及时补充货源", "warning")
 	case "db_table":
 		sqlList := global.AutoCreateUpDbTable()
 		sqlStrings := ""
@@ -31,6 +34,10 @@ func DoTestAction(flag string) {
 		test.Email()
 	case "sms":
 		test.Sms()
+	case "service_sms":
+		SendSMS := request.SendSMS{}
+		recordNewId, err := global.V.MyService.Sms.Send(6, SendSMS)
+		util.MyPrint(recordNewId, err)
 	case "cicd":
 		test.Cicd()
 	case "alert_push":

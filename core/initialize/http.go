@@ -151,7 +151,7 @@ func ZapLog() gin.HandlerFunc {
 		//	zap.String("errors", c.Errors.ByType(gin.ErrorTypePrivate).String()),
 		//	zap.Duration("cost", cost),
 		s := " "
-		context := strconv.Itoa(c.Writer.Status()) + s + c.Request.Method + s + path + s + query + c.ClientIP()
+		context := strconv.Itoa(c.Writer.Status()) + s + c.Request.Method + s + path + s + query + c.ClientIP() + s + c.Request.Host
 		// + s + c.Request.UserAgent() + c.Errors.ByType(gin.ErrorTypePrivate).String()
 
 		HttpZapLog.Info(context)

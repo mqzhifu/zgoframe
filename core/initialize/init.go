@@ -272,9 +272,11 @@ func (initialize *Initialize) Start() error {
 
 	return nil
 }
+
 func InitAlert(ProjectId int, Content string, Level string) {
 	global.V.MyService.Alert.LogSend(ProjectId, Content, Level)
 }
+
 func (initialize *Initialize) OutHttpGetBaseInfo() string {
 	//optionStr, _ := json.Marshal(initialize.Option)
 	//return string(optionStr)

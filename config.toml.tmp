@@ -187,16 +187,16 @@ bucket          = "#oss_port#"
 selfDomain      = "ossservicebase.seedreality.com"
 
 [aliSms]
-status  = "open"
+status          = "open"
 accessKeyId     = "#ali_sms_user#"
 accessKeySecret = "#ali_sms_ps#"
 endpoint        = "#sli_sms_ip#"
 
 #声网音视频流
 [agora]
-status  = "close"
+status          = "close"
 appId           = "#agora_user#"
 appCertificate  = "#agora_ps#"
-HttpKey = "#agora_aaa#"
-HttpSecret = "#agora_bbb#"
-domain  = "https://api.agora.io/v1/apps/"
+HttpKey         = "#agora_aaa#"
+HttpSecret      = "#agora_bbb#"
+domain          = "https://api.agora.io/v1/apps/"

@@ -138,9 +138,9 @@ func NewMyService() *MyService {
 		SendUid:           C.Alert.SendUid,
 	}
 
-	myService.Alert = msg_center.NewAlert(alertOption)
+	myService.Alert, _ = msg_center.NewAlert(alertOption)
 
-	myService.Cicd, err = InitCicd()
+	//myService.Cicd, err = InitCicd()
 
 	//myService.RegisterService()
 

@@ -1,8 +1,8 @@
 //全局初始化
 package initialize
 
-import "C"
 import (
+	"C"
 	"errors"
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -32,12 +32,47 @@ func (initialize *Initialize) Start() error {
 	}
 	global.V.Vip = myViper //全局变量管理者
 	global.C = config      //全局变量
-	//---read config file end -----
+	//--- read config file end -----
+
+	//邮件与短信优先初始化，是一但有报警，就可以直接发邮件/短信
+
+	//邮件模块
+	if global.C.Email.Status == core.GLOBAL_CONFIG_MODEL_STATUS_OPEN {
+		emailOption := util.EmailOption{
+			Host:      global.C.Email.Host,
+			Port:      global.C.Email.Port,
+			FromEmail: global.C.Email.From,
+			Password:  global.C.Email.Ps,
+			AuthCode:  global.C.Email.AuthCode,
+			Log:       global.V.Zap,
+		}
+
+		global.V.Email, err = util.NewMyEmail(emailOption)
+		if err != nil {
+			return err
+		}
+	}
+	//短信模块
+	if global.C.AliSms.Status == core.GLOBAL_CONFIG_MODEL_STATUS_OPEN {
+		op := util.AliSmsOp{
+			AccessKeyId:     global.C.AliSms.AccessKeyId,
+			AccessKeySecret: global.C.AliSms.AccessKeySecret,
+			Endpoint:        global.C.AliSms.Endpoint,
+		}
+		global.V.AliSms, err = util.NewAliSms(op)
+		if err != nil {
+			util.MyPrint(prefix+"util.NewAliSms err:", err)
+			return err
+		}
+	}
 
 	//预警/报警->推送器，这里是推送到3方服务，如：prometheus，而不是直接发邮件/短信
 	//ps:这个要优先zap日志类优化处理，因为zap里的<钩子>有用到,主要是日志里自动触发报警，略方便
 	if global.C.AlertPush.Status == core.GLOBAL_CONFIG_MODEL_STATUS_OPEN {
-		global.V.AlertPush = util.NewAlertPush(global.C.AlertPush.Host, global.C.AlertPush.Port, global.C.AlertPush.Uri, prefix)
+		global.V.AlertPush, err = util.NewAlertPush(global.C.AlertPush.Host, global.C.AlertPush.Port, global.C.AlertPush.Uri, prefix)
+		if err != nil {
+			return err
+		}
 	}
 	//创建main日志类
 	configZap := global.C.Zap
@@ -85,7 +120,7 @@ func (initialize *Initialize) Start() error {
 		global.V.Zap.Error(prefix + err.Error())
 		return err
 	}
-	//基础类：用于恢复一个挂了的协程,避免主进程被panic fatal 带挂了，同时有重度次数控制
+	//基础类：用于恢复一个挂了的协程,避免主进程被panic fatal 带挂了，同时有重试次数控制
 	global.V.RecoverGo = util.NewRecoverGo(global.V.Zap, 3)
 	//redis
 	if global.C.Redis.Status == core.GLOBAL_CONFIG_MODEL_STATUS_OPEN {
@@ -197,19 +232,7 @@ func (initialize *Initialize) Start() error {
 		}
 		global.V.GrpcManager, _ = util.NewGrpcManager(grpcManagerOption)
 	}
-	//邮件模块
-	if global.C.Email.Status == core.GLOBAL_CONFIG_MODEL_STATUS_OPEN {
-		emailOption := util.EmailOption{
-			Host:      global.C.Email.Host,
-			Port:      global.C.Email.Port,
-			FromEmail: global.C.Email.From,
-			Password:  global.C.Email.Ps,
-			AuthCode:  global.C.Email.AuthCode,
-			Log:       global.V.Zap,
-		}
 
-		global.V.Email = util.NewMyEmail(emailOption)
-	}
 	//预/报警,这个是真正的直接报警，如：邮件 SMS 等，不是推送3方
 	//ps:不推荐这么用，最好都统一推送3方报警机制
 	//if global.C.Alert.Status == core.GLOBAL_CONFIG_MODEL_STATUS_OPEN {
@@ -227,18 +250,7 @@ func (initialize *Initialize) Start() error {
 		}
 		global.V.AliOss = util.NewAliOss(op)
 	}
-	if global.C.AliSms.Status == core.GLOBAL_CONFIG_MODEL_STATUS_OPEN {
-		op := util.AliSmsOp{
-			AccessKeyId:     global.C.AliSms.AccessKeyId,
-			AccessKeySecret: global.C.AliSms.AccessKeySecret,
-			Endpoint:        global.C.AliSms.Endpoint,
-		}
-		global.V.AliSms, err = util.NewAliSms(op)
-		if err != nil {
-			util.MyPrint(prefix+"util.NewAliSms err:", err)
-			return err
-		}
-	}
+
 	//var netWayOption util.NetWayOption
 	//if global.C.Gateway.Status == global.GLOBAL_CONFIG_MODEL_STATUS_OPEN {
 	//	netWayOption = InitGateway()
@@ -274,7 +286,8 @@ func (initialize *Initialize) Start() error {
 }
 
 func InitAlert(ProjectId int, Content string, Level string) {
-	global.V.MyService.Alert.LogSend(ProjectId, Content, Level)
+	//global.V.MyService.Alert.LogSend(ProjectId, Content, Level)
+	global.V.AlertPush.Push(ProjectId, Content, Level)
 }
 
 func (initialize *Initialize) OutHttpGetBaseInfo() string {

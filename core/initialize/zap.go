@@ -89,7 +89,6 @@ func GetNewZapLog(configZap global.Zap) (logger *zap.Logger, configZapReturn glo
 }
 
 //所有的日志都给加一个公共的项：projectId，方便给日志分类规档
-//
 func LoggerWithProject(logger *zap.Logger, projectId int) *zap.Logger {
 	logger = logger.With(zap.Int("projectId", projectId))
 	return logger

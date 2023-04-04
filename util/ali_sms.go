@@ -9,28 +9,32 @@ import (
 )
 
 type AliSmsOp struct {
-	AccessKeyId     string
-	AccessKeySecret string
-	Endpoint        string
+	AccessKeyId     string //阿里云短信服务的AccessKeyId
+	AccessKeySecret string //阿里云短信服务的AccessKeySecret
+	Endpoint        string //阿里云短信服务的Endpoint
 }
 
 type AliSms struct {
-	Op           AliSmsOp
-	AliSmsClient *dysmsapi20170525.Client
+	Op           AliSmsOp                 //阿里云短信服务的配置
+	AliSmsClient *dysmsapi20170525.Client //阿里云短信服务的客户端
 }
 
+//创建一个阿里云短信服务客户端
 func NewAliSms(aliSmsOp AliSmsOp) (*AliSms, error) {
 	aliSms := new(AliSms)
 	aliSms.Op = aliSmsOp
 
+	//判断参数是否为空
+	if aliSmsOp.AccessKeyId == "" || aliSmsOp.AccessKeySecret == "" || aliSmsOp.Endpoint == "" {
+		return nil, errors.New("NewAliSms err: AccessKeyId or AccessKeySecret or Endpoint is empty")
+	}
+
 	config := &openapi.Config{
-		// 必填，您的 AccessKey ID
-		AccessKeyId: &aliSmsOp.AccessKeyId,
-		// 必填，您的 AccessKey Secret
+		AccessKeyId:     &aliSmsOp.AccessKeyId,
 		AccessKeySecret: &aliSmsOp.AccessKeySecret,
+		Endpoint:        tea.String(aliSmsOp.Endpoint),
 	}
 	// 访问的域名
-	config.Endpoint = tea.String("dysmsapi.aliyuncs.com")
 	aliSmsClient, err := dysmsapi20170525.NewClient(config)
 	if err != nil {
 		return aliSms, err

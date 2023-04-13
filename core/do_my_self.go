@@ -48,7 +48,7 @@ func DoTestAction(flag string) {
 		test.Test_command()
 		test.Test_supervisor()
 	case "gateway":
-		//test.gateway()
+		test.Gateway()
 	default:
 		util.ExitPrint("DoTestAction flag no hit , flag:" + flag)
 	}

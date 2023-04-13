@@ -17,7 +17,8 @@ cd $base_dir/protobuf/proto
 #编译GO，生成 GRPC protobuf的： PB 文件
 echo "protoc  --go_out=plugins=grpc:../pb ./*.proto"
 protoc  --go_out=plugins=grpc:../pb ./*.proto
-#protoc  --go-grpc_out=../pb ./*.proto  ，这个好像是新版本可以使用
+#protoc --go_out=.=../pb  --go-grpc_out=../pb ./*.proto  ，这个好像是新版本可以使用
+#protoc --go_out=../pb/ ./*.proto //仅生成 pb 文件
 #生成 id 映射 proto 的文件.txt ，以及动态网关需要的类文件
 #php makepbservice.php pbservice proto *.proto pbservice pb.
 

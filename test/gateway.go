@@ -1,32 +1,30 @@
 package test
 
-//import (
-//	"bufio"
-//	"github.com/golang/protobuf/proto"
-//	"github.com/gorilla/websocket"
-//	"net"
-//	"net/url"
-//	"os"
-//	"strconv"
-//	"time"
-//	"zgoframe/core/global"
-//	"zgoframe/protobuf/pb"
-//	"zgoframe/util"
-//)
-//
-//func Gateway() {
-//	GateServer()
-//	//GateClientWebsocket()
-//	//GateClientTcp()
-//}
-//
-//var GateListenIp = "127.0.0.1"
-//var GateWsPort = "1111"
-//var GateWsUri = "/ws"
-//var GateTcpPort = "2222"
-//var GateDefaultProtocol = int32(util.PROTOCOL_WEBSOCKET)
-//var GateDefaultContentType = int32(util.CONTENT_TYPE_PROTOBUF)
-//
+import (
+	"bufio"
+	"github.com/golang/protobuf/proto"
+	"net"
+	"os"
+	"strconv"
+	"time"
+	"zgoframe/core/global"
+	"zgoframe/protobuf/pb"
+	"zgoframe/util"
+)
+
+func Gateway() {
+	//GateServer()
+	//GateClientWebsocket()
+	GateClientTcp()
+}
+
+var GateListenIp = "127.0.0.1"
+var GateWsPort = "1111"
+var GateWsUri = "/ws"
+var GateTcpPort = "2222"
+var GateDefaultProtocol = int32(util.PROTOCOL_WEBSOCKET)
+var GateDefaultContentType = int32(util.CONTENT_TYPE_PROTOBUF)
+
 //func GateServer() {
 //	netWayOption := util.NetWayOption{
 //		ListenIp: GateListenIp, //程序启动时监听的IP
@@ -60,52 +58,51 @@ package test
 //
 //}
 //
-//func GetSendLoginMsg() []byte {
-//	actionName := "ClientLogin"
-//
-//	requestLogin := pb.RequestLogin{
-//		Token: "aaaa",
-//	}
-//	requestLoginMarshal, err := proto.Marshal(&requestLogin)
-//	if err != nil {
-//		global.V.Zap.Fatal("proto.Marshal err:" + err.Error())
-//	}
-//
-//	actionMap, empty := global.V.ProtobufMap.GetActionId(actionName)
-//	if empty {
-//		global.V.Zap.Panic("GetActionId empty.")
-//	}
-//
-//	protocol := GateDefaultProtocol
-//	contentType := GateDefaultContentType
-//
-//	connManager := GetConnManager()
-//
-//	msg := pb.Msg{
-//		ContentType:  contentType,
-//		ProtocolType: protocol,
-//		Action:       actionName,
-//		ActionId:     int32(actionMap.Id),
-//		ServiceId:    int32(actionMap.ServiceId),
-//		Content:      string(requestLoginMarshal),
-//	}
-//
-//	contentBytes := connManager.PackContentMsg(msg)
-//	util.MyPrint("contentBytes len:", len(contentBytes))
-//	//util.MyPrint(contentBytes)
-//	return contentBytes
-//}
-//
-//func GetConnManager() *util.ConnManager {
-//	connManagerOption := util.ConnManagerOption{
-//		Log:                 global.V.Zap,
-//		ProtobufMap:         global.V.ProtobufMap,
-//		DefaultContentType:  GateDefaultProtocol,
-//		DefaultProtocolType: GateDefaultProtocol,
-//	}
-//	connManager := util.NewConnManager(connManagerOption)
-//	return connManager
-//}
+func GetSendLoginMsg() []byte {
+	funcName := "CS_Login"
+	serviceName := "Gateway"
+
+	requestLogin := pb.Login{
+		Token: "aaaa",
+	}
+	requestLoginMarshal, err := proto.Marshal(&requestLogin)
+	if err != nil {
+		global.V.Zap.Fatal("proto.Marshal err:" + err.Error())
+	}
+
+	actionMap, empty := global.V.ProtoMap.GetServiceByName(serviceName, funcName)
+	if empty {
+		global.V.Zap.Panic("GetActionId empty.")
+	}
+
+	protocol := GateDefaultProtocol
+	contentType := GateDefaultContentType
+
+	connManager := GetConnManager()
+
+	msg := pb.Msg{
+		ContentType:  contentType,
+		ProtocolType: protocol,
+		ServiceId:    int32(actionMap.ServiceId),
+		Content:      string(requestLoginMarshal),
+	}
+
+	contentBytes := connManager.PackContentMsg(msg)
+	util.MyPrint("contentBytes len:", len(contentBytes))
+	//util.MyPrint(contentBytes)
+	return contentBytes
+}
+
+func GetConnManager() *util.ConnManager {
+	connManagerOption := util.ConnManagerOption{
+		Log:                 global.V.Zap,
+		DefaultContentType:  GateDefaultProtocol,
+		DefaultProtocolType: GateDefaultProtocol,
+	}
+	connManager := util.NewConnManager(connManagerOption)
+	return connManager
+}
+
 //
 //func GateClientWebsocket() {
 //	dns := GateListenIp + ":" + GateWsPort
@@ -143,34 +140,34 @@ package test
 //
 //}
 //
-//func GateClientTcp() {
-//	dns := GateListenIp + ":" + GateTcpPort
-//	fd, err := net.Dial("tcp", dns)
-//	if err != nil {
-//		global.V.Zap.Fatal("net.Listen err :" + err.Error())
-//	}
-//
-//	contentBytes := GetSendLoginMsg()
-//	n, err := fd.Write(contentBytes)
-//	if err != nil {
-//		global.V.Zap.Fatal("fd.write err :" + err.Error())
-//	}
-//	global.V.Zap.Info("write n:" + strconv.Itoa(n))
-//
-//	input := bufio.NewReader(os.Stdin)
-//	for {
-//		bytes, _, err := input.ReadLine()
-//		if err != nil {
-//			global.V.Zap.Fatal("read line faild err:%v\n" + err.Error())
-//		}
-//		str := string(bytes)
-//		util.MyPrint("read:", string(str))
-//		//n, err := conn.Write(bytes)
-//		//if err != nil {
-//		//	fmt.Printf("send data faild err:%v\n", err)
-//		//} else {
-//		//	fmt.Printf("send data length %d\n", n)
-//		//}
-//		time.Sleep(time.Second * 1)
-//	}
-//}
+func GateClientTcp() {
+	dns := GateListenIp + ":" + GateTcpPort
+	fd, err := net.Dial("tcp", dns)
+	if err != nil {
+		global.V.Zap.Fatal("net.Listen err :" + err.Error())
+	}
+
+	contentBytes := GetSendLoginMsg()
+	n, err := fd.Write(contentBytes)
+	if err != nil {
+		global.V.Zap.Fatal("fd.write err :" + err.Error())
+	}
+	global.V.Zap.Info("write n:" + strconv.Itoa(n))
+
+	input := bufio.NewReader(os.Stdin)
+	for {
+		bytes, _, err := input.ReadLine()
+		if err != nil {
+			global.V.Zap.Fatal("read line faild err:%v\n" + err.Error())
+		}
+		str := string(bytes)
+		util.MyPrint("read:", string(str))
+		//n, err := conn.Write(bytes)
+		//if err != nil {
+		//	fmt.Printf("send data faild err:%v\n", err)
+		//} else {
+		//	fmt.Printf("send data length %d\n", n)
+		//}
+		time.Sleep(time.Second * 1)
+	}
+}

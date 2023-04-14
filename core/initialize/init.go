@@ -78,7 +78,8 @@ func (initialize *Initialize) Start() error {
 	configZap := global.C.Zap
 	configZap.FileName = "main"
 	configZap.ModuleName = "main"
-	mainZap, configZapReturn, err := GetNewZapLog(configZap)
+	//mainZap, configZapReturn, err := GetNewZapLog(configZap)
+	mainZap, _, err := GetNewZapLog(configZap)
 	if err != nil {
 		util.MyPrint("GetNewZapLog err:", err)
 		return err
@@ -158,13 +159,13 @@ func (initialize *Initialize) Start() error {
 		HttpZap = LoggerWithProject(HttpZap, global.V.Project.Id)
 	}
 	//etcd
-	if global.C.Etcd.Status == core.GLOBAL_CONFIG_MODEL_STATUS_OPEN {
-		global.V.Etcd, err = GetNewEtcd(global.MainCmdParameter.Env, configZapReturn, prefix)
-		if err != nil {
-			global.V.Zap.Error(prefix + "GetNewEtcd err:" + err.Error())
-			return err
-		}
-	}
+	//if global.C.Etcd.Status == core.GLOBAL_CONFIG_MODEL_STATUS_OPEN {
+	//	global.V.Etcd, err = GetNewEtcd(global.MainCmdParameter.Env, configZapReturn, prefix)
+	//	if err != nil {
+	//		global.V.Zap.Error(prefix + "GetNewEtcd err:" + err.Error())
+	//		return err
+	//	}
+	//}
 	//服务管理器，这里跟project manager 有点差不多，不同的只是：project是DB中所有记录,service是type=N的情况
 	//ps:之所以单独加一个模块，也是因为service有些特殊的结构变量，与project的结构变量不太一样
 	global.V.ServiceManager, _ = util.NewServiceManager(global.V.Gorm)
@@ -380,8 +381,8 @@ func GetNewEtcd(env int, configZapReturn global.Zap, prefix string) (myEtcd *uti
 
 func GetNewServiceDiscovery() (serviceDiscovery *util.ServiceDiscovery, err error) {
 	serviceOption := util.ServiceDiscoveryOption{
-		Log:            global.V.Zap,
-		Etcd:           global.V.Etcd,
+		Log: global.V.Zap,
+		//Etcd:           global.V.Etcd,
 		Prefix:         global.C.ServiceDiscovery.Prefix,
 		DiscoveryType:  util.SERVICE_DISCOVERY_ETCD,
 		ServiceManager: global.V.ServiceManager,

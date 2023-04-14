@@ -1,10 +1,8 @@
 package test
 
 import (
-	"bufio"
 	"github.com/golang/protobuf/proto"
 	"net"
-	"os"
 	"strconv"
 	"time"
 	"zgoframe/core/global"
@@ -15,13 +13,14 @@ import (
 func Gateway() {
 	//GateServer()
 	//GateClientWebsocket()
+	util.MyPrint("test Gateway:===================")
 	GateClientTcp()
 }
 
 var GateListenIp = "127.0.0.1"
 var GateWsPort = "1111"
 var GateWsUri = "/ws"
-var GateTcpPort = "2222"
+var GateTcpPort = "3333"
 var GateDefaultProtocol = int32(util.PROTOCOL_WEBSOCKET)
 var GateDefaultContentType = int32(util.CONTENT_TYPE_PROTOBUF)
 
@@ -75,6 +74,8 @@ func GetSendLoginMsg() []byte {
 		global.V.Zap.Panic("GetActionId empty.")
 	}
 
+	util.MyPrint("actionMap funcId:", actionMap.FuncId, " , serviceId:", actionMap.ServiceId)
+
 	protocol := GateDefaultProtocol
 	contentType := GateDefaultContentType
 
@@ -84,6 +85,7 @@ func GetSendLoginMsg() []byte {
 		ContentType:  contentType,
 		ProtocolType: protocol,
 		ServiceId:    int32(actionMap.ServiceId),
+		FuncId:       int32(actionMap.FuncId),
 		Content:      string(requestLoginMarshal),
 	}
 
@@ -146,28 +148,32 @@ func GateClientTcp() {
 	if err != nil {
 		global.V.Zap.Fatal("net.Listen err :" + err.Error())
 	}
+	util.MyPrint("dns: ", dns)
 
 	contentBytes := GetSendLoginMsg()
+	util.MyPrint("fd.Write len:", len(contentBytes))
 	n, err := fd.Write(contentBytes)
 	if err != nil {
 		global.V.Zap.Fatal("fd.write err :" + err.Error())
 	}
 	global.V.Zap.Info("write n:" + strconv.Itoa(n))
 
-	input := bufio.NewReader(os.Stdin)
+	//input := bufio.NewReader(os.Stdin)
 	for {
-		bytes, _, err := input.ReadLine()
+		util.MyPrint("once....")
+		//reader := bufio.NewReader(fd)
+		//reader.Size()
+		buf := make([]byte, 1024)
+		r_len, err := fd.Read(buf)
 		if err != nil {
 			global.V.Zap.Fatal("read line faild err:%v\n" + err.Error())
 		}
-		str := string(bytes)
-		util.MyPrint("read:", string(str))
-		//n, err := conn.Write(bytes)
-		//if err != nil {
-		//	fmt.Printf("send data faild err:%v\n", err)
-		//} else {
-		//	fmt.Printf("send data length %d\n", n)
-		//}
-		time.Sleep(time.Second * 1)
+
+		//bytes, _, err := reader.ReadLine("\f")
+
+		//str := string(bytes)
+		util.MyPrint("loop read len:", r_len, "bytes:", buf[0:r_len], " ,str:", string(buf))
+
+		time.Sleep(time.Millisecond * 100)
 	}
 }

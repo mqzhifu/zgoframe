@@ -15,7 +15,7 @@ func DoMySelf() {
 //Gateway()
 func DoTestAction(flag string) {
 	//util.GetHTTPBaseAuth()
-
+	util.MyPrint("=======================", flag)
 	switch flag {
 	case "alert":
 		global.V.MyService.Alert.Send(6, "商品库存不足，请及时补充货源", "warning")

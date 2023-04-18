@@ -49,7 +49,7 @@ func (gateway *Gateway) NativeServiceFuncRouter(msg pb.Msg) (data interface{}, e
 		err = util.ConnParserContentMsg(msg, &requestClientPing)
 	case "CS_Heartbeat": //心跳
 		err = util.ConnParserContentMsg(msg, &requestClientHeartbeat)
-	case "SC_ProjectPushMsg": //某个服务想给其它服务推送消息
+	case "CS_ProjectPushMsg": //某个服务想给其它服务推送消息
 		err = util.ConnParserContentMsg(msg, &requestProjectPushMsg)
 	case "SC_SendMsg": //这个方法特殊，msg.content 的值是可能是各种类型，虽然可以用msg.sourceService + msg.sourceFunc 解出来，但意义不在，不解了，后面也是直接发送出去了
 		//err = util.ConnParserContentMsg(msg, &requestSendMsg)

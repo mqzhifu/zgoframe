@@ -20,7 +20,8 @@ service Gateway {
     rpc SC_Pong             (PongRes)           returns (PingReq) {}//S端测试RTT
     rpc SC_Heartbeat        (Heartbeat)         returns (Empty) {}//心跳
     rpc SC_KickOff          (KickOff)           returns (Empty) {}//该玩家在其它地方登陆，踢掉了当前连接
-    rpc SC_ProjectPushMsg   (ProjectPushMsg)    returns (Empty) {}//service通知网关，给某些用户推送消息
+    rpc CS_ProjectPushMsg   (ProjectPushMsg)    returns (Empty) {}//客户端(也可能是service) 通知网关，给某些用户推送(普通)消息
+    rpc SC_ProjectPushMsg   (ProjectPushMsg)    returns (Empty) {}//服务端推送消息，给某些用户推送消息
     rpc SC_SendMsg          (Msg)               returns (Empty) {}//service 通知网关，给某些用户发送特定消息
 
 }

@@ -39,8 +39,9 @@
 90116|Gateway|SC_Pong|PongRes|PingReq|S端测试RTT
 90118|Gateway|SC_Heartbeat|Heartbeat|Empty|心跳
 90120|Gateway|SC_KickOff|KickOff|Empty|该玩家在其它地方登陆，踢掉了当前连接
-90122|Gateway|SC_ProjectPushMsg|ProjectPushMsg|Empty|service通知网关，给某些用户推送消息
-90124|Gateway|SC_SendMsg|Msg|Empty|service 通知网关，给某些用户发送特定消息
+90122|Gateway|CS_ProjectPushMsg|ProjectPushMsg|Empty|客户端(也可能是service) 通知网关，给某些用户推送(普通)消息
+90124|Gateway|SC_ProjectPushMsg|ProjectPushMsg|Empty|服务端推送消息，给某些用户推送消息
+90126|Gateway|SC_SendMsg|Msg|Empty|service 通知网关，给某些用户发送特定消息
 12100|TwinAgora|CS_Heartbeat|Heartbeat|Empty|心跳
 12102|TwinAgora|CS_CallPeople|CallPeopleReq|Empty|客户端(眼镜端)呼叫某人/某些人，进行：音视频通话
 12104|TwinAgora|CS_CancelCallPeople|CancelCallPeopleReq|Empty|取消呼叫，之前客户端呼叫某人/某些人，进行：音视频通话，突然放弃了

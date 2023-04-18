@@ -89,10 +89,11 @@ func (gateway *Gateway) NativeServiceFuncRouter(msg pb.Msg) (data interface{}, e
 	case "FdClose":
 		gateway.BroadcastService("FdClose", msg)
 	case "CS_Ping":
-		//requestClientPing.SourceUid = conn.UserId
+		util.MyPrint("CS_Ping msg.SourceFuncId:", msg.SourceFuncId)
+		requestClientPing.SourceUid = msg.SourceUid
 		gateway.clientPing(requestClientPing)
 	case "CS_Pong":
-		//requestClientPong.SourceUid = conn.UserId
+		requestClientPong.SourceUid = msg.SourceUid
 		gateway.ClientPong(requestClientPong)
 	case "CS_Heartbeat":
 		util.MyPrint("", msg.SourceUid)
@@ -104,7 +105,7 @@ func (gateway *Gateway) NativeServiceFuncRouter(msg pb.Msg) (data interface{}, e
 		requestClientHeartbeatStrByte, _ := gateway.Netway.ConnManager.CompressContent(&requestClientHeartbeat, msg.SourceUid)
 		msgN, _, _ := gateway.Netway.ConnManager.MakeMsgByServiceFuncName(msg.SourceUid, "Gateway", "CS_Heartbeat", requestClientHeartbeatStrByte)
 		gateway.BroadcastService("CS_Heartbeat", msgN)
-	case "SC_ProjectPushMsg":
+	case "CS_ProjectPushMsg": //某个服务要给其它服务推送消息
 		TargetUidArr := strings.Split(requestProjectPushMsg.TargetUids, ",")
 		uids := []int{}
 		gateway.Log.Debug("SC_ProjectPushMsg ,TargetUids:" + requestProjectPushMsg.TargetUids)

@@ -51,6 +51,10 @@ func (gateway *Gateway)SC_KickOff(ctx context.Context,kickOff *pb.KickOff) (*pb.
     empty := &pb.Empty{}
     return empty,nil
 }
+func (gateway *Gateway)CS_ProjectPushMsg(ctx context.Context,projectPushMsg *pb.ProjectPushMsg) (*pb.Empty,error){
+    empty := &pb.Empty{}
+    return empty,nil
+}
 func (gateway *Gateway)SC_ProjectPushMsg(ctx context.Context,projectPushMsg *pb.ProjectPushMsg) (*pb.Empty,error){
     empty := &pb.Empty{}
     return empty,nil

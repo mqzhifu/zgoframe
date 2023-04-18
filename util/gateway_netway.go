@@ -308,6 +308,8 @@ func (netWay *NetWay) loginPreFailedSendMsg(msg string, closeSource int, conn *C
 
 //首次建立连接，登陆验证，预处理
 func (netWay *NetWay) loginPre(conn *Conn) (jwt request.CustomClaims, firstMsg pb.Msg, err error) {
+	//这里有个BUG，如果C端连接成功后，并没有立刻发消息过来
+	//conn.Read 函数会阻塞，后面不会执行，有点TCP 半连接的意思，也不超时
 	content, err := conn.Read() //先从socket FD中读取一次数据
 	if err != nil {
 		netWay.loginPreFailedSendMsg(err.Error(), CLOSE_SOURCE_FD_READ_EMPTY, conn)

@@ -143,8 +143,11 @@ func (gateway *Gateway) heartbeat(requestClientHeartbeat pb.Heartbeat) {
 }
 
 func (gateway *Gateway) clientPing(ping pb.PingReq) {
-	conn, _ := gateway.Netway.ConnManager.GetConnPoolById(ping.SourceUid)
-
+	conn, exist := gateway.Netway.ConnManager.GetConnPoolById(ping.SourceUid)
+	if !exist {
+		gateway.Log.Error("clientPing conn empty uid:" + strconv.Itoa(int(ping.SourceUid)))
+		return
+	}
 	responseServerPong := pb.PongRes{
 		ClientReqTime:      ping.ClientReqTime,
 		ClientReceiveTime:  ping.ClientReceiveTime,

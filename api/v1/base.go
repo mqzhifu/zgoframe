@@ -4,7 +4,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/mojocn/base64Captcha"
 	"go.uber.org/zap"
-	"io/ioutil"
 	"strconv"
 	"zgoframe/core/global"
 	httpmiddleware "zgoframe/http/middleware"
@@ -378,14 +377,14 @@ func ParserToken(c *gin.Context) {
 // @Success 200 {object} httpresponse.LoginResponse
 // @Router /base/login [post]
 func Login(c *gin.Context) {
-	body, err := ioutil.ReadAll(c.Request.Body)
-	util.MyPrint(string(body))
+	//body, err := ioutil.ReadAll(c.Request.Body)
+	//util.MyPrint(string(body))
 	var L request.Login
 	c.ShouldBind(&L)
-	if err := util.Verify(L, util.LoginVerify); err != nil {
-		httpresponse.FailWithMessage(err.Error(), c)
-		return
-	}
+	//if err := util.Verify(L, util.LoginVerify); err != nil {
+	//	httpresponse.FailWithMessage(err.Error(), c)
+	//	return
+	//}
 	//if store.Verify(L.CaptchaId, L.Captcha, true) {
 	//先从DB中做比对
 	U := &model.User{Username: L.Username, Password: L.Password}

@@ -522,6 +522,8 @@ CREATE TABLE `operation_record` (
 --
 -- Table structure for table `project`
 --
+INSERT INTO `project` VALUES (14,'120',1,'120眼镜','ck120T789!@#',1,'im120doctor',7,'',1650001049,1650001049,NULL);
+INSERT INTO `project` VALUES (15,'120',1,'120WEB','ck120Ta!3D$)',1,'im120User',4,'',1650001049,1650001049,NULL);
 
 DROP TABLE IF EXISTS `project`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;

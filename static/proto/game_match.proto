@@ -1,0 +1,46 @@
+syntax = "proto3";
+
+import "common.proto";
+
+package pb;
+option go_package ="./;pb";
+
+service GameMatch {
+
+    rpc CS_PlayerMatchSign         ( GameMatchSign)        returns (Empty) {}//玩家匹配报名
+    rpc CS_PlayerMatchSignCancel   ( GameMatchPlayerCancel)  returns (Empty) {}//玩家匹配取消报名
+    rpc CS_Heartbeat    (Heartbeat)    returns (Empty) {}//心跳
+
+    rpc SC_GameMatchOptResult   ( GameMatchOptResult) returns (Empty) {}//玩家报名(匹配)结果(成功/失败)
+    rpc SC_Heartbeat         (Heartbeat)    returns (Empty) {}//心跳
+
+    rpc FdClose             (FDCloseEvent)    returns (Empty) {}//C端长连接关闭，这个并不是C端发起的请求，而是网关获取事件，直接推送到后端服务的
+    rpc FdCreate            (FDCreateEvent)   returns (Empty) {}//C端建立了长连接，并已经登陆成功
+}
+
+message GameMatchSign{
+    int32       source_uid                      = 1;
+    int32       rule_id                         = 2;
+    int32       group_id                        = 3;
+    string      addition                        = 4;
+    repeated    GameMatchSignPlayer player_sets = 5;
+}
+
+message GameMatchSignPlayer{
+	int32               uid         = 1;
+    map<string, int32>    weight_attr = 2;
+}
+
+message GameMatchPlayerCancel{
+    int32   source_uid  = 1;
+    int32   rule_id     = 2;
+    int32   group_id    = 3;
+}
+
+message GameMatchOptResult{
+    int32   source_uid  = 1;
+    int32   group_id    = 2;
+    string  msg         = 3;
+    string  roomId      = 4;
+    int32   code        = 5;
+}

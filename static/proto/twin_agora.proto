@@ -1,0 +1,91 @@
+syntax = "proto3";
+
+package pb;
+option go_package ="./;pb";
+
+import "common.proto";
+
+service TwinAgora {
+    rpc CS_Heartbeat           (Heartbeat)              returns (Empty) {}//心跳
+    rpc CS_CallPeople          (CallPeopleReq)          returns (Empty) {}//客户端(眼镜端)呼叫某人/某些人，进行：音视频通话
+    rpc CS_CancelCallPeople    (CancelCallPeopleReq)    returns (Empty) {}//取消呼叫，之前客户端呼叫某人/某些人，进行：音视频通话，突然放弃了
+    rpc CS_PeopleEntry         (PeopleEntry)            returns (Empty) {}//某人进入了一个房间/频道
+    rpc CS_PeopleLeave         (PeopleLeaveRes)         returns (Empty) {}//某人离开了一个房间/频道
+    rpc CS_CallPeopleAccept    (CallVote)               returns (Empty) {}//被呼叫者-接收此次请求
+    rpc CS_CallPeopleDeny      (CallVote)               returns (Empty) {}//被呼叫者-拒绝此次请求
+    rpc CS_RoomHeartbeat       (RoomHeartbeatReq)       returns (Empty) {}//一个房间的心跳，因为使用声网，后端无法感知
+
+    rpc SC_CallPeople          (CallPeopleRes)          returns (Empty) {}//返回：呼叫者，刚刚呼叫的结果
+    rpc SC_CancelCallPeople    (CancelCallPeopleReq)    returns (Empty) {}//告知<被呼叫者>：之前的呼叫失效，呼叫者突然放弃了
+    rpc SC_PeopleEntry         (PeopleEntry)            returns (Empty) {}//某人进入了一个房间/频道，通知给C端
+    rpc SC_PeopleLeave         (PeopleLeaveRes)         returns (Empty) {}//告知房间里的人：有人离开了一个房间/频道
+    rpc SC_CallReply           (CallReply)              returns (Empty) {}//S端-通知专家端，有新的呼叫，请做出应答/选择
+    rpc SC_CallPeopleAccept    (CallVote)               returns (Empty) {}//告诉其它端，专家端已接收
+    rpc SC_CallPeopleDeny      (CallVote)               returns (Empty) {}//告诉其它端，专家端已拒绝
+
+    rpc FdClose                 (FDCloseEvent)          returns (Empty) {}//C端长连接关闭，这个并不是C端发起的请求，而是网关获取事件，直接推送到后端服务的
+    rpc FdCreate                (FDCreateEvent)         returns (Empty) {}//C端建立了长连接，并已经登陆成功
+
+}
+
+//房间心跳
+message RoomHeartbeatReq{
+    int32   source_uid  = 1;//发送者UID
+    int64   time        = 2;
+    string  room_id     = 3;
+    int32   uid         = 4;
+}
+//呼叫某人，加入一个房间，进行：音视频通话
+message CancelCallPeopleReq{
+    int32   source_uid      = 1;//发送者UID
+	int32   uid 	        = 2;//发起者UID,长连接其实已经确定了UID，这里不写也行
+	string  room_id         = 3;//房间ID
+}
+//专家发出应答选择
+message CallVote{
+    int32   source_uid      = 1;//发送者UID
+	int32   uid 	        = 2;//发起者UID,长连接其实已经确定了UID，这里不写也行
+	string  room_id         = 3;//房间ID
+}
+//呼叫某人，加入一个房间，进行：音视频通话
+message CallPeopleReq{
+    int32   source_uid      = 1;//发送者UID
+	int32   uid 	        = 2;//发起者UID,长连接其实已经确定了UID，这里不写也行
+	int32   target_uid      = 3;//希望指定用户，进行音视频-通话
+	string  channel 	    = 4;//双方进入某个特定的频道(可以为空,由后端随机生成一个,能发送给双方)
+	int32   people_type 	= 5;//呼叫人群类型：1 呼叫所有人，2 按照<小组>呼叫 3 用户自己指定呼叫的人
+	int32   people_role 	= 6;//呼叫人群角色：1普通用户2专家
+}
+//给发发起呼叫者，做出应答
+message CallPeopleRes{
+    int32   source_uid      = 1;//发送者UID
+	string  receive_uid 	= 2;//已接收呼叫的用户ID
+	string  channel 	    = 3;//双方进入某个特定的频道(可以为空,由后端随机生成一个,能发送给双方)
+	int32   err_code        = 4;//0,没有错误，1所有专家均不在线，请等待一会，重新呼叫
+	string  err_msg 	    = 5;//错误消息
+	string  room_id         = 6;//roomId,C端呼叫验证通过后会创建一个虚拟的房间号
+}
+//某人进入了一个房间/频道，通知给C端
+message PeopleEntry{
+    int32   source_uid      = 1;//发送者UID
+	int32   uid 	        = 2;//发起者UID,长连接其实已经确定了UID，这里不写也行
+	string  channel 	    = 3;//双方进入某个特定的频道(可以为空,由后端随机生成一个,能发送给双方)
+	string  room_id         = 4;//房间ID
+}
+//某人进入了一个房间/频道，通知给C端
+message PeopleLeaveRes{
+    int32   source_uid      = 1;
+	int32   uid 	        = 2;//发起者UID,长连接其实已经确定了UID，这里不写也行
+	string  channel 	    = 3;//双方进入某个特定的频道(可以为空,由后端随机生成一个,能发送给双方)
+	string  room_id         = 4;//房间ID
+}
+//给某人推送一条消息
+message CallReply{
+    int32   source_uid      = 1;//发送者UID
+	int32   send_uid 	    = 2;//发起者UID，如果是系统发送：uid=99999
+	int32   target_uid      = 3;//收消息的UID
+	string  content 	    = 4;//消息具体的内容，这里可以自定义成json格式
+	int32   msg_type 	    = 5;//消息分类
+	string  room_id         = 6;//房间ID
+}
+

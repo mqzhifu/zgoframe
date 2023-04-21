@@ -1,61 +1,54 @@
 syntax = "proto3";
 
+//import "google/protobuf/any.proto";
 import "common.proto";
 
 package pb;
 option go_package ="./;pb";
 
-
 service Gateway {
+    rpc FdClose             (FDCloseEvent)    returns (Empty) {}//C端长连接关闭，这个并不是C端发起的请求，而是网关获取事件，直接推送到后端服务的
+    rpc FdCreate            (FDCreateEvent)   returns (Empty) {}//C端建立了长连接，并已经登陆成功
 
-    rpc CS_Login             (Login)        returns (LoginRes) {}//登陆
-    rpc CS_Ping              (Ping)         returns (Pong) {}//客户端PING服务端
-    rpc CS_Pong              (Pong)         returns (Pong) {}//C端响应S端PIN
-    rpc CS_Heartbeat         (Heartbeat)    returns (Empty) {}//心跳
+    rpc CS_Login            (Login)             returns (LoginRes) {}//登陆
+    rpc CS_Ping             (PingReq)           returns (PongRes) {}//客户端PING服务端
+    rpc CS_Pong             (PongRes)           returns (PingReq) {}//C端响应S端PIN
+    rpc CS_Heartbeat        (Heartbeat)         returns (Empty) {}//心跳
 
-    rpc SC_Login             (LoginRes)     returns (Empty) {}//登陆
-    rpc SC_Ping              (Ping)         returns (Pong) {}//S端测试RTT
-    rpc SC_Pong              (Pong)         returns (Pong) {}//S端测试RTT
-    rpc SC_Heartbeat         (Heartbeat)    returns (Empty) {}//心跳
-    rpc SC_KickOff           (KickOff)      returns (Empty) {}//该玩家在其它地方登陆，踢掉了当前连接
-
-    rpc SC_ProjectPush       (ProjectPush)  returns (ProjectPush) {}//service通知网关，给某些用户推送消息
+    rpc SC_Login            (LoginRes)          returns (Empty) {}//登陆
+    rpc SC_Ping             (PingReq)           returns (PongRes) {}//S端测试RTT
+    rpc SC_Pong             (PongRes)           returns (PingReq) {}//S端测试RTT
+    rpc SC_Heartbeat        (Heartbeat)         returns (Empty) {}//心跳
+    rpc SC_KickOff          (KickOff)           returns (Empty) {}//该玩家在其它地方登陆，踢掉了当前连接
+    rpc CS_ProjectPushMsg   (ProjectPushMsg)    returns (Empty) {}//客户端(也可能是service) 通知网关，给某些用户推送(普通)消息
+    rpc SC_ProjectPushMsg   (ProjectPushMsg)    returns (Empty) {}//服务端推送消息，给某些用户推送消息
+    rpc SC_SendMsg          (Msg)               returns (Empty) {}//service 通知网关，给某些用户发送特定消息
 
 }
 
-
-message Heartbeat{
-    int64 time = 1;
-}
-
-message ProjectPush{
-    string  project_id  = 1;
-    string  msg         = 2;
-    string  target_uids = 3;
-    string  action_id   = 4;
-    string  service_id  = 5;
+//长连接传输内容：一条标准的内容
+message Msg{
+    int32   id                  = 1;//未使用，保留
+    int32   source_uid          = 2;//来源UID，socket 基类在收包
+    int32   target_uid          = 3;//后端要给前端推送消息时，得用网关服务中转，同时要把C端的UID打进去
+    int32   sid_fid             = 4;//无实际用，方便开发，service_id+func_id
+    int32   data_length         = 5;//内容的总长度
+    int32   content_type        = 6;//内容类型
+    int32   protocol_type       = 7;//协议类型
+    int32   service_id          = 8;//服务ID
+    int32   func_id             = 9;//函数ID
+    string  reserved            =10;//保留字段，未使用，后期可存sessionId
+    string  content             =11;//具体传输内容
+    string  end_char            =12;//包结束字符，用于TCP粘包，无实际作用，只是保证消息完整性
+    int32   source_service_id   =13;//来源服务ID，后端要给前端推送消息时，得用网关服务中转
+    int32   source_func_id      =14;//来源函数ID，后端要给前端推送消息时，得用网关服务中转
+    //google.protobuf.Any source_content = 15;
 }
 
 message Login{
-    string token = 1;
+    int32   source_uid  = 1;
+    string  token       = 2;
 }
-
-message Pong{
-    int64 add_time              = 1;
-    int64 client_receive_time   = 2;
-    int64 server_response_time   = 3;
-    int64 rtt_timeout           = 4;
-    int32 rtt_times             = 5;
-}
-
-message Ping{
-    int64 add_time                = 1;
-    int64 client_receive_time     = 2;
-    int64 server_response_time    = 3;
-    int64 rtt_timeout             = 4;
-    int32 rtt_times               = 5;
-}
-
 
 message LoginRes{
     int32   code        = 1;
@@ -63,70 +56,52 @@ message LoginRes{
     int32   uid         = 3;
 }
 
+message ProjectPushMsg{
+    int32   type                = 1;//分类ID，保留，暂不用
+    int32   source_uid          = 2;//来源用户ID
+    int32   source_project_id   = 3;//来源项目ID
+    int32   target_project_id   = 4;//目标项目ID
+    string  target_uids         = 5;//目标用户ID列表
+    string  content             = 6;//消息内容
+}
+
 message KickOff{
-    int64 time = 1;
+    int32   source_uid  = 1;
+    int64   time        = 2;
 }
-
-
-message Msg{
-    int32   data_length      = 1;
-    int32   content_type     = 2;
-    int32   protocol_type    = 3;
-
-    int32   action_id        = 4;
-    int32   service_id       = 5;
-
-    string  action           = 6;
-    string  content          = 7;
-
-    string  reserved         = 8;
-}
-
-
-
-
-
 
 message CfgServer{
-    	string  ListenIp            = 1;
-    	string  OutIp               = 2;
-    	string  HttpdRootPath       = 3;
-    	string  HttpPort            = 4;
-    	string  WsPort              = 5;
-    	string  UdpPort             = 6;
-    	int32   Protocol            = 7;
-    	string  WsUri               = 8;
-    	int32   ContentType         = 9;
-
-    	string  LoginAuthType       =10;
-    	string  LoginAuthSecretKey  =11;
-
-    	int32   MaxClientConnNum    =12;
-    	int32   MsgContentMax       =13;
-    	int64   IOTimeout           =14;
-    	int32   ConnTimeout         =15;
-
-    	int32   MapSize             =16;
-    	int32   RoomPeople          =17;
-    	int32   RoomTimeout         =18;
-    	int32   OffLineWaitTime     =19;
-
-    	int32   LockMode            =20;
-    	int32   FPS                 =21;
-    	int32   RoomReadyTimeout    =22;
-    	int32   Store               =23;
-    	string  TcpPort             =24;
+    string  ListenIp            = 1;
+    string  OutIp               = 2;
+    string  OutDomain           = 3;
+    string  WsPort              = 4;
+    string  TcpPort             = 5;
+    string  UdpPort             = 6;
+    string  WsUri               = 7;
+    int32   DefaultProtocolType = 8;
+    int32   DefaultContentType  = 9;
+    string  LoginAuthType       =10;
+    string  LoginAuthSecretKey  =11;
+    int32   MaxClientConnNum    =12;
+    int32   MsgContentMax       =13;
+    int64   IOTimeout           =14;
+    int32   ConnTimeout         =15;
+    int32   ClientHeartbeatTime =16;
+    int32   ServerHeartbeatTime =17;
 }
 
-message CfgProtocolActions{
-    map<int32,CfgActions> client = 1;
-    map<int32,CfgActions> server = 2;
+message CfgProtoMap{
+    map<int32,CfgProtoServiceFunc> client = 1;
+    map<int32,CfgProtoServiceFunc> server = 2;
 }
 
-message CfgActions{
-    int32 id        = 1;
-    string action   = 2;
-    string desc     = 3;
-    string demo     = 4;
+message CfgProtoServiceFunc{
+    int32   id          = 1;
+    string  service_id  = 2;
+    string  func_id     = 3;
+    string  func_name   = 4;
+    string  response    = 6;
+    string  request     = 7;
+    string  desc        = 8;
+    string  demo        = 9;
 }
-

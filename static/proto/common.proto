@@ -3,25 +3,52 @@ syntax = "proto3";
 package pb;
 option go_package ="./;pb";
 
+//有些函数，没有返回值，统一定义一个，方便处理
 message Empty {
 
 }
 
-message Common{
-    string request_id  = 1 ;
-    string trace_id  = 2 ;
-    int64 client_req_time = 3 ;
-    int64 client_receive_time = 4 ;
-    int64 server_receive_time = 5 ;
-    int64 server_response_time = 6 ;
+//心跳，长连接保活。(不要与PING混淆)
+message Heartbeat{
+    int32   source_uid              = 1 ;
+    int64   time                    = 2 ;//这个字段不用了，用下面的字段，但保留
+    int64   req_time                = 3 ;//这个字段不用了，用下面的字段，但保留
+    int64   client_req_time         = 4 ;
+    int64   client_receive_time     = 5 ;
+    int64   server_receive_time     = 6 ;
+    int64   server_response_time    = 7 ;
+    string  request_id              = 8 ;
 }
 
+message FDCloseEvent {
+    int32 source_uid    = 1;
+    int32 user_id       = 2;
+    int32 source        = 3;
+    int32 content_type  = 4;
+    int32 protocol_type = 5;
+}
 
-message CommonHeader{
-    string  request_id  = 1 ;
-    string  trace_id  = 2 ;
-    int64   client_req_time = 3 ;
-    int64   client_receive_time = 4 ;
-    int64   server_receive_time = 5 ;
-    int64   server_response_time = 6 ;
+message FDCreateEvent {
+    int32 source_uid    = 1;
+    int32 user_id       = 2;
+}
+
+message PingReq{
+    int32   source_uid              = 1 ;
+    string  request_id              = 2 ;
+    string  trace_id                = 3 ;
+    int64   client_req_time         = 4 ;
+    int64   client_receive_time     = 5 ;
+    int64   server_receive_time     = 6 ;
+    int64   server_response_time    = 7 ;
+}
+
+message PongRes{
+    int32   source_uid              = 1 ;
+    string  request_id              = 2 ;
+    string  trace_id                = 3 ;
+    int64   client_req_time         = 4 ;
+    int64   client_receive_time     = 5 ;
+    int64   server_receive_time     = 6 ;
+    int64   server_response_time    = 7 ;
 }

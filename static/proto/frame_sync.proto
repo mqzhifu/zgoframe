@@ -7,162 +7,154 @@ option go_package ="./;pb";
 
 
 service FrameSync {
-
+    rpc CS_PlayerReady             ( PlayerReady)           returns (Empty) {}//匹配成功/进入文章后，玩家需要再次确认：准备
     rpc CS_PlayerOperations        ( LogicFrame )           returns (Empty) {}//玩家推送操作记录
-    rpc CS_PlayerResumeGame        ( PlayerResumeGame)       returns (Empty) {}//掉线恢复游戏
-    rpc CS_PlayerReady             ( PlayerReady)            returns (Empty) {}//玩家报名/准备
-    rpc CS_PlayerOver              ( PlayerOver)             returns (Empty) {}//玩家死亡
-    rpc CS_RoomHistory             ( RoomHistory)            returns (Empty) {}//房间历史记录，如：玩家操作信息
-    rpc CS_RoomBaseInfo            ( RoomBaseInfo)           returns (Empty) {}//获取一个房间的基础信息
-    rpc CS_PlayerMatchSign         ( PlayerMatchSign)        returns (Empty) {}//玩家匹配报名
-    rpc CS_PlayerMatchSignCancel   ( PlayerMatchSignCancel)  returns (Empty) {}//玩家匹配取消报名
+    rpc CS_PlayerResumeGame        ( PlayerResumeGame)      returns (Empty) {}//掉线恢复游戏
+    rpc CS_PlayerOver              ( PlayerOver)            returns (Empty) {}//玩家死亡
+    rpc CS_RoomHistory             ( ReqRoomHistory)        returns (Empty) {}//房间历史记录，如：玩家操作信息
+    rpc CS_RoomBaseInfo            ( RoomBaseInfo)          returns (Empty) {}//获取一个房间的基础信息
+    rpc CS_PlayerState             ( PlayerBase)          returns (Empty) {}//获取一个玩家当前的状态
+    rpc CS_Heartbeat    (Heartbeat)    returns (Empty) {}//心跳
 
-    rpc SC_PlayerMatchSignFailed   ( PlayerMatchSignFailed) returns (Empty) {}//玩家报名(匹配)失败
-    rpc SC_PlayerMatchingFailed    ( PlayerMatchingFailed)  returns (Empty) {}//玩家匹配失败(可能超时，可能人不够组团)
+    rpc SC_ReadyTimeout            ( ReadyTimeout)          returns (Empty) {}//准备超时
     rpc SC_EnterBattle             ( EnterBattle)           returns (Empty) {}//开始游戏前初始化
     rpc SC_LogicFrame              ( LogicFrame)            returns (Empty) {}//推送逻辑帧
-    rpc SC_RoomHistory             ( RoomHistory)           returns (Empty) {}//推送逻辑帧
+    rpc SC_RoomHistory             ( RoomHistorySets)       returns (Empty) {}//推送一个房间的所有玩家操作帧
     rpc SC_RoomBaseInfo            ( RoomBaseInfo)          returns (Empty) {}//房间信息
     rpc SC_OtherPlayerOffline      ( OtherPlayerOffline)    returns (Empty) {}//其它玩家掉线
     rpc SC_OtherPlayerOver         ( PlayerOver)            returns (Empty) {}//其它玩家已死亡
     rpc SC_OtherPlayerResumeGame   ( PlayerResumeGame)      returns (Empty) {}//通知其它玩家，有玩家断线后已恢复
-    rpc SC_ReadyTimeout            ( ReadyTimeout)          returns (Empty) {}//准备超时
     rpc SC_StartBattle             ( StartBattle)           returns (Empty) {}//开始战斗
     rpc SC_RestartGame             ( RestartGame)           returns (Empty) {}//玩家均已在线，重新开始游戏
     rpc SC_GameOver                ( GameOver)              returns (Empty) {}//一局游戏结束
+    rpc SC_PlayerState             ( PlayerState)           returns (Empty) {}//一个玩家当前的状态
+    rpc SC_Heartbeat               (Heartbeat)    returns (Empty) {}//心跳
+
+    rpc FdClose             (FDCloseEvent)    returns (Empty) {}//C端长连接关闭，这个并不是C端发起的请求，而是网关获取事件，直接推送到后端服务的
+    rpc FdCreate            (FDCreateEvent)   returns (Empty) {}//C端建立了长连接，并已经登陆成功
 }
+
 message RoomBaseInfo{
-    string  id 	                = 1;
+    int32       source_uid          = 1;
+    string      id 	                = 2;
+    int32       add_time            = 3;
+    int32       status              = 4;
+    int32       timeout 	        = 5;
+    int32       sequence_number     = 6;
+    int32       rand_seek           = 7;
+    repeated    int32 player_ids    = 8;
+    string      room_id             = 9;
+    int32       start_time          =10;
+    int32       end_time 	        =11;
+}
+
+message PlayerBase{
+    int32   source_uid        = 1;
+    int32   player_id         = 2;
+}
+
+message PlayerState{
+    int32   player_id           = 1;
     int32   add_time            = 2;
     int32   status              = 3;
-    int32   timeout 	        = 4;
-    int32   sequence_number     = 5;
-    int32   rand_seek           = 6;
-    repeated Player player_list = 7;
-    string  room_id             = 8;
-    int32   start_time          = 9;
-    int32   end_time 	        =10;
+    string  room_id             = 4;
 }
 
 message PlayerResumeGame{
-    int32 player_id         = 1;
-    string room_id          = 2;
-    int32 sequence_number   = 3;
+    int32 source_uid        = 1;
+    int32 player_id         = 2;
+    string room_id          = 3;
+    int32 sequence_number   = 4;
 }
-
-message PlayerMatchSign{
-    int32 player_id = 1;
-}
-
 
 message PlayerReady{
-    int32 player_id     = 1;
-    string room_id      = 2;
+    int32 source_uid    = 1;
+    int32 player_id     = 2;
+    string room_id      = 3;
+}
+
+message ReqRoomHistory{
+    int32 source_uid            = 1;
+    int32 player_id             = 2;
+    string room_id              = 3;
+    int32 sequence_numberStart  = 4;
+    int32 sequence_numberEnd    = 5;
+}
+
+message RoomHistorySets{
+    int32   source_uid          = 1;
+    repeated RoomHistory Sets   = 2;
 }
 
 message RoomHistory{
-    int32 player_id             = 1;
-    string room_id              = 2;
-    int32 sequence_numberStart  = 3;
-    int32 sequence_numberEnd    = 4;
-}
-
-//message RoomHistory{
-//	int32  id      = 1;
-//	string action  = 2;
-//	string content = 3;
-//}
-
-message PlayerMatchSignCancel{
-    int32 player_id = 1;
+    int32 source_uid    = 1;
+	int32  id           = 2;
+	string action       = 3;
+	string content      = 4;
 }
 
 message GameOver{
-    int32 player_id         = 1;
-    string room_id          = 2;
-    int32 sequence_number   = 3;
-    string result           = 4;
+    int32   source_uid      = 1;
+    int32   player_id       = 2;
+    string  room_id         = 3;
+    int32   sequence_number = 4;
+    string  result          = 5;
 }
 
 message PlayerOver{
-    int32 player_id = 1;
-    int32 sequence_number   = 2;
+    int32   source_uid        = 1;
+    int32   player_id         = 2;
+    int32   sequence_number   = 3;
+    string  room_id           = 4;
 }
 
 message OtherPlayerOffline{
-    int32 player_id = 1;
+    int32 source_uid    = 1;
+    int32 player_id     = 2;
 }
 
 message StartBattle{
-    int32 sequence_number_start = 1;
+    int32 source_uid            = 1;
+    int32 sequence_number_start = 2;
 }
 
 message EnterBattle{
-    int32   rand_seek           = 1;
-    string  room_id             = 2;
-    int32   sequence_number     = 3;
-    int32   status              = 4;
-    int32   add_time            = 5;
-    int64   time                = 6;
-
-    repeated Player player_list = 7;
-
-    string  udp_port            = 8;
+    int32       source_uid          = 1;
+    int32       rand_seek           = 2;
+    string      room_id             = 3;
+    int32       sequence_number     = 4;
+    int32       status              = 5;
+    int32       add_time            = 6;
+    int64       time                = 7;
+    string      udp_port            = 8;
+    repeated    int32 player_ids    = 9;
 }
 
 message LogicFrame{
-	int32 id 	                    = 1;
-	string room_id 		            = 2;
-	int32 sequence_number           = 3;
-	repeated LogicFrame operations   = 4;
+    int32       source_uid          = 1;
+	int32       id 	                = 2;
+	string      room_id 		    = 3;
+	int32       sequence_number     = 4;
+	repeated    Operation operations= 5;
 }
 
-
-
+message Operation{
+    int32   source_uid  = 1;
+	int32   id 	        = 2;
+	string  event 	    = 3;
+	string  value 	    = 4;
+	int32   player_id 	= 5;
+}
 
 message ReadyTimeout{
-    string room_id      = 1;
-}
-
-
-
-message Player{
-    int32   id            = 1;
-    string  username      = 2;
-    string  nickname      = 3;
-    int32   status        = 4;
-    int32   add_time      = 5;
-    int32   upTime        = 6;
-    string  room_id       = 7;
-    string  session_id    = 8;
-    int32   timeout       = 9;
-    int32   content_type  = 10;
-    int32   protocol_type = 11;
-}
-
-message PlayerStatus{
-    int32   id            = 1;
-    string  nickname      = 2;
-    int32   status        = 3;
-    string  room_id       = 4;
-    int32   add_time      = 5;
-    int32   up_time       = 6;
+    int32   source_uid      = 1;
+    string  room_id         = 2;
 }
 
 message RestartGame{
-    string      room_id             = 1;
-    repeated    int32 player_ids    = 2;
+    int32       source_uid          = 1;
+    string      room_id             = 2;
+    repeated    int32 player_ids    = 3;
 }
 
-message PlayerMatchSignFailed{
-    int32   player_id   = 1;
-    string  msg         = 2;
-    int32   code        = 3;
-}
 
-message PlayerMatchingFailed{
-    int32   player_id   = 1;
-    string  msg         = 2;
-    string  roomId      = 3;
-    int32   code        = 4;
-}

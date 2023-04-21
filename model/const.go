@@ -54,7 +54,9 @@ const (
 	PLATFORM_ANDROID_APP        = 32 //安卓手机APP
 	PLATFORM_IOS_H5_BROWSER     = 41 //IOS手机浏览器
 	PLATFORM_IOS_APP            = 42 //IOS手机APP
+	PLATFORM_AR                 = 51 //ar眼镜
 	PLATFORM_UNKNOW             = 99 //未知
+
 )
 
 func GetConstListPlatform() map[string]int {

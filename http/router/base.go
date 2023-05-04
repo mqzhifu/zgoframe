@@ -34,6 +34,8 @@ func Base(Router *gin.RouterGroup) {
 		BaseRouter.POST("check/username", v1.CheckUsernameExist)
 		//检查token正确性
 		BaseRouter.POST("parser/token", v1.ParserToken)
+		//根据签名直接获取用户token
+		BaseRouter.POST("access/token", v1.AccessToken)
 
 	}
 }

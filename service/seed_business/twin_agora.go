@@ -401,7 +401,7 @@ func (twinAgora *TwinAgora) PeopleVote(callVote pb.CallVote) (error, *RTCRoom) {
 
 //被呼叫者，接收呼叫
 func (twinAgora *TwinAgora) CallPeopleAccept(callVote pb.CallVote) error {
-	twinAgora.Log.Debug("in func :CallPeopleAccept")
+	twinAgora.Log.Info("in func :CallPeopleAccept , " + "callVoteRoomId:" + callVote.RoomId)
 	err, RTCRoomInfo := twinAgora.PeopleVote(callVote)
 	if err != nil {
 		return err

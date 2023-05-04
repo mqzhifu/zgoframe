@@ -43,6 +43,7 @@ func GetUid(c *gin.Context) (int, error) {
 //2. 从token解出来的结构体内，再从DB中获取
 //3. header中也可以取这个值
 func GetProjectId(c *gin.Context) (int, error) {
+
 	customClaims, err := GetClaims(c)
 	if err != nil {
 		return 0, errors.New("Claims key not exist")

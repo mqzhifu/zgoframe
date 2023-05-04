@@ -89,7 +89,7 @@ func (fileManager *FileManager) GetConstListFileUploadStoreOSS() map[string]int 
 }
 
 //上传一个文件
-func (fileManager *FileManager) UploadOne(header *multipart.FileHeader, module string) (uploadRs UploadRs, err error) {
+func (fileManager *FileManager) UploadOne(header *multipart.FileHeader, module string, hashDir int) (uploadRs UploadRs, err error) {
 	//验证扩展名是否合法
 	fileExtName, err := fileManager.GetExtName(header.Filename)
 	if err != nil {
@@ -104,8 +104,8 @@ func (fileManager *FileManager) UploadOne(header *multipart.FileHeader, module s
 
 	MyPrint("UploadOne fileExtName:", fileExtName, " header size bytes:", header.Size, " mb:", fileSizeMB)
 	//获取文件存储的绝对路径
-	localDiskDir, relativePath, err := fileManager.checkLocalDiskPath(module)
-	MyPrint("localDiskDir:", localDiskDir)
+	localDiskDir, relativePath, err := fileManager.checkLocalDiskPath(module, hashDir)
+	MyPrint("localDiskDir:", localDiskDir, " , relativePath:", relativePath)
 	if err != nil {
 		return uploadRs, err
 	}
@@ -162,7 +162,7 @@ func (fileManager *FileManager) RealUploadOne() {
 }
 
 //流的大小：不能小于100个字节，因为要截取出头部的100个字节，做类型匹配及校验
-func (fileManager *FileManager) UploadOneByStream(stream string, category int, module string) (uploadRs UploadRs, err error) {
+func (fileManager *FileManager) UploadOneByStream(stream string, category int, module string, hashDir int) (uploadRs UploadRs, err error) {
 	if category != FILE_TYPE_IMG {
 		return uploadRs, errors.New("目前category仅支持：图片流")
 	}
@@ -213,7 +213,7 @@ func (fileManager *FileManager) UploadOneByStream(stream string, category int, m
 		return uploadRs, errors.New("大于限制：" + strconv.Itoa(fileManager.Option.UploadMaxSize) + "(mb)")
 	}
 	//获取文件存储的绝对路径
-	localDiskDir, relativePath, err := fileManager.checkLocalDiskPath(module)
+	localDiskDir, relativePath, err := fileManager.checkLocalDiskPath(module, hashDir)
 	MyPrint("localDiskDir:", localDiskDir)
 	if err != nil {
 		return uploadRs, err
@@ -426,9 +426,13 @@ func (fileManager *FileManager) GetNewFileName(fileExtName string) string {
 }
 
 //撮当前上传目录的：hash前缀目录
-func (fileManager *FileManager) GetHashDirName() string {
+func (fileManager *FileManager) GetHashDirName(hashDir int) string {
+	//if hashDir <= 0 {
+	//	hashDir = fileManager.Option.FileHashType
+	//}
+	//MyPrint("hashDir:=====", hashDir)
 	dirName := ""
-	switch fileManager.Option.FileHashType {
+	switch hashDir {
 	case FILE_HASH_NONE:
 		break
 	case FILE_HASH_HOUR:
@@ -459,15 +463,22 @@ func (fileManager *FileManager) GetExtName(fileName string) (extName string, err
 }
 
 //检查本地硬盘文件存储路径
-func (fileManager *FileManager) checkLocalDiskPath(FilePrefix string) (localDiskDir string, relativePath string, err error) {
+func (fileManager *FileManager) checkLocalDiskPath(FilePrefix string, hashDir int) (localDiskDir string, relativePath string, err error) {
 	//硬盘上存储的目录
 	localDiskDir = fileManager.GetLocalDiskUploadBasePath()
 	if FilePrefix != "" {
 		localDiskDir += "/" + FilePrefix
 		relativePath += FilePrefix
 	}
-	localDiskDir += "/" + fileManager.GetHashDirName()
-	relativePath += fileManager.GetHashDirName()
+
+	if hashDir > 0 {
+		localDiskDir += "/" + fileManager.GetHashDirName(hashDir)
+		relativePath += "/" + fileManager.GetHashDirName(hashDir)
+	} else {
+		//localDiskDir += "/"
+		//relativePath += "/"
+	}
+
 	_, err = PathExists(localDiskDir)
 	if err != nil {
 		if os.IsNotExist(err) {

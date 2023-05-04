@@ -6,7 +6,8 @@ INSERT INTO `project` (`id`, `name`, `type`, `desc`, `secret_key`, `status`, `ac
         (10, 'Zwebuigo', 1, '后台管理系统', 'ckZwebuigo', 1, 'imzwebuigo', 2, 'https://github.com/mqzhifu/zwebuigo.git', 1650001049, 1650001049, NULL),
         (11, 'Zwebuivue', 2, '后台管理系统-VUE', 'ckZwebuivue', 1, 'imzwebuivue', 4, 'https://github.com/mqzhifu/zwebuivue.git', 1650001049, 1650001049, NULL),
         (12, 'TwinAgora', 2, '数据孪生-专家指导(声网)', 'ckTwinAgora', 1, 'imtwinagora', 4, 'https://github.com/mqzhifu/twin_agora.git', 1650001049, 1650001049, NULL),
-        (13, 'AgoraUnity', 5, '数据孪生-UNITY端', 'ckAgoraUnity', 1, 'imagoraunity', 7, 'http://192.168.1.22:40080/jiaxing.zhu/Agora.git', 1650001049, 1650001049, NULL);
+        (13, 'AgoraUnity', 5, '数据孪生-UNITY端', 'ckAgoraUnity', 1, 'imagoraunity', 7, 'http://192.168.1.22:40080/jiaxing.zhu/Agora.git', 1650001049, 1650001049, NULL),
+        (16, 'Assistant', 5, '眼镜小助手', 'ckAssistant', 1, 'imassistant', 7, '', 1650001049, 1650001049, NULL);
 
 
 
@@ -31,11 +32,10 @@ INSERT INTO `email_rule` (`id`, `project_id`, `title`, `content`, `type`, `day_t
          (4, 6, '报警', '报警，程序出错。级别：{level}，项目ID:{project_id}，内容：{content}', 2, 10, 60, 1, 300,"",0, 0, null);
 
 
-
-
-
 INSERT INTO `user` (`id`, `uuid`, `project_id`, `sex`, `birthday`, `username`, `password`, `pay_ps`, `nick_name`, `mobile`, `email`, `robot`, `status`, `guest`, `test`, `recommend`, `header_img`, `created_at`, `updated_at`, `deleted_at`) VALUES
       (null, '2d879cfe-d900-45ae-a3e5-af3517eb8d02', 6, 1, 0, 'frame_sync_1', 'e10adc3949ba59abbe56e057f20f883e', 'e10adc3949ba59abbe56e057f20f883e', 'sync_1', '', '', 1, 1, 2, 2, '', '', 1658995531, 1658995531, NULL),
       (null, '4d69dee4-38f3-47ed-8dee-c4792df2e2c6', 6, 2, 0, 'frame_sync_2', 'e10adc3949ba59abbe56e057f20f883e', '', 'sync_2', '', '', 1, 1, 2, 2, '', '', 1658995531, 1658995531, NULL),
       (null, '4d69dee4-38f3-47ed-8dee-c4792df2e2c3', 6, 1, 0, 'frame_sync_3', 'e10adc3949ba59abbe56e057f20f883e', '', 'sync_3', '', '', 1, 1, 2, 2, '', '', 1658995531, 1658995531, NULL),
-      (null, '4d69dee4-38f3-47ed-8dee-c4792df2e2c1', 6, 2, 0, 'frame_sync_4', 'e10adc3949ba59abbe56e057f20f883e', '', 'sync_4', '', '', 1, 1, 2, 2, '', '', 1658995531, 1658995531, NULL);
+      (null, '4d69dee4-38f3-47ed-8dee-c4792df2e2c1', 6, 2, 0, 'frame_sync_4', 'e10adc3949ba59abbe56e057f20f883e', '', 'sync_4', '', '', 1, 1, 2, 2, '', '', 1658995531, 1658995531, NULL),
+       (null, '4d69dee4-38f3-47ed-8dee-c4792df2e2d1', 6, 2, 0, 'Assistant', 'e10adc3949ba59abbe56e057f20f883e', '', 'Assistant', '', '', 1, 1, 2, 2, '', '', 1658995531, 1658995531, NULL),
+      (null, '4d69dee4-38f3-47ed-8dee-c4792df2e2x1', 6, 2, 0, 'Zgoframe', 'e10adc3949ba59abbe56e057f20f883e', '', 'Zgoframe', '', '', 1, 1, 2, 2, '', '', 1658995531, 1658995531, NULL);

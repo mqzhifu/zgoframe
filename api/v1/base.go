@@ -493,15 +493,15 @@ func LoginThird(c *gin.Context) {
 }
 
 // @Tags Base
-// @Summary 用户使用3方账号联合登陆
-// @Description 3方平台登陆，验证成功后，生成token
+// @Summary 项目获取 ACCCESS-TOKEN
+// @Description 项目没有用户名+密码，只有密钥，拿到 ACCCESS-TOKEN 后，就跟正常用户登陆成功一样，可访问大部分API接口
 // @Produce  application/json
 // @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
 // @Param X-Project-Id header string true "项目ID" default(6)
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
 // @Param data body request.AccessToken true "基础信息"
 // @Success 200 {object} httpresponse.LoginResponse
-// @Router /base/login/third [post]
+// @Router /base/access/token [post]
 func AccessToken(c *gin.Context) {
 	var L request.AccessToken
 	c.ShouldBind(&L)
@@ -509,9 +509,10 @@ func AccessToken(c *gin.Context) {
 	if L.Sign == "" || L.Timestamp <= 0 {
 
 	}
-	projectId, _ := request.GetProjectId(c)
+	projectId := request.GetProjectIdByHeader(c)
 	if projectId <= 0 {
-
+		httpresponse.FailWithMessage("projectId <= 0 ", c)
+		return
 	}
 
 	projectInfo, empty := global.V.ProjectMng.GetById(projectId)
@@ -525,8 +526,25 @@ func AccessToken(c *gin.Context) {
 	m.Write([]byte(signStr))
 	signMd5 := hex.EncodeToString(m.Sum(nil))
 
+	util.MyPrint("signStr:", signStr, " , signMd5:", signMd5)
 	if signMd5 != L.Sign {
 		httpresponse.FailWithMessage("签名错误", c)
 		return
+	}
+
+	U := &model.User{Username: projectInfo.Name, Password: "123456"}
+	err, user := global.V.MyService.User.Login(U)
+	if err != nil {
+		httpresponse.FailWithMessage("未找到该用户", c)
+		return
+	}
+	loginType := global.V.MyService.User.TurnRegByUsername(projectInfo.Name)
+	//DB比较OK，开始做JWT处理
+	loginResponse, err := tokenNext(c, user, loginType)
+	if err != nil {
+		httpresponse.FailWithAll(loginResponse, err.Error(), c)
+	} else {
+		loginResponse.User = user
+		httpresponse.OkWithAll(loginResponse, "登录成功", c)
 	}
 }

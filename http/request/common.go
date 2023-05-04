@@ -61,6 +61,7 @@ type UploadFile struct {
 	Stream  string `json:"stream" form:"stream"`     //文件流,例：data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAHgAAAB4CAMAAAAOus .......
 	Module  string `json:"module" form:"module"`     //模块/业务名，可用于给文件名加前缀目录
 	SyncOss int    `json:"sync_oss" form:"sync_oss"` //是否同步到云oss 1是2否
+	HashDir int    `json:"hash_dir" form:"hash_dir"` //自动创建前缀目录 1不使用2月3天4小时
 }
 
 //@description http客户端请求头-基础信息

@@ -61,6 +61,12 @@ type Login struct {
 	CaptchaId string `json:"captchaId" form:"captchaId"` //验证码-ID
 }
 
+type AccessToken struct {
+	Grant     string `json:"grant"`     //保留字，先不用
+	Timestamp int    `json:"timestamp"` //unix 时间戳 10位的
+	Sign      string `json:"sign"`      //签名
+}
+
 //@description 短信登陆
 type LoginSMS struct {
 	//Code        string `json:"code"`

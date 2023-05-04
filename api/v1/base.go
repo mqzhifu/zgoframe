@@ -1,6 +1,8 @@
 package v1
 
 import (
+	"crypto/md5"
+	"encoding/hex"
 	"github.com/gin-gonic/gin"
 	"github.com/mojocn/base64Captcha"
 	"go.uber.org/zap"
@@ -488,4 +490,43 @@ func LoginThird(c *gin.Context) {
 	//} else {
 	//	httpresponse.FailWithMessage("验证码错误", c)
 	//}
+}
+
+// @Tags Base
+// @Summary 用户使用3方账号联合登陆
+// @Description 3方平台登陆，验证成功后，生成token
+// @Produce  application/json
+// @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
+// @Param X-Project-Id header string true "项目ID" default(6)
+// @Param X-Access header string true "访问KEY" default(imzgoframe)
+// @Param data body request.AccessToken true "基础信息"
+// @Success 200 {object} httpresponse.LoginResponse
+// @Router /base/login/third [post]
+func AccessToken(c *gin.Context) {
+	var L request.AccessToken
+	c.ShouldBind(&L)
+
+	if L.Sign == "" || L.Timestamp <= 0 {
+
+	}
+	projectId, _ := request.GetProjectId(c)
+	if projectId <= 0 {
+
+	}
+
+	projectInfo, empty := global.V.ProjectMng.GetById(projectId)
+	if empty {
+		httpresponse.FailWithMessage("项目不存在", c)
+		return
+	}
+	signStr := projectInfo.SecretKey + strconv.Itoa(L.Timestamp) + projectInfo.Access
+
+	m := md5.New()
+	m.Write([]byte(signStr))
+	signMd5 := hex.EncodeToString(m.Sum(nil))
+
+	if signMd5 != L.Sign {
+		httpresponse.FailWithMessage("签名错误", c)
+		return
+	}
 }

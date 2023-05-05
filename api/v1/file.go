@@ -10,15 +10,15 @@ import (
 )
 
 // @Tags file
-// @Summary 上传一张图片
-// @Description 目前是:本地存一份，同步到OSS一份，目录结构是根据(天)做hash,注：form要加上属性 enctype=multipart/form-data
-// @Param	X-Source-Type header string true "来源" Enums(11,12,21,22)
-// @Param	X-Project-Id  header string true "项目ID" default(6)
-// @Param	X-Access      header string true "访问KEY" default(imzgoframe)
-// @Param	file 		formData file 	true 	"文件(html中的input的name)"
-// @Param	module 		formData string false 	"模块/业务名，可用于给文件名加前缀目录，注：开头和结尾都不要加反斜杠"
-// @Param  	sync_oss 	formData int 	false 	"是否同步到云oss 1是2否" default(2)
-// @Param  	hash_dir 	formData int 	false 	"自动创建前缀目录 0不使用1月2天3小时" default(0)
+// @Summary 上传一张图片( http-form 表单模式 )
+// @Description 单图片上限2M。支持格式："jpg", "jpeg", "png", "gif", "x-png", "png", "bmp", "pjpeg", "x-icon", "svg", "webp"。
+// @Param	X-Source-Type 	header 		string 	true 	"来源" Enums(11,12,21,22)
+// @Param	X-Project-Id  	header 		string 	true 	"项目ID" default(6)
+// @Param	X-Access      	header 		string 	true 	"访问KEY" default(imzgoframe)
+// @Param	file 			formData 	file 	true 	"文件(html中的input的name)"
+// @Param	module 			formData 	string 	false 	"模块/业务名，可用于给文件名加前缀目录，注：开头和结尾都不要加反斜杠"
+// @Param  	sync_oss 		formData 	int 	false 	"是否同步到云 oss 1 是,2 否" default(2)
+// @Param  	hash_dir 		formData 	int 	false 	"自动创建:前缀目录(hash), 0 不使用,1 月, 2 天,3 小时" default(0)
 // @Accept 	multipart/form-data
 // @Produce	application/json
 // @Success 200 {object} httpresponse.HttpUploadRs "上传结果"
@@ -29,12 +29,10 @@ func FileUploadImgOne(c *gin.Context) {
 		util.MyPrint("err1:", err.Error())
 		return
 	}
+	syncOss, _ := strconv.Atoi(c.PostForm("sync_oss"))
 	hashDir, _ := strconv.Atoi(c.PostForm("hash_dir"))
-	//category := util.FILE_TYPE_IMG
-	module := c.PostForm("module")
-	//syncOss := c.PostForm("sync_oss")
-	//fileUpload := global.GetUploadObj(category, module)
-	uploadRs, err := global.V.ImgManager.UploadOne(header, module, hashDir)
+	module := GetFormParaModule(c)
+	uploadRs, err := global.V.ImgManager.UploadOne(header, module, hashDir, syncOss)
 
 	util.MyPrint("uploadRs:", uploadRs, " err:", err)
 	if err != nil {
@@ -52,23 +50,22 @@ func FileUploadImgOne(c *gin.Context) {
 
 // @Tags file
 // @Summary 上传多张图片
-// @Description 目前是本地存一份，同步到OSS一份，目录结构是根据天做hash，注：form enctype=multipart/form-data
-// @Param	X-Source-Type header string true "来源" Enums(11,12,21,22)
-// @Param	X-Project-Id  header string true "项目ID" default(6)
-// @Param	X-Access      header string true "访问KEY" default(imzgoframe)
-// @Param	file 		formData file 	true 	"文件(html中的input的name)"
-// @Param	module 		formData string false 	"模块/业务名，可用于给文件名加前缀目录，注：开头和结尾都不要加反斜杠"
-// @Param  	sync_oss 	formData int 	false 	"是否同步到云oss 1是2否" default(2)
-// @Param  	hash_dir 	formData int 	false 	"自动创建前缀目录 0不使用1月2天3小时" default(0)
+// @Description 单图片上限2M。支持格式："jpg", "jpeg", "png", "gif", "x-png", "png", "bmp", "pjpeg", "x-icon", "svg", "webp"。
+// @Param	X-Source-Type 	header 		string 	true 	"来源" Enums(11,12,21,22)
+// @Param	X-Project-Id  	header 		string 	true 	"项目ID" default(6)
+// @Param	X-Access      	header 		string 	true 	"访问KEY" default(imzgoframe)
+// @Param	file 			formData 	file 	true 	"文件(html中的input的name)"
+// @Param	module 			formData 	string 	false 	"模块/业务名，可用于给文件名加前缀目录，注：开头和结尾都不要加反斜杠"
+// @Param  	sync_oss 		formData 	int 	false 	"是否同步到云 oss 1 是,2 否" default(2)
+// @Param  	hash_dir 		formData 	int 	false 	"自动创建:前缀目录(hash), 0 不使用,1 月, 2 天,3 小时" default(0)
 // @Accept multipart/form-data
 // @Produce  application/json
 // @Success 200 {object} []httpresponse.HttpUploadRs "每个图片的上传结果"
 // @Router /file/upload/img/multi [post]
 func FileUploadImgMulti(c *gin.Context) {
-	//category ,_:= strconv.Atoi (c.PostForm("category") )
-	//category := util.FILE_TYPE_IMG
-	module := c.PostForm("module")
+	syncOss, _ := strconv.Atoi(c.PostForm("sync_oss"))
 	hashDir, _ := strconv.Atoi(c.PostForm("hash_dir"))
+	module := GetFormParaModule(c)
 	form, err := c.MultipartForm()
 	if err != nil {
 		httpresponse.FailWithMessage(err.Error(), c)
@@ -89,7 +86,7 @@ func FileUploadImgMulti(c *gin.Context) {
 	for _, file := range files {
 		httpUploadRs := httpresponse.HttpUploadRs{}
 
-		uploadRs, err := global.V.ImgManager.UploadOne(file, module, hashDir)
+		uploadRs, err := global.V.ImgManager.UploadOne(file, module, hashDir, syncOss)
 		errMsg := ""
 		if err != nil {
 			errMsg = err.Error()
@@ -107,33 +104,25 @@ func FileUploadImgMulti(c *gin.Context) {
 // @Tags file
 // @Summary 上传图片 - 流模式 - base64
 // @Description 有时前端并没有具体文件，而是在与用户交互中：动态产生的文件(图片)流，如：截图(canvas)，这时候直接把文件流传输后端即可
-// @Param	X-Source-Type header string true "来源" Enums(11,12,21,22)
-// @Param	X-Project-Id  header string true "项目ID" default(6)
-// @Param	X-Access      header string true "访问KEY" default(imzgoframe)
+// @Description 单图片上限2M。支持格式："jpg", "jpeg", "png", "gif", "x-png", "png", "bmp", "pjpeg", "x-icon", "svg", "webp"。
+// @Param	X-Source-Type 	header 		string 	true 	"来源" Enums(11,12,21,22)
+// @Param	X-Project-Id  	header 		string 	true 	"项目ID" default(6)
+// @Param	X-Access      	header 		string 	true 	"访问KEY" default(imzgoframe)
 // @Param data body request.UploadFile true "基础信息"
 // @Accept application/json
 // @Produce  application/json
 // @Success 200 {object} httpresponse.HttpUploadRs "下载结果"
 // @Router /file/upload/img/one/stream/base64 [POST]
 func FileUploadImgOneStreamBase64(c *gin.Context) {
-	category := util.FILE_TYPE_IMG
-
-	//fileUpload := global.GetUploadObj(category, "")
-
-	//stream  := c.PostForm("stream")
-	//util.MyPrint("stream:",stream)
-	//if stream == ""{
-	//	httpresponse.FailWithMessage("stream empty!!!",c)
-	//	return
-	//}
 	var form request.UploadFile
 	c.ShouldBind(&form)
+
 	if form.Stream == "" {
 		httpresponse.FailWithMessage("stream empty!!!", c)
 		return
 	}
-
-	uploadRs, err := global.V.ImgManager.UploadOneByStream(form.Stream, category, form.Module, form.HashDir)
+	module := GetModule(c, form.Module)
+	uploadRs, err := global.V.ImgManager.UploadOneByStream(form.Stream, util.FILE_TYPE_IMG, module, form.HashDir)
 	if err != nil {
 		httpresponse.FailWithMessage(err.Error(), c)
 	} else {
@@ -149,14 +138,14 @@ func FileUploadImgOneStreamBase64(c *gin.Context) {
 
 // @Tags file
 // @Summary 上传一个文档
-// @Description 目前是:本地存一份，同步到OSS一份，目录结构是根据(天)做hash,注：form要加上属性 enctype=multipart/form-data
-// @Param	X-Source-Type header string true "来源" Enums(11,12,21,22)
-// @Param	X-Project-Id  header string true "项目ID" default(6)
-// @Param	X-Access      header string true "访问KEY" default(imzgoframe)
-// @Param	file 		formData file 	true 	"文件(html中的input的name)"
-// @Param	module 		formData string false 	"模块/业务名，可用于给文件名加前缀目录，注：开头和结尾都不要加反斜杠"
-// @Param  	sync_oss 	formData int 	false 	"是否同步到云oss 1是2否" default(2)
-// @Param  	hash_dir 	formData int 	false 	"自动创建前缀目录 0不使用1月2天3小时" default(0)
+// @Description 单文件上限20M。支持格式："txt", "doc", "docx", "dotx", "json", "cvs", "xls", "xlsx", "sql", "msword", "ppt", "pptx", "pdf", "wps", "vsd"
+// @Param	X-Source-Type 	header 		string 	true 	"来源" Enums(11,12,21,22)
+// @Param	X-Project-Id  	header 		string 	true 	"项目ID" default(6)
+// @Param	X-Access      	header 		string 	true 	"访问KEY" default(imzgoframe)
+// @Param	file 			formData 	file 	true 	"文件(html中的input的name)"
+// @Param	module 			formData 	string 	false 	"模块/业务名，可用于给文件名加前缀目录，注：开头和结尾都不要加反斜杠"
+// @Param  	sync_oss 		formData 	int 	false 	"是否同步到云 oss 1 是,2 否" default(2)
+// @Param  	hash_dir 		formData 	int 	false 	"自动创建:前缀目录(hash), 0 不使用,1 月, 2 天,3 小时" default(0)
 // @Accept 	multipart/form-data
 // @Produce	application/json
 // @Success 200 {object} httpresponse.HttpUploadRs "上传结果"
@@ -167,32 +156,10 @@ func FileUploadDocOne(c *gin.Context) {
 		util.MyPrint("err1:", err.Error())
 		return
 	}
-
-	//category := util.FILE_TYPE_DOC
-	module := c.PostForm("module")
+	syncOss, _ := strconv.Atoi(c.PostForm("sync_oss"))
 	hashDir, _ := strconv.Atoi(c.PostForm("hash_dir"))
-	util.MyPrint("hashDir:======", hashDir)
-	//if hashDir != "" {
-	//	hashDirInt, _ := strconv.Atoi(hashDir)
-	//}
-	//syncOss := c.PostForm("sync_oss")
-	projectId := request.GetProjectIdByHeader(c)
-	//util.MyPrint("projectId:", projectId)
-	if projectId > 0 {
-		projectInfo, empty := global.V.ProjectMng.GetById(projectId)
-		//util.MyPrint("projectInfo:=====", projectInfo)
-		if !empty {
-			if module != "" {
-				module = projectInfo.Name + "/" + module
-			} else {
-				module = projectInfo.Name
-			}
-		}
-	}
-
-	util.MyPrint("module:=====" + module)
-	//fileUpload := global.GetUploadObj(category, module)
-	uploadRs, err := global.V.DocsManager.UploadOne(header, module, hashDir)
+	module := GetFormParaModule(c)
+	uploadRs, err := global.V.DocsManager.UploadOne(header, module, hashDir, syncOss)
 
 	util.MyPrint("uploadRs:", uploadRs, " err:", err)
 	if err != nil {
@@ -210,7 +177,7 @@ func FileUploadDocOne(c *gin.Context) {
 
 // @Tags file
 // @Summary 上传多个文档
-// @Description 目前是本地存一份，同步到OSS一份，目录结构是根据天做hash，注：form enctype=multipart/form-data
+// @Description 单文件上限20M。支持格式："txt", "doc", "docx", "dotx", "json", "cvs", "xls", "xlsx", "sql", "msword", "ppt", "pptx", "pdf", "wps", "vsd"
 // @Param	X-Source-Type header string true "来源" Enums(11,12,21,22)
 // @Param	X-Project-Id  header string true "项目ID" default(6)
 // @Param	X-Access      header string true "访问KEY" default(imzgoframe)
@@ -223,16 +190,15 @@ func FileUploadDocOne(c *gin.Context) {
 // @Success 200 {object} []httpresponse.HttpUploadRs "每个图片的上传结果"
 // @Router /file/upload/doc/multi [post]
 func FileUploadDocMulti(c *gin.Context) {
-	//category ,_:= strconv.Atoi (c.PostForm("category") )
-	//category := util.FILE_TYPE_IMG
-	module := c.PostForm("module")
+	syncOss, _ := strconv.Atoi(c.PostForm("sync_oss"))
+	hashDir, _ := strconv.Atoi(c.PostForm("hash_dir"))
+	module := GetFormParaModule(c)
 
 	form, err := c.MultipartForm()
 	if err != nil {
 		httpresponse.FailWithMessage(err.Error(), c)
 		return
 	}
-	hashDir, _ := strconv.Atoi(c.PostForm("hash_dir"))
 	//syncOss := c.PostForm("sync_oss")
 	//fileUpload := global.V.DocsManager.GetUploadObj(category, module)
 	// 获取所有图片
@@ -248,7 +214,7 @@ func FileUploadDocMulti(c *gin.Context) {
 	for _, file := range files {
 		httpUploadRs := httpresponse.HttpUploadRs{}
 
-		uploadRs, err := global.V.DocsManager.UploadOne(file, module, hashDir)
+		uploadRs, err := global.V.DocsManager.UploadOne(file, module, hashDir, syncOss)
 		errMsg := ""
 		if err != nil {
 			errMsg = err.Error()
@@ -261,6 +227,44 @@ func FileUploadDocMulti(c *gin.Context) {
 	}
 
 	httpresponse.OkWithAll(errList, "ok", c)
+}
+
+// @Tags file
+// @Summary 上传一个压缩包
+// @Description 单文件上限 50 M。支持格式："zip", "rar", "apk", "tar", "jar", "7z", "gz", "rz"
+// @Param	X-Source-Type 	header 		string 	true 	"来源" Enums(11,12,21,22)
+// @Param	X-Project-Id  	header 		string 	true 	"项目ID" default(6)
+// @Param	X-Access      	header 		string 	true 	"访问KEY" default(imzgoframe)
+// @Param	file 			formData 	file 	true 	"文件(html中的input的name)"
+// @Param	module 			formData 	string 	false 	"模块/业务名，可用于给文件名加前缀目录，注：开头和结尾都不要加反斜杠"
+// @Param  	sync_oss 		formData 	int 	false 	"是否同步到云 oss 1 是,2 否" default(2)
+// @Param  	hash_dir 		formData 	int 	false 	"自动创建:前缀目录(hash), 0 不使用,1 月, 2 天,3 小时" default(0)
+// @Accept 	multipart/form-data
+// @Produce	application/json
+// @Success 200 {object} httpresponse.HttpUploadRs "上传结果"
+// @Router 	/file/upload/packages/one [POST]
+func FileUploadPackagesOne(c *gin.Context) {
+	_, header, err := c.Request.FormFile("file")
+	if err != nil {
+		util.MyPrint("err1:", err.Error())
+		return
+	}
+	syncOss, _ := strconv.Atoi(c.PostForm("sync_oss"))
+	hashDir, _ := strconv.Atoi(c.PostForm("hash_dir"))
+	module := GetFormParaModule(c)
+	uploadRs, err := global.V.PackagesManager.UploadOne(header, module, hashDir, syncOss)
+
+	util.MyPrint("uploadRs:", uploadRs, " err:", err)
+	if err != nil {
+		httpresponse.FailWithMessage(err.Error(), c)
+	} else {
+		httpUploadRs := httpresponse.HttpUploadRs{}
+		httpUploadRs.UploadRs = uploadRs
+		ip, _ := util.GetLocalIp()
+		httpUploadRs.FullLocalIpUrl = util.UrlAppendIpHost("http", httpUploadRs.LocalIpUrl, ip, global.C.Http.Port)
+		httpUploadRs.FullLocalDomainUrl = util.UrlAppendDomain("http", httpUploadRs.LocalDomainUrl, global.C.Domain.Static, "")
+		httpresponse.OkWithAll(httpUploadRs, "已上传", c)
+	}
 }
 
 // @Tags file
@@ -302,4 +306,42 @@ func FileDownloadInfo(c *gin.Context) {
 	//
 	//c.Header("Accept-Ranges", "bytes")
 	//c.Header("Content-Length", strconv.Itoa(int(fileDownInfo.FileSize)))
+}
+
+func GetFormParaModule(c *gin.Context) string {
+
+	module := c.PostForm("module")
+	projectId := request.GetProjectIdByHeader(c)
+	if projectId > 0 {
+		projectInfo, empty := global.V.ProjectMng.GetById(projectId)
+		//util.MyPrint("projectInfo:=====", projectInfo)
+		if !empty {
+			if module != "" {
+				module = projectInfo.Name + "/" + module
+			} else {
+				module = projectInfo.Name
+			}
+		}
+	}
+
+	util.MyPrint("GetFormParaModule projectId:", strconv.Itoa(projectId), "module:"+module)
+	return module
+}
+
+func GetModule(c *gin.Context, module string) string {
+	projectId := request.GetProjectIdByHeader(c)
+	if projectId > 0 {
+		projectInfo, empty := global.V.ProjectMng.GetById(projectId)
+		//util.MyPrint("projectInfo:=====", projectInfo)
+		if !empty {
+			if module != "" {
+				module = projectInfo.Name + "/" + module
+			} else {
+				module = projectInfo.Name
+			}
+		}
+	}
+
+	util.MyPrint("GetModule projectId:", strconv.Itoa(projectId), "module:"+module)
+	return module
 }

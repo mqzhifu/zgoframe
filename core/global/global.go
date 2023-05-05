@@ -38,6 +38,7 @@ type Global struct {
 	Err              *util.ErrMsg
 	Email            *util.MyEmail
 	DocsManager      *util.FileManager
+	PackagesManager  *util.FileManager
 	ImgManager       *util.FileManager
 	VideoManager     *util.FileManager
 	NetWay           *util.NetWay

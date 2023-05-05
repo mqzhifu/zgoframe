@@ -1,9 +1,12 @@
 package util
 
 import (
+	"crypto/md5"
 	"encoding/base64"
+	"encoding/hex"
 	"errors"
 	"io"
+	"io/ioutil"
 	"mime/multipart"
 	"os"
 	"strconv"
@@ -56,9 +59,10 @@ type FileManagerOption struct {
 	//LocalDirPath    string //最终的：文件上传->本地硬盘路径
 }
 
-var imgs = []string{"jpg", "jpeg", "png", "gif", "x-png", "png", "bmp", "pjpeg", "x-icon"}
-var docs = []string{"txt", "doc", "docx", "dotx", "json", "cvs", "xls", "xlsx", "sql", "msword", "pptx", "pdf", "wps", "vsd", "m3u8", "webm", "ts"}
-var video = []string{"mp3", "mp4", "avi", "rm", "mkv", "wmv", "mov", "flv", "rmvb"}
+var imgs = []string{"jpg", "jpeg", "png", "gif", "x-png", "png", "bmp", "pjpeg", "x-icon", "svg", "webp", "psd"}
+var docs = []string{"txt", "doc", "docx", "dotx", "json", "cvs", "xls", "xlsx", "sql", "msword", "ppt", "pptx", "pdf", "wps", "vsd"}
+var packages = []string{"zip", "rar", "apk", "tar", "jar", "7z", "gz", "rz"}
+var video = []string{"mp3", "mp4", "avi", "rm", "mkv", "wmv", "mov", "flv", "fla", "rmvb", "m3u8", "webm", "ts", "wav"}
 
 func NewFileManagerUpload(Option FileManagerOption) *FileManager {
 	fileManager := new(FileManager)
@@ -89,7 +93,10 @@ func (fileManager *FileManager) GetConstListFileUploadStoreOSS() map[string]int 
 }
 
 //上传一个文件
-func (fileManager *FileManager) UploadOne(header *multipart.FileHeader, module string, hashDir int) (uploadRs UploadRs, err error) {
+func (fileManager *FileManager) UploadOne(header *multipart.FileHeader, module string, hashDir int, syncOss int) (uploadRs UploadRs, err error) {
+	if module == "" && hashDir == 0 {
+		return uploadRs, errors.New("module hashDir 均为空，即：在根目录上传文件，不允许")
+	}
 	//验证扩展名是否合法
 	fileExtName, err := fileManager.GetExtName(header.Filename)
 	if err != nil {
@@ -109,10 +116,20 @@ func (fileManager *FileManager) UploadOne(header *multipart.FileHeader, module s
 	if err != nil {
 		return uploadRs, err
 	}
+	file, err := header.Open()
+	defer file.Close()
+	fileStringBytes, err := ioutil.ReadAll(file)
+	fileHashValue := MD5V(fileStringBytes)
+	//hash := md5.New()
+	//_, _ = io.Copy(hash, file)
+	//fileHashValue := hex.EncodeToString(hash.Sum(nil))
+	//MyPrint("fileHashValue::", fileHashValue)
+
 	//文件名：文件类型_NowUnixStamp_文件扩展名
-	fileName := fileManager.GetNewFileName(fileExtName)
+	fileName := fileManager.GetNewFileName(fileExtName, fileHashValue)
 	newFileName := localDiskDir + "/" + fileName
 	MyPrint("uploadOne file:", newFileName)
+
 	if fileManager.Option.UploadStoreLocal == UPLOAD_STORE_LOCAL_OPEN {
 		//把用户上传的文件(内存中)，转移到本机的硬盘上
 		out, err := os.Create(newFileName)
@@ -120,11 +137,12 @@ func (fileManager *FileManager) UploadOne(header *multipart.FileHeader, module s
 		if err != nil {
 			return uploadRs, errors.New("本地存储文件失败1:" + err.Error())
 		}
-		file, err := header.Open()
-		_, err = io.Copy(out, file)
-		if err != nil {
-			return uploadRs, errors.New("本地存储文件失败2:" + err.Error())
-		}
+		//file, err := header.Open()
+		//_, err = io.Copy(out, file)
+		//if err != nil {
+		//	return uploadRs, errors.New("本地存储文件失败2:" + err.Error())
+		//}
+		out.Write(fileStringBytes)
 	}
 
 	//同步到阿里云
@@ -214,12 +232,13 @@ func (fileManager *FileManager) UploadOneByStream(stream string, category int, m
 	}
 	//获取文件存储的绝对路径
 	localDiskDir, relativePath, err := fileManager.checkLocalDiskPath(module, hashDir)
-	MyPrint("localDiskDir:", localDiskDir)
+	MyPrint("localDiskDir:", localDiskDir, " ,relativePath:", relativePath)
 	if err != nil {
 		return uploadRs, err
 	}
+	fileHashValue := MD5V(data)
 	//文件名：文件类型_NowUnixStamp_文件扩展名
-	fileName := fileManager.GetNewFileName(imgExtType)
+	fileName := fileManager.GetNewFileName(imgExtType, fileHashValue)
 	newFileName := localDiskDir + "/" + fileName
 	MyPrint("uploadOne file:", newFileName)
 	if fileManager.Option.UploadStoreLocal == UPLOAD_STORE_LOCAL_OPEN {
@@ -394,6 +413,8 @@ func (fileManager *FileManager) GetAllowFileTypeList(category int) (rs []string,
 		//	all := append(imgs, docs...)
 		//	all = append(all, video...)
 		//	return all, nil
+	} else if category == FILE_TYPE_PACKAGES {
+		return packages, nil
 	} else {
 		return nil, errors.New("category err.")
 	}
@@ -420,9 +441,9 @@ func (fileManager *FileManager) FilterByExtString(category int, extName string) 
 	return false
 }
 
-//把用户上传的文件名，转换成自己想要的文件名：类型ID_当时时间.扩展名
-func (fileManager *FileManager) GetNewFileName(fileExtName string) string {
-	return strconv.Itoa(fileManager.Option.Category) + "_" + strconv.Itoa(GetNowTimeSecondToInt()) + "." + fileExtName
+//把用户上传的文件名，转换成自己想要的文件名：类型ID_当时时间_md5值.扩展名
+func (fileManager *FileManager) GetNewFileName(fileExtName string, fileHashValue string) string {
+	return strconv.Itoa(fileManager.Option.Category) + "_" + strconv.Itoa(GetNowTimeSecondToInt()) + "_" + fileHashValue + "." + fileExtName
 }
 
 //撮当前上传目录的：hash前缀目录
@@ -495,4 +516,14 @@ func (fileManager *FileManager) checkLocalDiskPath(FilePrefix string, hashDir in
 	}
 
 	return localDiskDir, relativePath, nil
+}
+
+func FileMD5(filePath string) (string, error) {
+	file, err := os.Open(filePath)
+	if err != nil {
+		return "", err
+	}
+	hash := md5.New()
+	_, _ = io.Copy(hash, file)
+	return hex.EncodeToString(hash.Sum(nil)), nil
 }

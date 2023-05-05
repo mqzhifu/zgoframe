@@ -216,11 +216,14 @@ type ConfigCenter struct {
 }
 
 type FileManager struct {
-	Status          string
-	UploadPath      string
-	UploadMaxSize   int
-	DownloadPath    string
-	DownloadMaxSize int
+	Status                   string
+	UploadPath               string
+	UploadDocImgMaxSize      int
+	UploadDocDocMaxSize      int
+	UploadDocVideoMaxSize    int
+	UploadDocPackagesMaxSize int
+	DownloadPath             string
+	DownloadMaxSize          int
 }
 
 //type Upload struct {

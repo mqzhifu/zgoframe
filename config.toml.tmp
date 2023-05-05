@@ -49,7 +49,10 @@ status  = "open"
 #此目录就在项目的根目录下，不需要你手动创建，CICD会帮忙处理，如果不使用CICD，需要手动创建(软连接)
 uploadPath = "upload" #相对路径，在static下面
 #上传文件大小，这个值最好别设置太大，同时要跟nginx同步修改不然不失效
-uploadMaxSize = 9
+uploadDocImgMaxSize      = 2 #单位：M，上传图片大小限制，这个值最好别设置太大，同时要跟nginx同步修改不然不失效
+uploadDocDocMaxSize      = 20 #单位：M，上传文档大小限制，这个值最好别设置太大，同时要跟nginx同步修改不然不失效
+uploadDocVideoMaxSize    = 50 #单位：M，上传视频大小限制，这个值最好别设置太大，同时要跟nginx同步修改不然不失效
+uploadDocPackagesMaxSize = 50 #单位：M，上传视频大小限制，这个值最好别设置太大，同时要跟nginx同步修改不然不失效
 downloadPath = "download"
 downloadMaxSize = 100
 

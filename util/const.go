@@ -182,11 +182,12 @@ const (
 
 //@parse 文件类型
 const (
-	FILE_TYPE_ALL   = 1 //全部
-	FILE_TYPE_IMG   = 2 //图片
-	FILE_TYPE_DOC   = 3 //文档
-	FILE_TYPE_VIDEO = 4 //视频
-	FILE_TYPE_AUDIO = 5 //音频
+	FILE_TYPE_ALL      = 1 //全部
+	FILE_TYPE_IMG      = 2 //图片
+	FILE_TYPE_DOC      = 3 //文档
+	FILE_TYPE_VIDEO    = 4 //视频
+	FILE_TYPE_AUDIO    = 5 //音频
+	FILE_TYPE_PACKAGES = 6 //压缩包
 )
 
 //@parse 长连接FD关闭类型

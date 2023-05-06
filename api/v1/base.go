@@ -494,7 +494,7 @@ func LoginThird(c *gin.Context) {
 
 // @Tags Base
 // @Summary 项目获取 ACCCESS-TOKEN
-// @Description 项目没有用户名+密码，只有密钥，拿到 ACCCESS-TOKEN 后，就跟正常用户登陆成功一样，可访问大部分API接口
+// @Description 项目没有用户名+密码，只有密钥，拿到 ACCCESS-TOKEN 后，就跟正常用户登陆成功一样，可访问大部分API接口.sign值规则：md5(SecretKey+Timestamp+Access)
 // @Produce  application/json
 // @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
 // @Param X-Project-Id header string true "项目ID" default(6)

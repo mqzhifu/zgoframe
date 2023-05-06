@@ -31,6 +31,7 @@ func File(Router *gin.RouterGroup) {
 		//persistenceRouter.POST("upload/doc/one/stream/base64", v1.Upload)
 		persistenceRouter.POST("upload/doc/multi", v1.FileUploadDocMulti)
 		persistenceRouter.POST("upload/packages/one", v1.FileUploadPackagesOne)
+		persistenceRouter.POST("upload/video/one", v1.FileUploadVideoOne)
 
 		//
 		//persistenceRouter.POST("upload/video/one", v1.Upload)

@@ -423,3 +423,15 @@ func (user *User) BindEmail(uid int, email string) (err error) {
 	err = user.Gorm.Updates(&userInfoEdit).Error
 	return err
 }
+
+//func (user *User) ProjectAutoCreateUserDbRecord() {
+//	for _, v := range projectManager.Pool {
+//		var user model.User
+//		//projectManager.Gorm.Model(&model.User{}).Where("project_id = ?",v.Id).FirstOrCreate(&model.User{ProjectId:v.Id})
+//		err := projectManager.Gorm.Where("username = ?   ", v.Name).First(&user).Error
+//		if err == nil { //证明该用户记录已经存在，不需要再创建
+//			continue
+//		}
+//		newUser := model.User{}
+//	}
+//}

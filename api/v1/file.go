@@ -9,21 +9,7 @@ import (
 	"zgoframe/util"
 )
 
-// @Tags file
-// @Summary 上传一张图片( http-form 表单模式 )
-// @Description 单图片上限2M。支持格式："jpg", "jpeg", "png", "gif", "x-png", "png", "bmp", "pjpeg", "x-icon", "svg", "webp"。
-// @Param	X-Source-Type 	header 		string 	true 	"来源" Enums(11,12,21,22)
-// @Param	X-Project-Id  	header 		string 	true 	"项目ID" default(6)
-// @Param	X-Access      	header 		string 	true 	"访问KEY" default(imzgoframe)
-// @Param	file 			formData 	file 	true 	"文件(html中的input的name)"
-// @Param	module 			formData 	string 	false 	"模块/业务名，可用于给文件名加前缀目录，注：开头和结尾都不要加反斜杠"
-// @Param  	sync_oss 		formData 	int 	false 	"是否同步到云 oss 1 是,2 否" default(2)
-// @Param  	hash_dir 		formData 	int 	false 	"自动创建:前缀目录(hash), 0 不使用,1 月, 2 天,3 小时" default(0)
-// @Accept 	multipart/form-data
-// @Produce	application/json
-// @Success 200 {object} httpresponse.HttpUploadRs "上传结果"
-// @Router 	/file/upload/img/one [POST]
-func FileUploadImgOne(c *gin.Context) {
+func FileUploadReal(c *gin.Context, category int) {
 	_, header, err := c.Request.FormFile("file")
 	if err != nil {
 		util.MyPrint("err1:", err.Error())
@@ -32,7 +18,18 @@ func FileUploadImgOne(c *gin.Context) {
 	syncOss, _ := strconv.Atoi(c.PostForm("sync_oss"))
 	hashDir, _ := strconv.Atoi(c.PostForm("hash_dir"))
 	module := GetFormParaModule(c)
-	uploadRs, err := global.V.ImgManager.UploadOne(header, module, hashDir, syncOss)
+
+	var uploadRs util.UploadRs
+	switch category {
+	case util.FILE_TYPE_IMG:
+		uploadRs, err = global.V.ImgManager.UploadOne(header, module, hashDir, syncOss)
+	case util.FILE_TYPE_DOC:
+		uploadRs, err = global.V.DocsManager.UploadOne(header, module, hashDir, syncOss)
+	case util.FILE_TYPE_VIDEO:
+		uploadRs, err = global.V.VideoManager.UploadOne(header, module, hashDir, syncOss)
+	case util.FILE_TYPE_PACKAGES:
+		uploadRs, err = global.V.PackagesManager.UploadOne(header, module, hashDir, syncOss)
+	}
 
 	util.MyPrint("uploadRs:", uploadRs, " err:", err)
 	if err != nil {
@@ -45,24 +42,8 @@ func FileUploadImgOne(c *gin.Context) {
 		httpUploadRs.FullLocalDomainUrl = util.UrlAppendDomain("http", httpUploadRs.LocalDomainUrl, global.C.Domain.Static, "")
 		httpresponse.OkWithAll(httpUploadRs, "已上传", c)
 	}
-
 }
-
-// @Tags file
-// @Summary 上传多张图片
-// @Description 单图片上限2M。支持格式："jpg", "jpeg", "png", "gif", "x-png", "png", "bmp", "pjpeg", "x-icon", "svg", "webp"。
-// @Param	X-Source-Type 	header 		string 	true 	"来源" Enums(11,12,21,22)
-// @Param	X-Project-Id  	header 		string 	true 	"项目ID" default(6)
-// @Param	X-Access      	header 		string 	true 	"访问KEY" default(imzgoframe)
-// @Param	file 			formData 	file 	true 	"文件(html中的input的name)"
-// @Param	module 			formData 	string 	false 	"模块/业务名，可用于给文件名加前缀目录，注：开头和结尾都不要加反斜杠"
-// @Param  	sync_oss 		formData 	int 	false 	"是否同步到云 oss 1 是,2 否" default(2)
-// @Param  	hash_dir 		formData 	int 	false 	"自动创建:前缀目录(hash), 0 不使用,1 月, 2 天,3 小时" default(0)
-// @Accept multipart/form-data
-// @Produce  application/json
-// @Success 200 {object} []httpresponse.HttpUploadRs "每个图片的上传结果"
-// @Router /file/upload/img/multi [post]
-func FileUploadImgMulti(c *gin.Context) {
+func FileUploadRealMulti(c *gin.Context, category int) {
 	syncOss, _ := strconv.Atoi(c.PostForm("sync_oss"))
 	hashDir, _ := strconv.Atoi(c.PostForm("hash_dir"))
 	module := GetFormParaModule(c)
@@ -86,7 +67,18 @@ func FileUploadImgMulti(c *gin.Context) {
 	for _, file := range files {
 		httpUploadRs := httpresponse.HttpUploadRs{}
 
-		uploadRs, err := global.V.ImgManager.UploadOne(file, module, hashDir, syncOss)
+		var uploadRs util.UploadRs
+		switch category {
+		case util.FILE_TYPE_IMG:
+			uploadRs, err = global.V.ImgManager.UploadOne(file, module, hashDir, syncOss)
+		case util.FILE_TYPE_DOC:
+			uploadRs, err = global.V.DocsManager.UploadOne(file, module, hashDir, syncOss)
+		case util.FILE_TYPE_VIDEO:
+			uploadRs, err = global.V.VideoManager.UploadOne(file, module, hashDir, syncOss)
+		case util.FILE_TYPE_PACKAGES:
+			uploadRs, err = global.V.PackagesManager.UploadOne(file, module, hashDir, syncOss)
+		}
+		//uploadRs, err := global.V.ImgManager.UploadOne(file, module, hashDir, syncOss)
 		errMsg := ""
 		if err != nil {
 			errMsg = err.Error()
@@ -99,6 +91,42 @@ func FileUploadImgMulti(c *gin.Context) {
 	}
 
 	httpresponse.OkWithAll(errList, "ok", c)
+}
+
+// @Tags file
+// @Summary 上传一张图片( http-form 表单模式 )
+// @Description 单图片上限2M。支持格式："jpg", "jpeg", "png", "gif", "x-png", "png", "bmp", "pjpeg", "x-icon", "svg", "webp"。
+// @Param	X-Source-Type 	header 		string 	true 	"来源" Enums(11,12,21,22)
+// @Param	X-Project-Id  	header 		string 	true 	"项目ID" default(6)
+// @Param	X-Access      	header 		string 	true 	"访问KEY" default(imzgoframe)
+// @Param	file 			formData 	file 	true 	"文件(html中的input的name)"
+// @Param	module 			formData 	string 	false 	"模块/业务名，可用于给文件名加前缀目录，注：开头和结尾都不要加反斜杠"
+// @Param  	sync_oss 		formData 	int 	false 	"是否同步到云 oss 1 是,2 否" default(2)
+// @Param  	hash_dir 		formData 	int 	false 	"自动创建:前缀目录(hash), 0 不使用,1 月, 2 天,3 小时" default(0)
+// @Accept 	multipart/form-data
+// @Produce	application/json
+// @Success 200 {object} httpresponse.HttpUploadRs "上传结果"
+// @Router 	/file/upload/img/one [POST]
+func FileUploadImgOne(c *gin.Context) {
+	FileUploadReal(c, util.FILE_TYPE_IMG)
+}
+
+// @Tags file
+// @Summary 上传多张图片
+// @Description 单图片上限2M。支持格式："jpg", "jpeg", "png", "gif", "x-png", "png", "bmp", "pjpeg", "x-icon", "svg", "webp"。
+// @Param	X-Source-Type 	header 		string 	true 	"来源" Enums(11,12,21,22)
+// @Param	X-Project-Id  	header 		string 	true 	"项目ID" default(6)
+// @Param	X-Access      	header 		string 	true 	"访问KEY" default(imzgoframe)
+// @Param	files 			formData 	file 	true 	"文件(html中的input的name)"
+// @Param	module 			formData 	string 	false 	"模块/业务名，可用于给文件名加前缀目录，注：开头和结尾都不要加反斜杠"
+// @Param  	sync_oss 		formData 	int 	false 	"是否同步到云 oss 1 是,2 否" default(2)
+// @Param  	hash_dir 		formData 	int 	false 	"自动创建:前缀目录(hash), 0 不使用,1 月, 2 天,3 小时" default(0)
+// @Accept multipart/form-data
+// @Produce  application/json
+// @Success 200 {object} []httpresponse.HttpUploadRs "每个图片的上传结果"
+// @Router /file/upload/img/multi [post]
+func FileUploadImgMulti(c *gin.Context) {
+	FileUploadRealMulti(c, util.FILE_TYPE_IMG)
 }
 
 // @Tags file
@@ -151,28 +179,7 @@ func FileUploadImgOneStreamBase64(c *gin.Context) {
 // @Success 200 {object} httpresponse.HttpUploadRs "上传结果"
 // @Router 	/file/upload/doc/one [POST]
 func FileUploadDocOne(c *gin.Context) {
-	_, header, err := c.Request.FormFile("file")
-	if err != nil {
-		util.MyPrint("err1:", err.Error())
-		return
-	}
-	syncOss, _ := strconv.Atoi(c.PostForm("sync_oss"))
-	hashDir, _ := strconv.Atoi(c.PostForm("hash_dir"))
-	module := GetFormParaModule(c)
-	uploadRs, err := global.V.DocsManager.UploadOne(header, module, hashDir, syncOss)
-
-	util.MyPrint("uploadRs:", uploadRs, " err:", err)
-	if err != nil {
-		httpresponse.FailWithMessage(err.Error(), c)
-	} else {
-		httpUploadRs := httpresponse.HttpUploadRs{}
-		httpUploadRs.UploadRs = uploadRs
-		ip, _ := util.GetLocalIp()
-		httpUploadRs.FullLocalIpUrl = util.UrlAppendIpHost("http", httpUploadRs.LocalIpUrl, ip, global.C.Http.Port)
-		httpUploadRs.FullLocalDomainUrl = util.UrlAppendDomain("http", httpUploadRs.LocalDomainUrl, global.C.Domain.Static, "")
-		httpresponse.OkWithAll(httpUploadRs, "已上传", c)
-	}
-
+	FileUploadReal(c, util.FILE_TYPE_DOC)
 }
 
 // @Tags file
@@ -181,7 +188,7 @@ func FileUploadDocOne(c *gin.Context) {
 // @Param	X-Source-Type header string true "来源" Enums(11,12,21,22)
 // @Param	X-Project-Id  header string true "项目ID" default(6)
 // @Param	X-Access      header string true "访问KEY" default(imzgoframe)
-// @Param	file 		formData file 	true 	"文件(html中的input的name)"
+// @Param	files 		formData file 	true 	"文件(html中的input的name)"
 // @Param	module 		formData string false 	"模块/业务名，可用于给文件名加前缀目录，注：开头和结尾都不要加反斜杠"
 // @Param  	sync_oss 	formData int 	false 	"是否同步到云oss 1是2否" default(2)
 // @Param  	hash_dir 	formData int 	false 	"自动创建前缀目录 0不使用1月2天3小时" default(0)
@@ -190,43 +197,25 @@ func FileUploadDocOne(c *gin.Context) {
 // @Success 200 {object} []httpresponse.HttpUploadRs "每个图片的上传结果"
 // @Router /file/upload/doc/multi [post]
 func FileUploadDocMulti(c *gin.Context) {
-	syncOss, _ := strconv.Atoi(c.PostForm("sync_oss"))
-	hashDir, _ := strconv.Atoi(c.PostForm("hash_dir"))
-	module := GetFormParaModule(c)
+	FileUploadRealMulti(c, util.FILE_TYPE_DOC)
+}
 
-	form, err := c.MultipartForm()
-	if err != nil {
-		httpresponse.FailWithMessage(err.Error(), c)
-		return
-	}
-	//syncOss := c.PostForm("sync_oss")
-	//fileUpload := global.V.DocsManager.GetUploadObj(category, module)
-	// 获取所有图片
-	files := form.File["files"]
-	if len(files) < 1 {
-		httpresponse.FailWithMessage("请至少上传一个文件.", c)
-		return
-	}
-	util.MyPrint("files len:", len(files))
-
-	ip, _ := util.GetLocalIp()
-	errList := []httpresponse.HttpUploadRs{}
-	for _, file := range files {
-		httpUploadRs := httpresponse.HttpUploadRs{}
-
-		uploadRs, err := global.V.DocsManager.UploadOne(file, module, hashDir, syncOss)
-		errMsg := ""
-		if err != nil {
-			errMsg = err.Error()
-		}
-		httpUploadRs.UploadRs = uploadRs
-		httpUploadRs.FullLocalIpUrl = util.UrlAppendIpHost("http", httpUploadRs.LocalIpUrl, ip, global.C.Http.Port)
-		httpUploadRs.FullLocalDomainUrl = util.UrlAppendDomain("http", httpUploadRs.LocalDomainUrl, global.C.Domain.Static, "")
-		httpUploadRs.Err = errMsg
-		errList = append(errList, httpUploadRs)
-	}
-
-	httpresponse.OkWithAll(errList, "ok", c)
+// @Tags file
+// @Summary 上传一个视频文件
+// @Description 单文件上限20M。支持格式："mp4", "avi", "rm", "mkv", "wmv", "mov", "flv", "fla", "rmvb", "m3u8", "webm", "ts", "wav"
+// @Param	X-Source-Type 	header 		string 	true 	"来源" Enums(11,12,21,22)
+// @Param	X-Project-Id  	header 		string 	true 	"项目ID" default(6)
+// @Param	X-Access      	header 		string 	true 	"访问KEY" default(imzgoframe)
+// @Param	file 			formData 	file 	true 	"文件(html中的input的name)"
+// @Param	module 			formData 	string 	false 	"模块/业务名，可用于给文件名加前缀目录，注：开头和结尾都不要加反斜杠"
+// @Param  	sync_oss 		formData 	int 	false 	"是否同步到云 oss 1 是,2 否" default(2)
+// @Param  	hash_dir 		formData 	int 	false 	"自动创建:前缀目录(hash), 0 不使用,1 月, 2 天,3 小时" default(0)
+// @Accept 	multipart/form-data
+// @Produce	application/json
+// @Success 200 {object} httpresponse.HttpUploadRs "上传结果"
+// @Router 	/file/upload/video/one [POST]
+func FileUploadVideoOne(c *gin.Context) {
+	FileUploadReal(c, util.FILE_TYPE_VIDEO)
 }
 
 // @Tags file
@@ -244,27 +233,7 @@ func FileUploadDocMulti(c *gin.Context) {
 // @Success 200 {object} httpresponse.HttpUploadRs "上传结果"
 // @Router 	/file/upload/packages/one [POST]
 func FileUploadPackagesOne(c *gin.Context) {
-	_, header, err := c.Request.FormFile("file")
-	if err != nil {
-		util.MyPrint("err1:", err.Error())
-		return
-	}
-	syncOss, _ := strconv.Atoi(c.PostForm("sync_oss"))
-	hashDir, _ := strconv.Atoi(c.PostForm("hash_dir"))
-	module := GetFormParaModule(c)
-	uploadRs, err := global.V.PackagesManager.UploadOne(header, module, hashDir, syncOss)
-
-	util.MyPrint("uploadRs:", uploadRs, " err:", err)
-	if err != nil {
-		httpresponse.FailWithMessage(err.Error(), c)
-	} else {
-		httpUploadRs := httpresponse.HttpUploadRs{}
-		httpUploadRs.UploadRs = uploadRs
-		ip, _ := util.GetLocalIp()
-		httpUploadRs.FullLocalIpUrl = util.UrlAppendIpHost("http", httpUploadRs.LocalIpUrl, ip, global.C.Http.Port)
-		httpUploadRs.FullLocalDomainUrl = util.UrlAppendDomain("http", httpUploadRs.LocalDomainUrl, global.C.Domain.Static, "")
-		httpresponse.OkWithAll(httpUploadRs, "已上传", c)
-	}
+	FileUploadReal(c, util.FILE_TYPE_PACKAGES)
 }
 
 // @Tags file

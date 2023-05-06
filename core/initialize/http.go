@@ -102,7 +102,6 @@ func RegGinHttpRoute() {
 	{
 		router.Base(PublicGroup)
 		router.Persistence(PublicGroup)
-		router.File(PublicGroup)
 	}
 	//管理员/开发/运维 使用，头部要验证，还需要二次验证，主要有些危险的操作
 	SystemGroup := global.V.Gin.Group("")
@@ -116,8 +115,9 @@ func RegGinHttpRoute() {
 
 	PrivateGroup := global.V.Gin.Group("")
 	//设置正常API（需要验证）
-	PrivateGroup.Use(httpmiddleware.JWTAuth())
+	PrivateGroup.Use(httpmiddleware.HeaderAuth()).Use(httpmiddleware.JWTAuth())
 	{
+		router.File(PrivateGroup)
 		router.Gateway(PrivateGroup)
 		router.GameMatch(PrivateGroup)
 		router.TwinAgora(PrivateGroup)

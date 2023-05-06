@@ -95,6 +95,7 @@ func FileUploadRealMulti(c *gin.Context, category int) {
 
 // @Tags file
 // @Summary 上传一张图片( http-form 表单模式 )
+// @Security ApiKeyAuth
 // @Description 单图片上限2M。支持格式："jpg", "jpeg", "png", "gif", "x-png", "png", "bmp", "pjpeg", "x-icon", "svg", "webp"。
 // @Param	X-Source-Type 	header 		string 	true 	"来源" Enums(11,12,21,22)
 // @Param	X-Project-Id  	header 		string 	true 	"项目ID" default(6)
@@ -113,6 +114,7 @@ func FileUploadImgOne(c *gin.Context) {
 
 // @Tags file
 // @Summary 上传多张图片
+// @Security ApiKeyAuth
 // @Description 单图片上限2M。支持格式："jpg", "jpeg", "png", "gif", "x-png", "png", "bmp", "pjpeg", "x-icon", "svg", "webp"。
 // @Param	X-Source-Type 	header 		string 	true 	"来源" Enums(11,12,21,22)
 // @Param	X-Project-Id  	header 		string 	true 	"项目ID" default(6)
@@ -131,6 +133,7 @@ func FileUploadImgMulti(c *gin.Context) {
 
 // @Tags file
 // @Summary 上传图片 - 流模式 - base64
+// @Security ApiKeyAuth
 // @Description 有时前端并没有具体文件，而是在与用户交互中：动态产生的文件(图片)流，如：截图(canvas)，这时候直接把文件流传输后端即可
 // @Description 单图片上限2M。支持格式："jpg", "jpeg", "png", "gif", "x-png", "png", "bmp", "pjpeg", "x-icon", "svg", "webp"。
 // @Param	X-Source-Type 	header 		string 	true 	"来源" Enums(11,12,21,22)
@@ -166,6 +169,7 @@ func FileUploadImgOneStreamBase64(c *gin.Context) {
 
 // @Tags file
 // @Summary 上传一个文档
+// @Security ApiKeyAuth
 // @Description 单文件上限20M。支持格式："txt", "doc", "docx", "dotx", "json", "cvs", "xls", "xlsx", "sql", "msword", "ppt", "pptx", "pdf", "wps", "vsd"
 // @Param	X-Source-Type 	header 		string 	true 	"来源" Enums(11,12,21,22)
 // @Param	X-Project-Id  	header 		string 	true 	"项目ID" default(6)
@@ -202,6 +206,7 @@ func FileUploadDocMulti(c *gin.Context) {
 
 // @Tags file
 // @Summary 上传一个视频文件
+// @Security ApiKeyAuth
 // @Description 单文件上限20M。支持格式："mp4", "avi", "rm", "mkv", "wmv", "mov", "flv", "fla", "rmvb", "m3u8", "webm", "ts", "wav"
 // @Param	X-Source-Type 	header 		string 	true 	"来源" Enums(11,12,21,22)
 // @Param	X-Project-Id  	header 		string 	true 	"项目ID" default(6)
@@ -220,6 +225,7 @@ func FileUploadVideoOne(c *gin.Context) {
 
 // @Tags file
 // @Summary 上传一个压缩包
+// @Security ApiKeyAuth
 // @Description 单文件上限 50 M。支持格式："zip", "rar", "apk", "tar", "jar", "7z", "gz", "rz"
 // @Param	X-Source-Type 	header 		string 	true 	"来源" Enums(11,12,21,22)
 // @Param	X-Project-Id  	header 		string 	true 	"项目ID" default(6)
@@ -238,6 +244,7 @@ func FileUploadPackagesOne(c *gin.Context) {
 
 // @Tags file
 // @Summary 大文件下载(暂未实现，后续补充)
+// @Security ApiKeyAuth
 // @Description 大文件走NGINX不现实，而且，中间断了后，无法续传
 // @Param	X-Source-Type header string true "来源" Enums(11,12,21,22)
 // @Param	X-Project-Id  header string true "项目ID" default(6)

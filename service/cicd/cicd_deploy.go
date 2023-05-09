@@ -37,7 +37,7 @@ func (cicdManager *CicdManager) GetConstListCicdDeployTargetType() map[string]in
 type ServiceDeployConfig struct {
 	Name             string //服务名称
 	BaseDir          string //所有service项目统一放在一个目录下，由host.toml 中配置
-	RemoteBaseDir    string //无端机器的部署代码的基础路径
+	RemoteBaseDir    string //远端机器的部署代码的基础路径
 	FullPath         string //最终一个服务的目录名,BaseDir + serviceName
 	MasterDirName    string //一个服务的线上使用版本-软连目录名称
 	MasterPath       string //full path + MasterDirName

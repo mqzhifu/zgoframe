@@ -62,10 +62,6 @@ publish table list:<br/>
 
 
 <script>
-    // 后端公共HTTP接口-头信息
-    // var header_X_Source_Type = "11";
-    // var header_X_Project_Id = "6";
-    // var header_X_Access = "imzgoframe";
     //===========================
     var serviceList = null;
     var serverList = null;
@@ -276,29 +272,37 @@ publish table list:<br/>
 
     function optDeployService(serverId,serviceId ,flag,obj){
         console.log("deploy serverId:",serverId , " serviceId:",serviceId);
+
+        var data = {"server_id": serverId, "service_id": serviceId ,"flag":flag};
+        AjaxAdminReq(optDeployServiceBack,"cicd_service_deploy","",true,"POST",data);
+
         // var jqObj = $(obj);
         // jqObj.removeAttr("onclick");
         // jqObj.html("部署慢，请等待10后，再点击");
         // setTimeout( optDeployService , 10 * 1000);
-        $.ajax({
-            headers: {
-                "X-Source-Type": header_X_Source_Type,
-                "X-Project-Id": header_X_Project_Id,
-                "X-Access": header_X_Access,
-            },
-            dataType: "json",
-            type: "POST",
-            data: JSON.stringify({"server_id": serverId, "service_id": serviceId ,"flag":flag}),
-            contentType: "application/json;charset=utf-8",
-            url: "/cicd/service/deploy",
-            success: function(backData){
-                backData = eval(   backData  );
-                if(backData.code != 200){
-                    return alert("ajax req back data err");
-                }
-                alert(backData);
-            }
-        });
+        // $.ajax({
+        //     headers: {
+        //         "X-Source-Type": header_X_Source_Type,
+        //         "X-Project-Id": header_X_Project_Id,
+        //         "X-Access": header_X_Access,
+        //     },
+        //     dataType: "json",
+        //     type: "POST",
+        //     data: JSON.stringify({"server_id": serverId, "service_id": serviceId ,"flag":flag}),
+        //     contentType: "application/json;charset=utf-8",
+        //     url: "/cicd/service/deploy",
+        //     success: function(backData){
+        //         backData = eval(   backData  );
+        //         if(backData.code != 200){
+        //             return alert("ajax req back data err");
+        //         }
+        //         alert(backData);
+        //     }
+        // });
+    }
+
+    function optDeployServiceBack(){
+
     }
 
     function optPublishService(publishId ){

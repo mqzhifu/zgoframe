@@ -88,6 +88,7 @@ func (deploy *Deploy) MakeError(errMsg string) error {
 func (deploy *Deploy) ApiDeployOneService(form request.CicdDeploy) error {
 	server, project, err := deploy.CheckCicdRequestForm(form)
 	if err != nil {
+		util.MyPrint("err:", err.Error())
 		return err
 	}
 	serviceDeployConfig := deploy.GetDeployConfig(form.Flag)

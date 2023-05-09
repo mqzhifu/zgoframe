@@ -32,6 +32,8 @@ var URI_MAP = {
     "cicd_server_list": http_protocol + "://"+domain +"/cicd/server/list",
     "cicd_super_visor_list": http_protocol + "://"+domain +  "/cicd/superVisor/list",
     "cicd_service_deploy": http_protocol + "://"+domain +  "/cicd/service/deploy",
+    "cicd_service_publish": http_protocol + "://"+domain +  "/cicd/service/publish/#publishId#/2",
+
     "test_migu_get_para" : http_protocol + "://"+domain + "/tools/test/migu/api/para",
     "test_migu_send_back_data" : http_protocol + "://"+domain + "/tools/test/migu/api/backdata",
 
@@ -75,8 +77,14 @@ function UserLogin(uid,callback){
 }
 
 //发起公共请求
-function AjaxAdminReq(callback,urlMapKey , useToken,async,httpMethod,httpData){
+function AjaxAdminReq(callback,urlMapKey , useToken,async,httpMethod,httpData,uriReplace){
     console.log("AjaxAdminReq ,urlMapKey:"+urlMapKey , "httpMethod:",httpMethod,"httpData:",httpData);
+    var httpUrl = URI_MAP[urlMapKey];
+    if (uriReplace){
+        for(let key  in uriReplace){
+            httpUrl = httpUrl.replace(key,uriReplace[key]);
+        }
+    }
     $.ajax({
         headers: {
             "X-Second-Auth-Uname": "xiaoz",
@@ -89,7 +97,7 @@ function AjaxAdminReq(callback,urlMapKey , useToken,async,httpMethod,httpData){
         contentType: "application/json;charset=utf-8",
         type: httpMethod,
         data : httpData,
-        url:URI_MAP[urlMapKey],
+        url:httpUrl,
         async:async,
         success: function(data){
             console.log(data);

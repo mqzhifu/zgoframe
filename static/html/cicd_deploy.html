@@ -273,7 +273,8 @@ publish table list:<br/>
     function optDeployService(serverId,serviceId ,flag,obj){
         console.log("deploy serverId:",serverId , " serviceId:",serviceId);
 
-        var data = {"server_id": serverId, "service_id": serviceId ,"flag":flag};
+        // var data = {"server_id": serverId, "service_id": serviceId ,"flag":flag};
+        var data = JSON.stringify({"server_id": serverId, "service_id": serviceId ,"flag":flag});
         AjaxAdminReq(optDeployServiceBack,"cicd_service_deploy","",true,"POST",data);
 
         // var jqObj = $(obj);
@@ -307,27 +308,33 @@ publish table list:<br/>
 
     function optPublishService(publishId ){
         console.log("optPublishService publishId:",publishId  );
-        $.ajax({
-            headers: {
-                "X-Source-Type": header_X_Source_Type,
-                "X-Project-Id": header_X_Project_Id,
-                "X-Access": header_X_Access,
-            },
-            dataType: "json",
-            type: "GET",
-            // data: JSON.stringify({"server_id": serverId, "service_id": serviceId}),
-            contentType: "application/json;charset=utf-8",
-            url: "/cicd/service/publish/"+publishId + "/2",
-            success: function(backData){
-                backData = eval(   backData  );
-                if(backData.code != 200){
-                    return alert("ajax req back data err");
-                }
-                alert(backData);
-            }
-        });
-    }
+        // var data = JSON.stringify({"server_id": serverId, "service_id": serviceId ,"flag":flag});
+        AjaxAdminReq(optPublishServiceBace,"cicd_service_publish","",true,"GET","",{"#publishId#":publishId});
 
+        // $.ajax({
+        //     headers: {
+        //         "X-Source-Type": header_X_Source_Type,
+        //         "X-Project-Id": header_X_Project_Id,
+        //         "X-Access": header_X_Access,
+        //     },
+        //     dataType: "json",
+        //     type: "GET",
+        //     // data: JSON.stringify({"server_id": serverId, "service_id": serviceId}),
+        //     contentType: "application/json;charset=utf-8",
+        //     url: "/cicd/service/publish/"+publishId + "/2",
+        //     success: function(backData){
+        //         backData = eval(   backData  );
+        //         if(backData.code != 200){
+        //             return alert("ajax req back data err");
+        //         }
+        //         alert(backData);
+        //     }
+        // });
+    }
+    
+    function optPublishServiceBace(){
+
+    }
     function GetBnt(superVisorState,serverId,serviceId ){
         console.log("GetBnt serverId:",serverId , " serviceId:",serviceId);
         var optBnt = "<a href='#' onclick='optDeployService("+serverId+","+serviceId+",2,this)'>部署</a>&nbsp;";

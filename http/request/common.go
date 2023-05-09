@@ -112,9 +112,9 @@ type CicdSuperVisor struct {
 }
 
 type CicdDeploy struct {
-	ServerId  int `json:"server_id"`
-	ServiceId int `json:"service_id"`
-	Flag      int `json:"flag"` //1本地2远程
+	ServerId  int `json:"server_id" form:"server_id"`
+	ServiceId int `json:"service_id" form:"service_id"`
+	Flag      int `json:"flag" form:"flag"` //1本地2远程
 }
 
 type CicdSync struct {

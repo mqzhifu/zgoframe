@@ -4,7 +4,6 @@ package util
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"net/http"
 	"strconv"
 	"time"
@@ -47,10 +46,10 @@ type AlertMsgLabels struct {
 func NewAlertPush(ip string, port string, uri string, printfPrefix string) (*AlertPush, error) {
 	alert := new(AlertPush)
 	//验证函数参数是否为空
-	if ip == "" || port == "" || uri == "" {
-		MyPrint(printfPrefix + "NewAlertPush:ip,port,uri can not be empty")
-		return nil, errors.New(printfPrefix + "NewAlertPush:ip,port,uri can not be empty")
-	}
+	//if ip == "" || port == "" || uri == "" {
+	//	MyPrint(printfPrefix + "NewAlertPush:ip,port,uri can not be empty")
+	//	return nil, errors.New(printfPrefix + "NewAlertPush:ip,port,uri can not be empty")
+	//}
 
 	alert.Ip = ip
 	alert.Port = port

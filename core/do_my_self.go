@@ -40,6 +40,8 @@ func DoTestAction(flag string) {
 		util.MyPrint(recordNewId, err)
 	case "cicd":
 		test.Cicd()
+	case "ProjectAutoCreateUserDbRecord":
+		test.ProjectAutoCreateUserDbRecord()
 	case "alert_push":
 		//global.V.AlertPush.Push(1, "error", "test push alert info.")
 	case "grpc":

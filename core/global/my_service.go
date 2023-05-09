@@ -52,7 +52,7 @@ func NewMyService() *MyService {
 	//服务之间互相调用
 	myService.ServiceBridge, _ = service.NewBridge(ServiceBridgeOp)
 	//用户服务
-	myService.User = user_center.NewUser(V.Gorm, V.Redis)
+	myService.User = user_center.NewUser(V.Gorm, V.Redis, V.ProjectMng)
 	//站内信服务
 	myService.Mail = msg_center.NewMail(V.Gorm, V.Zap)
 	//短信服务

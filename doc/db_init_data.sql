@@ -1,13 +1,15 @@
 INSERT INTO `project` (`id`, `name`, `type`, `desc`, `secret_key`, `status`, `access`, `lang`, `git`, `created_at`, `updated_at`, `deleted_at`) VALUES
-        (1, 'GameMatch', 1, '小游戏-玩家匹配机制', 'ckgamematch', 0, 'imgamematch', 2, 'git://github.com/mqzhifu/gamematch.git', 1650001049, 1650001049, NULL),
-        (2, 'FrameSync', 1, '游戏-帧同步', 'ckframesync', 0, 'imframesync', 2, 'git://github.com/mqzhifu/frame_sync.git', 1650001049, 1650001049, NULL),
-        (6, 'Zgoframe', 1, 'go框架测试', 'ckZgoframe', 1, 'imzgoframe', 2, 'https://github.com/mqzhifu/zgoframe.git', 1650001049, 1650001049, NULL),
-        (9, 'Gateway', 1, '公共网关', 'ckgateway', 0, 'imgateway', 2, 'git://github.com/mqzhifu/gateway.git', 1650001049, 1650001049, NULL),
-        (10, 'Zwebuigo', 1, '后台管理系统', 'ckZwebuigo', 1, 'imzwebuigo', 2, 'https://github.com/mqzhifu/zwebuigo.git', 1650001049, 1650001049, NULL),
-        (11, 'Zwebuivue', 2, '后台管理系统-VUE', 'ckZwebuivue', 1, 'imzwebuivue', 4, 'https://github.com/mqzhifu/zwebuivue.git', 1650001049, 1650001049, NULL),
-        (12, 'TwinAgora', 2, '数据孪生-专家指导(声网)', 'ckTwinAgora', 1, 'imtwinagora', 4, 'https://github.com/mqzhifu/twin_agora.git', 1650001049, 1650001049, NULL),
-        (13, 'AgoraUnity', 5, '数据孪生-UNITY端', 'ckAgoraUnity', 1, 'imagoraunity', 7, 'http://192.168.1.22:40080/jiaxing.zhu/Agora.git', 1650001049, 1650001049, NULL),
-        (16, 'Platform_console ', 5, '内部人使用，平台小助手', 'ckPlatform_console', 1, 'imaPlatform_console', 7, '', 1650001049, 1650001049, NULL);
+        (1,  'GameMatch',       1, '游戏-玩家匹配机制',  'ckGamematch',       0, 'imgamematch',         2, 'git://github.com/mqzhifu/gamematch.git', 1650001049, 1650001049, NULL),
+        (2,  'FrameSync',       1, '游戏-帧同步'     ,  'ckFramesync',       0, 'imframesync',         2, 'git://github.com/mqzhifu/frame_sync.git', 1650001049, 1650001049, NULL),
+        (6,  'Zgoframe',        1, 'go-框架测试'    ,   'ckZgoframe',       1, 'imzgoframe',           2, 'https://github.com/mqzhifu/zgoframe.git', 1650001049, 1650001049, NULL),
+        (9,  'Gateway',         1, '公共网关',          'ckgateway',        0, 'imgateway',            2, 'git://github.com/mqzhifu/gateway.git', 1650001049, 1650001049, NULL),
+        (10, 'Zwebuigo',        1, '后台管理系统-API',   'ckZwebuigo',        1, 'imzwebuigo',          2, 'https://github.com/mqzhifu/zwebuigo.git', 1650001049, 1650001049, NULL),
+        (11, 'Zwebuivue',       2, '后台管理系统-VUE',   'ckZwebuivue',        1, 'imzwebuivue',        4, 'https://github.com/mqzhifu/zwebuivue.git', 1650001049, 1650001049, NULL),
+        (12, 'TwinAgora',       2, '数据孪生-专家端',    'ckTwinAgora',        1, 'imtwinagora',         4, 'https://github.com/mqzhifu/twin_agora.git', 1650001049, 1650001049, NULL),
+        (13, 'AgoraUnity',      5, '数据孪生-UNITY端',  'ckAgoraUnity',       1, 'imagoraunity',        7, 'http://192.168.1.22:40080/jiaxing.zhu/Agora.git', 1650001049, 1650001049, NULL),
+        (14, 'AR120',           5, '120-眼镜端',       'ckAR120',           1, 'imar120',              7, '',                                                 1650001049, 1650001049, NULL),
+        (15, 'WEB120',          5, '120-WEB端',        'ckWEB120',          1, 'imweb120',            7, '',                                                 1650001049, 1650001049, NULL),
+        (16, 'Platform_console',5, '平台(开发)小助手',   'ckPlatform_console', 1, 'imaPlatform_console', 7, '',                                                1650001049, 1650001049, NULL);
 
 
 

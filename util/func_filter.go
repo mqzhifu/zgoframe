@@ -17,7 +17,7 @@ func CheckEmailRule(email string) bool {
 }
 
 func CheckFileName(name string) bool { //判断文件名合法
-	pattern := `^[a-zA-Z0-9_-]{1,100}\.[\w]{1,10}$`
+	pattern := `^[a-zA-Z0-9_-]{1,100}\.[\w]{1,13}$`
 	reg := regexp.MustCompile(pattern)
 	return reg.MatchString(name)
 }

@@ -18,18 +18,20 @@ type UserRegInfo struct {
 }
 
 type User struct {
-	Gorm  *gorm.DB
-	Redis *util.MyRedis
+	Gorm           *gorm.DB
+	Redis          *util.MyRedis
+	ProjectManager *util.ProjectManager
 }
 
-func NewUser(gorm *gorm.DB, redis *util.MyRedis) *User {
+func NewUser(gorm *gorm.DB, redis *util.MyRedis, projectManager *util.ProjectManager) *User {
 	user := new(User)
 	user.Gorm = gorm
 	user.Redis = redis
+	user.ProjectManager = projectManager
 	return user
 }
 
-//注册，用户名/密码
+//注册，用户名/密码，把 HTTP 参数转换成 User 对象
 func (user *User) RegisterByUsername(R request.Register, h request.HeaderRequest) (err error, userInter model.User) {
 	u := model.User{
 		Username:  R.Username,
@@ -54,6 +56,15 @@ func (user *User) RegisterByUsername(R request.Register, h request.HeaderRequest
 	}
 
 	return user.Register(u, h, userRegInfo)
+}
+
+func (user *User) SystemCreateUser(userInfo model.User) (err error, userInter model.User) {
+	userInfo.Robot = model.USER_ROBOT_TRUE
+
+	h := request.HeaderRequest{}
+	r := UserRegInfo{}
+
+	return user.Register(userInfo, h, r)
 }
 
 func (user *User) Delete(uid int) (map[string]int, error) {
@@ -424,14 +435,25 @@ func (user *User) BindEmail(uid int, email string) (err error) {
 	return err
 }
 
-//func (user *User) ProjectAutoCreateUserDbRecord() {
-//	for _, v := range projectManager.Pool {
-//		var user model.User
-//		//projectManager.Gorm.Model(&model.User{}).Where("project_id = ?",v.Id).FirstOrCreate(&model.User{ProjectId:v.Id})
-//		err := projectManager.Gorm.Where("username = ?   ", v.Name).First(&user).Error
-//		if err == nil { //证明该用户记录已经存在，不需要再创建
-//			continue
-//		}
-//		newUser := model.User{}
-//	}
-//}
+func (user *User) ProjectAutoCreateUserDbRecord() {
+	for _, project := range user.ProjectManager.Pool {
+		var searchUser model.User
+		err := user.Gorm.Where("username = ?   ", project.Name).First(&searchUser).Error
+		if err == nil { //证明该用户记录已经存在，不需要再创建
+			util.MyPrint("projectName exist in user table. projectName:", project.Name)
+			continue
+		}
+		//util.ExitPrint(333)
+		userInfo := model.User{
+			Username: project.Name,
+			Password: util.MD5V([]byte("123456")),
+		}
+		err, _ = user.SystemCreateUser(userInfo)
+		if err != nil {
+			util.MyPrint("SystemCreateUser err:", err.Error())
+		} else {
+			util.MyPrint("SystemCreateUser success project name:", project.Name)
+		}
+
+	}
+}

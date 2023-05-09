@@ -33,6 +33,7 @@ type UploadRs struct {
 	LocalDomainUrl string `json:"local_domain_url"` //访问本地文件DOMAIN-URL地址
 	OssLocalUrl    string `json:"oss_local_url"`    //自己的域名绑定在阿里OSS上
 	OssUrl         string `json:"oss_url"`          //阿里云的地址
+	Md5Sign        string `json:"md5_sign"`         //文件的MD5签名
 }
 
 //类
@@ -61,7 +62,7 @@ type FileManagerOption struct {
 
 var imgs = []string{"jpg", "jpeg", "png", "gif", "x-png", "png", "bmp", "pjpeg", "x-icon", "svg", "webp", "psd"}
 var docs = []string{"txt", "doc", "docx", "dotx", "json", "cvs", "xls", "xlsx", "sql", "msword", "ppt", "pptx", "pdf", "wps", "vsd"}
-var packages = []string{"zip", "rar", "apk", "tar", "jar", "7z", "gz", "rz"}
+var packages = []string{"zip", "rar", "apk", "tar", "jar", "7z", "gz", "rz", "unitypackage"}
 var video = []string{"mp4", "avi", "rm", "mkv", "wmv", "mov", "flv", "fla", "rmvb", "m3u8", "webm", "ts", "wav"}
 
 func NewFileManagerUpload(Option FileManagerOption) *FileManager {
@@ -172,6 +173,7 @@ func (fileManager *FileManager) UploadOne(header *multipart.FileHeader, module s
 	uploadRs.LocalDomainUrl = fileManager.GetLocalDomainUrl(uploadRs)
 	uploadRs.OssUrl = fileManager.GetOssUrl(uploadRs)
 	uploadRs.OssLocalUrl = fileManager.GetOssLocalUrl(uploadRs)
+	uploadRs.Md5Sign = fileHashValue
 
 	return uploadRs, nil
 }

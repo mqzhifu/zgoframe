@@ -21,11 +21,11 @@ func StartHttpGin() {
 	dns := global.C.Http.Ip + ":" + global.C.Http.Port
 	global.V.Zap.Debug("http gin dns:" + dns)
 	server := &http.Server{
-		Addr:           dns,
-		Handler:        global.V.Gin,
-		ReadTimeout:    10 * time.Second,
-		WriteTimeout:   10 * time.Second,
-		MaxHeaderBytes: 1 << 20,
+		Addr:    dns,
+		Handler: global.V.Gin,
+		//ReadTimeout:    10 * time.Second,//这里先注释掉，上传大文件的时候，这里可能超时造成NGINX 502
+		//WriteTimeout:   10 * time.Second,
+		//MaxHeaderBytes: 1 << 20,
 	}
 
 	global.V.Zap.Warn("StartHttpGin : " + dns)
@@ -57,7 +57,7 @@ func HandleNotFound(c *gin.Context) {
 	return
 }
 
-//GIN: 监听HTTP   中间件  文件上传
+// GIN: 监听HTTP   中间件  文件上传
 func GetNewHttpGIN(zapLog *zap.Logger, prefix string) (*gin.Engine, error) {
 	staticFSUriName := "/static"
 	swaggerUri := "/swagger/*any"

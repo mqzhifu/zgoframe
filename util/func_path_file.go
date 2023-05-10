@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-//检查一个文件是否已存在
+// 检查一个文件是否已存在
 func FileExist(filename string) (os.FileInfo, error) {
 	if filename == "" {
 		msg := "filename empty"
@@ -46,13 +46,13 @@ func PathExists(path string) (os.FileInfo, error) {
 	return fd, nil
 }
 
-//打开一个文件，并按照换行符 读取到一个数组中
+// 打开一个文件，并按照换行符 读取到一个数组中
 func ReadLine(fileName string) ([]string, error) {
 	f, err := os.Open(fileName)
 	if err != nil {
 		return nil, err
 	}
-	defer f.Close()
+	//defer f.Close()
 	buf := bufio.NewReader(f)
 	var result []string
 	for {
@@ -68,31 +68,31 @@ func ReadLine(fileName string) ([]string, error) {
 	}
 	return result, nil
 }
-func UrlAppendIpHost(protocol string ,url string ,ip string,port string)string{
+func UrlAppendIpHost(protocol string, url string, ip string, port string) string {
 	fullUrl := protocol + "://" + ip
-	if port != ""{
+	if port != "" {
 		fullUrl += ":" + port
 	}
-	fullUrl += "/" +  url
+	fullUrl += "/" + url
 	return fullUrl
 }
 
-func UrlAppendDomain(protocol string ,url string ,domain string,port string)string{
+func UrlAppendDomain(protocol string, url string, domain string, port string) string {
 	fullUrl := protocol + "://" + domain
-	if port != ""{
+	if port != "" {
 		fullUrl += ":" + port
 	}
-	fullUrl += "/" +  url
+	fullUrl += "/" + url
 	return fullUrl
 }
 
-//打开一个文件，并按照换行符 读取到一个数组中
+// 打开一个文件，并按照换行符 读取到一个数组中
 func ReadString(fileName string) (string, error) {
 	f, err := os.Open(fileName)
 	if err != nil {
 		return "", err
 	}
-	defer f.Close()
+	//defer f.Close()
 
 	//buf := bufio.NewReader(f)
 	var strings string
@@ -115,7 +115,7 @@ type ForeachDirInfo struct {
 	Name string
 }
 
-//遍历一个目录的所有文件/目录列表，但 不递归，也就是子目录不处理
+// 遍历一个目录的所有文件/目录列表，但 不递归，也就是子目录不处理
 func ForeachDir(path string) []ForeachDirInfo {
 	var list []ForeachDirInfo
 	fs, err := ioutil.ReadDir(path)

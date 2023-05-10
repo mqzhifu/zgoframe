@@ -23,7 +23,7 @@ func NewAliOss(op AliOssOptions) *AliOss {
 	return aliOss
 }
 
-//将本地文件上传到阿里云-OSS
+// 将本地文件上传到阿里云-OSS
 func (aliOss *AliOss) UploadOneByFile(localFilePath string, relativePath, FileName string) error {
 	//这里阿里云有个小BUG，所有的路径不能以反斜杠(/)开头
 	if relativePath[0:1] == "/" {
@@ -56,8 +56,17 @@ func (aliOss *AliOss) UploadOneByFile(localFilePath string, relativePath, FileNa
 	return err
 
 }
+func (aliOss *AliOss) DelOne(relativePath string) error {
+	MyPrint("aliOss DelOne relativePath:", relativePath)
+	_, bucket, err := aliOss.GetClientBucket()
+	if err != nil {
+		return err
+	}
+	err = bucket.DeleteObject(relativePath)
+	return err
+}
 
-//将本地文件上传到阿里云-OSS
+// 将本地文件上传到阿里云-OSS
 func (aliOss *AliOss) UploadOneByStream(reader io.Reader, relativePath, FileName string) error {
 	//这里阿里云有个小BUG，所有的路径不能以反斜杠(/)开头
 	if relativePath[0:1] == "/" {

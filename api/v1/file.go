@@ -243,6 +243,33 @@ func FileUploadPackagesOne(c *gin.Context) {
 }
 
 // @Tags file
+// @Summary 删除一个文件
+// @Security ApiKeyAuth
+// @Description 单文件上限 50 M。支持格式："zip", "rar", "apk", "tar", "jar", "7z", "gz", "rz"
+// @Param	X-Source-Type 	header 		string 	true 	"来源" Enums(11,12,21,22)
+// @Param	X-Project-Id  	header 		string 	true 	"项目ID" default(6)
+// @Param	X-Access      	header 		string 	true 	"访问KEY" default(imzgoframe)
+// @Param data body request.FileDelete true "基础信息"
+// @Produce	application/json
+// @Success 200 {string} string  "删除结果"
+// @Router 	/file/delete/one [POST]
+func FileDeleteOne(c *gin.Context) {
+	var form request.FileDelete
+	c.ShouldBind(&form)
+
+	if form.RelativePath == "" {
+		httpresponse.FailWithMessage("文件相对路径不能为空", c)
+		return
+	}
+	err := global.V.VideoManager.DeleteOne(form)
+	if err != nil {
+		httpresponse.FailWithMessage(err.Error(), c)
+	} else {
+		httpresponse.OkWithMessage("删除成功", c)
+	}
+}
+
+// @Tags file
 // @Summary 大文件下载(暂未实现，后续补充)
 // @Security ApiKeyAuth
 // @Description 大文件走NGINX不现实，而且，中间断了后，无法续传
@@ -270,7 +297,7 @@ func FileBigDownload(c *gin.Context) {
 
 }
 
-//分断续传，使用http header:ranges ，C端首次请求：获取文件基础信息
+// 分断续传，使用http header:ranges ，C端首次请求：获取文件基础信息
 func FileDownloadInfo(c *gin.Context) {
 	//filePath := c.PostForm("path")
 	//fileUpload := global.GetUploadObj(1, "")

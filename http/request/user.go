@@ -1,6 +1,13 @@
 package request
 
-//@description 注册信息
+// @description 获取访问权限的 token
+type AccessToken struct {
+	Grant     string `json:"grant"`     //保留字，先不用
+	Timestamp int    `json:"timestamp"` //unix 时间戳 10位的
+	Sign      string `json:"sign"`      //签名:md5(SecretKey+Timestamp+Access)
+}
+
+// @description 注册信息
 type Register struct {
 	ProjectId int    `json:"project_id" form:"project_id"` //项目Id
 	Username  string `json:"userName" form:"username"`     //用户名
@@ -19,7 +26,7 @@ type Register struct {
 	ExtDiy    string `json:"ext_diy"`                      //自定义用户属性，暂未实现
 }
 
-//@description 注册信息 - 通过手机号
+// @description 注册信息 - 通过手机号
 type RegisterSms struct {
 	//ProjectId   int    `json:"project_id"`    //项目Id
 	Mobile      string `json:"mobile"`        //手机号
@@ -29,7 +36,7 @@ type RegisterSms struct {
 	CaptchaId   string `json:"captchaId"`     //图片验证码ID
 }
 
-//@descriptionw 绑定手机号
+// @descriptionw 绑定手机号
 type BindMobile struct {
 	ProjectId   int    `json:"project_id"`    //项目Id
 	Mobile      string `json:"mobile"`        //手机号
@@ -37,7 +44,7 @@ type BindMobile struct {
 	RuleId      int    `json:"rule_id"`       //短信类型，登陆/注册
 }
 
-//@descriptionw 绑定邮箱
+// @descriptionw 绑定邮箱
 type BindEmail struct {
 	ProjectId   int    `json:"project_id"`    //项目Id
 	Email       string `json:"email"`         //邮箱号
@@ -45,7 +52,7 @@ type BindEmail struct {
 	RuleId      int    `json:"rule_id"`       //邮件类型，登陆/注册
 }
 
-//@description 修改用户基础信息
+// @description 修改用户基础信息
 type SetUserInfo struct {
 	NickName  string `json:"nickName" form:"nick_name" `   //昵称
 	HeaderImg string `json:"headerImg" form:"header_img" ` //头像地址
@@ -53,7 +60,7 @@ type SetUserInfo struct {
 	Birthday  int    `json:"birthday" form:"birthday"`     //生日
 }
 
-//@description 正常登陆，需要用户名密码
+// @description 正常登陆，需要用户名密码
 type Login struct {
 	Username  string `json:"username" form:"username"`   //用户名：普通字符串、手机号、邮箱
 	Password  string `json:"password" form:"password"`   //密码
@@ -61,13 +68,22 @@ type Login struct {
 	CaptchaId string `json:"captchaId" form:"captchaId"` //验证码-ID
 }
 
-type AccessToken struct {
-	Grant     string `json:"grant"`     //保留字，先不用
-	Timestamp int    `json:"timestamp"` //unix 时间戳 10位的
-	Sign      string `json:"sign"`      //签名
+// @description 3方登陆
+type RLoginThird struct {
+	Register
+	ThirdId      string `json:"third_id"`      //3方平台用户ID，此值必填
+	PlatformType int    `json:"platform_type"` //3方平台类型，如：微信、QQ、facebook、抖音，此值必填
 }
 
-//@description 短信登陆
+//// @description  3方平台登陆
+//type LoginThird struct {
+//	Code      string `json:"code"`
+//	Platform  string `json:"platform"`
+//	Captcha   string `json:"captcha"`
+//	CaptchaId string `json:"captchaId"`
+//}
+
+// @description 短信登陆
 type LoginSMS struct {
 	//Code        string `json:"code"`
 	Captcha     string `json:"captcha"`       //图片验证码
@@ -77,15 +93,7 @@ type LoginSMS struct {
 	SmsRuleId   int    `json:"sms_rule_id"`   //短信类型，登陆/注册
 }
 
-//@description  3方平台登陆
-type LoginThird struct {
-	Code      string `json:"code"`
-	Platform  string `json:"platform"`
-	Captcha   string `json:"captcha"`
-	CaptchaId string `json:"captchaId"`
-}
-
-//@description 发送验证码
+// @description 发送验证码
 type SendSMS struct {
 	RuleId     int               `json:"rule_id"`     //配置规则的ID
 	ReplaceVar map[string]string `json:"replace_var"` //邮件内容模块中变量替换
@@ -96,21 +104,13 @@ type SendSMS struct {
 	CaptchaId  string            `json:"captchaId"`   //获取验证码时拿到的Id
 }
 
-type TwinAgoraToken struct {
-	Username string `json:"username"` //用户名 or 用户ID
-	Channel  string `json:"channel"`  //频道名称，给rtc使用,RTM可为空
-}
-
-type TwinAgoraReq struct {
-	RecordId int `json:"record_id"`
-}
-
+// @description 图片验证码
 type Captcha struct {
 	Width  int `json:"width"`  //图片宽度，默认：240，最大：1000
 	Height int `json:"height"` //图片高度，默认：80，最大：1000
 }
 
-//@description 发送邮件
+// @description 发送邮件
 type SendEmail struct {
 	RuleId     int               `json:"rule_id"`     //配置规则的ID
 	ReplaceVar map[string]string `json:"replaceVar"`  //邮件内容模块中变量替换
@@ -120,7 +120,7 @@ type SendEmail struct {
 	SendIp     string            `json:"send_ip"`     //发送者IP，如为空系统默认取：请求方的IP,最好给真实的，一但被刷，会使用此值
 }
 
-//@description 发送站内信
+// @description 发送站内信
 type SendMail struct {
 	RuleId     int               `json:"rule_id"`    //配置规则的ID
 	ReplaceVar map[string]string `json:"replaceVar"` //邮件内容模块中变量替换
@@ -130,7 +130,7 @@ type SendMail struct {
 	SendTime   int               `json:"send_time"`  //定时发送，unixStamp 必须大于当前时间
 }
 
-//@description 站内信列表
+// @description 站内信列表
 type MailList struct {
 	BoxType      int `json:"box_type"`      //1收件箱2发件箱4全部
 	ReceiverRead int `json:"receiver_read"` //1接收者已读2接收者未读
@@ -139,21 +139,21 @@ type MailList struct {
 	PageInfo         //分页
 }
 
-//@description 站内信一条消息详情
+// @description 站内信一条消息详情
 type MailInfo struct {
 	Id               int `json:"id"`
 	AutoReceiverRead int `json:"auto_receiver_read"` //自动更新为：接收者已读
 	AutoReceiverDel  int `json:"auto_receiver_del"`  //自动更新为：接收者已删除
 }
 
-//@description 设置/修改密码
+// @description 设置/修改密码
 type SetPassword struct {
 	Password           string `json:"password"`             //旧密码
 	NewPassword        string `json:"newPassword"`          //新密码
 	NewPasswordConfirm string `json:"new_password_confirm"` //新密码确认
 }
 
-//@description 修改密码
+// @description 修改密码
 type RestPasswordSms struct {
 	Mobile             string `json:"mobile"`               //手机号
 	SmsAuthCode        string `json:"sms_auth_code"`        //短信验证码
@@ -163,42 +163,20 @@ type RestPasswordSms struct {
 	NewPasswordConfirm string `json:"new_password_confirm"` //新密码确认
 }
 
+// @description 检测手机号是否已存在
 type CheckMobileExist struct {
 	Mobile  string `json:"mobile"`  //手机号
 	Purpose int    `json:"purpose"` //用途,1注册2找回密码3修改密码4登陆
 }
 
+// @description 检测用户名是否已存在
 type CheckUsernameExist struct {
 	Username string `json:"username"` //用户名
 	Purpose  int    `json:"purpose"`  //用途,1注册2找回密码3修改密码4登陆
 }
 
+// @description 检测邮件是否已存在
 type CheckEmailExist struct {
 	Email   string `json:"email"`   //邮箱
 	Purpose int    `json:"purpose"` //用途,1注册2找回密码3修改密码4登陆
-}
-
-////能用HTTP请求结构体，按说应该拆开，但是有些公共的参数，拆开不能统一check
-//type HttpReqGameMatchPlayerSign struct {
-//	RuleId     int                      `json:"rule_id" desc:"ruleId，后台录入的时候，自动生成"`
-//	GroupId    int                      `json:"group_id" desc:"小组ID，注：请输入唯一值，不要重复"`
-//	PlayerList []HttpReqGameMatchPlayer `json:"player_list" desc:"玩家列表,ex:[{\"uid\":2,\"matchAttr\":{\"age\":1,\"sex\":2}}]"`
-//	Addition   string                   `json:"addition" desc:"附加值，请求方传什么值，返回就会随带该值"`
-//}
-//
-//type HttpReqGameMatchPlayer struct {
-//	Uid        int            `json:"uid"`
-//	WeightAttr map[string]int `json:"weight_attr"`
-//}
-//
-//type HttpReqGameMatchPlayerCancel struct {
-//	RuleId  int `json:"rule_id" desc:"ruleId，后台录入的时候，自动生成"`
-//	GroupId int `json:"group_id" desc:"报名时候的，小组ID"`
-//}
-type FrameSyncRoomHistory struct {
-	RoomId              string `json:"roomId"`
-	SequenceNumberStart int32  `json:"sequenceNumberStart"`
-	SequenceNumberEnd   int32  `json:"sequenceNumberEnd"`
-	SourceUid           int32  `json:"sourceUid"`
-	PlayerId            int32  `json:"playerId"`
 }

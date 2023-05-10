@@ -12,6 +12,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"zgoframe/http/request"
 )
 
 //type FileDownInfo struct {
@@ -22,7 +23,7 @@ import (
 //	FileLocalPath    string
 //}
 
-//上伟文件成功后，返回的数据
+// 上伟文件成功后，返回的数据
 type UploadRs struct {
 	Filename       string `json:"filename"`         //文件名
 	RelativePath   string `json:"relative_path"`    //相对路径：用户自定义的前缀目录 + hash目录名
@@ -36,7 +37,7 @@ type UploadRs struct {
 	Md5Sign        string `json:"md5_sign"`         //文件的MD5签名
 }
 
-//类
+// 类
 type FileManager struct {
 	FileTypeMap sync.Map
 	Option      FileManagerOption
@@ -93,7 +94,7 @@ func (fileManager *FileManager) GetConstListFileUploadStoreOSS() map[string]int 
 	return list
 }
 
-//上传一个文件
+// 上传一个文件
 func (fileManager *FileManager) UploadOne(header *multipart.FileHeader, module string, hashDir int, syncOss int) (uploadRs UploadRs, err error) {
 	if module == "" && hashDir == 0 {
 		return uploadRs, errors.New("module hashDir 均为空，即：在根目录上传文件，不允许")
@@ -134,7 +135,7 @@ func (fileManager *FileManager) UploadOne(header *multipart.FileHeader, module s
 	if fileManager.Option.UploadStoreLocal == UPLOAD_STORE_LOCAL_OPEN {
 		//把用户上传的文件(内存中)，转移到本机的硬盘上
 		out, err := os.Create(newFileName)
-		defer out.Close()
+		//defer out.Close()
 		if err != nil {
 			return uploadRs, errors.New("本地存储文件失败1:" + err.Error())
 		}
@@ -181,7 +182,7 @@ func (fileManager *FileManager) RealUploadOne() {
 
 }
 
-//流的大小：不能小于100个字节，因为要截取出头部的100个字节，做类型匹配及校验
+// 流的大小：不能小于100个字节，因为要截取出头部的100个字节，做类型匹配及校验
 func (fileManager *FileManager) UploadOneByStream(stream string, category int, module string, hashDir int) (uploadRs UploadRs, err error) {
 	if category != FILE_TYPE_IMG {
 		return uploadRs, errors.New("目前category仅支持：图片流")
@@ -260,7 +261,7 @@ func (fileManager *FileManager) UploadOneByStream(stream string, category int, m
 		if err != nil {
 			return uploadRs, errors.New("open file err:" + err.Error())
 		}
-		defer fd.Close()
+		//defer fd.Close()
 		_, err = fd.Write(data)
 		if err != nil {
 			return uploadRs, errors.New("file write err:" + err.Error())
@@ -393,12 +394,12 @@ func (fileManager *FileManager) GetOssUrl(uploadRs UploadRs) string {
 	return fileManager.Option.AliOss.Op.BucketName + "." + fileManager.Option.AliOss.Op.Endpoint + "/" + uploadRs.RelativePath + "/" + uploadRs.Filename
 }
 
-//ip访问的话，目录前面会多一个 static
+// ip访问的话，目录前面会多一个 static
 func (fileManager *FileManager) GetLocalIpUrl(uploadRs UploadRs) string {
 	return uploadRs.StaticDir + "/" + uploadRs.UploadDir + "/" + uploadRs.RelativePath + "/" + uploadRs.Filename
 }
 
-//域名访问的话，少一个static
+// 域名访问的话，少一个static
 func (fileManager *FileManager) GetLocalDomainUrl(uploadRs UploadRs) string {
 	return uploadRs.UploadDir + "/" + uploadRs.RelativePath + "/" + uploadRs.Filename
 }
@@ -423,7 +424,7 @@ func (fileManager *FileManager) GetAllowFileTypeList(category int) (rs []string,
 
 }
 
-//主要是给出错信息使用
+// 主要是给出错信息使用
 func (fileManager *FileManager) GetAllowFileTypeListToStr(category int) string {
 	listStr := ""
 	list, _ := fileManager.GetAllowFileTypeList(category)
@@ -443,12 +444,12 @@ func (fileManager *FileManager) FilterByExtString(category int, extName string) 
 	return false
 }
 
-//把用户上传的文件名，转换成自己想要的文件名：类型ID_当时时间_md5值.扩展名
+// 把用户上传的文件名，转换成自己想要的文件名：类型ID_当时时间_md5值.扩展名
 func (fileManager *FileManager) GetNewFileName(fileExtName string, fileHashValue string) string {
 	return strconv.Itoa(fileManager.Option.Category) + "_" + strconv.Itoa(GetNowTimeSecondToInt()) + "_" + fileHashValue + "." + fileExtName
 }
 
-//撮当前上传目录的：hash前缀目录
+// 撮当前上传目录的：hash前缀目录
 func (fileManager *FileManager) GetHashDirName(hashDir int) string {
 	//if hashDir <= 0 {
 	//	hashDir = fileManager.Option.FileHashType
@@ -469,7 +470,7 @@ func (fileManager *FileManager) GetHashDirName(hashDir int) string {
 	return dirName
 }
 
-//根据文件名(字符串)，取文件的扩展名，同时验证该扩展名是否合法
+// 根据文件名(字符串)，取文件的扩展名，同时验证该扩展名是否合法
 func (fileManager *FileManager) GetExtName(fileName string) (extName string, err error) {
 	if !CheckFileName(fileName) {
 		return "", errors.New("文件名不合法：只允许大小写字母+(-_),且必须且只能出现一个:符号(.),长度范围：3~111 ")
@@ -485,7 +486,7 @@ func (fileManager *FileManager) GetExtName(fileName string) (extName string, err
 	return extName, nil
 }
 
-//检查本地硬盘文件存储路径
+// 检查本地硬盘文件存储路径
 func (fileManager *FileManager) checkLocalDiskPath(FilePrefix string, hashDir int) (localDiskDir string, relativePath string, err error) {
 	//硬盘上存储的目录
 	localDiskDir = fileManager.GetLocalDiskUploadBasePath()
@@ -528,4 +529,25 @@ func FileMD5(filePath string) (string, error) {
 	hash := md5.New()
 	_, _ = io.Copy(hash, file)
 	return hex.EncodeToString(hash.Sum(nil)), nil
+}
+
+func (fileManager *FileManager) DeleteOne(form request.FileDelete) error {
+	if form.RelativePath == "" {
+		return errors.New("relativePath is empty")
+	}
+	LocalDiskUploadBasePath := fileManager.GetLocalDiskUploadBasePath()
+	AllPath := LocalDiskUploadBasePath + form.RelativePath
+	_, err := FileExist(AllPath)
+	if err != nil {
+		return err
+	}
+	MyPrint("fileManager DeleteOne path:", AllPath)
+	err = os.Remove(AllPath)
+	if form.SyncOss == 2 {
+		err = fileManager.Option.AliOss.DelOne(form.RelativePath)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }

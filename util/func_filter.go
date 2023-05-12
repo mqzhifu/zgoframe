@@ -17,7 +17,7 @@ func CheckEmailRule(email string) bool {
 }
 
 func CheckFileName(name string) bool { //判断文件名合法
-	pattern := `^[a-zA-Z0-9_-]{1,100}\.[\w]{1,13}$`
+	pattern := `^[a-zA-z]{1}[a-zA-Z0-9_.]{1,99}\.[\w]{1,15}$`
 	reg := regexp.MustCompile(pattern)
 	return reg.MatchString(name)
 }
@@ -34,7 +34,7 @@ func CheckNameRule(ip string) bool { //帐号是否合法(字母开头，允许7
 	return reg.MatchString(ip)
 }
 
-//unix stamp 10位，秒为单位
+// unix stamp 10位，秒为单位
 func CheckUnixStampSecondRule(time int) bool {
 	//pattern := `^\d{10}$`
 	pattern := `^1\d{9}$`
@@ -42,14 +42,14 @@ func CheckUnixStampSecondRule(time int) bool {
 	return reg.MatchString(strconv.Itoa(time))
 }
 
-//unix stamp 13位，毫秒为单位
+// unix stamp 13位，毫秒为单位
 func CheckUnixStampMicroSecondRule(time int) bool {
 	pattern := `^1\d{12}$`
 	reg := regexp.MustCompile(pattern)
 	return reg.MatchString(strconv.Itoa(time))
 }
 
-//身份证号
+// 身份证号
 func CheckIdNumberRule(idNumber string) bool {
 	pattern := `^\d{17}[0-9Xx]|\d{15}$`
 	reg := regexp.MustCompile(pattern)

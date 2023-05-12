@@ -473,10 +473,12 @@ func (fileManager *FileManager) GetHashDirName(hashDir int) string {
 // 根据文件名(字符串)，取文件的扩展名，同时验证该扩展名是否合法
 func (fileManager *FileManager) GetExtName(fileName string) (extName string, err error) {
 	if !CheckFileName(fileName) {
-		return "", errors.New("文件名不合法：只允许大小写字母+(-_),且必须且只能出现一个:符号(.),长度范围：3~111 ")
+		return "", errors.New("文件名不合法：字母开头，允许字符：_.a-zA-Z0-9,共计100，之后扩展名：(.),长度范围：3~15 ")
 	}
 	//根据.切割文件名字符串
-	extName = strings.Split(fileName, ".")[1]
+	splitFileName := strings.Split(fileName, ".")
+	extName = splitFileName[len(splitFileName)-1]
+	//ExitPrint("=====", extName)
 	//判断下：扩展名类型是否合合法
 	fileExtNameFilter := fileManager.FilterByExtString(fileManager.Option.Category, extName)
 	if !fileExtNameFilter {

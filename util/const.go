@@ -1,6 +1,6 @@
 package util
 
-//声网 access token 自带
+// 声网 access token 自带
 type Privileges uint16
 
 const (
@@ -44,7 +44,7 @@ const (
 	ECHO_REPLY_HEAD_LEN   = 20
 )
 
-//声网 access token 自研
+// 声网 access token 自研
 // Role Type
 type RTCRole uint16
 type RTMRole uint16
@@ -59,7 +59,7 @@ const (
 	RoleRtmUser = 1
 )
 
-//@parse 环境变量-整形
+// @parse 环境变量-整形
 const (
 	ENV_LOCAL_INT  = 1 //开发环境
 	ENV_DEV_INT    = 2 //开发环境
@@ -78,14 +78,14 @@ const (
 
 )
 
-//@parse error
+// @parse error
 const (
 	LOG_LEVEL_DEBUG = 1 //调试
 	LOG_LEVEL_INFO  = 2 //信息
 	LOG_LEVEL_OFF   = 4 //关闭
 )
 
-//@parse 日志等级
+// @parse 日志等级
 const (
 	LEVEL_INFO      = 1 << iota
 	LEVEL_DEBUG     = 2   //2
@@ -102,21 +102,21 @@ const (
 	LEVEL_ONLINE    = LEVEL_INFO | LEVEL_ERROR | LEVEL_PANIC
 )
 
-//(status 冲突 暂放弃,不能删 frame_sync game_match 还在使用，后期优化吧)
-//@parse 玩家当着在线状态
+// (status 冲突 暂放弃,不能删 frame_sync game_match 还在使用，后期优化吧)
+// @parse 玩家当着在线状态
 const (
 	PLAYER_STATUS_ONLINE  = 1 //在线
 	PLAYER_STATUS_OFFLINE = 2 //离线
 )
 
-//@parse 一个副本的，一条消息的，同步状态
+// @parse 一个副本的，一条消息的，同步状态
 const (
 	PLAYERS_ACK_STATUS_INIT = 1 //初始化
 	PLAYERS_ACK_STATUS_WAIT = 2 //等待玩家确认
 	PLAYERS_ACK_STATUS_OK   = 3 //所有玩家均已确认
 )
 
-//@parse 房间状态
+// @parse 房间状态
 const (
 	ROOM_STATUS_INIT    = 1 //新房间，刚刚初始化，等待其它操作
 	ROOM_STATUS_EXECING = 2 //已开始游戏
@@ -125,14 +125,14 @@ const (
 	ROOM_STATUS_PAUSE   = 5 //有玩家掉线，暂停中
 )
 
-//@parse 协议类型
+// @parse 协议类型
 const (
 	PROTOCOL_TCP       = 1 //传输协议 TCP
 	PROTOCOL_UDP       = 3 //传输协议 UDP
 	PROTOCOL_WEBSOCKET = 2 //传输协议 WEB-SOCKET
 )
 
-//@parse 长连接connFD的状态
+// @parse 长连接connFD的状态
 const (
 	CONN_STATUS_INIT      = 1 //初始化
 	CONN_STATUS_EXECING   = 2 //运行中
@@ -140,13 +140,13 @@ const (
 	CONN_STATUS_CLOSE_ING = 4 //关闭中，防止重复关闭，不能用锁，因为：并发变串行后，还能重复关闭
 )
 
-//@parse 传输类型
+// @parse 传输类型
 const (
 	CONTENT_TYPE_JSON     = 1 //内容类型 json
 	CONTENT_TYPE_PROTOBUF = 2 //proto_buf
 )
 
-//@parse metricsc操作类型
+// @parse metricsc操作类型
 const (
 	METRICS_OPT_PLUS = 1 //1累加
 	METRICS_OPT_INC  = 2 //2加加
@@ -155,32 +155,32 @@ const (
 
 )
 
-//@parse NETWAY类状态
+// @parse NETWAY类状态
 const (
 	NETWAY_STATUS_INIT  = 1 //网关状态 初始化中
 	NETWAY_STATUS_START = 2 //网关状态 开始初始化
 	NETWAY_STATUS_CLOSE = 3 //网关状态 已关闭
 )
 
-//@parse xxxx
+// @parse xxxx
 const (
 	TRAN_MESSAGE_TYPE_CHAR   = 1 //网络传输数据格式：字符流
 	TRAN_MESSAGE_TYPE_BINARY = 2 //网络传输数据格式：二进制
 )
 
-//@parse 是否上传文件同时存储OSS
+// @parse 是否上传文件同时存储OSS
 const (
 	UPLOAD_STORE_OSS_OFF = 0 //关闭
 	UPLOAD_STORE_OSS_ALI = 1 //阿里
 )
 
-//@parse 是否上传文件同时存储本地
+// @parse 是否上传文件同时存储本地
 const (
 	UPLOAD_STORE_LOCAL_OFF  = 1 //关闭
 	UPLOAD_STORE_LOCAL_OPEN = 2 //打开
 )
 
-//@parse 文件类型
+// @parse 文件类型
 const (
 	FILE_TYPE_ALL      = 1 //全部
 	FILE_TYPE_IMG      = 2 //图片
@@ -190,7 +190,13 @@ const (
 	FILE_TYPE_PACKAGES = 6 //压缩包
 )
 
-//@parse 长连接FD关闭类型
+// @parse 文件操作是否同步到OSS
+const (
+	FILE_SYNC_TRUE  = 1 //全部
+	FILE_SYNC_FALSE = 2 //图片
+)
+
+// @parse 长连接FD关闭类型
 const (
 	CLOSE_SOURCE_CREATE                = 3  //初始化 连接类失败，可能是连接数过大
 	CLOSE_SOURCE_SERVER_HAS_CLOSE      = 11 //服务端状态已关闭
@@ -215,13 +221,13 @@ const (
 
 )
 
-//@parse http-curl类，数据传输类型
+// @parse http-curl类，数据传输类型
 const (
 	HTTP_DATA_CONTENT_TYPE_JSON   = 1 //JSON
 	HTTP_DATA_CONTENT_TYPE_Nornal = 2 //普通
 )
 
-//@parse 文件存储hash类型
+// @parse 文件存储hash类型
 const (
 	FILE_HASH_NONE  = 0 // 没有
 	FILE_HASH_MONTH = 1 // 月
@@ -229,7 +235,7 @@ const (
 	FILE_HASH_HOUR  = 3 //小时
 )
 
-//@parse
+// @parse
 const (
 	OUT_TARGET_SC   = 1 << iota
 	OUT_TARGET_FILE //文件
@@ -241,19 +247,19 @@ const (
 	OUT_TARGET_NET_UDP = 2 //网络协议为UDP
 )
 
-//@parse SERVER_STATUS
+// @parse SERVER_STATUS
 const (
 	SERVER_STATUS_NORMAL = 1 //正常
 	SERVER_STATUS_CLOSE  = 2 //已关闭
 )
 
-//@parse SERVER_PING服务器的状态
+// @parse SERVER_PING服务器的状态
 const (
 	SERVER_PING_OK   = 1 //正常：PING 成功
 	SERVER_PING_FAIL = 2 //异常：PING 失败了
 )
 
-//@parse service协议类型
+// @parse service协议类型
 const (
 	SERVICE_PROTOCOL_HTTP      = 1 //HTTP
 	SERVICE_PROTOCOL_GRPC      = 2 //GRPC
@@ -261,20 +267,20 @@ const (
 	SERVICE_PROTOCOL_TCP       = 4 //TCP
 )
 
-//@parse 服务发现的类型，分布式DB
+// @parse 服务发现的类型，分布式DB
 const (
 	SERVICE_DISCOVERY_ETCD   = 1 //ETCD
 	SERVICE_DISCOVERY_CONSUL = 2 //CONSULE
 )
 
-//@parse 服务发现负载类型
+// @parse 服务发现负载类型
 const (
 	LOAD_BALANCE_ROBIN = 1 //轮询
 	LOAD_BALANCE_HASH  = 2 //固定分子hash
 )
 
-//(主要是给CICD部署时使用，最终给前端使用)
-//@parse super_visor错误类型
+// (主要是给CICD部署时使用，最终给前端使用)
+// @parse super_visor错误类型
 const (
 	SV_ERROR_NONE      = 0 //无
 	SV_ERROR_INIT      = 1 //初始化

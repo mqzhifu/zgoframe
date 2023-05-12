@@ -23,7 +23,7 @@ func StartHttpGin() {
 	server := &http.Server{
 		Addr:    dns,
 		Handler: global.V.Gin,
-		//ReadTimeout:    10 * time.Second,//这里先注释掉，上传大文件的时候，这里可能超时造成NGINX 502
+		//ReadTimeout:    10 * time.Second,//这里先注释掉，上传大文件的时候，这里可能超时造成 NGINX 502
 		//WriteTimeout:   10 * time.Second,
 		//MaxHeaderBytes: 1 << 20,
 	}

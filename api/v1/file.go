@@ -245,7 +245,7 @@ func FileUploadPackagesOne(c *gin.Context) {
 // @Tags file
 // @Summary 删除一个文件
 // @Security ApiKeyAuth
-// @Description 单文件上限 50 M。支持格式："zip", "rar", "apk", "tar", "jar", "7z", "gz", "rz"
+// @Description 先删除本地，可选择删除OSS，注：路径要绝对正确，否则OSS上的文件不会删除
 // @Param	X-Source-Type 	header 		string 	true 	"来源" Enums(11,12,21,22)
 // @Param	X-Project-Id  	header 		string 	true 	"项目ID" default(6)
 // @Param	X-Access      	header 		string 	true 	"访问KEY" default(imzgoframe)
@@ -266,6 +266,52 @@ func FileDeleteOne(c *gin.Context) {
 		httpresponse.FailWithMessage(err.Error(), c)
 	} else {
 		httpresponse.OkWithMessage("删除成功", c)
+	}
+}
+
+// @Tags file
+// @Summary 移动一个文件
+// @Security ApiKeyAuth
+// @Description 注意下：阿里的OSS没有文件移动的功能，先复制再删除的方式实现
+// @Param	X-Source-Type 	header 		string 	true 	"来源" Enums(11,12,21,22)
+// @Param	X-Project-Id  	header 		string 	true 	"项目ID" default(6)
+// @Param	X-Access      	header 		string 	true 	"访问KEY" default(imzgoframe)
+// @Param data body request.FileCopy true "基础信息"
+// @Produce	application/json
+// @Success 200 {string} string  "移动结果"
+// @Router 	/file/move/one [POST]
+func FileMoveOne(c *gin.Context) {
+	var form request.FileCopy
+	c.ShouldBind(&form)
+
+	err := global.V.VideoManager.MoveOne(form)
+	if err != nil {
+		httpresponse.FailWithMessage(err.Error(), c)
+	} else {
+		httpresponse.OkWithMessage("移动成功", c)
+	}
+}
+
+// @Tags file
+// @Summary 复制一个文件
+// @Security ApiKeyAuth
+// @Description 主要是阿里的OSS没有文件移动的功能，被动先用复制再删除的方式实现
+// @Param	X-Source-Type 	header 		string 	true 	"来源" Enums(11,12,21,22)
+// @Param	X-Project-Id  	header 		string 	true 	"项目ID" default(6)
+// @Param	X-Access      	header 		string 	true 	"访问KEY" default(imzgoframe)
+// @Param data body request.FileCopy true "基础信息"
+// @Produce	application/json
+// @Success 200 {string} string  "删除结果"
+// @Router 	/file/copy/one [POST]
+func FileCopyOne(c *gin.Context) {
+	var form request.FileCopy
+	c.ShouldBind(&form)
+
+	err := global.V.VideoManager.CopyOne(form)
+	if err != nil {
+		httpresponse.FailWithMessage(err.Error(), c)
+	} else {
+		httpresponse.OkWithMessage("复制成功", c)
 	}
 }
 

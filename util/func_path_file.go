@@ -141,18 +141,61 @@ func ForeachDir(path string) []ForeachDirInfo {
 	return list
 }
 
-//func ForeachDir(path string) (dirList []string, err error) {
-//	//var fileList []string
-//	fs, err := ioutil.ReadDir(path)
-//	if err != nil {
-//		return dirList, errors.New("GetFileListByDir err:" + err.Error())
-//		//return fileList
-//	}
-//	for _, file := range fs {
-//		if file.IsDir() {
-//			//fmt.Println(path+file.Name())
-//			dirList = append(dirList, file.Name())
-//		}
-//	}
-//	return dirList, nil
-//}
+func FileCopy(srcPath string, tarPath string) error {
+	err := CheckFileModify(srcPath, tarPath)
+	if err != nil {
+		return err
+	}
+	srcFile, err := os.Open(srcPath)
+	if err != nil {
+		return err
+	}
+
+	dstFile, err := os.Create(tarPath)
+	if err != nil {
+		return err
+	}
+
+	_, err = io.Copy(dstFile, srcFile)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func FileMove(srcPath string, tarPath string) error {
+	err := CheckFileModify(srcPath, tarPath)
+	if err != nil {
+		return err
+	}
+
+	err = os.Rename(srcPath, tarPath)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func CheckFileModify(srcPath string, tarPath string) error {
+	if srcPath == "" || tarPath == "" {
+		return errors.New("relativePath is empty")
+	}
+
+	if srcPath == tarPath {
+		return errors.New("srcRelativePath == tarRelativePath")
+	}
+
+	_, err := FileExist(srcPath)
+	if err != nil { //源文件已存在
+		return err
+	}
+
+	_, err = FileExist(tarPath)
+	if err == nil { //目标文件已存在的
+		return err
+	}
+
+	return nil
+}

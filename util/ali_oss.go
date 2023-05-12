@@ -62,8 +62,36 @@ func (aliOss *AliOss) DelOne(relativePath string) error {
 	if err != nil {
 		return err
 	}
+
+	if relativePath[0:1] == "/" {
+		relativePath = relativePath[1:]
+	}
+
 	err = bucket.DeleteObject(relativePath)
+	MyPrint("bucket.DeleteObject , err:", err)
 	return err
+}
+
+func (aliOss *AliOss) CopyOne(srcRelativePath string, tarRelativePath string) (copyObjectResult oss.CopyObjectResult, err error) {
+	MyPrint("aliOss DelOne relativePath:", srcRelativePath)
+	_, bucket, err := aliOss.GetClientBucket()
+	if err != nil {
+		return copyObjectResult, err
+	}
+
+	if srcRelativePath[0:1] == "/" {
+		srcRelativePath = srcRelativePath[1:]
+	}
+
+	if tarRelativePath[0:1] == "/" {
+		tarRelativePath = tarRelativePath[1:]
+	}
+
+	MyPrint("aliOss CopyOne srcRelativePath:" + srcRelativePath + " , tarRelativePath:" + tarRelativePath)
+
+	copyObjectResult, err = bucket.CopyObject(srcRelativePath, tarRelativePath)
+	MyPrint("bucket.CopyObject , copyObjectResult:", copyObjectResult, ", err:", err)
+	return copyObjectResult, err
 }
 
 // 将本地文件上传到阿里云-OSS

@@ -538,16 +538,58 @@ func (fileManager *FileManager) DeleteOne(form request.FileDelete) error {
 	LocalDiskUploadBasePath := fileManager.GetLocalDiskUploadBasePath()
 	AllPath := LocalDiskUploadBasePath + form.RelativePath
 	_, err := FileExist(AllPath)
-	if err != nil {
+	if err != nil { //原文件不存在
 		return err
 	}
-	MyPrint("fileManager DeleteOne path:", AllPath)
+	MyPrint("fileManager DeleteOne local path:", AllPath)
 	err = os.Remove(AllPath)
-	if form.SyncOss == 2 {
+	if form.SyncOss == FILE_SYNC_TRUE {
+		MyPrint("fileManager DeleteOne from oss, RelativePath path:", form.RelativePath)
 		err = fileManager.Option.AliOss.DelOne(form.RelativePath)
 		if err != nil {
 			return err
 		}
 	}
+	return nil
+}
+
+func (fileManager *FileManager) MoveOne(form request.FileCopy) error {
+	LocalDiskUploadBasePath := fileManager.GetLocalDiskUploadBasePath()
+	srcPath := LocalDiskUploadBasePath + form.SrcRelativePath
+	tarPath := LocalDiskUploadBasePath + form.TarRelativePath
+
+	err := FileMove(srcPath, tarPath)
+	if err != nil {
+		return err
+	}
+
+	if form.SyncOss == FILE_SYNC_TRUE {
+		//MyPrint("fileManager DeleteOne from oss, RelativePath path:", form.RelativePath)
+		_, err = fileManager.Option.AliOss.CopyOne(form.SrcRelativePath, form.TarRelativePath)
+		err = fileManager.Option.AliOss.DelOne(form.SrcRelativePath)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+func (fileManager *FileManager) CopyOne(form request.FileCopy) error {
+
+	LocalDiskUploadBasePath := fileManager.GetLocalDiskUploadBasePath()
+	srcPath := LocalDiskUploadBasePath + form.SrcRelativePath
+	tarPath := LocalDiskUploadBasePath + form.TarRelativePath
+
+	err := FileCopy(srcPath, tarPath)
+	if err != nil {
+		return err
+	}
+	if form.SyncOss == FILE_SYNC_TRUE {
+		_, err := fileManager.Option.AliOss.CopyOne(form.SrcRelativePath, form.TarRelativePath)
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }

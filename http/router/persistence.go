@@ -33,6 +33,8 @@ func File(Router *gin.RouterGroup) {
 		persistenceRouter.POST("upload/packages/one", v1.FileUploadPackagesOne)
 		persistenceRouter.POST("upload/video/one", v1.FileUploadVideoOne)
 		persistenceRouter.POST("delete/one", v1.FileDeleteOne)
+		persistenceRouter.POST("copy/one", v1.FileCopyOne)
+		persistenceRouter.POST("move/one", v1.FileMoveOne)
 
 		//
 		//persistenceRouter.POST("upload/video/one", v1.Upload)

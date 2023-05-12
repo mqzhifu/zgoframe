@@ -26,6 +26,13 @@ type FileDelete struct {
 	RelativePath string `json:"relative_path" form:"relative_path"` //相对路径 + 文件名
 }
 
+type FileCopy struct {
+	SyncOss         int    `json:"sync_oss" form:"sync_oss"`                   //是否同步到云oss 1是2否
+	SrcRelativePath string `json:"src_relative_path" form:"src_relative_path"` //源：相对路径 + 文件名
+	TarRelativePath string `json:"tar_relative_path" form:"tar_relative_path"` //目标：相对路径 + 文件名
+
+}
+
 // @description 查看 SuperVisor 状态
 type CicdSuperVisor struct {
 	CicdDeploy

@@ -35,7 +35,7 @@ type MyService struct {
 var GateDefaultProtocol = int32(util.PROTOCOL_WEBSOCKET)
 var GateDefaultContentType = int32(util.CONTENT_TYPE_JSON)
 
-//内部服务，按说：一个项目里最多也就1-2个服务，其它的服务应该在其它项目，并且访问的时候通过HTTP/TCP，这里方便使用，先把其它服务当成一个类使用
+// 内部服务，按说：一个项目里最多也就1-2个服务，其它的服务应该在其它项目，并且访问的时候通过HTTP/TCP，这里方便使用，先把其它服务当成一个类使用
 func NewMyService() *MyService {
 	var err error
 	myService := new(MyService)
@@ -87,6 +87,7 @@ func NewMyService() *MyService {
 	if err != nil {
 		util.ExitPrint(err)
 	}
+
 	//长连接通信 - 配置
 	netWayOption := util.NetWayOption{
 		ListenIp:            C.Gateway.ListenIp,     //程序启动时监听的IP
@@ -109,6 +110,7 @@ func NewMyService() *MyService {
 		ProtoMap:            V.ProtoMap,             //protobuf 映射表
 		GrpcManager:         V.GrpcManager,
 		Log:                 V.Zap,
+		Gorm:                V.Gorm,
 	}
 	//CreateGameService(myService)
 	//网关
@@ -147,7 +149,7 @@ func NewMyService() *MyService {
 	return myService
 }
 
-//这里测试一下，服务注册到ETCD
+// 这里测试一下，服务注册到ETCD
 func (myService *MyService) RegisterService() {
 	if C.ServiceDiscovery.Status == "open" && C.Etcd.Status == "open" {
 		var node util.ServiceNode
@@ -194,7 +196,7 @@ func (myService *MyService) RegisterService() {
 	}
 }
 
-//游戏类的服务,一个游戏至少得有：房间、匹配、帧同步
+// 游戏类的服务,一个游戏至少得有：房间、匹配、帧同步
 func CreateGameService(myService *MyService) (err error) {
 	//帧同步 - 房间服务 - room要先实例化,math frame_sync 都强依赖room
 	frameSyncOption := frame_sync.FrameSyncOption{

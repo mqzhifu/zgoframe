@@ -7,14 +7,16 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/gorilla/websocket"
 	"go.uber.org/zap"
+	"gorm.io/gorm"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
+	"zgoframe/model"
 	"zgoframe/protobuf/pb"
 )
 
-//管理 CONN 的容器
+// 管理 CONN 的容器
 type ConnManager struct {
 	Pool              map[int32]*Conn // map[userId]*Conn FD 连接池
 	PoolRWLock        *sync.RWMutex
@@ -30,19 +32,20 @@ type ConnManagerOption struct {
 	DefaultProtocolType int32  //每个连接的默认 协议 类型
 	MsgSeparator        string //传输消息时，每条消息的间隔符，防止 粘包
 
+	Gorm     *gorm.DB `json:"-"`
 	Log      *zap.Logger
 	Metrics  *MyMetrics
 	ProtoMap *ProtoMap //协议ID管理器
 	NetWay   *NetWay
 }
 
-//消息内容协议体
+// 消息内容协议体
 type ProtocolCtrlInfo struct {
 	ContentType  int32
 	ProtocolType int32
 }
 
-//实例化
+// 实例化
 func NewConnManager(connManagerOption ConnManagerOption) *ConnManager {
 	connManagerOption.Log.Info("NewConnManager instance:")
 
@@ -66,7 +69,7 @@ func (connManager *ConnManager) MakeError(msg string) error {
 	return errors.New(msg)
 }
 
-//启动容器，监听 连接超时处理
+// 启动容器，监听 连接超时处理
 func (connManager *ConnManager) CheckTimeout() {
 	//defer func(ctx context.Context ) {
 	//	if err := recover(); err != nil {
@@ -96,7 +99,7 @@ end:
 	connManager.Option.Log.Warn(CTX_DONE_PRE + "checkConnPoolTimeout close")
 }
 
-//关闭容器，回收处理
+// 关闭容器，回收处理
 func (connManager *ConnManager) Shutdown() {
 	connManager.Option.Log.Warn("shutdown connManager")
 	connManager.CloseCheckTimeout <- 1
@@ -109,7 +112,7 @@ func (connManager *ConnManager) Shutdown() {
 	}
 }
 
-//创建一个新的连接结构体
+// 创建一个新的连接结构体
 func (connManager *ConnManager) CreateOneConn(connFd FDAdapter, netWay *NetWay) (myConn *Conn) {
 	connManager.PoolRWLock.RLock()
 	defer connManager.PoolRWLock.RUnlock()
@@ -141,7 +144,6 @@ func (connManager *ConnManager) CreateOneConn(connFd FDAdapter, netWay *NetWay) 
 	return myConn
 }
 
-//
 func (connManager *ConnManager) GetConnPoolById(userId int32) (*Conn, bool) {
 	connManager.PoolRWLock.RLock()
 	defer connManager.PoolRWLock.RUnlock()
@@ -150,7 +152,7 @@ func (connManager *ConnManager) GetConnPoolById(userId int32) (*Conn, bool) {
 	return conn, ok
 }
 
-//往POOL里添加一个新的连接
+// 往POOL里添加一个新的连接
 func (connManager *ConnManager) addConnPool(NewConn *Conn) error {
 	if NewConn.UserId <= 0 {
 		connManager.Option.Log.Error("addConnPool NewConn.UserId <= 0 ")
@@ -175,7 +177,7 @@ func (connManager *ConnManager) addConnPool(NewConn *Conn) error {
 	return nil
 }
 
-//删除一个FD
+// 删除一个FD
 func (connManager *ConnManager) delConnPool(uid int32) {
 	connManager.Option.Log.Warn("delConnPool uid :" + strconv.Itoa(int(uid)))
 	connManager.PoolRWLock.Lock()
@@ -184,7 +186,7 @@ func (connManager *ConnManager) delConnPool(uid int32) {
 	delete(connManager.Pool, uid)
 }
 
-//获取所有已连接用户的FD
+// 获取所有已连接用户的FD
 func (connManager *ConnManager) getPoolAll() map[int32]*Conn {
 	connManager.PoolRWLock.RLock()
 	defer connManager.PoolRWLock.RUnlock()
@@ -239,8 +241,8 @@ func (connManager *ConnManager) GetPlayerCtrlInfoById(userId int32) ProtocolCtrl
 //	return protocolCtrlInfo
 //}
 
-//==========================================================
-//将 结构体 压缩成 字符串
+// ==========================================================
+// 将 结构体 压缩成 字符串
 func (connManager *ConnManager) CompressContent(contentStruct interface{}, UserId int32) (content []byte, err error) {
 	//先获取该连接的通信元数据
 	protocolCtrlInfo := connManager.GetPlayerCtrlInfoById(UserId)
@@ -269,7 +271,7 @@ func (connManager *ConnManager) CompressContent(contentStruct interface{}, UserI
 	return content, nil
 }
 
-//将 结构体 压缩成 字符串，但不依赖userId
+// 将 结构体 压缩成 字符串，但不依赖userId
 func (connManager *ConnManager) CompressNormalContent(contentStruct interface{}, contentType int) (content []byte, err error) {
 	requestClientHeartbeatStrByte := []byte{}
 	if contentType == CONTENT_TYPE_PROTOBUF {
@@ -282,20 +284,20 @@ func (connManager *ConnManager) CompressNormalContent(contentStruct interface{},
 	return requestClientHeartbeatStrByte, err
 }
 
-//解析C端发送的数据，这一层，对于用户层的content数据不做处理
-//1-4字节：当前包数据总长度，~可用于：TCP粘包的情况
-//5字节：content type
-//6字节：protocol type
-//7字节 :服务Id
-//8-9字节 :函数Id
-//10-19：预留，还没想好，可以存sessionId，也可以换成UID
-//19 以后为内容体
-//结尾会添加一个字节：\f ,可用于 TCP 粘包 分隔
+// 解析C端发送的数据，这一层，对于用户层的content数据不做处理
+// 1-4字节：当前包数据总长度，~可用于：TCP粘包的情况
+// 5字节：content type
+// 6字节：protocol type
+// 7字节 :服务Id
+// 8-9字节 :函数Id
+// 10-19：预留，还没想好，可以存sessionId，也可以换成UID
+// 19 以后为内容体
+// 结尾会添加一个字节：\f ,可用于 TCP 粘包 分隔
 func (connManager *ConnManager) GetPackHeaderLength() int {
 	return 4 + 1 + 1 + 1 + 2 + 10
 }
 
-//解析二进制流 -> msg结构体
+// 解析二进制流 -> msg结构体
 func (connManager *ConnManager) ParserContentProtocol(content string) (message pb.Msg, err error) {
 	headerLength := connManager.GetPackHeaderLength()
 	if len(content) < headerLength {
@@ -350,7 +352,7 @@ func (connManager *ConnManager) ParserContentProtocol(content string) (message p
 	return msg, nil
 }
 
-//字节 转换 协议控制信息
+// 字节 转换 协议控制信息
 func (connManager *ConnManager) parserProtocolCtrlInfo(stream []byte) (int32, int32) {
 	//firstByteHighThreeBit := (firstByte >> 5 ) & 7
 	//firstByteLowThreeBit := ((firstByte << 5 ) >> 5 )  & 7
@@ -359,8 +361,8 @@ func (connManager *ConnManager) parserProtocolCtrlInfo(stream []byte) (int32, in
 	return int32(stream[0]), int32(stream[1])
 }
 
-//将消息 压缩成二进制
-//func  (protocolManager *ProtocolManager)packContentMsg(content []byte,conn *Conn ,serviceId int ,actionId int )[]byte{
+// 将消息 压缩成二进制
+// func  (protocolManager *ProtocolManager)packContentMsg(content []byte,conn *Conn ,serviceId int ,actionId int )[]byte{
 func (connManager *ConnManager) PackContentMsg(msg pb.Msg) []byte {
 	dataLengthBytes := Int32ToBytes(int32(len(msg.Content)))
 	contentTypeBytes := byte(msg.ContentType)
@@ -379,7 +381,7 @@ func (connManager *ConnManager) PackContentMsg(msg pb.Msg) []byte {
 	return content
 }
 
-//==============================
+// ==============================
 type ConnMetrics struct {
 	ReceiveMsgTimes int   `json:"receive_msg_times"`
 	ReceiveMsgSize  int64 `json:"receive_msg_size"`
@@ -387,7 +389,7 @@ type ConnMetrics struct {
 	SendMsgSize     int64 `json:"send_msg_size"`
 }
 
-//一个连接
+// 一个连接
 type Conn struct {
 	AddTime      int32        `json:"add_time"`      //添加时间
 	UpTime       int32        `json:"up_time"`       //最后更新时间
@@ -410,12 +412,12 @@ type Conn struct {
 	//UdpConn 		bool
 }
 
-//最后更新时间
+// 最后更新时间
 func (conn *Conn) UpLastTime() {
 	conn.UpTime = int32(GetNowTimeSecondToInt())
 }
 
-//直接从FD中读取一条原始消息(未做解析)
+// 直接从FD中读取一条原始消息(未做解析)
 func (conn *Conn) Read() (content string, err error) {
 	// 设置消息的最大长度 - 暂无
 	//conn.Conn.SetReadDeadline(time.Now().Add(time.Second * time.Duration(mynetWay.Option.IOTimeout)))
@@ -461,12 +463,14 @@ func (conn *Conn) IOLoop() {
 
 }
 
-////一个协程挂了，再给拉起来
-//func  (conn *Conn) RecoverReadLoop(ctx context.Context){
-//	conn.ConnManager.Option.Log.Warn("recover ReadLoop:")
-//	go conn.ReadLoop(ctx)
-//}
-//死循环，从底层已读取出的消息中，再读取消息
+// //一个协程挂了，再给拉起来
+//
+//	func  (conn *Conn) RecoverReadLoop(ctx context.Context){
+//		conn.ConnManager.Option.Log.Warn("recover ReadLoop:")
+//		go conn.ReadLoop(ctx)
+//	}
+//
+// 死循环，从底层已读取出的消息中，再读取消息
 func (conn *Conn) ReadLoop(ctx context.Context) {
 	//defer func(ctx context.Context) {
 	//	if err := recover(); err != nil {
@@ -533,7 +537,7 @@ end:
 //	go conn.ProcessMsgLoop(ctx)
 //}
 
-//关闭一个已登陆成功的FD,之所以放在最外层，是方便统一管理
+// 关闭一个已登陆成功的FD,之所以放在最外层，是方便统一管理
 func (conn *Conn) CloseOneConn(source int) {
 	conn.ConnManager.Option.Log.Info("Conn close ,source : " + strconv.Itoa(source) + " , " + strconv.Itoa(int(conn.UserId)))
 	if conn.Status == CONN_STATUS_CLOSE {
@@ -589,7 +593,7 @@ func (conn *Conn) CloseOneConn(source int) {
 
 }
 
-//从：FD里读取的消息（缓存队列），拿出来，做分发路由，处理
+// 从：FD里读取的消息（缓存队列），拿出来，做分发路由，处理
 func (conn *Conn) ProcessMsgLoop(ctx context.Context) {
 	//defer func(ctx context.Context) {
 	//	if err := recover(); err != nil {
@@ -607,6 +611,27 @@ func (conn *Conn) ProcessMsgLoop(ctx context.Context) {
 			msg.SourceUid = conn.UserId
 			conn.ConnManager.Option.Log.Info("ProcessMsgLoop receive msg , SidFid:" + strconv.Itoa(int(msg.SidFid)))
 			conn.ConnManager.Option.NetWay.Router(msg, conn)
+
+			if msg.SidFid != 90110 {
+				id, _ := GetLocalIp()
+				record := model.OperationRecord{
+					Ip:           id,
+					Method:       "gateway",
+					Path:         "/" + strconv.Itoa(int(msg.SidFid)) + "/",
+					Agent:        "gateway",
+					Body:         msg.Content,
+					Uid:          int(msg.SourceUid),
+					ErrorMessage: "",
+					Status:       0,
+					Latency:      0,
+					Resp:         "",
+				}
+
+				err := conn.ConnManager.Option.Gorm.Create(&record).Error
+				if err != nil {
+					conn.ConnManager.Option.Log.Error("conn ProcessMsgLoop:" + err.Error())
+				}
+			}
 		}
 		if ctxHasDone == 1 {
 			goto end
@@ -616,14 +641,14 @@ end:
 	conn.ConnManager.Option.Log.Warn("ProcessMsgLoop receive signal: done.")
 }
 
-//监听到某个FD被关闭后，回调函数
+// 监听到某个FD被关闭后，回调函数
 func (conn *Conn) CloseHandler(code int, text string) error {
 	conn.CloseOneConn(CLOSE_SOURCE_CLIENT)
 	return nil
 }
 
-//===================================================================
-//给一个玩家:发送一条消息，根据服务名\函数名，同时将消息内容进行编码与压缩
+// ===================================================================
+// 给一个玩家:发送一条消息，根据服务名\函数名，同时将消息内容进行编码与压缩
 func (conn *Conn) SendMsgCompressByName(serviceName string, funcName string, contentStruct interface{}) error {
 	serviceDesc, empty := conn.ConnManager.Option.ProtoMap.GetServiceByName(serviceName, funcName)
 	if empty {
@@ -632,7 +657,7 @@ func (conn *Conn) SendMsgCompressByName(serviceName string, funcName string, con
 	return conn.SendMsgCompress(serviceDesc, contentStruct, 1)
 }
 
-//给一个玩家:发送一条消息，根据服务ID\函数ID，同时将消息内容进行编码与压缩
+// 给一个玩家:发送一条消息，根据服务ID\函数ID，同时将消息内容进行编码与压缩
 func (conn *Conn) SendMsgCompressBySidFid(serviceId int, funcId int, contentStruct interface{}) error {
 	serviceDesc, empty := conn.ConnManager.Option.ProtoMap.GetServiceFuncBySidFid(serviceId, funcId)
 	if empty {
@@ -641,8 +666,8 @@ func (conn *Conn) SendMsgCompressBySidFid(serviceId int, funcId int, contentStru
 	return conn.SendMsgCompress(serviceDesc, contentStruct, 1)
 }
 
-//这里才是，最终给一个User发送一条消息
-//此方法轻易不要调用，因为没有做容错，比如：conn 不在pool中，直接调用 ProtoMap/uid=0 等，会把程序带崩溃了
+// 这里才是，最终给一个User发送一条消息
+// 此方法轻易不要调用，因为没有做容错，比如：conn 不在pool中，直接调用 ProtoMap/uid=0 等，会把程序带崩溃了
 func (conn *Conn) SendMsgCompress(protoServiceFunc ProtoServiceFunc, contentStruct interface{}, Compress int) error {
 	conn.ConnManager.Option.Log.Debug("SendMsgCompress , Compress:" + strconv.Itoa(Compress))
 	var content []byte
@@ -734,7 +759,7 @@ func (connManager *ConnManager) MakeMsgBySidFid(userId int32, sidFid int, conten
 	return msg, protocolCtrlInfo, nil
 }
 
-//这里才是，真正的往sock FD息(严格说：跟用户没关联了) 里写内容，也就是发送消
+// 这里才是，真正的往sock FD息(严格说：跟用户没关联了) 里写内容，也就是发送消
 func (conn *Conn) Write(content []byte, messageType int) error {
 	//defer func() {
 	//	if err := recover(); err != nil {

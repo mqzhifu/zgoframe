@@ -5,6 +5,7 @@ import (
 	"errors"
 	"github.com/dgrijalva/jwt-go"
 	"go.uber.org/zap"
+	"gorm.io/gorm"
 	"strconv"
 	"time"
 	"zgoframe/http/request"
@@ -32,6 +33,7 @@ type NetWayOption struct {
 	GrpcManager         *GrpcManager `json:"-"`                     //外部指针,grpc反代
 	ProtoMap            *ProtoMap    `json:"-"`                     //外部指针,协议号转换
 	Log                 *zap.Logger  `json:"-"`                     //外部指针,日志
+	Gorm                *gorm.DB     `json:"-"`
 	//网关接收FD消息后，回调，路由分发具体微服务
 	//RouterBack func(msg pb.Msg) (data interface{}, err error) `json:"-"`
 	RouterBack func(msg pb.Msg, balanceFactor string, flag int) (data interface{}, err error) `json:"-"`
@@ -64,7 +66,7 @@ type NetWay struct {
 	Option NetWayOption
 }
 
-//var myNetWay *NetWay//快捷变量，回头干掉
+// var myNetWay *NetWay//快捷变量，回头干掉
 func NewNetWay(option NetWayOption) (*NetWay, error) {
 	option.Log.Info("New NetWay instance :")
 
@@ -123,6 +125,7 @@ func NewNetWay(option NetWayOption) (*NetWay, error) {
 		ProtoMap:            option.ProtoMap,
 		NetWay:              netWay,
 		MsgContentMax:       option.MsgContentMax,
+		Gorm:                option.Gorm,
 	}
 	netWay.ConnManager = NewConnManager(connManagerOption)
 	go netWay.ConnManager.CheckTimeout()
@@ -165,7 +168,7 @@ func (netWay *NetWay) InitMetrics(log *zap.Logger) *MyMetrics {
 	return metrics
 }
 
-//一个新客户端连接请求进入
+// 一个新客户端连接请求进入
 func (netWay *NetWay) OpenNewConn(connFD FDAdapter) {
 	myMetrics.CounterInc("new_fd")
 	netWay.Option.Log.Info("OpenNewConn:" + connFD.RemoteAddr())
@@ -246,7 +249,7 @@ func (netWay *NetWay) OpenNewConn(connFD FDAdapter) {
 
 }
 
-//这个是快捷方法类似   gateway_conn_mannger.go  CloseOneConn 方法会调用
+// 这个是快捷方法类似   gateway_conn_mannger.go  CloseOneConn 方法会调用
 func (netWay *NetWay) Router(msg pb.Msg, conn *Conn) (data interface{}, err error) {
 	return netWay.Option.RouterBack(msg, "", 3)
 }
@@ -262,16 +265,16 @@ func (netWay *NetWay) heartbeat(requestClientHeartbeat pb.Heartbeat, conn *Conn)
 	conn.SendMsgCompressByName("Gateway", "SC_Headerbeat", &responseHeartbeat)
 }
 
-//=================================
-//直接关闭一个FD，主要用于：登陆就失败了的情况
+// =================================
+// 直接关闭一个FD，主要用于：登陆就失败了的情况
 func (netWay *NetWay) CloseFD(connFD FDAdapter, source int) {
 	connFD.Close()
 	//记录主动关闭FD次数
 	netWay.Metrics.CounterInc("close_fd_num")
 }
 
-//退出，目前能直接调用此函数的，就只有一种情况：
-//MAIN 接收到了中断信号，并执行了：context-cancel()，然后，startup函数的守护监听到，调用些方法
+// 退出，目前能直接调用此函数的，就只有一种情况：
+// MAIN 接收到了中断信号，并执行了：context-cancel()，然后，startup函数的守护监听到，调用些方法
 func (netWay *NetWay) Shutdown() {
 	netWay.Option.Log.Warn("netWay.Shutdown")
 	if netWay.Status != NETWAY_STATUS_START {
@@ -306,7 +309,7 @@ func (netWay *NetWay) loginPreFailedSendMsg(msg string, closeSource int, conn *C
 	//netWay.Option.Log.Error(msg)
 }
 
-//首次建立连接，登陆验证，预处理
+// 首次建立连接，登陆验证，预处理
 func (netWay *NetWay) loginPre(conn *Conn) (jwt request.CustomClaims, firstMsg pb.Msg, err error) {
 	//这里有个BUG，如果C端连接成功后，并没有立刻发消息过来
 	//conn.Read 函数会阻塞，后面不会执行，有点TCP 半连接的意思，也不超时
@@ -352,7 +355,7 @@ func (netWay *NetWay) loginPre(conn *Conn) (jwt request.CustomClaims, firstMsg p
 	return jwt, msg, nil
 }
 
-//登陆验证token
+// 登陆验证token
 func (netWay *NetWay) Login(requestLogin pb.Login, conn *Conn) (customClaims request.CustomClaims, err error) {
 	netWay.Option.Log.Info("netWay Login , token:" + requestLogin.Token)
 	if conn.UserId > 0 {
@@ -383,8 +386,8 @@ func (netWay *NetWay) Login(requestLogin pb.Login, conn *Conn) (customClaims req
 	return customClaims, err
 }
 
-//直接给一个FD发送消息，基本上不用，只是特殊报错的时候，直接使用
-//transmissionType : 1字符 2二进制
+// 直接给一个FD发送消息，基本上不用，只是特殊报错的时候，直接使用
+// transmissionType : 1字符 2二进制
 func (netWay *NetWay) WriteMessage(transmissionType int, connFD FDAdapter, content []byte) {
 	myMetrics.CounterInc("total_output_num")
 	myMetrics.GaugeAdd("total_output_size", float64(len(content)))

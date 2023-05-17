@@ -66,13 +66,17 @@ func Record() gin.HandlerFunc {
 		record.ErrorMessage = c.Errors.ByType(gin.ErrorTypePrivate).String()
 		record.Status = c.Writer.Status()
 		record.Latency = latency
-		record.Resp = writer.body.String()
+		resStr := writer.body.String()
+		if len(writer.body.String()) > 255 {
+			resStr = resStr[:255]
+		}
+		record.Resp = resStr
 
 		global.V.Zap.Debug(prefix + "finish , func exec time:" + strconv.Itoa(latency))
 
-		err := global.V.Gorm.Create(&record)
+		err := global.V.Gorm.Create(&record).Error
 		if err != nil {
-			global.V.Zap.Error(prefix+"create record error:", zap.Any("err", err))
+			global.V.Zap.Error(prefix + "create record error:" + err.Error())
 		}
 		//util.MyPrint("http middleware Create record err", err)
 		//fmt.Println("opt final record:", record)

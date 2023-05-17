@@ -63,7 +63,7 @@ type FileManagerOption struct {
 
 var imgs = []string{"jpg", "jpeg", "png", "gif", "x-png", "png", "bmp", "pjpeg", "x-icon", "svg", "webp", "psd"}
 var docs = []string{"txt", "doc", "docx", "dotx", "json", "cvs", "xls", "xlsx", "sql", "msword", "ppt", "pptx", "pdf", "wps", "vsd"}
-var packages = []string{"zip", "rar", "apk", "tar", "jar", "7z", "gz", "rz", "unitypackage"}
+var packages = []string{"zip", "rar", "apk", "tar", "jar", "7z", "gz", "rz", "unitypackage", "ab"}
 var video = []string{"mp4", "avi", "rm", "mkv", "wmv", "mov", "flv", "fla", "rmvb", "m3u8", "webm", "ts", "wav"}
 
 func NewFileManagerUpload(Option FileManagerOption) *FileManager {

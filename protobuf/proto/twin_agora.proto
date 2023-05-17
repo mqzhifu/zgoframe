@@ -66,7 +66,7 @@ message CallPeopleRes{
 	int32   err_code        = 4;//0,没有错误，1所有专家均不在线，请等待一会，重新呼叫
 	string  err_msg 	    = 5;//错误消息
 	string  room_id         = 6;//roomId,C端呼叫验证通过后会创建一个虚拟的房间号
-    string  agora_app_id          = 7;//声网的APPID
+    string  agora_app_id    = 7;//声网的APPID
     string  agora_channel   = 8;//声网的频道
 }
 //某人进入了一个房间/频道，通知给C端
@@ -91,5 +91,7 @@ message CallReply{
 	string  content 	    = 4;//消息具体的内容，这里可以自定义成json格式
 	int32   msg_type 	    = 5;//消息分类
 	string  room_id         = 6;//房间ID
+    string  agora_app_id    = 7;//声网的APPID
+    string  agora_channel   = 8;//声网的频道
 }
 

@@ -70,6 +70,11 @@ func Record() gin.HandlerFunc {
 
 		global.V.Zap.Debug(prefix + "finish , func exec time:" + strconv.Itoa(latency))
 
+		err := global.V.Gorm.Create(&record)
+		if err != nil {
+			global.V.Zap.Error(prefix+"create record error:", zap.Any("err", err))
+		}
+		//util.MyPrint("http middleware Create record err", err)
 		//fmt.Println("opt final record:", record)
 		//if err := service.CreateSysOperationRecord(record); err != nil {
 		//	global.V.Zap.Error("create operation record error:", zap.Any("err", err))

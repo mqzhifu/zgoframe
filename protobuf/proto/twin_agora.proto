@@ -55,6 +55,8 @@ message CallPeopleReq{
 	string  channel 	    = 4;//双方进入某个特定的频道(可以为空,由后端随机生成一个,能发送给双方)
 	int32   people_type 	= 5;//呼叫人群类型：1 呼叫所有人，2 按照<小组>呼叫 3 用户自己指定呼叫的人
 	int32   people_role 	= 6;//呼叫人群角色：1普通用户2专家
+	string  agora_app_id          = 7;//声网的APPID
+	string  agora_channel   = 8;//声网的频道
 }
 //给发发起呼叫者，做出应答
 message CallPeopleRes{
@@ -64,6 +66,8 @@ message CallPeopleRes{
 	int32   err_code        = 4;//0,没有错误，1所有专家均不在线，请等待一会，重新呼叫
 	string  err_msg 	    = 5;//错误消息
 	string  room_id         = 6;//roomId,C端呼叫验证通过后会创建一个虚拟的房间号
+    string  agora_app_id          = 7;//声网的APPID
+    string  agora_channel   = 8;//声网的频道
 }
 //某人进入了一个房间/频道，通知给C端
 message PeopleEntry{

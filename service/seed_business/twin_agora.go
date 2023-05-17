@@ -15,6 +15,8 @@ import (
 func (twinAgora *TwinAgora) CallPeople(callPeopleReq pb.CallPeopleReq) {
 	twinAgora.Log.Info("in func CallPeople:")
 	callPeopleRes := pb.CallPeopleRes{}
+	callPeopleRes.AgoraAppId = callPeopleReq.AgoraAppId
+	callPeopleRes.AgoraChannel = callPeopleReq.AgoraChannel
 
 	if callPeopleReq.Uid <= 0 {
 		callPeopleRes.ErrCode = 400
@@ -167,6 +169,8 @@ func (twinAgora *TwinAgora) CallPeople(callPeopleReq pb.CallPeopleReq) {
 		receiveUidsStr += strconv.Itoa(user.Id) + "," //专家接收列表
 		callReply := pb.CallReply{}
 		callReply.RoomId = myRTCRoom.Id
+		callReply.AgoraAppId = callPeopleReq.AgoraAppId
+		callReply.AgoraChannel = callPeopleReq.AgoraChannel
 		callReply.Content = strconv.Itoa(int(callPeopleReq.Uid)) + " calling....... please reply:" + callPeopleReq.Channel
 		//twinAgora.RequestServiceAdapter.GatewaySendMsgByUid(int32(user.Id), "SC_CallReply", callReply)
 

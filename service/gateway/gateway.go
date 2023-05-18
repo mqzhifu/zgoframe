@@ -29,10 +29,10 @@ type Gateway struct {
 }
 
 /*
-	网关，目前主要是分为3个主要功能：
-	1. http 代理 grpc(中等)
-	2. 长连接代理(重点)
-	3. http 代理 http(鸡肋)
+网关，目前主要是分为3个主要功能：
+1. http 代理 grpc(中等)
+2. 长连接代理(重点)
+3. http 代理 http(鸡肋)
 */
 func NewGateway(grpcManager *util.GrpcManager, log *zap.Logger, serviceBridge *service.Bridge) *Gateway {
 	//func NewGateway(grpcManager *util.GrpcManager, log *zap.Logger, requestServiceAdapter *service.RequestServiceAdapter) *Gateway {
@@ -67,7 +67,7 @@ func NewGateway(grpcManager *util.GrpcManager, log *zap.Logger, serviceBridge *s
 //
 //}
 
-//开启长连接监听
+// 开启长连接监听
 func (gateway *Gateway) StartSocket(netWayOption util.NetWayOption) (*util.NetWay, error) {
 	gateway.Log.Info("gateway StartSocket:")
 	//netWayOption.RouterBack = gateway.Router //公共回调 路由器，用于给最底层的长连接公共类回调
@@ -79,33 +79,33 @@ func (gateway *Gateway) StartSocket(netWayOption util.NetWayOption) (*util.NetWa
 	return netWay, err
 }
 
-//广播给所有服务，如：心跳 PING PONG 关闭事件(不广播给gateway)
+// 广播给所有服务，如：心跳 PING PONG 关闭事件(不广播给gateway)
 func (gateway *Gateway) BroadcastService(funcName string, msg pb.Msg) {
 	gateway.Log.Debug("BroadcastService funcId:" + strconv.Itoa(int(msg.FuncId)))
 	//gateway.RouterServiceSync(msg)
 	////gateway.RouterServiceGameMatch(msg, conn)
 	//gateway.RouterServiceTwinAgora(msg)
 
-	serviceDesc, empty := gateway.NetWayOption.ProtoMap.GetServiceByName("FrameSync", funcName)
-	if empty {
-		util.ExitPrint("BroadcastService get service1 empty , name:" + funcName)
-	}
-	msg.ServiceId = int32(serviceDesc.ServiceId)
-	msg.FuncId = int32(serviceDesc.FuncId)
-	msg.SidFid = int32(gateway.NetWayOption.ProtoMap.GetIdBySidFid(serviceDesc.ServiceId, serviceDesc.FuncId))
+	//serviceDesc, empty := gateway.NetWayOption.ProtoMap.GetServiceByName("FrameSync", funcName)
+	//if empty {
+	//	util.ExitPrint("BroadcastService get service1 empty , name:" + funcName)
+	//}
+	//msg.ServiceId = int32(serviceDesc.ServiceId)
+	//msg.FuncId = int32(serviceDesc.FuncId)
+	//msg.SidFid = int32(gateway.NetWayOption.ProtoMap.GetIdBySidFid(serviceDesc.ServiceId, serviceDesc.FuncId))
+	//
+	//gateway.ServiceBridge.Call(service.CallMsg{Msg: msg})
+	//
+	//serviceDesc, _ = gateway.NetWayOption.ProtoMap.GetServiceByName("GameMatch", funcName)
+	//if empty {
+	//	util.ExitPrint("BroadcastService get service2 empty, name:" + funcName)
+	//}
+	//msg.ServiceId = int32(serviceDesc.ServiceId)
+	//msg.FuncId = int32(serviceDesc.FuncId)
+	//msg.SidFid = int32(gateway.NetWayOption.ProtoMap.GetIdBySidFid(serviceDesc.ServiceId, serviceDesc.FuncId))
+	//gateway.ServiceBridge.Call(service.CallMsg{Msg: msg})
 
-	gateway.ServiceBridge.Call(service.CallMsg{Msg: msg})
-
-	serviceDesc, _ = gateway.NetWayOption.ProtoMap.GetServiceByName("GameMatch", funcName)
-	if empty {
-		util.ExitPrint("BroadcastService get service2 empty, name:" + funcName)
-	}
-	msg.ServiceId = int32(serviceDesc.ServiceId)
-	msg.FuncId = int32(serviceDesc.FuncId)
-	msg.SidFid = int32(gateway.NetWayOption.ProtoMap.GetIdBySidFid(serviceDesc.ServiceId, serviceDesc.FuncId))
-	gateway.ServiceBridge.Call(service.CallMsg{Msg: msg})
-
-	serviceDesc, _ = gateway.NetWayOption.ProtoMap.GetServiceByName("TwinAgora", funcName)
+	serviceDesc, empty := gateway.NetWayOption.ProtoMap.GetServiceByName("TwinAgora", funcName)
 	if empty {
 		util.ExitPrint("BroadcastService get service3 empty, name:" + funcName)
 	}
@@ -158,7 +158,7 @@ func (gateway *Gateway) clientPing(ping pb.PingReq) {
 	conn.SendMsgCompressByName("Gateway", "SC_Pong", &responseServerPong)
 }
 
-//balanceFactor:负载均衡 方法
+// balanceFactor:负载均衡 方法
 func (gateway *Gateway) HttpCallGrpc(serviceName string, funcName string, balanceFactor string, requestData []byte) (resJsonStr string, err error) {
 	gateway.Log.Info("HttpCallGrpc ， serviceName:" + serviceName + " funcName:" + funcName + " balanceFactor:" + balanceFactor + " requestData:" + string(requestData))
 	callGrpcResData, err := gateway.GrpcManager.CallGrpc(serviceName, funcName, balanceFactor, requestData)

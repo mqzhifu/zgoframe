@@ -31,7 +31,7 @@ type BridgeOption struct {
 	Log              *zap.Logger
 }
 
-//向3方服务发送请求的适配器，属于快捷方法，也可以在自己的服务中封装
+// 向3方服务发送请求的适配器，属于快捷方法，也可以在自己的服务中封装
 type Bridge struct {
 	Op                BridgeOption
 	Prefix            string //调试使用，输出前缀字符串值
@@ -51,7 +51,7 @@ func NewBridge(op BridgeOption) (*Bridge, error) {
 		GameMatch: make(chan pb.Msg, 100),
 		FrameSync: make(chan pb.Msg, 100),
 		Gateway:   make(chan pb.Msg, 100),
-		TwinAgora: make(chan pb.Msg, 100),
+		TwinAgora: make(chan pb.Msg, 10),
 	}
 
 	bridge.NativeServiceList = &nativeServiceList
@@ -76,7 +76,7 @@ type CallMsg struct {
 	Flag          int
 }
 
-//网关的呼叫略有点麻烦，多了一个 targetUid
+// 网关的呼叫略有点麻烦，多了一个 targetUid
 func (bridge *Bridge) CallGateway(callGatewayMsg CallGatewayMsg) (resData interface{}, err error) {
 	debugInfo := " CallGateway ,  ServiceName:" + callGatewayMsg.ServiceName + " FunName:" + callGatewayMsg.FunName + " sourceUid:" + strconv.Itoa(int(callGatewayMsg.SourceUid)) + " targetUid: " + strconv.Itoa(int(callGatewayMsg.TargetUid))
 	bridge.DebugInfo(debugInfo)
@@ -125,7 +125,7 @@ func (bridge *Bridge) CallGateway(callGatewayMsg CallGatewayMsg) (resData interf
 	return bridge.Call(callMsg)
 }
 
-//根据 名称 调用 call
+// 根据 名称 调用 call
 func (bridge *Bridge) CallByName(callGatewayMsg CallGatewayMsg) (resData interface{}, err error) {
 	debugInfo := " CallByName , serviceName::" + callGatewayMsg.ServiceName + " , funcName:" + callGatewayMsg.FunName
 	bridge.DebugInfo(debugInfo)
@@ -160,7 +160,7 @@ func (bridge *Bridge) RouterBack(msg pb.Msg, balanceFactor string, flag int) (da
 	return data, nil
 }
 
-//核心方法： 动态调用一个服务(方法)
+// 核心方法： 动态调用一个服务(方法)
 func (bridge *Bridge) Call(callMsg CallMsg) (resData interface{}, err error) {
 	//func (bridge *Bridge) Call(msg pb.Msg, balanceFactor string, flag int) (resData interface{}, err error) {
 	debugInfo := "Call , flag:" + strconv.Itoa(callMsg.Flag) + " op.Flag:" + strconv.Itoa(bridge.Op.Flag) + " msg.ServiceId: " + strconv.Itoa(int(callMsg.ServiceId)) + " msg.FuncId: " + strconv.Itoa(int(callMsg.FuncId)) + " msg.SourceUid:" + strconv.Itoa(int(callMsg.SourceUid))
@@ -185,7 +185,7 @@ func (bridge *Bridge) Call(callMsg CallMsg) (resData interface{}, err error) {
 
 }
 
-//动用本地方法
+// 动用本地方法
 func (bridge *Bridge) CallNativeService(callMsg CallMsg) (resData interface{}, err error) {
 	debugInfo := "CallNativeService , flag:" + strconv.Itoa(callMsg.Flag) + " op.Flag:" + strconv.Itoa(bridge.Op.Flag) + " msg.ServiceId: " + strconv.Itoa(int(callMsg.ServiceId)) + " msg.FuncId: " + strconv.Itoa(int(callMsg.FuncId))
 	bridge.DebugInfo(debugInfo)
@@ -228,7 +228,7 @@ func (bridge *Bridge) DebugInfo(info string) string {
 	return info
 }
 
-//远程调用 GRPC/HTTP
+// 远程调用 GRPC/HTTP
 func (bridge *Bridge) CallRemoteService(callMsg CallMsg) (resData interface{}, err error) {
 	serviceFuncDesc, empty := bridge.Op.ProtoMap.GetServiceFuncById(int(callMsg.SidFid))
 	if empty {
@@ -251,7 +251,7 @@ func (bridge *Bridge) CallRemoteService(callMsg CallMsg) (resData interface{}, e
 	return resData, err
 }
 
-//动态调用服务的函数 : GameMatch
+// 动态调用服务的函数 : GameMatch
 func (bridge *Bridge) CallServiceFuncGameMatch(callMsg CallMsg) (data interface{}, err error) {
 	//获取GRPC一个连接
 	//grpcClient, err := bridge.Op.GrpcManager.GetGameMatchClient("GameMatch", balanceFactor)

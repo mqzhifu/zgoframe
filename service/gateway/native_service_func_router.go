@@ -23,7 +23,7 @@ func (gateway *Gateway) ListeningBridgeMsg() {
 	}
 }
 
-//网关自解析的路由
+// 网关自解析的路由
 func (gateway *Gateway) NativeServiceFuncRouter(msg pb.Msg) (data interface{}, err error) {
 	prefix := "NativeServiceRouter "
 
@@ -96,7 +96,7 @@ func (gateway *Gateway) NativeServiceFuncRouter(msg pb.Msg) (data interface{}, e
 		requestClientPong.SourceUid = msg.SourceUid
 		gateway.ClientPong(requestClientPong)
 	case "CS_Heartbeat":
-		util.MyPrint("", msg.SourceUid)
+		util.MyPrint("CS_Heartbeat:", msg.SourceUid)
 		requestClientHeartbeat.SourceUid = msg.SourceUid
 		//网关自己要维护一个心跳，主要是更新原始FD的时间、计算RTT等
 		gateway.heartbeat(requestClientHeartbeat)
@@ -158,7 +158,7 @@ func (gateway *Gateway) MakeRouterErrNotFound(prefix string, funcName string, in
 	return errMsg
 }
 
-//总：路由器，这里分成了两类：gateway 自解析 和 代理后方服务的请求
+// 总：路由器，这里分成了两类：gateway 自解析 和 代理后方服务的请求
 func (gateway *Gateway) RouterSendMsg(msg pb.Msg, sourceServiceFunc util.ProtoServiceFunc, conn *util.Conn) (data interface{}, err error) {
 	//actionInfo, _ := gateway.NetWayOption.ProtoMap.GetServiceFuncById(int(msg.SidFid))
 	//gateway.Log.Info("service gateway router , ServiceName:" + actionInfo.ServiceName + " FuncName:" + actionInfo.FuncName + " SidFid:" + strconv.Itoa(int(msg.SidFid)))

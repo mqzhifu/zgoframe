@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"zgoframe/model"
 	"zgoframe/protobuf/pb"
 	"zgoframe/service"
 	"zgoframe/util"
@@ -117,6 +118,27 @@ func (gateway *Gateway) NativeServiceFuncRouter(msg pb.Msg) (data interface{}, e
 				return data, err
 			}
 			uids = append(uids, uid)
+		}
+
+		recordContent := requestProjectPushMsg.Content
+		if len(recordContent) > 255 {
+			recordContent = recordContent[:255]
+		}
+
+		date, _ := strconv.Atoi(time.Now().Format("20060102"))
+		projectPushMsgRecord := model.ProjectPushMsg{
+			Type:            int(requestProjectPushMsg.Type),
+			SourceProjectId: int(requestProjectPushMsg.SourceProjectId),
+			SourceId:        int(requestProjectPushMsg.SourceUid),
+			TargetUids:      requestProjectPushMsg.TargetUids,
+			TargetProjectId: int(requestProjectPushMsg.TargetProjectId),
+			Content:         recordContent,
+			Date:            date,
+		}
+
+		err = gateway.NetWayOption.Gorm.Create(&projectPushMsgRecord).Error
+		if err != nil {
+			gateway.NetWayOption.Log.Error("projectPushMsgRecord create err:" + err.Error())
 		}
 
 		for _, uid := range uids {

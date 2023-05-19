@@ -612,7 +612,7 @@ func (conn *Conn) ProcessMsgLoop(ctx context.Context) {
 			conn.ConnManager.Option.Log.Info("ProcessMsgLoop receive msg , SidFid:" + strconv.Itoa(int(msg.SidFid)))
 			conn.ConnManager.Option.NetWay.Router(msg, conn)
 
-			if msg.SidFid != 90110 {
+			if msg.SidFid != 90110 { //心跳太频繁，就不入库了
 				id, _ := GetLocalIp()
 				record := model.OperationRecord{
 					Ip:           id,

@@ -1,4 +1,4 @@
-//全局容器，1 配置信息中的变量 2 公共初始好的类包
+// 全局容器，1 配置信息中的变量 2 公共初始好的类包
 package global
 
 import "C"
@@ -49,7 +49,7 @@ type Global struct {
 	MyService        *MyService             //内部快捷服务
 }
 
-//main主协程的一些参数
+// main主协程的一些参数
 type MainEnvironment struct {
 	RootDir         string             `json:"root_dir"`
 	RootDirName     string             `json:"root_dir_name"`
@@ -63,7 +63,7 @@ type MainEnvironment struct {
 	BuildGitVersion string             //编译时：git版本号
 }
 
-//指令行 收集的参数
+// 指令行 收集的参数
 type CmdParameter struct {
 	Env              int    `json:"env"`                //当前环境
 	ConfigSourceType string `json:"config_source_type"` //文件 | etcd
@@ -91,6 +91,7 @@ func AutoCreateUpDbTable() map[string]string {
 		&model.GameMatchRule{}, &model.GameMatchSuccess{}, &model.GameMatchGroup{}, &model.GameMatchPush{}, &model.GameSyncRoom{},
 		&model.OperationRecord{}, &model.Project{}, &model.StatisticsLog{},
 		&model.CicdPublish{}, &model.Server{}, &model.Instance{},
+		&model.ProjectPushMsg{},
 		&model.SmsRule{}, &model.SmsLog{}, &model.EmailRule{}, &model.EmailLog{}, &model.MailRule{}, &model.MailLog{}, &model.MailGroup{})
 
 	return sql

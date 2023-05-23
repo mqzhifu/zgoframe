@@ -9,6 +9,7 @@ import (
 	"os/exec"
 	"strconv"
 	"strings"
+	"time"
 	"zgoframe/core/global"
 	"zgoframe/http/request"
 	httpresponse "zgoframe/http/response"
@@ -659,4 +660,72 @@ func TwinAgoraSocketTools(c *gin.Context) {
 	config["rtc_user_pool"] = global.V.MyService.TwinAgora.RTCUserPool
 
 	httpresponse.OkWithAll(config, "Query-成功", c)
+}
+
+// @Tags TwinAgora
+// @Summary 获取推送事件的统计信息
+// @Description 如：发送标注图次数、发送图片次数、发送视频次数
+// @accept application/json
+// @Security ApiKeyAuth
+// @Param X-Source-Type header string true "来源" default(11)
+// @Param start_time path string true "start_time"
+// @Param end_time path string true "end_time"
+// @Produce application/json
+// @Success 200 {boolean} boolean "true:成功 false:否"
+// @Router /twin/agora/statistics/event/alls [GET]
+func TwinAgoraStatisticsEventAll(c *gin.Context) {
+	startTime := c.Query("start_time")
+	endTime := c.Query("end_time")
+
+	startDate, _ := time.Parse("20060102", startTime)
+	endDate, _ := time.Parse("20060102", endTime)
+	dateArray := make([]string, 0)
+	dateArray = append(dateArray, startDate.Format("20060102"))
+	for currDate := startDate.AddDate(0, 0, 1); currDate.Before(endDate); currDate = currDate.AddDate(0, 0, 1) {
+		dateArray = append(dateArray, currDate.Format("20060102"))
+	}
+	dateArray = append(dateArray, endDate.Format("20060102"))
+
+	// select count(*), `date`, `type` from project_push_msg where `date`>="20230505" and `date`<= "20230523" group by `date`
+	rows, err := global.V.Gorm.
+		Model(&model.ProjectPushMsg{}).
+		Select("count(*) as count", "date", "type as eventType").
+		Where("date >= ? and date <= ?", startTime, endTime).
+		Group("date").
+		Group("type").
+		Rows()
+	if err != nil {
+		httpresponse.FailWithAll(err.Error(), "失败", c)
+		return
+	}
+
+	defer rows.Close()
+	tmp := make(map[int]map[string]int)
+	for _, i := range []int{1, 2, 3, 4, 5} {
+		tmp[i] = make(map[string]int)
+	}
+	for rows.Next() {
+		var count int
+		var date string
+		var eventType int
+		rows.Scan(&count, &date, &eventType)
+
+		if _, ok := tmp[eventType]; ok {
+			tmp[eventType][date] = count
+		}
+	}
+
+	ret := make(map[int][]int)
+
+	for eventType, _ := range tmp {
+		for _, date := range dateArray {
+			if _, ok := tmp[eventType][date]; !ok {
+				ret[eventType] = append(ret[eventType], 0)
+			} else {
+				ret[eventType] = append(ret[eventType], tmp[eventType][date])
+			}
+		}
+	}
+
+	httpresponse.OkWithAll(ret, "成功", c)
 }

@@ -32,7 +32,7 @@ type ViperOption struct {
 	PrintPrefix    string
 }
 
-//读取配置文件：目前仅支持从文件读取配置信息，ETCD的方式只写了一半
+// 读取配置文件：目前仅支持从文件读取配置信息，ETCD的方式只写了一半
 func GetNewViper(prefix string) (myViper *viper.Viper, config global.Config, err error) {
 	//初始化 : 配置信息
 	viperOption := ViperOption{
@@ -54,7 +54,7 @@ func GetNewViper(prefix string) (myViper *viper.Viper, config global.Config, err
 	if viperOption.SourceType == "file" { //直接从文件中读取配置信息
 		myViper.SetConfigType(viperOption.ConfigFileType)
 		//myViper.SetConfigName(ConfigName + "." + ConfigType)
-		configFile := viperOption.ConfigFileName + "." + viperOption.ConfigFileType
+		configFile := "config/" + viperOption.ConfigFileName + "." + viperOption.ConfigFileType
 		util.MyPrint(viperOption.PrintPrefix + "viper read:" + configFile)
 		myViper.SetConfigFile(configFile)
 		myViper.AddConfigPath(".")

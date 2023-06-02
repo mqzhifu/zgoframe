@@ -1,7 +1,7 @@
 go.sum
 .idea/
 latest_log*
-config.toml
+config/config.toml
 ./zgoframe
 node_modules
 package-lock.json

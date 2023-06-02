@@ -1,4 +1,4 @@
-//全局初始化
+// 全局初始化
 package initialize
 
 import (
@@ -21,7 +21,7 @@ func NewInitialize() *Initialize {
 	return initialize
 }
 
-//框架-初始化-入口
+// 框架-初始化-入口
 func (initialize *Initialize) Start() error {
 	//---read config file start -----
 	prefix := "initialize ,"
@@ -116,7 +116,7 @@ func (initialize *Initialize) Start() error {
 	//global.V.RootDir = initialize.Option.RootDir
 	global.V.Zap.Info(prefix + "global.V.RootDir: " + global.MainEnv.RootDir)
 	//错误码 文案 管理（还未用起来，后期优化）
-	global.V.Err, err = util.NewErrMsg(global.V.Zap, global.C.Http.StaticPath+global.C.System.ErrorMsgFile)
+	global.V.Err, err = util.NewErrMsg(global.V.Zap, global.C.Http.StaticPath+"/"+global.C.System.ErrorMsgFile)
 	if err != nil {
 		global.V.Zap.Error(prefix + err.Error())
 		return err
@@ -327,7 +327,7 @@ func (initialize *Initialize) Quit() {
 	global.V.Zap.Warn("init quit finish.")
 }
 
-//=======================================================================================
+// =======================================================================================
 func InitPath(rootDir string) (rootDirName string, err error) {
 	pwdArr := strings.Split(rootDir, "/") //切割路径字符串
 	rootDirName = pwdArr[len(pwdArr)-1]   //获取路径数组最后一个元素：当前路径的文件夹名

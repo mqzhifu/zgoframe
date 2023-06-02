@@ -19,6 +19,6 @@ func TwinAgora(Router *gin.RouterGroup) {
 		TwinAgora.GET("config", v1.TwinAgoraConfig)
 		TwinAgora.GET("socket/tools", v1.TwinAgoraSocketTools)
 		TwinAgora.POST("cloud/record/check", v1.TwinAgoraCloudRecordCheck)
-
+		TwinAgora.GET("statistics/event/all", v1.TwinAgoraStatisticsEventAll)
 	}
 }

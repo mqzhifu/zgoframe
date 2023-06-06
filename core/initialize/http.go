@@ -75,7 +75,12 @@ func GetNewHttpGIN(zapLog *zap.Logger, prefix string) (*gin.Engine, error) {
 	//单独的日志记录，GIN默认的日志不会持久化的
 	ginRouter.Use(ZapLog())
 	//设置静态目录，等待请求
-	ginRouter.StaticFS(staticFSUriName, http.Dir(staticPath))
+	if global.MainCmdParameter.BuildStatic == "on" {
+		ginRouter.StaticFS(staticFSUriName, http.FS(global.V.StaticFileSys))
+	} else {
+		ginRouter.StaticFS(staticFSUriName, http.Dir(staticPath))
+	}
+
 	//favicon.ico
 	ginRouter.StaticFile("/favicon.ico", "./static/favicon.ico")
 	//加载swagger api 工具

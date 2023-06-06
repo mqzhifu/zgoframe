@@ -9,6 +9,7 @@ package main
 
 import (
 	"context"
+	"embed"
 	_ "embed"
 	"flag"
 	"os"
@@ -27,6 +28,11 @@ var (
 	BuildTime       string
 	BuildGitVersion string
 )
+
+// 静态文件打包
+//
+//go:embed static
+var staticFileSys embed.FS
 
 var initializeVar *initialize.Initialize
 
@@ -109,6 +115,7 @@ func main() {
 	}
 	global.MainEnv = mainEnvironment
 	global.MainCmdParameter = cmdParameter
+	global.V.StaticFileSys = staticFileSys
 	//开始正式全局初始化
 	initializeVar = initialize.NewInitialize()
 	err := initializeVar.Start()
@@ -149,6 +156,8 @@ func processCmdParameter(prefix string) global.CmdParameter {
 	debug := flag.Int("debug", 0, "startup debug mode level")
 	//开启自动测试模式
 	testFlag := flag.String("t", "", "testFlag:empty or 1")
+	//配置文件的名称
+	buildStatic := flag.String("bs", core.DEFAULT_GLOBAL_CONFIG_BUILD_STATIC, "BuildStatic")
 	//解析命令行参数
 	flag.Parse()
 	//检测环境变量值ENV是否正常
@@ -166,6 +175,7 @@ func processCmdParameter(prefix string) global.CmdParameter {
 		EtcdUrl:          *etcdUrl,
 		Debug:            *debug,
 		TestFlag:         *testFlag,
+		BuildStatic:      *buildStatic,
 	}
 
 	return cmdParameter

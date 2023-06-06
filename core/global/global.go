@@ -4,6 +4,7 @@ package global
 import "C"
 import (
 	"context"
+	"embed"
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
@@ -47,6 +48,7 @@ type Global struct {
 	ServiceDiscovery *util.ServiceDiscovery //管理服务发现，会用到上面的ServiceManager
 	AliOss           *util.AliOss           //阿里网盘
 	MyService        *MyService             //内部快捷服务
+	StaticFileSys    embed.FS               //静态文件
 }
 
 // main主协程的一些参数
@@ -72,6 +74,7 @@ type CmdParameter struct {
 	EtcdUrl          string `json:"etcd_url"`           //etcd get url
 	Debug            int    `json:"debug"`              //debug 模式
 	TestFlag         string `json:"test_flag"`          //是否为测试状态
+	BuildStatic      string `json:"build_static"`       //是否编译时把静态文件一并打包进二进制文件中
 }
 
 var V = New() //动态的容器

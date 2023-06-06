@@ -4,7 +4,7 @@
 php makepbservice.php pb ~/data/www/golang/zgoframe/protobuf/proto ~/data/www/golang/zgoframe/protobuf/pbservice
 php makepbservice.php pb /data/www/golang/zgoframe/protobuf/proto /data/www/golang/zgoframe/protobuf/pbservice
 
-功能描述：快速生成protobuf中间文件等工具集(比较懒，就不用GOLANG写了)
+功能描述：快速生成 protobuf 中间文件等工具集(比较懒，就不用GOLANG写了)
 大体上一共是2类：
 1、用 protoc 工具，编译生成 GO 和 JS 的所有 可执行文件
 2、工具附加代码

@@ -41,8 +41,8 @@ type ProtoServiceFunc struct {
 	Desc        string `json:"desc"`
 }
 
-//var actionMap  	map[string]map[int]ActionMap
-func NewProtoMap(log *zap.Logger, configFileDir string, MapFileName string, projectManager *ProjectManager) (*ProtoMap, error) {
+// var actionMap  	map[string]map[int]ActionMap
+func NewProtoMap(log *zap.Logger, configFileDir string, MapFileName string, projectManager *ProjectManager, fileContentArr []string) (*ProtoMap, error) {
 	log.Info("NewProtobufMap:" + configFileDir)
 
 	protoMap := new(ProtoMap)
@@ -79,8 +79,6 @@ func (protoMap *ProtoMap) initProtocolActionMap() error {
 }
 
 func (protoMap *ProtoMap) loadingActionMapConfigFile(fileName string) (map[int]ProtoServiceFunc, error) {
-	//_, _,_,dir  := getInfo(1)
-	//ExitPrint(protobufMap.ConfigFileDir,fileName)
 	pathFile := protoMap.ConfigFileDir + "/" + fileName
 	protoMap.Log.Info("protobufMap loadingActionMapConfigFile:" + pathFile)
 	fileContentArr, err := ReadLine(pathFile)
@@ -158,12 +156,12 @@ func (protoMap *ProtoMap) loadingActionMapConfigFile(fileName string) (map[int]P
 //	return
 //}
 
-//获取全部列表数据
+// 获取全部列表数据
 func (protoMap *ProtoMap) GetServiceFuncMap() map[int]ProtoServiceFunc {
 	return protoMap.ServiceFuncMap
 }
 
-//根据函数名，获取一条记录，这种方法不太严谨，按说应该 服务名+函数名，保证唯一 ，但代码已经写了，先这样，后期优化
+// 根据函数名，获取一条记录，这种方法不太严谨，按说应该 服务名+函数名，保证唯一 ，但代码已经写了，先这样，后期优化
 func (protoMap *ProtoMap) GetServiceByName(serviceName string, funcName string) (protoServiceFunc ProtoServiceFunc, empty bool) {
 	for _, v := range protoMap.ServiceFuncMap {
 		if v.FuncName == funcName && v.ServiceName == serviceName {
@@ -173,7 +171,7 @@ func (protoMap *ProtoMap) GetServiceByName(serviceName string, funcName string) 
 	return protoServiceFunc, true
 }
 
-//根据函数名，获取一条记录，这种方法不太严谨，按说应该 服务名+函数名，保证唯一 ，但代码已经写了，先这样，后期优化
+// 根据函数名，获取一条记录，这种方法不太严谨，按说应该 服务名+函数名，保证唯一 ，但代码已经写了，先这样，后期优化
 func (protoMap *ProtoMap) GetServiceNameByServiceId(serviceId int) (n string, empty bool) {
 	for _, v := range protoMap.ServiceFuncMap {
 		if v.ServiceId == serviceId {
@@ -183,7 +181,7 @@ func (protoMap *ProtoMap) GetServiceNameByServiceId(serviceId int) (n string, em
 	return "", true
 }
 
-//根据函数名，获取一条记录，这种方法不太严谨，按说应该 服务名+函数名，保证唯一 ，但代码已经写了，先这样，后期优化
+// 根据函数名，获取一条记录，这种方法不太严谨，按说应该 服务名+函数名，保证唯一 ，但代码已经写了，先这样，后期优化
 func (protoMap *ProtoMap) GetServiceIdByServiceName(serviceName string) (n int, empty bool) {
 	for _, v := range protoMap.ServiceFuncMap {
 		if v.ServiceName == serviceName {

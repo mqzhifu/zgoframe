@@ -209,11 +209,32 @@ func (initialize *Initialize) Start() error {
 		//})
 		//global.V.Metric.Test()
 	}
-	//初始化-protobuf 映射文件
-	dir := global.MainEnv.RootDir + "/" + global.C.Protobuf.BasePath + "/" + global.C.Protobuf.PbServicePath
+	//初始化-protobuf 映射文件（原 protobuf 目录 改成 static 下面）
 	//将rpc service 中的方法，转化成ID（由PHP生成 的ID map）
 	if global.C.Protobuf.Status == core.GLOBAL_CONFIG_MODEL_STATUS_OPEN {
-		global.V.ProtoMap, err = util.NewProtoMap(global.V.Zap, dir, global.C.Protobuf.IdMapFileName, global.V.ProjectMng)
+		var fileContentArr []string
+		if global.MainCmdParameter.BuildStatic == "on" {
+			content, err := global.V.StaticFileSys.ReadFile("static/proto/" + global.C.Protobuf.IdMapFileName)
+			if err != nil {
+				util.MyPrint("ReadFile err:", err)
+				return err
+			}
+			fileContentArr = strings.Split(string(content), "\n")
+			//util.MyPrint(fileContentArr[1])
+			//util.ExitPrint(33)
+		} else {
+			//dir := global.MainEnv.RootDir + "/" + global.C.Protobuf.BasePath + "/" + global.C.Protobuf.PbServicePath
+			pathFile := global.MainEnv.RootDir + "/" + global.C.Http.StaticPath + "/proto/" + global.C.Protobuf.IdMapFileName
+			fileContentArr, err = util.ReadLine(pathFile)
+			if err != nil {
+				util.MyPrint("initActionMap ReadLine err :" + err.Error())
+				//protoMap.Log.Error("initActionMap ReadLine err :" + err.Error())
+				return err
+				//protobufMap.Log.Panic("initActionMap ReadLine err :" + err.Error())
+			}
+		}
+		pp := global.MainEnv.RootDir + "/" + global.C.Http.StaticPath + "/proto/"
+		global.V.ProtoMap, err = util.NewProtoMap(global.V.Zap, pp, global.C.Protobuf.IdMapFileName, global.V.ProjectMng, fileContentArr)
 		if err != nil {
 			util.MyPrint("GetNewViper err:", err)
 			return err

@@ -39,7 +39,7 @@ WORKDIR /app
 
 #COPY . .
 COPY static ./static
-COPY protobuf ./protobuf
+#COPY protobuf ./protobuf
 #COPY config.toml .
 COPY --from=builder /app/ar120 .
 
@@ -48,3 +48,4 @@ COPY --from=builder /app/ar120 .
 EXPOSE 3333 5555
 
 CMD [ "./ar120","-e","5"]
+#CMD [ "./ar120","-e","5","-bs","on"]

@@ -17,7 +17,7 @@ WORKDIR /app
 COPY . .
 
 #下载 goland 依赖包
-RUN go env -w GO111MODULE=on;go env -w GOPROXY=https://goproxy.cn,direct;RUN go mod tidy;
+RUN go env -w GO111MODULE=on;go env -w GOPROXY=https://goproxy.cn,direct;go mod tidy;
 
 #帮助文档
 #RUN go install github.com/swaggo/swag/cmd/swag@v1.7.9;
@@ -33,6 +33,7 @@ WORKDIR /app
 #COPY . .
 #COPY static ./static
 #COPY protobuf ./protobuf
+#如果走挂载模式，这个可以不执行
 COPY config/config.toml config/config.toml
 COPY --from=builder /app/zgoframe .
 
@@ -44,4 +45,5 @@ EXPOSE 3333 5555
 CMD [ "./zgoframe","-e","5"]
 #CMD [ "./zgoframe","-e","5","-bs","on"]
 
-
+#docker run -d --link=ckMysq57:myDb --link=ckRedis5:myRedis -v /data/docker/zgoframe/config:/app/config zgoframe:0.10
+#docker run -d  -d -p 3333:3333 -p 5555:5555  --link=ckMysq57:myDb --link=ckRedis5:myRedis -v /data/docker/zgoframe/config:/app/config zgoframe:0.10

@@ -5,7 +5,7 @@
 [system]
 dbType       = "mysql"
 projectId    = #projectId# #项目ID，所有的项目均要在后台申请一个ID
-errorMsgFile = "/data/lang.txt"#这是个相对路径,在static下面
+errorMsgFile = "data/lang.txt"#这是个相对路径,在static下面
 opDirName    = "operation"
 
 #域名管理

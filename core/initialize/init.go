@@ -34,6 +34,12 @@ func (initialize *Initialize) Start() error {
 	global.C = config      //全局变量
 	//--- read config file end -----
 
+	//if global.MainCmdParameter.BuildStatic == "on" {
+	global.V.StaticFileSystem = util.NewStaticFileSystem(global.V.StaticFileSys, global.MainCmdParameter.BuildStatic)
+	//} else {
+	//	staticFileSystem := util.NewStaticFileSystem(global.V.StaticFileSys, global.MainCmdParameter.BuildStatic)
+	//}
+
 	//邮件与短信优先初始化，是一但有报警，就可以直接发邮件/短信
 
 	//邮件模块
@@ -116,7 +122,13 @@ func (initialize *Initialize) Start() error {
 	//global.V.RootDir = initialize.Option.RootDir
 	global.V.Zap.Info(prefix + "global.V.RootDir: " + global.MainEnv.RootDir)
 	//错误码 文案 管理（还未用起来，后期优化）
-	global.V.Err, err = util.NewErrMsg(global.V.Zap, global.C.Http.StaticPath+"/"+global.C.System.ErrorMsgFile)
+	errorMsgFileContentDir := global.C.Http.StaticPath + "/" + global.C.System.ErrorMsgFile
+	errorMsgFileContent, err := global.V.StaticFileSystem.GetStaticFileContentLine(errorMsgFileContentDir)
+	if err != nil {
+		global.V.Zap.Error(prefix + err.Error())
+		return err
+	}
+	global.V.Err, err = util.NewErrMsg(global.V.Zap, errorMsgFileContentDir, errorMsgFileContent)
 	if err != nil {
 		global.V.Zap.Error(prefix + err.Error())
 		return err
@@ -213,28 +225,27 @@ func (initialize *Initialize) Start() error {
 	//将rpc service 中的方法，转化成ID（由PHP生成 的ID map）
 	if global.C.Protobuf.Status == core.GLOBAL_CONFIG_MODEL_STATUS_OPEN {
 		var fileContentArr []string
-		if global.MainCmdParameter.BuildStatic == "on" {
-			content, err := global.V.StaticFileSys.ReadFile("static/proto/" + global.C.Protobuf.IdMapFileName)
-			if err != nil {
-				util.MyPrint("ReadFile err:", err)
-				return err
-			}
-			fileContentArr = strings.Split(string(content), "\n")
-			//util.MyPrint(fileContentArr[1])
-			//util.ExitPrint(33)
-		} else {
-			//dir := global.MainEnv.RootDir + "/" + global.C.Protobuf.BasePath + "/" + global.C.Protobuf.PbServicePath
-			pathFile := global.MainEnv.RootDir + "/" + global.C.Http.StaticPath + "/proto/" + global.C.Protobuf.IdMapFileName
-			fileContentArr, err = util.ReadLine(pathFile)
-			if err != nil {
-				util.MyPrint("initActionMap ReadLine err :" + err.Error())
-				//protoMap.Log.Error("initActionMap ReadLine err :" + err.Error())
-				return err
-				//protobufMap.Log.Panic("initActionMap ReadLine err :" + err.Error())
-			}
-		}
-		pp := global.MainEnv.RootDir + "/" + global.C.Http.StaticPath + "/proto/"
-		global.V.ProtoMap, err = util.NewProtoMap(global.V.Zap, pp, global.C.Protobuf.IdMapFileName, global.V.ProjectMng, fileContentArr)
+		//if global.MainCmdParameter.BuildStatic == "on" {
+		//	content, err := global.V.StaticFileSys.ReadFile("static/proto/" + global.C.Protobuf.IdMapFileName)
+		//	if err != nil {
+		//		util.MyPrint("ReadFile err:", err)
+		//		return err
+		//	}
+		//	fileContentArr = strings.Split(string(content), "\n")
+		//} else {
+		//	//dir := global.MainEnv.RootDir + "/" + global.C.Protobuf.BasePath + "/" + global.C.Protobuf.PbServicePath
+		//	pathFile := global.MainEnv.RootDir + "/" + global.C.Http.StaticPath + "/proto/" + global.C.Protobuf.IdMapFileName
+		//	fileContentArr, err = util.ReadLine(pathFile)
+		//	if err != nil {
+		//		util.MyPrint("initActionMap ReadLine err :" + err.Error())
+		//		return err
+		//	}
+		//}
+		protobufStaticDir := global.C.Http.StaticPath + "/proto/"
+		fileContentArr, _ = global.V.StaticFileSystem.GetStaticFileContentLine(protobufStaticDir + global.C.Protobuf.IdMapFileName)
+		//util.MyPrint(fileContentArr)
+		protobufStaticFullDir := global.MainEnv.RootDir + "/" + protobufStaticDir
+		global.V.ProtoMap, err = util.NewProtoMap(global.V.Zap, protobufStaticFullDir, global.C.Protobuf.IdMapFileName, global.V.ProjectMng, fileContentArr)
 		if err != nil {
 			util.MyPrint("GetNewViper err:", err)
 			return err

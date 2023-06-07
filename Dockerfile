@@ -10,9 +10,8 @@ RUN apk add build-base
 #设置代码的工作目录，容器启动直接进入此目录
 WORKDIR /app
 
-##设置GOLANG的环境变量
-#ENV GO111MODULE=on \
-#    GOPROXY=https://goproxy.cn,direct
+#下载代码
+#RUN git clone https://github.com/xxxx/xxxxx.git;rm -rf .git;
 
 #将代码统一复制项目代码中
 COPY . .
@@ -25,14 +24,12 @@ RUN go env -w GO111MODULE=on;go env -w GOPROXY=https://goproxy.cn,direct;RUN go 
 #RUN /go/bin/swag init --parseDependency --parseInternal --parseDepth 3;
 
 #编译项目代码
-RUN go build -ldflags  "-X main.BuildGitVersion='f65cf33ef605' -X main.BuildTime='2023' "  -o zgoframe
+RUN go build -ldflags  "-X main.BuildGitVersion='f65cf33ef605' -X main.BuildTime='$(date +%y%m%d)' "  -o zgoframe
 #RUN go build -o zgoframe
 
-#二阶段部署，上面阶段如果直接运行，镜像大概是：1.5GB，使用 alpine-runner 更小
+#二阶段部署，上面阶段如果直接运行，镜像大概是：1.5GB，使用 alpine-runner 更小:100MB 以下
 FROM alpine AS runner
 WORKDIR /app
-
-
 #COPY . .
 #COPY static ./static
 #COPY protobuf ./protobuf
@@ -46,3 +43,5 @@ EXPOSE 3333 5555
 #CMD [ "top"]
 CMD [ "./zgoframe","-e","5"]
 #CMD [ "./zgoframe","-e","5","-bs","on"]
+
+

@@ -1,4 +1,4 @@
-//游戏-用户匹配
+// 游戏-用户匹配
 package gamematch
 
 import (
@@ -79,6 +79,7 @@ type GameMatchOption struct {
 	Metrics          *util.MyMetrics        `json:"-"` //统计 实例
 	ServiceDiscovery *util.ServiceDiscovery `json:"-"` //服务发现 实例
 	ProtoMap         *util.ProtoMap         `json:"-"`
+	StaticFileSystem *util.StaticFileSystem
 }
 
 type GameMatch struct {
@@ -108,8 +109,14 @@ func NewGameMatch(option GameMatchOption) (*GameMatch, error) {
 	option.WeightMaxValue = 100                             //权限最终的值，不能大于 100
 	option.PersistenceType = service.PERSISTENCE_TYPE_MYSQL //数据 - 持久化
 	gameMatch.Option = option
+
+	ErrorMsgFileContent, err := option.StaticFileSystem.GetStaticFileContentLine(option.StaticPath + "/data/game_match_cn.lang")
+	if err != nil {
+		return gameMatch, err
+	}
+
 	//语言包
-	lang, err := util.NewErrMsg(option.Log, option.StaticPath+"/data/game_match_cn.lang")
+	lang, err := util.NewErrMsg(option.Log, option.StaticPath+"/data/game_match_cn.lang", ErrorMsgFileContent)
 	if err != nil {
 		util.ExitPrint(err)
 	}
@@ -135,22 +142,22 @@ func NewGameMatch(option GameMatchOption) (*GameMatch, error) {
 	return gameMatch, nil
 }
 
-//退出
+// 退出
 func (gameMatch *GameMatch) Quit(source int) {
 	gameMatch.RuleManager.Quit()
 }
 
-//获取语言包
+// 获取语言包
 func (gameMatch *GameMatch) GetLang() map[int]util.ErrInfo {
 	return gameMatch.Err.Pool
 }
 
-//获取配置信息
+// 获取配置信息
 func (gameMatch *GameMatch) GetOption() GameMatchOption {
 	return gameMatch.Option
 }
 
-//持久化数据 - 组
+// 持久化数据 - 组
 func (gameMatch *GameMatch) PersistenceRecordGroup(group Group, ruleId int) {
 	if gameMatch.Option.PersistenceType == service.PERSISTENCE_TYPE_MYSQL {
 		pids := ""
@@ -178,7 +185,7 @@ func (gameMatch *GameMatch) PersistenceRecordGroup(group Group, ruleId int) {
 	}
 }
 
-//持久化数据 - 匹配成功结果
+// 持久化数据 - 匹配成功结果
 func (gameMatch *GameMatch) PersistenceRecordSuccessResult(result Result, ruleId int) {
 	if gameMatch.Option.PersistenceType == service.PERSISTENCE_TYPE_MYSQL {
 		gameMatchSuccess := model.GameMatchSuccess{
@@ -194,7 +201,7 @@ func (gameMatch *GameMatch) PersistenceRecordSuccessResult(result Result, ruleId
 	}
 }
 
-//持久化数据 - 组
+// 持久化数据 - 组
 func (gameMatch *GameMatch) PersistenceRecordSuccessPush(pushElement PushElement, ruleId int) {
 	if gameMatch.Option.PersistenceType == service.PERSISTENCE_TYPE_MYSQL {
 		gameMatchPush := model.GameMatchPush{
@@ -211,14 +218,14 @@ func (gameMatch *GameMatch) PersistenceRecordSuccessPush(pushElement PushElement
 	}
 }
 
-//删除 全部 redis 数据，这个是方便测试，线上业务不能用
+// 删除 全部 redis 数据，这个是方便测试，线上业务不能用
 func (gameMatch *GameMatch) DelRedisData() {
 	gameMatch.Option.Log.Warn(gameMatch.prefix + " action :  DelRedisData")
 	keys := gameMatch.Option.RedisPrefix + "*"
 	gameMatch.Option.Redis.RedisDelAllByPrefix(keys)
 }
 
-//删除 一条 rule的 redis 数据
+// 删除 一条 rule的 redis 数据
 func (gameMatch *GameMatch) DelOneRuleRedisDataById(ruleId int) {
 	gameMatch.Option.Log.Warn(gameMatch.prefix + " action :  DelOneRuleRedisDataById , " + strconv.Itoa(ruleId))
 	gameMatch.RuleManager.delOneRuleRedisData(ruleId)

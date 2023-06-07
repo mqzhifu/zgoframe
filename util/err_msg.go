@@ -26,27 +26,27 @@ type ErrMsg struct {
 	Pool         map[int]ErrInfo `json:"pool"`
 }
 
-func NewErrMsg(log *zap.Logger, langPathFile string) (*ErrMsg, error) {
+func NewErrMsg(log *zap.Logger, langPathFile string, fileContent []string) (*ErrMsg, error) {
 	//log.Info("NewErrMsg class")
 	errMsg := new(ErrMsg)
 	errMsg.Log = log
 	errMsg.LangPathFile = langPathFile
 	errMsg.Pool = make(map[int]ErrInfo)
 
-	err := errMsg.loadFileContent()
+	err := errMsg.loadFileContent(fileContent)
 
 	return errMsg, err
 }
 
-func (errMsg ErrMsg) loadFileContent() error {
-	fileContentArr, err := ReadLine(errMsg.LangPathFile)
+func (errMsg ErrMsg) loadFileContent(fileContent []string) error {
+	//fileContentArr, err := ReadLine(errMsg.LangPathFile)
 	var errContent string
-	if err != nil {
-		errContent = "errMsg loadFileContent ReadLine err :" + err.Error()
-		errMsg.Log.Error(errContent)
-		return errors.New(errContent)
-	}
-
+	//if err != nil {
+	//	errContent = "errMsg loadFileContent ReadLine err :" + err.Error()
+	//	errMsg.Log.Error(errContent)
+	//	return errors.New(errContent)
+	//}
+	fileContentArr := fileContent
 	if len(fileContentArr) <= 0 {
 		errContent = "errMsg loadFileContent len <= 0"
 		errMsg.Log.Error(errContent)
@@ -74,7 +74,7 @@ func (errMsg ErrMsg) loadFileContent() error {
 	return nil
 }
 
-//使用者传入的code不在lang文件中，统一给一个字符串
+// 使用者传入的code不在lang文件中，统一给一个字符串
 func (errMsg *ErrMsg) GetCodeNotExistMsg(code int) string {
 	codeNotExistMsg := strings.Replace(errMsg.Pool[CODE_NOT_EXIST].Msg, "{0}", strconv.Itoa(code), -1)
 	return codeNotExistMsg

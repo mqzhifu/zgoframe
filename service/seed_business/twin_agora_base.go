@@ -34,7 +34,7 @@ type TwinAgora struct {
 	Lang *util.ErrMsg
 }
 
-//创建连接的FD管理池：用户基础信息
+// 创建连接的FD管理池：用户基础信息
 type RTCUser struct {
 	Id            int    `json:"id"`             //用户ID
 	RoomId        string `json:"room_id"`        //用户所有房间ID
@@ -60,10 +60,11 @@ type RTCRoom struct {
 }
 
 type TwinAgoraOption struct {
-	ProtoMap   *util.ProtoMap `json:"-"`
-	Gorm       *gorm.DB
-	Log        *zap.Logger
-	StaticPath string
+	ProtoMap         *util.ProtoMap `json:"-"`
+	Gorm             *gorm.DB
+	Log              *zap.Logger
+	StaticPath       string
+	StaticFileSystem *util.StaticFileSystem
 	//RequestServiceAdapter *service.RequestServiceAdapter
 	ServiceBridge *service.Bridge
 }
@@ -85,9 +86,12 @@ func NewTwinAgora(op TwinAgoraOption) (*TwinAgora, error) {
 	twinAgora.Op = op
 
 	twinAgora.CancelCtx, twinAgora.CancelFunc = context.WithCancel(context.Background())
-
+	ErrorMsgFileContent, err := op.StaticFileSystem.GetStaticFileContentLine(op.StaticPath + "/data/twin_agora.en.lang")
+	if err != nil {
+		return twinAgora, err
+	}
 	//错误码 文案 管理（还未用起来，后期优化）
-	lang, err := util.NewErrMsg(op.Log, op.StaticPath+"/data/twin_agora.en.lang")
+	lang, err := util.NewErrMsg(op.Log, op.StaticPath+"/data/twin_agora.en.lang", ErrorMsgFileContent)
 	if err != nil {
 		twinAgora.MakeError(err.Error())
 		return twinAgora, err
@@ -98,19 +102,19 @@ func NewTwinAgora(op TwinAgoraOption) (*TwinAgora, error) {
 	return twinAgora, nil
 }
 
-//开启RTC房间监控.这里有2个主要的功能：
-//1. 检查房间各种超时
-//2. 心跳更新房间的：最后操作时间(目前是被动接收)
+// 开启RTC房间监控.这里有2个主要的功能：
+// 1. 检查房间各种超时
+// 2. 心跳更新房间的：最后操作时间(目前是被动接收)
 func (twinAgora *TwinAgora) Start() {
 	go twinAgora.CheckTimeout()
 }
 
-//退出，做善后处理
+// 退出，做善后处理
 func (twinAgora *TwinAgora) Quit() {
 	twinAgora.CancelFunc() //发送关闭信息
 }
 
-//守护协程，检查房间超时：呼叫超时、运行超时(连接断开)
+// 守护协程，检查房间超时：呼叫超时、运行超时(连接断开)
 func (twinAgora *TwinAgora) CheckTimeout() {
 	twinAgora.Log.Debug("twinAgora CheckTimeout demon.")
 	for {
@@ -146,7 +150,7 @@ end:
 	twinAgora.Log.Debug("twinAgora CheckTimeout finish.")
 }
 
-//网关监控到有C端连接，并通过了登陆验证后，会推送事件
+// 网关监控到有C端连接，并通过了登陆验证后，会推送事件
 func (twinAgora *TwinAgora) FDCreateEvent(FDCreateEvent pb.FDCreateEvent) {
 	//util.MyPrint("FDCreateEvent=========")
 	if FDCreateEvent.UserId <= 0 {
@@ -173,7 +177,7 @@ func (twinAgora *TwinAgora) FDCreateEvent(FDCreateEvent pb.FDCreateEvent) {
 	twinAgora.RTCUserPool[int(FDCreateEvent.UserId)] = &NewRTCUser
 }
 
-//网关监控到用户连接断了(超时)，会回调通知服务
+// 网关监控到用户连接断了(超时)，会回调通知服务
 func (twinAgora *TwinAgora) FDCloseEvent(connCloseEvent pb.FDCloseEvent) {
 	twinAgora.Log.Warn("TwinAgora ConnCloseCallback :", zap.Int("userId", int(connCloseEvent.UserId)), zap.Int("source", int(connCloseEvent.Source)))
 	myRTCUser, ok := twinAgora.GetUserById(int(connCloseEvent.UserId))
@@ -184,7 +188,7 @@ func (twinAgora *TwinAgora) FDCloseEvent(connCloseEvent pb.FDCloseEvent) {
 	twinAgora.ConnCloseProcess(myRTCUser, "FDCloseEvent")
 }
 
-//用户长连接 - 心跳，更新房间的最后更新时间
+// 用户长连接 - 心跳，更新房间的最后更新时间
 func (twinAgora *TwinAgora) UserHeartbeat(heartbeat pb.Heartbeat) {
 	twinAgora.Log.Info("twinAgora Heartbeat , ", zap.Int64("time", heartbeat.Time), zap.Int32("uid", heartbeat.SourceUid))
 	myRTCUser, ok := twinAgora.GetUserById(int(heartbeat.SourceUid))
@@ -216,7 +220,7 @@ func (twinAgora *TwinAgora) UserHeartbeat(heartbeat pb.Heartbeat) {
 
 }
 
-//每个房间的心跳，因为音视频使用的是声网，监控不到，就得单独再加一个心跳
+// 每个房间的心跳，因为音视频使用的是声网，监控不到，就得单独再加一个心跳
 func (twinAgora *TwinAgora) RoomHeartbeat(heartbeat pb.RoomHeartbeatReq) {
 	twinAgora.Log.Info("twinAgora RoomHeartbeat , ", zap.Int64("time", heartbeat.Time), zap.Int32("uid", heartbeat.SourceUid))
 	myRTCUser, ok := twinAgora.GetUserById(int(heartbeat.Uid))
@@ -240,7 +244,7 @@ func (twinAgora *TwinAgora) RoomHeartbeat(heartbeat pb.RoomHeartbeatReq) {
 
 }
 
-//给客户端推送消息，主要是一些错误信息
+// 给客户端推送消息，主要是一些错误信息
 func (twinAgora *TwinAgora) PushMsg(uid int, code int, eventId int, content string) {
 	//util.MyPrint("PushMsg uid:", uid, ", code ", code, " , eventId:", eventId, " , content:", content)
 	//pushMsg := pb.PushMsg{
@@ -255,7 +259,7 @@ func (twinAgora *TwinAgora) PushMsg(uid int, code int, eventId int, content stri
 	////conn.GatewaySendMsgByUid(int32(uid), "SC_PushMsg", pushMsg)
 }
 
-//连接断开或超时处理
+// 连接断开或超时处理
 func (twinAgora *TwinAgora) ConnCloseProcess(rtcUserRTCUser *RTCUser, source string) {
 	twinAgora.Log.Warn("ConnCloseProcess source: " + source + " , uid:" + strconv.Itoa(rtcUserRTCUser.Id) + " roomId:" + rtcUserRTCUser.RoomId)
 	if rtcUserRTCUser.RoomId == "" {
@@ -281,10 +285,10 @@ func (twinAgora *TwinAgora) ConnCloseProcess(rtcUserRTCUser *RTCUser, source str
 
 }
 
-//已结束的房间要做:
-//1. 持久化
-//2. 房间池内删除该元素
-//3. 更新用户池内：在线用户的房间ID清除
+// 已结束的房间要做:
+// 1. 持久化
+// 2. 房间池内删除该元素
+// 3. 更新用户池内：在线用户的房间ID清除
 func (twinAgora *TwinAgora) RoomEnd(roomId string, endStatus int) {
 	twinAgora.Log.Warn("RoomEnd id:" + roomId + " , endStatus:" + strconv.Itoa(endStatus))
 	roomInfo, err := twinAgora.GetRoomById(roomId)
@@ -345,7 +349,7 @@ func (twinAgora *TwinAgora) RoomEnd(roomId string, endStatus int) {
 	twinAgora.Log.Warn("RoomEnd ok , roomId: " + roomId + " , endStatus:" + strconv.Itoa(endStatus))
 }
 
-//持久化到DB中
+// 持久化到DB中
 func (twinAgora *TwinAgora) StoreHistory(RTCRoom *RTCRoom) error {
 	var twinAgoraRoomRow model.TwinAgoraRoom
 	twinAgora.Gorm.Where("room_id = ? ", RTCRoom.Id).First(&twinAgoraRoomRow)

@@ -49,6 +49,7 @@ type Global struct {
 	AliOss           *util.AliOss           //阿里网盘
 	MyService        *MyService             //内部快捷服务
 	StaticFileSys    embed.FS               //静态文件
+	StaticFileSystem *util.StaticFileSystem //兼容，管理静态文件读取
 }
 
 // main主协程的一些参数

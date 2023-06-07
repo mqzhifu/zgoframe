@@ -27,6 +27,7 @@ type MyService struct {
 	ServiceBridge *service.Bridge
 	FrameSync     *frame_sync.FrameSync
 	Alert         *msg_center.Alert
+	//StaticFileSystem *util.StaticFileSystem
 	//Match                 *gamematch.GameMatch        //匹配服务
 	//RequestServiceAdapter *service.RequestServiceAdapter //请求3方服务 适配器
 	//RoomManage            *frame_sync.RoomManager     //房间服务
@@ -68,6 +69,7 @@ func NewMyService() *MyService {
 		ProjectManager:     V.ProjectMng,
 		PersistenceType:    service.PERSISTENCE_TYPE_FILE,
 		PersistenceFileDir: C.Http.StaticPath + "/" + C.ConfigCenter.DataPath,
+		StaticFileSystem:   V.StaticFileSystem,
 		Log:                V.Zap,
 	}
 	myService.ConfigCenter, err = config_center.NewConfigCenter(configCenterOption)
@@ -81,7 +83,8 @@ func NewMyService() *MyService {
 		StaticPath: C.Http.StaticPath,
 		ProtoMap:   V.ProtoMap,
 		//RequestServiceAdapter: myService.RequestServiceAdapter,
-		ServiceBridge: myService.ServiceBridge,
+		ServiceBridge:    myService.ServiceBridge,
+		StaticFileSystem: V.StaticFileSystem,
 	}
 	myService.TwinAgora, err = seed_business.NewTwinAgora(twinAgoraOption)
 	if err != nil {
@@ -239,6 +242,7 @@ func CreateGameService(myService *MyService) (err error) {
 		RedisIdSeparator:       ",",
 		RedisPayloadSeparation: "%",
 		ProtoMap:               V.ProtoMap,
+		StaticFileSystem:       V.StaticFileSystem,
 	}
 	myService.GameMatch, err = gamematch.NewGameMatch(gmOp)
 	if err != nil {

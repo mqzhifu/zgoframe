@@ -1,6 +1,7 @@
 package util
 
 import (
+	"errors"
 	"go.uber.org/zap"
 	"strconv"
 	"strings"
@@ -28,6 +29,7 @@ type ProtoMap struct {
 	ConfigFileDir  string
 	MapFileName    string `json:"map_file_name"`
 	ProjectManager *ProjectManager
+	FileContentArr []string
 }
 
 type ProtoServiceFunc struct {
@@ -50,7 +52,7 @@ func NewProtoMap(log *zap.Logger, configFileDir string, MapFileName string, proj
 	protoMap.ConfigFileDir = configFileDir
 	protoMap.MapFileName = MapFileName
 	protoMap.ProjectManager = projectManager
-
+	protoMap.FileContentArr = fileContentArr
 	err := protoMap.initProtocolActionMap()
 	log.Info("protoMap.ServiceFuncMap len:" + strconv.Itoa(len(protoMap.ServiceFuncMap)))
 
@@ -79,16 +81,22 @@ func (protoMap *ProtoMap) initProtocolActionMap() error {
 }
 
 func (protoMap *ProtoMap) loadingActionMapConfigFile(fileName string) (map[int]ProtoServiceFunc, error) {
-	pathFile := protoMap.ConfigFileDir + "/" + fileName
-	protoMap.Log.Info("protobufMap loadingActionMapConfigFile:" + pathFile)
-	fileContentArr, err := ReadLine(pathFile)
-	if err != nil {
-		protoMap.Log.Error("initActionMap ReadLine err :" + err.Error())
-		return nil, err
-		//protobufMap.Log.Panic("initActionMap ReadLine err :" + err.Error())
+	//pathFile := protoMap.ConfigFileDir + "/" + fileName
+	//protoMap.Log.Info("protobufMap loadingActionMapConfigFile:" + pathFile)
+	//fileContentArr, err := ReadLine(pathFile)
+	//if err != nil {
+	//	protoMap.Log.Error("initActionMap ReadLine err :" + err.Error())
+	//	return nil, err
+	//	//protobufMap.Log.Panic("initActionMap ReadLine err :" + err.Error())
+	//}
+
+	if len(protoMap.FileContentArr) < 1 {
+		protoMap.Log.Error("initActionMap ReadLine len < 1")
+		return nil, errors.New("initActionMap ReadLine len < 1")
 	}
 	am := make(map[int]ProtoServiceFunc)
-	for _, v := range fileContentArr {
+	for _, v := range protoMap.FileContentArr {
+
 		contentArr := strings.Split(v, "|")
 		//MyPrint(contentArr[0],contentArr[1])
 		if len(contentArr) < 5 {

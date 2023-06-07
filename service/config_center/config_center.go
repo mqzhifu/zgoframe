@@ -36,6 +36,7 @@ type ConfigCenterOption struct {
 	PersistenceType    int
 	PersistenceFileDir string
 	Log                *zap.Logger
+	StaticFileSystem   *util.StaticFileSystem
 }
 
 func NewConfigCenter(Option ConfigCenterOption) (*ConfigCenter, error) {
@@ -60,13 +61,13 @@ func (configCenter *ConfigCenter) Init() error {
 	}
 
 	if configCenter.Option.PersistenceType == service.PERSISTENCE_TYPE_FILE {
-		return configCenter.InitPersistenceFile()
+		//return configCenter.InitPersistenceFile()//这里先注释掉，原是直接操作物理文件，但后来增加了 静态文件编译进二进制文件，所以这里先注释掉
 	}
 
 	return nil
 }
 
-//以模块(文件)为单位，获取该模块(文件)下的所有配置信息
+// 以模块(文件)为单位，获取该模块(文件)下的所有配置信息
 func (configCenter *ConfigCenter) GetByModule(env int, projectId int, module string) (data interface{}, err error) {
 	myViper, err := configCenter.GetModuleInfo(env, projectId, module)
 	if err != nil {
@@ -78,7 +79,7 @@ func (configCenter *ConfigCenter) GetByModule(env int, projectId int, module str
 
 }
 
-//以以模块(文件)+里面具体的key 为单位，获取配置信息
+// 以以模块(文件)+里面具体的key 为单位，获取配置信息
 func (configCenter *ConfigCenter) GetByKey(env int, projectId int, module string, key string) (data interface{}, err error) {
 	myViper, err := configCenter.GetModuleInfo(env, projectId, module)
 	if err != nil {
@@ -90,7 +91,7 @@ func (configCenter *ConfigCenter) GetByKey(env int, projectId int, module string
 
 }
 
-//以模块(文件)+里面具体的key 为单位，设置置信息(如果存在，覆盖)
+// 以模块(文件)+里面具体的key 为单位，设置置信息(如果存在，覆盖)
 func (configCenter *ConfigCenter) SetByKey(env int, projectId int, module string, key string, value interface{}) (err error) {
 	myViper, err := configCenter.GetModuleInfo(env, projectId, module)
 	if err != nil {

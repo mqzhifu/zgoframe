@@ -86,7 +86,7 @@ func UrlAppendDomain(protocol string, url string, domain string, port string) st
 	return fullUrl
 }
 
-// 打开一个文件，并按照换行符 读取到一个数组中
+// 打开一个文件，并按照换行符 读取到一个字符串中
 func ReadString(fileName string) (string, error) {
 	f, err := os.Open(fileName)
 	if err != nil {

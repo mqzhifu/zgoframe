@@ -100,39 +100,46 @@
 <script>
     var contentType = 1;
     var protocolType = 2;
-
+    var userInfo = null;
     function Init(){
+        // return 1;
         // GetFDUserList();
-        UserLogin(9,LoginRes);
+        AutoUserLogin(9,LoginRes);
     }
 
-    function LoginRes(userInfo){
+    function LoginRes(data){
+        console.log("UserLoginBack data:",data);
+        userInfo = data;
         initServerConfig();
-        GetFDUserList();
-        total();
+
+        // request(GetFDUserList,"gateway_fd_list",userInfo["token"],false,"GET",null,null);
+        // request(total,"gateway_total",userInfo["token"],false,"GET",null,null)
+
+        // GetFDUserList();
+        // total();
     }
 
-    function GetFDUserList(){
-        $.ajax({
-            type: "GET",
-            headers: {
-                "X-Source-Type": header_X_Source_Type,
-                "X-Project-Id": header_X_Project_Id,
-                "X-Access": header_X_Access,
-            },
-            url:get_uri_by_name("gateway_fd_list"),
-            success: function(data){
+    function GetFDUserList(data){
+        // $.ajax({
+        //     type: "GET",
+        //     headers: {
+        //         "X-Source-Type": header_X_Source_Type,
+        //         "X-Project-Id": header_X_Project_Id,
+        //         "X-Access": header_X_Access,
+        //     },
+        //     url:get_uri_by_name("gateway_fd_list"),
+        //     success: function(data){
                 var htmlStr = "<tr> <th>uid</th> <th>状态</th> <th>添加时间</th> <th>最后更新时间</th>   <th>content_type</th>  <th>protocol_type</th><th>RTT</th> <td>receive_msg_times</td> <td>receive_msg_size</td> <td>send_msg_times</td> <td>send_msg_size</td> </tr>";
 
-                if (data.code != 200){
-                    htmlStr += "<tr><td>请求接口，获取数据，出错</td></tr>"
-                    $("#fd_user_list_div").html(htmlStr);
+                // if (data.code != 200){
+                //     htmlStr += "<tr><td>请求接口，获取数据，出错</td></tr>"
+                //     $("#fd_user_list_div").html(htmlStr);
+                //
+                //     var msg =  "code:" + data.code +  " , msg:" + data.msg;
+                //     return alert(msg);
+                // }
 
-                    var msg =  "code:" + data.code +  " , msg:" + data.msg;
-                    return alert(msg);
-                }
-
-                var fdList = data.data;
+                var fdList = data;
                 var fdListLen =  Object.keys(fdList).length;
                 if (fdListLen <= 0){
                     htmlStr += "<tr><td>在线用户为0</td></tr>"
@@ -153,8 +160,8 @@
                 }
 
                 $("#fd_user_list_div").html(htmlStr);
-            }
-        });
+            // }
+        // });
     }
 
     function send_msg(){
@@ -168,50 +175,52 @@
             return alert("content 不能为空");
         }
 
-        $.ajax({
-            type: "POST",
-            async:false,
-            data:{"uid":uid,"content":content},
-            headers: {
-                "X-Source-Type": header_X_Source_Type,
-                "X-Project-Id": header_X_Project_Id,
-                "X-Access": header_X_Access,
-            },
-            url:URI_MAP["gateway_send_msg"],
-            success: function(data){
-                console.log("send msg res:",data)
-            }
-        });
+        // $.ajax({
+        //     type: "POST",
+        //     async:false,
+        //     data:{"uid":uid,"content":content},
+        //     headers: {
+        //         "X-Source-Type": header_X_Source_Type,
+        //         "X-Project-Id": header_X_Project_Id,
+        //         "X-Access": header_X_Access,
+        //     },
+        //     url:URI_MAP["gateway_send_msg"],
+        //     success: function(data){
+        //         console.log("send msg res:",data)
+        //     }
+        // });
     }
 
     function initServerConfig(){
-        $.ajax({
-            type: "GET",
-            async:false,
-            headers: {
-                "X-Token":UserList[9].token,
-            },
-            url:URI_MAP["gateway_config"],
-            success: function(data){
-                console.log("data:",data)
-                processServerConfig(data.data);
-                // ServerConfig = data.data;
-            }
-        });
+        request(processServerConfig,"gateway_config",userInfo["token"],false,"GET",null,null);
+
+        // $.ajax({
+        //     type: "GET",
+        //     async:false,
+        //     headers: {
+        //         "X-Token":UserList[9].token,
+        //     },
+        //     url:URI_MAP["gateway_config"],
+        //     success: function(data){
+        //         console.log("data:",data)
+        //         processServerConfig(data.data);
+        //         // ServerConfig = data.data;
+        //     }
+        // });
     }
 
-    function total(){
-        $.ajax({
-            type: "GET",
-            async:false,
-            headers: {
-                "X-Token":UserList[9].token,
-            },
-            url:URI_MAP["gateway_total"],
-            success: function(data){
+    function total(data){
+        // $.ajax({
+        //     type: "GET",
+        //     async:false,
+        //     headers: {
+        //         "X-Token":UserList[9].token,
+        //     },
+        //     url:URI_MAP["gateway_total"],
+        //     success: function(data){
                 console.log("data:",data)
                 var html = "<tr><th>key</th><th>value</th><th>desc</th></>";
-                var list = data.data;
+                var list = data;
                 if(list.length <= 0){
                     html += "<tr><td>空</td></tr>";
                 }else{
@@ -222,8 +231,8 @@
 
                 var metrics_div_obj = $("#metrics_div");
                 metrics_div_obj.html(html);
-            }
-        });
+        //     }
+        // });
     }
 
     function processServerConfig (data){

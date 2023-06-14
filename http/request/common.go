@@ -56,6 +56,7 @@ type HeaderRequest struct {
 	SecondAuthUname   string         `json:"second_auth_uname"`   //有些API是给管理员使用，除了TOKEN验证外，还得进行二次验证
 	SecondAuthPs      string         `json:"second_auth_ps"`      //有些API是给管理员使用，除了TOKEN验证外，还得进行二次验证
 	BaseInfo          HeaderBaseInfo `json:"base_info"`           //收集客户端的一些基础信息，json格式，参考：HeaderBaseInfo 结构体
+	Sign              string         `json:"sign"`                //签名
 }
 
 // @description http 公共响应头
@@ -68,6 +69,7 @@ type HeaderResponse struct {
 	ClientReqTime int    `json:"client_req_time"`      //客户端请求时间  unix_time
 	ReceiveTime   int    `json:"server_receive_time"`  //服务端接收到请求的时间 unix_time
 	ResponseTime  int    `json:"server_response_time"` //服务端最后响应的时间 uni_xtime
+	Sign          string `json:"sign"`
 }
 
 // @description http客户端请求头-基础信息

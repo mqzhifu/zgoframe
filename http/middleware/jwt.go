@@ -8,7 +8,6 @@ import (
 	"strconv"
 	"zgoframe/core/global"
 	"zgoframe/http/request"
-	httpresponse "zgoframe/http/response"
 	"zgoframe/model"
 )
 
@@ -16,7 +15,7 @@ type JWT struct {
 	SigningKey []byte
 }
 
-//创建一个JWT结构，自带密钥
+// 创建一个JWT结构，自带密钥
 func NewJWT() *JWT {
 	return &JWT{
 		[]byte(global.C.Jwt.Key),
@@ -31,7 +30,7 @@ func (j *JWT) CreateToken(claims request.CustomClaims) (string, error) {
 	return token, err
 }
 
-//快捷函数，方便 回调 ，主要是给gin http 使用
+// 快捷函数，方便 回调 ，主要是给gin http 使用
 func JWTAuth() gin.HandlerFunc {
 	global.V.Zap.Debug("im in jwtauth:")
 	return RealJWTAuth
@@ -71,13 +70,14 @@ func (j *JWT) ParseToken(tokenString string) (customClaims request.CustomClaims,
 
 }
 
-//给中间件使用
+// 给中间件使用
 func RealJWTAuth(c *gin.Context) {
 	header, _ := request.GetMyHeader(c)
 	user, customClaims, err := CheckToken(header)
 	if err != nil {
-		code, msg, _ := global.V.Err.SplitMsg(err.Error())
-		httpresponse.Result(code, nil, msg, c)
+		code, _, _ := global.V.Err.SplitMsg(err.Error())
+		ErrAbortWithResponse(code, c)
+		//httpresponse.Result(code, nil, msg, c)
 		//ErrAbortWithResponse()
 		//httpresponse.FailWithAll(gin.H{"reload": true}, err.Error(), c)
 		c.Abort()
@@ -96,7 +96,7 @@ func RealJWTAuth(c *gin.Context) {
 
 }
 
-//检查一个token (解析token)
+// 检查一个token (解析token)
 func CheckToken(myHeader request.HeaderRequest) (u model.User, customClaims request.CustomClaims, err error) {
 	//登录时回返回token信息 这里前端需要把token存储到cookie或者本地localStorage中 不过需要跟后端协商过期时间 可以约定刷新令牌或者重新登录
 	j := NewJWT()

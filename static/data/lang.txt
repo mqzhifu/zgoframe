@@ -6,6 +6,13 @@
 5103|header projectId  empty
 5104|header ACCESS  error
 5105|getMyHeader empty or assertions failed: HeaderRequest
+5106|ioutil.ReadAll c.Request.Body err.
+5017|md5Str != header.Sign
+5018|header.Sign empty
+5019|GetMyHeader empty
+5020|GetMyProject empty
+5021|http body empty
+5022|SetupBody err
 5200|保留
 5201|jwt ParseWithClaims , token过期或未启用，err_info:{0}
 5202|jwt ParseWithClaims , err_info:{0}
@@ -14,5 +21,6 @@
 5205|token 不在redis 中，也可能已失效
 5206|redis 读取token 为空 , 失败:
 5207|uid not in db :{0}
+5208|RateMiddleware too many requests
 5290|二次验证为空
 5291|二次验证为失败

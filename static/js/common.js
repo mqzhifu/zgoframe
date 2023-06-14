@@ -1,3 +1,7 @@
+document.write('<script src="/static/js/base64.js" type="text/javascript" charset="utf-8"></script>');
+document.write('<script src="/static/js/md5.js" type="text/javascript" charset="utf-8"></script>');
+document.write('<script src="/static/js/crypto-js.js" type="text/javascript" charset="utf-8"></script>');
+
 // 后端公共HTTP接口-头信息
 var header_X_Source_Type = "11";
 var header_X_Project_Id = "6";
@@ -6,7 +10,16 @@ var header_X_Access = "imzgoframe";
 var content_type_desc = {1:"json",2:"protobuf"};
 var protocol_type_desc = {1:"tcp",2:"websocket",3:"udp"};
 var CONN_STATUS_DESC = {1:"初始化",2:"运行中",3:"已关闭"};
-//后端相关
+//加密信息
+// var DATA_ENCRYPT =  2;
+// var secret = "ckZgoframe201310";
+// var iv     = "ckZgoframe201310";
+var DATA_ENCRYPT =  0;
+
+//二次验证
+var Second_Auth_Uname= "xiaoz"
+var Second_Auth_Pwd  = "qwerASDFzxcv"
+//================== 后端相关 ==================
 //域名
 // var domain = "127.0.0.1:1111";
 var domain = window.location.host;
@@ -15,100 +28,241 @@ var http_protocol = "http";
 if(location.href.substring(0,5) == "https"){
     http_protocol = "https";
 }
+//后端接口URI 的映射表
 var URI_MAP = {
-    "gateway_config": http_protocol + "://"+domain + "/gateway/config",
-    "gateway_action_map":http_protocol + "://"+domain + "/gateway/action/map",//URI - 网关 protobuf 映射表
-    "user_login":http_protocol + "://"+domain + "/base/login",//登陆
-    "gateway_fd_list":http_protocol + "://"+domain + "/gateway/fd/list",//长连接用户
-    "gateway_send_msg":http_protocol + "://"+domain + "/gateway/send/msg",//长连接推送消息
-    "gateway_total":http_protocol + "://"+domain + "/gateway/total",//长连接 metrics
-    "twin_agora_config":http_protocol + "://"+domain + "/twin/agora/config",//声网房间长连接配置
-    "rule":http_protocol + "://"+domain + "/game/match/rule",
-    "game_frame_sync_history":http_protocol + "://"+domain + "/frame/sync/room/history",
+    "gateway_config":  "/gateway/config",
+    "gateway_action_map": "/gateway/action/map",//URI - 网关 protobuf 映射表
+    "user_login":  "/base/login",//登陆
+    "gateway_fd_list":  "/gateway/fd/list",//长连接用户
+    "gateway_send_msg":  "/gateway/send/msg",//长连接推送消息
+    "gateway_total":  "/gateway/total",//长连接 metrics
+    "twin_agora_config": "/twin/agora/config",//声网房间长连接配置
+    "rule":  "/game/match/rule",
+    "game_frame_sync_history":  "/frame/sync/room/history",
 
-    "cicd_publish_list":http_protocol + "://"+domain +"/cicd/publish/list",
-    "cicd_server_service_list": http_protocol + "://"+domain +"/cicd/local/all/server/service/list",
-    "cicd_service_list": http_protocol + "://"+domain +"/cicd/service/list",
-    "cicd_server_list": http_protocol + "://"+domain +"/cicd/server/list",
-    "cicd_super_visor_list": http_protocol + "://"+domain +  "/cicd/superVisor/list",
-    "cicd_service_deploy": http_protocol + "://"+domain +  "/cicd/service/deploy",
-    "cicd_service_publish": http_protocol + "://"+domain +  "/cicd/service/publish/#publishId#/2",
+    "cicd_publish_list": "/cicd/publish/list",
+    "cicd_server_service_list":  "/cicd/local/all/server/service/list",
+    "cicd_service_list": "/cicd/service/list",
+    "cicd_server_list":  "/cicd/server/list",
+    "cicd_super_visor_list":   "/cicd/superVisor/list",
+    "cicd_service_deploy":   "/cicd/service/deploy",
+    "cicd_service_publish":  "/cicd/service/publish/#publishId#/2",
 
-    "test_migu_get_para" : http_protocol + "://"+domain + "/tools/test/migu/api/para",
-    "test_migu_send_back_data" : http_protocol + "://"+domain + "/tools/test/migu/api/backdata",
+    "test_migu_get_para" :  "/tools/test/migu/api/para",
+    "test_migu_send_back_data" :  "/tools/test/migu/api/backdata",
 
 };
-
+//用户列表，用于测试
 var UserList = {
     10 :{id:10 ,"username"  :"doctor", "password":"123456","info":{},"token":"","roomId":"","channel":"ckck"},
      9 :{id:9  ,"username":"calluser", "password":"123456","info":{},"token":"","roomId":"","channel":"ckck"},
 }
-
-
+//根据 KEY 获取 URI 的完成URL地址
 function get_uri_by_name(name){
-    return URI_MAP[name];
+    if(!URI_MAP.hasOwnProperty(name)){
+        console.log("err : URI_MAP not has key:",name);
+        return "";
+    }
+    return  http_protocol + "://"+domain + URI_MAP[name];
+}
+//给传输的数据加密
+function encrypt_body_data(data){
+    console.log("encrypt_body_data DATA_ENCRYPT:",DATA_ENCRYPT," data:",data);
+    if(DATA_ENCRYPT <= 0 || !data){//未开启或数据为空，直接返回原数据即可
+        return data;
+    }
+    switch (DATA_ENCRYPT){
+        case 1:
+            data = Base64.encode(data);
+            console.log("encrypt_body_data  Base64.encode:",data);
+        case 2:
+            // console.log(JSON.stringify(data));
+            // var data1 = CryptoJS.AES.encrypt(JSON.stringify(data), CryptoJS.enc.Utf8.parse(secret), {
+            //     iv: CryptoJS.enc.Utf8.parse(iv),
+            //     mode: CryptoJS.mode.CBC,
+            //     padding: CryptoJS.pad.Pkcs7,
+            // }).toString();
+            var key = CryptoJS.enc.Utf8.parse(secret);
+            var ivT = CryptoJS.enc.Utf8.parse(iv);
+            let encrypted = CryptoJS.AES.encrypt(data, key, {
+                iv: ivT,
+                mode: CryptoJS.mode.CBC,
+                padding: CryptoJS.pad.Pkcs7,
+            });
+            var data = encrypted.toString();
+            console.log("encrypt_body_data AES CBC data:", data, " ori:", data);
+        default:
+            console.log("err DATA_ENCRYPT value err.")
+            break;
+    }
+    return data;
 }
 
-function UserLogin(uid,callback){
+function de_encrypt_body_data(data){
+    if(DATA_ENCRYPT <= 0 || !data){//未开启或数据为空，直接返回原数据即可
+        return data;
+    }
+    if( 1 == DATA_ENCRYPT){
+        data = Base64.decode(data);
+        console.log("de_encrypt_body_data  Base64.encode:",data);
+    }else {
+        // data = Base64.decode(data);
+        // console.log("Base64.decode:",data)
+        // var key = CryptoJS.enc.Utf8.parse(secret);
+        // var ivT = CryptoJS.enc.Utf8.parse(iv);
+        // var decrypt = CryptoJS.AES.decrypt(data, key,
+        //     {
+        //         iv: ivT,
+        //         mode: CryptoJS.mode.ECB,
+        //         padding: CryptoJS.pad.Pkcs7
+        //     }
+        // ).toString();
+        // console.log(data);
+        var key = CryptoJS.enc.Utf8.parse(secret);
+        var ivT = CryptoJS.enc.Utf8.parse(iv);
+        let encrypted = CryptoJS.AES.decrypt(data, key, {
+            iv: ivT,
+            mode: CryptoJS.mode.CBC,
+            padding: CryptoJS.pad.Pkcs7,
+        }).toString(CryptoJS.enc.Utf8);
+
+        data = encrypted;
+        // data = CryptoJS.enc.Utf8.stringify(decrypt).toString();
+        // console.log("de_encrypt_body_data:",data);
+    }
+
+    return data;
+}
+
+//快捷 自动 登陆(根据UID)
+function AutoUserLogin(uid,callback){
     var info = UserList[uid];
     console.log("UserLogin uid:",uid, " ",URI_MAP["user_login"] , " info:",info)
 
-    $.ajax({
-        headers: {
-            "X-Source-Type": header_X_Source_Type,
-            "X-Project-Id": header_X_Project_Id,
-            "X-Access": header_X_Access,
-        },
-        type: "POST",
-        data : {"username":info.username,"password":info.password},
-        url:URI_MAP["user_login"],
-        dataType: "json",
-        async:false,
-        success: function(data){
-            if (data.code != 200){
-                return alert("UserLogin server back err:"+data.msg);
-            }
-
-            UserList[data.data.user.id].info = data.data.user;
-            UserList[data.data.user.id].token = data.data.token;
-            callback(UserList[data.data.user.id]);
-        }
-    });
+    var oriPostData = {"username":info.username,"password":info.password};
+    request(callback,"user_login","",false,"POST",oriPostData,null);
+    // var encryptData = encrypt_body_data(oriPostData);
+    // // return 1;
+    // $.ajax({
+    //     headers: getCommonHeader(JSON.stringify(oriPostData)),
+    //     type: "POST",
+    //     data : encryptData,
+    //     url:URI_MAP["user_login"],
+    //     // dataType: "json",
+    //     contentType: "application/json;charset=utf-8",
+    //     async:false,
+    //     success: function(data){
+    //         if (data.code != 200){
+    //             return alert("UserLogin server back err:"+data.msg);
+    //         }
+    //
+    //         // UserList[data.data.user.id].info = data.data.user;
+    //         // UserList[data.data.user.id].token = data.data.token;
+    //         // callback(UserList[data.data.user.id]);
+    //     }
+    // });
 }
-
 //发起公共请求
-function AjaxAdminReq(callback,urlMapKey , useToken,async,httpMethod,httpData,uriReplace){
-    console.log("AjaxAdminReq ,urlMapKey:"+urlMapKey , "httpMethod:",httpMethod,"httpData:",httpData);
-    var httpUrl = URI_MAP[urlMapKey];
+function request(callback,urlMapKey , useToken,async,httpMethod,httpData,uriReplace){
+    var httpUrl = get_uri_by_name(urlMapKey);
     if (uriReplace){
         for(let key  in uriReplace){
             httpUrl = httpUrl.replace(key,uriReplace[key]);
         }
     }
+    console.log("Ajax request ,urlMapKey:"+urlMapKey , "url:"+httpUrl , " httpMethod:",httpMethod,"httpData:",httpData);
+
+    var httpDataJsonStr = "";
+    var encryptData = "";
+    if(httpData){
+        httpDataJsonStr = JSON.stringify(httpData);
+        encryptData = encrypt_body_data(httpDataJsonStr);
+    }
+
     $.ajax({
-        headers: {
-            "X-Second-Auth-Uname": "xiaoz",
-            "X-Second-Auth-Ps":"qwerASDFzxcv",
-            "X-Source-Type": header_X_Source_Type,
-            "X-Project-Id": header_X_Project_Id,
-            "X-Access": header_X_Access,
-        },
-        dataType: "json",
-        contentType: "application/json;charset=utf-8",
+        headers: getCommonHeader(httpDataJsonStr,useToken),
         type: httpMethod,
-        data : httpData,
+        data : encryptData,
         url:httpUrl,
+        // dataType: "json",
+        contentType: "application/json;charset=utf-8",
         async:async,
         success: function(data){
-            console.log(data);
+            console.log("back data:",data);
             if (data.code != 200){
-                return alert("AjaxReq server back err:"+data.msg);
+                return alert("UserLogin server back err:"+data.msg);
             }
+
+            if(DATA_ENCRYPT > 0 ){
+                data.data = eval( "(" +de_encrypt_body_data(data.data) + ")");
+            }
+
+
             callback(data.data);
+
+
+            // UserList[data.data.user.id].info = data.data.user;
+            // UserList[data.data.user.id].token = data.data.token;
+            // callback(UserList[data.data.user.id]);
         }
     });
 }
 
+// //发起公共请求
+// function AjaxAdminReq(callback,urlMapKey , useToken,async,httpMethod,httpData,uriReplace){
+//     console.log("AjaxAdminReq ,urlMapKey:"+urlMapKey , "httpMethod:",httpMethod,"httpData:",httpData);
+//     var httpUrl = URI_MAP[urlMapKey];
+//     if (uriReplace){
+//         for(let key  in uriReplace){
+//             httpUrl = httpUrl.replace(key,uriReplace[key]);
+//         }
+//     }
+//
+//     // if(DATA_ENCRYPT > 0){
+//     //     // httpData = "ddd";
+//     //     if(httpData){
+//     //         var httpData = Base64.encode(httpData);
+//     //         console.log("AjaxAdminReq Base64.encode:",httpData);
+//     //         return 1;
+//     //     }
+//     // }
+//
+//     $.ajax({
+//         headers: getCommonHeader(),
+//         dataType: "json",
+//         contentType: "application/json;charset=utf-8",
+//         type: httpMethod,
+//         data : httpData,
+//         url:httpUrl,
+//         async:async,
+//         success: function(data){
+//             console.log(data);
+//             if (data.code != 200){
+//                 return alert("AjaxReq server back err:"+data.msg);
+//             }
+//             callback(data.data);
+//         }
+//     });
+// }
+
+function getCommonHeader(postData,userToken){
+    var now =  Math.round(new Date().getTime()/1000).toString();
+    // var sign = md5( header_X_Project_Id + now + secret + postData);
+    var sign = "";
+    // console.log("sign:",header_X_Project_Id,now,secret,postData);
+    var header = {
+        "X-Second-Auth-Uname": Second_Auth_Uname,
+        "X-Second-Auth-Ps":Second_Auth_Pwd,
+        "X-Source-Type": header_X_Source_Type,
+        "X-Project-Id": header_X_Project_Id,
+        "X-Access": header_X_Access,
+        "X-Token":userToken,
+        "X-Client-Req-Time":now,
+        "X-Sign":sign,
+    }
+
+    return header;
+}
 function formatUnixTime(us){
     if (us <= 0 ){
         return "--";

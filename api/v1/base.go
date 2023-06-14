@@ -16,7 +16,7 @@ import (
 	"zgoframe/util"
 )
 
-//图片验证码使用，主要是图片的ID得保存在内存(store)中
+// 图片验证码使用，主要是图片的ID得保存在内存(store)中
 var store = base64Captcha.DefaultMemStore
 
 // @Tags Base
@@ -383,6 +383,7 @@ func Login(c *gin.Context) {
 	//util.MyPrint(string(body))
 	var L request.Login
 	c.ShouldBind(&L)
+	util.MyPrint("Login L:", L, "c.content type:", c.ContentType())
 	//if err := util.Verify(L, util.LoginVerify); err != nil {
 	//	httpresponse.FailWithMessage(err.Error(), c)
 	//	return

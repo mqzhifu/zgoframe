@@ -145,7 +145,7 @@ func NewMyService() *MyService {
 
 	myService.Alert, _ = msg_center.NewAlert(alertOption)
 
-	//myService.Cicd, err = InitCicd()
+	myService.Cicd, err = InitCicd()
 
 	//myService.RegisterService()
 

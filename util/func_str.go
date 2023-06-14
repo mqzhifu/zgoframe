@@ -18,7 +18,7 @@ import (
 	"zgoframe/http/request"
 )
 
-//将字符串的首字母转大写
+// 将字符串的首字母转大写
 func StrFirstToLower(str string) string {
 	if len(str) < 1 {
 		return str
@@ -30,7 +30,7 @@ func StrFirstToLower(str string) string {
 	return string(strArry)
 }
 
-//将字符串的首字母转大写
+// 将字符串的首字母转大写
 func StrFirstToUpper(str string) string {
 	if len(str) < 1 {
 		return str
@@ -50,21 +50,28 @@ func Lcfirst(str string) string {
 	return ""
 }
 
-//将一个字符串转换成MD5
+// 将一个字符串转换成MD5
 func Md5(text string) string {
 	hashMd5 := md5.New()
 	io.WriteString(hashMd5, text)
 	return fmt.Sprintf("%x", hashMd5.Sum(nil))
 }
 
-//将一个字符串转换成MD5
+// 将一个字符串转换成MD5
 func MD5V(str []byte) string {
 	h := md5.New()
 	h.Write(str)
 	return hex.EncodeToString(h.Sum(nil))
 }
+func MD5X(str string) string {
+	hash := md5.New()
+	hash.Write([]byte(str))
+	hashed := hash.Sum(nil)
+	md5Str := hex.EncodeToString(hashed)
+	return md5Str
+}
 
-//判断一个字符串是否为空，包括  空格
+// 判断一个字符串是否为空，包括  空格
 func CheckStrEmpty(str string) bool {
 	if str == "" {
 		return true
@@ -76,7 +83,7 @@ func CheckStrEmpty(str string) bool {
 	return false
 }
 
-//驼峰式 转 下划线 式,针对普通字符串
+// 驼峰式 转 下划线 式,针对普通字符串
 func CamelToSnake2(marshalled []byte) []byte {
 	var keyMatchRegex = regexp.MustCompile(`(\w+)`)
 	var wordBarrierRegex = regexp.MustCompile(`(\w)([A-Z])`)
@@ -92,7 +99,7 @@ func CamelToSnake2(marshalled []byte) []byte {
 	return converted
 }
 
-//驼峰式 转 下划线 式,针对json串
+// 驼峰式 转 下划线 式,针对json串
 func CamelToSnake(marshalled []byte) []byte {
 	var keyMatchRegex = regexp.MustCompile(`\"(\w+)\":`)
 	var wordBarrierRegex = regexp.MustCompile(`(\w)([A-Z])`)
@@ -108,7 +115,7 @@ func CamelToSnake(marshalled []byte) []byte {
 	return converted
 }
 
-//将一个完整的URL地址，以 <?>号分开，取<?>后面的参数
+// 将一个完整的URL地址，以 <?>号分开，取<?>后面的参数
 func UriTurnPath(uri string) string {
 	n := strings.Index(uri, "?")
 	if n == -1 {
@@ -119,7 +126,7 @@ func UriTurnPath(uri string) string {
 	return string(path)
 }
 
-//字符串 下划线转中划线，同时每个单词首字母转大写，最后每个字符串开头再加上：X-
+// 字符串 下划线转中划线，同时每个单词首字母转大写，最后每个字符串开头再加上：X-
 func StrCovertHttpHeader(str string) string {
 	rsStr := ""
 	arr := strings.Split(str, "_")
@@ -173,10 +180,26 @@ func HttpHeaderSureStructCovertSureMap(response request.HeaderResponse) (outMap 
 	return outMap
 }
 
+func AesDecryptCBC(encrypted []byte, key []byte) (decrypted []byte, err error) {
+	block, err := aes.NewCipher(key) // 分组秘钥
+	if err != nil {
+		return decrypted, err
+	}
+	blockSize := block.BlockSize()
+	blockMode := cipher.NewCBCDecrypter(block, key[:blockSize]) // 加密模式
+	//MyPrint(len(encrypted), string(encrypted), "  ,  ", len(key), string(key), " err:", err, " blockSize:", blockSize)
+	decrypted = make([]byte, len(encrypted))    // 创建数组
+	blockMode.CryptBlocks(decrypted, encrypted) // 解密
+	decrypted = pkcs5UnPadding(decrypted)       // 去除补全码
+	return decrypted, nil
+}
+
+// AES/CBC/PKCS5Padding 加密
 func AesEncryptCBC(origData []byte, key []byte) (encrypted []byte) {
 	// 分组秘钥
 	// NewCipher该函数限制了输入k的长度必须为16, 24或者32
 	block, _ := aes.NewCipher(key)
+	//MyPrint("AesEncryptCBC err:", err)
 	blockSize := block.BlockSize()                              // 获取秘钥块的长度
 	origData = pkcs5Padding(origData, blockSize)                // 补全码
 	blockMode := cipher.NewCBCEncrypter(block, key[:blockSize]) // 加密模式
@@ -189,6 +212,13 @@ func pkcs5Padding(ciphertext []byte, blockSize int) []byte {
 	padding := blockSize - len(ciphertext)%blockSize
 	padtext := bytes.Repeat([]byte{byte(padding)}, padding)
 	return append(ciphertext, padtext...)
+
+}
+
+func pkcs5UnPadding(origData []byte) []byte {
+	length := len(origData)
+	unpadding := int(origData[length-1])
+	return origData[:(length - unpadding)]
 }
 
 func SHA1_1(s string) string {

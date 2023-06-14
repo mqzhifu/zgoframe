@@ -18,6 +18,18 @@ func GetMyHeader(c *gin.Context) (hr HeaderRequest, err error) {
 	return myHeader, nil
 }
 
+func GetMyProject(c *gin.Context) (project model.Project, err error) {
+	myHeaderInterface, exists := c.Get("project")
+	if !exists {
+		return project, errors.New("get GetMyProject is empty~")
+	}
+	project, ok := myHeaderInterface.(model.Project)
+	if !ok {
+		return project, errors.New("assertions failed: HeaderRequest")
+	}
+	return project, nil
+}
+
 //func GetParserTokenData(c *gin.Context) (parserTokenData ParserTokenData, err error) {
 //	parserTokenDataInter, exists := c.Get("parserTokenData")
 //	if !exists {
@@ -28,8 +40,8 @@ func GetMyHeader(c *gin.Context) (hr HeaderRequest, err error) {
 //	return parserTokenData, nil
 //}
 
-//1. 从token中解出来的值里获取
-//2. 从DB中获取
+// 1. 从token中解出来的值里获取
+// 2. 从DB中获取
 func GetUid(c *gin.Context) (int, error) {
 	user, err := GetUser(c)
 	if err != nil {
@@ -38,10 +50,10 @@ func GetUid(c *gin.Context) (int, error) {
 	return user.Id, nil
 }
 
-//有4种方式获取：
-//1. 从token解出来的结构体内获取
-//2. 从token解出来的结构体内，再从DB中获取
-//3. header中也可以取这个值
+// 有4种方式获取：
+// 1. 从token解出来的结构体内获取
+// 2. 从token解出来的结构体内，再从DB中获取
+// 3. header中也可以取这个值
 func GetProjectId(c *gin.Context) (int, error) {
 
 	customClaims, err := GetClaims(c)

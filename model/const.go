@@ -1,11 +1,17 @@
 package model
 
+// @parse body加密方式
+const (
+	DATA_ENCRYPT_BASE64         = 1
+	DATA_ENCRYPT_AES_CBC_BASE64 = 2
+)
+
 const (
 	RULE_PERIORD_MIN = 30 //
 	CHANNEL_DEFAULT  = 1  //
 )
 
-//@parse 用户角色
+// @parse 用户角色
 const (
 	USER_ROLE_NORMAL = 1 //普通用户
 	USER_ROLE_DOCTOR = 2 //专家
@@ -20,7 +26,7 @@ func CheckConstInList(list map[string]int, value int) bool {
 	return false
 }
 
-//@parse 短信发送目的
+// @parse 短信发送目的
 const (
 	PURPOSE_REGISTER           = 11 //注册
 	PURPOSE_LOGIN              = 12 //登陆
@@ -44,7 +50,7 @@ func GetConstListPurpose() map[string]int {
 	return list
 }
 
-//@parse 平台类型
+// @parse 平台类型
 const (
 	PLATFORM_MAC_PC_BROWSER     = 11 //MAC台式浏览器
 	PLATFORM_MAC_APP            = 12 //MAC台式APP
@@ -78,7 +84,7 @@ func GetConstListPlatform() map[string]int {
 	return list
 }
 
-//@parse 验证码状态
+// @parse 验证码状态
 const (
 	AUTH_CODE_STATUS_NORMAL = 1 //正常
 	AUTH_CODE_STATUS_EXPIRE = 3 //失效
@@ -94,7 +100,7 @@ const (
 //	return list
 //}
 
-//@parse 发送消息(sms 邮件 站内信)状态
+// @parse 发送消息(sms 邮件 站内信)状态
 const (
 	SEND_MSG_STATUS_OK   = 1 //成功
 	SEND_MSG_STATUS_FAIL = 2 //失败
@@ -112,7 +118,7 @@ const (
 //	return list
 //}
 
-//@parse 用户注册类型
+// @parse 用户注册类型
 const (
 	USER_TYPE_THIRD_FACEBOOK = 21 //facebook
 	USER_TYPE_THIRD_GOOGLE   = 22 //google
@@ -123,7 +129,7 @@ const (
 	USER_TYPE_THIRD_QQ       = 13 //QQ
 )
 
-//@parse 用户注册类型
+// @parse 用户注册类型
 const (
 	USER_REG_TYPE_EMAIL  = 1 //邮件
 	USER_REG_TYPE_NAME   = 2 //用户名
@@ -185,31 +191,31 @@ const (
 ////	return UserThirdType
 ////}
 
-//@parse 性别
+// @parse 性别
 const (
 	SEX_MALE   = 1 //男
 	SEX_FEMALE = 2 //女
 )
 
-//@parse 用户状态
+// @parse 用户状态
 const (
 	USER_STATUS_NOMAL = 1 //正常
 	USER_STATUS_DENY  = 2 //禁止
 )
 
-//@parse 用户是否为游客
+// @parse 用户是否为游客
 const (
 	USER_GUEST_TRUE  = 1 //是
 	USER_GUEST_FALSE = 2 //否
 )
 
-//@parse 用户是否为机器人
+// @parse 用户是否为机器人
 const (
 	USER_ROBOT_TRUE  = 1 //是
 	USER_ROBOT_FALSE = 2 //否
 )
 
-//@parse 用户是否为测试账号
+// @parse 用户是否为测试账号
 const (
 	USER_TEST_TRUE  = 1 //是
 	USER_TEST_FALSE = 2 //否
@@ -255,7 +261,7 @@ const (
 //	return list
 //}
 
-//@parse 消息rule类型
+// @parse 消息rule类型
 const (
 	RULE_TYPE_AUTH_CODE = 1 //验证码
 	RULE_TYPE_NOTIFY    = 2 //通知
@@ -272,7 +278,7 @@ const (
 //	return list
 //}
 
-//@parse 短信3方平台
+// @parse 短信3方平台
 const (
 	SMS_CHANNEL_ALI     = 1 //阿里
 	SMS_CHANNEL_TENCENT = 2 //腾讯
@@ -287,7 +293,7 @@ const (
 //	return list
 //}
 
-//@parse 服务器3方平台
+// @parse 服务器3方平台
 const (
 	SERVER_PLATFORM_SELF     = 1 //阿里
 	SERVER_PLATFORM_TENGCENT = 2 //腾讯
@@ -306,7 +312,7 @@ const (
 //	return list
 //}
 
-//@parse CICD部署状态
+// @parse CICD部署状态
 const (
 	CICD_PUBLISH_DEPLOY_STATUS_ING    = 1 //发布中
 	CICD_PUBLISH_DEPLOY_STATUS_FAIL   = 2 //发布失败
@@ -324,7 +330,7 @@ const (
 //	return list
 //}
 
-//@parse CICD发布状态
+// @parse CICD发布状态
 const (
 	CICD_PUBLISH_STATUS_WAIT_DEPLOY = 1 //待部署
 	CICD_PUBLISH_STATUS_WAIT_PUB    = 2 //待发布
@@ -343,7 +349,7 @@ const (
 //	return list
 //}
 
-//@parse 项目状态
+// @parse 项目状态
 const (
 	PROJECT_STATUS_OPEN  = 1 //打开
 	PROJECT_STATUS_CLOSE = 2 //关闭
@@ -358,7 +364,7 @@ const (
 //	return list
 //}
 
-//@parse 项目大类型
+// @parse 项目大类型
 const (
 	PROJECT_TYPE_SERVICE = 1 //服务
 	PROJECT_TYPE_FE      = 2 //前端
@@ -375,7 +381,7 @@ const (
 //	return list
 //}
 
-//@parse 项目开发语言类型
+// @parse 项目开发语言类型
 const (
 	PROJECT_LANG_PHP     = 1 //PHP
 	PROJECT_LANG_GO      = 2 //GO
@@ -398,7 +404,7 @@ const (
 //	return list
 //}
 
-//@parse 声网录制屏幕-获取资源的状态
+// @parse 声网录制屏幕-获取资源的状态
 const (
 	AGORA_CLOUD_RECORD_STATUS_RESOURCE = 1 //已获取资源ID
 	AGORA_CLOUD_RECORD_STATUS_START    = 2 //已开始
@@ -414,7 +420,7 @@ const (
 //	return list
 //}
 
-//@parse 声网录制屏幕-停止的类型
+// @parse 声网录制屏幕-停止的类型
 const (
 	AGORA_CLOUD_RECORD_STOP_ACTION_UNKNOW   = 0 //未知
 	AGORA_CLOUD_RECORD_STOP_ACTION_NORMAL   = 1 //正常停止
@@ -423,7 +429,7 @@ const (
 	AGORA_CLOUD_RECORD_STOP_ACTION_CALLBACK = 4 //声网回调触发
 )
 
-//@parse 声网录制屏幕-服务状态
+// @parse 声网录制屏幕-服务状态
 const (
 	AGORA_CLOUD_RECORD_SERVER_STATUS_UNDO = 1 //未处理
 	AGORA_CLOUD_RECORD_SERVER_STATUS_ING  = 2 //处理中
@@ -441,7 +447,7 @@ const (
 //	return list
 //}
 
-//@parse 声网录制屏幕-回调状态
+// @parse 声网录制屏幕-回调状态
 const (
 	CallbackEventAllUploaded = 31 // 所有录制文件已上传至指定的第三方云存储
 	CallbackEventRecordExit  = 41 // 录制服务已退出

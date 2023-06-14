@@ -1,17 +1,19 @@
-//http 响应公共处理
+// http 响应公共处理
 package httpresponse
 
 import (
+	"encoding/json"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 	"net/http"
 	"zgoframe/core"
 	"zgoframe/core/global"
+	"zgoframe/http/encrypt"
 	"zgoframe/http/request"
 	"zgoframe/util"
 )
 
-//@description 公共HTTP响应结构体
+// @description 公共HTTP响应结构体
 type Response struct {
 	Code int         `json:"code"` //状态码，200是OK，4代表有发生错误
 	Data interface{} `json:"data"` //请求时有数据返回，会在此字段中
@@ -47,7 +49,7 @@ type HttpUploadRs struct {
 	Err                string `json:"err"` //上传图片是否发生错误，如果为空证明没有，此字段给上传多张图片使用
 }
 
-//@description 常量信息
+// @description 常量信息
 type ConstInfo struct {
 	List map[string]int
 	Key  string
@@ -74,6 +76,26 @@ func Result(code int, data interface{}, msg string, c *gin.Context) {
 		c.Header(k, v)
 	}
 
+	util.MyPrint("httpresponse Result data:", data)
+
+	dataByte, err := json.Marshal(data)
+	if err != nil {
+		util.MyPrint("httpresponse Result json.Marshal(data) err:", err)
+	}
+	dataStr := string(dataByte)
+	_, sign, _ := encrypt.CreateSign(c, headerResponse.ResponseTime, dataStr)
+	headerResponse.Sign = sign
+
+	project, EncryptData, err := encrypt.EncodeBody(c, dataStr)
+	if err != nil {
+		util.MyPrint("httpresponse Result EncryptBody err:", err)
+	}
+	util.MyPrint("sign:" + sign + ", EncryptData:" + EncryptData)
+
+	if project.DataEncrypt > 0 {
+		data = EncryptData
+	}
+
 	c.JSON(http.StatusOK, Response{
 		code,
 		data,
@@ -81,32 +103,32 @@ func Result(code int, data interface{}, msg string, c *gin.Context) {
 	})
 }
 
-//快速响应-无输出数据
+// 快速响应-无输出数据
 func Ok(c *gin.Context) {
 	Result(core.HTTP_RES_COMM_SUCCESS, map[string]interface{}{}, "操作成功", c)
 }
 
-//快速响应-有简单类型(一个字符串)的输出信息
+// 快速响应-有简单类型(一个字符串)的输出信息
 func OkWithMessage(message string, c *gin.Context) {
 	Result(core.HTTP_RES_COMM_SUCCESS, map[string]interface{}{}, message, c)
 }
 
-//快速响应-有复杂的输出数据
+// 快速响应-有复杂的输出数据
 func OkWithData(data interface{}, c *gin.Context) {
 	Result(core.HTTP_RES_COMM_SUCCESS, data, "操作成功", c)
 }
 
-//快速响应-即有简单数据，也有复杂数据
+// 快速响应-即有简单数据，也有复杂数据
 func OkWithAll(data interface{}, message string, c *gin.Context) {
 	Result(core.HTTP_RES_COMM_SUCCESS, data, message, c)
 }
 
-//快速响应-失败，无任何输出信息
+// 快速响应-失败，无任何输出信息
 func Fail(c *gin.Context) {
 	Result(core.HTTP_RES_COMM_ERROR, map[string]interface{}{}, "操作失败", c)
 }
 
-//快速响应-失败，有些简单的输出信息
+// 快速响应-失败，有些简单的输出信息
 func FailWithMessage(message string, c *gin.Context) {
 	global.V.Zap.Error("失败", zap.Any("err", message))
 	Result(core.HTTP_RES_COMM_ERROR, map[string]interface{}{}, message, c)

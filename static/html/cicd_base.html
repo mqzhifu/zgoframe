@@ -4,6 +4,7 @@
         <title>cicd</title>
         <script src="/static/js/common.js?r=8" type="text/javascript"></script>
         <script src="/static/js/jquery.min.js" type="text/javascript" ></script>
+
     </head>
     <style>
     table
@@ -107,11 +108,21 @@ super_visor_list:<br/>
 
         return optBnt;
     }
+
+
+    // var b = new Base64();
+
+
+
     //入口
     $(document).ready(function(){
-        AjaxAdminReq(cicd_server_list,"cicd_server_list","",true,"GET");
-        AjaxAdminReq(cicd_service_list,"cicd_service_list","",true,"GET");
-        AjaxAdminReq(cicd_super_visor_list,"cicd_super_visor_list","",true,"GET");
+        request(cicd_server_list,"cicd_server_list","",true,"GET","","")
+        request(cicd_service_list,"cicd_service_list","",true,"GET","","")
+        request(cicd_super_visor_list,"cicd_super_visor_list","",true,"GET","","")
+
+        // AjaxAdminReq(cicd_server_list,"cicd_server_list","",true,"GET");
+        // AjaxAdminReq(cicd_service_list,"cicd_service_list","",true,"GET");
+        // AjaxAdminReq(cicd_super_visor_list,"cicd_super_visor_list","",true,"GET");
     });
 
     function cicd_super_visor_list(data){

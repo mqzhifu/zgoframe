@@ -7,10 +7,9 @@ import (
 	"go.uber.org/zap"
 	"strconv"
 	"zgoframe/core/global"
-	httpresponse "zgoframe/http/response"
 )
 
-//对API的访问次数、频繁，做限制,防止恶意DDos
+// 对API的访问次数、频繁，做限制,防止恶意DDos
 func Limiter() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		reqIp := c.ClientIP()
@@ -25,8 +24,9 @@ func Limiter() gin.HandlerFunc {
 			if !rs {
 				err := errors.New("too many requests")
 				global.V.Zap.Error("RateMiddleware", zap.Any("err", err))
-				httpresponse.FailWithMessage(err.Error(), c)
-				c.Abort()
+				ErrAbortWithResponse(5208, c)
+				//httpresponse.FailWithMessage(err.Error(), c)
+				//c.Abort()
 				return
 			}
 		} else {

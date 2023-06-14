@@ -94,11 +94,15 @@ publish table list:<br/>
     }
     //入口
     $(document).ready(function(){
-        AjaxAdminReq(cicd_publish_list,"cicd_publish_list","",true,"GET");
+        // AjaxAdminReq(cicd_publish_list,"cicd_publish_list","",true,"GET");
 
+        request(cicd_publish_list,"cicd_publish_list","",true,"GET",null,null);
         // /cicd/local/all/server/service/list
 
-        AjaxAdminReq(cicd_service_list,"cicd_server_service_list","",true,"GET");
+        // AjaxAdminReq(cicd_service_list,"cicd_server_service_list","",true,"GET");
+
+        request(cicd_service_list,"cicd_server_service_list","",true,"GET",null,null);
+
         // $.ajax({
         //     headers: {
         //         "X-Source-Type": header_X_Source_Type,
@@ -146,11 +150,8 @@ publish table list:<br/>
     //     });
     // });
 
-
-
-
-
     function ProcessServerService(serverService){
+        console.log("serverService:",serverService);
         var serverList = serverService.server_list;
         var serviceList = serverService.service_list;
         var tableBody = "<tr><td>id</td><td>outIp</td><td>env</td><td>状态</td></tr>";
@@ -393,6 +394,7 @@ publish table list:<br/>
     }
 
     function ProcessPublishList(objId,data_list){
+        console.log("data_list:",data_list);
         var tableObj = $("#"+objId);
         var tableTh = "";
 

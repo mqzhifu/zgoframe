@@ -112,8 +112,8 @@
         userInfo = data;
         initServerConfig();
 
-        // request(GetFDUserList,"gateway_fd_list",userInfo["token"],false,"GET",null,null);
-        // request(total,"gateway_total",userInfo["token"],false,"GET",null,null)
+        request(GetFDUserList,"gateway_fd_list",userInfo["token"],false,"GET",null,null);
+        request(total,"gateway_total",userInfo["token"],false,"GET",null,null)
 
         // GetFDUserList();
         // total();

@@ -7,7 +7,6 @@ import (
 	"github.com/mojocn/base64Captcha"
 	"go.uber.org/zap"
 	"strconv"
-	"time"
 	"zgoframe/core/global"
 	httpmiddleware "zgoframe/http/middleware"
 	"zgoframe/http/request"
@@ -402,19 +401,20 @@ func Login(c *gin.Context) {
 	U := &model.User{Username: L.Username, Password: L.Password}
 	err, user := global.V.MyService.User.Login(U)
 	if err != nil {
-		limitNum := 5
-		key := "login_ip_limit_num_" + c.ClientIP()
-		wrongNum, _ := strconv.Atoi(global.V.Redis.Redis.Get(c, key).Val())
-		if wrongNum+1 >= limitNum {
-			global.V.Redis.Redis.Set(c, limitKey, "1", time.Hour*24)
-			httpresponse.FailWithMessage("尝试次数过多，已被暂停访问24小时", c)
-			return
-		}
-
-		global.V.Redis.Redis.Set(c, key, wrongNum+1, time.Minute*30)
-		lastNum := limitNum - (wrongNum + 1)
-
-		httpresponse.FailWithMessage("用户名不存在或者密码错误，还剩"+strconv.Itoa(lastNum)+"次机会", c)
+		httpresponse.FailWithMessage(err.Error(), c)
+		//limitNum := 5
+		//key := "login_ip_limit_num_" + c.ClientIP()
+		//wrongNum, _ := strconv.Atoi(global.V.Redis.Redis.Get(c, key).Val())
+		//if wrongNum+1 >= limitNum {
+		//	global.V.Redis.Redis.Set(c, limitKey, "1", time.Hour*24)
+		//	httpresponse.FailWithMessage("尝试次数过多，已被暂停访问24小时", c)
+		//	return
+		//}
+		//
+		//global.V.Redis.Redis.Set(c, key, wrongNum+1, time.Minute*30)
+		//lastNum := limitNum - (wrongNum + 1)
+		//
+		//httpresponse.FailWithMessage("用户名不存在或者密码错误，还剩"+strconv.Itoa(lastNum)+"次机会", c)
 	} else {
 		loginType := global.V.MyService.User.TurnRegByUsername(L.Username)
 		//DB比较OK，开始做JWT处理

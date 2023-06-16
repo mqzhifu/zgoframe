@@ -48,17 +48,18 @@ func HeaderAuth() gin.HandlerFunc {
 		}
 		//把 project 信息放到 context 中，主要是给 响应的时候使用
 		c.Set("project", project)
+		//CheckSign 得放在 DecodeBody 之前，因为 DecodeBody 会解码，复写 c.Request.Body
+		_, err = encrypt.CheckSign(c)
+		if err != nil {
+			errCode, _ := strconv.Atoi(err.Error())
+			ErrAbortWithResponse(errCode, c)
+			return
+		}
 
 		_, err = encrypt.DecodeBody(c)
 		if err != nil {
 			util.MyPrint("SetupBody err:" + err.Error())
 			ErrAbortWithResponse(5022, c)
-			return
-		}
-		_, err = encrypt.CheckSign(c)
-		if err != nil {
-			errCode, _ := strconv.Atoi(err.Error())
-			ErrAbortWithResponse(errCode, c)
 			return
 		}
 

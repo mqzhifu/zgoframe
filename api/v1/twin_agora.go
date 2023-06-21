@@ -701,7 +701,7 @@ func TwinAgoraStatisticsEventAll(c *gin.Context) {
 
 	defer rows.Close()
 	tmp := make(map[int]map[string]int)
-	for _, i := range []int{1, 2, 3, 4, 5} {
+	for _, i := range []int{6, 1, 2, 3, 4, 5} {
 		tmp[i] = make(map[string]int)
 	}
 	for rows.Next() {

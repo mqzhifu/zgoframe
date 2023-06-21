@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strconv"
+	"time"
 	"zgoframe/core/global"
 	"zgoframe/http/request"
 	"zgoframe/model"
@@ -94,4 +95,40 @@ type responseBodyWriter struct {
 func (r responseBodyWriter) Write(b []byte) (int, error) {
 	r.body.Write(b)
 	return r.ResponseWriter.Write(b)
+}
+
+func RecordTimeoutReq() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		reqTimeStr := c.Request.Header.Get("X-Request-Time")
+
+		// 需要监控的API
+		// recordedApi := map[string]struct{}{"/gateway/config": {}}
+		if reqTimeStr != "" {
+			// if _, ok := recordedApi[c.Request.URL.Path]; ok && reqTimeStr != "" {
+			timestamp, err := strconv.ParseInt(reqTimeStr, 10, 64)
+			if err != nil {
+				return
+			}
+			reqTime := time.UnixMilli(timestamp)
+			nowTime := time.Now()
+			if nowTime.Sub(reqTime) > time.Millisecond*500 {
+				date, err := strconv.Atoi(nowTime.Format("20060102"))
+				if err != nil {
+					return
+				}
+				// 入库
+				global.V.Gorm.Create(&model.ProjectPushMsg{
+					Type:            6,
+					SourceId:        0,
+					SourceProjectId: 0,
+					Content:         "",
+					TargetProjectId: 0,
+					TargetUids:      "",
+					Date:            date,
+				})
+			}
+		}
+
+		c.Next()
+	}
 }

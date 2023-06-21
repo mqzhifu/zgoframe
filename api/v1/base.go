@@ -27,7 +27,7 @@ var store = base64Captcha.DefaultMemStore
 // @Param X-Project-Id header string true "项目ID"  default(6)
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
 // @Param data body request.Captcha false "基础信息"
-// @Produce application/json
+// @Produce text/html
 // @Success 200 {object} httpresponse.Captcha "图片信息"
 // @Router /base/captcha [POST]
 func Captcha(c *gin.Context) {

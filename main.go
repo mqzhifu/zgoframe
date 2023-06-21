@@ -37,7 +37,7 @@ var staticFileSys embed.FS
 var initializeVar *initialize.Initialize
 
 // @title z golang 框架
-// @version 0.5 测试版Alta
+// @version 0.6 测试版Alta
 // @description restful api 工具，模拟客户端请求，方便调试/测试
 // @description 注：这只是一个工具，不是万能的，像：动态枚举类型、公共请求header、动态常量等,详细的请去 <a href="http://godoc.seedreality.com" target="_black">godoc</a> 里去查看
 // @description 注：所有 header 遵循HTTP标准，即：自定义的header中每个key 以大写X开头，单词以中划线分隔，每个单词首字母大写

@@ -88,7 +88,7 @@ func TestMiguAPIGetPara(c *gin.Context) {
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
 // @Param X-Second-Auth-Uname header string true "二次验证-用户名" default(test)
 // @Param X-Second-Auth-Ps header string true "二次验证-密码" default(qweASD1234560)
-// @Param name body string true "标签名称"
+// @Param data body request.SendSMS true "基础信息"
 // @Produce  application/json
 // @Success 200 {object} v1.MiguRes "最终的请求参数信息"
 // @Router /tools/test/migu/api/backdata [POST]

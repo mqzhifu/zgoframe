@@ -132,7 +132,8 @@ func (fileManager *FileManager) UploadOne(header *multipart.FileHeader, module s
 	newFileName := localDiskDir + "/" + fileName
 	MyPrint("uploadOne file:", newFileName)
 
-	if fileManager.Option.UploadStoreLocal == UPLOAD_STORE_LOCAL_OPEN {
+	//if fileManager.Option.UploadStoreLocal == UPLOAD_STORE_LOCAL_OPEN {
+	if false {
 		//把用户上传的文件(内存中)，转移到本机的硬盘上
 		out, err := os.Create(newFileName)
 		//defer out.Close()
@@ -544,7 +545,7 @@ func (fileManager *FileManager) DeleteOne(form request.FileDelete) error {
 		return err
 	}
 	MyPrint("fileManager DeleteOne local path:", AllPath)
-	err = os.Remove(AllPath)
+	err = os.RemoveAll(AllPath)
 	if form.SyncOss == FILE_SYNC_TRUE {
 		MyPrint("fileManager DeleteOne from oss, RelativePath path:", form.RelativePath)
 		err = fileManager.Option.AliOss.DelOne(form.RelativePath)

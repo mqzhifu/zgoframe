@@ -38,8 +38,8 @@ func FileUploadReal(c *gin.Context, category int) {
 		httpUploadRs := httpresponse.HttpUploadRs{}
 		httpUploadRs.UploadRs = uploadRs
 		ip, _ := util.GetLocalIp()
-		httpUploadRs.FullLocalIpUrl = util.UrlAppendIpHost("http", httpUploadRs.LocalIpUrl, ip, global.C.Http.Port)
-		httpUploadRs.FullLocalDomainUrl = util.UrlAppendDomain("http", httpUploadRs.LocalDomainUrl, global.C.Domain.Static, "")
+		httpUploadRs.FullLocalIpUrl = util.UrlAppendIpHost("https", httpUploadRs.LocalIpUrl, ip, global.C.Http.Port)
+		httpUploadRs.FullLocalDomainUrl = util.UrlAppendDomain("https", httpUploadRs.LocalDomainUrl, global.C.Domain.Static, "")
 		httpresponse.OkWithAll(httpUploadRs, "已上传", c)
 	}
 }
@@ -84,8 +84,8 @@ func FileUploadRealMulti(c *gin.Context, category int) {
 			errMsg = err.Error()
 		}
 		httpUploadRs.UploadRs = uploadRs
-		httpUploadRs.FullLocalIpUrl = util.UrlAppendIpHost("http", httpUploadRs.LocalIpUrl, ip, global.C.Http.Port)
-		httpUploadRs.FullLocalDomainUrl = util.UrlAppendDomain("http", httpUploadRs.LocalDomainUrl, global.C.Domain.Static, "")
+		httpUploadRs.FullLocalIpUrl = util.UrlAppendIpHost("https", httpUploadRs.LocalIpUrl, ip, global.C.Http.Port)
+		httpUploadRs.FullLocalDomainUrl = util.UrlAppendDomain("https", httpUploadRs.LocalDomainUrl, global.C.Domain.Static, "")
 		httpUploadRs.Err = errMsg
 		errList = append(errList, httpUploadRs)
 	}
@@ -160,8 +160,8 @@ func FileUploadImgOneStreamBase64(c *gin.Context) {
 		httpUploadRs := httpresponse.HttpUploadRs{}
 		httpUploadRs.UploadRs = uploadRs
 		ip, _ := util.GetLocalIp()
-		httpUploadRs.FullLocalIpUrl = util.UrlAppendIpHost("http", httpUploadRs.LocalIpUrl, ip, global.C.Http.Port)
-		httpUploadRs.FullLocalDomainUrl = util.UrlAppendDomain("http", httpUploadRs.LocalDomainUrl, global.C.Domain.Static, "")
+		httpUploadRs.FullLocalIpUrl = util.UrlAppendIpHost("https", httpUploadRs.LocalIpUrl, ip, global.C.Http.Port)
+		httpUploadRs.FullLocalDomainUrl = util.UrlAppendDomain("https", httpUploadRs.LocalDomainUrl, global.C.Domain.Static, "")
 		httpresponse.OkWithAll(httpUploadRs, "已上传", c)
 	}
 

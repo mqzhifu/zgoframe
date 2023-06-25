@@ -132,8 +132,8 @@ func (fileManager *FileManager) UploadOne(header *multipart.FileHeader, module s
 	newFileName := localDiskDir + "/" + fileName
 	MyPrint("uploadOne file:", newFileName)
 
-	//if fileManager.Option.UploadStoreLocal == UPLOAD_STORE_LOCAL_OPEN {
-	if false {
+	if fileManager.Option.UploadStoreLocal == UPLOAD_STORE_LOCAL_OPEN {
+
 		//把用户上传的文件(内存中)，转移到本机的硬盘上
 		out, err := os.Create(newFileName)
 		//defer out.Close()
@@ -149,7 +149,8 @@ func (fileManager *FileManager) UploadOne(header *multipart.FileHeader, module s
 	}
 
 	//同步到阿里云
-	if fileManager.Option.UploadStoreOSS == UPLOAD_STORE_OSS_ALI {
+	//if fileManager.Option.UploadStoreOSS == UPLOAD_STORE_OSS_ALI {
+	if false {
 		if fileManager.Option.UploadStoreLocal == UPLOAD_STORE_LOCAL_OPEN {
 			//如果本地存储打开了，流里的数据已经读完了，不能重复读，那就用本地已保存的文件传到OSS上
 			err = fileManager.Option.AliOss.UploadOneByFile(newFileName, relativePath, fileName)
@@ -270,7 +271,8 @@ func (fileManager *FileManager) UploadOneByStream(stream string, category int, m
 	}
 
 	//同步到阿里云
-	if fileManager.Option.UploadStoreOSS == UPLOAD_STORE_OSS_ALI {
+	//if fileManager.Option.UploadStoreOSS == UPLOAD_STORE_OSS_ALI {
+	if false {
 		rr := strings.NewReader(streamData)
 		err = fileManager.Option.AliOss.UploadOneByStream(rr, relativePath, fileName)
 		if err != nil {

@@ -11,6 +11,7 @@ opDirName    = "operation"
 #域名管理
 [domain]
 static = "#domain_host#" #静态文件访问的域名
+protocol = "#protocol#" #域名的HTTP协议
 
 #签名验证 token
 [jwt]

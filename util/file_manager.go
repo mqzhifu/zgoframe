@@ -149,20 +149,21 @@ func (fileManager *FileManager) UploadOne(header *multipart.FileHeader, module s
 	}
 
 	//同步到阿里云
-	//if fileManager.Option.UploadStoreOSS == UPLOAD_STORE_OSS_ALI {
-	if false {
-		if fileManager.Option.UploadStoreLocal == UPLOAD_STORE_LOCAL_OPEN {
-			//如果本地存储打开了，流里的数据已经读完了，不能重复读，那就用本地已保存的文件传到OSS上
-			err = fileManager.Option.AliOss.UploadOneByFile(newFileName, relativePath, fileName)
-		} else {
-			fileStream, err := header.Open()
-			if err != nil {
-				return uploadRs, errors.New(" header.Open()读取失败:" + err.Error())
-			}
+	if syncOss == 1 {
+		if fileManager.Option.UploadStoreOSS == UPLOAD_STORE_OSS_ALI {
+			if fileManager.Option.UploadStoreLocal == UPLOAD_STORE_LOCAL_OPEN {
+				//如果本地存储打开了，流里的数据已经读完了，不能重复读，那就用本地已保存的文件传到OSS上
+				err = fileManager.Option.AliOss.UploadOneByFile(newFileName, relativePath, fileName)
+			} else {
+				fileStream, err := header.Open()
+				if err != nil {
+					return uploadRs, errors.New(" header.Open()读取失败:" + err.Error())
+				}
 
-			err = fileManager.Option.AliOss.UploadOneByStream(fileStream, relativePath, fileName)
-			if err != nil {
-				return uploadRs, errors.New("上传阿里云OSS失败:" + err.Error())
+				err = fileManager.Option.AliOss.UploadOneByStream(fileStream, relativePath, fileName)
+				if err != nil {
+					return uploadRs, errors.New("上传阿里云OSS失败:" + err.Error())
+				}
 			}
 		}
 	}
@@ -185,7 +186,7 @@ func (fileManager *FileManager) RealUploadOne() {
 }
 
 // 流的大小：不能小于100个字节，因为要截取出头部的100个字节，做类型匹配及校验
-func (fileManager *FileManager) UploadOneByStream(stream string, category int, module string, hashDir int) (uploadRs UploadRs, err error) {
+func (fileManager *FileManager) UploadOneByStream(stream string, category int, module string, hashDir int, syncOss int) (uploadRs UploadRs, err error) {
 	if category != FILE_TYPE_IMG {
 		return uploadRs, errors.New("目前category仅支持：图片流")
 	}
@@ -271,12 +272,13 @@ func (fileManager *FileManager) UploadOneByStream(stream string, category int, m
 	}
 
 	//同步到阿里云
-	//if fileManager.Option.UploadStoreOSS == UPLOAD_STORE_OSS_ALI {
-	if false {
-		rr := strings.NewReader(streamData)
-		err = fileManager.Option.AliOss.UploadOneByStream(rr, relativePath, fileName)
-		if err != nil {
-			return uploadRs, errors.New("上传阿里云OSS失败:" + err.Error())
+	if syncOss == 1 {
+		if fileManager.Option.UploadStoreOSS == UPLOAD_STORE_OSS_ALI {
+			rr := strings.NewReader(streamData)
+			err = fileManager.Option.AliOss.UploadOneByStream(rr, relativePath, fileName)
+			if err != nil {
+				return uploadRs, errors.New("上传阿里云OSS失败:" + err.Error())
+			}
 		}
 	}
 

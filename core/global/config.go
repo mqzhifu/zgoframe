@@ -257,5 +257,6 @@ type Agora struct {
 }
 
 type Domain struct {
-	Static string
+	Static   string
+	Protocol string
 }

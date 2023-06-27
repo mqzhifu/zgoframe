@@ -9,6 +9,7 @@ import (
 	"zgoframe/util"
 )
 
+// 最终做上传操作的方法
 func FileUploadReal(c *gin.Context, category int) {
 	_, header, err := c.Request.FormFile("file")
 	if err != nil {
@@ -30,7 +31,6 @@ func FileUploadReal(c *gin.Context, category int) {
 	case util.FILE_TYPE_PACKAGES:
 		uploadRs, err = global.V.PackagesManager.UploadOne(header, module, hashDir, syncOss)
 	}
-
 	util.MyPrint("uploadRs:", uploadRs, " err:", err)
 	if err != nil {
 		httpresponse.FailWithMessage(err.Error(), c)
@@ -38,11 +38,13 @@ func FileUploadReal(c *gin.Context, category int) {
 		httpUploadRs := httpresponse.HttpUploadRs{}
 		httpUploadRs.UploadRs = uploadRs
 		ip, _ := util.GetLocalIp()
-		httpUploadRs.FullLocalIpUrl = util.UrlAppendIpHost("https", httpUploadRs.LocalIpUrl, ip, global.C.Http.Port)
-		httpUploadRs.FullLocalDomainUrl = util.UrlAppendDomain("https", httpUploadRs.LocalDomainUrl, global.C.Domain.Static, "")
+		httpUploadRs.FullLocalIpUrl = util.UrlAppendIpHost(global.C.Domain.Protocol, httpUploadRs.LocalIpUrl, ip, global.C.Http.Port)
+		httpUploadRs.FullLocalDomainUrl = util.UrlAppendDomain(global.C.Domain.Protocol, httpUploadRs.LocalDomainUrl, global.C.Domain.Static, "")
 		httpresponse.OkWithAll(httpUploadRs, "已上传", c)
 	}
 }
+
+// 多个文件上传
 func FileUploadRealMulti(c *gin.Context, category int) {
 	syncOss, _ := strconv.Atoi(c.PostForm("sync_oss"))
 	hashDir, _ := strconv.Atoi(c.PostForm("hash_dir"))
@@ -84,8 +86,8 @@ func FileUploadRealMulti(c *gin.Context, category int) {
 			errMsg = err.Error()
 		}
 		httpUploadRs.UploadRs = uploadRs
-		httpUploadRs.FullLocalIpUrl = util.UrlAppendIpHost("https", httpUploadRs.LocalIpUrl, ip, global.C.Http.Port)
-		httpUploadRs.FullLocalDomainUrl = util.UrlAppendDomain("https", httpUploadRs.LocalDomainUrl, global.C.Domain.Static, "")
+		httpUploadRs.FullLocalIpUrl = util.UrlAppendIpHost(global.C.Domain.Protocol, httpUploadRs.LocalIpUrl, ip, global.C.Http.Port)
+		httpUploadRs.FullLocalDomainUrl = util.UrlAppendDomain(global.C.Domain.Protocol, httpUploadRs.LocalDomainUrl, global.C.Domain.Static, "")
 		httpUploadRs.Err = errMsg
 		errList = append(errList, httpUploadRs)
 	}
@@ -152,16 +154,19 @@ func FileUploadImgOneStreamBase64(c *gin.Context) {
 		httpresponse.FailWithMessage("stream empty!!!", c)
 		return
 	}
+
+	syncOss, _ := strconv.Atoi(c.PostForm("sync_oss"))
+	//hashDir, _ := strconv.Atoi(c.PostForm("hash_dir"))
 	module := GetModule(c, form.Module)
-	uploadRs, err := global.V.ImgManager.UploadOneByStream(form.Stream, util.FILE_TYPE_IMG, module, form.HashDir)
+	uploadRs, err := global.V.ImgManager.UploadOneByStream(form.Stream, util.FILE_TYPE_IMG, module, form.HashDir, syncOss)
 	if err != nil {
 		httpresponse.FailWithMessage(err.Error(), c)
 	} else {
 		httpUploadRs := httpresponse.HttpUploadRs{}
 		httpUploadRs.UploadRs = uploadRs
 		ip, _ := util.GetLocalIp()
-		httpUploadRs.FullLocalIpUrl = util.UrlAppendIpHost("https", httpUploadRs.LocalIpUrl, ip, global.C.Http.Port)
-		httpUploadRs.FullLocalDomainUrl = util.UrlAppendDomain("https", httpUploadRs.LocalDomainUrl, global.C.Domain.Static, "")
+		httpUploadRs.FullLocalIpUrl = util.UrlAppendIpHost(global.C.Domain.Protocol, httpUploadRs.LocalIpUrl, ip, global.C.Http.Port)
+		httpUploadRs.FullLocalDomainUrl = util.UrlAppendDomain(global.C.Domain.Protocol, httpUploadRs.LocalDomainUrl, global.C.Domain.Static, "")
 		httpresponse.OkWithAll(httpUploadRs, "已上传", c)
 	}
 

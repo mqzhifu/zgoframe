@@ -46,4 +46,4 @@ CMD [ "./zgoframe","-e","5"]
 #CMD [ "./zgoframe","-e","5","-bs","on"]
 
 #docker run -d --link=ckMysq57:myDb --link=ckRedis5:myRedis -v /data/docker/zgoframe/config:/app/config zgoframe:0.10
-#docker run -d  -d -p 3333:3333 -p 5555:5555  --link=ckMysq57:myDb --link=ckRedis5:myRedis -v /data/docker/zgoframe/config:/app/config zgoframe:0.10
+#docker run -d  -d -p 3333:3333 -p 5555:5555  --link=ckMysq57:myDb --link=ckRedis5:myRedis -v /data/docker/zgoframe/config:/app/config zgoframe:0.12

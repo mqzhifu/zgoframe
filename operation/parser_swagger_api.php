@@ -2,26 +2,29 @@
 class ParserSwaggerApi{
     public $swaggerFilePath = "";
     public $outDir = "";
+    public $template = null;
     public $yamlObject = null;
     public $tmpLoopForeachObj = null;
-    public function __construct($swaggerFilePath,$outDir)
+    public function __construct($swaggerFilePath,$outDir,$templateType)
     {
         $this->swaggerFilePath = $swaggerFilePath;
         $this->outDir = $outDir;
+        $this->template = new Template($templateType);
     }
-
+    //开始分析
     function Start(){
         $this->out("swaggerFilePath:".$this->swaggerFilePath);
+        //读取 yaml 文件，并转化成一个对象
         $content = file_get_contents($this->swaggerFilePath);
         $yaml = yaml_parse($content);
         $this->yamlObject = $yaml;
 
         //1. 处理 函数
-        $funcTemplateCodeByTags = [];
+        $funcTemplateCodeByTags = [];//保存所有函数的处理结果集
         foreach ($yaml["paths"] as $path=>$pathOne){
             $this->out("path:".$path);
             foreach ($pathOne as $method=>$row){
-                $method = strtoupper($method);
+                $method = strtoupper($method);//转大写
                 $this->out("method:".$method);
                 $summary = $this->checkUnset( $row,"summary");
                 $description = $this->checkUnset( $row,"description");
@@ -40,7 +43,7 @@ class ParserSwaggerApi{
         }
         //2. 处理 class ，将函数代码 替换到类中
         foreach ($funcTemplateCodeByTags as $tagName=>$functions){
-            $TemplateClass = $this->GetTemplateClass();
+            $TemplateClass = $this->template->GetClass();
             $TemplateClass = str_replace("#class#",$tagName,$TemplateClass);
             $functionsCode = "";
             foreach ($functions as $k=>$code){
@@ -77,7 +80,7 @@ class ParserSwaggerApi{
                     $parserNewObj = $this->LoopForeachObj($obj,1);
                     $inType = "body";
 //                    $paraList[] = $obj;
-                    $paraList[] = $parserNewObj;
+                    $paraList = $parserNewObj;//这里没有用数组存，因为一但 body 里传 JSON，只能有一个大的 HTTP BODY参数
                     break;
                 case "path":
                     $paraList[] = $paraOne;
@@ -85,8 +88,8 @@ class ParserSwaggerApi{
                     break;
                 case "formData":
                     $inType = "formData";
+                    $paraList[] = $paraOne;
                     break;
-
                 default:
                     $this->out("err ,Parameters <in> value err:"+$in);
                     break;
@@ -120,7 +123,7 @@ class ParserSwaggerApi{
                 break;
         }
 
-        $functionTemplate = $this->GetTemplateFunction();
+        $functionTemplate = $this->template->GetFunction();
         $functionTemplate = str_replace("#uri#",$path,$functionTemplate);
         $functionTemplate = str_replace("#method#",$method,$functionTemplate);
         $functionTemplate = str_replace("#body#",$functionDataBody,$functionTemplate);
@@ -155,29 +158,6 @@ class ParserSwaggerApi{
 //        }
         return $obj;
     }
-
-    function GetTemplateClass(){
-        $code = <<<EOF
-class #class#{
-    #functions#
-}
-EOF;
-        return $code;
-    }
-function GetTemplateFunction(){
-        $code = <<<EOF
-//#desc#
-    #Funcname#(callback){
-        let uri = "#uri#";
-        let method = "#method#";
-        let loginData = #body#;
-        this.HttpRequest.request(callback,uri,this.token,false,method,loginData,"",this);
-    }
-    
-EOF;
-        return $code;
-    }
-
     function checkUnset($arr,$key){
         if(isset($arr[$key])){
             return $arr[$key];
@@ -271,7 +251,7 @@ EOF;
 
 
 
-        var_dump($type);
+//        var_dump($type);
         if( $type == "object") {
             $row[] = $this->LoopForeachObj($obj["properties"]);
         }elseif( $type == "array"){
@@ -305,7 +285,37 @@ EOF;
     }
 }
 
+class Template{
+    public $_type = 0;
+    public function __construct($_type)
+    {
+        $this->_type = $_type;
+    }
+    function GetClass(){
+        $code = <<<EOF
+class #class#{
+    #functions#
+}
+EOF;
+        return $code;
+    }
+    function GetFunction(){
+        $code = <<<EOF
+//#desc#
+    #Funcname#(obj,callback){
+        let uri = "#uri#";
+        let method = "#method#";
+        //let loginData = #body#;
+        this.HttpRequest.request(this.CommonCallback.bind(this),uri,this.token,false,method,obj,"");
+    }
+    
+EOF;
+        return $code;
+    }
+}
+
+
 $path = "/data/golang/zgoframe/docs/swagger.yaml";
 $outDir = "/data/php/zhongyuhuacai/storage";
-$ParserSwaggerApiClass = new ParserSwaggerApi($path,$outDir);
+$ParserSwaggerApiClass = new ParserSwaggerApi($path,$outDir,"js");
 $ParserSwaggerApiClass->Start();

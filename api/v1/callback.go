@@ -50,7 +50,7 @@ type AgoraCloudCallbackReq struct {
 	Payload   AgoraCloudCallbackPayloadReq `json:"payload"`
 }
 
-//===================
+// ===================
 type AgoraRtcCallbackPayloadReq struct {
 	ChannelName string `json:"channelName"`
 	Platform    int    `json:"platform"`

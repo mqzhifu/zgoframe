@@ -26,5 +26,7 @@ func Tools(Router *gin.RouterGroup) {
 		ToolsRouter.GET("test/migu/api/para", v1.TestMiguAPIGetPara)
 		ToolsRouter.POST("test/migu/api/backdata", v1.ReceiveMiguBackData)
 
+		ToolsRouter.GET("test/full/header", v1.TestFullHeaderStruct)
+
 	}
 }

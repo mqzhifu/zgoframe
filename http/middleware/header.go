@@ -11,7 +11,7 @@ import (
 	"zgoframe/util"
 )
 
-//预处理header：每个HTTP-API请求，都得加上对应的header，解析出来
+// 预处理header：每个HTTP-API请求，都得加上对应的header，解析出来
 func Header() gin.HandlerFunc {
 
 	return func(c *gin.Context) {
@@ -20,6 +20,10 @@ func Header() gin.HandlerFunc {
 		//string header map 映射到 request.Header 结构体中
 		header := HttpHeaderSureMapCovertSureStruct(c.Request.Header)
 		header.AutoIp = c.Request.RemoteAddr
+
+		//h := request.HeaderBaseInfo{}
+		//s, _ := json.Marshal(h)
+		//util.ExitPrint(string(s))
 
 		header.ServerReceiveTime = util.GetNowTimeSecondToInt()
 		if header.RequestId == "" {
@@ -49,9 +53,9 @@ func CreateOneTraceId() string {
 /*
 //给定一个空的struct ，再给定一个有值的map ， 根据struct的tag ， 把map值 映射到 空 struct 中
 //问题：
-	1. 目前仅支持一维
-	2. 并不是真正的struct 转 map ， 还需要struct 元素中定义tag
-	3. map里的key 是http header 模式，也就是X-XXX 开头这种
+ 1. 目前仅支持一维
+ 2. 并不是真正的struct 转 map ， 还需要struct 元素中定义tag
+ 3. map里的key 是http header 模式，也就是X-XXX 开头这种
 */
 func HttpHeaderSureMapCovertSureStruct(inMap map[string][]string) request.HeaderRequest {
 	outStruct := request.HeaderRequest{}

@@ -3,6 +3,7 @@ package user_center
 import (
 	"errors"
 	"fmt"
+	"github.com/go-redis/redis/v8"
 	uuid "github.com/satori/go.uuid"
 	"gorm.io/gorm"
 	"strconv"
@@ -31,7 +32,7 @@ func NewUser(gorm *gorm.DB, redis *util.MyRedis, projectManager *util.ProjectMan
 	return user
 }
 
-//注册，用户名/密码，把 HTTP 参数转换成 User 对象
+// 注册，用户名/密码，把 HTTP 参数转换成 User 对象
 func (user *User) RegisterByUsername(R request.Register, h request.HeaderRequest) (err error, userInter model.User) {
 	u := model.User{
 		Username:  R.Username,
@@ -107,7 +108,7 @@ func (user *User) Delete(uid int) (map[string]int, error) {
 	return rsMap, nil
 }
 
-//最终 - 注册
+// 最终 - 注册
 func (user *User) Register(formUser model.User, h request.HeaderRequest, userRegInfo UserRegInfo) (err error, userInter model.User) {
 	var userRegType int
 
@@ -225,7 +226,7 @@ func (user *User) Register(formUser model.User, h request.HeaderRequest, userReg
 	return nil, formUser
 }
 
-//手机号登陆 - 上一步需要 ： 短信验证没问题
+// 手机号登陆 - 上一步需要 ： 短信验证没问题
 func (user *User) LoginSms(mobile string) (userInter model.User, err error) {
 	userInter, empty, _ := user.FindUserByMobile(mobile)
 	if !empty {
@@ -235,7 +236,7 @@ func (user *User) LoginSms(mobile string) (userInter model.User, err error) {
 	return userInter, errors.New("手机号不存在DB")
 }
 
-//用户名/密码 登陆
+// 用户名/密码 登陆
 func (user *User) Login(u *model.User) (err error, userInter model.User) {
 	var userInfo model.User
 	if u.Username == "" || u.Password == "" {
@@ -261,7 +262,7 @@ func (user *User) Login(u *model.User) (err error, userInter model.User) {
 	return err, userInfo
 }
 
-//3方平台登陆 - 不需要密码
+// 3方平台登陆 - 不需要密码
 func (user *User) LoginThird(rLoginThird request.RLoginThird, h request.HeaderRequest) (userInfo model.User, isNewReg bool, err error) {
 	var userThird model.UserThird
 	//var userInfo model.User
@@ -297,7 +298,7 @@ func (user *User) LoginThird(rLoginThird request.RLoginThird, h request.HeaderRe
 	}
 }
 
-//根据用户名 判断  ：手机号 用户名 邮箱
+// 根据用户名 判断  ：手机号 用户名 邮箱
 func (user *User) TurnRegByUsername(username string) int {
 	isEmail := util.CheckEmailRule(username)
 	isMobile := util.CheckMobileRule(username)
@@ -310,13 +311,13 @@ func (user *User) TurnRegByUsername(username string) int {
 	return userRegType
 }
 
-//编辑用户基础信息
+// 编辑用户基础信息
 func (user *User) SetUserInfo(reqUser model.User) (err error, userInfo model.User) {
 	err = user.Gorm.Updates(&reqUser).Error
 	return err, reqUser
 }
 
-//根据ID查找一个用户信息
+// 根据ID查找一个用户信息
 func (user *User) FindUserById(id int) (err error, userInfo *model.User) {
 	var u model.User
 	err = user.Gorm.Where("`id` = ?", id).First(&u).Error
@@ -356,7 +357,7 @@ func (user *User) FindUserByMobile(mobile string) (userInfo model.User, empty bo
 	return userInfo, false, nil
 }
 
-//根据uuid查找一个用户信息
+// 根据uuid查找一个用户信息
 func (user *User) FindUserByUuid(uuid string) (err error, userInfo *model.User) {
 	if err = user.Gorm.Where("`uuid` = ?", uuid).First(&userInfo).Error; err != nil {
 		return errors.New("用户不存在"), userInfo
@@ -364,17 +365,17 @@ func (user *User) FindUserByUuid(uuid string) (err error, userInfo *model.User) 
 	return nil, userInfo
 }
 
-//随机生成一个用户 - 游客
+// 随机生成一个用户 - 游客
 func MakeGuestUsername() string {
 	return uuid.NewV4().String()
 }
 
-//随机生成一个昵称 - 游客
+// 随机生成一个昵称 - 游客
 func MakeNickname() string {
 	return uuid.NewV4().String()
 }
 
-//修改密码
+// 修改密码
 func (user *User) ChangePassword(uid int, newPassword string) (err error) {
 	var userInfo model.User
 	userInfo.Id = uid
@@ -383,7 +384,7 @@ func (user *User) ChangePassword(uid int, newPassword string) (err error) {
 	return err
 }
 
-//绑定手机号
+// 绑定手机号
 func (user *User) BindMobile(uid int, mobile string) (err error) {
 
 	_, empty, err := user.FindUserByMobile(mobile)
@@ -409,7 +410,7 @@ func (user *User) BindMobile(uid int, mobile string) (err error) {
 	return err
 }
 
-//绑定邮箱
+// 绑定邮箱
 func (user *User) BindEmail(uid int, email string) (err error) {
 
 	_, empty, err := user.FindUserByEmail(email)
@@ -456,4 +457,42 @@ func (user *User) ProjectAutoCreateUserDbRecord() {
 		}
 
 	}
+}
+
+func (user *User) GetLoginFailedLimit(ip string, accountName string) (cnt int) {
+	redisElement, _ := user.Redis.GetElementByIndex("login_failed_limiter_ip", ip, accountName)
+	cntStr, err := user.Redis.Get(redisElement)
+	if err != nil && err == redis.Nil {
+		cntStr = "0"
+	}
+	//else {
+	//	util.MyPrint("redis get err:", err.Error())
+	//	return 0, err
+	//}
+	cnt, _ = strconv.Atoi(cntStr)
+
+	return cnt
+	//maxCnt := 5
+	//if cnt > maxCnt {
+	//	return cnt, errors.New("登录失败次数过多(>" + strconv.Itoa(maxCnt) + ")，请稍后再试")
+	//}
+	//
+	//return cnt, nil
+}
+
+func (user *User) IncrLoginFailedLimit(ip string, accountName string) {
+	redisElement, _ := user.Redis.GetElementByIndex("login_failed_limiter_ip", ip, accountName)
+	user.Redis.Incr(redisElement)
+}
+
+func (user *User) CheckLoginFailedLimit(ip string, accountName string, maxCnt int, failedLimitTime int) (cnt int, err error) {
+	if maxCnt <= 0 {
+		return 0, nil
+	}
+	cnt = user.GetLoginFailedLimit(ip, accountName)
+	if cnt > maxCnt {
+		errMsg := "登录失败次数过多(>" + strconv.Itoa(maxCnt) + ")，请稍后(" + strconv.Itoa(failedLimitTime) + ")再试"
+		return cnt, errors.New(errMsg)
+	}
+	return cnt, nil
 }

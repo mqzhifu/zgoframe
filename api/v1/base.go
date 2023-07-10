@@ -7,7 +7,6 @@ import (
 	"github.com/mojocn/base64Captcha"
 	"go.uber.org/zap"
 	"strconv"
-	"time"
 	"zgoframe/core/global"
 	httpmiddleware "zgoframe/http/middleware"
 	"zgoframe/http/request"
@@ -28,7 +27,7 @@ var store = base64Captcha.DefaultMemStore
 // @Param X-Project-Id header string true "项目ID"  default(6)
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
 // @Param data body request.Captcha false "基础信息"
-// @Produce text/html
+// @Produce application/json
 // @Success 200 {object} httpresponse.Captcha "图片信息"
 // @Router /base/captcha [POST]
 func Captcha(c *gin.Context) {
@@ -62,6 +61,7 @@ func Captcha(c *gin.Context) {
 // @Tags Base
 // @Summary 发送短信
 // @Description 登陆、注册、找回密码等，短信的内容由ruleId匹配（后台录入）
+// @accept application/json
 // @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
 // @Param X-Project-Id header string true "项目ID" default(6)
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
@@ -93,6 +93,7 @@ func SendSms(c *gin.Context) {
 // @Tags Base
 // @Summary 发送邮件
 // @Description 登陆、注册、找回密码等使用，目前不支持附件功能，邮件的内容由ruleId匹配（后台录入）
+// @accept application/json
 // @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
 // @Param X-Project-Id header string true "项目ID" default(6)
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
@@ -119,6 +120,7 @@ func SendEmail(c *gin.Context) {
 // @Tags Base
 // @Summary 重置密码 - 通过短信
 // @Description 忘记密码后，可发送短信通知，重置密码
+// @accept application/json
 // @Param X-Source-Type header string true "来源" default(11)
 // @Param X-Project-Id header string true "项目ID" Enums(1,2,3,4) default(6)
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
@@ -157,6 +159,7 @@ func ResetPasswordSms(c *gin.Context) {
 // @Tags Base
 // @Summary 用户注册账号
 // @Description 普通注册，需要有：用户名 密码
+// @accept application/json
 // @Produce  application/json
 // @Param X-Source-Type header string true "来源" default(11)
 // @Param X-Project-Id header string true "项目ID"  default(6)
@@ -190,6 +193,7 @@ func Register(c *gin.Context) {
 
 // @Tags Base
 // @Summary 用户注册账号-通过手机验证码
+// @accept application/json
 // @Produce  application/json
 // @Param X-Source-Type header string true "来源" default(11)
 // @Param X-Project-Id header string true "项目ID"  default(6)
@@ -229,6 +233,7 @@ func RegisterSms(c *gin.Context) {
 // @Tags Base
 // @Summary 检测手机号：是否已存在
 // @Description 注册/找加密码/登陆 使用
+// @accept application/json
 // @Produce  application/json
 // @Param X-Source-Type header string true "来源" default(11)
 // @Param X-Project-Id header string true "项目ID"  default(6)
@@ -267,6 +272,7 @@ func CheckMobileExist(c *gin.Context) {
 // @Tags Base
 // @Summary 检测用户名：是否已存在
 // @Description 登陆 使用
+// @accept application/json
 // @Produce  application/json
 // @Param X-Source-Type header string true "来源" default(11)
 // @Param X-Project-Id header string true "项目ID"  default(6)
@@ -305,6 +311,7 @@ func CheckUsernameExist(c *gin.Context) {
 // @Tags Base
 // @Summary 检测邮件：是否已存在
 // @Description 注册/找加密码 使用
+// @accept application/json
 // @Produce  application/json
 // @Param X-Source-Type header string true "来源" default(11)
 // @Param X-Project-Id header string true "项目ID"  default(6)
@@ -346,7 +353,8 @@ func CheckEmailExist(c *gin.Context) {
 
 // @Tags Base
 // @Summary 解析一个TOKEN
-// @Description 单点登陆，各应用收到的接口都会带有token，要到用户中心(微服务)再认证/解析一下，确保安全
+// @Description 单点登陆，各应用收到的接口都会带有token，可以到用户中心(微服务)再认证/解析一下，确保安全
+// @accept application/json
 // @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
 // @Param X-Project-Id header string true "项目ID" default(6)
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
@@ -372,6 +380,7 @@ func ParserToken(c *gin.Context) {
 // @Tags Base
 // @Summary 普通登陆
 // @Description 用户名/手机/邮箱+密码->登陆，验证成功后，生成token
+// @accept application/json
 // @Produce  application/json
 // @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
 // @Param X-Project-Id header string true "项目ID" default(6)
@@ -380,42 +389,26 @@ func ParserToken(c *gin.Context) {
 // @Success 200 {object} httpresponse.LoginResponse
 // @Router /base/login [post]
 func Login(c *gin.Context) {
-	//body, err := ioutil.ReadAll(c.Request.Body)
-	//util.MyPrint(string(body))
 	var L request.Login
 	c.ShouldBind(&L)
-	//if err := util.Verify(L, util.LoginVerify); err != nil {
-	// httpresponse.FailWithMessage(err.Error(), c)
-	// return
-	//}
-	//if store.Verify(L.CaptchaId, L.Captcha, true) {
 
-	// 同一个IP半小时密码错误5次，封禁24小时
-	limitKey := "login_ip_limit_" + c.ClientIP()
-	limitRes := global.V.Redis.Redis.Get(c, limitKey).Val()
-	if limitRes != "" {
-		httpresponse.FailWithMessage("尝试次数过多，已被暂停访问24小时", c)
-		return
+	failedCnt, checkLoginFailedCntErr := global.V.MyService.User.CheckLoginFailedLimit(c.ClientIP(), L.Username, global.C.Login.MaxFailedCnt, global.C.Login.FailedLimitTime)
+	if checkLoginFailedCntErr != nil {
+		//httpresponse.FailWithMessage(checkLoginFailedCntErr.Error(), c)
+		//return
 	}
-
+	//util.MyPrint("redis cnt :", cnt, err)
 	//先从DB中做比对
 	U := &model.User{Username: L.Username, Password: L.Password}
 	err, user := global.V.MyService.User.Login(U)
 	if err != nil {
-		httpresponse.FailWithMessage(err.Error(), c)
-		limitNum := 5
-		key := "login_ip_limit_num_" + c.ClientIP()
-		wrongNum, _ := strconv.Atoi(global.V.Redis.Redis.Get(c, key).Val())
-		if wrongNum+1 >= limitNum {
-			global.V.Redis.Redis.Set(c, limitKey, "1", time.Hour*24)
-			httpresponse.FailWithMessage("尝试次数过多，已被暂停访问24小时", c)
-			return
+		global.V.MyService.User.IncrLoginFailedLimit(c.ClientIP(), L.Username)
+		errMsg := "用户名不存在或者密码错误"
+		if global.C.Login.MaxFailedCnt > 0 {
+			balance := global.C.Login.MaxFailedCnt - failedCnt
+			errMsg += "，还剩" + strconv.Itoa(balance) + "次机会"
 		}
-
-		global.V.Redis.Redis.Set(c, key, wrongNum+1, time.Minute*30)
-		lastNum := limitNum - (wrongNum + 1)
-
-		httpresponse.FailWithMessage("用户名不存在或者密码错误，还剩"+strconv.Itoa(lastNum)+"次机会", c)
+		httpresponse.FailWithMessage(errMsg, c)
 	} else {
 		loginType := global.V.MyService.User.TurnRegByUsername(L.Username)
 		//DB比较OK，开始做JWT处理
@@ -427,14 +420,13 @@ func Login(c *gin.Context) {
 			httpresponse.OkWithAll(loginResponse, "登录成功", c)
 		}
 	}
-	//} else {
-	// httpresponse.FailWithMessage("验证码错误", c)
-	//}
+
 }
 
 // @Tags Base
 // @Summary 短信(验证码)登陆
 // @Description 登陆(验证)成功后，生成token
+// @accept application/json
 // @Produce  application/json
 // @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
 // @Param X-Project-Id header string true "项目ID" default(6)

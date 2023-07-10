@@ -348,6 +348,28 @@ func CheckInAllowInstance(name string) bool {
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
 // @Param X-Second-Auth-Uname header string true "二次验证-用户名" default(test)
 // @Param X-Second-Auth-Ps header string true "二次验证-密码" default(qweASD1234560)
+// @Param X-Client-Req-Time header string true "客户端请求时间 unix" default(1648277052)
+// @Param X-Request-Id header string true "追踪ID" default(abcdefg)
+// @Param X-Trace-Id header string true "请求ID" default(12345667)
+// @Param X-Token header string true "追踪ID" default(12345667)
+// @Param X-Sign header string true "签名" default(12345667)
+// @Param X-Base-Info header string true "客户端信息" default({'sn':”,'pack_name':”,'app_version':”,'os':”,'os_version':”,'device':”,'device_version':”,'lat':”,'lon':”,'device_id':”,'dpi':”,'ip':”,'referer':”})
+// @Success 200 {object} request.TestHeader
+// @Router /tools/test/full/header [get]
+func TestFullHeaderStruct(c *gin.Context) {
+	header, _ := request.GetMyHeader(c)
+	httpresponse.OkWithAll(header, "OK~d", c)
+
+}
+
+// @Tags Tools
+// @Summary header头-结构体
+// @Description 日常header里放一诸如验证类的东西，统一公示出来，仅是说明，方便测试/前端查看，方便使用
+// @Param X-Source-Type header string true "来源" default(11)
+// @Param X-Project-Id header string true "项目ID" Enums(1,2,3,4) default(6)
+// @Param X-Access header string true "访问KEY" default(imzgoframe)
+// @Param X-Second-Auth-Uname header string true "二次验证-用户名" default(test)
+// @Param X-Second-Auth-Ps header string true "二次验证-密码" default(qweASD1234560)
 // @Param X-Client-Req-Time header string true "客户端请求时间unix" default(1648277052)
 // @Success 200 {object} request.TestHeader
 // @Router /tools/header/struct [get]

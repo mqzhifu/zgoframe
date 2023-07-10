@@ -62,7 +62,6 @@ func NewMyRedis(myRedisOption MyRedisOption) (*MyRedis, error) {
 	return myRedis, nil
 }
 
-//
 func (myRedis *MyRedis) GetContext() context.Context {
 	return context.Background()
 }
@@ -71,7 +70,7 @@ func (myRedis *MyRedis) Debug(msg string, fields ...zap.Field) {
 	myRedis.Option.Log.Info(msg, fields...)
 }
 
-//redis key 可能大部分都是动态的
+// redis key 可能大部分都是动态的
 func (myRedis *MyRedis) GetElementByIndex(keyIndex string, values ...string) (redisElement RedisElement, err error) {
 	one, ok := myRedis.Option.ElementPool[keyIndex]
 	if !ok {
@@ -103,13 +102,13 @@ func (myRedis *MyRedis) GetElementByIndex(keyIndex string, values ...string) (re
 	return one, nil
 }
 
-//set 一个永久有效的值
+// set 一个永久有效的值
 func (myRedis *MyRedis) Set(element RedisElement, value string) (string, error) {
 	myRedis.Debug(" set " + element.Key + " val:" + value)
 	return myRedis.Redis.Set(myRedis.GetContext(), element.Key, value, 0).Result()
 }
 
-//set 一个会失效的值
+// set 一个会失效的值
 func (myRedis *MyRedis) SetEX(element RedisElement, value string, expireSecond int) (string, error) {
 	if expireSecond < 0 {
 		errMsg := "expireSecond < 0"
@@ -140,12 +139,12 @@ func (myRedis *MyRedis) Get(element RedisElement) (string, error) {
 	return s, e
 }
 
-//删除一个key
+// 删除一个key
 func (myRedis *MyRedis) Del(element RedisElement) (int64, error) {
 	return myRedis.Redis.Del(myRedis.GetContext(), element.Key).Result()
 }
 
-//设置KEY过期时间
+// 设置KEY过期时间
 func (myRedis *MyRedis) Expire(element RedisElement, expireSecond int) (bool, error) {
 	if expireSecond <= 0 {
 		err := errors.New("expireSecond <=0")
@@ -171,7 +170,6 @@ func (myRedis *MyRedis) Decr(element RedisElement) (int64, error) {
 	return myRedis.Redis.Decr(myRedis.GetContext(), element.Key).Result()
 }
 
-//
 func (myRedis *MyRedis) DecrBy(element RedisElement, num int64) (int64, error) {
 	return myRedis.Redis.DecrBy(myRedis.GetContext(), element.Key, num).Result()
 }
@@ -219,16 +217,16 @@ func (myRedis *MyRedis) DelLock(element RedisElement, val string) (int64, error)
 
 }
 
-////列表相关   start
-//func (myRedis *MyRedis)LPush(){
+// //列表相关   start
+// func (myRedis *MyRedis)LPush(){
 //
-//}
+// }
 //
-//func (myRedis *MyRedis)RPop(){
+// func (myRedis *MyRedis)RPop(){
 //
-//}
+// }
 //
-//set 一个永久有效的值
+// set 一个永久有效的值
 func (myRedis *MyRedis) LLen(element RedisElement) (int64, error) {
 	return myRedis.Redis.LLen(myRedis.GetContext(), element.Key).Result()
 }

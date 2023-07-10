@@ -27,8 +27,15 @@ type Config struct {
 	Agora            Agora
 	Domain           Domain
 	AliSms           AliSms
+	Login            Login
 	//Casbin           Casbin
 	//Upload           Upload
+}
+
+type Login struct {
+	Status          string
+	MaxFailedCnt    int
+	FailedLimitTime int
 }
 
 type Protobuf struct {

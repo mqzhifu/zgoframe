@@ -79,11 +79,6 @@ func Record() gin.HandlerFunc {
 		if err != nil {
 			global.V.Zap.Error(prefix + "create record error:" + err.Error())
 		}
-		//util.MyPrint("http middleware Create record err", err)
-		//fmt.Println("opt final record:", record)
-		//if err := service.CreateSysOperationRecord(record); err != nil {
-		//	global.V.Zap.Error("create operation record error:", zap.Any("err", err))
-		//}
 	}
 }
 

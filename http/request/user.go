@@ -116,7 +116,7 @@ type SendEmail struct {
 	ReplaceVar map[string]string `json:"replaceVar"`  //邮件内容模块中变量替换
 	Receiver   string            `json:"receiver"`    //接收者（email格式）
 	CarbonCopy []string          `json:"carbon_copy"` //抄送（email格式），可以是多人
-	SendUid    int               `json:"send_uid"`    //发送者ID，管理员是9999，未知8888
+	SendUid    int               `json:"send_uid"`    //发送者ID，管理员:9999，未知:8888
 	SendIp     string            `json:"send_ip"`     //发送者IP，如为空系统默认取：请求方的IP,最好给真实的，一但被刷，会使用此值
 }
 

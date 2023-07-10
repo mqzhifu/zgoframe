@@ -80,6 +80,12 @@ port            = "#http_port#"
 staticPath      = "static" #监听某个目录下的静态文件，提供 restful 服务。这里是个相对路径，在项目的根目录下. 注：如果开启 embed ，此参数无效
 reqLimitTimes   = 100
 
+#用户登陆控制
+[login]
+status          = "open"
+maxFailedCnt    = 5 #最大失败次数
+failedLimitTime  = 86400 #失败封禁时间，1天：单位：秒
+
 #mysql 数据库，注：这里是一个二维数组，支持多mysql实例,但CICD目前只能处理一个mysql 变量替换
 [[mysql]]
 status          = "open"

@@ -25,7 +25,7 @@ class ConstProcess{
     public $project_base_dir = "";
     public $parse_rs = array();
 
-    function ConstProcess($project_base_dir){
+    function __construct($project_base_dir){
         debug("start:");
         $this->project_base_dir = $project_base_dir;
         $this->init();
@@ -183,12 +183,15 @@ EOF;
         //常量不要出现：括号关键字，会影响正则匹配
         debug("process_one:".$file_key);
         $file_content = $this->process_file_content_list[$file_key];
-        preg_match_all('/\/\/@parse (.*)\nconst \(\n(.*)\)/isU',$file_content,$match);
+        preg_match_all('/@parse (.*)\nconst \(\n(.*)\)/isU',$file_content,$match);
         if(count($match) <= 0 ){
+            debug("not match");
             return false;
         }
 
         $list = array();
+        debug(" process_one match:");
+        //var_dump($match);
         foreach ($match[1] as $k=>$const_name){
             $type = "int";
             $row = array(
@@ -254,7 +257,7 @@ EOF;
 
 
 $myConstProcess = new ConstProcess($project_base_dir);
-$myConstProcess->ConstProcess($project_base_dir);
+//$myConstProcess->ConstProcess($project_base_dir);
 
 function debug($str,$n = "\n"){
     echo $str . $n;

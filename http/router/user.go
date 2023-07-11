@@ -19,6 +19,7 @@ func User(Router *gin.RouterGroup) {
 		UserRouter.POST("set/info", v1.SetUserInfo) // 设置用户信息
 		UserRouter.PUT("logout", v1.Logout)         // 退出
 		UserRouter.GET("info", v1.GetUserInfo)
+
 	}
 }
 
@@ -32,5 +33,20 @@ func System(Router *gin.RouterGroup) {
 		//
 		SysRouter.POST("metrics", v1.Metrics)
 
+	}
+}
+
+func Goods(Router *gin.RouterGroup) {
+	GoodsRouter := Router.Group("goods")
+	{
+		GoodsRouter.POST("create/one", v1.GoodsCreateOne)
+	}
+}
+
+func Orders(Router *gin.RouterGroup) {
+	OrdersRouter := Router.Group("orders")
+	{
+		OrdersRouter.POST("create/one", v1.OrdersCreateOne)
+		OrdersRouter.POST("payment", v1.OrdersPayment)
 	}
 }

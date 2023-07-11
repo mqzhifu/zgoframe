@@ -1,6 +1,6 @@
 package model
 
-// @parse body加密方式
+// @parse 加密方式
 const (
 	DATA_ENCRYPT_BASE64         = 1
 	DATA_ENCRYPT_AES_CBC_BASE64 = 2
@@ -451,4 +451,32 @@ const (
 const (
 	CallbackEventAllUploaded = 31 // 所有录制文件已上传至指定的第三方云存储
 	CallbackEventRecordExit  = 41 // 录制服务已退出
+)
+
+// @parse 支付类型
+const (
+	PAY_TYPE_ALI    = 1 //阿里
+	PAY_TYPE_WECHAT = 2 //微信
+)
+
+// @parse 支付子类型
+const (
+	PAY_SUB_TYPE_APP = 1 //APP内
+	PAY_SUB_TYPE_PC  = 2 //浏览器网页端
+	PAY_SUB_TYPE_H5  = 3 //浏览器H5
+	PAY_SUB_TYPE_QR  = 4 //二维码
+)
+
+// @parse 商品状态
+const (
+	GOODS_STATUS_NORMAL  = 1 //上线
+	GOODS_STATUS_OFFLINE = 2 //下线
+)
+
+// @parse 订单状态
+const (
+	ORDERS_STATUS_NORMAL  = 1 //正常，未支付
+	ORDERS_STATUS_PAID    = 2 //已支付
+	ORDERS_STATUS_REFUND  = 3 //退款
+	ORDERS_STATUS_TIMEOUT = 4 //超时
 )

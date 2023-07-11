@@ -930,6 +930,31 @@ func (constHandle *ConstHandle) Init() {
 	constItemList = []ConstItem{}
 
     	constItem = ConstItem{
+		Key:   "DATA_ENCRYPT_BASE64",
+		Value: 1,
+		Desc:  "",
+	}
+	constItemList = append(constItemList, constItem)
+
+	constItem = ConstItem{
+		Key:   "DATA_ENCRYPT_AES_CBC_BASE64",
+		Value: 2,
+		Desc:  "",
+	}
+	constItemList = append(constItemList, constItem)
+
+
+	enumConst = EnumConst{
+		CommonPrefix: "DATA_ENCRYPT_",
+		Desc:         "加密方式",
+		ConstList:    constItemList,
+		Type:          "int",
+	}
+
+	constHandle.EnumConstPool[enumConst.CommonPrefix] = enumConst
+	constItemList = []ConstItem{}
+
+    	constItem = ConstItem{
 		Key:   "USER_ROLE_NORMAL",
 		Value: 1,
 		Desc:  "普通用户",
@@ -1067,6 +1092,13 @@ func (constHandle *ConstHandle) Init() {
 		Key:   "PLATFORM_IOS_APP",
 		Value: 42,
 		Desc:  "IOS手机APP",
+	}
+	constItemList = append(constItemList, constItem)
+
+	constItem = ConstItem{
+		Key:   "PLATFORM_AR",
+		Value: 51,
+		Desc:  "ar眼镜",
 	}
 	constItemList = append(constItemList, constItem)
 
@@ -1824,6 +1856,134 @@ func (constHandle *ConstHandle) Init() {
 	constItemList = []ConstItem{}
 
     	constItem = ConstItem{
+		Key:   "PAY_TYPE_ALI",
+		Value: 1,
+		Desc:  "阿里",
+	}
+	constItemList = append(constItemList, constItem)
+
+	constItem = ConstItem{
+		Key:   "PAY_TYPE_WECHAT",
+		Value: 2,
+		Desc:  "微信",
+	}
+	constItemList = append(constItemList, constItem)
+
+
+	enumConst = EnumConst{
+		CommonPrefix: "PAY_TYPE_",
+		Desc:         "支付类型",
+		ConstList:    constItemList,
+		Type:          "int",
+	}
+
+	constHandle.EnumConstPool[enumConst.CommonPrefix] = enumConst
+	constItemList = []ConstItem{}
+
+    	constItem = ConstItem{
+		Key:   "PAY_SUB_TYPE_APP",
+		Value: 1,
+		Desc:  "APP内",
+	}
+	constItemList = append(constItemList, constItem)
+
+	constItem = ConstItem{
+		Key:   "PAY_SUB_TYPE_PC",
+		Value: 2,
+		Desc:  "浏览器网页端",
+	}
+	constItemList = append(constItemList, constItem)
+
+	constItem = ConstItem{
+		Key:   "PAY_SUB_TYPE_H5",
+		Value: 3,
+		Desc:  "浏览器H5",
+	}
+	constItemList = append(constItemList, constItem)
+
+	constItem = ConstItem{
+		Key:   "PAY_SUB_TYPE_QR",
+		Value: 4,
+		Desc:  "二维码",
+	}
+	constItemList = append(constItemList, constItem)
+
+
+	enumConst = EnumConst{
+		CommonPrefix: "PAY_SUB_TYPE_",
+		Desc:         "支付子类型",
+		ConstList:    constItemList,
+		Type:          "int",
+	}
+
+	constHandle.EnumConstPool[enumConst.CommonPrefix] = enumConst
+	constItemList = []ConstItem{}
+
+    	constItem = ConstItem{
+		Key:   "GOODS_STATUS_NORMAL",
+		Value: 1,
+		Desc:  "上线",
+	}
+	constItemList = append(constItemList, constItem)
+
+	constItem = ConstItem{
+		Key:   "GOODS_STATUS_OFFLINE",
+		Value: 2,
+		Desc:  "下线",
+	}
+	constItemList = append(constItemList, constItem)
+
+
+	enumConst = EnumConst{
+		CommonPrefix: "GOODS_STATUS_",
+		Desc:         "商品状态",
+		ConstList:    constItemList,
+		Type:          "int",
+	}
+
+	constHandle.EnumConstPool[enumConst.CommonPrefix] = enumConst
+	constItemList = []ConstItem{}
+
+    	constItem = ConstItem{
+		Key:   "ORDERS_STATUS_NORMAL",
+		Value: 1,
+		Desc:  "正常，未支付",
+	}
+	constItemList = append(constItemList, constItem)
+
+	constItem = ConstItem{
+		Key:   "ORDERS_STATUS_PAID",
+		Value: 2,
+		Desc:  "已支付",
+	}
+	constItemList = append(constItemList, constItem)
+
+	constItem = ConstItem{
+		Key:   "ORDERS_STATUS_REFUND",
+		Value: 3,
+		Desc:  "退款",
+	}
+	constItemList = append(constItemList, constItem)
+
+	constItem = ConstItem{
+		Key:   "ORDERS_STATUS_TIMEOUT",
+		Value: 4,
+		Desc:  "超时",
+	}
+	constItemList = append(constItemList, constItem)
+
+
+	enumConst = EnumConst{
+		CommonPrefix: "ORDERS_STATUS_",
+		Desc:         "订单状态",
+		ConstList:    constItemList,
+		Type:          "int",
+	}
+
+	constHandle.EnumConstPool[enumConst.CommonPrefix] = enumConst
+	constItemList = []ConstItem{}
+
+    	constItem = ConstItem{
 		Key:   "ENV_LOCAL_INT",
 		Value: 1,
 		Desc:  "开发环境",
@@ -2383,10 +2543,42 @@ func (constHandle *ConstHandle) Init() {
 	}
 	constItemList = append(constItemList, constItem)
 
+	constItem = ConstItem{
+		Key:   "FILE_TYPE_PACKAGES",
+		Value: 6,
+		Desc:  "压缩包",
+	}
+	constItemList = append(constItemList, constItem)
+
 
 	enumConst = EnumConst{
 		CommonPrefix: "FILE_TYPE_",
 		Desc:         "文件类型",
+		ConstList:    constItemList,
+		Type:          "int",
+	}
+
+	constHandle.EnumConstPool[enumConst.CommonPrefix] = enumConst
+	constItemList = []ConstItem{}
+
+    	constItem = ConstItem{
+		Key:   "FILE_SYNC_TRUE",
+		Value: 1,
+		Desc:  "全部",
+	}
+	constItemList = append(constItemList, constItem)
+
+	constItem = ConstItem{
+		Key:   "FILE_SYNC_FALSE",
+		Value: 2,
+		Desc:  "图片",
+	}
+	constItemList = append(constItemList, constItem)
+
+
+	enumConst = EnumConst{
+		CommonPrefix: "FILE_SYNC_",
+		Desc:         "文件操作是否同步到OSS",
 		ConstList:    constItemList,
 		Type:          "int",
 	}

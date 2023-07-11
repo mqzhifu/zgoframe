@@ -89,3 +89,35 @@ type FrameSyncRoomHistory struct {
 	SourceUid           int32  `json:"sourceUid"`
 	PlayerId            int32  `json:"playerId"`
 }
+
+type Goods struct {
+	Title         string `json:"title" db:"define:varchar(50);comment:标题;defaultValue:''"`                   //标题
+	Desc          string `json:"desc" db:"define:varchar(255);comment:描述;defaultValue:''"`                   //描述
+	Type          int    `json:"type" db:"define:tinyint(1);comment:分类;defaultValue:0"`                      //分类
+	Price         int    `json:"price" db:"define:int;comment:价格(单位分);defaultValue:0"`                       //价格
+	Amount        int    `json:"period" db:"define:int;comment:买一个商品给多少个数量;defaultValue:0"`                  //买一个商品给多少个数量
+	Stock         int    `json:"stock" db:"define:int;comment:库存数量;defaultValue:0"`                          //库存数量
+	AdminId       int    `json:"admin_id" db:"define:int;comment:管理员ID;defaultValue:0" `                     //管理员ID
+	AllowCoupon   int    `json:"allow_coupon" db:"define:int;comment:允许使用优惠券;defaultValue:0"`                //允许使用优惠券，0不允许
+	AllowGoldCoin int    `json:"allow_gold_coin" db:"define:int;comment:允许支付类型1微信2支付宝;defaultValue:0"`       //允许使用金币，0不允许
+	PayAllowType  string `json:"pay_allow_type" db:"define:tinyint(1);comment:允许支付类型1微信2支付宝;defaultValue:0"` //允许支付类型1微信2支付宝
+	Status        int    `json:"status" db:"define:tinyint(1);comment:状态1:正常 2:下架;defaultValue:0"`           //状态 1:正常 2:下架
+	Memo          string `json:"memo" db:"define:varchar(255);comment:备注;defaultValue:''"`                   //备注
+}
+
+type Orders struct {
+	Type      int    `json:"type" db:"define:tinyint(1);comment:分类;defaultValue:0"`             //分类
+	GoodsId   int    `json:"goods_id" db:"define:int;comment:商品ID;defaultValue:0"`              //商品ID
+	Amount    int    `json:"amount" db:"define:int;comment:购买数量;defaultValue:0"`                //购买数量
+	CouponId  int    `json:"coupon_id" db:"define:int;comment:优惠卷ID;defaultValue:0" `           //优惠卷ID
+	Uid       int    `json:"uid" db:"define:int;comment:用户ID;defaultValue:0" `                  //用户ID
+	GoldCoin  int    `json:"gold_coin" db:"define:int;comment:金币数;defaultValue:0" `             //金币数
+	Source    int    `json:"source" db:"define:tinyint(1);comment:来源;defaultValue:0"`           //来源
+	UserMemo  string `json:"user_memo" db:"define:varchar(255);comment:用户备注;defaultValue:''"`   //备注
+	AdminMemo string `json:"admin_memo" db:"define:varchar(255);comment:管理员备注;defaultValue:''"` //备注
+}
+
+type Payment struct {
+	OrdersId int `json:"orders_id"`
+	Type     int `json:"type"`
+}

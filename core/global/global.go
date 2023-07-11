@@ -96,7 +96,7 @@ func AutoCreateUpDbTable() map[string]string {
 		&model.OperationRecord{}, &model.Project{}, &model.StatisticsLog{},
 		&model.CicdPublish{}, &model.Server{}, &model.Instance{},
 		&model.ProjectPushMsg{},
-		&model.SmsRule{}, &model.SmsLog{}, &model.EmailRule{}, &model.EmailLog{}, &model.MailRule{}, &model.MailLog{}, &model.MailGroup{})
+		&model.SmsRule{}, &model.SmsLog{}, &model.EmailRule{}, &model.EmailLog{}, &model.MailRule{}, &model.MailLog{}, &model.MailGroup{}, &model.Goods{}, &model.Orders{})
 
 	return sql
 }

@@ -108,6 +108,8 @@ func RegGinHttpRoute() {
 	{
 		router.Base(PublicGroup)
 		router.Persistence(PublicGroup)
+		router.Goods(PublicGroup)
+		router.Orders(PublicGroup)
 	}
 	//管理员/开发/运维 使用，头部要验证，还需要二次验证，主要有些危险的操作
 	SystemGroup := global.V.Gin.Group("")

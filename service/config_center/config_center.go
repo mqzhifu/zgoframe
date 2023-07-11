@@ -1,3 +1,4 @@
+// 配置中心. 所有项目均可动态获取配置信息
 package config_center
 
 import (

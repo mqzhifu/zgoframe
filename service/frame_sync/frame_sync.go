@@ -1,3 +1,4 @@
+// 游戏帧同步
 package frame_sync
 
 import (

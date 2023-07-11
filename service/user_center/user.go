@@ -1,3 +1,4 @@
+// 用户中心：如注册、找回密码、登录、修改密码、修改用户信息等
 package user_center
 
 import (

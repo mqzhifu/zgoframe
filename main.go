@@ -71,6 +71,10 @@ var initializeVar *initialize.Initialize
 // @tag.description 游戏匹配机制
 // @tag.name FrameSync
 // @tag.description 帧同步
+// @tag.name Goods
+// @tag.description 商品相关操作
+// @tag.name Orders
+// @tag.description 订单/支付
 // @tag.name persistence
 // @tag.description 持久化(文件/日志收集)
 // @tag.name file

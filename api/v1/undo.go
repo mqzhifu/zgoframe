@@ -35,14 +35,6 @@ type Room interface {
 	Ready()           //准备
 }
 
-type GameMatch interface {
-	Add()
-	Cancel()
-}
-
-type FrameSync interface {
-}
-
 type IMInterface interface {
 	SendOneMsg()
 	EntrySession()
@@ -55,18 +47,7 @@ type Game interface {
 	GetMatchHistoryByUid() //获取一个用户玩过的所有游戏的战绩列表
 }
 
-type Pay interface {
-	GetCategory()
-	Doing()
-}
-
-type Goods interface {
-	GetList()
-	UpInfo()
-	GetOne()
-}
-
-//货币
+// 货币
 type Currency interface {
 	AddCoin()
 	LessCoin()
@@ -74,31 +55,13 @@ type Currency interface {
 	GetCoinHistory()
 }
 
-type Order interface {
-	Create()
-	PayCallback()
-	UpInfo()
-}
-
 type MsgCenter interface {
 	//微信 企业微信/公众号
 	//app msg
-	//站内信 | 内部邮件
-	//短信
-	//邮件
 	//IM
 	//task
 	//game
 	//pay
 	//friend
 
-	//长连接
-	Connect()   //接收到C端建立长连接
-	Login()     //连接建立后，做验证
-	Heartbeat() //心跳
-	Close()     //C端主动关闭连接
-	PushLong()  //接收到C端推送消息
-
-	//短连接
-	Push()
 }

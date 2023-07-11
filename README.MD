@@ -1,27 +1,29 @@
 拼装一个GO的基础框架，主要是想把经常用的类/包 统一化/SDK化，统一管理，节省重复造轮子。  
-像：log 链路追踪 etcd等，保证项目高可用
+像：log 链路追踪 etcd等，保证项目高可用/高扩展
 
 主要 3方 package 说明 ：
 
-| 类库                       | 说明         | 版本  |
-|--------------------------|------------|-----|
-| viper                    | 解析配置文件     ||     |
-| zap                      | 日志         |     |
-| casbin                   | 权限控制       ||     |
-| jwt                      | 登陆验证       ||     |
-| gin                      | http 容器    ||     |
-| swaager                  | API管理及注解   ||     |
-| etcd                     | 分布式存储      ||     |
-| gorm                     | DB-MYSQL   ||     |
-| grpc                     | 异步调用       ||     |
-| protobuf                 | 传输内容压缩     ||     |g
-| uuid                     | uniq-uid   ||     |
-| go-redis                 | redis      ||     |
-| redigo                   | redis      ||     |
-| gorilla/websocket        | websocket  ||     |
-| base64Captcha            | 图片二进制转码    ||     |
-| sigs.k8s.io/yaml         | 解析yaml配置文件 ||     |
-| prometheus/client_golang | metrics    ||     |
+| 类库                       | 说明            | 版本  |
+|--------------------------|---------------|-----|
+| viper                    | 解析配置文件        ||     |
+| zap                      | 日志            |     |
+| casbin                   | 权限控制          ||     |
+| jwt                      | 登陆验证          ||     |
+| gin                      | http 容器       ||     |
+| swaager                  | API管理及注解      ||     |
+| etcd                     | 分布式存储         ||     |
+| gorm                     | DB-MYSQL      ||     |
+| grpc                     | 远程 调用         ||     |
+| protobuf                 | 传输内容压缩        ||     |
+| uuid                     | uniq-uid      ||     |
+| go-redis                 | redis         ||     |
+| redigo                   | redis         ||     |
+| gorilla/websocket        | websocket     ||     |
+| base64Captcha            | 图片二进制转码       ||     |
+| sigs.k8s.io/yaml         | 解析yaml配置文件    ||     |
+| prometheus/client_golang | metrics       ||     |
+| go-supervisord           | 管理 supervisor ||     |
+| alibabacloud-go          | 阿里云SDK 主要是OSS ||     |
 
 >详细的package，请去godoc里查看
 
@@ -85,35 +87,14 @@ go get -u github.com/swaggo/swag/cmd/swag@v1.7.9
 访问地址：
 >http://127.0.0.1:1111/swagger/index.html
 
-
-包管理 注意：  
-这里最恶心的是ETCD，它不是完全兼容MOD模式。官方的版本比较高，给MOD的是略低些的版本，有些新的功能不可以用，同时：连带着GRPC也不能用高版本  
-pkg.go.com 上的包是:v3.3.25+incompatible  
-
-官方：3.4.7  
-MOD：3.3.25
-
-1. bbolt包已经换了位置 ，代码中还是使用旧的地址
->replace github.com/coreos/bbolt v1.3.4 => go.etcd.io/bbolt v1.3.4
-
-2. grpc包得降级
->replace google.golang.org/grpc => google.golang.org/grpc v1.26.0
-
-这个是最恶心的，导致如果你项目中使用grpc 也得跟着降级protoc 的版本
-
-如果使用protobuf，需要先下载工具包
-```azure
-go get -u github.com/golang/protobuf/protoc-gen-go@v1.2.0
-go get github.com/golang/protobuf/protoc-gen-go@v1.3.2
-```
-
-
 启动:
->go run main.go -e local
+>go run main.go -e 1
 
-指令行参数：
+查看指令行参数：
 >go run main.go -h
 ```
+  -bs string
+    	BuildStatic (default "off")
   -cfn string
     	configFileName (default "config")
   -cs string
@@ -122,11 +103,17 @@ go get github.com/golang/protobuf/protoc-gen-go@v1.3.2
     	configFileType (default "toml")
   -debug int
     	startup debug mode level
-  -e string
-    	must require , env:local test pre dev online
+  -e int
+    	must require , 1本地2开发3测试4预发布5线上
   -etl string
     	get etcd config url (default "http://127.0.0.1/getEtcdCluster/Ip/Port")
+  -t string
+    	testFlag:empty or 1
 ```
+>-e 是使用最多的，且是必须的。主要是区分环境，如：本地、开发、测试、预发布、线上 
+
+>-t 是做测试使用
+
 
 必须开启组件/类库：
 
@@ -138,32 +125,14 @@ go get github.com/golang/protobuf/protoc-gen-go@v1.3.2
 | redis | http限流使用               |
 
 
-注意组件/类库：
-有些组件是互相依赖的，如：网关要依赖protobuf ，声网-录制屏幕，要依赖阿里云的OSS等
 
-配置文件说明：  
+配置文件说明
+
 目前仅使用了toml格式，也可以兼容yaml 等，自行研究    
 每个模块里都有status: open  | close ，自行设置  
 基本上大部分模块，从配置中分析一下，也能知道个大概  
 
-微服务 - 业务
-----
-基本上各种扩展已经封装好，如：GRPC、ETCD动态扩容、ES日志收集、metrics收集 等
+CICD/容器部署
 
-已完成
-1. 用户中心
-2. 网关
-3. 匹配
-4. 帧同步
-5. 房间
-6. 消息中心：sms、邮件、站内信
-7. 配置中心
-8. 文件/图片系统
+自行参考 Dockfile 文件
 
-未完成
-1. 好友体系
-2. 订单/商品/支付
-3. 任务/成就体系
-4. 货币(金币/现金)
-5. 消息中心：APP-PUSH、队列、公众号
-6. RTC，音视频流控

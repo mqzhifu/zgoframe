@@ -1,3 +1,4 @@
+// http 传输加密/解密
 package encrypt
 
 import (

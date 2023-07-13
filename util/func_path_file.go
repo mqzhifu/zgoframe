@@ -116,20 +116,26 @@ type ForeachDirInfo struct {
 }
 
 // 遍历一个目录的所有文件/目录列表，但 不递归，也就是子目录不处理
-func ForeachDir(path string) []ForeachDirInfo {
+func ForeachDir(path string, extNameList []string) []ForeachDirInfo {
 	var list []ForeachDirInfo
 	fs, err := ioutil.ReadDir(path)
 	if err != nil {
 		MyPrint("ForeachDir err:", err.Error())
 		return list
 	}
+
+	if len(fs) == 0 {
+		return list
+	}
+
 	for _, file := range fs {
 		if file.IsDir() {
-			foreachDirInfo := ForeachDirInfo{
-				Name: file.Name(),
-				Cate: "dir",
-			}
-			list = append(list, foreachDirInfo)
+			continue
+			//foreachDirInfo := ForeachDirInfo{
+			//	Name: file.Name(),
+			//	Cate: "dir",
+			//}
+			//list = append(list, foreachDirInfo)
 		} else {
 			foreachDirInfo := ForeachDirInfo{
 				Name: file.Name(),
@@ -138,6 +144,23 @@ func ForeachDir(path string) []ForeachDirInfo {
 			list = append(list, foreachDirInfo)
 		}
 	}
+
+	if len(fs) == 0 {
+		return list
+	}
+
+	if len(extNameList) > 0 {
+		var list2 []ForeachDirInfo
+		for _, file := range list {
+			for _, extName := range extNameList {
+				if strings.HasSuffix(file.Name, extName) {
+					list2 = append(list2, file)
+				}
+			}
+		}
+		return list2
+	}
+
 	return list
 }
 

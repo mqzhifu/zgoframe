@@ -225,7 +225,7 @@ func (configCenter *ConfigCenter) InitPersistenceFile() error {
 				}
 			}
 			//读取一个项目下的所有配置文件列表
-			foreachProjectDirList := util.ForeachDir(projectDir)
+			foreachProjectDirList := util.ForeachDir(projectDir, []string{})
 			if len(foreachProjectDirList) <= 0 {
 				continue
 			}

@@ -7,6 +7,8 @@ import (
 )
 
 func InitFileManager() {
+	global.V.ImageMagic = util.NewImageMagic()
+
 	fileUploadOption := util.FileManagerOption{
 		//FilePrefix:       module,
 		Category:         util.FILE_TYPE_IMG,

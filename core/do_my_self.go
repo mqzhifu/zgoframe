@@ -11,8 +11,8 @@ func DoMySelf() {
 
 }
 
-//test_command()
-//Gateway()
+// test_command()
+// Gateway()
 func DoTestAction(flag string) {
 	//util.GetHTTPBaseAuth()
 	util.MyPrint("=======================", flag)
@@ -51,6 +51,8 @@ func DoTestAction(flag string) {
 		test.Test_supervisor()
 	case "gateway":
 		test.Gateway()
+	case "image_slice":
+		test.ImageSlice()
 	default:
 		util.ExitPrint("DoTestAction flag no hit , flag:" + flag)
 	}

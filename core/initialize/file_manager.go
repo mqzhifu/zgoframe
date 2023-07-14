@@ -7,7 +7,11 @@ import (
 )
 
 func InitFileManager() {
-	global.V.ImageMagic = util.NewImageMagic()
+	baseDir := global.MainEnv.RootDir + "/" + global.C.Http.StaticPath + "/puzzle"
+	oriImagePath := baseDir + "/ori/"
+	shardImagePath := baseDir + "/shard/"
+	thumbnailPath := baseDir + "/thumbnail/"
+	global.V.ImageSlice = util.NewImageSlice(oriImagePath, shardImagePath, thumbnailPath)
 
 	fileUploadOption := util.FileManagerOption{
 		//FilePrefix:       module,

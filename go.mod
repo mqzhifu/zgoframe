@@ -38,6 +38,7 @@ require (
 	github.com/magiconair/properties v1.8.7 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/mojocn/base64Captcha v1.3.5
+	github.com/nfnt/resize v0.0.0-20180221191011-83c6a9932646
 	github.com/prometheus/client_golang v1.14.0
 	github.com/prometheus/common v0.42.0 // indirect
 	github.com/satori/go.uuid v1.2.0
@@ -56,6 +57,7 @@ require (
 	go.uber.org/multierr v1.8.0 // indirect
 	go.uber.org/zap v1.24.0
 	golang.org/x/crypto v0.0.0-20220525230936-793ad666bf5e // indirect
+	golang.org/x/image v0.0.0-20220302094943-723b81ca9867 // indirect
 	golang.org/x/net v0.8.0
 	golang.org/x/tools v0.6.0
 	google.golang.org/genproto v0.0.0-20230410155749-daa745c078e1 // indirect

@@ -38,7 +38,7 @@ type Global struct {
 	Process          *util.Process
 	Err              *util.ErrMsg
 	Email            *util.MyEmail
-	ImageMagic       *util.ImageMagic
+	ImageSlice       *util.ImageSlice
 	DocsManager      *util.FileManager
 	PackagesManager  *util.FileManager
 	ImgManager       *util.FileManager

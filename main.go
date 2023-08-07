@@ -75,9 +75,9 @@ var initializeVar *initialize.Initialize
 // @tag.description 商品相关操作
 // @tag.name Orders
 // @tag.description 订单/支付
-// @tag.name persistence
+// @tag.name Persistence
 // @tag.description 持久化(文件/日志收集)
-// @tag.name file
+// @tag.name File
 // @tag.description 文件系统，如：上传/下载文件，文件包括：图片、视频、文件流等。上传的文件名只允许：字母、数字、下划线、中划线、点，必须有扩展名。 上传后的新文件名：类型ID_unixStamp_md5值.扩展名。文件在本地存一份，可同步到OSS一份，目录可以做hash(月、天、小时)。 注：文件上传目前仅支持HTTP协议，也就是form+multipart/form-data模式。(有一个接口支持非HTTP-FORM上传，也就是base64当BODY，但是仅支持图片)。注：有操作路径时，一定不要多一个/少一个反斜杠的【字符】，因为OSS上是直接支持的,LINUX下双反斜杠会自动变成一个。暂不支持：分片传输，断点续传等功能
 // @tag.name ConfigCenter
 // @tag.description 配置中心，它有几个维度注意下： 环境->项目->文件->模块，项目这个维度http-header头中是公共的且已处理，余下3个请求的时候都要带上。目前仅支持：toml格式，后期可加ymal和ini

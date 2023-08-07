@@ -1,6 +1,5 @@
 package frame_sync
 
-import "C"
 import (
 	"container/list"
 	"errors"
@@ -81,7 +80,7 @@ func NewRoomManager(roomManagerOption RoomManagerOption) *RoomManager {
 //	roomManager.Option.FrameSync = frameSync
 //}
 
-//创建一个空房间
+// 创建一个空房间
 func (roomManager *RoomManager) NewEmptyRoom() *Room {
 	room := new(Room)
 	room.Id = CreateRoomId()
@@ -138,7 +137,7 @@ func (room *Room) UpStatus(status int32) {
 	room.StatusLock.Unlock()
 }
 
-//C端获取一个房间的信息
+// C端获取一个房间的信息
 func (roomManager *RoomManager) GetRoom(requestGetRoom pb.RoomBaseInfo) error {
 	roomId := requestGetRoom.RoomId
 	room, _ := roomManager.GetById(roomId)
@@ -164,7 +163,7 @@ func (roomManager *RoomManager) GetRoom(requestGetRoom pb.RoomBaseInfo) error {
 	return nil
 }
 
-//根据ROOID  有池子里找到该roomInfo
+// 根据ROOID  有池子里找到该roomInfo
 func (roomManager *RoomManager) GetById(roomId string) (room *Room, empty bool) {
 	room, exist := roomManager.Pool[roomId]
 	if !exist {
@@ -189,8 +188,8 @@ func (roomManager *RoomManager) Shutdown() {
 	}
 }
 
-//给集合添加一个新的 游戏副本
-//一局新游戏（副本）创建成功，告知玩家进入战场，等待 所有玩家准备确认
+// 给集合添加一个新的 游戏副本
+// 一局新游戏（副本）创建成功，告知玩家进入战场，等待 所有玩家准备确认
 func (roomManager *RoomManager) AddOne(room *Room) error {
 	roomManager.Option.Log.Info("roomManager addPoolElement id:" + room.Id)
 	_, empty := roomManager.GetById(room.Id)

@@ -16,7 +16,7 @@ import (
 	"zgoframe/util"
 )
 
-// @Tags persistence
+// @Tags Persistence
 // @Summary 收集日志,目前是存于MYSQL中，后期可以优化成文件或ES中
 // @Description 用于后台统计
 // @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
@@ -73,7 +73,7 @@ func LogPush(c *gin.Context) {
 	httpresponse.OkWithAll("", "已收录", c)
 }
 
-// @Tags persistence
+// @Tags Persistence
 // @Summary 收集日志(文件)-目前是存于MYSQL中，后期可以优化成文件或ES中
 // @Description 用于后台统计
 // @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
@@ -153,7 +153,7 @@ func LogPushFile(c *gin.Context) {
 	httpresponse.OkWithAll("", "已收录", c)
 }
 
-// @Tags persistence
+// @Tags Persistence
 // @Summary 收集日志(文件)-目前是存于MYSQL中，后期可以优化成文件或ES中
 // @Description 用于后台统计
 // @Param X-Source-Type header string true "来源" Enums(11,12,21,22,88)

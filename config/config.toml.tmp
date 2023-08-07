@@ -57,7 +57,7 @@ uploadDocPackagesMaxSize = 50 #单位：M，上传视频大小限制，这个值
 downloadPath = "download"
 downloadMaxSize = 100
 
-#缓存
+#缓存(server)
 [redis]
 status      = "open"
 db-number   = 1
@@ -107,9 +107,9 @@ status = "open"
 
 [protobuf]
 status          = "open"
-basePath        = "protobuf" #相对路径，在static下面
-pbServicePath   = "pbservice"#相对路径，在static下面
-protoPath       = "proto"    #相对路径，在static下面
+basePath        = "protobuf" #基础路径(相对路径)
+pbServicePath   = "pbservice"#基于上面产生(相对路径)
+protoPath       = "proto"    #基于上面产生(相对路径)
 idMapFileName   = "map.txt"
 
 #邮件

@@ -32,29 +32,47 @@ class ParserSwaggerApi{
                 $responses  = $this->checkUnset( $row,"responses");
                 $produces = $this->checkUnset( $row,"responses");
                 $tags = $this->checkUnset($row,"tags");
+                $className = $this->GetClassName($tags[0]);
                 if(!$parameters){
                     $this->out("warning ,parameters empty.");
                     continue;
                 }
                 //处理请求参数
                 $funcTemplate = $this->ParserParameters($parameters,$path,$method,$description);
-                $funcTemplateCodeByTags[$tags[0]][] = $funcTemplate;
+                $funcTemplateCodeByTags[$className][] = $funcTemplate;
             }
         }
+        $jsIncludeCode = "";
+        $jsNewClassCode = "";
         //2. 处理 class ，将函数代码 替换到类中
-        foreach ($funcTemplateCodeByTags as $tagName=>$functions){
+        foreach ($funcTemplateCodeByTags as $className=>$functions){
             $TemplateClass = $this->template->GetClass();
-            $TemplateClass = str_replace("#class#",$tagName,$TemplateClass);
+            $TemplateClass = str_replace("#class#",$className,$TemplateClass);
             $functionsCode = "";
             foreach ($functions as $k=>$code){
                 $functionsCode .= $code;
             }
             $TemplateClass = str_replace("#functions#",$functionsCode,$TemplateClass);
-            $fileName = $tagName . ".js";
+            $fileName = $className . ".js";
             $path = $this->outDir. "/".$fileName;
             $fd = fopen($path,"w+");
             fwrite($fd,$TemplateClass);
+
+            $jsIncludeCode .= 'import * as ApiLogic'.$className.'   from "./apiLogic/'.$className.'.js";'."\n";
+//            let apiApiLogicBase  = new ApiLogicBase.Base(header,encrypt,http);
+            $jsNewClassCode .= "let apiLogic{$className}  = new  ApiLogic{$className}.{$className}(header,encrypt,http) \n";
         }
+
+        $path = $this->outDir. "/importCode.js";
+        $fd = fopen($path,"w+");
+        fwrite($fd,$jsIncludeCode . "\n\n" . $jsNewClassCode);
+
+//        var_dump($jsIncludeCode);
+    }
+
+    function GetClassName($tag){
+        return $tag;
+//        return "ApiLogic". $tag;
     }
 
     function ParserParameters($parameters,$path,$method,$description){
@@ -293,9 +311,61 @@ class Template{
     }
     function GetClass(){
         $code = <<<EOF
+import * as Cfg from "./../config.js";
+import * as HttpRequest from "./../httpRequest.js"
+
 class #class#{
+    constructor(header,encrypt,http) {
+        this.token = "";//登陆成功后，保存 token
+        this.callbackList= [];//保存调用者的：回调函数
+
+        let config = new Cfg.Config(header,encrypt,http);
+        this.HttpRequest = new HttpRequest.HttpRequest(config);
+    }
+    
+    CommonCallback (uri,err,data){
+        let prefix = "CommonCallback";
+        console.log(prefix," uri:",uri)
+        if(err){
+            console.log(prefix," err:",err)
+            this.ExecCall(uri,err,data)
+            return 1;
+        }
+
+        if(!data){
+            console.log(prefix," data empty.")
+            this.ExecCall(uri,err,data)
+            return 1;
+        }
+
+        if(data.code != 200){
+            console.log(prefix,"request back err, code:"+data.code + " msg: "+ data.msg);
+            this.ExecCall(uri,err,data)
+            return 1;
+        }
+
+        // console.log(data);
+        // return 1;
+        if(uri == "/base/login"){
+            console.log(prefix," set token.");
+            this.token = data.data.token;
+        }
+        // let funcName = this.UriTurnFunName(uri);
+        this.ExecCall(uri,err,data)
+        return 1;
+    }
+
+    ExecCall(uri,err,data){
+        if(!!(uri in this.callbackList)){
+            this.callbackList[uri](uri,err,data);
+        }else{
+            console.log("err:uri not in list .",uri)
+        }
+    }
+    
     #functions#
 }
+export {#class#}
 EOF;
         return $code;
     }
@@ -306,6 +376,7 @@ EOF;
         let uri = "#uri#";
         let method = "#method#";
         //let loginData = #body#;
+        this.callbackList[uri] = callback;
         this.HttpRequest.request(this.CommonCallback.bind(this),uri,this.token,false,method,obj,"");
     }
     
@@ -315,7 +386,8 @@ EOF;
 }
 
 
-$path = "/data/golang/zgoframe/docs/swagger.yaml";
-$outDir = "/data/php/zhongyuhuacai/storage";
+$path = "D:\golang\zgoframe\docs\swagger.yaml";
+//$outDir = "D:\php/zhongyuhuacai/storage";
+$outDir = 'D:\nodejs\zjsframework\src\apiLogic';
 $ParserSwaggerApiClass = new ParserSwaggerApi($path,$outDir,"js");
 $ParserSwaggerApiClass->Start();

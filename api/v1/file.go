@@ -95,7 +95,7 @@ func FileUploadRealMulti(c *gin.Context, category int) {
 	httpresponse.OkWithAll(errList, "ok", c)
 }
 
-// @Tags file
+// @Tags File
 // @Summary 上传一张图片( http-form 表单模式 )
 // @Security ApiKeyAuth
 // @Description 单图片上限2M。支持格式："jpg", "jpeg", "png", "gif", "x-png", "png", "bmp", "pjpeg", "x-icon", "svg", "webp"。
@@ -114,7 +114,7 @@ func FileUploadImgOne(c *gin.Context) {
 	FileUploadReal(c, util.FILE_TYPE_IMG)
 }
 
-// @Tags file
+// @Tags File
 // @Summary 上传多张图片
 // @Security ApiKeyAuth
 // @Description 单图片上限2M。支持格式："jpg", "jpeg", "png", "gif", "x-png", "png", "bmp", "pjpeg", "x-icon", "svg", "webp"。
@@ -133,11 +133,10 @@ func FileUploadImgMulti(c *gin.Context) {
 	FileUploadRealMulti(c, util.FILE_TYPE_IMG)
 }
 
-// @Tags file
+// @Tags File
 // @Summary 上传图片 - 流模式 - base64
 // @Security ApiKeyAuth
-// @Description 有时前端并没有具体文件，而是在与用户交互中：动态产生的文件(图片)流，如：截图(canvas)，这时候直接把文件流传输后端即可
-// @Description 单图片上限2M。支持格式："jpg", "jpeg", "png", "gif", "x-png", "png", "bmp", "pjpeg", "x-icon", "svg", "webp"。
+// @Description 有时前端并没有具体文件，而是在与用户交互中：动态产生的文件(图片)流，如：截图(canvas)，这时候直接把文件流传输后端即可,单图片上限2M。支持格式："jpg", "jpeg", "png", "gif", "x-png", "png", "bmp", "pjpeg", "x-icon", "svg", "webp"。
 // @Param	X-Source-Type 	header 		string 	true 	"来源" Enums(11,12,21,22)
 // @Param	X-Project-Id  	header 		string 	true 	"项目ID" default(6)
 // @Param	X-Access      	header 		string 	true 	"访问KEY" default(imzgoframe)
@@ -172,7 +171,7 @@ func FileUploadImgOneStreamBase64(c *gin.Context) {
 
 }
 
-// @Tags file
+// @Tags File
 // @Summary 上传一个文档
 // @Security ApiKeyAuth
 // @Description 单文件上限20M。支持格式："txt", "doc", "docx", "dotx", "json", "cvs", "xls", "xlsx", "sql", "msword", "ppt", "pptx", "pdf", "wps", "vsd"
@@ -191,7 +190,7 @@ func FileUploadDocOne(c *gin.Context) {
 	FileUploadReal(c, util.FILE_TYPE_DOC)
 }
 
-// @Tags file
+// @Tags File
 // @Summary 上传多个文档
 // @Description 单文件上限20M。支持格式："txt", "doc", "docx", "dotx", "json", "cvs", "xls", "xlsx", "sql", "msword", "ppt", "pptx", "pdf", "wps", "vsd"
 // @Param	X-Source-Type header string true "来源" Enums(11,12,21,22)
@@ -209,7 +208,7 @@ func FileUploadDocMulti(c *gin.Context) {
 	FileUploadRealMulti(c, util.FILE_TYPE_DOC)
 }
 
-// @Tags file
+// @Tags File
 // @Summary 上传一个视频文件
 // @Security ApiKeyAuth
 // @Description 单文件上限20M。支持格式："mp4", "avi", "rm", "mkv", "wmv", "mov", "flv", "fla", "rmvb", "m3u8", "webm", "ts", "wav"
@@ -228,7 +227,7 @@ func FileUploadVideoOne(c *gin.Context) {
 	FileUploadReal(c, util.FILE_TYPE_VIDEO)
 }
 
-// @Tags file
+// @Tags File
 // @Summary 上传一个压缩包
 // @Security ApiKeyAuth
 // @Description 单文件上限 50 M。支持格式："zip", "rar", "apk", "tar", "jar", "7z", "gz", "rz"
@@ -247,7 +246,7 @@ func FileUploadPackagesOne(c *gin.Context) {
 	FileUploadReal(c, util.FILE_TYPE_PACKAGES)
 }
 
-// @Tags file
+// @Tags File
 // @Summary 删除一个文件
 // @Security ApiKeyAuth
 // @Description 先删除本地，可选择删除OSS，注：路径要绝对正确，否则OSS上的文件不会删除
@@ -274,7 +273,7 @@ func FileDeleteOne(c *gin.Context) {
 	}
 }
 
-// @Tags file
+// @Tags File
 // @Summary 移动一个文件
 // @Security ApiKeyAuth
 // @Description 注意下：阿里的OSS没有文件移动的功能，先复制再删除的方式实现
@@ -297,7 +296,7 @@ func FileMoveOne(c *gin.Context) {
 	}
 }
 
-// @Tags file
+// @Tags File
 // @Summary 复制一个文件
 // @Security ApiKeyAuth
 // @Description 主要是阿里的OSS没有文件移动的功能，被动先用复制再删除的方式实现
@@ -320,7 +319,7 @@ func FileCopyOne(c *gin.Context) {
 	}
 }
 
-// @Tags file
+// @Tags File
 // @Summary 大文件下载(暂未实现，后续补充)
 // @Security ApiKeyAuth
 // @Description 大文件走NGINX不现实，而且，中间断了后，无法续传

@@ -5,7 +5,9 @@ import (
 	"strconv"
 	"zgoframe/core/global"
 	httpresponse "zgoframe/http/response"
+	"zgoframe/model"
 	"zgoframe/protobuf/pb"
+	"zgoframe/util"
 )
 
 // @Tags GameMatch
@@ -65,7 +67,10 @@ func GameMatchSignCancel(c *gin.Context) {
 func GameMatchGetOneRule(c *gin.Context) {
 	ridStr := c.Param("id")
 	rid, _ := strconv.Atoi(ridStr)
-	rule, err := global.V.MyService.GameMatch.RuleManager.GetById(rid)
+	//rule, err := global.V.MyService.GameMatch.RuleManager.GetById(rid)
+	util.MyPrint("rid:", rid)
+	rule := model.GameMatchRule{}
+	err := global.V.Gorm.Where("id = ? ", rid).First(&rule).Error
 	if err != nil {
 		httpresponse.FailWithMessage(err.Error(), c)
 		return

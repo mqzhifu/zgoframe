@@ -33,17 +33,30 @@ class ParserSwaggerApi{
                 $produces = $this->checkUnset( $row,"responses");
                 $tags = $this->checkUnset($row,"tags");
                 $className = $this->GetClassName($tags[0]);
-                if(!$parameters){
-                    $this->out("warning ,parameters empty.");
-                    continue;
-                }
+
+//                if($className == "Gateway"){
+//                    echo "========im gateway start========\n";
+//                    var_dump($parameters);
+//                }
+
+//                if(!$parameters){
+//                    $this->out("warning ,parameters empty.");
+//                    $funcTemplate = $this->ParserParameters($parameters,$path,$method,$description);
+//                    $funcTemplateCodeByTags[$className][] = $funcTemplate;
+//                    continue;
+//                }
+
                 //处理请求参数
                 $funcTemplate = $this->ParserParameters($parameters,$path,$method,$description);
                 $funcTemplateCodeByTags[$className][] = $funcTemplate;
+//                if($className == "Gateway"){
+//                    echo "========im gateway end========\n";
+//                }
             }
         }
         $jsIncludeCode = "";
         $jsNewClassCode = "";
+        $jsSetCallerCode = "";
         //2. 处理 class ，将函数代码 替换到类中
         foreach ($funcTemplateCodeByTags as $className=>$functions){
             $TemplateClass = $this->template->GetClass();
@@ -58,14 +71,16 @@ class ParserSwaggerApi{
             $fd = fopen($path,"w+");
             fwrite($fd,$TemplateClass);
 
-            $jsIncludeCode .= 'import * as ApiLogic'.$className.'   from "./apiLogic/'.$className.'.js";'."\n";
+            $jsIncludeCode .= 'import * as ApiLogic'.$className.'   from "./'.$className.'.js";'."\n";
 //            let apiApiLogicBase  = new ApiLogicBase.Base(header,encrypt,http);
-            $jsNewClassCode .= "let apiLogic{$className}  = new  ApiLogic{$className}.{$className}(header,encrypt,http) \n";
+            $jsNewClassCode .= "this.apiLogic{$className}  = new  ApiLogic{$className}.{$className}(this.HttpRequest) \n";
+            $jsSetCallerCode .= " this.apiLogic{$className}.SetCaller(this);\n";
+
         }
 
         $path = $this->outDir. "/importCode.js";
         $fd = fopen($path,"w+");
-        fwrite($fd,$jsIncludeCode . "\n\n" . $jsNewClassCode);
+        fwrite($fd,$jsIncludeCode . "\n\n" . $jsNewClassCode ."\n\n" . $jsSetCallerCode);
 
 //        var_dump($jsIncludeCode);
     }
@@ -78,68 +93,72 @@ class ParserSwaggerApi{
     function ParserParameters($parameters,$path,$method,$description){
         $inType = "";
         $paraList = [];
-        foreach ($parameters as $k=>$paraOne){
-            $paraDescription = $this->checkUnset( $paraOne,"description");
-            $name = $this->checkUnset( $paraOne,"name");
-            $required = $this->checkUnset( $paraOne,"required");
-            $valueType = $this->checkUnset( $paraOne,"type");
-            $in = $this->checkUnset( $paraOne,"in");
+        if($paraList){//有些函数就没有请求参数
+            foreach ($parameters as $k=>$paraOne){
+                $paraDescription = $this->checkUnset( $paraOne,"description");
+                $name = $this->checkUnset( $paraOne,"name");
+                $required = $this->checkUnset( $paraOne,"required");
+                $valueType = $this->checkUnset( $paraOne,"type");
+                $in = $this->checkUnset( $paraOne,"in");
 
-            switch ($in){
-                case "header":
-                    $inType = "header";
-                    break;
-                case "body":
-                    $schema = $paraOne["schema"]['$ref'];
-                    $this->out("schema:$schema");
-                    $obj = $this->GetDefinitionsObj($schema);
+                switch ($in){
+                    case "header":
+                        $inType = "header";
+                        break;
+                    case "body":
+                        $schema = $paraOne["schema"]['$ref'];
+                        $this->out("schema:$schema");
+                        $obj = $this->GetDefinitionsObj($schema);
 //                    var_dump($obj);exit;
-                    $realObj = [];
-                    $parserNewObj = $this->LoopForeachObj($obj,1);
-                    $inType = "body";
+                        $realObj = [];
+                        $parserNewObj = $this->LoopForeachObj($obj,1);
+                        $inType = "body";
 //                    $paraList[] = $obj;
-                    $paraList = $parserNewObj;//这里没有用数组存，因为一但 body 里传 JSON，只能有一个大的 HTTP BODY参数
-                    break;
-                case "path":
-                    $paraList[] = $paraOne;
-                    $inType = "path";
-                    break;
-                case "formData":
-                    $inType = "formData";
-                    $paraList[] = $paraOne;
-                    break;
-                default:
-                    $this->out("err ,Parameters <in> value err:"+$in);
-                    break;
-            }
+                        $paraList = $parserNewObj;//这里没有用数组存，因为一但 body 里传 JSON，只能有一个大的 HTTP BODY参数
+                        break;
+                    case "path":
+                        $paraList[] = $paraOne;
+                        $inType = "path";
+                        break;
+                    case "formData":
+                        $inType = "formData";
+                        $paraList[] = $paraOne;
+                        break;
+                    default:
+                        $this->out("err ,Parameters <in> value err:"+$in);
+                        break;
+                }
 //            var_dump($paraOne);exit;
 //            if(row.parameters[para].in == "header"){
+            }
         }
-        if(count($paraList) <= 0){
-            return "";
-        }
+
+
         $FunctionTemplateStr = $this->MakeOneFunctionTemplate($path,$method,$description,$inType,$paraList);
         return $FunctionTemplateStr;
     }
     function MakeOneFunctionTemplate($path,$method,$description,$type,$paraList){
         $functionName = $this->ParserFuncNameByPath($path);//解析函数名
         $functionDataBody = "";
-        switch ($type){
-            case "formData":
-            case  "path":
-                $obj = [];
-                foreach ($paraList as $k=>$v){
-                    $obj[$v['name']] = "";
-                }
-                $functionDataBody = json_encode($obj);
-                break;
-            case  "body":
-                $functionDataBody = json_encode($paraList);
-                break;
-            default:
-                $this->out("MakeOneFunctionTemplate type value err:".$type);
-                break;
+        if($paraList ){//有些函数，就没有请求参数
+            switch ($type){
+                case "formData":
+                case  "path":
+                    $obj = [];
+                    foreach ($paraList as $k=>$v){
+                        $obj[$v['name']] = "";
+                    }
+                    $functionDataBody = json_encode($obj);
+                    break;
+                case  "body":
+                    $functionDataBody = json_encode($paraList);
+                    break;
+                default:
+                    $this->out("MakeOneFunctionTemplate type value err:".$type);
+                    break;
+            }
         }
+
 
         $functionTemplate = $this->template->GetFunction();
         $functionTemplate = str_replace("#uri#",$path,$functionTemplate);
@@ -311,59 +330,20 @@ class Template{
     }
     function GetClass(){
         $code = <<<EOF
-import * as Cfg from "./../config.js";
-import * as HttpRequest from "./../httpRequest.js"
 
-class #class#{
-    constructor(header,encrypt,http) {
-        this.token = "";//登陆成功后，保存 token
-        this.callbackList= [];//保存调用者的：回调函数
-
-        let config = new Cfg.Config(header,encrypt,http);
-        this.HttpRequest = new HttpRequest.HttpRequest(config);
+import * as ApiLogic from "./apiLogic.js";
+class #class# {
+  
+    constructor(httpRequest) {
+        this.Caller = null;
+        this.HttpRequest = httpRequest
     }
     
-    CommonCallback (uri,err,data){
-        let prefix = "CommonCallback";
-        console.log(prefix," uri:",uri)
-        if(err){
-            console.log(prefix," err:",err)
-            this.ExecCall(uri,err,data)
-            return 1;
-        }
-
-        if(!data){
-            console.log(prefix," data empty.")
-            this.ExecCall(uri,err,data)
-            return 1;
-        }
-
-        if(data.code != 200){
-            console.log(prefix,"request back err, code:"+data.code + " msg: "+ data.msg);
-            this.ExecCall(uri,err,data)
-            return 1;
-        }
-
-        // console.log(data);
-        // return 1;
-        if(uri == "/base/login"){
-            console.log(prefix," set token.");
-            this.token = data.data.token;
-        }
-        // let funcName = this.UriTurnFunName(uri);
-        this.ExecCall(uri,err,data)
-        return 1;
+    SetCaller(callerObj){
+        this.Caller = callerObj;
     }
-
-    ExecCall(uri,err,data){
-        if(!!(uri in this.callbackList)){
-            this.callbackList[uri](uri,err,data);
-        }else{
-            console.log("err:uri not in list .",uri)
-        }
-    }
-    
     #functions#
+    
 }
 export {#class#}
 EOF;
@@ -372,12 +352,19 @@ EOF;
     function GetFunction(){
         $code = <<<EOF
 //#desc#
-    #Funcname#(obj,callback){
+    #Funcname#(data,callback,uriReplace){                             
         let uri = "#uri#";
         let method = "#method#";
+        
+        if (uriReplace){//有些URI中，包含动态变量，这里做一下替换
+            for(let key  in uriReplace){
+                uri = uri.replace("{"+ key + "}",uriReplace[key]);
+            }
+        }
+        
         //let loginData = #body#;
-        this.callbackList[uri] = callback;
-        this.HttpRequest.request(this.CommonCallback.bind(this),uri,this.token,false,method,obj,"");
+        this.Caller.callbackList[uri] = callback;
+        this.HttpRequest.request(this.Caller.CommonCallback.bind(this.Caller),uri,this.Caller.token,false,method,data,uriReplace);
     }
     
 EOF;

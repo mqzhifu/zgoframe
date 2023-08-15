@@ -500,9 +500,15 @@ func (conn *Conn) ReadLoop(ctx context.Context) {
 						//这里可能有重复关闭的情况，如：C端监听到网络断了，然后立刻重连，等于kick off 会关闭一次，这里又监测到一次
 						conn.CloseOneConn(CLOSE_SOURCE_CONN_RESET_BY_PEER)
 						goto end
+					} else {
+						//这个3方类库，还有很多 对端  关闭的 错误捕捉不到，如，下面这个：
+						//wsarecv: An existing connection was forcibly closed by the remote host
+						//所以，别纠结了，只要 read 有问题，大概率是对端 网络有总是，默认全理解成 连接关闭吧。
+						conn.CloseOneConn(CLOSE_SOURCE_CONN_RESET_BY_PEER)
+						goto end
+
 					}
 
-					continue
 				}
 			}
 

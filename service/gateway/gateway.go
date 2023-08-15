@@ -154,6 +154,7 @@ func (gateway *Gateway) clientPing(ping pb.PingReq) {
 		ClientReceiveTime:  ping.ClientReceiveTime,
 		ServerReceiveTime:  util.GetNowMillisecond(),
 		ServerResponseTime: util.GetNowMillisecond(),
+		RequestId:          "AAA",
 	}
 	//gateway.RequestServiceAdapter.GatewaySendMsgByUid(ping.SourceUid, "SC_Pong", &responseServerPong)
 	conn.SendMsgCompressByName("Gateway", "SC_Pong", &responseServerPong)

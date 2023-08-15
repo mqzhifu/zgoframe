@@ -34,7 +34,7 @@ type MyService struct {
 }
 
 var GateDefaultProtocol = int32(util.PROTOCOL_WEBSOCKET)
-var GateDefaultContentType = int32(util.CONTENT_TYPE_JSON)
+var GateDefaultContentType = int32(util.CONTENT_TYPE_PROTOBUF)
 
 // 内部服务，按说：一个项目里最多也就1-2个服务，其它的服务应该在其它项目，并且访问的时候通过HTTP/TCP，这里方便使用，先把其它服务当成一个类使用
 func NewMyService() *MyService {

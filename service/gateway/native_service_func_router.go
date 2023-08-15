@@ -77,7 +77,7 @@ func (gateway *Gateway) NativeServiceFuncRouter(msg pb.Msg) (data interface{}, e
 
 		loginRes := pb.LoginRes{
 			Code:   200,
-			ErrMsg: "",
+			ErrMsg: "success",
 			Uid:    msg.SourceUid,
 		}
 		conn, exist := gateway.Netway.ConnManager.GetConnPoolById(msg.SourceUid)

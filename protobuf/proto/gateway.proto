@@ -50,10 +50,16 @@ message Login{
     string  token       = 2;
 }
 
+//message LoginRes{
+//    int32   code        = 1;
+//    string  errMsg      = 2;
+//    int32   uid         = 3;
+//}
+
 message LoginRes{
     int32   code        = 1;
-    string  errMsg      = 2;
-    int32   uid         = 3;
+    int32   uid         = 2;
+    string  err_msg     = 3;
 }
 
 message ProjectPushMsg{

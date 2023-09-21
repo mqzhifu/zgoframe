@@ -22,7 +22,7 @@ import (
 // @Success 200 {object} model.CicdPublish
 // @Router /cicd/publish/list [get]
 func CicdPublishList(c *gin.Context) {
-	list := global.V.MyService.Cicd.GetPublishList(20) //取出最新的20条即可，不然数据太大
+	list := global.V.MyService.Cicd.GetPublishList(20) // 取出最新的20条即可，不然数据太大
 	httpresponse.OkWithAll(list, "成功", c)
 }
 
@@ -133,6 +133,7 @@ func CicdSuperVisorProcess(c *gin.Context) {
 // @Param X-Second-Auth-Ps header string true "二次验证-密码" default(qweASD1234560)
 // @Param X-Client-Req-Time header string true "客户端请求时间unix" default(1648277052)
 // @Param id path string true "publish id"
+// @Param flag path string flase "deployTargetType"
 // @Produce  application/json
 // @Success 200 {bool} bool "true:成功 false:失败"
 // @Router /cicd/service/publish/{id}/{flag} [get]
@@ -180,21 +181,21 @@ func CicdServiceDeploy(c *gin.Context) {
 	c.ShouldBind(&form)
 
 	util.MyPrint("CicdServiceDeploy form:", form)
-	//这里因为是HTTP连接，而后端处理一次时间接近1分钟，HTTP可能多次重复请求，开个协程
+	// 这里因为是HTTP连接，而后端处理一次时间接近1分钟，HTTP可能多次重复请求，开个协程
 	go global.V.MyService.Cicd.Deploy.ApiDeployOneService(form)
 	httpresponse.OkWithAll("aaaa", "成功", c)
-	//if err != nil {
+	// if err != nil {
 	//	httpresponse.FailWithMessage(err.Error(), c)
-	//} else {
+	// } else {
 	//	httpresponse.OkWithAll("aaaa", "成功", c)
-	//}
+	// }
 
 }
 
-//func CicdLocalSyncTarget(c *gin.Context) {
+// func CicdLocalSyncTarget(c *gin.Context) {
 //	var form request.CicdSync
 //	c.ShouldBind(&form)
 //
 //	list := global.V.MyService.Cicd.LocalSyncTarget(form)
 //	httpresponse.OkWithAll(list, "成功", c)
-//}
+// }

@@ -76,10 +76,10 @@ func SendSms(c *gin.Context) {
 		sendSMSForm.SendIp = c.Request.RemoteAddr
 	}
 
-	//if err := api.Verify(sendSMSForm, api.ApiVerify); err != nil {
+	// if err := api.Verify(sendSMSForm, api.ApiVerify); err != nil {
 	//	response.FailWithMessage(err.Error(), c)
 	//	return
-	//}
+	// }
 
 	projectId, _ := request.GetProjectId(c)
 	dbNewId, err := global.V.MyService.Sms.Send(projectId, sendSMSForm)
@@ -184,7 +184,7 @@ func Register(c *gin.Context) {
 	header, _ := request.GetMyHeader(c)
 	err, userInfo := global.V.MyService.User.RegisterByUsername(R, header)
 	if err != nil {
-		//global.V.Zap.Error("注册失败", zap.Any("err", err))
+		// global.V.Zap.Error("注册失败", zap.Any("err", err))
 		httpresponse.FailWithAll(userInfo, "注册失败:"+err.Error(), c)
 	} else {
 		httpresponse.OkWithAll(userInfo, "注册成功", c)
@@ -221,7 +221,7 @@ func RegisterSms(c *gin.Context) {
 	header, _ := request.GetMyHeader(c)
 	err, userInfo := global.V.MyService.User.Register(user, header, user_center.UserRegInfo{})
 	if err != nil {
-		//global.V.Zap.Error("注册失败", zap.Any("err", err))
+		// global.V.Zap.Error("注册失败", zap.Any("err", err))
 		httpresponse.FailWithAll(userInfo, "注册失败:"+err.Error(), c)
 		return
 	}
@@ -320,6 +320,7 @@ func CheckUsernameExist(c *gin.Context) {
 // @Success 200 {boolean} boolean "true:存在 false:不存在"
 // @Router /base/check/email [post]
 func CheckEmailExist(c *gin.Context) {
+	print("dddd")
 	var form request.CheckEmailExist
 	_ = c.ShouldBind(&form)
 
@@ -363,7 +364,7 @@ func CheckEmailExist(c *gin.Context) {
 // @Success 200 {object} request.CustomClaims
 // @Router /base/parser/token [post]
 func ParserToken(c *gin.Context) {
-	//util.MyPrint("im in parserToken")
+	// util.MyPrint("im in parserToken")
 	var p request.ParserToken
 	c.ShouldBind(&p)
 
@@ -394,11 +395,11 @@ func Login(c *gin.Context) {
 
 	failedCnt, checkLoginFailedCntErr := global.V.MyService.User.CheckLoginFailedLimit(c.ClientIP(), L.Username, global.C.Login.MaxFailedCnt, global.C.Login.FailedLimitTime)
 	if checkLoginFailedCntErr != nil {
-		//httpresponse.FailWithMessage(checkLoginFailedCntErr.Error(), c)
-		//return
+		// httpresponse.FailWithMessage(checkLoginFailedCntErr.Error(), c)
+		// return
 	}
-	//util.MyPrint("redis cnt :", cnt, err)
-	//先从DB中做比对
+	// util.MyPrint("redis cnt :", cnt, err)
+	// 先从DB中做比对
 	U := &model.User{Username: L.Username, Password: L.Password}
 	err, user := global.V.MyService.User.Login(U)
 	if err != nil {
@@ -411,7 +412,7 @@ func Login(c *gin.Context) {
 		httpresponse.FailWithMessage(errMsg, c)
 	} else {
 		loginType := global.V.MyService.User.TurnRegByUsername(L.Username)
-		//DB比较OK，开始做JWT处理
+		// DB比较OK，开始做JWT处理
 		loginResponse, err := tokenNext(c, user, loginType)
 		if err != nil {
 			httpresponse.FailWithAll(loginResponse, err.Error(), c)
@@ -450,7 +451,7 @@ func LoginSms(c *gin.Context) {
 		return
 	}
 
-	//DB比较OK，开始做JWT处理
+	// DB比较OK，开始做JWT处理
 	loginResponse, err := tokenNext(c, user, model.USER_REG_TYPE_MOBILE)
 	if err != nil {
 		httpresponse.FailWithAll(loginResponse, err.Error()+",(短信已使用，请重新发送一条)", c)
@@ -474,25 +475,25 @@ func LoginSms(c *gin.Context) {
 func LoginThird(c *gin.Context) {
 	var L request.RLoginThird
 	c.ShouldBind(&L)
-	//if err := util.Verify(L, util.LoginVerify); err != nil {
+	// if err := util.Verify(L, util.LoginVerify); err != nil {
 	//	httpresponse.FailWithMessage(err.Error(), c)
 	//	return
-	//}
+	// }
 
-	//if !request.CheckPlatformExist(request.GetMyHeader(c).SourceType) {
+	// if !request.CheckPlatformExist(request.GetMyHeader(c).SourceType) {
 	//	httpresponse.FailWithMessage("Header.SourceType unknow", c)
 	//	return
-	//}
+	// }
 
-	//if store.Verify(L.CaptchaId, L.Captcha, true) {
-	//先从DB中做比对
-	//U := &model.User{ThirdId: L.Code}
+	// if store.Verify(L.CaptchaId, L.Captcha, true) {
+	// 先从DB中做比对
+	// U := &model.User{ThirdId: L.Code}
 	header, _ := request.GetMyHeader(c)
 	user, newReg, err := global.V.MyService.User.LoginThird(L, header)
 	if err != nil {
 		httpresponse.FailWithMessage("用户名不存在或者密码错误 ,err:"+err.Error(), c)
 	} else {
-		//DB比较OK，开始做JWT处理
+		// DB比较OK，开始做JWT处理
 		loginResponse, err := tokenNext(c, user, L.PlatformType)
 		loginResponse.IsNewReg = newReg
 		if err != nil {
@@ -502,9 +503,9 @@ func LoginThird(c *gin.Context) {
 			httpresponse.OkWithAll(loginResponse, "登录成功", c)
 		}
 	}
-	//} else {
+	// } else {
 	//	httpresponse.FailWithMessage("验证码错误", c)
-	//}
+	// }
 }
 
 // @Tags Base
@@ -554,7 +555,7 @@ func AccessToken(c *gin.Context) {
 		return
 	}
 	loginType := global.V.MyService.User.TurnRegByUsername(projectInfo.Name)
-	//DB比较OK，开始做JWT处理
+	// DB比较OK，开始做JWT处理
 	loginResponse, err := tokenNext(c, user, loginType)
 	if err != nil {
 		httpresponse.FailWithAll(loginResponse, err.Error(), c)

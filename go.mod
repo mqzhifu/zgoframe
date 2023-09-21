@@ -8,6 +8,7 @@ replace github.com/coreos/bbolt => go.etcd.io/bbolt v1.3.6
 replace google.golang.org/grpc => google.golang.org/grpc v1.26.0
 
 require (
+	github.com/BurntSushi/toml v1.3.2 // indirect
 	github.com/abrander/go-supervisord v0.0.0-20210517172913-a5469a4c50e2
 	github.com/alibabacloud-go/darabonba-openapi/v2 v2.0.4
 	github.com/alibabacloud-go/dysmsapi-20170525/v3 v3.0.5
@@ -23,6 +24,9 @@ require (
 	github.com/gin-contrib/sse v0.0.0-20170109093832-22d885f9ecc7 // indirect
 	github.com/gin-gonic/gin v1.3.0
 	github.com/go-gomail/gomail v0.0.0-20160411212932-81ebce5c23df
+	github.com/go-openapi/jsonpointer v0.20.0 // indirect
+	github.com/go-openapi/jsonreference v0.20.2 // indirect
+	github.com/go-openapi/spec v0.20.9 // indirect
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
@@ -56,13 +60,11 @@ require (
 	go.uber.org/atomic v1.9.0 // indirect
 	go.uber.org/multierr v1.8.0 // indirect
 	go.uber.org/zap v1.24.0
-	golang.org/x/crypto v0.0.0-20220525230936-793ad666bf5e // indirect
 	golang.org/x/image v0.0.0-20220302094943-723b81ca9867
-	golang.org/x/net v0.8.0
-	golang.org/x/tools v0.6.0
+	golang.org/x/net v0.14.0
+	golang.org/x/tools v0.12.0
 	google.golang.org/genproto v0.0.0-20230410155749-daa745c078e1 // indirect
 	google.golang.org/grpc v1.54.0
-	google.golang.org/protobuf v1.30.0
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
 	gopkg.in/go-playground/validator.v8 v8.18.2 // indirect

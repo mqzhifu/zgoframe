@@ -38,7 +38,9 @@ func GetUtilAgora() *util.MyAgora {
 // @Summary 获取用户的录屏记录列表
 // @Description 获取用户的录屏记录列表
 // @Security ApiKeyAuth
-// @Param X-Source-Type header string true "来源" default(11)
+// @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
+// @Param X-Project-Id header string true "项目ID" default(6)
+// @Param X-Access header string true "访问KEY" default(imzgoframe)
 // @Produce application/json
 // @Success 200 {boolean} boolean "true:成功 false:否"
 // @Router /twin/agora/cloud/record/list [POST]
@@ -54,9 +56,10 @@ func TwinAgoraCloudRecordList(c *gin.Context) {
 // @Summary 检查云端录制环境
 // @Description 当有未停止的云端录制时，自动stop掉
 // @Security ApiKeyAuth
-// @Param X-Source-Type header string true "来源" default(11)
+// @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
+// @Param X-Project-Id header string true "项目ID" default(6)
+// @Param X-Access header string true "访问KEY" default(imzgoframe)
 // @accept application/json
-// @Security ApiKeyAuth
 // @Produce application/json
 // @Success 200 {boolean} boolean "true:成功 false:否"
 // @Router /twin/agora/cloud/record/check [POST]
@@ -91,14 +94,16 @@ func TwinAgoraCloudRecordCheck(c *gin.Context) {
 // @Description 录屏时，要先从声网，申请一个资源ID，之后，才能开始（声网限制：每秒最多请求10次）
 // @accept application/json
 // @Security ApiKeyAuth
-// @Param X-Source-Type header string true "来源" default(11)
+// @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
+// @Param X-Project-Id header string true "项目ID" default(6)
+// @Param X-Access header string true "访问KEY" default(imzgoframe)
 // @Param data body util.AgoraAcquireReq false "基础信息"
 // @Produce application/json
 // @Success 200 {object} util.AgoraCloudRecordRes "结果"
 // @Router /twin/agora/cloud/record/create/acquire [POST]
 func TwinAgoraCloudRecordCreateAcquire(c *gin.Context) {
 	thisUid, _ := request.GetUid(c)
-	//GetUtilAgora().ExecBGOssFile()
+	// GetUtilAgora().ExecBGOssFile()
 	var formData util.AgoraAcquireReq
 	c.ShouldBind(&formData)
 
@@ -114,8 +119,8 @@ func TwinAgoraCloudRecordCreateAcquire(c *gin.Context) {
 	formData.ClientRequest = util.AgoraAcquireClientReq{
 		Region:              "CN",
 		ResourceExpiredHour: 72,
-		Scene:               0, //非延迟转换
-		//Scene:               2,//延迟转换
+		Scene:               0, // 非延迟转换
+		// Scene:               2,//延迟转换
 	}
 
 	agoraCloudRecordRes, err := GetUtilAgora().CreateAcquire(formData)
@@ -158,7 +163,9 @@ func TwinAgoraCloudRecordCreateAcquire(c *gin.Context) {
 // @Description 根据上一步获取到的ResourceId，开始录屏，其数据会推送到3方的OSS上
 // @accept application/json
 // @Security ApiKeyAuth
-// @Param X-Source-Type header string true "来源" default(11)
+// @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
+// @Param X-Project-Id header string true "项目ID" default(6)
+// @Param X-Access header string true "访问KEY" default(imzgoframe)
 // @Param data body request.TwinAgoraReq false "基础信息"
 // @Produce application/json
 // @Success 200 {object} util.AgoraCloudRecordRes "结果"
@@ -183,14 +190,14 @@ func TwinAgoraCloudRecordStart(c *gin.Context) {
 		return
 	}
 
-	//获取RTC TOKEN
+	// 获取RTC TOKEN
 	var form request.TwinAgoraToken
 	form.Username = strconv.Itoa(record.ListenerAgoraUid)
 	form.Channel = record.ChannelName
 	token, _ := GetRtcToken(form)
 
 	var formData util.AgoraRecordStartReq
-	//formData.ClientRequest = make(map[string]interface{})
+	// formData.ClientRequest = make(map[string]interface{})
 	formData.ClientRequest.Token = token
 
 	formData.Uid = strconv.Itoa(record.ListenerAgoraUid)
@@ -216,7 +223,7 @@ func TwinAgoraCloudRecordStart(c *gin.Context) {
 		Status:     model.AGORA_CLOUD_RECORD_STATUS_START,
 		ConfigInfo: string(ClientRequestBytes),
 	}
-	//agoraCloudRecord.Id = formData.RecordId
+	// agoraCloudRecord.Id = formData.RecordId
 	err = global.V.Gorm.Where(" id = ?", userFormData.RecordId).Updates(&agoraCloudRecord).Error
 	if err != nil {
 		util.MyPrint("CloudRecordStart gorm updates err:", err)
@@ -241,7 +248,9 @@ func CloudRecordErr(recordId int, agoraCloudRecordRes util.AgoraCloudRecordRes) 
 // @Description 根据上一步获取到的ResourceId，
 // @accept application/json
 // @Security ApiKeyAuth
-// @Param X-Source-Type header string true "来源" default(11)
+// @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
+// @Param X-Project-Id header string true "项目ID" default(6)
+// @Param X-Access header string true "访问KEY" default(imzgoframe)
 // @Produce application/json
 // @Param rid path string true "rid"
 // @Success 200 {object} util.AgoraCloudRecordRes "结果"
@@ -277,8 +286,11 @@ func TwinAgoraCloudRecordQuery(c *gin.Context) {
 // @Description 各种异常情况都最好调一下stop，不然OSS要一直花钱呐....~~~~~
 // @accept application/json
 // @Security ApiKeyAuth
-// @Param X-Source-Type header string true "来源" default(11)
-// @Param rid path string true "rid"
+// @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
+// @Param X-Project-Id header string true "项目ID" default(6)
+// @Param X-Access header string true "访问KEY" default(imzgoframe)
+// @Param rid path string true "resource_id"
+// @Param type path string true "类型"
 // @Produce application/json
 // @Success 200 {object} util.AgoraCloudRecordRes "结果"
 // @Router /twin/agora/cloud/record/stop/{rid}/{type} [GET]
@@ -296,7 +308,7 @@ func TwinAgoraCloudRecordStop(c *gin.Context) {
 	}
 
 	agoraCloudRecordRes, err := GetUtilAgora().CloudRecordStop(strconv.Itoa(record.ListenerAgoraUid), record.ChannelName, record.ResourceId, record.SessionId)
-	//if agoraCloudRecordRes.Code > 0 || agoraCloudRecordRes.HttpCode != 200 {
+	// if agoraCloudRecordRes.Code > 0 || agoraCloudRecordRes.HttpCode != 200 {
 	if agoraCloudRecordRes.Code > 0 {
 		httpresponse.FailWithAll(agoraCloudRecordRes, "失败", c)
 		return
@@ -323,7 +335,9 @@ func TwinAgoraCloudRecordStop(c *gin.Context) {
 // @Description 使用RTM前，动态获取token，然后再登陆声网，才可正常使用声网的功能(token时效是一天，如果存在且未失效正常返回，否则创建新的)
 // @accept application/json
 // @Security ApiKeyAuth
-// @Param X-Source-Type header string true "来源" default(11)
+// @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
+// @Param X-Project-Id header string true "项目ID" default(6)
+// @Param X-Access header string true "访问KEY" default(imzgoframe)
 // @Param data body request.TwinAgoraToken false "基础信息"
 // @Produce application/json
 // @Success 200 {boolean} boolean "true:成功 false:否"
@@ -346,7 +360,7 @@ func TwinAgoraRTMGetToken(c *gin.Context) {
 }
 
 func GetRtmToken(form request.TwinAgoraToken) (token string, err error) {
-	//从redis中获取缓存的token
+	// 从redis中获取缓存的token
 	redisElement, err := global.V.Redis.GetElementByIndex("rtm_token", form.Username)
 	if err != nil {
 		return token, errors.New("GetElementByIndex <rtm_token> err:" + err.Error())
@@ -365,24 +379,24 @@ func GetRtmToken(form request.TwinAgoraToken) (token string, err error) {
 
 	util.MyPrint("create new token.")
 
-	//appID := global.C.Agora.AppId
-	//appCertificate := global.C.Agora.AppCertificate
-	//expiredTs := uint32(util.GetNowTimeSecondToInt() + redisElement.Expire)
-	//result, err := util.RTMBuildToken(appID, appCertificate, form.Username, util.RoleRtmUser, expiredTs)
+	// appID := global.C.Agora.AppId
+	// appCertificate := global.C.Agora.AppCertificate
+	// expiredTs := uint32(util.GetNowTimeSecondToInt() + redisElement.Expire)
+	// result, err := util.RTMBuildToken(appID, appCertificate, form.Username, util.RoleRtmUser, expiredTs)
 	result, err := GetUtilAgora().GetRtmToken(form.Username, 0)
 	if err != nil {
 		return token, errors.New("BuildToken err:" + err.Error())
 	}
-	//if err != nil {
+	// if err != nil {
 	//	return token, errors.New("BuildToken err:" + err.Error())
-	//}
-	//util.MyPrint(result)
-	//token := util.AccessToken{}
-	//token.FromString(result)
-	//if token.Message[util.KLoginRtm] != expiredTs {
+	// }
+	// util.MyPrint(result)
+	// token := util.AccessToken{}
+	// token.FromString(result)
+	// if token.Message[util.KLoginRtm] != expiredTs {
 	//	httpresponse.FailWithMessage("expiredTs:"+err.Error(),c)
 	//	return
-	//}
+	// }
 
 	_, err = global.V.Redis.SetEX(redisElement, result, 0)
 	if err != nil {
@@ -392,7 +406,7 @@ func GetRtmToken(form request.TwinAgoraToken) (token string, err error) {
 }
 
 func GetRtcToken(form request.TwinAgoraToken) (token string, err error) {
-	//从redis中获取缓存的token
+	// 从redis中获取缓存的token
 	redisElement, err := global.V.Redis.GetElementByIndex("rtc_token", form.Username, form.Channel)
 	if err != nil {
 		return token, errors.New("GetElementByIndex <rtc_token> err:" + err.Error())
@@ -424,7 +438,9 @@ func GetRtcToken(form request.TwinAgoraToken) (token string, err error) {
 // @Description  使用RTC前，动态获取token，然后再登陆声网，才可正常使用声网的功能(token时效是一天，如果存在且未失效正常返回，否则创建新的)
 // @accept application/json
 // @Security ApiKeyAuth
-// @Param X-Source-Type header string true "来源" default(11)
+// @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
+// @Param X-Project-Id header string true "项目ID" default(6)
+// @Param X-Access header string true "访问KEY" default(imzgoframe)
 // @Param data body request.TwinAgoraToken false "基础信息"
 // @Produce application/json
 // @Success 200 {boolean} boolean "true:成功 false:否"
@@ -456,7 +472,9 @@ func TwinAgoraRTCGetToken(c *gin.Context) {
 // @Description 将小文件，合并成一个大文件
 // @accept application/json
 // @Security ApiKeyAuth
-// @Param X-Source-Type header string true "来源" default(11)
+// @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
+// @Param X-Project-Id header string true "项目ID" default(6)
+// @Param X-Access header string true "访问KEY" default(imzgoframe)
 // @Param rid path string true "rid"
 // @Produce application/json
 // @Success 200 {boolean} boolean "true:成功 false:否"
@@ -522,9 +540,9 @@ func GenerateCloudVideo(recordId int) (err error) {
 	for _, v := range clientRequestStart.StorageConfig.FileNamePrefix {
 		pathPrefix += v + "/"
 	}
-	//pathPrefix := "agoraRecord/ckck/1660733248/"
+	// pathPrefix := "agoraRecord/ckck/1660733248/"
 
-	//fileManager := global.GetUploadObj(1, "")
+	// fileManager := global.GetUploadObj(1, "")
 	localDiskPath := global.V.DocsManager.GetLocalDiskDownloadBasePath() + "/" + pathPrefix
 	util.MyPrint("pathPrefix:", pathPrefix, " , localDiskPath:", localDiskPath)
 	listObjectsResult, err := global.V.DocsManager.Option.AliOss.OssLs(pathPrefix)
@@ -547,8 +565,8 @@ func GenerateCloudVideo(recordId int) (err error) {
 		ExtName       string
 	}
 	processFileInfoList := []ProcessFileInfo{}
-	//av := []string{}
-	//av := []string{"8b666674134ffc392685e183d4b4e11f_ckck__uid_s_110__uid_e_av.m3u8","8b666674134ffc392685e183d4b4e11f_ckck__uid_s_44446__uid_e_av.m3u8","8b666674134ffc392685e183d4b4e11f_ckck__uid_s_44446__uid_e_av.mpd"}
+	// av := []string{}
+	// av := []string{"8b666674134ffc392685e183d4b4e11f_ckck__uid_s_110__uid_e_av.m3u8","8b666674134ffc392685e183d4b4e11f_ckck__uid_s_44446__uid_e_av.m3u8","8b666674134ffc392685e183d4b4e11f_ckck__uid_s_44446__uid_e_av.mpd"}
 	for _, v := range listObjectsResult.Objects {
 		filePathArr := strings.Split(v.Key, "/")
 		fileName := filePathArr[len(filePathArr)-1]
@@ -589,7 +607,7 @@ func GenerateCloudVideo(recordId int) (err error) {
 			return err
 		}
 	}
-	//util.MyPrint(processFileInfoList)
+	// util.MyPrint(processFileInfoList)
 	lastFiles := make(map[string]string)
 	pathPrefix = pathPrefix[:len(pathPrefix)-1] // 去掉最后的/
 	for _, v := range processFileInfoList {
@@ -630,7 +648,9 @@ func GenerateCloudVideo(recordId int) (err error) {
 // @Description 主要是超时时间的配置，C端需要使用
 // @accept application/json
 // @Security ApiKeyAuth
-// @Param X-Source-Type header string true "来源" default(11)
+// @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
+// @Param X-Project-Id header string true "项目ID" default(6)
+// @Param X-Access header string true "访问KEY" default(imzgoframe)
 // @Produce application/json
 // @Success 200 {boolean} boolean "true:成功 false:否"
 // @Router /twin/agora/config [GET]
@@ -650,7 +670,9 @@ func TwinAgoraConfig(c *gin.Context) {
 // @Description 如：房间、用户连接状态等
 // @accept application/json
 // @Security ApiKeyAuth
-// @Param X-Source-Type header string true "来源" default(11)
+// @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
+// @Param X-Project-Id header string true "项目ID" default(6)
+// @Param X-Access header string true "访问KEY" default(imzgoframe)
 // @Produce application/json
 // @Success 200 {boolean} boolean "true:成功 false:否"
 // @Router /twin/agora/socket/tools [GET]
@@ -667,12 +689,14 @@ func TwinAgoraSocketTools(c *gin.Context) {
 // @Description 如：发送标注图次数、发送图片次数、发送视频次数
 // @accept application/json
 // @Security ApiKeyAuth
-// @Param X-Source-Type header string true "来源" default(11)
+// @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
+// @Param X-Project-Id header string true "项目ID" default(6)
+// @Param X-Access header string true "访问KEY" default(imzgoframe)
 // @Param start_time path string true "start_time"
 // @Param end_time path string true "end_time"
 // @Produce application/json
 // @Success 200 {boolean} boolean "true:成功 false:否"
-// @Router /twin/agora/statistics/event/alls [GET]
+// @Router /twin/agora/statistics/event/all [GET]
 func TwinAgoraStatisticsEventAll(c *gin.Context) {
 	startTime := c.Query("start_time")
 	endTime := c.Query("end_time")

@@ -12,16 +12,17 @@ import (
 // @Summary 发送一条站内信
 // @Description 注意参数
 // @Security ApiKeyAuth
-// @Param X-Source-Type header string true "来源" default(11)
+// @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
+// @Param X-Project-Id header string true "项目ID" default(6)
+// @Param X-Access header string true "访问KEY" default(imzgoframe)
 // @accept application/json
-// @Security ApiKeyAuth
 // @Param data body request.SendMail true "参数信息,参考model"
 // @Success 200 {boolean} boolean "true:成功 false:否"
 // @Router /mail/send [post]
 func MailSend(c *gin.Context) {
 	var form request.SendMail
 	_ = c.ShouldBind(&form)
-	//projectId, _ := request.GetProjectId(c)
+	// projectId, _ := request.GetProjectId(c)
 	recordNewId, err := global.V.MyService.Mail.Send(form)
 	if err != nil {
 		httpresponse.FailWithMessage("失败了："+err.Error(), c)
@@ -34,16 +35,17 @@ func MailSend(c *gin.Context) {
 // @Summary 获取用户站内信列表
 // @Description 注意参数
 // @Security ApiKeyAuth
-// @Param X-Source-Type header string true "来源" default(11)
+// @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
+// @Param X-Project-Id header string true "项目ID" default(6)
+// @Param X-Access header string true "访问KEY" default(imzgoframe)
 // @accept application/json
-// @Security ApiKeyAuth
 // @Param data body request.MailList true "参数信息,参考model"
 // @Success 200 {object} []model.MailLog
 // @Router /mail/list [post]
 func MailList(c *gin.Context) {
 	var form request.MailList
 	_ = c.ShouldBind(&form)
-	//projectId, _ := request.GetProjectId(c)
+	// projectId, _ := request.GetProjectId(c)
 	uid, _ := request.GetUid(c)
 	mailList, err := global.V.MyService.Mail.GetUserListByUid(uid, form)
 	if err != nil {
@@ -57,9 +59,10 @@ func MailList(c *gin.Context) {
 // @Summary 获取用户一条信息的详情
 // @Description 注意参数
 // @Security ApiKeyAuth
-// @Param X-Source-Type header string true "来源" default(11)
+// @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
+// @Param X-Project-Id header string true "项目ID" default(6)
+// @Param X-Access header string true "访问KEY" default(imzgoframe)
 // @accept application/json
-// @Security ApiKeyAuth
 // @Param data body request.MailInfo true "参数信息,参考model"
 // @Success 200 {object} model.MailLog
 // @Router /mail/info [post]
@@ -79,9 +82,10 @@ func MailInfo(c *gin.Context) {
 // @Summary 站内信未读总数
 // @Description 注意参数
 // @Security ApiKeyAuth
-// @Param X-Source-Type header string true "来源" default(11)
+// @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
+// @Param X-Project-Id header string true "项目ID" default(6)
+// @Param X-Access header string true "访问KEY" default(imzgoframe)
 // @accept application/json
-// @Security ApiKeyAuth
 // @Success 200 {integer} int "155"
 // @Router /mail/unread [get]
 func MailUnread(c *gin.Context) {

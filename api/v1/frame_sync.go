@@ -15,7 +15,9 @@ import (
 // @Description  配置信息
 // @Security ApiKeyAuth
 // @accept application/json
-// @Param X-Source-Type header string true "来源" default(11)
+// @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
+// @Param X-Project-Id header string true "项目ID" default(6)
+// @Param X-Access header string true "访问KEY" default(imzgoframe)
 // @Produce application/json
 // @Success 200 {boolean} true "true:成功 false:否"
 // @Router /frame/sync/config [get]
@@ -30,6 +32,8 @@ func FrameSyncConfig(c *gin.Context) {
 // @Security ApiKeyAuth
 // @accept application/json
 // @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
+// @Param X-Project-Id header string true "项目ID" default(6)
+// @Param X-Access header string true "访问KEY" default(imzgoframe)
 // @Param data body request.FrameSyncRoomHistory true "基础信息"
 // @Produce  application/json
 // @Success 200 {object} request.FrameSyncRoomHistory
@@ -38,8 +42,8 @@ func FrameSyncRoomHistory(c *gin.Context) {
 	bodyByts, _ := ioutil.ReadAll(c.Request.Body)
 	form := request.FrameSyncRoomHistory{}
 	json.Unmarshal(bodyByts, &form)
-	//var form request.FrameSyncRoomHistory
-	//c.ShouldBind(&form)
+	// var form request.FrameSyncRoomHistory
+	// c.ShouldBind(&form)
 
 	util.MyPrint("=======------", form)
 

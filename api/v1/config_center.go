@@ -14,6 +14,7 @@ import (
 // @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
 // @Param X-Project-Id header string true "项目ID" default(6)
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
+// @Param X-Second-Auth-Uname header string true "二次验证-用户名" default(test)
 // @Param X-Second-Auth-Ps header string true "二次验证-密码" default(qweASD1234560)
 // @Param X-Client-Req-Time header string true "客户端请求时间unix" default(1648277052)
 // @Param data body request.ConfigCenterOpt true "请求参数"
@@ -25,7 +26,7 @@ func ConfigCenterGetByModule(c *gin.Context) {
 	var form request.ConfigCenterOpt
 	c.ShouldBind(&form)
 
-	//moduleName  := c.Param("name")
+	// moduleName  := c.Param("name")
 	configInfo, err := global.V.MyService.ConfigCenter.GetByModule(form.Env, projectId, form.Module)
 	if err != nil {
 		httpresponse.FailWithMessage(err.Error(), c)
@@ -41,6 +42,7 @@ func ConfigCenterGetByModule(c *gin.Context) {
 // @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
 // @Param X-Project-Id header string true "项目ID" default(6)
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
+// @Param X-Second-Auth-Uname header string true "二次验证-用户名" default(test)
 // @Param X-Second-Auth-Ps header string true "二次验证-密码" default(qweASD1234560)
 // @Param X-Client-Req-Time header string true "客户端请求时间unix" default(1648277052)
 // @Param data body request.ConfigCenterOpt true "请求参数"
@@ -67,6 +69,7 @@ func ConfigCenterGetByModuleByKey(c *gin.Context) {
 // @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
 // @Param X-Project-Id header string true "项目ID" default(6)
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
+// @Param X-Second-Auth-Uname header string true "二次验证-用户名" default(test)
 // @Param X-Second-Auth-Ps header string true "二次验证-密码" default(qweASD1234560)
 // @Param X-Client-Req-Time header string true "客户端请求时间unix" default(1648277052)
 // @Param data body request.ConfigCenterOpt true "请求参数"
@@ -78,7 +81,7 @@ func ConfigCenterSetByModuleByKey(c *gin.Context) {
 	var form request.ConfigCenterOpt
 	c.ShouldBind(&form)
 
-	//util.MyPrint("set key form:",form.Env,form.Module,form.Value)
+	// util.MyPrint("set key form:",form.Env,form.Module,form.Value)
 
 	err := global.V.MyService.ConfigCenter.SetByKey(form.Env, projectId, form.Module, form.Key, form.Value)
 	if err != nil {
@@ -94,6 +97,7 @@ func ConfigCenterSetByModuleByKey(c *gin.Context) {
 // @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
 // @Param X-Project-Id header string true "项目ID" default(6)
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
+// @Param X-Second-Auth-Uname header string true "二次验证-用户名" default(test)
 // @Param X-Second-Auth-Ps header string true "二次验证-密码" default(qweASD1234560)
 // @Param X-Client-Req-Time header string true "客户端请求时间unix" default(1648277052)
 // @Param data body request.ConfigCenterOpt true "请求参数"

@@ -105,6 +105,7 @@ func CicdSuperVisorList(c *gin.Context) {
 // @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
 // @Param X-Project-Id header string true "项目ID" default(6)
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
+// @Param X-Second-Auth-Uname header string true "二次验证-用户名" default(test)
 // @Param X-Second-Auth-Ps header string true "二次验证-密码" default(qweASD1234560)
 // @Param X-Client-Req-Time header string true "客户端请求时间unix" default(1648277052)
 // @Param data body request.CicdDeploy true "用户信息"
@@ -130,6 +131,7 @@ func CicdSuperVisorProcess(c *gin.Context) {
 // @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
 // @Param X-Project-Id header string true "项目ID" default(6)
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
+// @Param X-Second-Auth-Uname header string true "二次验证-用户名" default(test)
 // @Param X-Second-Auth-Ps header string true "二次验证-密码" default(qweASD1234560)
 // @Param X-Client-Req-Time header string true "客户端请求时间unix" default(1648277052)
 // @Param id path string true "publish id"
@@ -170,6 +172,7 @@ func CicdServicePublish(c *gin.Context) {
 // @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
 // @Param X-Project-Id header string true "项目ID" default(6)
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
+// @Param X-Second-Auth-Uname header string true "二次验证-用户名" default(test)
 // @Param X-Second-Auth-Ps header string true "二次验证-密码" default(qweASD1234560)
 // @Param X-Client-Req-Time header string true "客户端请求时间unix" default(1648277052)
 // @Param data body request.CicdDeploy true "用户信息"

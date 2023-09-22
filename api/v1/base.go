@@ -393,6 +393,8 @@ func Login(c *gin.Context) {
 	var L request.Login
 	c.ShouldBind(&L)
 
+	util.MyPrint(L)
+
 	failedCnt, checkLoginFailedCntErr := global.V.MyService.User.CheckLoginFailedLimit(c.ClientIP(), L.Username, global.C.Login.MaxFailedCnt, global.C.Login.FailedLimitTime)
 	if checkLoginFailedCntErr != nil {
 		// httpresponse.FailWithMessage(checkLoginFailedCntErr.Error(), c)

@@ -216,6 +216,7 @@ func (cicdManager *CicdManager) SuperVisorProcess(form request.CicdSuperVisor) (
 }
 
 // 浏览器会请求此函数，拿到所有服务器和服务列表，用于部署
+// 此方法较慢，因为要 ping 服务器。还要 连接 superVisor
 func (cicdManager *CicdManager) LocalAllServerServiceList() (list LocalServerServiceList, err error) {
 	list.ServiceList = make(map[int]model.Project)
 	list.ServerList = make(map[int]util.Server)
@@ -239,7 +240,7 @@ func (cicdManager *CicdManager) LocalAllServerServiceList() (list LocalServerSer
 	instanceManager := cicdManager.Option.InstanceManager
 
 	for _, server := range cicdManager.Option.ServerList {
-		// 先ping 一下，确实该服务器网络正常
+		// 先ping 一下，确定该服务器网络正常
 		argsmap := map[string]interface{}{}
 		p := util.NewPingOption()
 		err = p.Ping3(server.OutIp, argsmap)

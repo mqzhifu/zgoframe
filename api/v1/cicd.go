@@ -192,7 +192,6 @@ func CicdServiceDeploy(c *gin.Context) {
 	// } else {
 	//	httpresponse.OkWithAll("aaaa", "成功", c)
 	// }
-
 }
 
 // func CicdLocalSyncTarget(c *gin.Context) {

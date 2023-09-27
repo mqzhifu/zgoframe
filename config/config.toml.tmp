@@ -186,6 +186,16 @@ port    = "#push_gateway_port#"
 
 [cicd]
 status  = "close"
+env=["local","dev","test","pre","online"]
+logDir="/data/logs/cicd" #本机/远端，目录
+workBaseDir= "/data/cicd" #本机进行cicd部署时的：根目录
+remoteBaseDir = "/opt/cicd" #本地部署成功后，会往远端同步代码，这里是远端服务器存放代码的目录
+remoteUploadDir = "/opt/cicd/file_upload"
+remoteDownloadDir = "/opt/cicd/file_download"
+masterDirName = "master"
+gitCloneTmpDirName="clone"
+httpPort="4455"
+
 
 #阿里云静态文件存储
 [aliOss]
@@ -210,3 +220,23 @@ appCertificate  = "#agora_ps#"
 HttpKey         = "#agora_aaa#"
 HttpSecret      = "#agora_bbb#"
 domain          = "https://api.agora.io/v1/apps/"
+
+
+[superVisor]
+#rpcPort="9988"
+rpcPort="9002"
+#confTemplateFile="/data/www/golang/src/zgoframe/operation/super_visor.ini" #暂时用相对路径，方便CICD
+confTemplateFile="super_visor.ini"#所有项目的通用配置文件，在本项目中
+#confDir="/usr/local/etc/"
+#confDir="/etc/supervisor"
+confDir="D:/project/cicd/super_visor"
+
+
+[service]
+sms             = "open"
+user            = "open"
+email           = "open"
+configCenter    = "open"
+twinAgora       = "open"
+gameMatch       = "close"
+frameSync       = "close"

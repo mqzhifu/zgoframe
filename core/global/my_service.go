@@ -50,87 +50,10 @@ func NewMyService() *MyService {
 		Flag:             service.REQ_SERVICE_METHOD_NATIVE,
 		Log:              V.Zap,
 	}
+	myService.AliSms = V.AliSms
 	// 服务之间互相调用
 	myService.ServiceBridge, _ = service.NewBridge(ServiceBridgeOp)
-	// 用户服务
-	myService.User = user_center.NewUser(V.Gorm, V.Redis, V.ProjectMng)
-	// 站内信服务
-	myService.Mail = msg_center.NewMail(V.Gorm, V.Zap)
-	// 短信服务
-	myService.Sms = msg_center.NewSms(V.Gorm, V.AliSms, V.Zap)
-	// 电子邮件服务
-	myService.Email = msg_center.NewEmail(V.Gorm, V.Email)
-	myService.AliSms = V.AliSms
-	// 配置中心服务
-	configCenterOption := config_center.ConfigCenterOption{
-		EnvList:            util.GetConstListEnv(),
-		Gorm:               V.Gorm,
-		Redis:              V.Redis,
-		ProjectManager:     V.ProjectMng,
-		PersistenceType:    service.PERSISTENCE_TYPE_FILE,
-		PersistenceFileDir: C.Http.StaticPath + "/" + C.ConfigCenter.DataPath,
-		StaticFileSystem:   V.StaticFileSystem,
-		Log:                V.Zap,
-	}
-	myService.ConfigCenter, err = config_center.NewConfigCenter(configCenterOption)
-	if err != nil {
-		util.ExitPrint("NewConfigCenter err:" + err.Error())
-	}
-	// 远程呼叫专家
-	twinAgoraOption := seed_business.TwinAgoraOption{
-		Log:        V.Zap,
-		Gorm:       V.Gorm,
-		StaticPath: C.Http.StaticPath,
-		ProtoMap:   V.ProtoMap,
-		// RequestServiceAdapter: myService.RequestServiceAdapter,
-		ServiceBridge:    myService.ServiceBridge,
-		StaticFileSystem: V.StaticFileSystem,
-	}
-	myService.TwinAgora, err = seed_business.NewTwinAgora(twinAgoraOption)
-	if err != nil {
-		util.ExitPrint(err)
-	}
-
-	// 长连接通信 - 配置
-	netWayOption := util.NetWayOption{
-		ListenIp:            C.Gateway.ListenIp,     // 程序启动时监听的IP
-		OutIp:               C.Gateway.OutIp,        // 对外访问的IP
-		OutDomain:           C.Gateway.OutDomain,    // 对外的域名,WS在线上得用wss
-		WsPort:              C.Gateway.WsPort,       // 监听端口号
-		TcpPort:             C.Gateway.TcpPort,      // 监听端口号
-		UdpPort:             C.Gateway.UdpPort,      // UDP端口号
-		WsUri:               C.Gateway.WsUri,        // 接HOST的后面的URL地址
-		DefaultProtocolType: GateDefaultProtocol,    // 兼容协议：ws tcp udp
-		DefaultContentType:  GateDefaultContentType, // 默认内容格式 ：json protobuf
-		LoginAuthType:       "jwt",                  // 登陆验证类型-jwt
-		LoginAuthSecretKey:  C.Jwt.Key,              // 登陆验证-key
-		MaxClientConnNum:    1024,                   // 客户端最大连接数
-		MsgContentMax:       10240,                  // 一条消息内容最大值
-		IOTimeout:           3,                      // read write sock fd 超时时间
-		ConnTimeout:         60,                     // 一个FD超时时间
-		ClientHeartbeatTime: 3,                      // 客户端心跳时间(秒)
-		ServerHeartbeatTime: 5,                      // 服务端心跳时间(秒)
-		ProtoMap:            V.ProtoMap,             // protobuf 映射表
-		GrpcManager:         V.GrpcManager,
-		Log:                 V.Zap,
-		Gorm:                V.Gorm,
-	}
-	// CreateGameService(myService)
-	// 网关
-	if C.Gateway.Status == "open" {
-		// gateway := gateway.NewGateway(V.GrpcManager, V.Zap, myService.RequestServiceAdapter)
-		// gateway.MyServiceList.GameMatch = myService.GameMatch
-		// gateway.MyServiceList.FrameSync = myService.FrameSync
-		// gateway.MyServiceList.TwinAgora = myService.TwinAgora
-		gateway := gateway.NewGateway(V.GrpcManager, V.Zap, myService.ServiceBridge)
-		myService.Gateway = gateway
-
-		_, err := gateway.StartSocket(netWayOption)
-		if err != nil {
-			util.ExitPrint("InitGateway err:" + err.Error())
-		}
-	}
-
+	// 预警推送
 	alertOption := msg_center.AlertOption{
 		SendMsgChannel:    C.Alert.SendMsgChannel,
 		MsgTemplateRuleId: C.Alert.MsgTemplateRuleId,
@@ -145,9 +68,152 @@ func NewMyService() *MyService {
 
 	myService.Alert, _ = msg_center.NewAlert(alertOption)
 
-	// myService.Cicd, err = InitCicd()
+	if C.Service.User == "open" {
+		// 用户服务
+		myService.User = user_center.NewUser(V.Gorm, V.Redis, V.ProjectMng)
+	}
+	if C.Service.Email == "open" {
+		// 站内信服务
+		myService.Mail = msg_center.NewMail(V.Gorm, V.Zap)
+	}
+	if C.Service.Sms == "open" {
+		// 短信服务
+		myService.Sms = msg_center.NewSms(V.Gorm, V.AliSms, V.Zap)
+	}
+	if C.Service.Email == "open" {
+		// 电子邮件服务
+		myService.Email = msg_center.NewEmail(V.Gorm, V.Email)
+	}
 
-	// myService.RegisterService()
+	if C.Service.Email == "open" {
+		// 配置中心服务
+		configCenterOption := config_center.ConfigCenterOption{
+			EnvList:            util.GetConstListEnv(),
+			Gorm:               V.Gorm,
+			Redis:              V.Redis,
+			ProjectManager:     V.ProjectMng,
+			PersistenceType:    service.PERSISTENCE_TYPE_FILE,
+			PersistenceFileDir: C.Http.StaticPath + "/" + C.ConfigCenter.DataPath,
+			StaticFileSystem:   V.StaticFileSystem,
+			Log:                V.Zap,
+		}
+		myService.ConfigCenter, err = config_center.NewConfigCenter(configCenterOption)
+		if err != nil {
+			util.ExitPrint("NewConfigCenter err:" + err.Error())
+		}
+	}
+	if C.Service.TwinAgora == "open" {
+		// 远程呼叫专家
+		twinAgoraOption := seed_business.TwinAgoraOption{
+			Log:        V.Zap,
+			Gorm:       V.Gorm,
+			StaticPath: C.Http.StaticPath,
+			ProtoMap:   V.ProtoMap,
+			// RequestServiceAdapter: myService.RequestServiceAdapter,
+			ServiceBridge:    myService.ServiceBridge,
+			StaticFileSystem: V.StaticFileSystem,
+		}
+		myService.TwinAgora, err = seed_business.NewTwinAgora(twinAgoraOption)
+		if err != nil {
+			util.ExitPrint(err)
+		}
+	}
+	// 网关
+	if C.Gateway.Status == "open" {
+		// 长连接通信 - 配置
+		netWayOption := util.NetWayOption{
+			ListenIp:            C.Gateway.ListenIp,     // 程序启动时监听的IP
+			OutIp:               C.Gateway.OutIp,        // 对外访问的IP
+			OutDomain:           C.Gateway.OutDomain,    // 对外的域名,WS在线上得用wss
+			WsPort:              C.Gateway.WsPort,       // 监听端口号
+			TcpPort:             C.Gateway.TcpPort,      // 监听端口号
+			UdpPort:             C.Gateway.UdpPort,      // UDP端口号
+			WsUri:               C.Gateway.WsUri,        // 接HOST的后面的URL地址
+			DefaultProtocolType: GateDefaultProtocol,    // 兼容协议：ws tcp udp
+			DefaultContentType:  GateDefaultContentType, // 默认内容格式 ：json protobuf
+			LoginAuthType:       "jwt",                  // 登陆验证类型-jwt
+			LoginAuthSecretKey:  C.Jwt.Key,              // 登陆验证-key
+			MaxClientConnNum:    1024,                   // 客户端最大连接数
+			MsgContentMax:       10240,                  // 一条消息内容最大值
+			IOTimeout:           3,                      // read write sock fd 超时时间
+			ConnTimeout:         60,                     // 一个FD超时时间
+			ClientHeartbeatTime: 3,                      // 客户端心跳时间(秒)
+			ServerHeartbeatTime: 5,                      // 服务端心跳时间(秒)
+			ProtoMap:            V.ProtoMap,             // protobuf 映射表
+			GrpcManager:         V.GrpcManager,
+			Log:                 V.Zap,
+			Gorm:                V.Gorm,
+		}
+
+		// gateway := gateway.NewGateway(V.GrpcManager, V.Zap, myService.RequestServiceAdapter)
+		// gateway.MyServiceList.GameMatch = myService.GameMatch
+		// gateway.MyServiceList.FrameSync = myService.FrameSync
+		// gateway.MyServiceList.TwinAgora = myService.TwinAgora
+		gateway := gateway.NewGateway(V.GrpcManager, V.Zap, myService.ServiceBridge)
+		myService.Gateway = gateway
+
+		_, err := gateway.StartSocket(netWayOption)
+		if err != nil {
+			util.ExitPrint("InitGateway err:" + err.Error())
+		}
+	}
+	if C.Service.FrameSync == "open" {
+		// 帧同步 - 房间服务 - room要先实例化,math frame_sync 都强依赖room
+		frameSyncOption := frame_sync.FrameSyncOption{
+			LockMode:      service.LOCK_MODE_PESSIMISTIC,
+			Store:         1,
+			Log:           V.Zap,
+			ServiceBridge: myService.ServiceBridge,
+			// RequestServiceAdapter: myService.RequestServiceAdapter,
+			OffLineWaitTime: 10,
+			Gorm:            V.Gorm,
+			ProtoMap:        V.ProtoMap,
+		}
+		myService.FrameSync = frame_sync.NewFrameSync(frameSyncOption)
+	}
+
+	if C.Service.GameMatch == "open" {
+		// 匹配服务 , 依赖 RoomManage
+		// matchOption := service.MatchOption{
+		//	RequestServiceAdapter: myService.RequestServiceAdapter,
+		//	Log:                   V.Zap,
+		//	RoomManager:           myService.RoomManage,
+		//	//MatchSuccessChan chan *Room
+		// }
+		// 匹配服务，这个是假的，或者说简易版本，用于快速测试
+		// myService.Match = service.NewMatch(matchOption)
+
+		// 这个是真的匹配服务
+		gmOp := gamematch.GameMatchOption{
+			// RequestServiceAdapter:  myService.RequestServiceAdapter,
+			ServiceBridge:          myService.ServiceBridge,
+			Log:                    V.Zap,
+			Redis:                  V.RedisGo,
+			Gorm:                   V.Gorm,
+			Metrics:                V.Metric,
+			ServiceDiscovery:       V.ServiceDiscovery,
+			RuleDataSourceType:     service.GAME_MATCH_DATA_SOURCE_TYPE_DB,
+			StaticPath:             C.Http.StaticPath,
+			RedisPrefix:            "gm",
+			RedisKeySeparator:      "_",
+			RedisTextSeparator:     "#",
+			FrameSync:              myService.FrameSync,
+			RedisIdSeparator:       ",",
+			RedisPayloadSeparation: "%",
+			ProtoMap:               V.ProtoMap,
+			StaticFileSystem:       V.StaticFileSystem,
+		}
+		myService.GameMatch, err = gamematch.NewGameMatch(gmOp)
+		if err != nil {
+			util.ExitPrint("NewGameMatch err:", err)
+		}
+	}
+
+	if C.Cicd.Status == "open" {
+		myService.Cicd, err = InitCicd()
+	}
+
+	myService.RegisterService()
 
 	return myService
 }
@@ -199,81 +265,46 @@ func (myService *MyService) RegisterService() {
 	}
 }
 
-// 游戏类的服务,一个游戏至少得有：房间、匹配、帧同步
-func CreateGameService(myService *MyService) (err error) {
-	// 帧同步 - 房间服务 - room要先实例化,math frame_sync 都强依赖room
-	frameSyncOption := frame_sync.FrameSyncOption{
-		LockMode:      service.LOCK_MODE_PESSIMISTIC,
-		Store:         1,
-		Log:           V.Zap,
-		ServiceBridge: myService.ServiceBridge,
-		// RequestServiceAdapter: myService.RequestServiceAdapter,
-		OffLineWaitTime: 10,
-		Gorm:            V.Gorm,
-		ProtoMap:        V.ProtoMap,
-	}
-	myService.FrameSync = frame_sync.NewFrameSync(frameSyncOption)
-
-	// 匹配服务 , 依赖 RoomManage
-	// matchOption := service.MatchOption{
-	//	RequestServiceAdapter: myService.RequestServiceAdapter,
-	//	Log:                   V.Zap,
-	//	RoomManager:           myService.RoomManage,
-	//	//MatchSuccessChan chan *Room
-	// }
-	// 匹配服务，这个是假的，或者说简易版本，用于快速测试
-	// myService.Match = service.NewMatch(matchOption)
-
-	// 这个是真的匹配服务
-	gmOp := gamematch.GameMatchOption{
-		// RequestServiceAdapter:  myService.RequestServiceAdapter,
-		ServiceBridge:          myService.ServiceBridge,
-		Log:                    V.Zap,
-		Redis:                  V.RedisGo,
-		Gorm:                   V.Gorm,
-		Metrics:                V.Metric,
-		ServiceDiscovery:       V.ServiceDiscovery,
-		RuleDataSourceType:     service.GAME_MATCH_DATA_SOURCE_TYPE_DB,
-		StaticPath:             C.Http.StaticPath,
-		RedisPrefix:            "gm",
-		RedisKeySeparator:      "_",
-		RedisTextSeparator:     "#",
-		FrameSync:              myService.FrameSync,
-		RedisIdSeparator:       ",",
-		RedisPayloadSeparation: "%",
-		ProtoMap:               V.ProtoMap,
-		StaticFileSystem:       V.StaticFileSystem,
-	}
-	myService.GameMatch, err = gamematch.NewGameMatch(gmOp)
-	if err != nil {
-		util.ExitPrint("NewGameMatch err:", err)
-	}
-
-	return nil
-}
-
 func InitCicd() (*cicd.CicdManager, error) {
-	// util.MyPrint(ServiceList)
 	/*依赖
 	host.toml cicd.sh
 	table:  project instance server cicd_publish
 	*/
 
-	opDirFull := MainEnv.RootDir + "/" + C.System.OpDirName
+	// opDirFull := MainEnv.RootDir + "/" + C.System.OpDirName
 	cicdConfig := cicd.ConfigCicd{}
 	cicdConfig.System.RootDir = MainEnv.RootDir
 	// 运维：服务器的配置信息
-	configFile := opDirFull + "/host" + "." + "toml"
+	// configFile := opDirFull + "/host" + "." + "toml"
+	//
+	// // 读取配置文件中的内容
+	// err := util.ReadConfFile(configFile, &cicdConfig)
+	// if err != nil {
+	// 	util.ExitPrint(err.Error())
+	// }
 
-	// 读取配置文件中的内容
-	err := util.ReadConfFile(configFile, &cicdConfig)
-	if err != nil {
-		util.ExitPrint(err.Error())
+	cicdConfig.SuperVisor = cicd.ConfigCicdSuperVisor{
+		RpcPort:          C.SuperVisor.RpcPort,
+		ConfTemplateFile: C.SuperVisor.ConfTemplateFile,
+		ConfDir:          C.SuperVisor.ConfDir,
 	}
+
+	cicdConfig.System = cicd.ConfigCicdSystem{
+		Env:                C.Cicd.Env,
+		LogDir:             C.Cicd.LogDir,
+		WorkBaseDir:        C.Cicd.WorkBaseDir,
+		RemoteBaseDir:      C.Cicd.RemoteBaseDir,
+		RemoteUploadDir:    C.Cicd.RemoteUploadDir,
+		RemoteDownloadDir:  C.Cicd.RemoteDownloadDir,
+		MasterDirName:      C.Cicd.MasterDirName,
+		GitCloneTmpDirName: C.Cicd.GitCloneTmpDirName,
+		HttpPort:           C.Cicd.HttpPort,
+	}
+
 	cicdConfig.SuperVisor.ConfTemplateFileName = cicdConfig.SuperVisor.ConfTemplateFile
 	cicdConfig.SuperVisor.ConfTemplateFile = MainEnv.RootDir + "/" + C.System.OpDirName + "/" + cicdConfig.SuperVisor.ConfTemplateFile
 
-	V.Zap.Debug("InitCicd HostConfigFile:" + configFile + " ConfTemplateFile:" + cicdConfig.SuperVisor.ConfTemplateFile)
+	V.Zap.Debug(" ConfTemplateFile:" + cicdConfig.SuperVisor.ConfTemplateFile)
 	// util.PrintStruct(cicdConfig , " : ")
 
 	// 3方实例

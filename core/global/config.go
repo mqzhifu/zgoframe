@@ -28,8 +28,10 @@ type Config struct {
 	Domain           Domain
 	AliSms           AliSms
 	Login            Login
-	//Casbin           Casbin
-	//Upload           Upload
+	Service          Service
+	SuperVisor       SuperVisor
+	// Casbin           Casbin
+	// Upload           Upload
 }
 
 type Login struct {
@@ -62,10 +64,19 @@ type Mysql struct {
 }
 
 type Cicd struct {
-	Status string
+	Status             string
+	Env                []string
+	LogDir             string
+	WorkBaseDir        string
+	RemoteBaseDir      string
+	RemoteUploadDir    string
+	RemoteDownloadDir  string
+	MasterDirName      string
+	GitCloneTmpDirName string
+	HttpPort           string
 }
 
-//type MysqlConfig struct {
+// type MysqlConfig struct {
 //	Ip           string
 //	Port         string
 //	Config       string
@@ -76,7 +87,7 @@ type Cicd struct {
 //	MaxOpenConns int
 //	LogMode      bool
 //	LogZap       bool
-//}
+// }
 
 type Http struct {
 	Status         string
@@ -125,8 +136,8 @@ type Zap struct {
 	AutoAlert     bool
 	StacktraceKey string
 	LogInConsole  bool
-	ModuleName    string //使用设定，不在配置文件中
-	FileName      string //使用设定，不在配置文件中
+	ModuleName    string // 使用设定，不在配置文件中
+	FileName      string // 使用设定，不在配置文件中
 }
 
 type Captcha struct {
@@ -144,10 +155,10 @@ type Redis struct {
 	Password string
 }
 
-//type Casbin struct {
+// type Casbin struct {
 //	Status    string
 //	ModelPath string
-//}
+// }
 
 type Etcd struct {
 	Status   string
@@ -233,10 +244,10 @@ type FileManager struct {
 	DownloadMaxSize          int
 }
 
-//type Upload struct {
+// type Upload struct {
 //	Path    string
 //	MaxSize int
-//}
+// }
 
 type AliOss struct {
 	Status          string
@@ -266,4 +277,21 @@ type Agora struct {
 type Domain struct {
 	Static   string
 	Protocol string
+}
+
+type Service struct {
+	Sms          string
+	User         string
+	Email        string
+	ConfigCenter string
+	TwinAgora    string
+	GameMatch    string
+	FrameSync    string
+	Cicd         string
+}
+
+type SuperVisor struct {
+	RpcPort          string
+	ConfTemplateFile string
+	ConfDir          string
 }

@@ -287,6 +287,8 @@ func InitCicd() (*cicd.CicdManager, error) {
 		RpcPort:          C.SuperVisor.RpcPort,
 		ConfTemplateFile: C.SuperVisor.ConfTemplateFile,
 		ConfDir:          C.SuperVisor.ConfDir,
+		Username:         C.SuperVisor.Username,
+		Password:         C.SuperVisor.Password,
 	}
 
 	cicdConfig.System = cicd.ConfigCicdSystem{

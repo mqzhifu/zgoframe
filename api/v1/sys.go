@@ -97,7 +97,7 @@ func CheckID(form request.SystemConfig) bool {
 // @Param X-Client-Req-Time header string true "客户端请求时间unix" default(1648277052)
 // @Produce  application/json
 // @Success 200 {string} string "成功"
-// @Router /sys/config [post]
+// @Router /sys/alert [post]
 func Alert(c *gin.Context) {
 	// alertMsg := util.AlertMsg{}
 	// var formData request.SystemConfig

@@ -69,6 +69,8 @@ type ConfigServiceCICD struct {
 
 type ConfigCicdSuperVisor struct {
 	RpcPort              string
+	Username             string
+	Password             string
 	ConfTemplateFile     string
 	ConfTemplateFileName string
 	ConfDir              string
@@ -325,10 +327,12 @@ func (cicdManager *CicdManager) GetSuperVisorList() (list ServerServiceSuperViso
 		fmt.Println("for each service , outIp:" + server.OutIp + " env:" + strconv.Itoa(server.Env))
 		// 创建实例
 		superVisorOption := util.SuperVisorOption{
-			Ip:       server.OutIp,
-			RpcPort:  cicdManager.Option.Config.SuperVisor.RpcPort,
-			Username: "ckadmin",
-			Password: "ckckarar",
+			Ip:      server.OutIp,
+			RpcPort: cicdManager.Option.Config.SuperVisor.RpcPort,
+			// Username: "ckadmin",
+			// Password: "ckckarar",
+			Username: "admin",
+			Password: "1234",
 		}
 		serviceSuperVisor, err := util.NewSuperVisor(superVisorOption)
 		if err != nil {

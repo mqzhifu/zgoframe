@@ -17,7 +17,7 @@ protocol = "#protocol#" #域名的HTTP协议
 [jwt]
 status      = "open"
 key         = "chukong"
-expiresTime = 360000
+expiresTime = 360000 #100小时(60 * 60 * 100 )
 
 #读取配置文件的一个插件
 [viper]
@@ -230,6 +230,8 @@ confTemplateFile="super_visor.ini"#所有项目的通用配置文件，在本项
 #confDir="/usr/local/etc/"
 #confDir="/etc/supervisor"
 confDir="D:/project/cicd/super_visor"
+username="admin"
+password="1234"
 
 
 [service]

@@ -46,6 +46,7 @@ var initializeVar *initialize.Initialize
 // @description 注：99%的请求内容格式均是JSON(暂不支持兼容json+html-form)，只有上传文件例外(html+form)
 // @description 注：所有接口均支持：跨域请求
 // @description 注：所有接口的响应格式均是json格式 ，包含3个值: code data msg ,具体参考 model.httpresponse.Response
+// @description 注：win 开发有点差别，得加几个  信号处理
 // @description 测试/开发人员：用户已上传的图片，查看，<a href="http://static.seedreality.com/upload/" target="_blank">点这里</a>
 // @description 测试/开发人员：配置中心的文件，查看，<a href="http://static.seedreality.com/data/config/" target="_blank">点这里</a>
 // @description 后台UI：<a href="http://admin.seedreality.com" target="_blank">点这里</a>
@@ -87,23 +88,23 @@ var initializeVar *initialize.Initialize
 // @in header
 
 func main() {
-	//编译打进去的两个参数：BuildTime 编译时间，编译的 git 版本号
+	// 编译打进去的两个参数：BuildTime 编译时间，编译的 git 版本号
 	util.MyPrint("code , BuildTime:", BuildTime, " BuildGitVersion:", BuildGitVersion)
-	//日志前缀
+	// 日志前缀
 	prefix := "main "
-	//处理指令行的参数
+	// 处理指令行的参数
 	cmdParameter := processCmdParameter(prefix)
 	util.MyPrint("cmdParameter")
 	util.PrintStruct(cmdParameter, ":")
-	//util.MyPrint(prefix+" cmd parameter:", cmdParameter)
-	//获取当前脚本执行用户信息
+	// util.MyPrint(prefix+" cmd parameter:", cmdParameter)
+	// 获取当前脚本执行用户信息
 	imUser, _ := user.Current()
 	util.MyPrint(prefix + "exec script  <user info> , name: " + imUser.Name + " uid: " + imUser.Uid + " , gid :" + imUser.Gid + " ,homeDir:" + imUser.HomeDir)
-	//当前脚本执行的路径
+	// 当前脚本执行的路径
 	pwd, _ := os.Getwd()
 	util.MyPrint(prefix + "exec script pwd:" + pwd)
-	//开始初始化模块
-	//main主协程的 context
+	// 开始初始化模块
+	// main主协程的 context
 	util.MyPrint(prefix + "create cancel context")
 	mainCxt, mainCancelFunc := context.WithCancel(context.Background())
 	mainEnvironment := global.MainEnvironment{
@@ -120,7 +121,7 @@ func main() {
 	global.MainEnv = mainEnvironment
 	global.MainCmdParameter = cmdParameter
 	global.V.StaticFileSys = staticFileSys
-	//开始正式全局初始化
+	// 开始正式全局初始化
 	initializeVar = initialize.NewInitialize()
 	err := initializeVar.Start()
 	if err != nil {
@@ -128,13 +129,13 @@ func main() {
 		panic(prefix + "initialize.Init err:" + err.Error())
 	}
 
-	//执行用户自己的一些功能
+	// 执行用户自己的一些功能
 	go core.DoMySelf()
-	//监听外部进程信号
+	// 监听外部进程信号
 	go global.V.Process.DemonSignal()
 	util.MyPrint(prefix + "wait mainCxt.done...")
 	select {
-	case <-mainCxt.Done(): //阻塞
+	case <-mainCxt.Done(): // 阻塞
 		QuitAll(1)
 	}
 
@@ -143,28 +144,28 @@ func main() {
 
 // 处理指令行参数
 func processCmdParameter(prefix string) global.CmdParameter {
-	//获取<环境变量>枚举值
+	// 获取<环境变量>枚举值
 	envList := util.GetConstListEnv()
 	envListStr := util.ConstListEnvToStr()
-	//当前环境,env:local test pre dev online
+	// 当前环境,env:local test pre dev online
 	env := flag.Int("e", 0, "must require , "+envListStr)
-	//配置读取源类型，1 文件  2 etcd
+	// 配置读取源类型，1 文件  2 etcd
 	configSourceType := flag.String("cs", core.DEFAULT_GLOBAL_CONFIG_TYPE_FILE, "configSource:file or etcd")
-	//配置文件的类型:toml yaml
+	// 配置文件的类型:toml yaml
 	configFileType := flag.String("ct", core.DEFAULT_GLOBAL_CONFIG_FILE_TYPE, "configFileType")
-	//配置文件的名称
+	// 配置文件的名称
 	configFileName := flag.String("cfn", core.DEFAULT_GLOBAL_CONFIG_FILE_NAME, "configFileName")
-	//获取etcd 配置信息的URL,也可以把配置文件中的信息存于ETCD中，通过URL请求ETCD获取
+	// 获取etcd 配置信息的URL,也可以把配置文件中的信息存于ETCD中，通过URL请求ETCD获取
 	etcdUrl := flag.String("etl", "http://127.0.0.1/getEtcdCluster/Ip/Port", "get etcd config url")
-	//DEBUG模式
+	// DEBUG模式
 	debug := flag.Int("debug", 0, "startup debug mode level")
-	//开启自动测试模式
+	// 开启自动测试模式
 	testFlag := flag.String("t", "", "testFlag:empty or 1")
-	//配置文件的名称
+	// 配置文件的名称
 	buildStatic := flag.String("bs", core.DEFAULT_GLOBAL_CONFIG_BUILD_STATIC, "BuildStatic")
-	//解析命令行参数
+	// 解析命令行参数
 	flag.Parse()
-	//检测环境变量值ENV是否正常
+	// 检测环境变量值ENV是否正常
 	if !util.CheckEnvExist(*env) {
 		msg := prefix + " argv env , is err :"
 		util.MyPrint(msg, envList)

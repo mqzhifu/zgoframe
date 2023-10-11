@@ -294,4 +294,6 @@ type SuperVisor struct {
 	RpcPort          string
 	ConfTemplateFile string
 	ConfDir          string
+	Username         string
+	Password         string
 }

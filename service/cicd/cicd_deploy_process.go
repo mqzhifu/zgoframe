@@ -205,7 +205,9 @@ func (deploy *Deploy) DeployOneServiceSuperVisor(serviceDeployConfig ServiceDepl
 func (deploy *Deploy) DeployOneServiceProjectConfig(newGitCodeDir string, server util.Server, serviceDeployConfig ServiceDeployConfig, configServiceCICD ConfigServiceCICD, service model.Project) (string, string, error) {
 	deploy.Option.Log.Info("step 5 : create project self conf file.")
 	// 读取该服务自己的配置文件 config.toml
-	serviceSelfConfigTmpFileDir := newGitCodeDir + util.DIR_SEPARATOR + configServiceCICD.System.ConfigTmpFileName
+	// serviceSelfConfigTmpFileDir := newGitCodeDir + util.DIR_SEPARATOR + configServiceCICD.System.ConfigTmpFileName
+	// 原 config.toml 是放在项目根目录下，后期做docker makefile 的时候遇到把，新建了个 config 文件夹存在
+	serviceSelfConfigTmpFileDir := newGitCodeDir + util.DIR_SEPARATOR + "config" + util.DIR_SEPARATOR + configServiceCICD.System.ConfigTmpFileName
 	_, err := util.FileExist(serviceSelfConfigTmpFileDir)
 	if err != nil {
 		return "", "", errors.New("serviceSelfConfigTmpFileDir CheckFileIsExist err:" + err.Error())

@@ -299,7 +299,7 @@ func (deploy *Deploy) SyncOneServiceToRemote(serviceDeployConfig ServiceDeployCo
 		util.MyPrint("SyncOneServiceToRemote:", syncCodeShellCommand, " err:", err)
 		// 2 同步superVisor
 		// syncSuperVisorShellCommand = GetRsyncCommandPre() + newGitCodeDir + "/" + serviceDeployConfig.Name + ".ini" + " rsync@" + server.OutIp + "::super_visor"
-		syncCodeShellCommand = GetRsyncCommand(rsyncInstance.Host, rsyncInstance.Port, rsyncInstance.User, "", "super_visor", "", newGitCodeDir+"/"+serviceDeployConfig.Name+".ini")
+		syncSuperVisorShellCommand = GetRsyncCommand(rsyncInstance.Host, rsyncInstance.Port, rsyncInstance.User, "", "super_visor", "", newGitCodeDir+"/"+serviceDeployConfig.Name+".ini")
 		_, err = ExecShellCommand(syncSuperVisorShellCommand, "")
 		util.MyPrint("syncSuperVisorShellCommand:", syncSuperVisorShellCommand, " err:", err)
 	} else if project.Type == model.PROJECT_TYPE_FE {

@@ -274,9 +274,10 @@ publish table list:<br/>
     function optDeployService(serverId,serviceId ,flag,obj){
         console.log("deploy serverId:",serverId , " serviceId:",serviceId);
 
-        // var data = {"server_id": serverId, "service_id": serviceId ,"flag":flag};
-        var data = JSON.stringify({"server_id": serverId, "service_id": serviceId ,"flag":flag});
-        AjaxAdminReq(optDeployServiceBack,"cicd_service_deploy","",true,"POST",data);
+        var data = {"server_id": serverId, "service_id": serviceId ,"flag":flag};
+        // var data = JSON.stringify({"server_id": serverId, "service_id": serviceId ,"flag":flag});
+                   request(cicd_publish_list,"cicd_service_deploy","",true,"POST",data,null);
+        // AjaxAdminReq(optDeployServiceBack,"cicd_service_deploy","",true,"POST",data);
 
         // var jqObj = $(obj);
         // jqObj.removeAttr("onclick");

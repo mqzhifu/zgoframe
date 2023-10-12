@@ -11,7 +11,7 @@ import (
 
 // @Tags Cicd
 // @Summary 部署/发布 列表
-// @Description 查看 项目的已部署 日志 列表
+// @Description 查看 项目的已部署 日志(列表)
 // @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
 // @Param X-Project-Id header string true "项目ID" default(6)
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
@@ -193,11 +193,3 @@ func CicdServiceDeploy(c *gin.Context) {
 	//	httpresponse.OkWithAll("aaaa", "成功", c)
 	// }
 }
-
-// func CicdLocalSyncTarget(c *gin.Context) {
-//	var form request.CicdSync
-//	c.ShouldBind(&form)
-//
-//	list := global.V.MyService.Cicd.LocalSyncTarget(form)
-//	httpresponse.OkWithAll(list, "成功", c)
-// }

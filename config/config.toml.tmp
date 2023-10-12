@@ -16,7 +16,7 @@ protocol = "#protocol#" #域名的HTTP协议
 #签名验证 token
 [jwt]
 status      = "open"
-key         = "chukong"
+key         = "local_seed"
 expiresTime = 360000 #100小时(60 * 60 * 100 )
 
 #读取配置文件的一个插件
@@ -223,15 +223,13 @@ domain          = "https://api.agora.io/v1/apps/"
 
 
 [superVisor]
-#rpcPort="9988"
+#这里的配置均属于本机的配置，远端的存在DB中
 rpcPort="9002"
-#confTemplateFile="/data/www/golang/src/zgoframe/operation/super_visor.ini" #暂时用相对路径，方便CICD
 confTemplateFile="super_visor.ini"#所有项目的通用配置文件，在本项目中
 #confDir="/usr/local/etc/"
 #confDir="/etc/supervisor"
 confDir="D:/project/cicd/super_visor"
-username="admin"
-password="1234"
+
 
 
 [service]

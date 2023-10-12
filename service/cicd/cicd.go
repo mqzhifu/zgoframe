@@ -69,8 +69,6 @@ type ConfigServiceCICD struct {
 
 type ConfigCicdSuperVisor struct {
 	RpcPort              string
-	Username             string
-	Password             string
 	ConfTemplateFile     string
 	ConfTemplateFileName string
 	ConfDir              string
@@ -223,7 +221,7 @@ func (cicdManager *CicdManager) LocalAllServerServiceList() (list LocalServerSer
 	list.ServiceList = make(map[int]model.Project)
 	list.ServerList = make(map[int]util.Server)
 
-	util.MyPrint(cicdManager.Option.ServerList)
+	// util.MyPrint(cicdManager.Option.ServerList)
 
 	if len(cicdManager.Option.ServerList) == 0 {
 		// 服务器 为空
@@ -264,11 +262,12 @@ func (cicdManager *CicdManager) LocalAllServerServiceList() (list LocalServerSer
 		// 创建实例
 		superVisorOption := util.SuperVisorOption{
 			Ip: server.OutIp,
-			// RpcPort:          cicdManager.Option.Config.SuperVisor.RpcPort,
+			// RpcPort:          cicdManager.Option.Config.SuperVisor.RpcPort
 			RpcPort:  instance.Port,
 			Username: instance.User,
 			Password: instance.Ps,
 		}
+
 		serviceSuperVisor, err := util.NewSuperVisor(superVisorOption)
 		if err != nil {
 			util.MyPrint("NewSuperVisor err:", err)
@@ -325,15 +324,26 @@ func (cicdManager *CicdManager) GetSuperVisorList() (list ServerServiceSuperViso
 	// 遍历服务器列表
 	for _, server := range cicdManager.Option.ServerList {
 		fmt.Println("for each service , outIp:" + server.OutIp + " env:" + strconv.Itoa(server.Env))
-		// 创建实例
-		superVisorOption := util.SuperVisorOption{
-			Ip:      server.OutIp,
-			RpcPort: cicdManager.Option.Config.SuperVisor.RpcPort,
-			// Username: "ckadmin",
-			// Password: "ckckarar",
-			Username: "admin",
-			Password: "1234",
+		instance, empty := cicdManager.Option.InstanceManager.GetByEnvName(server.Env, "super_visor")
+		if empty {
+			return list, errors.New("not found super_visor instance")
 		}
+
+		// 创建实例
+		// superVisorOption := util.SuperVisorOption{
+		// 	Ip:      server.OutIp,
+		// 	RpcPort: cicdManager.Option.Config.SuperVisor.RpcPort,
+		// 	Username:
+		// 	Username: "ckadmin",
+		// 	Password: "ckckarar",
+		// }
+		superVisorOption := util.SuperVisorOption{
+			Ip:       server.OutIp,
+			RpcPort:  instance.Port,
+			Username: instance.User,
+			Password: instance.Ps,
+		}
+		util.MyPrint("=====", superVisorOption)
 		serviceSuperVisor, err := util.NewSuperVisor(superVisorOption)
 		if err != nil {
 			util.MyPrint("NewSuperVisor err:", err)

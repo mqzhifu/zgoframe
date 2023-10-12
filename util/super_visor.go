@@ -19,19 +19,19 @@ type SuperVisorReplace struct {
 	ProcessName          string
 }
 
-//==============superVisor===========
+// ==============superVisor===========
 
 type SuperVisorOption struct {
 	Ip                string
 	RpcPort           string
 	Username          string
 	Password          string
-	ConfTemplateFile  string //每个服务的superVisor 配置文件模型(需要后期替换占位符)
-	ServiceName       string //服务名称
-	ConfDir           string //本机superVisor 的配置文件基目录(所有服务的superVisor配置文件均放在这个目录下面)
-	ServiceNamePrefix string //进程启动时，启程名称的前缀，方便统一管理
+	ConfTemplateFile  string // 每个服务的superVisor 配置文件模型(需要后期替换占位符)
+	ServiceName       string // 服务名称
+	ConfDir           string // 本机superVisor 的配置文件基目录(所有服务的superVisor配置文件均放在这个目录下面)
+	ServiceNamePrefix string // 进程启动时，启程名称的前缀，方便统一管理
 	Separator         string
-	//Port 				string
+	// Port 				string
 }
 
 type SuperVisor struct {
@@ -49,7 +49,7 @@ func NewSuperVisor(superVisorOption SuperVisorOption) (*SuperVisor, error) {
 	return superVisor, nil
 }
 
-//通过XML Rpc 控制远程 superVisor 服务进程
+// 通过XML Rpc 控制远程 superVisor 服务进程
 func (superVisor *SuperVisor) InitXMLRpc() error {
 	if superVisor.Option.Ip == "" || superVisor.Option.RpcPort == "" {
 		return errors.New("ip or port empty")
@@ -64,14 +64,15 @@ func (superVisor *SuperVisor) InitXMLRpc() error {
 	} else {
 		c, err = supervisord.NewClient(dns)
 	}
+	MyPrint()
 
 	if err != nil {
 		MyPrint("superVisor init err:", err)
 		return err
 	}
 	_, err = c.GetState()
-	//state ,err := c.GetState()
-	//MyPrint("superVisor: XMLRpc state:",state," err:",err)
+	// state ,err := c.GetState()
+	// MyPrint("superVisor: XMLRpc state:",state," err:",err)
 	if err != nil {
 		MyPrint("superVisor err:" + err.Error())
 		return errors.New("superVisor err:" + err.Error())
@@ -109,9 +110,9 @@ func (superVisor *SuperVisor) ReplaceConfTemplate(replaceSource SuperVisorReplac
 		return "", errors.New("ConfTemplateFileContent empty")
 	}
 	content := superVisor.ConfTemplateFileContent
-	//MyPrint(content)
+	// MyPrint(content)
 	key := superVisor.Option.Separator + "script_name" + superVisor.Option.Separator
-	//MyPrint(key)
+	// MyPrint(key)
 	content = strings.Replace(content, key, replaceSource.ScriptName, -1)
 
 	key = superVisor.Option.Separator + "startup_script_command" + superVisor.Option.Separator
@@ -129,29 +130,29 @@ func (superVisor *SuperVisor) ReplaceConfTemplate(replaceSource SuperVisorReplac
 	key = superVisor.Option.Separator + "process_name" + superVisor.Option.Separator
 	content = strings.Replace(content, key, superVisor.Option.ServiceNamePrefix+replaceSource.ProcessName, -1)
 
-	//ExitPrint(content)
+	// ExitPrint(content)
 
 	return content, nil
 }
 
-//========监听相关
+// ========监听相关
 func (superVisor *SuperVisor) CreateServiceConfFile(content string, newGitCodeDir string) error {
-	//本机部署时：直接将配置文件转到superVisor目录下，立即生效
-	//fileName := superVisor.Option.ConfDir +DIR_SEPARATOR +  superVisor.Option.ServiceName + ".ini"
-	//远程部署：是先在本地部署，再推送到远端，所以，是是先将配置文件生成到代码目录下，最后再同步过去
+	// 本机部署时：直接将配置文件转到superVisor目录下，立即生效
+	// fileName := superVisor.Option.ConfDir +DIR_SEPARATOR +  superVisor.Option.ServiceName + ".ini"
+	// 远程部署：是先在本地部署，再推送到远端，所以，是是先将配置文件生成到代码目录下，最后再同步过去
 	fileName := newGitCodeDir + "/" + superVisor.Option.ServiceName + ".ini"
-	//MyPrint(fileName)
+	// MyPrint(fileName)
 	file, err := os.Create(fileName)
 	MyPrint("os.Create:", fileName)
 	if err != nil {
 		MyPrint("os.Create :", fileName, " err:", err)
 		return err
 	}
-	contentByte := bytes.Trim([]byte(content), "\x00") //NUL
+	contentByte := bytes.Trim([]byte(content), "\x00") // NUL
 	file.Write(contentByte)
 	file.Close()
 
-	//ExitPrint(-1)
+	// ExitPrint(-1)
 
 	return nil
 }

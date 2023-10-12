@@ -160,8 +160,6 @@ func (deploy *Deploy) DeployOneServiceSuperVisor(serviceDeployConfig ServiceDepl
 	superVisorOption := util.SuperVisorOption{
 		ConfDir:     deploy.Option.Config.SuperVisor.ConfDir,
 		ServiceName: serviceDeployConfig.Name,
-		Username:    deploy.Option.Config.SuperVisor.Username,
-		Password:    deploy.Option.Config.SuperVisor.Password,
 		// ConfTemplateFile: cicdManager.Option.Config.SuperVisor.ConfTemplateFile,
 	}
 
@@ -260,20 +258,53 @@ func (deploy *Deploy) DeployOneServiceCommand(newGitCodeDir string, serviceDeplo
 	return command, build, output1 + " <br/> " + output2, nil
 }
 
+func (deploy *Deploy) GetRsyncInstance(server util.Server) (is util.Instance, err error) {
+	rsyncInstance, empty := deploy.Option.InstanceManager.GetByEnvName(server.Env, "rsync")
+	if empty {
+		deploy.Option.Log.Error("GetByEnvName rsync empty")
+		return is, errors.New("SyncOneServiceToRemote err1")
+	}
+
+	if rsyncInstance.Host == "" || rsyncInstance.Port == "" || rsyncInstance.User == "" || rsyncInstance.Ext == "" {
+		deploy.Option.Log.Error("rsyncInstance someone empty : rsyncHost rsyncPort rsyncUserName rsyncModule")
+		return is, errors.New("SyncOneServiceToRemote err2")
+	}
+
+	return is, nil
+}
+
+func GetRsyncCommand(remoteHost string, port string, username string, ps string, module string, exclude string, localPath string) string {
+	comm := ""
+	if exclude == "" {
+		comm = "rsync -avz --progress --port=" + port + " " + localPath + " " + username + "@" + remoteHost + "::" + module
+	} else {
+		comm = "rsync -avz --progress --port=" + port + " --exclude=" + exclude + " " + localPath + " " + username + "@" + remoteHost + "::" + module
+	}
+	return comm
+}
+
 // 本机部署均已完成，需要将本地代码同步到远端
 func (deploy *Deploy) SyncOneServiceToRemote(serviceDeployConfig ServiceDeployConfig, server util.Server, newGitCodeDir string, project model.Project) (syncCodeShellCommand string, syncSuperVisorShellCommand string, err error) {
+	rsyncInstance, err := deploy.GetRsyncInstance(server)
+	if err != nil {
+		return "", "", err
+	}
 	if project.Type == model.PROJECT_TYPE_SERVICE {
 		// 1 同步代码
-		syncCodeShellCommand = GetRsyncCommandPre() + " --exclude=master " + serviceDeployConfig.FullPath + " rsync@" + server.OutIp + "::www"
+		// syncCodeShellCommand = GetRsyncCommandPre() + " --exclude=master " + serviceDeployConfig.FullPath + " rsync@" + server.OutIp + "::www"
+		syncCodeShellCommand = GetRsyncCommand(rsyncInstance.Host, rsyncInstance.Port, rsyncInstance.User, "", rsyncInstance.Ext, "master", serviceDeployConfig.FullPath)
+		util.ExitPrint(syncCodeShellCommand)
 		_, err := ExecShellCommand(syncCodeShellCommand, "")
 		util.MyPrint("SyncOneServiceToRemote:", syncCodeShellCommand, " err:", err)
 		// 2 同步superVisor
-		syncSuperVisorShellCommand = GetRsyncCommandPre() + newGitCodeDir + "/" + serviceDeployConfig.Name + ".ini" + " rsync@" + server.OutIp + "::super_visor"
+		// syncSuperVisorShellCommand = GetRsyncCommandPre() + newGitCodeDir + "/" + serviceDeployConfig.Name + ".ini" + " rsync@" + server.OutIp + "::super_visor"
+		syncCodeShellCommand = GetRsyncCommand(rsyncInstance.Host, rsyncInstance.Port, rsyncInstance.User, "", "super_visor", "", newGitCodeDir+"/"+serviceDeployConfig.Name+".ini")
 		_, err = ExecShellCommand(syncSuperVisorShellCommand, "")
 		util.MyPrint("syncSuperVisorShellCommand:", syncSuperVisorShellCommand, " err:", err)
 	} else if project.Type == model.PROJECT_TYPE_FE {
 		// util.MyPrint(serviceDeployConfig)
-		syncCodeShellCommand = GetRsyncCommandPre() + " --exclude=node_modules " + newGitCodeDir + " rsync@" + server.OutIp + "::www/" + serviceDeployConfig.Name
+		// syncCodeShellCommand = GetRsyncCommandPre() + " --exclude=node_modules " + newGitCodeDir + " rsync@" + server.OutIp + "::www/" + serviceDeployConfig.Name
+		syncCodeShellCommand = GetRsyncCommand(rsyncInstance.Host, rsyncInstance.Port, rsyncInstance.User, "", rsyncInstance.Ext+"/"+serviceDeployConfig.Name, "node_modules", newGitCodeDir)
 		// util.ExitPrint(syncCodeShellCommand)
 		_, err := ExecShellCommand(syncCodeShellCommand, "")
 		util.MyPrint("SyncOneServiceToRemote:", syncCodeShellCommand, " err:", err)

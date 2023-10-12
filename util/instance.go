@@ -60,6 +60,7 @@ func (instanceManager *InstanceManager) GetFromDb() error {
 			Env:  v.Env,
 			User: v.User,
 			Ps:   v.Ps,
+			Ext:  v.Ext,
 		}
 		instanceManager.AddOne(n)
 	}

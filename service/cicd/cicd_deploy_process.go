@@ -295,7 +295,6 @@ func (deploy *Deploy) SyncOneServiceToRemote(serviceDeployConfig ServiceDeployCo
 		// 1 同步代码
 		// syncCodeShellCommand = GetRsyncCommandPre() + " --exclude=master " + serviceDeployConfig.FullPath + " rsync@" + server.OutIp + "::www"
 		syncCodeShellCommand = GetRsyncCommand(rsyncInstance.Host, rsyncInstance.Port, rsyncInstance.User, "", rsyncInstance.Ext, "master", serviceDeployConfig.FullPath)
-		util.ExitPrint(syncCodeShellCommand)
 		_, err := ExecShellCommand(syncCodeShellCommand, "")
 		util.MyPrint("SyncOneServiceToRemote:", syncCodeShellCommand, " err:", err)
 		// 2 同步superVisor

@@ -273,7 +273,7 @@ func InitCicd() (*cicd.CicdManager, error) {
 
 	// opDirFull := MainEnv.RootDir + "/" + C.System.OpDirName
 	cicdConfig := cicd.ConfigCicd{}
-	cicdConfig.System.RootDir = MainEnv.RootDir
+
 	// 运维：服务器的配置信息
 	// configFile := opDirFull + "/host" + "." + "toml"
 	//
@@ -300,6 +300,7 @@ func InitCicd() (*cicd.CicdManager, error) {
 		GitCloneTmpDirName: C.Cicd.GitCloneTmpDirName,
 		HttpPort:           C.Cicd.HttpPort,
 	}
+	cicdConfig.System.RootDir = MainEnv.RootDir
 
 	cicdConfig.SuperVisor.ConfTemplateFileName = cicdConfig.SuperVisor.ConfTemplateFile
 	cicdConfig.SuperVisor.ConfTemplateFile = MainEnv.RootDir + "/" + C.System.OpDirName + "/" + cicdConfig.SuperVisor.ConfTemplateFile

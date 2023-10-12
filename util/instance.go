@@ -90,12 +90,14 @@ func (instanceManager *InstanceManager) GetByEnv(env int) (in []Instance) {
 
 func (instanceManager *InstanceManager) GetByEnvName(env int, name string) (in Instance, empty bool) {
 	// MyPrint("GetByEnvName:",env , " name:",name)
+
 	for _, v := range instanceManager.Pool {
 		if v.Env == env && v.Name == name {
 			// MyPrint(v)
 			return v, false
 		}
 	}
+	MyPrint("GetByEnvName empty", " ", env, " ", name)
 	return in, true
 }
 

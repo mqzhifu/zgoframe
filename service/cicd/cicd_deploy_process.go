@@ -263,7 +263,7 @@ func (deploy *Deploy) DeployOneServiceCommand(newGitCodeDir string, serviceDeplo
 func (deploy *Deploy) GetRsyncInstance(server util.Server) (is util.Instance, err error) {
 	rsyncInstance, empty := deploy.Option.InstanceManager.GetByEnvName(server.Env, "rsync")
 	if empty {
-		deploy.Option.Log.Error("GetByEnvName rsync empty")
+		deploy.Option.Log.Error("GetByEnvName rsync empty: env=" + strconv.Itoa(server.Env) + " rsync")
 		return is, errors.New("SyncOneServiceToRemote err1")
 	}
 

@@ -269,10 +269,10 @@ func (deploy *Deploy) GetRsyncInstance(server util.Server) (is util.Instance, er
 
 	if rsyncInstance.Host == "" || rsyncInstance.Port == "" || rsyncInstance.User == "" || rsyncInstance.Ext == "" {
 		deploy.Option.Log.Error("rsyncInstance someone empty : rsyncHost rsyncPort rsyncUserName rsyncModule")
-		return is, errors.New("SyncOneServiceToRemote err2")
+		return rsyncInstance, errors.New("SyncOneServiceToRemote err2")
 	}
 
-	return is, nil
+	return rsyncInstance, nil
 }
 
 func GetRsyncCommand(remoteHost string, port string, username string, ps string, module string, exclude string, localPath string) string {

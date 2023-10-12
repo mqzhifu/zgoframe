@@ -377,9 +377,12 @@ func (deploy *Deploy) ReplaceInstance(content string, serviceName string, env in
 			// MyPrint("cicdManager.Option.InstanceManager.GetByEnvName is empty,",env,v)
 			continue
 		}
-
+		// 待解决
 		if v == "gateway" {
 			host := strings.Split(instance.Host, ",")
+			if len(host) != 3 {
+				util.ExitPrint("ReplaceInstance gateway :host value err, must 3 ")
+			}
 
 			key := separator + v + "_" + "listen_ip" + separator
 			content = strings.Replace(content, key, host[0], -1)

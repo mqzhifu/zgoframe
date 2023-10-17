@@ -22,13 +22,13 @@ type SuperVisorReplace struct {
 // ==============superVisor===========
 
 type SuperVisorOption struct {
-	Ip                string
-	RpcPort           string
-	Username          string
-	Password          string
-	ConfTemplateFile  string // 每个服务的superVisor 配置文件模型(需要后期替换占位符)
-	ServiceName       string // 服务名称
-	ConfDir           string // 本机superVisor 的配置文件基目录(所有服务的superVisor配置文件均放在这个目录下面)
+	Ip               string
+	RpcPort          string
+	Username         string
+	Password         string
+	ConfTemplateFile string // 每个服务的superVisor 配置文件模型(需要后期替换占位符)
+	ServiceName      string // 服务名称
+	// ConfDir           string // 本机superVisor 的配置文件基目录(所有服务的superVisor配置文件均放在这个目录下面)
 	ServiceNamePrefix string // 进程启动时，启程名称的前缀，方便统一管理
 	Separator         string
 	// Port 				string

@@ -12,6 +12,8 @@ import (
 
 // step 1
 func (deploy *Deploy) DeployServiceCheck(serviceDeployConfig ServiceDeployConfig, service model.Project, server util.Server) (ServiceDeployConfig, error) {
+
+	log := deploy.Option.Log
 	deploy.Option.Log.Info("step 1 : DeployServiceCheck ")
 	if service.Git == "" {
 		errMsg := "service.Git is empty~" + service.Name
@@ -41,10 +43,11 @@ func (deploy *Deploy) DeployServiceCheck(serviceDeployConfig ServiceDeployConfig
 	_, err := util.PathExists(serviceDeployConfig.BaseDir)
 	if err != nil {
 		if os.IsNotExist(err) {
-			util.MyPrint("DeployServiceCheck create dir:", serviceDeployConfig.BaseDir)
+			log.Info("DeployServiceCheck create dir:" + serviceDeployConfig.BaseDir)
 			err = os.Mkdir(serviceDeployConfig.BaseDir, 0777)
 			if err != nil {
-				util.ExitPrint("os.Mkdir :", serviceDeployConfig.BaseDir, " err:", err.Error())
+				errMsg := "os.Mkdir :" + serviceDeployConfig.BaseDir + " err:" + err.Error()
+				return serviceDeployConfig, errors.New(errMsg)
 			}
 		}
 	}
@@ -54,13 +57,15 @@ func (deploy *Deploy) DeployServiceCheck(serviceDeployConfig ServiceDeployConfig
 		_, err = util.PathExists(newBaseDir)
 		if err != nil {
 			if os.IsNotExist(err) {
-				util.MyPrint("DEPLOY_TARGET_TYPE_LOCAL create dir:", newBaseDir)
+				log.Info("DEPLOY_TARGET_TYPE_LOCAL create dir:" + newBaseDir)
 				err = os.Mkdir(newBaseDir, 0777)
 				if err != nil {
-					util.ExitPrint("os.Mkdir :", newBaseDir, " err:", err.Error())
+					errMsg := "os.Mkdir :" + newBaseDir + " err:" + err.Error()
+					return serviceDeployConfig, errors.New(errMsg)
 				}
 			} else {
-				util.ExitPrint("util.PathExists err:", err.Error())
+				errMsg := "util.PathExists err:" + err.Error()
+				return serviceDeployConfig, errors.New(errMsg)
 			}
 		}
 		serviceDeployConfig.BaseDir += server.OutIp
@@ -94,7 +99,7 @@ func (deploy *Deploy) DeployOneServiceGitCode(serviceDeployConfig ServiceDeployC
 	shellArgc := service.Git + " " + serviceDeployConfig.ClonePath + " " + service.Name + " " + deploy.Option.Config.System.RemoteUploadDir + " " + deploy.Option.UploadDiskPath + " " + deploy.Option.Config.System.RemoteDownloadDir + " " + deploy.Option.DownloadDiskPath
 	CICDShellFileName := ""
 	// 执行shell 脚本 后：service项目代码已被clone, git 版本号已知了
-	if service.Type == model.PROJECT_TYPE_FE {
+	if service.Type == model.PROJECT_TYPE_FE { // 待处理
 		CICDShellFileName = "cicd_fe.sh"
 	} else {
 		CICDShellFileName = serviceDeployConfig.CICDShellFileName
@@ -115,15 +120,6 @@ func (deploy *Deploy) DeployOneServiceGitCode(serviceDeployConfig ServiceDeployC
 	}
 	deploy.Option.Log.Info("step 2 finish , newGitCodeDir :  " + newGitCodeDir + " , gitLastCommitId:" + gitLastCommitId)
 
-	// 处理图片目录 的软件 连接
-	// _, err := util.FileExist(cicdManager.Option.UploadDiskPath)
-	// cicdManager.Option.Log.Info("ln -s " + cicdManager.Option.Config.System.RemoteUploadDir + " " + cicdManager.Option.UploadDiskPath)
-	// err = os.Symlink(cicdManager.Option.Config.System.RemoteUploadDir,cicdManager.Option.UploadDiskPath)
-	// if err != nil{
-	//	return newGitCodeDir , projectDirName ,gitLastCommitId, errors.New("link file upload err:" + err.Error())
-	// }
-	// util.ExitPrint(33)
-
 	return newGitCodeDir, projectDirName, gitLastCommitId, nil
 }
 
@@ -139,26 +135,26 @@ func (deploy *Deploy) DeployOneServiceCICIConfig(newGitCodeDir string, serviceDe
 	if err != nil {
 		return serviceCICDConfig, serviceSelfCICDConf, errors.New(err.Error())
 	}
+	// 待处理
 	serviceCICDConfig.System.Build = strings.Replace(serviceCICDConfig.System.Build, "#service_name#", serviceDeployConfig.Name, -1)
 	serviceCICDConfig.System.Build = strings.Replace(serviceCICDConfig.System.Build, "#datetime#", strconv.Itoa(util.GetNowTimeSecondToInt()), -1)
 	serviceCICDConfig.System.Build = strings.Replace(serviceCICDConfig.System.Build, "#git_version#", gitLastCommitId, -1)
-	// util.MyPrint(serviceCICDConfig.System.Build)
-	// util.ExitPrint(33)
+
 	serviceCICDConfig.System.Startup = strings.Replace(serviceCICDConfig.System.Startup, "#env#", strconv.Itoa(server.Env), -1)
 	serviceCICDConfig.System.Startup = strings.Replace(serviceCICDConfig.System.Startup, "#master_path#", serviceDeployConfig.RemoteBaseDir+"/"+serviceDeployConfig.Name+"/"+serviceDeployConfig.MasterDirName, -1)
 	serviceCICDConfig.System.Startup = strings.Replace(serviceCICDConfig.System.Startup, "#service_name#", serviceDeployConfig.Name, -1)
-
-	// util.ExitPrint(serviceCICDConfig.System.Startup)
-	// util.PrintStruct(serviceCICDConfig, ":")
 
 	return serviceCICDConfig, serviceSelfCICDConf, nil
 }
 
 // step 4 生成该服务的，superVisor 配置文件
 func (deploy *Deploy) DeployOneServiceSuperVisor(serviceDeployConfig ServiceDeployConfig, configServiceCICD ConfigServiceCICD, newGitCodeDir string) error {
+	if configServiceCICD.System.HasSuperVisor != "open" {
+		return nil
+	}
 	deploy.Option.Log.Info("step 4 : create superVisor conf file.")
 	superVisorOption := util.SuperVisorOption{
-		ConfDir:     deploy.Option.Config.SuperVisor.ConfDir,
+		// ConfDir:     deploy.Option.Config.SuperVisor.ConfDir,
 		ServiceName: serviceDeployConfig.Name,
 		// ConfTemplateFile: cicdManager.Option.Config.SuperVisor.ConfTemplateFile,
 	}
@@ -204,10 +200,8 @@ func (deploy *Deploy) DeployOneServiceSuperVisor(serviceDeployConfig ServiceDepl
 // step 5
 func (deploy *Deploy) DeployOneServiceProjectConfig(newGitCodeDir string, server util.Server, serviceDeployConfig ServiceDeployConfig, configServiceCICD ConfigServiceCICD, service model.Project) (string, string, error) {
 	deploy.Option.Log.Info("step 5 : create project self conf file.")
-	// 读取该服务自己的配置文件 config.toml
-	// serviceSelfConfigTmpFileDir := newGitCodeDir + util.DIR_SEPARATOR + configServiceCICD.System.ConfigTmpFileName
-	// 原 config.toml 是放在项目根目录下，后期做docker makefile 的时候遇到把，新建了个 config 文件夹存在
-	serviceSelfConfigTmpFileDir := newGitCodeDir + util.DIR_SEPARATOR + "config" + util.DIR_SEPARATOR + configServiceCICD.System.ConfigTmpFileName
+	// 从 cicd.toml 读取该服务自己的配置文件的信息（路径+文件名） -> 再读取该配置文件
+	serviceSelfConfigTmpFileDir := newGitCodeDir + util.DIR_SEPARATOR + configServiceCICD.System.ConfigFilePath + util.DIR_SEPARATOR + configServiceCICD.System.ConfigTmpFileName
 	_, err := util.FileExist(serviceSelfConfigTmpFileDir)
 	if err != nil {
 		return "", "", errors.New("serviceSelfConfigTmpFileDir CheckFileIsExist err:" + err.Error())
@@ -275,18 +269,45 @@ func (deploy *Deploy) GetRsyncInstance(server util.Server) (is util.Instance, er
 	return rsyncInstance, nil
 }
 
-func GetRsyncCommand(remoteHost string, port string, username string, ps string, module string, exclude string, localPath string) string {
+func GetRsyncCommand(remoteHost string, port string, username string, ps string, module string, excludeFormFileName string, localPath string) string {
 	comm := ""
-	if exclude == "" {
+	if excludeFormFileName == "" {
 		comm = "rsync -avz --progress --port=" + port + " " + localPath + " " + username + "@" + remoteHost + "::" + module
 	} else {
-		comm = "rsync -avz --progress --port=" + port + " --exclude=" + exclude + " " + localPath + " " + username + "@" + remoteHost + "::" + module
+		comm = "rsync -avz --progress --port=" + port + " --exclude-form=" + excludeFormFileName + " " + localPath + " " + username + "@" + remoteHost + "::" + module
 	}
 	return comm
 }
 
 // 本机部署均已完成，需要将本地代码同步到远端
-func (deploy *Deploy) SyncOneServiceToRemote(serviceDeployConfig ServiceDeployConfig, server util.Server, newGitCodeDir string, project model.Project) (syncCodeShellCommand string, syncSuperVisorShellCommand string, err error) {
+func (deploy *Deploy) SyncOneServiceToRemote(serviceDeployConfig ServiceDeployConfig, server util.Server, newGitCodeDir string, project model.Project, serviceCICDConfig ConfigServiceCICD) (syncCodeShellCommand string, syncSuperVisorShellCommand string, err error) {
+	rsyncInstance, err := deploy.GetRsyncInstance(server)
+	if err != nil {
+		return "", "", err
+	}
+	// 1 同步代码
+	rsyncExcludePath := deploy.Option.Config.System.RootDir + "/rsync_exclude.list" // 写死了，待处理
+	syncCodeShellCommand = GetRsyncCommand(rsyncInstance.Host, rsyncInstance.Port, rsyncInstance.User, "", rsyncInstance.Ext, rsyncExcludePath, serviceDeployConfig.FullPath)
+	// syncCodeShellCommand = GetRsyncCommand(rsyncInstance.Host, rsyncInstance.Port, rsyncInstance.User, "", rsyncInstance.Ext+"/"+serviceDeployConfig.Name, "node_modules", newGitCodeDir)
+	_, err = ExecShellCommand(syncCodeShellCommand, "")
+	if err != nil {
+		errMsg := "SyncOneServiceToRemote:" + syncCodeShellCommand + " err:" + err.Error()
+		return "", "", errors.New(errMsg)
+	}
+	// 2. 同步 superVisor 配置文件，前端没这个，一般后端使用
+	if serviceCICDConfig.System.HasSuperVisor == "open" {
+		syncSuperVisorShellCommand = GetRsyncCommand(rsyncInstance.Host, rsyncInstance.Port, rsyncInstance.User, "", "super_visor", "", newGitCodeDir+"/"+serviceDeployConfig.Name+".ini")
+		_, err = ExecShellCommand(syncSuperVisorShellCommand, "")
+		if err != nil {
+			errMsg := "syncSuperVisorShellCommand:" + syncSuperVisorShellCommand + " err:" + err.Error()
+			return "", "", errors.New(errMsg)
+		}
+	}
+	return syncCodeShellCommand, syncSuperVisorShellCommand, nil
+}
+
+// 本机部署均已完成，需要将本地代码同步到远端 - 已放弃
+func (deploy *Deploy) SyncOneServiceToRemoteOld(serviceDeployConfig ServiceDeployConfig, server util.Server, newGitCodeDir string, project model.Project) (syncCodeShellCommand string, syncSuperVisorShellCommand string, err error) {
 	rsyncInstance, err := deploy.GetRsyncInstance(server)
 	if err != nil {
 		return "", "", err
@@ -296,19 +317,31 @@ func (deploy *Deploy) SyncOneServiceToRemote(serviceDeployConfig ServiceDeployCo
 		// syncCodeShellCommand = GetRsyncCommandPre() + " --exclude=master " + serviceDeployConfig.FullPath + " rsync@" + server.OutIp + "::www"
 		syncCodeShellCommand = GetRsyncCommand(rsyncInstance.Host, rsyncInstance.Port, rsyncInstance.User, "", rsyncInstance.Ext, "master", serviceDeployConfig.FullPath)
 		_, err := ExecShellCommand(syncCodeShellCommand, "")
-		util.MyPrint("SyncOneServiceToRemote:", syncCodeShellCommand, " err:", err)
+		if err != nil {
+			errMsg := "SyncOneServiceToRemote:" + syncCodeShellCommand + " err:" + err.Error()
+			return "", "", errors.New(errMsg)
+		}
+		// util.MyPrint("SyncOneServiceToRemote:", syncCodeShellCommand, " err:", err)
 		// 2 同步superVisor
 		// syncSuperVisorShellCommand = GetRsyncCommandPre() + newGitCodeDir + "/" + serviceDeployConfig.Name + ".ini" + " rsync@" + server.OutIp + "::super_visor"
 		syncSuperVisorShellCommand = GetRsyncCommand(rsyncInstance.Host, rsyncInstance.Port, rsyncInstance.User, "", "super_visor", "", newGitCodeDir+"/"+serviceDeployConfig.Name+".ini")
 		_, err = ExecShellCommand(syncSuperVisorShellCommand, "")
-		util.MyPrint("syncSuperVisorShellCommand:", syncSuperVisorShellCommand, " err:", err)
+		if err != nil {
+			errMsg := "syncSuperVisorShellCommand:" + syncSuperVisorShellCommand + " err:" + err.Error()
+			return "", "", errors.New(errMsg)
+		}
+		// util.MyPrint("syncSuperVisorShellCommand:", syncSuperVisorShellCommand, " err:", err)
 	} else if project.Type == model.PROJECT_TYPE_FE {
 		// util.MyPrint(serviceDeployConfig)
 		// syncCodeShellCommand = GetRsyncCommandPre() + " --exclude=node_modules " + newGitCodeDir + " rsync@" + server.OutIp + "::www/" + serviceDeployConfig.Name
 		syncCodeShellCommand = GetRsyncCommand(rsyncInstance.Host, rsyncInstance.Port, rsyncInstance.User, "", rsyncInstance.Ext+"/"+serviceDeployConfig.Name, "node_modules", newGitCodeDir)
 		// util.ExitPrint(syncCodeShellCommand)
 		_, err := ExecShellCommand(syncCodeShellCommand, "")
-		util.MyPrint("SyncOneServiceToRemote:", syncCodeShellCommand, " err:", err)
+		// util.MyPrint("SyncOneServiceToRemote:", syncCodeShellCommand, " err:", err)
+		if err != nil {
+			errMsg := "SyncOneServiceToRemote:" + syncCodeShellCommand + " err:" + err.Error()
+			return "", "", errors.New(errMsg)
+		}
 	} else {
 		return "", "", errors.New("SyncOneServiceToRemote :project type err.")
 	}

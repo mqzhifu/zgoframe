@@ -73,7 +73,7 @@ type Cicd struct {
 	RemoteDownloadDir  string
 	MasterDirName      string
 	GitCloneTmpDirName string
-	HttpPort           string
+	// HttpPort           string
 }
 
 // type MysqlConfig struct {
@@ -293,5 +293,5 @@ type Service struct {
 type SuperVisor struct {
 	RpcPort          string
 	ConfTemplateFile string
-	ConfDir          string
+	// ConfDir          string //暂时不用，生成的项目配置文件，直接在项目目录中即可，不再单独加目录了
 }

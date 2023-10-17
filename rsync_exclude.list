@@ -1,0 +1,7 @@
+.idea/
+node_modules
+package-lock.json
+vendor
+.DS_Store
+desktop.ini
+master

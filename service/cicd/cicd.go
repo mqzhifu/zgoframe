@@ -20,11 +20,22 @@ import (
 )
 
 /*
-自动化部署，从DB中读取出所有信息基础信息，GIT CLONE 配置super visor 监听进程
+自动化部署从DB中读取出所有信息基础信息，GIT CLONE 配置 super visor 监听进程
 依赖
-	supervisor 依赖 python 、 xmlrpc
+	mysql 读取3方配置信息
+	配置文件中读取基础配置信息
+	supervisor ，进程检测（依赖 python 、 xmlrpc）
+	rsync 用于推送代码、文件等
+		1. 远程服务器 - 部署项目的根目录
+		2. super_visor 配置文件存储位置
 	代码依赖：git
-	系统脚本：依赖shell
+	系统脚本：依赖 shell
+	目录：
+		1. CICD本机目录
+		2. 当前项目的根目录
+		3. 远程服务器 - 部署项目的根目录
+		4. 远程服务器 - 图片上传位置
+		5. 远程服务器 - 图片下载位置
 */
 
 // ===============配置 结构体 开始===================
@@ -35,14 +46,12 @@ type ConfigCicdSystem struct {
 	RemoteBaseDir     string
 	RemoteUploadDir   string
 	RemoteDownloadDir string
-	// UploadPath      string
-	// DownloadPath string
-	RootDir string
+	RootDir           string
 	// ServiceDir 			string	//远程部署目录
 	// LocalServiceDir		string 	//本地部署目录
 	MasterDirName      string
 	GitCloneTmpDirName string
-	HttpPort           string
+	// HttpPort           string
 }
 
 type ConfigServiceCICDSystem struct {
@@ -53,6 +62,8 @@ type ConfigServiceCICDSystem struct {
 	Command           string
 	ConfigTmpFileName string
 	ConfigFileName    string
+	ConfigFilePath    string
+	HasSuperVisor     string
 }
 
 type ConfigServiceCICDDepend struct {
@@ -71,7 +82,7 @@ type ConfigCicdSuperVisor struct {
 	RpcPort              string
 	ConfTemplateFile     string
 	ConfTemplateFileName string
-	ConfDir              string
+	// ConfDir              string
 }
 
 type ConfigCicd struct {
@@ -117,16 +128,16 @@ type CicdManager struct {
 }
 
 type CicdManagerOption struct {
+	// HttpPort         string
 	ServerList       map[int]util.Server  // 所有服务器
 	ServiceList      map[int]util.Service // 所有项目/服务
 	ProjectList      map[int]model.Project
-	HttpPort         string
 	InstanceManager  *util.InstanceManager
 	Config           ConfigCicd
 	PublicManager    *CICDPublicManager
 	Log              *zap.Logger
-	OpDirName        string
 	TestServerList   []string
+	OpDirName        string
 	UploadDiskPath   string
 	DownloadDiskPath string
 }
@@ -138,28 +149,48 @@ func NewCicdManager(cicdManagerOption CicdManagerOption) (*CicdManager, error) {
 
 	cicdManager.Option = cicdManagerOption
 	cicdManager.Deploy = NewDeploy(cicdManagerOption)
-	// _, err := util.PathExists(cicdManagerOption.Config.System.ServiceDir) //service 根目录
+
 	_, err := util.PathExists(cicdManagerOption.Config.System.WorkBaseDir)
 	if err != nil {
-		return cicdManager, cicdManager.Deploy.MakeError("Option.Config.System.ServiceDir :" + err.Error())
+		return cicdManager, cicdManager.Deploy.MakeError("cicdManagerOption.Config.System.WorkBaseDir :" + err.Error())
 	}
 	// SuperVisor 模板文件
 	_, err = util.FileExist(cicdManager.Option.Config.SuperVisor.ConfTemplateFile) // superVisor 模板文件
 	if err != nil {
 		return cicdManager, cicdManager.Deploy.MakeError("SuperVisor.ConfTemplateFile :" + err.Error())
 	}
-	// SuperVisor 配置文件统一放置目录
-	_, err = util.PathExists(cicdManager.Option.Config.SuperVisor.ConfDir) // superVisor 配置文件统一放置目录
-	if err != nil {
-		return cicdManager, cicdManager.Deploy.MakeError("SuperVisor.ConfDir :" + err.Error())
-	}
+	// // SuperVisor 配置文件统一放置目录
+	// _, err = util.PathExists(cicdManager.Option.Config.SuperVisor.ConfDir) // superVisor 配置文件统一放置目录
+	// if err != nil {
+	// 	return cicdManager, cicdManager.Deploy.MakeError("SuperVisor.ConfDir :" + err.Error())
+	// }
 	// 日志统一放置目录
 	_, err = util.PathExists(cicdManager.Option.Config.System.LogDir)
 	if err != nil {
 		return cicdManager, cicdManager.Deploy.MakeError("System.LogDir :" + err.Error())
 	}
 
+	cicdManager.ShowTotalInfo()
+
+	cicdManagerOption.Log.Info("NewCicdManager finish")
+
 	return cicdManager, nil
+}
+func (cicdManager *CicdManager) ShowTotalInfo() {
+	log := cicdManager.Option.Log
+	sysConf := cicdManager.Option.Config.System
+	logPre := "cicdManager "
+
+	log.Info(logPre + "WorkBaseDir:" + sysConf.WorkBaseDir)
+	log.Info(logPre + "RemoteBaseDir:" + sysConf.RemoteBaseDir)
+	log.Info(logPre + "RemoteUploadDir:" + sysConf.RemoteUploadDir)
+	log.Info(logPre + "RemoteDownloadDir:" + sysConf.RemoteDownloadDir)
+	log.Info(logPre + "RootDir:" + sysConf.RootDir)
+	log.Info(logPre + "RootDir:" + sysConf.RootDir)
+
+	log.Info(logPre + "len InstanceManager:" + strconv.Itoa(len(cicdManager.Option.InstanceManager.Pool)))
+	log.Info(logPre + "len ServerList:" + strconv.Itoa(len(cicdManager.Option.ServerList)))
+	log.Info(logPre + "len ServiceList:" + strconv.Itoa(len(cicdManager.Option.ServiceList)))
 }
 
 // 获取所有 部署发布 记录列表，ps:未加分页
@@ -396,7 +427,7 @@ func (cicdManager *CicdManager) GetSuperVisorList() (list ServerServiceSuperViso
 					// superVisorStatus[service.Id ] = util.SV_ERROR_NONE
 					// search = 1
 
-					serviceDeployConfig := cicdManager.Deploy.GetDeployConfig(DEPLOY_TARGET_TYPE_LOCAL)
+					serviceDeployConfig, _ := cicdManager.Deploy.GetDeployConfig(DEPLOY_TARGET_TYPE_LOCAL)
 					serviceDeployConfig, _ = cicdManager.Deploy.DeployServiceCheck(serviceDeployConfig, service, server)
 					// path := serviceDeployConfig.MasterPath + "/" + serviceDeployConfig.OpDirName
 					// masterSrc,_ := ExecShellFile2(path + "/" + "get_soft_link_src.sh",serviceDeployConfig.MasterPath)

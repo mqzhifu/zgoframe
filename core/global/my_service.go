@@ -286,7 +286,7 @@ func InitCicd() (*cicd.CicdManager, error) {
 	cicdConfig.SuperVisor = cicd.ConfigCicdSuperVisor{
 		RpcPort:          C.SuperVisor.RpcPort,
 		ConfTemplateFile: C.SuperVisor.ConfTemplateFile,
-		ConfDir:          C.SuperVisor.ConfDir,
+		// ConfDir:          C.SuperVisor.ConfDir,
 	}
 
 	cicdConfig.System = cicd.ConfigCicdSystem{
@@ -298,7 +298,7 @@ func InitCicd() (*cicd.CicdManager, error) {
 		RemoteDownloadDir:  C.Cicd.RemoteDownloadDir,
 		MasterDirName:      C.Cicd.MasterDirName,
 		GitCloneTmpDirName: C.Cicd.GitCloneTmpDirName,
-		HttpPort:           C.Cicd.HttpPort,
+		// HttpPort:           C.Cicd.HttpPort,
 	}
 	cicdConfig.System.RootDir = MainEnv.RootDir
 
@@ -318,7 +318,7 @@ func InitCicd() (*cicd.CicdManager, error) {
 
 	// util.ExitPrint(22)
 	op := cicd.CicdManagerOption{
-		HttpPort:         C.Http.Port,
+		// HttpPort:         C.Http.Port,
 		ServerList:       serverList,
 		Config:           cicdConfig,
 		InstanceManager:  instanceManager,

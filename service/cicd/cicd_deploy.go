@@ -35,17 +35,15 @@ func (cicdManager *CicdManager) GetConstListCicdDeployTargetType() map[string]in
 }
 
 type ServiceDeployConfig struct {
-	Name             string // 服务名称
-	BaseDir          string // 所有service项目统一放在一个目录下，由host.toml 中配置
-	RemoteBaseDir    string // 远端机器的部署代码的基础路径
-	FullPath         string // 最终一个服务的目录名,BaseDir + serviceName
-	MasterDirName    string // 一个服务的线上使用版本-软连目录名称
-	MasterPath       string // full path + MasterDirName
-	CICDConfFileName string // 一个服务自己的需要执行的cicd脚本
-	OpDirName        string // 存放所有：运维工具脚本的目录
-	FullOpDirName    string // 当前正在执行的脚本，运维目录
-	// ConfigTmpFileName  string //一个服务的配置文件的模板文件名
-	// ConfigFileName     string //一个服务的配置文件名,由上面CP
+	Name                  string // 服务名称
+	BaseDir               string // 所有service项目统一放在一个目录下，由host.toml 中配置
+	RemoteBaseDir         string // 远端机器的部署代码的基础路径
+	FullPath              string // 最终一个服务的目录名,BaseDir + serviceName
+	MasterDirName         string // 一个服务的线上使用版本-软连目录名称
+	MasterPath            string // full path + MasterDirName
+	CICDConfFileName      string // 一个服务自己的需要执行的cicd脚本
+	OpDirName             string // 存放所有：运维工具脚本的目录
+	FullOpDirName         string // 当前正在执行的脚本，运维目录
 	GitCloneTmpDirName    string // git clone 一个服务的项目代码时，临时存在的目录名
 	ClonePath             string // service dir + GitCloneTmpDirName ，先把代码clone 到这个目录下面,后续再转移
 	CodeGitClonePath      string // ClonePath + service name ,，之后再重合名(文件名：unixTime + gitCommitId)，转移到service目录下
@@ -53,6 +51,8 @@ type ServiceDeployConfig struct {
 	SuperConfTemplateFile string // superVisor原配置文件,模板文件，用这个文件再生成每个项目的superVisor配置文件
 	CICDShellFileName     string // 有一一些操作需要借用于shell 执行，如：git clone . 该变量就是shell 文件名
 	DeployTargetType      int    // 1本地部署2远端部署
+	// ConfigTmpFileName  string //一个服务的配置文件的模板文件名
+	// ConfigFileName     string //一个服务的配置文件名,由上面CP
 }
 
 // 公共变量
@@ -88,96 +88,115 @@ func (deploy *Deploy) MakeError(errMsg string) error {
 func (deploy *Deploy) ApiDeployOneService(form request.CicdDeploy) error {
 	server, project, err := deploy.CheckCicdRequestForm(form)
 	if err != nil {
-		util.MyPrint("err:", err.Error())
+		deploy.Option.Log.Error(err.Error())
 		return err
 	}
-	serviceDeployConfig := deploy.GetDeployConfig(form.Flag)
+	serviceDeployConfig, err := deploy.GetDeployConfig(form.Flag)
+	if err != nil {
+		return err
+	}
+
 	_, _, err = deploy.OneService(server, serviceDeployConfig, project)
 	return err
 }
 
 func (deploy *Deploy) CheckCicdRequestForm(form request.CicdDeploy) (server util.Server, service model.Project, err error) {
 	server, ok := deploy.Option.ServerList[form.ServerId]
+	pre := "CheckCicdRequestForm"
 	if !ok {
-		return server, service, errors.New("serviceId not in list")
+		return server, service, errors.New(pre + "ServerId not in list")
 	}
 	service, ok = deploy.Option.ProjectList[form.ServiceId]
 	if !ok {
-		return server, service, errors.New("serviceId not in list")
+		return server, service, errors.New(pre + "serviceId not in list")
 	}
 
 	if form.Flag <= 0 {
-		return server, service, errors.New("Flag <= 0")
+		return server, service, errors.New(pre + "Flag <= 0")
 	}
 
 	if form.Flag != DEPLOY_TARGET_TYPE_LOCAL && form.Flag != DEPLOY_TARGET_TYPE_REMOTE {
-		return server, service, errors.New("Flag err")
+		return server, service, errors.New(pre + "Flag err")
 	}
 
 	return server, service, nil
 }
 
 // 一次部署: 所有服务器的全部服务项目
-func (deploy *Deploy) AllService(deployTargetType int) {
-	util.MyPrint("DeployAllService:")
-	serviceDeployConfig := deploy.GetDeployConfig(deployTargetType)
+func (deploy *Deploy) AllService(deployTargetType int) error {
+	return errors.New("此方法暂时不开放，敬请期待")
+	serviceDeployConfig, err := deploy.GetDeployConfig(deployTargetType)
+	if err != nil {
+		return err
+	}
 	// 先遍历所有服务器，然后，把所有已知服务部署到每台服务器上(每台机器都可以部署任何服务)
 	for _, server := range deploy.Option.ServerList {
-		// if server.OutIp != "8.142.161.156" {
-		//	continue
-		// }
 		// 遍历所有服务
 		for _, service := range deploy.Option.ProjectList {
 			publishId, _, err := deploy.OneService(server, serviceDeployConfig, service)
-			util.MyPrint("DeployOneService err:", err, " publishId:", publishId)
+			deploy.Option.Log.Info("DeployOneService err:" + err.Error() + " publishId:" + strconv.Itoa(publishId))
 			if err == nil {
 				err = deploy.Publish(publishId, deployTargetType)
 				util.MyPrint("DeployOneService err:", err)
 			}
-
-			// if err != nil {
-			//	util.ExitPrint(err)
-			// }
 		}
 	}
+	return nil
 }
 
-func (deploy *Deploy) GetDeployConfig(deployTargetType int) ServiceDeployConfig {
+func (deploy *Deploy) GetDeployConfig(deployTargetType int) (sdc ServiceDeployConfig, err error) {
 	serviceBaseDir := ""
 	if deployTargetType == DEPLOY_TARGET_TYPE_REMOTE {
 		serviceBaseDir = deploy.Option.Config.System.WorkBaseDir + "/" + DEPLOY_TARGET_TYPE_REMOTE_NAME + "/"
 	} else if deployTargetType == DEPLOY_TARGET_TYPE_LOCAL {
 		serviceBaseDir = deploy.Option.Config.System.WorkBaseDir + "/" + DEPLOY_TARGET_TYPE_LOCAL_NAME + "/"
 	} else {
-		util.ExitPrint("deployTargetType err:", deployTargetType)
+		return sdc, errors.New("deployTargetType err:" + strconv.Itoa(deployTargetType))
 	}
 
 	// cicdManager.Option.Log.Info("DeployAllService:")
 	serviceDeployConfig := ServiceDeployConfig{
-		DeployTargetType:   deployTargetType,
-		BaseDir:            serviceBaseDir,
-		RemoteBaseDir:      deploy.Option.Config.System.RemoteBaseDir,
-		OpDirName:          deploy.Option.OpDirName,
-		MasterDirName:      deploy.Option.Config.System.MasterDirName,
-		GitCloneTmpDirName: deploy.Option.Config.System.GitCloneTmpDirName,
-
-		CICDConfFileName:      "cicd.toml", // 本项目的相关 脚本及配置,这个是写死的，与程序员约定好，且里面的内容由程序DIY
-		CICDShellFileName:     "cicd.sh",   // 执行：git clone 代码，并获取当前git最新版本号
-		SuperVisorConfDir:     deploy.Option.Config.SuperVisor.ConfDir,
+		DeployTargetType:      deployTargetType,
+		BaseDir:               serviceBaseDir,
+		RemoteBaseDir:         deploy.Option.Config.System.RemoteBaseDir,
+		OpDirName:             deploy.Option.OpDirName,
+		MasterDirName:         deploy.Option.Config.System.MasterDirName,
+		GitCloneTmpDirName:    deploy.Option.Config.System.GitCloneTmpDirName,
+		CICDConfFileName:      "cicd.toml", // 本项目的相关 脚本及配置(写死的，只放在项目根目录下)
+		CICDShellFileName:     "cicd.sh",   // 执行：git clone 代码，并获取当前git最新版本号(写死的，只有部署程序的项目，才需要此脚本，被部署的项目不需要)
 		SuperConfTemplateFile: deploy.Option.Config.SuperVisor.ConfTemplateFile,
+		// SuperVisorConfDir:     deploy.Option.Config.SuperVisor.ConfDir,
 	}
-	return serviceDeployConfig
+	return serviceDeployConfig, nil
+}
+
+func (deploy *Deploy) ShowServiceDeployConfig(sdc ServiceDeployConfig) {
+	pre := "ServiceDeployConfig "
+	log := deploy.Option.Log
+
+	log.Info(pre + " Name " + sdc.Name)
+	log.Info(pre + " BaseDir " + sdc.BaseDir)
+	log.Info(pre + " RemoteBaseDir " + sdc.RemoteBaseDir)
+	log.Info(pre + " FullPath " + sdc.FullPath)
+	log.Info(pre + " MasterDirName " + sdc.MasterDirName)
+	log.Info(pre + " MasterPath " + sdc.MasterPath)
+	log.Info(pre + " CICDConfFileName " + sdc.CICDConfFileName)
+	log.Info(pre + " OpDirName " + sdc.OpDirName)
+	log.Info(pre + " FullOpDirName " + sdc.FullOpDirName)
+	log.Info(pre + " GitCloneTmpDirName " + sdc.GitCloneTmpDirName)
+	log.Info(pre + " ClonePath " + sdc.ClonePath)
+	log.Info(pre + " CodeGitClonePath " + sdc.CodeGitClonePath)
+	log.Info(pre + " SuperVisorConfDir " + sdc.SuperVisorConfDir)
+	log.Info(pre + " SuperConfTemplateFile " + sdc.SuperConfTemplateFile)
+	log.Info(pre + " CICDShellFileName " + sdc.CICDShellFileName)
+	log.Info(pre + " DeployTargetType " + strconv.Itoa(sdc.DeployTargetType))
+
 }
 
 // 部署时，如果是测试，指定一些参数即可，不用全部署
 func (deploy *Deploy) CheckTest(server util.Server, serviceDeployConfig ServiceDeployConfig, service model.Project) error {
 	// if server.OutIp != ""{
 	//	return errors.New("CheckTest is err outIp != ''")
-	// }
-	// if server.Env != 5 { // 测试代码,只部署：正式
-	// 	errMsg := " server.Env != 5 "
-	// 	util.MyPrint(errMsg)
-	// 	return errors.New(errMsg)
 	// }
 	// 目前仅允许这3个项目部署，3个全开放，是给HTTP使用，指令行测试，把下面两个打开即可
 	test_allow_project_name := []string{"Zgoframe", "Zwebuivue", "Zwebuigo", "Digitaltwin"}
@@ -192,7 +211,6 @@ func (deploy *Deploy) CheckTest(server util.Server, serviceDeployConfig ServiceD
 
 	if search == 0 {
 		errMsg := "test_allow_project_name service name no search : " + service.Name
-		util.MyPrint(errMsg)
 		return errors.New(errMsg)
 	}
 
@@ -212,9 +230,9 @@ func (deploy *Deploy) OneService(server util.Server, serviceDeployConfig Service
 		Step:                0,
 		ServiceDeployConfig: serviceDeployConfig,
 		Server:              server,
-		service:             service,
+		Service:             service,
 	}
-	deploy.Option.Log.Info("DeployOneService:" + server.OutIp + " Env:" + strconv.Itoa(server.Env) + " serviceName: " + service.Name)
+	deploy.Option.Log.Info("DeployOneService ServerOutIp:" + server.OutIp + " Env:" + strconv.Itoa(server.Env) + " serviceName: " + service.Name)
 	// 创建一条发布记录
 	publish, err := deploy.Option.PublicManager.InsertOne(service, server, serviceDeployConfig.DeployTargetType)
 	if err != nil {
@@ -230,6 +248,8 @@ func (deploy *Deploy) OneService(server util.Server, serviceDeployConfig Service
 	if err != nil {
 		return publish.Id, deployOneServiceFlowRecord, deploy.DeployOneServiceFailed(publish, err.Error())
 	}
+
+	deploy.ShowServiceDeployConfig(serviceDeployConfig)
 	deploy.Option.Log.Info("DeployServiceCheck ok~")
 	serviceDeployConfig = newServiceDeployConfig
 	// step 2 : 项目代码及目录(git)相关
@@ -244,17 +264,15 @@ func (deploy *Deploy) OneService(server util.Server, serviceDeployConfig Service
 	p.Id = publish.Id
 	p.CodeDir = projectDirName // 保留目录名，使用浏览器操作的时候，切换master使用
 	deploy.Option.PublicManager.UpInfo(p)
-	// step 3 : 读取service项目代码里自带的cicd.toml ,供:后面使用
+	// step 3 : 读取service项目代码里自带的 cicd.toml ,供:后面使用
 	deployOneServiceFlowRecord.Step = 3
-	util.MyPrint("newGitCodeDir:", newGitCodeDir)
+	deploy.Option.Log.Info("newGitCodeDir:" + newGitCodeDir)
 	deployOneServiceFlowRecord.NewGitCodeDir = newGitCodeDir
 
 	serviceCICDConfig, serviceSelfCICDConf, err := deploy.DeployOneServiceCICIConfig(newGitCodeDir, serviceDeployConfig, server, gitLastCommitId)
 	if err != nil {
 		return publish.Id, deployOneServiceFlowRecord, deploy.DeployOneServiceFailed(publish, err.Error())
 	}
-	// deployOneServiceFlowRecord.ShowDeployOneServiceRecord()
-	// util.ExitPrint(22)
 
 	deployOneServiceFlowRecord.ServiceSelfCicdFile = serviceSelfCICDConf
 	deployOneServiceFlowRecord.Step = 4
@@ -271,7 +289,7 @@ func (deploy *Deploy) OneService(server util.Server, serviceDeployConfig Service
 	}
 	deployOneServiceFlowRecord.ServiceSelfConfigTmpFileDir = serviceSelfConfigTmpFileDir
 	deployOneServiceFlowRecord.ServiceSelfCicdFile = serviceSelfConfigFileDir
-	// step 6 : 先执行 服务自带的 shell 预处理
+	// step 6 : 先执行 服务自带的 shell 预处理(编译代码)
 	deployOneServiceFlowRecord.Step = 6
 	shellCICDCommand, shellCICDBuild, _, err := deploy.DeployOneServiceCommand(newGitCodeDir, serviceDeployConfig, serviceCICDConfig)
 	if err != nil {
@@ -281,7 +299,10 @@ func (deploy *Deploy) OneService(server util.Server, serviceDeployConfig Service
 	deployOneServiceFlowRecord.ShellCICDBuild = shellCICDBuild
 	// step 7 : 目前均是在本机部署的代码，现在要将代码同步到服务器上
 	deployOneServiceFlowRecord.Step = 7
-	syncCodeShellCommand, syncSuperVisorShellCommand, err := deploy.SyncOneServiceToRemote(serviceDeployConfig, server, newGitCodeDir, service)
+	syncCodeShellCommand, syncSuperVisorShellCommand, err := deploy.SyncOneServiceToRemote(serviceDeployConfig, server, newGitCodeDir, service, serviceCICDConfig)
+	if err != nil {
+		return publish.Id, deployOneServiceFlowRecord, deploy.DeployOneServiceFailed(publish, err.Error())
+	}
 	deployOneServiceFlowRecord.SyncCodeShellCommand = syncCodeShellCommand
 	deployOneServiceFlowRecord.SyncSuperVisorShellCommand = syncSuperVisorShellCommand
 	// 更新部署的状态
@@ -310,8 +331,12 @@ func (deploy *Deploy) OneService(server util.Server, serviceDeployConfig Service
 // }
 
 func (deploy *Deploy) Publish(id int, deployTargetType int) error {
-	serviceDeployConfig := deploy.GetDeployConfig(deployTargetType)
 	publishRecord, err := deploy.Option.PublicManager.GetById(id)
+	if err != nil {
+		return err
+	}
+
+	serviceDeployConfig, err := deploy.GetDeployConfig(deployTargetType)
 	if err != nil {
 		return err
 	}

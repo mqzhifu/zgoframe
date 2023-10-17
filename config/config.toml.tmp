@@ -194,7 +194,7 @@ remoteUploadDir = "/opt/cicd/file_upload"
 remoteDownloadDir = "/opt/cicd/file_download"
 masterDirName = "master"
 gitCloneTmpDirName="clone"
-httpPort="4455"
+#httpPort="4455"
 
 
 #阿里云静态文件存储
@@ -226,9 +226,7 @@ domain          = "https://api.agora.io/v1/apps/"
 #这里的配置均属于本机的配置，远端的存在DB中
 rpcPort="9002"
 confTemplateFile="super_visor.ini"#所有项目的通用配置文件，在本项目中
-#confDir="/usr/local/etc/"
-#confDir="/etc/supervisor"
-confDir="D:/project/cicd/super_visor"
+#confDir="D:/project/cicd/super_visor" # 暂时不用，生成的项目配置文件，直接在项目目录中即可，不再单独加目录了
 
 
 

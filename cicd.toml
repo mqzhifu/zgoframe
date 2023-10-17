@@ -7,9 +7,10 @@ build = "go build -ldflags  \"-X main.BuildGitVersion='#git_version#' -X main.Bu
 #build = "go build -ldflags \"-X main.BuildGitVersion='#git_version#' -X 'main.BUILD_TIME=`#datetime#`' \" -o #service_name#"
 #command="go version;go env -w GO111MODULE=on;go env -w GOPROXY=https://goproxy.cn,direct;go mod tidy;go mod download;go get -u github.com/swaggo/swag/cmd/swag@v1.7.9;$HOME/go/bin/swag init --parseDependency --parseInternal --parseDepth 3;"
 command="go version;go env -w GO111MODULE=on;go env -w GOPROXY=https://goproxy.cn,direct;go mod tidy;$HOME/go/bin/swag init --parseDependency --parseInternal --parseDepth 3;"
-configTmpFileName="config.toml.tmp"
-configFileName="config.toml"
-
+configTmpFileName="config.toml.tmp" #项目的配置文件-模板
+configFileName="config.toml" #最终的，项目配置文件（已替换好变量）
+ConfigFilePath="config"# 项目的配置文件所在的位置，上面两个文件均在此目录下(注：这是个相对路径，以项目的根目录为依托)
+hasSuperVisor="open" # 大多是后端部署时，需要启动进程，并保护进程，前端大概率不需要
 
 [depend]
 go="1.16"

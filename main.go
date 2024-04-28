@@ -4,7 +4,7 @@ package main
 //go:generate go env -w GOPROXY=https://goproxy.cn,direct
 //go:generate go mod tidy
 //go:generate go mod download
-//go:generate go get -u github.com/swaggo/swag/cmd/swag@v1.7.9
+//go:generate go install github.com/swaggo/swag/cmd/swag@v1.7.9
 //go:generate $HOME/go/bin/swag init --parseDependency --parseInternal --parseDepth 3
 
 import (
@@ -12,6 +12,9 @@ import (
 	"embed"
 	_ "embed"
 	"flag"
+	"fmt"
+	"net/http"
+	_ "net/http/pprof"
 	"os"
 	"os/user"
 	"runtime"
@@ -82,12 +85,19 @@ var initializeVar *initialize.Initialize
 // @tag.description 文件系统，如：上传/下载文件，文件包括：图片、视频、文件流等。上传的文件名只允许：字母、数字、下划线、中划线、点，必须有扩展名。 上传后的新文件名：类型ID_unixStamp_md5值.扩展名。文件在本地存一份，可同步到OSS一份，目录可以做hash(月、天、小时)。 注：文件上传目前仅支持HTTP协议，也就是form+multipart/form-data模式。(有一个接口支持非HTTP-FORM上传，也就是base64当BODY，但是仅支持图片)。注：有操作路径时，一定不要多一个/少一个反斜杠的【字符】，因为OSS上是直接支持的,LINUX下双反斜杠会自动变成一个。暂不支持：分片传输，断点续传等功能
 // @tag.name ConfigCenter
 // @tag.description 配置中心，它有几个维度注意下： 环境->项目->文件->模块，项目这个维度http-header头中是公共的且已处理，余下3个请求的时候都要带上。目前仅支持：toml格式，后期可加ymal和ini
+// @tag.name Test
+// @tag.description 测试开发
 // @securityDefinitions.apikey ApiKeyAuth
 // @name xa
 // @name X-Token
 // @in header
 
+func test() {
+	fmt.Println(111)
+}
+
 func main() {
+	go test()
 	// 编译打进去的两个参数：BuildTime 编译时间，编译的 git 版本号
 	util.MyPrint("code , BuildTime:", BuildTime, " BuildGitVersion:", BuildGitVersion)
 	// 日志前缀
@@ -134,6 +144,9 @@ func main() {
 	// 监听外部进程信号
 	go global.V.Process.DemonSignal()
 	util.MyPrint(prefix + "wait mainCxt.done...")
+	//性能 - 监控
+	//go startHttp()
+
 	select {
 	case <-mainCxt.Done(): // 阻塞
 		QuitAll(1)
@@ -195,4 +208,18 @@ func QuitAll(source int) {
 	initializeVar.Quit()
 
 	util.MyPrint("main QuitAll finish.")
+}
+
+// 快速开启一个 HTTP 监听，给火焰图使用
+func startHttp() {
+	hostPort := "127.0.0.1:10000"
+	http.HandleFunc("/", wwwHandle)
+	err := http.ListenAndServe(hostPort, nil)
+	if err != nil {
+		fmt.Println("ListenAndServe err:", err)
+	}
+}
+
+func wwwHandle(w http.ResponseWriter, r *http.Request) {
+
 }

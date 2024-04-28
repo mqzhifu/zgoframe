@@ -2,7 +2,6 @@
 package initialize
 
 import (
-	"C"
 	"errors"
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -12,6 +11,7 @@ import (
 	"zgoframe/core"
 	"zgoframe/core/global"
 	"zgoframe/util"
+	"zgoframe/util/container"
 )
 
 type Initialize struct{}
@@ -284,6 +284,9 @@ func (initialize *Initialize) Start() error {
 		global.V.AliOss = util.NewAliOss(op)
 	}
 
+	//创建一全二叉树
+	global.V.BinaryTree = container.NewBinaryTree(100, 1, 1)
+	global.V.TrieTree = container.NewTrieTree()
 	//var netWayOption util.NetWayOption
 	//if global.C.Gateway.Status == global.GLOBAL_CONFIG_MODEL_STATUS_OPEN {
 	//	netWayOption = InitGateway()

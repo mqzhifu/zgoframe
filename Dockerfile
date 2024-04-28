@@ -47,3 +47,5 @@ CMD [ "./zgoframe","-e","5"]
 
 #docker run -d --link=ckMysq57:myDb --link=ckRedis5:myRedis -v /data/docker/zgoframe/config:/app/config zgoframe:0.10
 #docker run -d  -d -p 3333:3333 -p 5555:5555  --link=ckMysq57:myDb --link=ckRedis5:myRedis -v /data/docker/zgoframe/config:/app/config zgoframe:0.12
+
+# docker run -p 6379:6379 --name myRedis5  -d redis:5.0.3 --requirepass "111222"

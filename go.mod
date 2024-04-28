@@ -61,8 +61,11 @@ require (
 	go.uber.org/multierr v1.8.0 // indirect
 	go.uber.org/zap v1.24.0
 	golang.org/x/image v0.0.0-20220302094943-723b81ca9867
-	golang.org/x/net v0.14.0
-	golang.org/x/tools v0.12.0
+	golang.org/x/mod v0.17.0 // indirect
+	golang.org/x/net v0.24.0
+	golang.org/x/sync v0.7.0 // indirect
+	golang.org/x/telemetry v0.0.0-20240228155512-f48c80bd79b2 // indirect
+	golang.org/x/tools v0.17.0
 	google.golang.org/genproto v0.0.0-20230410155749-daa745c078e1 // indirect
 	google.golang.org/grpc v1.54.0
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect

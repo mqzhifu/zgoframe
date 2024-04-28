@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>二叉树</title>
+    <script src="/static/js/common.js?r=8" type="text/javascript"></script>
+    <script src="/static/js/jquery.min.js" type="text/javascript" ></script>
+</head>
+<body>
+
+<table>
+
+    <tr>
+        <th>遍历顺序</th>
+        <th>列表</th>
+    </tr>
+
+    <tr>
+        <td>先序</td><td id="list_first"></td>
+    </tr>
+
+    <tr>
+        <td>中序</td><td id="list_middle"></td>
+    </tr>
+
+    <tr>
+        <td>后序</td><td id="list_end"></td>
+    </tr>
+
+</table>
+
+
+<table>
+
+    <tr>
+        <td><input type="button" onclick="add();" value="添加" /></td>
+        <td><input type="text" id="add_data" /></td>
+
+
+    </tr>
+    <tr>
+        <td><input type="button" onclick="each_deep();" value="打印树" /></td>
+    </tr>
+</table>
+
+
+
+<div>树：</div>
+<div id="tree"></div>
+
+
+</body>
+
+<script>
+
+    function add(){
+        var data = $("#add_data").val();
+        console.log(data)
+        if(data == ""){
+            return alert("添加内容为空");
+        }
+        var uri = {"keyword":data}
+        request(addCallback,"test_binary_tree_insert_one","","","GET","",uri)
+
+    }
+
+    function addCallback(res){
+        // alert(res);
+        initList()
+    }
+
+    function initList(){
+
+        request(test_binary_tree_list,"test_binary_tree_list","","","GET","",{"flag":4})
+
+    }
+
+    function test_binary_tree_list(backData){
+        // console.log(backData)
+        if(!backData){
+            $("#list_first").html("回调数据为空1");
+            $("#list_middle").html("回调数据为空1");
+            $("#list_end").html("回调数据为空1");
+            return null;
+        }
+
+        if(!backData.first){
+            $("#list_first").html("回调数据为空2");
+            $("#list_middle").html("回调数据为空2");
+            $("#list_end").html("回调数据为空2");
+            return null;
+        }
+
+        var html = "";
+        for(var i=0;i<backData.first.length;i++){
+            html += backData.first[i] + " , ";
+        }
+        $("#list_first").html(html);
+
+        var html = "";
+        for(var i=0;i<backData.middle.length;i++){
+            html += backData.middle[i] + " , ";
+        }
+        $("#list_middle").html(html);
+
+        var html = "";
+        for(var i=0;i<backData.after.length;i++){
+            html += backData.after[i] + " , ";
+        }
+        $("#list_end").html(html);
+
+    }
+
+    function each_deep(){
+        request(each_deep_callback,"test_binary_tree_each_deep","","","GET")
+    }
+
+    function each_deep_callback(res){
+        // console.log("each_deep_callback:",res)
+        var everyNodeWidth = 10;//每个元素值占的宽度
+        var  everySpaceWidth = 50;//每个元素中间会有一个空格
+        var level = 0;
+        for (let key in res) {
+            level++;
+        }
+        console.log("level:",level);
+        var lastLevelNodeNum = Math.pow(2,level - 1);
+        console.log("最后一行共计多少个节点:",lastLevelNodeNum);
+        //总宽度 = 总结点数 * everyNodeWidth + 每个空格占位数 * 共计多少个空格
+        var width = lastLevelNodeNum * everyNodeWidth + everySpaceWidth * (lastLevelNodeNum - 1)
+        console.log(lastLevelNodeNum,everyNodeWidth,everySpaceWidth,lastLevelNodeNum - 1)
+        console.log(width)
+
+        var inc = 0;
+        var html = "";
+        for (var j = level;j > 0 ;j--) {
+            var preStart = inc * everySpaceWidth ;
+            var everyNodeDistance = width / res[j].length ;
+            everyNodeDistance =  parseInt(everyNodeDistance);
+            console.log(everyNodeDistance,res[j].length)
+
+            var row = "<div>";
+            for(var i=0;i<res[j].length;i++){
+                if (i == 0){
+                    row  += getSomeSpace(preStart) ;
+                }
+
+                row += getSpace(res[j][i],everyNodeDistance);
+
+
+
+                console.log(row)
+                // if(res[j].length == i+1){
+                    // html += '<div style="width: '+everyNodeDistance+'px">'+res[j][i]+'</div>';
+                // }else{
+                    // html += '<div style="width: '+everyNodeDistance+'px ;display: inline-block">'+res[j][i]+'</div>';
+                // }
+            }
+            // console.log(html)
+            row += "</div>";
+            inc++;
+
+            html += row;
+        }
+
+        // alert(html);
+        $("#tree").html(html)
+        // var distance = width / lastLevelNodeNum ;
+        // console.log("distance:",distance)
+
+    }
+
+    function getSpace(v,distance){
+        var spaceNum = distance - v.toString().length
+        var spaceHtml = "";
+        for(var i=0;i<spaceNum;i++){
+            spaceHtml += "&nbsp;"
+        }
+        return v.toString() + spaceHtml;
+    }
+
+    function getSomeSpace(n){
+        var spaceHtml = "";
+        for(var i=0;i<n;i++){
+            spaceHtml += "&nbsp;"
+        }
+        return spaceHtml;
+    }
+
+    initList()
+
+
+
+</script>
+</html>

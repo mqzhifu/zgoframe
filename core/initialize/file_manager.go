@@ -1,6 +1,5 @@
 package initialize
 
-import "C"
 import (
 	"zgoframe/core/global"
 	"zgoframe/util"

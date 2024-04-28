@@ -51,6 +51,13 @@ var URI_MAP = {
     "test_migu_get_para" :  "/tools/test/migu/api/para",
     "test_migu_send_back_data" :  "/tools/test/migu/api/backdata",
 
+    "test_binary_tree_list" :  "/test/binary/tree/list/flag",
+    // "test_binary_tree_list_middle" :  "/test/binary/tree/list/middle",
+    // "test_binary_tree_list_end" :  "/test/binary/tree/list/end",
+    "test_binary_tree_insert_one":"/test/binary/tree/insert/one/keyword",
+    "test_binary_tree_each_deep":"/test/binary/tree/each/deep",
+
+
 };
 //用户列表，用于测试
 var UserList = {

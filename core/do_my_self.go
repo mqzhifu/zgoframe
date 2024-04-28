@@ -1,6 +1,7 @@
 package core
 
 import (
+	"reflect"
 	"zgoframe/core/global"
 	"zgoframe/http/request"
 	"zgoframe/test"
@@ -52,9 +53,56 @@ func DoTestAction(flag string) {
 	case "gateway":
 		test.Gateway()
 	case "image_slice":
-		test.ImageSlice()
+	case "calc":
+		dd := "aaaaa"
+		ttDD := reflect.TypeOf(dd)
+		vvDD := reflect.ValueOf(dd)
+
+		util.MyPrint(ttDD, vvDD)
+
+		//slice1 := []int{0, 1, 2, 3}
+		//testSlice(slice1)
+		//util.MyPrint(slice1)
+
+		//slice := []int{0, 1, 2, 3}
+		//fmt.Printf("slice: %v \n", slice)
+		//
+		//changeSlice(slice)
+		//fmt.Printf("slice: %v\n", slice)
+
+		//a := []int{1, 2, 3, 4, 5}
+		//changeSlice(a)
+		//fmt.Println(a)
+
+		//time.NewTimer(2 * time.Second)
+		//
+		//var slice []int
+		//var a [3]int
+		//util.MyPrint((slice == nil))
+
+		//var b [3]int
+		//a := [3]int{}
+		//util.MyPrint(a, b)
+		//a := [4]int{1, 2, 3, 4}
+		//b := []int{1, 2, 3, 4}
+		//
+		//fmt.Printf("%p %T %v %d %d \n", &a, a, a, len(a), cap(a))
+		//fmt.Printf("%p %T %v %d %d \n", &b, b, b, len(b), cap(b))
+		//util.ExitPrint(a, b)
+		util.ExitPrint("im die")
+		//geo := container.NewGeoHash()
+		//geo.Calc(39.923201, 116.390705)
 	default:
 		util.ExitPrint("DoTestAction flag no hit , flag:" + flag)
 	}
 
 }
+
+//func testSlice(a []int) {
+//	a = append(a, 1)
+//	util.MyPrint(a)
+//}
+//
+//func changeSlice(slice []int) {
+//	slice[2] = 333
+//}

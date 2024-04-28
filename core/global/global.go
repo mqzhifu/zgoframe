@@ -1,7 +1,6 @@
 // 全局容器，1 配置信息中的变量 2 公共初始好的类包
 package global
 
-import "C"
 import (
 	"context"
 	"embed"
@@ -13,6 +12,7 @@ import (
 	"os/user"
 	"zgoframe/model"
 	"zgoframe/util"
+	"zgoframe/util/container"
 )
 
 type Global struct {
@@ -51,6 +51,8 @@ type Global struct {
 	MyService        *MyService             // 内部快捷服务
 	StaticFileSys    embed.FS               // 静态文件
 	StaticFileSystem *util.StaticFileSystem // 兼容，管理静态文件读取
+	BinaryTree       *container.BinaryTree
+	TrieTree         *container.TrieTree
 }
 
 var V = New() // 动态的容器

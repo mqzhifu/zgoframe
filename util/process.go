@@ -14,14 +14,14 @@ import (
 )
 
 type Process struct {
-	PathFileName string
-	CancelFunc   context.CancelFunc
-	InitBaseInfoCallbackFunc  func()string
-	RootQuitFunc func(source int)
-	Log          *zap.Logger
+	PathFileName             string
+	CancelFunc               context.CancelFunc
+	InitBaseInfoCallbackFunc func() string
+	RootQuitFunc             func(source int)
+	Log                      *zap.Logger
 }
 
-func NewProcess(ProcessPathFileName string, cancelFunc context.CancelFunc, log *zap.Logger, RootQuitFunc func(source int),InitBaseInfoCallbackFunc func()string) *Process {
+func NewProcess(ProcessPathFileName string, cancelFunc context.CancelFunc, log *zap.Logger, RootQuitFunc func(source int), InitBaseInfoCallbackFunc func() string) *Process {
 	process := new(Process)
 	process.PathFileName = ProcessPathFileName
 	process.CancelFunc = cancelFunc
@@ -63,7 +63,7 @@ func (process *Process) DelPid() (int, error) {
 	return pid, err
 }
 
-//进程PID保存到文件
+// 进程PID保存到文件
 func initPid(pathFile string) (int, error) {
 	pid := os.Getpid()
 	checkFd, err := FileExist(pathFile)
@@ -85,12 +85,13 @@ func initPid(pathFile string) (int, error) {
 	return pid, err
 }
 
-//信号 处理
+// 信号 处理
 func (process *Process) DemonSignal() {
 	process.Log.Warn("SIGNAL init : ")
 	c := make(chan os.Signal)
 	//syscall.SIGHUP :ssh 挂断会造成这个信号被捕获，先注释掉吧
-	signal.Notify(c, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT, syscall.SIGUSR1, syscall.SIGUSR2)
+	//signal.Notify(c, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT, syscall.SIGUSR1, syscall.SIGUSR2)
+	signal.Notify(c, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
 	prefix := "SIGNAL-DEMON :"
 	for {
 		sign := <-c
@@ -100,10 +101,11 @@ func (process *Process) DemonSignal() {
 			process.Log.Warn(prefix + "SIGINT | SIGTERM | SIGQUIT  , exit!!!")
 			process.CancelFunc()
 			goto end
-		case syscall.SIGUSR1:
-			process.Log.Warn(prefix + " usr1!!!")
-		case syscall.SIGUSR2:
-			process.Log.Warn(prefix + " usr2!!!")
+		//case syscall.SIGUSR1:
+		//	   process.Log.Warn(prefix + " usr1!!!")
+		//case syscall.SIGUSR2:
+		//	   process.Log.Warn(prefix + " usr2!!!")
+
 		default:
 			process.Log.Warn(prefix + " unknow!!!")
 		}

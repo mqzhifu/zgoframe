@@ -4,7 +4,7 @@ package main
 //go:generate go env -w GOPROXY=https://goproxy.cn,direct
 //go:generate go mod tidy
 //go:generate go mod download
-//go:generate go install github.com/swaggo/swag/cmd/swag@v1.7.9
+//go:generate go install github.com/swaggo/swag/cmd/swag@v1.16.3
 //go:generate $HOME/go/bin/swag init --parseDependency --parseInternal --parseDepth 3
 
 import (

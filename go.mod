@@ -52,7 +52,7 @@ require (
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/spf13/viper v1.3.2
 	github.com/swaggo/gin-swagger v1.0.0
-	github.com/swaggo/swag v1.7.9
+	github.com/swaggo/swag v1.16.3
 	github.com/tmc/grpc-websocket-proxy v0.0.0-20220101234140-673ab2c3ae75 // indirect
 	github.com/ugorji/go/codec v0.0.0-20181209151446-772ced7fd4c2 // indirect
 	github.com/xiang90/probing v0.0.0-20221125231312-a49e3df8f510 // indirect
@@ -63,8 +63,6 @@ require (
 	golang.org/x/image v0.0.0-20220302094943-723b81ca9867
 	golang.org/x/mod v0.17.0 // indirect
 	golang.org/x/net v0.24.0
-	golang.org/x/sync v0.7.0 // indirect
-	golang.org/x/telemetry v0.0.0-20240228155512-f48c80bd79b2 // indirect
 	golang.org/x/tools v0.17.0
 	google.golang.org/genproto v0.0.0-20230410155749-daa745c078e1 // indirect
 	google.golang.org/grpc v1.54.0
@@ -75,5 +73,4 @@ require (
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gorm.io/driver/mysql v1.5.0
 	gorm.io/gorm v1.25.0
-	sigs.k8s.io/yaml v1.2.0 // indirect
 )

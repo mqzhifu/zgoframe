@@ -20,7 +20,7 @@ import (
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
 // @Produce application/json
 // @Param data body pb.GameMatchSign true " "
-// @Success 200 {object} gamematch.Group
+// @Success 200 {object} string
 // @Router /game/match/sign [post]
 func GameMatchSign(c *gin.Context) {
 	var form pb.GameMatchSign

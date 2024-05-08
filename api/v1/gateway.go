@@ -19,7 +19,7 @@ import (
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
 // @Param service_name path string true "服务名"
 // @Param func_name path string true "函数名"
-// @Param data body request.Empty true "任意，请参考.proto"
+// @Param data body string true "任意，请参考.proto"
 // @Success 200 {boolean} true "true:成功 false:否"
 // @Router /gateway/service/{service_name}/{func_name} [post]
 func GatewayService(c *gin.Context) {

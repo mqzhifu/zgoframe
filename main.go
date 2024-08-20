@@ -92,12 +92,7 @@ var initializeVar *initialize.Initialize
 // @name X-Token
 // @in header
 
-func test() {
-	fmt.Println(111)
-}
-
 func main() {
-	go test()
 	// 编译打进去的两个参数：BuildTime 编译时间，编译的 git 版本号
 	util.MyPrint("code , BuildTime:", BuildTime, " BuildGitVersion:", BuildGitVersion)
 	// 日志前缀

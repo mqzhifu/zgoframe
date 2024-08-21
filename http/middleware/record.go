@@ -41,6 +41,11 @@ func Record() gin.HandlerFunc {
 			}
 			userId = id
 		}
+
+		if len(body) > 1000 {
+			body = []byte("body len > 1000")
+		}
+
 		record := model.OperationRecord{
 			Ip:     c.ClientIP(),
 			Method: c.Request.Method,

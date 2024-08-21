@@ -15,20 +15,12 @@ import (
 	"zgoframe/http/request"
 )
 
-//type FileDownInfo struct {
-//	PieceNum         int
-//	PieceSize        int
-//	FileSize         int64
-//	FileRelativePath string
-//	FileLocalPath    string
-//}
-
 // 上伟文件成功后，返回的数据
 type UploadRs struct {
 	Filename       string `json:"filename"`         //文件名
 	RelativePath   string `json:"relative_path"`    //相对路径：用户自定义的前缀目录 + hash目录名
 	UploadDir      string `json:"upload_dir"`       //存储上传图片的目录名
-	StaticDir      string `json:"static_dir"`       //存储表态文件的目录名，它是UploadDir的上一级
+	StaticDir      string `json:"static_dir"`       //存储静态文件的目录名，它是UploadDir的上一级
 	LocalDiskPath  string `json:"local_disk_path"`  //本地硬盘存储的路径
 	LocalIpUrl     string `json:"local_ip_url"`     //访问本地文件IP-URL地址
 	LocalDomainUrl string `json:"local_domain_url"` //访问本地文件DOMAIN-URL地址
@@ -37,12 +29,13 @@ type UploadRs struct {
 	Md5Sign        string `json:"md5_sign"`         //文件的MD5签名
 }
 
-// 类
+// FileManager 类
 type FileManager struct {
 	FileTypeMap sync.Map
 	Option      FileManagerOption
 }
 
+// FileManager 类的初始化参数
 type FileManagerOption struct {
 	UploadDir        string  //上传文件的存储：目录名
 	UploadMaxSize    int     //文件最大：MB ,默认：nginx是10Mb ,golang是9mb，不建议太大，且修改要与NGINX同步改，不然无效。文件太大建议使用新方法做分片传输
@@ -61,11 +54,19 @@ type FileManagerOption struct {
 	//LocalDirPath    string //最终的：文件上传->本地硬盘路径
 }
 
+// 所有图片-扩展名
 var imgs = []string{"jpg", "jpeg", "png", "gif", "x-png", "png", "bmp", "pjpeg", "x-icon", "svg", "webp", "psd"}
+
+// 所有文档-扩展名
 var docs = []string{"txt", "doc", "docx", "dotx", "json", "cvs", "xls", "xlsx", "sql", "msword", "ppt", "pptx", "pdf", "wps", "vsd"}
+
+// 所有压缩包-扩展名
 var packages = []string{"zip", "rar", "apk", "tar", "jar", "7z", "gz", "rz", "unitypackage", "ab"}
+
+// 所有视频-扩展名
 var video = []string{"mp4", "avi", "rm", "mkv", "wmv", "mov", "flv", "fla", "rmvb", "m3u8", "webm", "ts", "wav"}
 
+// 创建实例- 构造函数
 func NewFileManagerUpload(Option FileManagerOption) *FileManager {
 	fileManager := new(FileManager)
 	fileManager.Option = Option
@@ -165,6 +166,8 @@ func (fileManager *FileManager) UploadOne(header *multipart.FileHeader, module s
 					return uploadRs, errors.New("上传阿里云OSS失败:" + err.Error())
 				}
 			}
+		} else {
+			ExitPrint("syncOss only ali")
 		}
 	}
 

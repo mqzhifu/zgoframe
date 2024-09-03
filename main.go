@@ -10,7 +10,6 @@ package main
 import (
 	"context"
 	"embed"
-	_ "embed"
 	"flag"
 	"fmt"
 	"net/http"
@@ -37,6 +36,7 @@ var (
 //go:embed static
 var staticFileSys embed.FS
 
+// 核心类 - 初始化所有代码
 var initializeVar *initialize.Initialize
 
 // @title z golang 框架

@@ -53,7 +53,6 @@ func GetNewViper(prefix string) (myViper *viper.Viper, config global.Config, err
 
 	if viperOption.SourceType == "file" { //直接从文件中读取配置信息
 		myViper.SetConfigType(viperOption.ConfigFileType)
-		//myViper.SetConfigName(ConfigName + "." + ConfigType)
 		configFile := "config/" + viperOption.ConfigFileName + "." + viperOption.ConfigFileType
 		util.MyPrint(viperOption.PrintPrefix + "viper read:" + configFile)
 		myViper.SetConfigFile(configFile)
@@ -63,7 +62,6 @@ func GetNewViper(prefix string) (myViper *viper.Viper, config global.Config, err
 			util.MyPrint("myViper.ReadInConfig() err :", err)
 			return myViper, config, err
 		}
-		//config := Config{}
 		err = myViper.Unmarshal(&config)
 		if err != nil {
 			util.MyPrint(" myViper.Unmarshal err:", err)

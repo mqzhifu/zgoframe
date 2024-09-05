@@ -56,6 +56,8 @@ var URI_MAP = {
     // "test_binary_tree_list_end" :  "/test/binary/tree/list/end",
     "test_binary_tree_insert_one":"/test/binary/tree/insert/one/keyword",
     "test_binary_tree_each_deep":"/test/binary/tree/each/deep",
+    "grab_order_get_data":"/grab/order/get/data",
+    "grab_order_get_pay_category":"/grab/order/get/pay/category"
 
 
 };

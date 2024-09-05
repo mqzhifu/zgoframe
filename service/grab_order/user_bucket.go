@@ -6,21 +6,21 @@ import (
 )
 
 type UserBucketElement struct {
-	Uid         int
-	Weight      int
-	SuccessTime int
-	FailedTime  int
-	CreateTime  int64
-	UpdateTime  int64
+	Uid         int   `json:"uid"`
+	Weight      int   `json:"weight"`
+	SuccessTime int   `json:"success_time"`
+	FailedTime  int   `json:"failed_time"`
+	CreateTime  int64 `json:"create_time"`
+	UpdateTime  int64 `json:"update_time"`
 }
 
 // 参与抢单-用户-桶
 type UserBucket struct {
-	CategoryId    int
-	MinAmount     int
-	MaxAmount     int
-	PriorityQueue PriorityQueue //有序队列   oid => 金额
-	ElementsMap   map[int]UserBucketElement
+	CategoryId    int                       `json:"category_id"`
+	MinAmount     int                       `json:"min_amount"`
+	MaxAmount     int                       `json:"max_amount"`
+	PriorityQueue PriorityQueue             `json:"-"` //有序队列   oid => 金额
+	ElementsMap   map[int]UserBucketElement `json:"elements_map"`
 }
 
 func NewUserBucket(categoryId int, minAmount int, maxAmount int) *UserBucket {

@@ -2,38 +2,41 @@ package grab_order
 
 import (
 	"fmt"
+	"gorm.io/gorm"
 	"strconv"
 	"time"
+	"zgoframe/model"
 )
 
 type GrabOrder struct {
-	OrderBucketList           map[int]*OrderBucket           //[category_id]OrderBucket
-	UserBucketAmountRangeList map[int]map[string]*UserBucket //[category_id][amount_range]UserBucket
-	UserTotal                 *UserTotal
-	AmountRange               AmountRange
-	Settings                  Settings
+	OrderBucketList           map[int]*OrderBucket           `json:"order_bucket_list"`             //[category_id]OrderBucket
+	UserBucketAmountRangeList map[int]map[string]*UserBucket `json:"user_bucket_amount_range_list"` //[category_id][amount_range]UserBucket
+	UserTotal                 *UserTotal                     `json:"user_total"`
+	AmountRange               AmountRange                    `json:"amount_range"`
+	Settings                  Settings                       `json:"settings"`
+	Gorm                      *gorm.DB                       `json:"-"`
 	//GrabEventInterrupt        chan int
 }
 
 type AmountRange struct {
-	MinAmount int
-	MaxAmount int
-	Range     []AmountRangeElement
+	MinAmount int                  `json:"min_amount"`
+	MaxAmount int                  `json:"max_amount"`
+	Range     []AmountRangeElement `json:"range"`
 }
 
 type AmountRangeElement struct {
-	MinAmount int
-	MaxAmount int
+	MinAmount int `json:"min_amount"`
+	MaxAmount int `json:"max_amount"`
 }
 
 type Settings struct {
-	GrabTimeout        int //抢单超时时间
-	GrabDayTotalAmount int //每天可抢总额度
-	GrabDayOrderCnt    int //每天可抢总订单数量
-	GrabIntervalTime   int //抢单间隔
+	GrabTimeout        int `json:"grab_timeout"`          //抢单超时时间
+	GrabDayTotalAmount int `json:"grab_day_total_amount"` //每天可抢总额度
+	GrabDayOrderCnt    int `json:"grab_day_order_cnt"`    //每天可抢总订单数量
+	GrabIntervalTime   int `json:"grab_interval_time"`    //抢单间隔
 }
 
-func NewGrabOrder() *GrabOrder {
+func NewGrabOrder(db *gorm.DB) *GrabOrder {
 	grabOrder := new(GrabOrder)
 
 	grabOrder.InitAmountRange()
@@ -41,7 +44,8 @@ func NewGrabOrder() *GrabOrder {
 	grabOrder.InitUserBucketOrderBucket()
 
 	grabOrder.UserTotal = NewUserTotal()
-	//grabOrder.GrabEventInterrupt = make(chan int)
+
+	grabOrder.Gorm = db
 
 	return grabOrder
 }
@@ -69,17 +73,28 @@ func (grabOrder *GrabOrder) InitSettings() {
 }
 
 func (grabOrder *GrabOrder) InitUserBucketOrderBucket() {
+	grabOrder.UserBucketAmountRangeList = make(map[int]map[string]*UserBucket)
 	grabOrder.OrderBucketList = make(map[int]*OrderBucket)
 	for categoryId, _ := range PayCategoryList() { //每个支付分类 - 有一个 订单桶
 		grabOrder.OrderBucketList[categoryId] = NewOrderBucket(categoryId)
+		mapUserBucket := make(map[string]*UserBucket)
 		for _, v := range grabOrder.AmountRange.Range {
 			key := GetRangeKey(v.MinAmount, v.MaxAmount)
-			grabOrder.UserBucketAmountRangeList[categoryId][key] = NewUserBucket(categoryId, v.MinAmount, v.MaxAmount)
+			mapUserBucket[key] = NewUserBucket(categoryId, v.MinAmount, v.MaxAmount)
 		}
+		grabOrder.UserBucketAmountRangeList[categoryId] = mapUserBucket
 	}
 }
+func (grabOrder *GrabOrder) GetPayCategory() ([]model.PayCategory, error) {
+	list := []model.PayCategory{}
+	grabOrder.Gorm.Find(&list)
+	return list, nil
+}
+func (grabOrder *GrabOrder) GetData() (*GrabOrder, error) {
+	return grabOrder, nil
+}
 
-func (grabOrder *GrabOrder) CreateOrder(order Order) {
+func (grabOrder *GrabOrder) CreateOrder(order Order) error {
 	order.Timeout = grabOrder.Settings.GrabTimeout
 	key := ""
 	for _, v := range grabOrder.AmountRange.Range {
@@ -139,6 +154,7 @@ func (grabOrder *GrabOrder) CreateOrder(order Order) {
 		userBucket.PushOne(userInfo)
 		times++
 	}
+	return nil
 }
 
 type EventMsg struct {

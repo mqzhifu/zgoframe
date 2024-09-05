@@ -90,6 +90,14 @@ type FrameSyncRoomHistory struct {
 	PlayerId            int32  `json:"playerId"`
 }
 
+type GrabOrder struct {
+	Id         int `json:"id"`
+	Amount     int `json:"amount"`
+	Uid        int `json:"uid"`
+	CategoryId int `json:"category_id"`
+	Timeout    int `json:"timeout"`
+}
+
 type Goods struct {
 	Title         string `json:"title" db:"define:varchar(50);comment:标题;defaultValue:''"`                   //标题
 	Desc          string `json:"desc" db:"define:varchar(255);comment:描述;defaultValue:''"`                   //描述

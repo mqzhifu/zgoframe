@@ -1,17 +1,17 @@
 package grab_order
 
 type Order struct {
-	Id         int
-	Amount     int
-	Uid        int
-	CategoryId int
-	Timeout    int
+	Id         int `json:"id"`
+	Amount     int `json:"amount"`
+	Uid        int `json:"uid"`
+	CategoryId int `json:"category_id"`
+	Timeout    int `json:"timeout"`
 }
 
 // 支付-类型桶
 type OrderBucket struct {
-	CategoryId     int
-	QueueOrderInfo map[int]Order
+	CategoryId int           `json:"category_id"`
+	List       map[int]Order `json:"list"`
 }
 
 func NewOrderBucket(categoryId int) *OrderBucket {
@@ -22,15 +22,15 @@ func NewOrderBucket(categoryId int) *OrderBucket {
 }
 
 func (ob OrderBucket) AddOne(order Order) error {
-	ob.QueueOrderInfo[order.Id] = order
+	ob.List[order.Id] = order
 	return nil
 }
 
 func (ob OrderBucket) GelOne(oid int) Order {
-	return ob.QueueOrderInfo[oid]
+	return ob.List[oid]
 }
 
 func (ob OrderBucket) DelOne(oid int) error {
-	delete(ob.QueueOrderInfo, oid)
+	delete(ob.List, oid)
 	return nil
 }

@@ -341,3 +341,33 @@ create table mail_group(
                            `deleted_at` bigint  default   null  comment '是否删除'  ,
                            index  (`deleted_at`) )
     engine=innodb charset=utf8 comment='站内信 - 群发记录';
+
+
+CREATE TABLE `pay_category` (
+                                `id` int unsigned NOT NULL AUTO_INCREMENT COMMENT '主键id',
+                                `name` varchar(32) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL COMMENT '支付分类名',
+                                `sn` varchar(32) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL COMMENT '支付分类唯一标识',
+                                `status` tinyint NOT NULL DEFAULT '1' COMMENT '跑分状态',
+                                `sort` int NOT NULL DEFAULT '0' COMMENT '排序',
+                                `remark` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '备注',
+                                `icon` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT '' COMMENT '图像标识',
+                                `created_at` bigint  not null  default   0  comment '创建时间'  ,
+                                `updated_at` bigint  not null  default   0  comment '最后更新时间'  ,
+                                `deleted_at` bigint  default   null  comment '是否删除'  ,
+                                `min_amt` int NOT NULL DEFAULT '0' COMMENT '最小金额限制',
+                                `max_amt` int NOT NULL DEFAULT '0' COMMENT '最大金额限制',
+                                PRIMARY KEY (`id`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci ROW_FORMAT=DYNAMIC COMMENT='支付大类表';
+
+
+CREATE TABLE `banks` (
+                         `id` int NOT NULL AUTO_INCREMENT,
+                         `name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '银行名称',
+                         `code` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '银行代码',
+                         `address` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '银行地址',
+                         `status` tinyint NOT NULL DEFAULT '1' COMMENT '状态（0为禁用，1为启用）',
+                         `created_at` int DEFAULT NULL,
+                         `updated_at` int DEFAULT NULL,
+                         `deleted_at` int DEFAULT NULL,
+                         PRIMARY KEY (`id`) USING BTREE
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci ROW_FORMAT=DYNAMIC COMMENT='银行列表';

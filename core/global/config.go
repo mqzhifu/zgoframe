@@ -288,6 +288,7 @@ type Service struct {
 	GameMatch    string
 	FrameSync    string
 	Cicd         string
+	GrabOrder    string
 }
 
 type SuperVisor struct {

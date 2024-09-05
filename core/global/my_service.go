@@ -7,6 +7,7 @@ import (
 	"zgoframe/service/frame_sync"
 	gamematch "zgoframe/service/game_match"
 	"zgoframe/service/gateway"
+	"zgoframe/service/grab_order"
 	"zgoframe/service/msg_center"
 	"zgoframe/service/seed_business"
 	"zgoframe/service/user_center"
@@ -27,6 +28,7 @@ type MyService struct {
 	ServiceBridge *service.Bridge
 	FrameSync     *frame_sync.FrameSync
 	Alert         *msg_center.Alert
+	GrabOrder     *grab_order.GrabOrder
 	// StaticFileSystem *util.StaticFileSystem
 	// Match                 *gamematch.GameMatch        //匹配服务
 	// RequestServiceAdapter *service.RequestServiceAdapter //请求3方服务 适配器
@@ -117,6 +119,9 @@ func NewMyService() *MyService {
 		if err != nil {
 			util.ExitPrint(err)
 		}
+	}
+	if C.Service.GrabOrder == "open" {
+		myService.GrabOrder = grab_order.NewGrabOrder(V.Gorm)
 	}
 	// 网关
 	if C.Gateway.Status == "open" {

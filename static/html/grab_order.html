@@ -1,0 +1,105 @@
+<html>
+
+<head>
+    <title>cicd</title>
+    <script src="/static/js/common.js?r=8" type="text/javascript"></script>
+    <script src="/static/js/jquery.min.js" type="text/javascript" ></script>
+</head>
+<style>
+    table
+    {
+        border-collapse: collapse;
+        /*margin: 0 auto;*/
+        text-align: left;
+    }
+    table td, table th
+    {
+        border: 1px solid #cad9ea;
+        color: #666;
+        height: 30px;
+    }
+    table thead th
+    {
+        background-color: #CCE8EB;
+        width: 100px;
+    }
+    table tr:nth-child(odd)
+    {
+        background: #fff;
+    }
+    table tr:nth-child(even) {
+        background: #F5FAFA;
+    }
+
+    .portlet {
+        border:1px solid #ff0000;
+        margin:5px;
+    }
+
+</style>
+
+<body>
+
+<table class='table' id="pay_category">
+
+</table>
+
+<table class='table' id="grab_order">
+
+</table>
+
+<table class='table' id="order_bucket_list">
+
+</table>
+
+
+
+<br/>
+
+
+
+
+
+
+<script>
+    //入口
+    $(document).ready(function(){
+        request(init_pay_category,"grab_order_get_pay_category","",false,"GET",null,null);
+        request(init_grab_order_data,"grab_order_get_data","",false,"GET",null,null);
+
+
+    });
+    function init_pay_category(data){
+        var pay_category = $("#pay_category");
+        var html = "";
+        for(var i=0;i<data.length;i++){
+            html += "<tr>";
+            html += "<td>"+data[i]["id"]+"</td>"
+            html += "<td>"+data[i]["name"]+"</td>"
+            html += "</tr>";
+        }
+        pay_category.html(html);
+    }
+
+    function init_grab_order_data(data){
+        // var grab_order = $("#grab_order");
+        //
+        // var order_bucket_list_div = $("#order_bucket_list");
+        // for (let categoryId in data.order_bucket_list) {
+        //     var list = data.order_bucket_list[categoryId];
+        //     if (list.length <= 0){
+        //         alert("order_bucket_list 某个 list 空");
+        //         continue;
+        //     }
+        //     for(var i=0;i<list;i++){
+        //
+        //     }
+        // }
+    }
+
+
+</script>
+
+</body>
+
+</html>

@@ -113,6 +113,7 @@ func RegGinHttpRoute() {
 		router.Orders(PublicGroup)
 		router.Test(PublicGroup)
 		router.Pic(PublicGroup)
+		router.GrabOrder(PublicGroup)
 	}
 	//管理员/开发/运维 使用，头部要验证，还需要二次验证，主要有些危险的操作
 	SystemGroup := global.V.Gin.Group("")

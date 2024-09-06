@@ -11,5 +11,6 @@ func GrabOrder(Router *gin.RouterGroup) {
 		configCenterRouter.GET("get/pay/category", v1.GetPayCategory)
 		configCenterRouter.GET("get/data", v1.GrabOrderGetData)
 		configCenterRouter.POST("create", v1.GrabOrderCreate)
+		configCenterRouter.POST("user/open", v1.GrabOrderUserOpen)
 	}
 }

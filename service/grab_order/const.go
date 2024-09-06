@@ -5,7 +5,7 @@ const (
 	PAY_CATEGORY_BANK_CARD = 2 //银行卡
 	PAY_CATEGORY_WECHAT    = 3 //微信
 
-	DEFAULT_PRIORITY = 1 //抢单，用户默认权重值
+	DEFAULT_PRIORITY = 100 //抢单，用户默认权重值
 
 	EVENT_TYPE_USER_COLOSE_GRAB       = 1 //用户关闭了抢单
 	EVENT_TYPE_USER_WS_CLOSE          = 2 //用户ws断了

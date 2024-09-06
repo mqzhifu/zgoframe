@@ -55,8 +55,8 @@ func GrabOrderGetData(c *gin.Context) {
 }
 
 // @Tags GrabOrder
-// @Summary 抢单-获取数据
-// @Description 获取所有，汇总数据
+// @Summary 创建一个订单
+// @Description 创建一个订单，匹配一个用户来支付
 // @Security ApiKeyAuth
 // @accept application/json
 // @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
@@ -79,6 +79,41 @@ func GrabOrderCreate(c *gin.Context) {
 	}
 
 	err = global.V.MyService.GrabOrder.CreateOrder(o)
+	if err != nil {
+		httpresponse.FailWithMessage("err:"+err.Error(), c)
+	} else {
+		httpresponse.OkWithAll("可以的哟~", "ok", c)
+	}
+}
+
+// @Tags GrabOrder
+// @Summary 用户打开抢单功能
+// @Description 用户打开抢单功能，开始抢单匹配用户
+// @Security ApiKeyAuth
+// @accept application/json
+// @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
+// @Param X-Project-Id header string true "项目ID" default(6)
+// @Param X-Access header string true "访问KEY" default(imzgoframe)
+// @Param data body []request.GrabOrderUserOpen true "用户信息"
+// @Produce  application/json
+// @Success 200 {object} request.FrameSyncRoomHistory
+// @Router /grab/order/user/open [POST]
+func GrabOrderUserOpen(c *gin.Context) {
+	var form []request.GrabOrderUserOpen
+	err := c.ShouldBind(&form)
+	util.MyPrint("form:", form, " err:", err)
+
+	req := []grab_order.UserGrabInfo{}
+	for _, v := range form {
+		o := grab_order.UserGrabInfo{
+			PayCategoryId: v.PayCategoryId,
+			AmountMin:     v.AmountMin,
+			AmountMax:     v.AmountMax,
+		}
+		req = append(req, o)
+	}
+
+	err = global.V.MyService.GrabOrder.UserOpenGrab(4, req)
 	if err != nil {
 		httpresponse.FailWithMessage("err:"+err.Error(), c)
 	} else {

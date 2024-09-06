@@ -98,6 +98,12 @@ type GrabOrder struct {
 	Timeout    int `json:"timeout"`
 }
 
+type GrabOrderUserOpen struct {
+	PayCategoryId int
+	AmountMin     int
+	AmountMax     int
+}
+
 type Goods struct {
 	Title         string `json:"title" db:"define:varchar(50);comment:标题;defaultValue:''"`                   //标题
 	Desc          string `json:"desc" db:"define:varchar(255);comment:描述;defaultValue:''"`                   //描述

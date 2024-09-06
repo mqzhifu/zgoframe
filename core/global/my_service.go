@@ -121,7 +121,7 @@ func NewMyService() *MyService {
 		}
 	}
 	if C.Service.GrabOrder == "open" {
-		myService.GrabOrder = grab_order.NewGrabOrder(V.Gorm)
+		myService.GrabOrder = grab_order.NewGrabOrder(V.Gorm, V.Redis)
 	}
 	// 网关
 	if C.Gateway.Status == "open" {

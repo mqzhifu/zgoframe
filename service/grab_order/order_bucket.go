@@ -6,6 +6,7 @@ type Order struct {
 	Uid        int `json:"uid"`
 	CategoryId int `json:"category_id"`
 	Timeout    int `json:"timeout"`
+	StartTime  int `json:"start_time"`
 }
 
 // 支付-类型桶

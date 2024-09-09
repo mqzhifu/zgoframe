@@ -4,55 +4,44 @@ import (
 	"fmt"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
-	"strconv"
 	"time"
 	"zgoframe/model"
 	"zgoframe/util"
 )
 
 type GrabOrder struct {
-	OrderBucketList           map[int]*OrderBucket           `json:"order_bucket_list"`             //[category_id]OrderBucket
-	UserBucketAmountRangeList map[int]map[string]*UserBucket `json:"user_bucket_amount_range_list"` //[category_id][amount_range]UserBucket
-	UserTotal                 *UserTotal                     `json:"user_total"`
-	AmountRange               AmountRange                    `json:"amount_range"`
-	Settings                  Settings                       `json:"settings"`
-	Gorm                      *gorm.DB                       `json:"-"`
-	Redis                     *util.MyRedis                  `json:"-"`
-	//GrabEventInterrupt        chan int
-}
-
-type AmountRange struct {
-	MinAmount int                  `json:"min_amount"`
-	MaxAmount int                  `json:"max_amount"`
-	Range     []AmountRangeElement `json:"range"`
-}
-
-type AmountRangeElement struct {
-	MinAmount int `json:"min_amount"`
-	MaxAmount int `json:"max_amount"`
-}
-
-type Settings struct {
-	GrabTimeout        int `json:"grab_timeout"`          //抢单超时时间
-	GrabDayTotalAmount int `json:"grab_day_total_amount"` //每天可抢总额度
-	GrabDayOrderCnt    int `json:"grab_day_order_cnt"`    //每天可抢总订单数量
-	GrabIntervalTime   int `json:"grab_interval_time"`    //抢单间隔
+	OrderBucketList           map[int]*OrderBucket           `json:"order_bucket_list"`             //[category_id]OrderBucket 存放所有订单
+	UserBucketAmountRangeList map[int]map[string]*UserBucket `json:"user_bucket_amount_range_list"` //[category_id][amount_range]UserBucket 存放抢单的人
+	UserTotal                 *UserTotal                     `json:"user_total"`                    //每个用户的详细信息
+	AmountRange               AmountRange                    `json:"amount_range"`                  //存储 settings 的配置信息
+	Settings                  Settings                       `json:"settings"`                      //配置信息 - 各种限制
+	Gorm                      *gorm.DB                       `json:"-"`                             //DB
+	Redis                     *util.MyRedis                  `json:"-"`                             //redis
+	EventMsgCh                chan EventMsg                  `json:"-"`                             //接收 eventMsg 中断抢单死循环
+	CloseOrderTimeoutDemon    chan int                       `json:"-"`
 }
 
 func NewGrabOrder(db *gorm.DB, redis *util.MyRedis) *GrabOrder {
 	grabOrder := new(GrabOrder)
 	grabOrder.Redis = redis
 	grabOrder.Gorm = db
+	grabOrder.EventMsgCh = make(chan EventMsg)
+	grabOrder.CloseOrderTimeoutDemon = make(chan int)
 
-	grabOrder.InitAmountRange()
-	grabOrder.InitSettings()
-	grabOrder.InitUserBucketOrderBucket()
-
-	grabOrder.UserTotal = NewUserTotal(redis)
+	grabOrder.Init()
 
 	return grabOrder
 }
 
+func (grabOrder *GrabOrder) Init() {
+	grabOrder.InitAmountRange()
+	grabOrder.InitSettings()
+	grabOrder.InitUserBucketOrderBucket()
+
+	grabOrder.UserTotal = NewUserTotal(grabOrder.Redis)
+}
+
+// 初始化 - 装载 抢单金额区间 池子
 func (grabOrder *GrabOrder) InitAmountRange() {
 	amountRange := AmountRange{
 		MinAmount: 100,
@@ -62,9 +51,11 @@ func (grabOrder *GrabOrder) InitAmountRange() {
 	amountRange.Range = append(amountRange.Range, AmountRangeElement{MinAmount: 100, MaxAmount: 500})
 	amountRange.Range = append(amountRange.Range, AmountRangeElement{MinAmount: 501, MaxAmount: 1000})
 	amountRange.Range = append(amountRange.Range, AmountRangeElement{MinAmount: 1001, MaxAmount: 5000})
+
 	grabOrder.AmountRange = amountRange
 }
 
+// 初始化 - 配置信息，各种限制值
 func (grabOrder *GrabOrder) InitSettings() {
 	settings := Settings{
 		GrabTimeout:        30,
@@ -75,6 +66,7 @@ func (grabOrder *GrabOrder) InitSettings() {
 	grabOrder.Settings = settings
 }
 
+// 初始化 - 抢单的用户池子 - [支付渠道类型][金额区间][用户池]
 func (grabOrder *GrabOrder) InitUserBucketOrderBucket() {
 	grabOrder.UserBucketAmountRangeList = make(map[int]map[string]*UserBucket)
 	grabOrder.OrderBucketList = make(map[int]*OrderBucket)
@@ -88,18 +80,113 @@ func (grabOrder *GrabOrder) InitUserBucketOrderBucket() {
 		grabOrder.UserBucketAmountRangeList[categoryId] = mapUserBucket
 	}
 }
-func (grabOrder *GrabOrder) GetPayCategory() ([]model.PayCategory, error) {
-	list := []model.PayCategory{}
-	grabOrder.Gorm.Find(&list)
-	return list, nil
-}
-func (grabOrder *GrabOrder) GetData() (*GrabOrder, error) {
-	return grabOrder, nil
+
+// 监听：订单超时
+func (grabOrder *GrabOrder) CheckOrderTimeout() {
+	stop := 0
+	for {
+		select {
+		case <-grabOrder.CloseOrderTimeoutDemon:
+			stop = 1
+			break
+		default:
+
+			time.Sleep(time.Second * 1)
+		}
+		if stop == 1 {
+			break
+		}
+	}
 }
 
+// 用户开启 - 自动抢单功能
+func (grabOrder *GrabOrder) UserOpenGrab(uid int, userOpenGrabSet []UserOpenGrabSet) error {
+	if uid <= 0 || len(userOpenGrabSet) == 0 {
+		return errors.New("uid <= 0 or len UserOpenGrabSet== 0")
+	}
+	//200 - 2000
+	//100 - 500 | 501 - 1000  | 1000 - 5000
+	userInAmtFlag := 0
+	for _, userChannel := range userOpenGrabSet {
+		if userChannel.AmountMin < grabOrder.AmountRange.MinAmount {
+			fmt.Println("此用户支付渠道不满足 userChannel.AmountMin < grabOrder.AmountRange.MinAmount")
+			continue
+		}
+
+		if userChannel.AmountMax > grabOrder.AmountRange.MaxAmount {
+			fmt.Println("此用户支付渠道不满足 userChannel.AmountMax > grabOrder.AmountRange.MaxAmount")
+			continue
+		}
+		//每个渠道，根据每个金额范围，都会有一个用户桶
+		//用户：每个渠道，会设置一个 金额范围
+		//一个渠道  => 多个金额区间的用户池 ，用户可能同时在多个用户池中
+		//将用户设置的金额区间，计算出应该在哪些用户池中添加该UID
+		userAmountSection := []string{}                 //存储，用户金额范围内，属于哪些区间
+		for _, v := range grabOrder.AmountRange.Range { //100 - 500 | 501 - 1000  | 1000 - 5000
+			if userChannel.AmountMin >= v.MaxAmount {
+				continue
+			}
+			userAmountSection = append(userAmountSection, GetRangeKey(v.MinAmount, v.MaxAmount))
+			if userChannel.AmountMax <= v.MaxAmount {
+				break
+			}
+		}
+
+		if len(userAmountSection) == 0 {
+			continue
+		}
+		userInAmtFlag = 1
+
+		for _, v := range userAmountSection {
+			//找到该金额区间的用户池，然后添加进去
+			userBucket := grabOrder.UserBucketAmountRangeList[userChannel.PayCategoryId][v]
+			queueItem := QueueItem{
+				Score: DEFAULT_PRIORITY,
+				Uid:   uid,
+			}
+			//可能用户池的UID会重复，但用序队列会自动覆盖
+			userBucket.QueueRedis.Push(queueItem)
+		}
+	}
+
+	if userInAmtFlag == 0 {
+		errMsg := "用户的所有渠道的所有金额区间都没有匹配到，算是异常"
+		fmt.Println(errMsg)
+		return errors.New(errMsg)
+	}
+	//UID会在多个渠道、金额区间的池子里，还得有个用户的总控，在这里添加/更新
+	err, optType := grabOrder.UserTotal.AddOrUpdateOne(uid)
+	fmt.Println("AddOrUpdateOne rs , err:", err, " , optType:", optType)
+
+	return nil
+}
+
+// 用户关闭抢单
+func (grabOrder *GrabOrder) UserCloseGrab(uid int) error {
+	userTotal, exist := grabOrder.UserTotal.GetOne(uid)
+	if !exist {
+		return errors.New("user total does not exist")
+	}
+
+	userTotal.GrabStatus = USER_GRAP_STATUS_CLOSE
+	for categoryId, _ := range PayCategoryList() { //每个支付分类 - 有一个 订单桶
+		grabOrder.OrderBucketList[categoryId] = NewOrderBucket(categoryId)
+		for _, v := range grabOrder.AmountRange.Range {
+			key := GetRangeKey(v.MinAmount, v.MaxAmount)
+			userBucket := grabOrder.UserBucketAmountRangeList[categoryId][key]
+			userBucket.QueueRedis.DelOneByUid(uid)
+		}
+	}
+	return nil
+}
+
+// 其它服务，推单过来
 func (grabOrder *GrabOrder) CreateOrder(order Order) error {
-	order.Timeout = grabOrder.Settings.GrabTimeout
+	//先给订单 设置 超时时间
+	order.StartTime = int(time.Now().Unix())
+	order.Timeout = order.StartTime + grabOrder.Settings.GrabTimeout
 	key := ""
+	//判断 - 当前订单的金额 属性哪个 金额区间
 	for _, v := range grabOrder.AmountRange.Range {
 		if order.Amount >= v.MinAmount && order.Amount <= v.MaxAmount {
 			key = GetRangeKey(v.MinAmount, v.MaxAmount)
@@ -109,63 +196,123 @@ func (grabOrder *GrabOrder) CreateOrder(order Order) error {
 		fmt.Println("err1 key empty")
 		return errors.New("key empty")
 	}
-
+	//订单 - 添加到公共的桶中
 	grabOrder.OrderBucketList[order.CategoryId].AddOne(order)
-	timer := time.NewTimer(time.Second * time.Duration(grabOrder.Settings.GrabTimeout))
-
+	timer := time.NewTimer(time.Second * time.Duration(order.StartTime+grabOrder.Settings.GrabTimeout))
+	//根据：支付渠道类型、金额区间，找到那个用户池子，从池子找一个用户接单
 	userBucket := grabOrder.UserBucketAmountRangeList[order.CategoryId][key]
-	times := 1
+	selectStatus := 0 //1超时2检查失败3成功
+	popQueueList := []QueueItem{}
 	for {
-		if times >= 3 {
+		select {
+		case msg := <-grabOrder.EventMsgCh:
+			fmt.Println(msg)
+			selectStatus = LOOP_SELECT_USER_QUEUE_EVENT_STOP
+			//exceptUid = append(exceptUid, msg.Uid)
+		case <-timer.C:
+			selectStatus = LOOP_SELECT_USER_QUEUE_TIMEOUT
+			break
+		default:
+			if userBucket.QueueRedis.Len() == 0 {
+				return errors.New("queue empty")
+			}
+			queueItem, err := userBucket.QueueRedis.Pop()
+			if err != nil {
+				fmt.Println("userBucket.PopOne err:", err.Error())
+				continue
+			}
+			popQueueList = append(popQueueList, queueItem)
+			err = grabOrder.GrabDoing(queueItem.Uid, order.Id)
+			if err != nil {
+				selectStatus = LOOP_SELECT_USER_QUEUE_FAILED
+			}
+			selectStatus = LOOP_SELECT_USER_QUEUE_SUCCESS
+		}
+
+		if selectStatus == LOOP_SELECT_USER_QUEUE_SUCCESS {
 			break
 		}
-
-		userInfo, err := userBucket.PopOne()
-		if err != nil {
-			fmt.Println("err2")
-		}
-
-		//rs := grabOrder.GrabStart(userInfo.Uid, order.Id)
-		grabDoingExecRsChan := make(chan int)
-		grabDoingExecRs := 0
-		//doneFlag := 0
-		timeoutFlag := 0
-		go grabOrder.GrabDoing(order.Uid, order.Id, grabDoingExecRsChan)
-
-		select {
-		case <-timer.C:
-			fmt.Println("timeout")
-			timeoutFlag = 1
-		case grabDoingExecRs = <-grabDoingExecRsChan:
-			fmt.Println("抢单返回结果")
-			//doneFlag = 1
-		}
-
-		if timeoutFlag == 1 {
-
-		}
-		fmt.Println(grabDoingExecRs)
-
-		//if doneFlag == 1 {
-		//	if grabDoingExecRs == 1 { //抢单成功
-		//		userInfo.Weight++
-		//		userInfo.SuccessTime++
-		//	} else {
-		//		userInfo.Weight--
-		//		userInfo.FailedTime++
-		//	}
-		//}
-
-		userBucket.PushOne(userInfo)
-		times++
 	}
+
 	return nil
 }
 
-type EventMsg struct {
-	OrderId int
-	TypeId  int
-	Content string
+// 正式开始抢单
+func (grabOrder *GrabOrder) GrabDoing(uid int, oid int) error {
+	err := grabOrder.CheckGrabLimit(uid, oid)
+	grabOrder.UserTotal.UpdateLastGrabFailedTime()
+	if err != nil {
+		return err
+	}
+	//order record 落盘
+	//更新用户：余额、冻结金额
+	//合建账变记录
+
+	grabOrder.UserTotal.UpdateGrabDayTotalOrderCnt()
+	//grabOrder.UserTotal.UpdateGrabDayTotalAmountProgress()
+	grabOrder.UserTotal.UpdateGrabDayTotalAmount()
+	grabOrder.UserTotal.UpdateLastGrabSuccessTime()
+
+	return nil
+}
+
+func (grabOrder *GrabOrder) CheckGrabLimit(uid int, oid int) (err error) {
+	order := grabOrder.OrderBucketList[oid].GelOne(oid)
+	if order.Timeout > int(time.Now().Unix()) {
+		return errors.New("order timeout")
+	}
+
+	userTotal, exist := grabOrder.UserTotal.GetOne(uid)
+	if exist == false {
+		return errors.New("uid not in UserTotal")
+	}
+	if userTotal.UserDayTotal.GrabAmount > grabOrder.Settings.GrabDayTotalAmount {
+
+	}
+
+	if userTotal.UserDayTotal.GrabCnt > grabOrder.Settings.GrabDayOrderCnt {
+
+	}
+
+	if int(time.Now().Unix()-userTotal.LastGrabSuccessTime) < grabOrder.Settings.GrabIntervalTime {
+		return errors.New("下单间隔")
+	}
+
+	if userTotal.WsStatus == USER_WS_STATUS_OFFLINE {
+		return errors.New("用户长连接状态为：关闭")
+	}
+
+	if userTotal.GrabStatus == USER_GRAP_STATUS_CLOSE {
+		return errors.New("uid not in UserTotal")
+	}
+
+	userInfo := model.User{}
+	grabOrder.Gorm.First(&userInfo, uid)
+	if userInfo.Id <= 0 {
+		return errors.New("uid not in user table")
+	}
+	if userInfo.Status == 2 { //用户被禁用
+		return errors.New("用户被禁用")
+	}
+	userTotalInfo := model.UserTotal{}
+	grabOrder.Gorm.First(&userTotalInfo, uid)
+	if userTotalInfo.Id <= 0 {
+		return errors.New("uid not in userTotal table")
+	}
+	//可抢额度=账户余额-押金-冻结金额
+	if order.Amount > userTotalInfo.Cash { //余额不足
+		return errors.New("余额不足")
+	}
+	//if userTotal.PayCategoryStatus == 0 {
+	//
+	//}
+	//
+	//if userTotal.PayChannelStatus == 0 {
+	//
+	//}
+	//
+
+	return nil
 }
 
 func (grabOrder *GrabOrder) ReceiveEventMsg(msg EventMsg) {
@@ -187,102 +334,14 @@ func (grabOrder *GrabOrder) ReceiveEventMsg(msg EventMsg) {
 	}
 }
 
-type UserGrabInfo struct {
-	PayCategoryId int
-	AmountMin     int
-	AmountMax     int
+// 给前端API
+func (grabOrder *GrabOrder) GetPayCategory() ([]model.PayCategory, error) {
+	list := []model.PayCategory{}
+	grabOrder.Gorm.Find(&list)
+	return list, nil
 }
 
-func GetRangeKey(amountMin int, amountMax int) string {
-	return strconv.Itoa(amountMin) + "_" + strconv.Itoa(amountMax)
-}
-
-func (grabOrder *GrabOrder) UserOpenGrab(uid int, userGrabInfo []UserGrabInfo) error {
-	if uid <= 0 || len(userGrabInfo) == 0 {
-		fmt.Println("err4")
-		return errors.New("err4")
-	}
-	//200 - 2000
-	//100 - 500 | 501 - 1000  | 1000 - 5000
-	fmt.Println("3333========", grabOrder.AmountRange.MinAmount, grabOrder.AmountRange.MaxAmount)
-	userAmountSection := []string{}
-	for _, userChannel := range userGrabInfo {
-		//fmt.Println(userChannel.AmountMin, userChannel.AmountMax)
-		if userChannel.AmountMin < grabOrder.AmountRange.MinAmount {
-			fmt.Println("此用户支付渠道不满足 userChannel.AmountMin < grabOrder.AmountRange.MinAmount")
-			continue
-		}
-
-		if userChannel.AmountMax > grabOrder.AmountRange.MaxAmount {
-			fmt.Println("此用户支付渠道不满足 userChannel.AmountMax > grabOrder.AmountRange.MaxAmount")
-			continue
-		}
-
-		for _, v := range grabOrder.AmountRange.Range { //100 - 500 | 501 - 1000  | 1000 - 5000
-			if userChannel.AmountMin >= v.MaxAmount {
-				continue
-			}
-			userAmountSection = append(userAmountSection, GetRangeKey(v.MinAmount, v.MaxAmount))
-			if userChannel.AmountMax <= v.MaxAmount {
-				break
-			}
-		}
-
-		//for _, v := range userAmountSection {
-		//grabOrder.UserTotal.AddOne(uid)
-		//userBucket := grabOrder.UserBucketAmountRangeList[userChannel.PayCategoryId][v]
-		//userBucket.PushNewOne(uid)
-		//}
-	}
-
-	return nil
-}
-
-func (grabOrder *GrabOrder) GrabDoing(uid int, oid int, grabCh chan int) {
-	order := grabOrder.OrderBucketList[oid].GelOne(oid)
-	if order.Timeout > int(time.Now().Unix()) {
-
-	}
-
-	//userTotal, _ := grabOrder.UserTotal.GetOne(uid)
-	//if userTotal.GrabDayTotalAmount > grabOrder.Settings.GrabDayTotalAmount {
-	//
-	//}
-	//
-	//if userTotal.GrabDayTotalOrderCnt > grabOrder.Settings.GrabDayOrderCnt {
-	//
-	//}
-	//
-	//if int(time.Now().Unix()-userTotal.LastGrabSuccessTime) < grabOrder.Settings.GrabIntervalTime {
-	//
-	//}
-	//
-	//if userTotal.WsStatus == 0 {
-	//
-	//}
-	//
-	//if userTotal.GrabStatus == 0 {
-	//
-	//}
-	//
-	//if userTotal.PayCategoryStatus == 0 {
-	//
-	//}
-	//
-	//if userTotal.PayChannelStatus == 0 {
-	//
-	//}
-	//
-	////可抢额度=账户余额-押金-冻结金额
-	//
-	////order record 落盘
-	////更新用户：余额、冻结金额
-	////合建账变记录
-	//
-	//grabOrder.UserTotal.UpdateGrabDayTotalOrderCnt()
-	//grabOrder.UserTotal.UpdateGrabDayTotalAmountProgress()
-	//grabOrder.UserTotal.UpdateGrabDayTotalAmount()
-	//grabOrder.UserTotal.UpdateLastGrabSuccessTime()
-	//
-	//grabCh <- 1
+// 给前端API
+func (grabOrder *GrabOrder) GetData() (*GrabOrder, error) {
+	return grabOrder, nil
 }

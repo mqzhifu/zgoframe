@@ -9,15 +9,6 @@ import (
 	"zgoframe/util"
 )
 
-//type UserBucketElement struct {
-//	Uid         int   `json:"uid"`
-//	Weight      int   `json:"weight"`
-//	SuccessTime int   `json:"success_time"`
-//	FailedTime  int   `json:"failed_time"`
-//	CreateTime  int64 `json:"create_time"`
-//	UpdateTime  int64 `json:"update_time"`
-//}
-
 // 参与抢单-用户-桶
 type UserBucket struct {
 	CategoryId int           `json:"category_id"`
@@ -25,36 +16,6 @@ type UserBucket struct {
 	MaxAmount  int           `json:"max_amount"`
 	QueueRedis *QueueRedis   `json:"queue_redis"` //有序队列
 	Redis      *util.MyRedis `json:"-"`
-	//PriorityQueue PriorityQueue             `json:"-"` //有序队列   oid => 金额
-	//ElementsMap map[int]UserBucketElement `json:"elements_map"`
-}
-
-func NewUserBucket(r *util.MyRedis, categoryId int, minAmount int, maxAmount int) *UserBucket {
-	userBucket := new(UserBucket)
-	userBucket.CategoryId = categoryId
-	userBucket.MinAmount = minAmount
-	userBucket.MaxAmount = maxAmount
-	//userBucket.ElementsMap = make(map[int]UserBucketElement)
-
-	redisKey := "grab_order_queue_" + GetRangeKey(minAmount, maxAmount)
-	userBucket.QueueRedis = NewQueueRedis(r, redisKey)
-	return userBucket
-}
-
-func (userBucket *UserBucket) PopOne() (queueItem QueueItem, err error) {
-	if userBucket.QueueRedis.Len() <= 0 {
-		return queueItem, errors.New("len = 0 ")
-	}
-	item, _ := userBucket.QueueRedis.Pop()
-	//userBucketElement = userBucket.ElementsMap[userBucketElement.Uid]
-	//delete(userBucket.ElementsMap, priorityQueueElement.value)
-	//
-	//return userBucketElement, nil
-	return item, err
-}
-
-func (userBucket *UserBucket) PushOne(queueItem QueueItem) {
-	userBucket.QueueRedis.Push(queueItem)
 }
 
 type QueueRedis struct {
@@ -66,6 +27,17 @@ type QueueRedis struct {
 type QueueItem struct {
 	Uid   int `json:"uid"`
 	Score int `json:"score"`
+}
+
+func NewUserBucket(r *util.MyRedis, categoryId int, minAmount int, maxAmount int) *UserBucket {
+	userBucket := new(UserBucket)
+	userBucket.CategoryId = categoryId
+	userBucket.MinAmount = minAmount
+	userBucket.MaxAmount = maxAmount
+
+	redisKey := "grab_order_queue_" + strconv.Itoa(categoryId) + "_" + GetRangeKey(minAmount, maxAmount)
+	userBucket.QueueRedis = NewQueueRedis(r, redisKey)
+	return userBucket
 }
 
 func NewQueueRedis(r *util.MyRedis, key string) *QueueRedis {
@@ -82,6 +54,7 @@ func (queue *QueueRedis) Len() int {
 	return int(redisRs.Val())
 }
 
+// 有序队列中 添加一个UID，可能用户池的UID会重复，但用序队列会自动覆盖
 func (queue *QueueRedis) Push(item QueueItem) {
 	res := queue.Redis.Redis.ZAdd(context.Background(), queue.Key, &redis.Z{Score: float64(item.Score), Member: item.Uid})
 	fmt.Println("Redis.ZAdd :", res)
@@ -98,4 +71,8 @@ func (queue *QueueRedis) Pop() (item QueueItem, err error) {
 
 	queue.Redis.Redis.ZRem(context.Background(), queue.Key, list[0].Member)
 	return item, err
+}
+
+func (queue *QueueRedis) DelOneByUid(uid int) {
+	queue.Redis.Redis.ZRem(context.Background(), queue.Key, uid)
 }

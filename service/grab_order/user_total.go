@@ -44,30 +44,35 @@ func NewUserTotal(redis *util.MyRedis) *UserTotal {
 	return userTotal
 }
 
-func (userTotal *UserTotal) AddOne(uid int) error {
+func (userTotal *UserTotal) AddOrUpdateOne(uid int) (err error, optType int) {
 	userElement, exist := userTotal.GetOne(uid)
 
 	ymd := time.Now().Format("2006") + time.Now().Format("01") + time.Now().Format("02")
 	key := "grab_order_day_total_" + ymd + strconv.Itoa(uid)
 
-	if exist {
+	if exist { //如果已经存在，做更新处理
 		userElement.UpdateTime = time.Now().Unix()
+		userElement.GrabStatus = USER_GRAP_STATUS_OPEN
+		userElement.WsStatus = userTotal.GetUserWsStatus()
 		if userElement.UserDayTotal.Date == "" {
 			fmt.Println("err userElement.UserDayTotal.Date empty")
+			//重新获取一下，当日的金额相关的统计数据
+			userElement.UserDayTotal = userTotal.GetStructUserDayTotal(key)
 		}
 
 		if userElement.UserDayTotal.Date != ymd {
 			fmt.Println("err UserDayTotal.Date != today")
+			//重新获取一下，当日的金额相关的统计数据
 			userElement.UserDayTotal = userTotal.GetStructUserDayTotal(key)
 		}
 
-		return nil
+		return nil, USER_TOTAL_OPT_TYPE_UP
 	}
-
+	//走到这里，证明，用户数据不存在进程中，需要重新创建一下
 	userElement = UserElement{
 		Uid:        uid,
-		WsStatus:   0,
-		GrabStatus: 0,
+		WsStatus:   userTotal.GetUserWsStatus(),
+		GrabStatus: USER_GRAP_STATUS_OPEN,
 		CreateTime: time.Now().Unix(),
 		UpdateTime: time.Now().Unix(),
 	}
@@ -89,11 +94,16 @@ func (userTotal *UserTotal) AddOne(uid int) error {
 	} else {
 		userElement.UserDayTotal = userTotal.GetStructUserDayTotal(key)
 	}
-
+	//添加到集合中
 	userTotal.UserElementList[uid] = userElement
 
-	return nil
+	return nil, USER_TOTAL_OPT_TYPE_ADD
 }
+
+func (userTotal *UserTotal) GetUserWsStatus() int {
+	return USER_WS_STATUS_ONLINE
+}
+
 func (userTotal *UserTotal) GetStructUserDayTotal(key string) (userDayTotal UserDayTotal) {
 	res := userTotal.Redis.Redis.Get(context.Background(), key)
 	if res.Err() != nil {
@@ -117,26 +127,37 @@ func (userTotal *UserTotal) GetOne(uid int) (e UserElement, exist bool) {
 	return element, true
 }
 
+// 获取 - 用户当天抢单总数
 func (userTotal *UserTotal) GetUserOrderCntDay() {
 
 }
 
+// 获取 - 用户当天抢单总金额
 func (userTotal *UserTotal) GetUserOrderAmountDay() {
 
 }
 
-func (userTotal *UserTotal) UpdateGrabDayTotalAmountProgress() {
+// 获取 - 用户当天抢单-进行中的-订单数量
+//func (userTotal *UserTotal) UpdateGrabDayTotalAmountProgress() {
+//
+//}
 
-}
-
+// 更新 - 用户当天抢单总数
 func (userTotal *UserTotal) UpdateGrabDayTotalOrderCnt() {
 
 }
 
+// 更新 - 用户当天抢单总金额
 func (userTotal *UserTotal) UpdateGrabDayTotalAmount() {
 
 }
 
+// 更新 - 用户当天抢单-进行中的-订单数量
+func (userTotal *UserTotal) UpdateLastGrabFailedTime() {
+
+}
+
+// 更新 - 用户当天抢单-进行中的-订单数量
 func (userTotal *UserTotal) UpdateLastGrabSuccessTime() {
 
 }

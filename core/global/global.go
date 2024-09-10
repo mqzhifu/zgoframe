@@ -16,21 +16,20 @@ import (
 )
 
 type Global struct {
-	Vip         *viper.Viper
-	Zap         *zap.Logger
-	Redis       *util.MyRedis
-	RedisGo     *util.MyRedisGo
-	Gin         *gin.Engine
-	Gorm        *gorm.DB   // 多数据库模式下，有一个库肯定会被经常访问，这里加一个快捷链接
-	GormList    []*gorm.DB // 所有数据库，连接成功后的列表
-	Project     model.Project
-	ProjectMng  *util.ProjectManager
-	Etcd        *util.MyEtcd
-	HttpServer  *http.Server
-	Metric      *util.MyMetrics
-	GrpcManager *util.GrpcManager
-	AlertPush   *util.AlertPush // 报警推送： prometheus
-	// AlertHook        *util.AlertHook //报警：邮件 手机
+	Vip              *viper.Viper
+	Zap              *zap.Logger
+	Redis            *util.MyRedis
+	RedisGo          *util.MyRedisGo
+	Gin              *gin.Engine
+	Gorm             *gorm.DB   // 多数据库模式下，有一个库肯定会被经常访问，这里加一个快捷链接
+	GormList         []*gorm.DB // 所有数据库，连接成功后的列表
+	Project          model.Project
+	ProjectMng       *util.ProjectManager
+	Etcd             *util.MyEtcd
+	HttpServer       *http.Server
+	Metric           *util.MyMetrics
+	GrpcManager      *util.GrpcManager
+	AlertPush        *util.AlertPush // 报警推送： prometheus
 	Websocket        *util.Websocket
 	ConnMng          *util.ConnManager
 	RecoverGo        *util.RecoverGo
@@ -53,6 +52,7 @@ type Global struct {
 	StaticFileSystem *util.StaticFileSystem // 兼容，管理静态文件读取
 	BinaryTree       *container.BinaryTree
 	TrieTree         *container.TrieTree
+	// AlertHook        *util.AlertHook //报警：邮件 手机
 }
 
 var V = New() // 动态的容器

@@ -99,24 +99,24 @@ func GrabOrderCreate(c *gin.Context) {
 // @Success 200 {object} request.FrameSyncRoomHistory
 // @Router /grab/order/user/open [POST]
 func GrabOrderUserOpen(c *gin.Context) {
-	var form []request.GrabOrderUserOpen
-	err := c.ShouldBind(&form)
-	util.MyPrint("form:", form, " err:", err)
-
-	req := []grab_order.UserGrabInfo{}
-	for _, v := range form {
-		o := grab_order.UserGrabInfo{
-			PayCategoryId: v.PayCategoryId,
-			AmountMin:     v.AmountMin,
-			AmountMax:     v.AmountMax,
-		}
-		req = append(req, o)
-	}
-
-	err = global.V.MyService.GrabOrder.UserOpenGrab(4, req)
-	if err != nil {
-		httpresponse.FailWithMessage("err:"+err.Error(), c)
-	} else {
-		httpresponse.OkWithAll("可以的哟~", "ok", c)
-	}
+	//var form []request.GrabOrderUserOpen
+	//err := c.ShouldBind(&form)
+	//util.MyPrint("form:", form, " err:", err)
+	//
+	//req := []grab_order.UserGrabInfo{}
+	//for _, v := range form {
+	//	o := grab_order.UserGrabInfo{
+	//		PayCategoryId: v.PayCategoryId,
+	//		AmountMin:     v.AmountMin,
+	//		AmountMax:     v.AmountMax,
+	//	}
+	//	req = append(req, o)
+	//}
+	//
+	//err = global.V.MyService.GrabOrder.UserOpenGrab(4, req)
+	//if err != nil {
+	//	httpresponse.FailWithMessage("err:"+err.Error(), c)
+	//} else {
+	//	httpresponse.OkWithAll("可以的哟~", "ok", c)
+	//}
 }

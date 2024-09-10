@@ -12,3 +12,5 @@ docs
 static/upload
 static/download
 package.json
+latest_log_http
+latest_log_main

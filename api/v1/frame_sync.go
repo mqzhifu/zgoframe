@@ -22,7 +22,7 @@ import (
 // @Success 200 {boolean} true "true:成功 false:否"
 // @Router /frame/sync/config [get]
 func FrameSyncConfig(c *gin.Context) {
-	op := global.V.MyService.FrameSync.Option
+	op := global.V.Service.FrameSync.Option
 	httpresponse.OkWithAll(op, "ok", c)
 }
 
@@ -47,7 +47,7 @@ func FrameSyncRoomHistory(c *gin.Context) {
 
 	util.MyPrint("=======------", form)
 
-	room, empty := global.V.MyService.FrameSync.RoomManage.GetById(form.RoomId)
+	room, empty := global.V.Service.FrameSync.RoomManage.GetById(form.RoomId)
 	if empty {
 		httpresponse.FailWithMessage("roomId Empty id:"+form.RoomId, c)
 	} else {

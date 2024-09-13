@@ -34,7 +34,7 @@ func Split(c *gin.Context) {
 		return
 	}
 
-	uploadRs, err := global.V.ImgManager.UploadOne(header, "pic_split", 0, 2)
+	uploadRs, err := global.V.Util.ImgManager.UploadOne(header, "pic_split", 0, 2)
 
 	fileName := uploadRs.LocalDiskPath + "/" + uploadRs.Filename
 	f, err := os.Open(fileName)
@@ -83,7 +83,7 @@ func Split(c *gin.Context) {
 
 			subImage := imgYCbCr.SubImage(image.Rect(everyBlockWidthStepX0, everyBlockHeightStepY0, everyBlockWidthStepX1, everyBlockHeightStepY1)).(*image.YCbCr)
 			// 保存图片
-			LocalDiskUploadBasePath := global.V.ImgManager.GetLocalDiskUploadBasePath()
+			LocalDiskUploadBasePath := global.V.Util.ImgManager.GetLocalDiskUploadBasePath()
 			fmt.Println(LocalDiskUploadBasePath)
 			fileName2 := "/new" + strconv.Itoa(i) + strconv.Itoa(j) + ".jpg"
 			create, _ := os.Create(LocalDiskUploadBasePath + fileName2)

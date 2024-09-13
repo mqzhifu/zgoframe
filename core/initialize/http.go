@@ -19,18 +19,18 @@ import (
 
 func StartHttpGin() {
 	dns := global.C.Http.Ip + ":" + global.C.Http.Port
-	global.V.Zap.Debug("http gin dns:" + dns)
+	global.V.Base.Zap.Debug("http gin dns:" + dns)
 	server := &http.Server{
 		Addr:    dns,
-		Handler: global.V.Gin,
+		Handler: global.V.Base.Gin,
 		//ReadTimeout:    10 * time.Second,//这里先注释掉，上传大文件的时候，这里可能超时造成 NGINX 502
 		//WriteTimeout:   10 * time.Second,
 		//MaxHeaderBytes: 1 << 20,
 	}
 
-	global.V.Zap.Warn("StartHttpGin : " + dns)
+	global.V.Base.Zap.Warn("StartHttpGin : " + dns)
 
-	global.V.HttpServer = server
+	global.V.Base.HttpServer = server
 	go func() {
 		err := server.ListenAndServe()
 		if err != nil {
@@ -46,7 +46,7 @@ func StartHttpGin() {
 
 func HttpServerShutdown() {
 	cancelCtx, cancel := context.WithTimeout(context.Background(), time.Second*3)
-	global.V.HttpServer.Shutdown(cancelCtx)
+	global.V.Base.HttpServer.Shutdown(cancelCtx)
 	cancel()
 }
 
@@ -76,7 +76,7 @@ func GetNewHttpGIN(zapLog *zap.Logger, prefix string) (*gin.Engine, error) {
 	ginRouter.Use(ZapLog())
 	//设置静态目录，等待请求
 	if global.MainCmdParameter.BuildStatic == "on" {
-		ginRouter.StaticFS(staticFSUriName, http.FS(global.V.StaticFileSys))
+		ginRouter.StaticFS(staticFSUriName, http.FS(global.V.Base.StaticFileSys))
 	} else {
 		ginRouter.StaticFS(staticFSUriName, http.Dir(staticPath))
 	}
@@ -96,13 +96,13 @@ func GetNewHttpGIN(zapLog *zap.Logger, prefix string) (*gin.Engine, error) {
 }
 
 func RegGinHttpRoute() {
-	httpresponse.ErrManager = global.V.Err
+	httpresponse.ErrManager = global.V.Util.Err
 	//公共 中间件: 限流 日志 头部解析
-	global.V.Gin.Use(httpmiddleware.Limiter()).Use(httpmiddleware.Record()).Use(httpmiddleware.Header())
-	global.V.Gin.Use(httpmiddleware.RecordTimeoutReq())
+	global.V.Base.Gin.Use(httpmiddleware.Limiter()).Use(httpmiddleware.Record()).Use(httpmiddleware.Header())
+	global.V.Base.Gin.Use(httpmiddleware.RecordTimeoutReq())
 
 	//设置非登陆可访问API，但是头里要加基础认证的信息
-	PublicGroup := global.V.Gin.Group("")
+	PublicGroup := global.V.Base.Gin.Group("")
 	//开启跨域，NGINX做了配置暂时可以先不用打开
 	//PublicGroup.Use(httpmiddleware.Cors())
 	PublicGroup.Use(httpmiddleware.HeaderAuth())
@@ -116,7 +116,7 @@ func RegGinHttpRoute() {
 		router.GrabOrder(PublicGroup)
 	}
 	//管理员/开发/运维 使用，头部要验证，还需要二次验证，主要有些危险的操作
-	SystemGroup := global.V.Gin.Group("")
+	SystemGroup := global.V.Base.Gin.Group("")
 	SystemGroup.Use(httpmiddleware.HeaderAuth()).Use(httpmiddleware.SecondAuth())
 	{
 		router.Cicd(SystemGroup)
@@ -125,7 +125,7 @@ func RegGinHttpRoute() {
 		router.Tools(SystemGroup)
 	}
 
-	PrivateGroup := global.V.Gin.Group("")
+	PrivateGroup := global.V.Base.Gin.Group("")
 	//设置正常API（需要验证）
 	PrivateGroup.Use(httpmiddleware.HeaderAuth()).Use(httpmiddleware.JWTAuth())
 	{
@@ -138,7 +138,7 @@ func RegGinHttpRoute() {
 		router.FrameSync(PrivateGroup)
 	}
 	//3方回调的请求
-	nobodyGroup := global.V.Gin.Group("")
+	nobodyGroup := global.V.Base.Gin.Group("")
 	nobodyGroup.Use()
 	{
 		router.Callback(nobodyGroup)
@@ -167,7 +167,7 @@ func ZapLog() gin.HandlerFunc {
 		// + s + c.Request.UserAgent() + c.Errors.ByType(gin.ErrorTypePrivate).String()
 
 		HttpZapLog.Info(context)
-		//global.V.Zap.Info("eeeeee", zap.String("time", `http://foo.com`))
+		//global.V.Base.Zap.Info("eeeeee", zap.String("time", `http://foo.com`))
 
 		c.Next()
 	}

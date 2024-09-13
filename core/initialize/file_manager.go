@@ -10,7 +10,7 @@ func InitFileManager() {
 	oriImagePath := baseDir + "/ori/"
 	shardImagePath := baseDir + "/shard/"
 	thumbnailPath := baseDir + "/thumbnail/"
-	global.V.ImageSlice = util.NewImageSlice(oriImagePath, shardImagePath, thumbnailPath)
+	global.V.Util.ImageSlice = util.NewImageSlice(oriImagePath, shardImagePath, thumbnailPath)
 
 	fileUploadOption := util.FileManagerOption{
 		//FilePrefix:       module,
@@ -25,9 +25,9 @@ func InitFileManager() {
 		FileHashType:    util.FILE_HASH_DAY,
 		StaticDir:       global.C.Http.StaticPath,
 		ProjectRootPath: global.MainEnv.RootDir,
-		AliOss:          global.V.AliOss,
+		AliOss:          global.V.Util.AliOss,
 	}
-	global.V.ImgManager = util.NewFileManagerUpload(fileUploadOption)
+	global.V.Util.ImgManager = util.NewFileManagerUpload(fileUploadOption)
 
 	fileUploadOption = util.FileManagerOption{
 		//FilePrefix:       module,
@@ -42,9 +42,9 @@ func InitFileManager() {
 		FileHashType:    util.FILE_HASH_DAY,
 		StaticDir:       global.C.Http.StaticPath,
 		ProjectRootPath: global.MainEnv.RootDir,
-		AliOss:          global.V.AliOss,
+		AliOss:          global.V.Util.AliOss,
 	}
-	global.V.DocsManager = util.NewFileManagerUpload(fileUploadOption)
+	global.V.Util.DocsManager = util.NewFileManagerUpload(fileUploadOption)
 
 	fileUploadOption = util.FileManagerOption{
 		//FilePrefix:       module,
@@ -59,9 +59,9 @@ func InitFileManager() {
 		FileHashType:    util.FILE_HASH_DAY,
 		StaticDir:       global.C.Http.StaticPath,
 		ProjectRootPath: global.MainEnv.RootDir,
-		AliOss:          global.V.AliOss,
+		AliOss:          global.V.Util.AliOss,
 	}
-	global.V.VideoManager = util.NewFileManagerUpload(fileUploadOption)
+	global.V.Util.VideoManager = util.NewFileManagerUpload(fileUploadOption)
 
 	fileUploadOption = util.FileManagerOption{
 		//FilePrefix:       module,
@@ -76,7 +76,7 @@ func InitFileManager() {
 		FileHashType:    util.FILE_HASH_DAY,
 		StaticDir:       global.C.Http.StaticPath,
 		ProjectRootPath: global.MainEnv.RootDir,
-		AliOss:          global.V.AliOss,
+		AliOss:          global.V.Util.AliOss,
 	}
-	global.V.PackagesManager = util.NewFileManagerUpload(fileUploadOption)
+	global.V.Util.PackagesManager = util.NewFileManagerUpload(fileUploadOption)
 }

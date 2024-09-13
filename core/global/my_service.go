@@ -43,24 +43,25 @@ func NewMyService() *MyService {
 	var err error
 	myService := new(MyService)
 	// 创建一个 请求3方服务 的适配器，服务之间的请求/调用
-	// myService.RequestServiceAdapter = service.NewRequestServiceAdapter(V.ServiceDiscovery, V.GrpcManager, service.REQ_SERVICE_METHOD_INNER, C.System.ProjectId, V.Zap)
+	// myService.RequestServiceAdapter = service.NewRequestServiceAdapter(V.Base.ServiceDiscovery, V.Base.GrpcManager, service.REQ_SERVICE_METHOD_INNER, C.System.ProjectId, V.Base.Zap)
 	ServiceBridgeOp := service.BridgeOption{
-		ProtoMap:         V.ProtoMap,
-		ProjectId:        V.Project.Id,
-		ServiceDiscovery: V.ServiceDiscovery,
-		GrpcManager:      V.GrpcManager,
+		ProtoMap:         V.Util.ProtoMap,
+		ProjectId:        V.Util.Project.Id,
+		ServiceDiscovery: V.Util.ServiceDiscovery,
+		GrpcManager:      V.Util.GrpcManager,
 		Flag:             service.REQ_SERVICE_METHOD_NATIVE,
-		Log:              V.Zap,
+		Log:              V.Base.Zap,
 	}
-	myService.AliSms = V.AliSms
 	// 服务之间互相调用
 	myService.ServiceBridge, _ = service.NewBridge(ServiceBridgeOp)
+
+	myService.AliSms = V.Util.AliSms
 	// 预警推送
 	alertOption := msg_center.AlertOption{
 		SendMsgChannel:    C.Alert.SendMsgChannel,
 		MsgTemplateRuleId: C.Alert.MsgTemplateRuleId,
 		SendSync:          C.Alert.SendSync,
-		Log:               V.Zap,
+		Log:               V.Base.Zap,
 		Sms:               myService.Sms,
 		SmsReceiver:       C.Alert.SmsReceiver,
 		Email:             myService.Email,
@@ -72,32 +73,32 @@ func NewMyService() *MyService {
 
 	if C.Service.User == "open" {
 		// 用户服务
-		myService.User = user_center.NewUser(V.Gorm, V.Redis, V.ProjectMng)
+		myService.User = user_center.NewUser(V.Base.Gorm, V.Base.Redis, V.Util.ProjectMng)
 	}
 	if C.Service.Email == "open" {
 		// 站内信服务
-		myService.Mail = msg_center.NewMail(V.Gorm, V.Zap)
+		myService.Mail = msg_center.NewMail(V.Base.Gorm, V.Base.Zap)
 	}
 	if C.Service.Sms == "open" {
 		// 短信服务
-		myService.Sms = msg_center.NewSms(V.Gorm, V.AliSms, V.Zap)
+		myService.Sms = msg_center.NewSms(V.Base.Gorm, V.Util.AliSms, V.Base.Zap)
 	}
 	if C.Service.Email == "open" {
 		// 电子邮件服务
-		myService.Email = msg_center.NewEmail(V.Gorm, V.Email)
+		myService.Email = msg_center.NewEmail(V.Base.Gorm, V.Util.Email)
 	}
 
 	if C.Service.Email == "open" {
 		// 配置中心服务
 		configCenterOption := config_center.ConfigCenterOption{
 			EnvList:            util.GetConstListEnv(),
-			Gorm:               V.Gorm,
-			Redis:              V.Redis,
-			ProjectManager:     V.ProjectMng,
+			Gorm:               V.Base.Gorm,
+			Redis:              V.Base.Redis,
+			ProjectManager:     V.Util.ProjectMng,
 			PersistenceType:    service.PERSISTENCE_TYPE_FILE,
 			PersistenceFileDir: C.Http.StaticPath + "/" + C.ConfigCenter.DataPath,
-			StaticFileSystem:   V.StaticFileSystem,
-			Log:                V.Zap,
+			StaticFileSystem:   V.Util.StaticFileSystem,
+			Log:                V.Base.Zap,
 		}
 		myService.ConfigCenter, err = config_center.NewConfigCenter(configCenterOption)
 		if err != nil {
@@ -107,13 +108,13 @@ func NewMyService() *MyService {
 	if C.Service.TwinAgora == "open" {
 		// 远程呼叫专家
 		twinAgoraOption := seed_business.TwinAgoraOption{
-			Log:        V.Zap,
-			Gorm:       V.Gorm,
+			Log:        V.Base.Zap,
+			Gorm:       V.Base.Gorm,
 			StaticPath: C.Http.StaticPath,
-			ProtoMap:   V.ProtoMap,
+			ProtoMap:   V.Util.ProtoMap,
 			// RequestServiceAdapter: myService.RequestServiceAdapter,
 			ServiceBridge:    myService.ServiceBridge,
-			StaticFileSystem: V.StaticFileSystem,
+			StaticFileSystem: V.Util.StaticFileSystem,
 		}
 		myService.TwinAgora, err = seed_business.NewTwinAgora(twinAgoraOption)
 		if err != nil {
@@ -121,7 +122,7 @@ func NewMyService() *MyService {
 		}
 	}
 	if C.Service.GrabOrder == "open" {
-		myService.GrabOrder = grab_order.NewGrabOrder(V.Gorm, V.Redis)
+		myService.GrabOrder = grab_order.NewGrabOrder(V.Base.Gorm, V.Base.Redis)
 	}
 	// 网关
 	if C.Gateway.Status == "open" {
@@ -144,17 +145,17 @@ func NewMyService() *MyService {
 			ConnTimeout:         60,                     // 一个FD超时时间
 			ClientHeartbeatTime: 3,                      // 客户端心跳时间(秒)
 			ServerHeartbeatTime: 5,                      // 服务端心跳时间(秒)
-			ProtoMap:            V.ProtoMap,             // protobuf 映射表
-			GrpcManager:         V.GrpcManager,
-			Log:                 V.Zap,
-			Gorm:                V.Gorm,
+			ProtoMap:            V.Util.ProtoMap,        // protobuf 映射表
+			GrpcManager:         V.Util.GrpcManager,
+			Log:                 V.Base.Zap,
+			Gorm:                V.Base.Gorm,
 		}
 
-		// gateway := gateway.NewGateway(V.GrpcManager, V.Zap, myService.RequestServiceAdapter)
+		// gateway := gateway.NewGateway(V.Base.GrpcManager, V.Base.Zap, myService.RequestServiceAdapter)
 		// gateway.MyServiceList.GameMatch = myService.GameMatch
 		// gateway.MyServiceList.FrameSync = myService.FrameSync
 		// gateway.MyServiceList.TwinAgora = myService.TwinAgora
-		gateway := gateway.NewGateway(V.GrpcManager, V.Zap, myService.ServiceBridge)
+		gateway := gateway.NewGateway(V.Util.GrpcManager, V.Base.Zap, myService.ServiceBridge)
 		myService.Gateway = gateway
 
 		_, err := gateway.StartSocket(netWayOption)
@@ -167,12 +168,12 @@ func NewMyService() *MyService {
 		frameSyncOption := frame_sync.FrameSyncOption{
 			LockMode:      service.LOCK_MODE_PESSIMISTIC,
 			Store:         1,
-			Log:           V.Zap,
+			Log:           V.Base.Zap,
 			ServiceBridge: myService.ServiceBridge,
 			// RequestServiceAdapter: myService.RequestServiceAdapter,
 			OffLineWaitTime: 10,
-			Gorm:            V.Gorm,
-			ProtoMap:        V.ProtoMap,
+			Gorm:            V.Base.Gorm,
+			ProtoMap:        V.Util.ProtoMap,
 		}
 		myService.FrameSync = frame_sync.NewFrameSync(frameSyncOption)
 	}
@@ -181,7 +182,7 @@ func NewMyService() *MyService {
 		// 匹配服务 , 依赖 RoomManage
 		// matchOption := service.MatchOption{
 		//	RequestServiceAdapter: myService.RequestServiceAdapter,
-		//	Log:                   V.Zap,
+		//	Log:                   V.Base.Zap,
 		//	RoomManager:           myService.RoomManage,
 		//	//MatchSuccessChan chan *Room
 		// }
@@ -192,11 +193,11 @@ func NewMyService() *MyService {
 		gmOp := gamematch.GameMatchOption{
 			// RequestServiceAdapter:  myService.RequestServiceAdapter,
 			ServiceBridge:          myService.ServiceBridge,
-			Log:                    V.Zap,
-			Redis:                  V.RedisGo,
-			Gorm:                   V.Gorm,
-			Metrics:                V.Metric,
-			ServiceDiscovery:       V.ServiceDiscovery,
+			Log:                    V.Base.Zap,
+			Redis:                  V.Base.RedisGo,
+			Gorm:                   V.Base.Gorm,
+			Metrics:                V.Util.Metric,
+			ServiceDiscovery:       V.Util.ServiceDiscovery,
 			RuleDataSourceType:     service.GAME_MATCH_DATA_SOURCE_TYPE_DB,
 			StaticPath:             C.Http.StaticPath,
 			RedisPrefix:            "gm",
@@ -205,8 +206,8 @@ func NewMyService() *MyService {
 			FrameSync:              myService.FrameSync,
 			RedisIdSeparator:       ",",
 			RedisPayloadSeparation: "%",
-			ProtoMap:               V.ProtoMap,
-			StaticFileSystem:       V.StaticFileSystem,
+			ProtoMap:               V.Util.ProtoMap,
+			StaticFileSystem:       V.Util.StaticFileSystem,
 		}
 		myService.GameMatch, err = gamematch.NewGameMatch(gmOp)
 		if err != nil {
@@ -241,7 +242,7 @@ func (myService *MyService) RegisterService() {
 			Protocol:    util.SERVICE_PROTOCOL_HTTP,
 			IsSelfReg:   true,
 		}
-		V.ServiceDiscovery.Register(node)
+		V.Util.ServiceDiscovery.Register(node)
 
 		node = util.ServiceNode{
 			// ServiceId: global.C.System.ProjectId,
@@ -254,7 +255,7 @@ func (myService *MyService) RegisterService() {
 			IsSelfReg:   true,
 		}
 
-		V.ServiceDiscovery.Register(node)
+		V.Util.ServiceDiscovery.Register(node)
 		node = util.ServiceNode{
 			// ServiceId: global.C.System.ProjectId,
 			ServiceId:   2, // 游戏匹配服务
@@ -265,7 +266,7 @@ func (myService *MyService) RegisterService() {
 			Protocol:    util.SERVICE_PROTOCOL_HTTP,
 			IsSelfReg:   true,
 		}
-		V.ServiceDiscovery.Register(node)
+		V.Util.ServiceDiscovery.Register(node)
 
 	}
 }
@@ -276,7 +277,7 @@ func InitCicd() (*cicd.CicdManager, error) {
 	table:  project instance server cicd_publish
 	*/
 
-	// opDirFull := MainEnv.RootDir + "/" + C.System.OpDirName
+	// opDirFull := MainEnV.Base.RootDir + "/" + C.System.OpDirName
 	cicdConfig := cicd.ConfigCicd{}
 
 	// 运维：服务器的配置信息
@@ -310,16 +311,16 @@ func InitCicd() (*cicd.CicdManager, error) {
 	cicdConfig.SuperVisor.ConfTemplateFileName = cicdConfig.SuperVisor.ConfTemplateFile
 	cicdConfig.SuperVisor.ConfTemplateFile = MainEnv.RootDir + "/" + C.System.OpDirName + "/" + cicdConfig.SuperVisor.ConfTemplateFile
 
-	V.Zap.Debug(" ConfTemplateFile:" + cicdConfig.SuperVisor.ConfTemplateFile)
+	V.Base.Zap.Debug(" ConfTemplateFile:" + cicdConfig.SuperVisor.ConfTemplateFile)
 	// util.PrintStruct(cicdConfig , " : ")
 
 	// 3方实例
-	instanceManager, _ := util.NewInstanceManager(V.Gorm)
+	instanceManager, _ := util.NewInstanceManager(V.Base.Gorm)
 	// 服务器列表
-	serverManger, _ := util.NewServerManger(V.Gorm)
+	serverManger, _ := util.NewServerManger(V.Base.Gorm)
 	serverList := serverManger.Pool
 	// 发布管理
-	publicManager := cicd.NewCICDPublicManager(V.Gorm)
+	publicManager := cicd.NewCICDPublicManager(V.Base.Gorm)
 
 	// util.ExitPrint(22)
 	op := cicd.CicdManagerOption{
@@ -328,10 +329,10 @@ func InitCicd() (*cicd.CicdManager, error) {
 		Config:           cicdConfig,
 		InstanceManager:  instanceManager,
 		PublicManager:    publicManager,
-		Log:              V.Zap,
+		Log:              V.Base.Zap,
 		OpDirName:        C.System.OpDirName,
-		ServiceList:      V.ServiceManager.Pool,
-		ProjectList:      V.ProjectMng.Pool,
+		ServiceList:      V.Util.ServiceManager.Pool,
+		ProjectList:      V.Util.ProjectMng.Pool,
 		UploadDiskPath:   C.Http.StaticPath + "/" + C.FileManager.UploadPath,
 		DownloadDiskPath: C.Http.StaticPath + "/" + C.FileManager.DownloadPath,
 	}

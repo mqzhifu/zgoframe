@@ -5,19 +5,18 @@ import (
 	"zgoframe/util"
 )
 
-func PushMetrics(){
+func PushMetrics() {
 	testPushCounterName := "testPushCounter"
 
-	global.V.Metric.CreateCounter(testPushCounterName,"im_test_counter")
-	global.V.Metric.CounterInc(testPushCounterName)
+	global.V.Util.Metric.CreateCounter(testPushCounterName, "im_test_counter")
+	global.V.Util.Metric.CounterInc(testPushCounterName)
 
 	testPushGaugeName := "testPushGauge"
 
-	global.V.Metric.CreateGauge(testPushGaugeName,"im_test_gauge")
-	global.V.Metric.GaugeSet(testPushGaugeName,0.001)
+	global.V.Util.Metric.CreateGauge(testPushGaugeName, "im_test_gauge")
+	global.V.Util.Metric.GaugeSet(testPushGaugeName, 0.001)
 
-
-	push_err := global.V.Metric.PushMetrics()
-	util.MyPrint("test pusher err:",push_err)
+	push_err := global.V.Util.Metric.PushMetrics()
+	util.MyPrint("test pusher err:", push_err)
 	return
 }

@@ -23,13 +23,13 @@ func FileUploadReal(c *gin.Context, category int) {
 	var uploadRs util.UploadRs
 	switch category {
 	case util.FILE_TYPE_IMG:
-		uploadRs, err = global.V.ImgManager.UploadOne(header, module, hashDir, syncOss)
+		uploadRs, err = global.V.Util.ImgManager.UploadOne(header, module, hashDir, syncOss)
 	case util.FILE_TYPE_DOC:
-		uploadRs, err = global.V.DocsManager.UploadOne(header, module, hashDir, syncOss)
+		uploadRs, err = global.V.Util.DocsManager.UploadOne(header, module, hashDir, syncOss)
 	case util.FILE_TYPE_VIDEO:
-		uploadRs, err = global.V.VideoManager.UploadOne(header, module, hashDir, syncOss)
+		uploadRs, err = global.V.Util.VideoManager.UploadOne(header, module, hashDir, syncOss)
 	case util.FILE_TYPE_PACKAGES:
-		uploadRs, err = global.V.PackagesManager.UploadOne(header, module, hashDir, syncOss)
+		uploadRs, err = global.V.Util.PackagesManager.UploadOne(header, module, hashDir, syncOss)
 	}
 	util.MyPrint("uploadRs:", uploadRs, " err:", err)
 	if err != nil {
@@ -72,15 +72,15 @@ func FileUploadRealMulti(c *gin.Context, category int) {
 		var uploadRs util.UploadRs
 		switch category {
 		case util.FILE_TYPE_IMG:
-			uploadRs, err = global.V.ImgManager.UploadOne(file, module, hashDir, syncOss)
+			uploadRs, err = global.V.Util.ImgManager.UploadOne(file, module, hashDir, syncOss)
 		case util.FILE_TYPE_DOC:
-			uploadRs, err = global.V.DocsManager.UploadOne(file, module, hashDir, syncOss)
+			uploadRs, err = global.V.Util.DocsManager.UploadOne(file, module, hashDir, syncOss)
 		case util.FILE_TYPE_VIDEO:
-			uploadRs, err = global.V.VideoManager.UploadOne(file, module, hashDir, syncOss)
+			uploadRs, err = global.V.Util.VideoManager.UploadOne(file, module, hashDir, syncOss)
 		case util.FILE_TYPE_PACKAGES:
-			uploadRs, err = global.V.PackagesManager.UploadOne(file, module, hashDir, syncOss)
+			uploadRs, err = global.V.Util.PackagesManager.UploadOne(file, module, hashDir, syncOss)
 		}
-		//uploadRs, err := global.V.ImgManager.UploadOne(file, module, hashDir, syncOss)
+		//uploadRs, err := global.V.Util.ImgManager.UploadOne(file, module, hashDir, syncOss)
 		errMsg := ""
 		if err != nil {
 			errMsg = err.Error()
@@ -157,7 +157,7 @@ func FileUploadImgOneStreamBase64(c *gin.Context) {
 	syncOss, _ := strconv.Atoi(c.PostForm("sync_oss"))
 	//hashDir, _ := strconv.Atoi(c.PostForm("hash_dir"))
 	module := GetModule(c, form.Module)
-	uploadRs, err := global.V.ImgManager.UploadOneByStream(form.Stream, util.FILE_TYPE_IMG, module, form.HashDir, syncOss)
+	uploadRs, err := global.V.Util.ImgManager.UploadOneByStream(form.Stream, util.FILE_TYPE_IMG, module, form.HashDir, syncOss)
 	if err != nil {
 		httpresponse.FailWithMessage(err.Error(), c)
 	} else {
@@ -265,7 +265,7 @@ func FileDeleteOne(c *gin.Context) {
 		httpresponse.FailWithMessage("文件相对路径不能为空", c)
 		return
 	}
-	err := global.V.VideoManager.DeleteOne(form)
+	err := global.V.Util.VideoManager.DeleteOne(form)
 	if err != nil {
 		httpresponse.FailWithMessage(err.Error(), c)
 	} else {
@@ -288,7 +288,7 @@ func FileMoveOne(c *gin.Context) {
 	var form request.FileCopy
 	c.ShouldBind(&form)
 
-	err := global.V.VideoManager.MoveOne(form)
+	err := global.V.Util.VideoManager.MoveOne(form)
 	if err != nil {
 		httpresponse.FailWithMessage(err.Error(), c)
 	} else {
@@ -311,7 +311,7 @@ func FileCopyOne(c *gin.Context) {
 	var form request.FileCopy
 	c.ShouldBind(&form)
 
-	err := global.V.VideoManager.CopyOne(form)
+	err := global.V.Util.VideoManager.CopyOne(form)
 	if err != nil {
 		httpresponse.FailWithMessage(err.Error(), c)
 	} else {
@@ -366,7 +366,7 @@ func GetFormParaModule(c *gin.Context) string {
 	module := c.PostForm("module")
 	projectId := request.GetProjectIdByHeader(c)
 	if projectId > 0 {
-		projectInfo, empty := global.V.ProjectMng.GetById(projectId)
+		projectInfo, empty := global.V.Util.ProjectMng.GetById(projectId)
 		//util.MyPrint("projectInfo:=====", projectInfo)
 		if !empty {
 			if module != "" {
@@ -384,7 +384,7 @@ func GetFormParaModule(c *gin.Context) string {
 func GetModule(c *gin.Context, module string) string {
 	projectId := request.GetProjectIdByHeader(c)
 	if projectId > 0 {
-		projectInfo, empty := global.V.ProjectMng.GetById(projectId)
+		projectInfo, empty := global.V.Util.ProjectMng.GetById(projectId)
 		//util.MyPrint("projectInfo:=====", projectInfo)
 		if !empty {
 			if module != "" {

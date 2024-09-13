@@ -121,7 +121,7 @@ func GetNewViper(prefix string) (myViper *viper.Viper, config global.Config, err
 }
 
 func ViperShutdown() {
-	global.V.Vip.WatchRemoteConfig()
+	global.V.Base.Vip.WatchRemoteConfig()
 }
 
 func getEtcdHostPort(etcdUrl string) (etcdHttpResp EtcdHttpResp, err error) {

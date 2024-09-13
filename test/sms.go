@@ -16,7 +16,7 @@ func Sms() {
 	}
 	SendAlertSmsTBytes, _ := json.Marshal(SendAlertSmsT)
 
-	backInfo, err := global.V.AliSms.Send("13522536459", "SMS_273495087", "正负无限科技", string(SendAlertSmsTBytes))
+	backInfo, err := global.V.Util.AliSms.Send("13522536459", "SMS_273495087", "正负无限科技", string(SendAlertSmsTBytes))
 	util.MyPrint("err:", err)
 	util.MyPrint("backInfo", backInfo)
 }

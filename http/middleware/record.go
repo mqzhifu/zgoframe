@@ -17,7 +17,7 @@ import (
 func Record() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		prefix := "http middleware <Record>  "
-		global.V.Zap.Debug(prefix + "start:")
+		global.V.Base.Zap.Debug(prefix + "start:")
 
 		var body []byte
 		var userId int
@@ -26,7 +26,7 @@ func Record() gin.HandlerFunc {
 			body, err = ioutil.ReadAll(c.Request.Body)
 			if err != nil {
 
-				global.V.Zap.Error("read body from request error:", zap.Any("err", err))
+				global.V.Base.Zap.Error("read body from request error:", zap.Any("err", err))
 			} else {
 				c.Request.Body = ioutil.NopCloser(bytes.NewBuffer(body))
 			}
@@ -78,11 +78,11 @@ func Record() gin.HandlerFunc {
 		}
 		record.Resp = resStr
 
-		global.V.Zap.Debug(prefix + "finish , func exec time:" + strconv.Itoa(latency))
+		global.V.Base.Zap.Debug(prefix + "finish , func exec time:" + strconv.Itoa(latency))
 
-		err := global.V.Gorm.Create(&record).Error
+		err := global.V.Base.Gorm.Create(&record).Error
 		if err != nil {
-			global.V.Zap.Error(prefix + "create record error:" + err.Error())
+			global.V.Base.Zap.Error(prefix + "create record error:" + err.Error())
 		}
 	}
 }
@@ -117,7 +117,7 @@ func RecordTimeoutReq() gin.HandlerFunc {
 					return
 				}
 				// 入库
-				global.V.Gorm.Create(&model.ProjectPushMsg{
+				global.V.Base.Gorm.Create(&model.ProjectPushMsg{
 					Type:            6,
 					SourceId:        0,
 					SourceProjectId: 0,

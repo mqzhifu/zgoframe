@@ -13,7 +13,7 @@ import (
 // 非JWT的接口，公共接口，也是允许访问，但是得从HEADER里提取信用，做基础验证
 func HeaderAuth() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		global.V.Zap.Debug("http middleware <HeaderAuth> start:")
+		global.V.Base.Zap.Debug("http middleware <HeaderAuth> start:")
 		header, err := request.GetMyHeader(c)
 		if err != nil {
 			util.MyPrint("err:" + err.Error())
@@ -37,7 +37,7 @@ func HeaderAuth() gin.HandlerFunc {
 			return
 		}
 
-		project, empty := global.V.ProjectMng.GetById(header.ProjectId)
+		project, empty := global.V.Util.ProjectMng.GetById(header.ProjectId)
 		if empty {
 			ErrAbortWithResponse(5103, c)
 			return
@@ -63,6 +63,6 @@ func HeaderAuth() gin.HandlerFunc {
 			return
 		}
 
-		global.V.Zap.Debug("http middleware <HeaderAuth> finish.")
+		global.V.Base.Zap.Debug("http middleware <HeaderAuth> finish.")
 	}
 }

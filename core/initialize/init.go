@@ -11,7 +11,6 @@ import (
 	"zgoframe/core"
 	"zgoframe/core/global"
 	"zgoframe/util"
-	"zgoframe/util/container"
 )
 
 type Initialize struct{}
@@ -30,15 +29,15 @@ func (initialize *Initialize) Start() error {
 		util.MyPrint(prefix+"GetNewViper err:", err)
 		return err
 	}
-	global.V.Vip = myViper //全局变量管理者
-	global.C = config      //全局变量
+	global.V.Base.Vip = myViper //全局变量管理者
+	global.C = config           //全局变量
 	//--- read config file end -----
 
-	//if global.MainCmdParameter.BuildStatic == "on" {
-	global.V.StaticFileSystem = util.NewStaticFileSystem(global.V.StaticFileSys, global.MainCmdParameter.BuildStatic)
-	//} else {
-	//	staticFileSystem := util.NewStaticFileSystem(global.V.StaticFileSys, global.MainCmdParameter.BuildStatic)
-	//}
+	if global.MainCmdParameter.BuildStatic == "on" { //没启用，回头处理
+		global.V.Util.StaticFileSystem = util.NewStaticFileSystem(global.V.Base.StaticFileSys, global.MainCmdParameter.BuildStatic)
+	} else {
+		global.V.Util.StaticFileSystem = util.NewStaticFileSystem(global.V.Base.StaticFileSys, global.MainCmdParameter.BuildStatic)
+	}
 
 	//邮件与短信优先初始化，是一但有报警，就可以直接发邮件/短信
 
@@ -50,10 +49,10 @@ func (initialize *Initialize) Start() error {
 			FromEmail: global.C.Email.From,
 			Password:  global.C.Email.Ps,
 			AuthCode:  global.C.Email.AuthCode,
-			Log:       global.V.Zap,
+			Log:       global.V.Base.Zap,
 		}
 
-		global.V.Email, err = util.NewMyEmail(emailOption)
+		global.V.Util.Email, err = util.NewMyEmail(emailOption)
 		if err != nil {
 			return err
 		}
@@ -65,7 +64,7 @@ func (initialize *Initialize) Start() error {
 			AccessKeySecret: global.C.AliSms.AccessKeySecret,
 			Endpoint:        global.C.AliSms.Endpoint,
 		}
-		global.V.AliSms, err = util.NewAliSms(op)
+		global.V.Util.AliSms, err = util.NewAliSms(op)
 		if err != nil {
 			util.MyPrint(prefix+"util.NewAliSms err:", err)
 			return err
@@ -75,7 +74,7 @@ func (initialize *Initialize) Start() error {
 	//预警/报警->推送器，这里是推送到3方服务，如：prometheus，而不是直接发邮件/短信
 	//ps:这个要优先zap日志类优化处理，因为zap里的<钩子>有用到,主要是日志里自动触发报警，略方便
 	if global.C.AlertPush.Status == core.GLOBAL_CONFIG_MODEL_STATUS_OPEN {
-		global.V.AlertPush, err = util.NewAlertPush(global.C.AlertPush.Host, global.C.AlertPush.Port, global.C.AlertPush.Uri, prefix)
+		global.V.Util.AlertPush, err = util.NewAlertPush(global.C.AlertPush.Host, global.C.AlertPush.Port, global.C.AlertPush.Uri, prefix)
 		if err != nil {
 			return err
 		}
@@ -90,56 +89,56 @@ func (initialize *Initialize) Start() error {
 		util.MyPrint("GetNewZapLog err:", err)
 		return err
 	}
-	global.V.Zap = mainZap
+	global.V.Base.Zap = mainZap
 	//这个变量，主要是给gorm做日志使用，也就是DB的日志，最终也交由zap来接管
-	util.LoggerZap = global.V.Zap
+	util.LoggerZap = global.V.Base.Zap
 	//实例化gorm db
-	global.V.GormList, err = GetNewGorm(prefix)
+	global.V.Base.GormList, err = GetNewGorm(prefix)
 	if err != nil {
 		return err
 	}
-	if len(global.V.GormList) <= 0 {
+	if len(global.V.Base.GormList) <= 0 {
 		return errors.New("至少有一个数据库需要被连接")
 	}
-	global.V.Gorm = global.V.GormList[0]
+	global.V.Base.Gorm = global.V.Base.GormList[0]
 	//DB 快捷变量
-	//model.Db = global.V.Gorm
+	//model.Db = global.V.Base.Gorm
 	//初始化APP信息，所有项目都需要有AppId或serviceId，因为要做验证，同时目录名也包含在里面
 	err = InitProject(prefix)
 	if err != nil {
-		global.V.Zap.Error(prefix + err.Error())
+		global.V.Base.Zap.Error(prefix + err.Error())
 		return err
 	}
 	//gorm 和 project 初始化(成功)完成后，给main日志增加公共输出项：projectId
-	global.V.Zap = LoggerWithProject(global.V.Zap, global.V.Project.Id)
+	global.V.Base.Zap = LoggerWithProject(global.V.Base.Zap, global.V.Util.Project.Id)
 	//项目目录名，必须跟PROJECT里的key相同(key由驼峰转为下划线模式)
 	_, err = InitPath(global.MainEnv.RootDir)
 	if err != nil {
-		global.V.Zap.Error(prefix + err.Error())
+		global.V.Base.Zap.Error(prefix + err.Error())
 		return err
 	}
 	//项目的根目录
-	//global.V.RootDir = initialize.Option.RootDir
-	global.V.Zap.Info(prefix + "global.V.RootDir: " + global.MainEnv.RootDir)
+	//global.V.Base.RootDir = initialize.Option.RootDir
+	global.V.Base.Zap.Info(prefix + "global.V.Base.RootDir: " + global.MainEnv.RootDir)
 	//错误码 文案 管理（还未用起来，后期优化）
 	errorMsgFileContentDir := global.C.Http.StaticPath + "/" + global.C.System.ErrorMsgFile
-	errorMsgFileContent, err := global.V.StaticFileSystem.GetStaticFileContentLine(errorMsgFileContentDir)
+	errorMsgFileContent, err := global.V.Util.StaticFileSystem.GetStaticFileContentLine(errorMsgFileContentDir)
 	if err != nil {
-		global.V.Zap.Error(prefix + err.Error())
+		global.V.Base.Zap.Error(prefix + err.Error())
 		return err
 	}
-	global.V.Err, err = util.NewErrMsg(global.V.Zap, errorMsgFileContentDir, errorMsgFileContent)
+	global.V.Util.Err, err = util.NewErrMsg(global.V.Base.Zap, errorMsgFileContentDir, errorMsgFileContent)
 	if err != nil {
-		global.V.Zap.Error(prefix + err.Error())
+		global.V.Base.Zap.Error(prefix + err.Error())
 		return err
 	}
 	//基础类：用于恢复一个挂了的协程,避免主进程被panic fatal 带挂了，同时有重试次数控制
-	global.V.RecoverGo = util.NewRecoverGo(global.V.Zap, 3)
+	global.V.Util.RecoverGo = util.NewRecoverGo(global.V.Base.Zap, 3)
 	//redis
 	if global.C.Redis.Status == core.GLOBAL_CONFIG_MODEL_STATUS_OPEN {
-		global.V.Redis, err = GetNewRedis(prefix)
+		global.V.Base.Redis, err = GetNewRedis(prefix)
 		if err != nil {
-			global.V.Zap.Error(prefix + " GetRedis " + err.Error())
+			global.V.Base.Zap.Error(prefix + " GetRedis " + err.Error())
 			return err
 		}
 		//这个是另外一个redis sdk库，算是备用吧
@@ -147,9 +146,9 @@ func (initialize *Initialize) Start() error {
 			Host: global.C.Redis.Ip,
 			Port: global.C.Redis.Port,
 			Ps:   global.C.Redis.Password,
-			Log:  global.V.Zap,
+			Log:  global.V.Base.Zap,
 		}
-		global.V.RedisGo, _ = util.NewRedisConnPool(redisGoOption)
+		global.V.Base.RedisGo, _ = util.NewRedisConnPool(redisGoOption)
 	}
 	//http server
 	if global.C.Http.Status == core.GLOBAL_CONFIG_MODEL_STATUS_OPEN {
@@ -159,34 +158,34 @@ func (initialize *Initialize) Start() error {
 		//Http log zap 这里单独再开个zap 实例，用于专门记录http 请求
 		HttpZap, _, err := GetNewZapLog(configZap)
 		if err != nil {
-			global.V.Zap.Error(prefix + "GetNewZapLog err:" + err.Error())
+			global.V.Base.Zap.Error(prefix + "GetNewZapLog err:" + err.Error())
 			return err
 		}
 
-		global.V.Gin, err = GetNewHttpGIN(HttpZap, prefix)
+		global.V.Base.Gin, err = GetNewHttpGIN(HttpZap, prefix)
 		if err != nil {
-			global.V.Zap.Error(prefix + "GetNewHttpGIN err:" + err.Error())
+			global.V.Base.Zap.Error(prefix + "GetNewHttpGIN err:" + err.Error())
 			return err
 		}
-		HttpZap = LoggerWithProject(HttpZap, global.V.Project.Id)
+		HttpZap = LoggerWithProject(HttpZap, global.V.Util.Project.Id)
 	}
 	//etcd
 	//if global.C.Etcd.Status == core.GLOBAL_CONFIG_MODEL_STATUS_OPEN {
-	//	global.V.Etcd, err = GetNewEtcd(global.MainCmdParameter.Env, configZapReturn, prefix)
+	//	global.V.Base.Etcd, err = GetNewEtcd(global.MainCmdParameter.Env, configZapReturn, prefix)
 	//	if err != nil {
-	//		global.V.Zap.Error(prefix + "GetNewEtcd err:" + err.Error())
+	//		global.V.Base.Zap.Error(prefix + "GetNewEtcd err:" + err.Error())
 	//		return err
 	//	}
 	//}
 	//服务管理器，这里跟project manager 有点差不多，不同的只是：project是DB中所有记录,service是type=N的情况
 	//ps:之所以单独加一个模块，也是因为service有些特殊的结构变量，与project的结构变量不太一样
-	global.V.ServiceManager, _ = util.NewServiceManager(global.V.Gorm)
+	global.V.Util.ServiceManager, _ = util.NewServiceManager(global.V.Base.Gorm)
 	//service 服务发现，这里有个顺序，必须先实现化完成:serviceManager
 	if global.C.ServiceDiscovery.Status == core.GLOBAL_CONFIG_MODEL_STATUS_OPEN {
 		if global.C.Etcd.Status != core.GLOBAL_CONFIG_MODEL_STATUS_OPEN {
 			return errors.New("ServiceDiscovery need Etcd open!")
 		}
-		global.V.ServiceDiscovery, err = GetNewServiceDiscovery()
+		global.V.Util.ServiceDiscovery, err = GetNewServiceDiscovery()
 		if err != nil {
 			return err
 		}
@@ -197,36 +196,36 @@ func (initialize *Initialize) Start() error {
 			Status:  global.C.PushGateway.Status,
 			Ip:      global.C.PushGateway.Ip,
 			Port:    global.C.PushGateway.Port,
-			JobName: global.V.Project.Name,
+			JobName: global.V.Util.Project.Name,
 		}
 		myMetricsOption := util.MyMetricsOption{
-			Log:         global.V.Zap,
-			NameSpace:   global.V.Project.Name,
+			Log:         global.V.Base.Zap,
+			NameSpace:   global.V.Util.Project.Name,
 			PushGateway: myPushGateway,
 			Env:         global.MainCmdParameter.Env,
 		}
-		global.V.Metric = util.NewMyMetrics(myMetricsOption)
+		global.V.Util.Metric = util.NewMyMetrics(myMetricsOption)
 
 		if global.C.Http.Status != core.GLOBAL_CONFIG_MODEL_STATUS_OPEN {
 			return errors.New("metrics need gin open!")
 		}
-		global.V.Gin.GET("/metrics", gin.WrapH(promhttp.Handler()))
+		global.V.Base.Gin.GET("/metrics", gin.WrapH(promhttp.Handler()))
 		//测试
-		//global.V.Gin.GET("/metrics/count", func(c *gin.Context) {
-		//	global.V.Metric.CounterInc("paySuccess")
+		//global.V.Base.Gin.GET("/metrics/count", func(c *gin.Context) {
+		//	global.V.Base.Metric.CounterInc("paySuccess")
 		//})
 		//
-		//global.V.Gin.GET("/metrics/gauge", func(c *gin.Context) {
-		//	global.V.Metric.CounterInc("payUser")
+		//global.V.Base.Gin.GET("/metrics/gauge", func(c *gin.Context) {
+		//	global.V.Base.Metric.CounterInc("payUser")
 		//})
-		//global.V.Metric.Test()
+		//global.V.Base.Metric.Test()
 	}
 	//初始化-protobuf 映射文件（原 protobuf 目录 改成 static 下面）
 	//将rpc service 中的方法，转化成ID（由PHP生成 的ID map）
 	if global.C.Protobuf.Status == core.GLOBAL_CONFIG_MODEL_STATUS_OPEN {
 		var fileContentArr []string
 		//if global.MainCmdParameter.BuildStatic == "on" {
-		//	content, err := global.V.StaticFileSys.ReadFile("static/proto/" + global.C.Protobuf.IdMapFileName)
+		//	content, err := global.V.Base.StaticFileSys.ReadFile("static/proto/" + global.C.Protobuf.IdMapFileName)
 		//	if err != nil {
 		//		util.MyPrint("ReadFile err:", err)
 		//		return err
@@ -242,36 +241,36 @@ func (initialize *Initialize) Start() error {
 		//	}
 		//}
 		protobufStaticDir := global.C.Http.StaticPath + "/proto/"
-		fileContentArr, _ = global.V.StaticFileSystem.GetStaticFileContentLine(protobufStaticDir + global.C.Protobuf.IdMapFileName)
+		fileContentArr, _ = global.V.Util.StaticFileSystem.GetStaticFileContentLine(protobufStaticDir + global.C.Protobuf.IdMapFileName)
 		//util.MyPrint(fileContentArr)
 		protobufStaticFullDir := global.MainEnv.RootDir + "/" + protobufStaticDir
-		global.V.ProtoMap, err = util.NewProtoMap(global.V.Zap, protobufStaticFullDir, global.C.Protobuf.IdMapFileName, global.V.ProjectMng, fileContentArr)
+		global.V.Util.ProtoMap, err = util.NewProtoMap(global.V.Base.Zap, protobufStaticFullDir, global.C.Protobuf.IdMapFileName, global.V.Util.ProjectMng, fileContentArr)
 		if err != nil {
 			util.MyPrint("GetNewViper err:", err)
 			return err
 		}
-		//util.ExitPrint(global.V.ProtoMap.ServiceFuncMap)
+		//util.ExitPrint(global.V.Base.ProtoMap.ServiceFuncMap)
 	}
 	//grpc
 	if global.C.Grpc.Status == core.GLOBAL_CONFIG_MODEL_STATUS_OPEN {
 		grpcManagerOption := util.GrpcManagerOption{
-			//AppId: global.V.App.Id,
-			//ServiceId: global.V.Service.Id,
-			ProjectId: global.V.Project.Id,
-			Log:       global.V.Zap,
+			//AppId: global.V.Base.App.Id,
+			//ServiceId: global.V.Base.Service.Id,
+			ProjectId: global.V.Util.Project.Id,
+			Log:       global.V.Base.Zap,
 		}
 		if global.C.ServiceDiscovery.Status == core.GLOBAL_CONFIG_MODEL_STATUS_OPEN {
-			grpcManagerOption.ServiceDiscovery = global.V.ServiceDiscovery
+			grpcManagerOption.ServiceDiscovery = global.V.Util.ServiceDiscovery
 		}
-		global.V.GrpcManager, _ = util.NewGrpcManager(grpcManagerOption)
+		global.V.Util.GrpcManager, _ = util.NewGrpcManager(grpcManagerOption)
 	}
 
 	//预/报警,这个是真正的直接报警，如：邮件 SMS 等，不是推送3方
 	//ps:不推荐这么用，最好都统一推送3方报警机制
 	//if global.C.Alert.Status == core.GLOBAL_CONFIG_MODEL_STATUS_OPEN {
-	//	global.V.AlertHook = util.NewAlertHook(-1, "程序出错了：#body#", "报错", util.ALERT_METHOD_SYNC, global.V.Zap)
-	//global.V.AlertHook.Email = global.V.Email
-	//global.V.AlertHook.Alert("Aaaa")
+	//	global.V.Base.AlertHook = util.NewAlertHook(-1, "程序出错了：#body#", "报错", util.ALERT_METHOD_SYNC, global.V.Base.Zap)
+	//global.V.Base.AlertHook.Email = global.V.Base.Email
+	//global.V.Base.AlertHook.Alert("Aaaa")
 	//}
 	if global.C.AliOss.Status == core.GLOBAL_CONFIG_MODEL_STATUS_OPEN {
 		op := util.AliOssOptions{
@@ -281,12 +280,12 @@ func (initialize *Initialize) Start() error {
 			BucketName:      global.C.AliOss.Bucket,
 			LocalDomain:     global.C.AliOss.SelfDomain,
 		}
-		global.V.AliOss = util.NewAliOss(op)
+		global.V.Util.AliOss = util.NewAliOss(op)
 	}
 
 	//创建一全二叉树
-	global.V.BinaryTree = container.NewBinaryTree(100, 1, 1)
-	global.V.TrieTree = container.NewTrieTree()
+	//global.V.Util.BinaryTree = container.NewBinaryTree(100, 1, 1)
+	//global.V.Base.TrieTree = container.NewTrieTree()
 	//var netWayOption util.NetWayOption
 	//if global.C.Gateway.Status == global.GLOBAL_CONFIG_MODEL_STATUS_OPEN {
 	//	netWayOption = InitGateway()
@@ -295,10 +294,10 @@ func (initialize *Initialize) Start() error {
 	//		util.MyPrint("int Gateway err:", err)
 	//		return err
 	//	}
-	//	global.V.NetWay = netWay
+	//	global.V.Base.NetWay = netWay
 	//}
 	InitFileManager()
-	global.V.MyService = global.NewMyService()
+	global.V.Service = global.NewMyService()
 
 	//global.C.System.ENV = initialize.Option.Env
 	//启动http
@@ -309,9 +308,9 @@ func (initialize *Initialize) Start() error {
 
 	//_ ,cancelFunc := context.WithCancel(option.RootCtx)
 	//进程通信相关
-	ProcessPathFileName := "/tmp/" + global.V.Project.Name + ".pid"
-	global.V.Process = util.NewProcess(ProcessPathFileName, global.MainEnv.RootCancelFunc, global.V.Zap, global.MainEnv.RootQuitFunc, initialize.OutHttpGetBaseInfo)
-	global.V.Process.InitProcess()
+	ProcessPathFileName := "/tmp/" + global.V.Util.Project.Name + ".pid"
+	global.V.Util.Process = util.NewProcess(ProcessPathFileName, global.MainEnv.RootCancelFunc, global.V.Base.Zap, global.MainEnv.RootQuitFunc, initialize.OutHttpGetBaseInfo)
+	global.V.Util.Process.InitProcess()
 
 	if global.MainCmdParameter.TestFlag != "" {
 		core.DoTestAction(global.MainCmdParameter.TestFlag)
@@ -322,8 +321,8 @@ func (initialize *Initialize) Start() error {
 }
 
 func InitAlert(ProjectId int, Content string, Level string) {
-	//global.V.MyService.Alert.LogSend(ProjectId, Content, Level)
-	global.V.AlertPush.Push(ProjectId, Content, Level)
+	//global.V.Base.MyService.Alert.LogSend(ProjectId, Content, Level)
+	global.V.Util.AlertPush.Push(ProjectId, Content, Level)
 }
 
 func (initialize *Initialize) OutHttpGetBaseInfo() string {
@@ -333,7 +332,7 @@ func (initialize *Initialize) OutHttpGetBaseInfo() string {
 }
 
 func (initialize *Initialize) Quit() {
-	global.V.Zap.Warn("init quit start:")
+	global.V.Base.Zap.Warn("init quit start:")
 	if global.C.Http.Status == core.GLOBAL_CONFIG_MODEL_STATUS_OPEN {
 		HttpServerShutdown()
 	}
@@ -343,23 +342,23 @@ func (initialize *Initialize) Quit() {
 	}
 	//这个得优于etcd先关
 	if global.C.Grpc.Status == core.GLOBAL_CONFIG_MODEL_STATUS_OPEN {
-		global.V.GrpcManager.Shutdown()
+		global.V.Util.GrpcManager.Shutdown()
 	}
 	//这个得优于etcd先关
 	if global.C.ServiceDiscovery.Status == core.GLOBAL_CONFIG_MODEL_STATUS_OPEN {
-		global.V.ServiceDiscovery.Shutdown()
+		global.V.Util.ServiceDiscovery.Shutdown()
 	}
 
 	if global.C.Etcd.Status == core.GLOBAL_CONFIG_MODEL_STATUS_OPEN {
-		global.V.Etcd.Shutdown()
+		global.V.Util.Etcd.Shutdown()
 	}
 
-	//global.V.Websocket.Shutdown()
+	//global.V.Base.Websocket.Shutdown()
 
 	GormShutdown()
 	ViperShutdown()
 
-	global.V.Zap.Warn("init quit finish.")
+	global.V.Base.Zap.Warn("init quit finish.")
 }
 
 // =======================================================================================
@@ -367,9 +366,9 @@ func InitPath(rootDir string) (rootDirName string, err error) {
 	pwdArr := strings.Split(rootDir, "/") //切割路径字符串
 	rootDirName = pwdArr[len(pwdArr)-1]   //获取路径数组最后一个元素：当前路径的文件夹名
 	//option.RootDirName = rootDirName
-	//global.V.RootDir = option.RootDir
+	//global.V.Base.RootDir = option.RootDir
 	//这里要求，DB中项目记录里：name 与项目目录名必须一致，防止有人错用/盗用projectId
-	projectNameByte := util.CamelToSnake2([]byte(global.V.Project.Name))
+	projectNameByte := util.CamelToSnake2([]byte(global.V.Util.Project.Name))
 	projectName := util.StrFirstToLower(string(projectNameByte))
 	if rootDirName != projectName {
 		//这里与CICD部署的时候冲突，先注释掉，回头想想怎么解决掉
@@ -397,15 +396,15 @@ func GetNewEtcd(env int, configZapReturn global.Zap, prefix string) (myEtcd *uti
 	}
 
 	option := util.EtcdOption{
-		ProjectName: global.V.Project.Name,
+		ProjectName: global.V.Util.Project.Name,
 		ProjectENV:  env,
-		//ProjectKey		: global.V.Project.Key,
+		//ProjectKey		: global.V.Base.Project.Key,
 		FindEtcdUrl: global.C.Etcd.Url,
 		Username:    global.C.Etcd.Username,
 		Password:    global.C.Etcd.Password,
 		Ip:          global.C.Etcd.Ip,
 		Port:        global.C.Etcd.Port,
-		Log:         global.V.Zap,
+		Log:         global.V.Base.Zap,
 		ZapConfig:   zl,
 		PrintPrefix: prefix,
 	}
@@ -416,11 +415,11 @@ func GetNewEtcd(env int, configZapReturn global.Zap, prefix string) (myEtcd *uti
 
 func GetNewServiceDiscovery() (serviceDiscovery *util.ServiceDiscovery, err error) {
 	serviceOption := util.ServiceDiscoveryOption{
-		Log: global.V.Zap,
-		//Etcd:           global.V.Etcd,
+		Log: global.V.Base.Zap,
+		//Etcd:           global.V.Base.Etcd,
 		Prefix:         global.C.ServiceDiscovery.Prefix,
 		DiscoveryType:  util.SERVICE_DISCOVERY_ETCD,
-		ServiceManager: global.V.ServiceManager,
+		ServiceManager: global.V.Util.ServiceManager,
 		//Prefix	: "/service",
 	}
 	serviceDiscovery, err = util.NewServiceDiscovery(serviceOption)

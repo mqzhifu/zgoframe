@@ -26,7 +26,7 @@ func GameMatchSign(c *gin.Context) {
 	var form pb.GameMatchSign
 	c.ShouldBind(&form)
 
-	group, err := global.V.MyService.GameMatch.PlayerJoin(form)
+	group, err := global.V.Service.GameMatch.PlayerJoin(form)
 	if err != nil {
 		httpresponse.FailWithMessage(err.Error(), c)
 		return
@@ -50,7 +50,7 @@ func GameMatchSignCancel(c *gin.Context) {
 	var form pb.GameMatchPlayerCancel
 	c.ShouldBind(&form)
 
-	err := global.V.MyService.GameMatch.Cancel(form)
+	err := global.V.Service.GameMatch.Cancel(form)
 	if err != nil {
 		httpresponse.FailWithMessage(err.Error(), c)
 		return
@@ -73,10 +73,10 @@ func GameMatchSignCancel(c *gin.Context) {
 func GameMatchGetOneRule(c *gin.Context) {
 	ridStr := c.Param("id")
 	rid, _ := strconv.Atoi(ridStr)
-	// rule, err := global.V.MyService.GameMatch.RuleManager.GetById(rid)
+	// rule, err := global.V.Service.GameMatch.RuleManager.GetById(rid)
 	util.MyPrint("rid:", rid)
 	rule := model.GameMatchRule{}
-	err := global.V.Gorm.Where("id = ? ", rid).First(&rule).Error
+	err := global.V.Base.Gorm.Where("id = ? ", rid).First(&rule).Error
 	if err != nil {
 		httpresponse.FailWithMessage(err.Error(), c)
 		return
@@ -97,7 +97,7 @@ func GameMatchGetOneRule(c *gin.Context) {
 // @Router /game/match/lang [get]
 func GameMatchGetLang(c *gin.Context) {
 	// util.ErrInfo
-	lang := global.V.MyService.GameMatch.GetLang()
+	lang := global.V.Service.GameMatch.GetLang()
 	httpresponse.OkWithAll(lang, "ok", c)
 }
 
@@ -113,7 +113,7 @@ func GameMatchGetLang(c *gin.Context) {
 // @Success 200 {boolean} true "true:成功 false:否"
 // @Router /game/match/config [get]
 func GameMatchConfig(c *gin.Context) {
-	op := global.V.MyService.GameMatch.GetOption()
+	op := global.V.Service.GameMatch.GetOption()
 	httpresponse.OkWithAll(op, "ok", c)
 }
 

@@ -130,12 +130,12 @@ func Fail(c *gin.Context) {
 
 // 快速响应-失败，有些简单的输出信息
 func FailWithMessage(message string, c *gin.Context) {
-	global.V.Zap.Error("失败", zap.Any("err", message))
+	global.V.Base.Zap.Error("失败", zap.Any("err", message))
 	Result(core.HTTP_RES_COMM_ERROR, map[string]interface{}{}, message, c)
 }
 
 func FailWithAll(data interface{}, message string, c *gin.Context) {
-	global.V.Zap.Error("失败", zap.Any("err", message))
+	global.V.Base.Zap.Error("失败", zap.Any("err", message))
 	Result(core.HTTP_RES_COMM_ERROR, data, message, c)
 }
 

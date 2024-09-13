@@ -24,39 +24,38 @@ var GateTcpPort = "3333"
 var GateDefaultProtocol = int32(util.PROTOCOL_WEBSOCKET)
 var GateDefaultContentType = int32(util.CONTENT_TYPE_PROTOBUF)
 
-//func GateServer() {
-//	netWayOption := util.NetWayOption{
-//		ListenIp: GateListenIp, //程序启动时监听的IP
-//		OutIp:    GateListenIp, //对外访问的IP
+//	func GateServer() {
+//		netWayOption := util.NetWayOption{
+//			ListenIp: GateListenIp, //程序启动时监听的IP
+//			OutIp:    GateListenIp, //对外访问的IP
 //
-//		WsPort:  GateWsPort,  //监听端口号
-//		TcpPort: GateTcpPort, //监听端口号
-//		//UdpPort				: "3333",		//UDP端口号
+//			WsPort:  GateWsPort,  //监听端口号
+//			TcpPort: GateTcpPort, //监听端口号
+//			//UdpPort				: "3333",		//UDP端口号
 //
-//		WsUri:               GateWsUri,              //接HOST的后面的URL地址
-//		DefaultProtocolType: GateDefaultProtocol,    //兼容协议：ws tcp udp
-//		DefaultContentType:  GateDefaultContentType, //默认内容格式 ：json protobuf
+//			WsUri:               GateWsUri,              //接HOST的后面的URL地址
+//			DefaultProtocolType: GateDefaultProtocol,    //兼容协议：ws tcp udp
+//			DefaultContentType:  GateDefaultContentType, //默认内容格式 ：json protobuf
 //
-//		LoginAuthType:      "/jwt", //jwt
-//		LoginAuthSecretKey: "aaaa", //密钥
+//			LoginAuthType:      "/jwt", //jwt
+//			LoginAuthSecretKey: "aaaa", //密钥
 //
-//		MaxClientConnNum: 10,    //客户端最大连接数
-//		MsgContentMax:    10240, //一条消息内容最大值
-//		IOTimeout:        1,     //read write sock fd 超时时间
-//		ConnTimeout:      60,    //一个FD超时时间
-//		GrpcManager:      global.V.GrpcManager,
-//		Log:              global.V.Zap,
-//		ProtobufMap:      global.V.ProtobufMap,
-//		//ProtobufMapPath		string		`json:"portobuf_map_path"`//协议号对应的函数名
-//		//两种快速关闭方式，也可以直接调用shutdown函数
-//		//OutCxt 				context.Context `json:"-"`			//调用方的CTX，用于所有协程的退出操作
-//		//CloseChan 			chan int		`json:"-"`
-//	}
-//	gateway := util.NewGateway(global.V.GrpcManager, global.V.Zap)
-//	gateway.StartSocket(netWayOption)
+//			MaxClientConnNum: 10,    //客户端最大连接数
+//			MsgContentMax:    10240, //一条消息内容最大值
+//			IOTimeout:        1,     //read write sock fd 超时时间
+//			ConnTimeout:      60,    //一个FD超时时间
+//			GrpcManager:      global.V.GrpcManager,
+//			Log:              global.V.Zap,
+//			ProtobufMap:      global.V.ProtobufMap,
+//			//ProtobufMapPath		string		`json:"portobuf_map_path"`//协议号对应的函数名
+//			//两种快速关闭方式，也可以直接调用shutdown函数
+//			//OutCxt 				context.Context `json:"-"`			//调用方的CTX，用于所有协程的退出操作
+//			//CloseChan 			chan int		`json:"-"`
+//		}
+//		gateway := util.NewGateway(global.V.GrpcManager, global.V.Zap)
+//		gateway.StartSocket(netWayOption)
 //
-//}
-//
+// }
 func GetSendLoginMsg() []byte {
 	funcName := "CS_Login"
 	serviceName := "Gateway"
@@ -66,12 +65,12 @@ func GetSendLoginMsg() []byte {
 	}
 	requestLoginMarshal, err := proto.Marshal(&requestLogin)
 	if err != nil {
-		global.V.Zap.Fatal("proto.Marshal err:" + err.Error())
+		global.V.Base.Zap.Fatal("proto.Marshal err:" + err.Error())
 	}
 
-	actionMap, empty := global.V.ProtoMap.GetServiceByName(serviceName, funcName)
+	actionMap, empty := global.V.Util.ProtoMap.GetServiceByName(serviceName, funcName)
 	if empty {
-		global.V.Zap.Panic("GetActionId empty.")
+		global.V.Base.Zap.Panic("GetActionId empty.")
 	}
 
 	util.MyPrint("actionMap funcId:", actionMap.FuncId, " , serviceId:", actionMap.ServiceId)
@@ -97,7 +96,7 @@ func GetSendLoginMsg() []byte {
 
 func GetConnManager() *util.ConnManager {
 	connManagerOption := util.ConnManagerOption{
-		Log:                 global.V.Zap,
+		Log:                 global.V.Base.Zap,
 		DefaultContentType:  GateDefaultProtocol,
 		DefaultProtocolType: GateDefaultProtocol,
 	}
@@ -105,48 +104,46 @@ func GetConnManager() *util.ConnManager {
 	return connManager
 }
 
-//
-//func GateClientWebsocket() {
-//	dns := GateListenIp + ":" + GateWsPort
-//	u := url.URL{Scheme: "ws", Host: dns, Path: GateWsUri}
-//	c, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
-//	if err != nil {
-//		global.V.Zap.Fatal("dial:" + err.Error())
-//	}
-//	//defer c.Close()
-//	connManager := GetConnManager()
-//
-//	contentBytes := GetSendLoginMsg()
-//	err = c.WriteMessage(websocket.BinaryMessage, contentBytes)
-//	if err != nil {
-//		global.V.Zap.Error("write:" + err.Error())
-//		return
-//	}
-//
-//	for {
-//		_, message, err := c.ReadMessage()
+//	func GateClientWebsocket() {
+//		dns := GateListenIp + ":" + GateWsPort
+//		u := url.URL{Scheme: "ws", Host: dns, Path: GateWsUri}
+//		c, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
 //		if err != nil {
-//			global.V.Zap.Error("read:" + err.Error())
+//			global.V.Zap.Fatal("dial:" + err.Error())
+//		}
+//		//defer c.Close()
+//		connManager := GetConnManager()
+//
+//		contentBytes := GetSendLoginMsg()
+//		err = c.WriteMessage(websocket.BinaryMessage, contentBytes)
+//		if err != nil {
+//			global.V.Zap.Error("write:" + err.Error())
 //			return
 //		}
 //
-//		msg, err := connManager.ParserContentProtocol(string(message))
-//		if err != nil {
-//			global.V.Zap.Error("ParserContentProtocol:" + err.Error())
-//			return
+//		for {
+//			_, message, err := c.ReadMessage()
+//			if err != nil {
+//				global.V.Zap.Error("read:" + err.Error())
+//				return
+//			}
+//
+//			msg, err := connManager.ParserContentProtocol(string(message))
+//			if err != nil {
+//				global.V.Zap.Error("ParserContentProtocol:" + err.Error())
+//				return
+//			}
+//
+//			util.PrintStruct(msg, ":")
+//			time.Sleep(time.Second * 1)
 //		}
 //
-//		util.PrintStruct(msg, ":")
-//		time.Sleep(time.Second * 1)
-//	}
-//
-//}
-//
+// }
 func GateClientTcp() {
 	dns := GateListenIp + ":" + GateTcpPort
 	fd, err := net.Dial("tcp", dns)
 	if err != nil {
-		global.V.Zap.Fatal("net.Listen err :" + err.Error())
+		global.V.Base.Zap.Fatal("net.Listen err :" + err.Error())
 	}
 	util.MyPrint("dns: ", dns)
 
@@ -154,9 +151,9 @@ func GateClientTcp() {
 	util.MyPrint("fd.Write len:", len(contentBytes))
 	n, err := fd.Write(contentBytes)
 	if err != nil {
-		global.V.Zap.Fatal("fd.write err :" + err.Error())
+		global.V.Base.Zap.Fatal("fd.write err :" + err.Error())
 	}
-	global.V.Zap.Info("write n:" + strconv.Itoa(n))
+	global.V.Base.Zap.Info("write n:" + strconv.Itoa(n))
 
 	//input := bufio.NewReader(os.Stdin)
 	for {
@@ -166,7 +163,7 @@ func GateClientTcp() {
 		buf := make([]byte, 1024)
 		r_len, err := fd.Read(buf)
 		if err != nil {
-			global.V.Zap.Fatal("read line faild err:%v\n" + err.Error())
+			global.V.Base.Zap.Fatal("read line faild err:%v\n" + err.Error())
 		}
 
 		//bytes, _, err := reader.ReadLine("\f")

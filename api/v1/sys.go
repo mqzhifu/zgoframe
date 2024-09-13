@@ -24,7 +24,7 @@ func Quit(c *gin.Context) {
 	c.ShouldBind(&formData)
 
 	// if CheckID(formData) {
-	global.V.Process.RootQuitFunc(2)
+	global.V.Util.Process.RootQuitFunc(2)
 	httpresponse.OkWithAll(global.C, "信号已发出，结束中...请等待几秒", c)
 	// } else {
 	//	httpresponse.FailWithMessage("验证失败", c)
@@ -50,7 +50,7 @@ func Config(c *gin.Context) {
 	c.ShouldBind(&formData)
 	// 这里也可以把global.C输出回去
 	// global.C
-	info := global.V.Process.InitBaseInfoCallbackFunc()
+	info := global.V.Util.Process.InitBaseInfoCallbackFunc()
 	// util.MyPrint("InitBaseInfoCallbackFunc:",info)
 	//
 	// if  CheckID(formData)  {

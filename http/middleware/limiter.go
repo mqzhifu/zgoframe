@@ -23,7 +23,7 @@ func Limiter() gin.HandlerFunc {
 			showMsg += " , nowTimes:" + strconv.Itoa(nowTimes)
 			if !rs {
 				err := errors.New("too many requests")
-				global.V.Zap.Error("RateMiddleware", zap.Any("err", err))
+				global.V.Base.Zap.Error("RateMiddleware", zap.Any("err", err))
 				ErrAbortWithResponse(5208, c)
 				//httpresponse.FailWithMessage(err.Error(), c)
 				//c.Abort()
@@ -33,7 +33,7 @@ func Limiter() gin.HandlerFunc {
 			showMsg += " , no need process."
 		}
 
-		global.V.Zap.Debug(showMsg)
+		global.V.Base.Zap.Debug(showMsg)
 		//global.V.Zap.Debug("middle Limiter finish.")
 		c.Next()
 		//fmt.Println("RateMiddleware after")
@@ -42,12 +42,12 @@ func Limiter() gin.HandlerFunc {
 
 // 通过redis的value判断第几次访问并返回是否允许访问
 func LimiterAllow(ip string, maxTimes int, second int) (bool, int) {
-	element, _ := global.V.Redis.GetElementByIndex("limiter", ip)
-	nowTimesStr, err := global.V.Redis.Get(element)
+	element, _ := global.V.Base.Redis.GetElementByIndex("limiter", ip)
+	nowTimesStr, err := global.V.Base.Redis.Get(element)
 	nowTimes, _ := strconv.Atoi(nowTimesStr)
 
 	if err == redis.Nil {
-		global.V.Redis.SetEX(element, strconv.Itoa(1), second)
+		global.V.Base.Redis.SetEX(element, strconv.Itoa(1), second)
 		return true, nowTimes
 	} else if err != nil {
 		return false, nowTimes
@@ -55,7 +55,7 @@ func LimiterAllow(ip string, maxTimes int, second int) (bool, int) {
 		if nowTimes >= maxTimes {
 			return false, nowTimes
 		}
-		global.V.Redis.Incr(element)
+		global.V.Base.Redis.Incr(element)
 		return true, nowTimes
 	}
 

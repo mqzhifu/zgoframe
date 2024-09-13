@@ -101,7 +101,7 @@ func AgoraCallbackRTC(c *gin.Context) {
 		ChannelName: form.Payload.ChannelName,
 		Payload:     string(payloadBytes),
 	}
-	global.V.Gorm.Create(&agoraCallbackRecord)
+	global.V.Base.Gorm.Create(&agoraCallbackRecord)
 
 	httpresponse.OkWithAll("回调成功", "ok", c)
 }
@@ -142,12 +142,12 @@ func AgoraCallbackCloud(c *gin.Context) {
 		SessionId:   form.Payload.Sid,
 		Payload:     string(payloadBytes),
 	}
-	global.V.Gorm.Create(&agoraCallbackRecord)
+	global.V.Base.Gorm.Create(&agoraCallbackRecord)
 
 	if form.EventType == model.CallbackEventAllUploaded {
 		go func() {
 			var record model.AgoraCloudRecord
-			err := global.V.Gorm.First(&record).Where("session_id = ?", form.Payload.Sid).Error
+			err := global.V.Base.Gorm.First(&record).Where("session_id = ?", form.Payload.Sid).Error
 			if err != nil {
 				return
 			}
@@ -162,7 +162,7 @@ func AgoraCallbackCloud(c *gin.Context) {
 				Status:     model.AGORA_CLOUD_RECORD_STATUS_END,
 				StopAction: model.AGORA_CLOUD_RECORD_STOP_ACTION_CALLBACK,
 			}
-			err = global.V.Gorm.Where("status != ? and session_id = ?", model.AGORA_CLOUD_RECORD_STATUS_END, agoraCallbackRecord.SessionId).Updates(&agoraCloudRecord).Error
+			err = global.V.Base.Gorm.Where("status != ? and session_id = ?", model.AGORA_CLOUD_RECORD_STATUS_END, agoraCallbackRecord.SessionId).Updates(&agoraCloudRecord).Error
 			if err != nil {
 				util.MyPrint("gorm updates err:", err)
 			}

@@ -9,7 +9,7 @@ import (
 
 func GetNewRedis(prefix string) (*util.MyRedis, error) {
 	redisCfg := global.C.Redis
-	global.V.Zap.Info(prefix + "redis conn:" + redisCfg.Ip + ":" + redisCfg.Port + " ps:****")
+	global.V.Base.Zap.Info(prefix + "redis conn:" + redisCfg.Ip + ":" + redisCfg.Port + " ps:****")
 
 	pool := make(map[string]util.RedisElement)
 	//pool["userInfo"] 	= util.RedisElement{KeyTemplate: "user_info_{0}",Expire: -1,Index: "userInfo"}
@@ -27,10 +27,10 @@ func GetNewRedis(prefix string) (*util.MyRedis, error) {
 		Port:        redisCfg.Port,
 		Password:    redisCfg.Password,
 		DbNumber:    redisCfg.DbNumber,
-		KeyPrefix:   global.V.Project.Name,
+		KeyPrefix:   global.V.Util.Project.Name,
 		KeySeparate: "_",
 		ElementPool: pool,
-		Log:         global.V.Zap,
+		Log:         global.V.Base.Zap,
 	}
 
 	myRedis, err := util.NewMyRedis(myRedisKeyOption)
@@ -43,8 +43,8 @@ func TestQueue() {
 		DeliveryRetry: []int{1, 5, 10},
 		//测试的所有队列名称
 		QueueNameList: []string{"myqueue", "myqueue2"},
-		Redis:         global.V.Redis,
-		Log:           global.V.Zap,
+		Redis:         global.V.Base.Redis,
+		Log:           global.V.Base.Zap,
 	}
 
 	redisQueueManager := util.NewRedisQueueManager(RedisQueueManagerOption)
@@ -92,5 +92,5 @@ func TestQueue() {
 }
 
 func RedisShutdown() {
-	global.V.Redis.Redis.Close()
+	global.V.Base.Redis.Redis.Close()
 }

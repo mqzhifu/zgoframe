@@ -129,7 +129,7 @@ func main() {
 	}
 	global.MainEnv = mainEnvironment
 	global.MainCmdParameter = cmdParameter
-	global.V.StaticFileSys = staticFileSys
+	global.V.Base.StaticFileSys = staticFileSys
 	// 开始正式全局初始化
 	initializeVar = initialize.NewInitialize()
 	err := initializeVar.Start()
@@ -141,7 +141,7 @@ func main() {
 	// 执行用户自己的一些功能
 	go core.DoMySelf()
 	// 监听外部进程信号
-	go global.V.Process.DemonSignal()
+	go global.V.Util.Process.DemonSignal()
 	util.MyPrint(prefix + "wait mainCxt.done...")
 	//性能 - 监控
 	//go startHttp()
@@ -200,10 +200,10 @@ func processCmdParameter(prefix string) global.CmdParameter {
 
 func QuitAll(source int) {
 	defer func() {
-		global.V.Process.DelPid()
+		global.V.Util.Process.DelPid()
 	}()
 
-	global.V.Zap.Warn("main quit , source : " + strconv.Itoa(source))
+	global.V.Base.Zap.Warn("main quit , source : " + strconv.Itoa(source))
 	initializeVar.Quit()
 
 	util.MyPrint("main QuitAll finish.")

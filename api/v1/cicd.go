@@ -22,7 +22,7 @@ import (
 // @Success 200 {object} model.CicdPublish
 // @Router /cicd/publish/list [get]
 func CicdPublishList(c *gin.Context) {
-	list := global.V.MyService.Cicd.GetPublishList(20) // 取出最新的20条即可，不然数据太大
+	list := global.V.Service.Cicd.GetPublishList(20) // 取出最新的20条即可，不然数据太大
 	httpresponse.OkWithAll(list, "成功", c)
 }
 
@@ -39,7 +39,7 @@ func CicdPublishList(c *gin.Context) {
 // @Success 200 {object} util.Service
 // @Router /cicd/local/all/server/service/list [get]
 func CicdLocalAllServerServiceList(c *gin.Context) {
-	list, _ := global.V.MyService.Cicd.LocalAllServerServiceList()
+	list, _ := global.V.Service.Cicd.LocalAllServerServiceList()
 	httpresponse.OkWithAll(list, "成功", c)
 }
 
@@ -56,7 +56,7 @@ func CicdLocalAllServerServiceList(c *gin.Context) {
 // @Success 200 {object} util.Service
 // @Router /cicd/service/list [get]
 func CicdServiceList(c *gin.Context) {
-	list := global.V.MyService.Cicd.GetServiceList()
+	list := global.V.Service.Cicd.GetServiceList()
 	httpresponse.OkWithAll(list, "成功", c)
 }
 
@@ -73,7 +73,7 @@ func CicdServiceList(c *gin.Context) {
 // @Success 200 {object} util.Server
 // @Router /cicd/server/list [get]
 func CicdServerList(c *gin.Context) {
-	list := global.V.MyService.Cicd.GetServerList()
+	list := global.V.Service.Cicd.GetServerList()
 	httpresponse.OkWithAll(list, "成功", c)
 }
 
@@ -90,7 +90,7 @@ func CicdServerList(c *gin.Context) {
 // @Success 200 {boolean} true "数据过长，先用bool替代"
 // @Router /cicd/superVisor/list [get]
 func CicdSuperVisorList(c *gin.Context) {
-	list, err := global.V.MyService.Cicd.GetSuperVisorList()
+	list, err := global.V.Service.Cicd.GetSuperVisorList()
 	if err != nil {
 		httpresponse.FailWithMessage(err.Error(), c)
 	} else {
@@ -117,7 +117,7 @@ func CicdSuperVisorProcess(c *gin.Context) {
 	c.ShouldBind(&form)
 
 	util.MyPrint("CicdSuperVisorProcess form:", form)
-	err := global.V.MyService.Cicd.SuperVisorProcess(form)
+	err := global.V.Service.Cicd.SuperVisorProcess(form)
 	if err != nil {
 		httpresponse.FailWithMessage(err.Error(), c)
 	} else {
@@ -157,7 +157,7 @@ func CicdServicePublish(c *gin.Context) {
 	}
 
 	flag, _ := strconv.Atoi(flagStr)
-	err = global.V.MyService.Cicd.Deploy.Publish(id, flag)
+	err = global.V.Service.Cicd.Deploy.Publish(id, flag)
 	if err != nil {
 		httpresponse.FailWithMessage(err.Error(), c)
 	} else {
@@ -185,7 +185,7 @@ func CicdServiceDeploy(c *gin.Context) {
 
 	util.MyPrint("CicdServiceDeploy form:", form)
 	// 这里因为是HTTP连接，而后端处理一次时间接近1分钟，HTTP可能多次重复请求，开个协程
-	go global.V.MyService.Cicd.Deploy.ApiDeployOneService(form)
+	go global.V.Service.Cicd.Deploy.ApiDeployOneService(form)
 	httpresponse.OkWithAll("aaaa", "成功", c)
 	// if err != nil {
 	//	httpresponse.FailWithMessage(err.Error(), c)

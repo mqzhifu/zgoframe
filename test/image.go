@@ -9,7 +9,7 @@ import (
 func ImageSlice() {
 	//dir := global.MainEnv.RootDir + "/" + global.C.Http.StaticPath + "/puzzle"
 	extNameList := []string{"jpg", "png", "jpeg", "bmp"}
-	dir := global.V.ImageSlice.OriImagePath
+	dir := global.V.Util.ImageSlice.OriImagePath
 	fileList := util.ForeachDir(dir, extNameList)
 	//util.MyPrint(fileList)
 	if len(fileList) == 0 {
@@ -22,7 +22,7 @@ func ImageSlice() {
 		fileName := fileNameArr[len(fileNameArr)-1]
 
 		//global.V.ImageSlice.Slice(fileName)
-		global.V.ImageSlice.ScaleImg(fileName, 20)
+		global.V.Util.ImageSlice.ScaleImg(fileName, 20)
 	}
 
 	util.ExitPrint(33)

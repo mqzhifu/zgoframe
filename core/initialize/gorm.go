@@ -10,7 +10,7 @@ import (
 )
 
 func GetNewGorm(printPrefix string) ([]*gorm.DB, error) {
-	//global.V.Zap.Info(printPrefix + "GetNewGorm , DBType:" + global.C.System.DbType)
+	//global.V.Base.Zap.Info(printPrefix + "GetNewGorm , DBType:" + global.C.System.DbType)
 	switch global.C.System.DbType {
 	//目前仅支持MYSQL ，后期考虑是否加入其它DB
 	case "mysql":
@@ -22,13 +22,13 @@ func GetNewGorm(printPrefix string) ([]*gorm.DB, error) {
 
 func GormMysql(printPrefix string) ([]*gorm.DB, error) {
 	var list []*gorm.DB
-	for _,m:=range global.C.Mysql{
-		if m.Status != "open"{
+	for _, m := range global.C.Mysql {
+		if m.Status != "open" {
 			continue
 		}
 		//m :=
 		dns := m.Username + ":" + m.Password + "@tcp(" + m.Ip + ":" + m.Port + ")/" + m.DbName + "?" + m.Config
-		global.V.Zap.Info(printPrefix + " gorm mysql ," + m.Username + ":" + "****" + "@tcp(" + m.Ip + ":" + m.Port + ")/" + m.DbName + "?" + m.Config)
+		global.V.Base.Zap.Info(printPrefix + " gorm mysql ," + m.Username + ":" + "****" + "@tcp(" + m.Ip + ":" + m.Port + ")/" + m.DbName + "?" + m.Config)
 		mysqlConfig := mysql.Config{
 			DSN:                       dns,   // DSN data source name
 			DefaultStringSize:         191,   // string 类型字段的默认长度
@@ -39,7 +39,7 @@ func GormMysql(printPrefix string) ([]*gorm.DB, error) {
 		}
 		db, err := gorm.Open(mysql.New(mysqlConfig), gormConfig(m.LogMode))
 		if err != nil {
-			global.V.Zap.Error("MySQL启动异常:" + err.Error())
+			global.V.Base.Zap.Error("MySQL启动异常:" + err.Error())
 			return nil, err
 		}
 		//db = db.Debug()
@@ -47,14 +47,14 @@ func GormMysql(printPrefix string) ([]*gorm.DB, error) {
 		sqlDB.SetMaxIdleConns(m.MaxIdleConns)
 		sqlDB.SetMaxOpenConns(m.MaxOpenConns)
 
-		list = append(list,db)
+		list = append(list, db)
 	}
 
 	return list, nil
 }
 
 func GormShutdown() {
-	db, _ := global.V.Gorm.DB()
+	db, _ := global.V.Base.Gorm.DB()
 	db.Close()
 }
 

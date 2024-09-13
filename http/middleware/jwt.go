@@ -26,13 +26,13 @@ func NewJWT() *JWT {
 func (j *JWT) CreateToken(claims request.CustomClaims) (string, error) {
 	tokenClaims := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	token, err := tokenClaims.SignedString(j.SigningKey)
-	global.V.Zap.Debug("CreateToken: " + token)
+	global.V.Base.Zap.Debug("CreateToken: " + token)
 	return token, err
 }
 
 // 快捷函数，方便 回调 ，主要是给gin http 使用
 func JWTAuth() gin.HandlerFunc {
-	global.V.Zap.Debug("im in jwtauth:")
+	global.V.Base.Zap.Debug("im in jwtauth:")
 	return RealJWTAuth
 }
 
@@ -41,30 +41,30 @@ func (j *JWT) ParseToken(tokenString string) (customClaims request.CustomClaims,
 	token, err := jwt.ParseWithClaims(tokenString, &request.CustomClaims{}, func(token *jwt.Token) (i interface{}, e error) {
 		return j.SigningKey, nil
 	})
-	global.V.Zap.Debug("ParseToken:" + tokenString)
+	global.V.Base.Zap.Debug("ParseToken:" + tokenString)
 	//util.MyPrint(token.Header, " ", token.Valid, "  ", token.Signature, " ", token.Method.Alg(), " ", err)
 	if err != nil { //发生错误
-		global.V.Zap.Debug("jwt.ParseWithClaims err:" + err.Error())
+		global.V.Base.Zap.Debug("jwt.ParseWithClaims err:" + err.Error())
 
 		if ve, ok := err.(*jwt.ValidationError); ok { //
 			if ve.Errors&(jwt.ValidationErrorExpired|jwt.ValidationErrorNotValidYet) != 0 {
-				replaceMap := global.V.Err.MakeOneStringReplace(err.Error())
-				err = global.V.Err.NewReplace(5201, replaceMap)
+				replaceMap := global.V.Util.Err.MakeOneStringReplace(err.Error())
+				err = global.V.Util.Err.NewReplace(5201, replaceMap)
 				return customClaims, err
 			}
 		}
 
-		replaceMap := global.V.Err.MakeOneStringReplace(err.Error())
-		err = global.V.Err.NewReplace(5202, replaceMap)
+		replaceMap := global.V.Util.Err.MakeOneStringReplace(err.Error())
+		err = global.V.Util.Err.NewReplace(5202, replaceMap)
 		return customClaims, err
 
 	}
 	claims, ok := token.Claims.(*request.CustomClaims)
 	if ok && token.Valid {
-		global.V.Zap.Debug("ParseToken success , id: " + strconv.Itoa(claims.Id) + " username:" + claims.Username + " sourceType" + strconv.Itoa(claims.SourceType))
+		global.V.Base.Zap.Debug("ParseToken success , id: " + strconv.Itoa(claims.Id) + " username:" + claims.Username + " sourceType" + strconv.Itoa(claims.SourceType))
 		return *claims, nil
 	} else {
-		err := global.V.Err.New(5203)
+		err := global.V.Util.Err.New(5203)
 		return customClaims, err
 	}
 
@@ -75,7 +75,7 @@ func RealJWTAuth(c *gin.Context) {
 	header, _ := request.GetMyHeader(c)
 	user, customClaims, err := CheckToken(header)
 	if err != nil {
-		code, _, _ := global.V.Err.SplitMsg(err.Error())
+		code, _, _ := global.V.Util.Err.SplitMsg(err.Error())
 		ErrAbortWithResponse(code, c)
 		//httpresponse.Result(code, nil, msg, c)
 		//ErrAbortWithResponse()
@@ -85,7 +85,7 @@ func RealJWTAuth(c *gin.Context) {
 	}
 	//if parserTokenData.NewToken != "" {
 	//	c.Header("new-token", parserTokenData.NewToken)
-	//	c.Header("new-expires-at", strconv.FormatInt(parserTokenData.Claims.ExpiresAt, 10))
+	//	c.Header("new-expires-at", strconV.Base.FormatInt(parserTokenData.Claims.ExpiresAt, 10))
 	//}
 
 	c.Set("user", user)
@@ -111,7 +111,7 @@ func CheckToken(myHeader request.HeaderRequest) (u model.User, customClaims requ
 	}
 
 	if claims.ProjectId <= 0 || claims.Id <= 0 || claims.SourceType <= 0 {
-		return u, customClaims, global.V.Err.New(5204)
+		return u, customClaims, global.V.Util.Err.New(5204)
 	}
 	//请求头里的来源类型要与jwt里的对上
 	//if claims.SourceType != parserTokenData.SourceType {
@@ -124,9 +124,9 @@ func CheckToken(myHeader request.HeaderRequest) (u model.User, customClaims requ
 	//	//_ = service.JsonInBlacklist(model.JwtBlacklist{Jwt: token})
 	//	return parserTokenData, errors.New("id not in db")
 	//}
-	redisElement, _ := global.V.Redis.GetElementByIndex("jwt", strconv.Itoa(claims.SourceType), strconv.Itoa(claims.Id))
-	global.V.Zap.Debug("user token key:" + redisElement.Key)
-	jwtStr, err := global.V.Redis.Get(redisElement)
+	redisElement, _ := global.V.Base.Redis.GetElementByIndex("jwt", strconv.Itoa(claims.SourceType), strconv.Itoa(claims.Id))
+	global.V.Base.Zap.Debug("user token key:" + redisElement.Key)
+	jwtStr, err := global.V.Base.Redis.Get(redisElement)
 	//if eee == redis.Nil {
 	//	util.MyPrint("jwt hit hit okokok")
 	//} else {
@@ -134,12 +134,12 @@ func CheckToken(myHeader request.HeaderRequest) (u model.User, customClaims requ
 	//}
 	if err == redis.Nil {
 		//return u, customClaims, errors.New("token 不在redis 中，也可能已失效")
-		return u, customClaims, global.V.Err.New(5205)
+		return u, customClaims, global.V.Util.Err.New(5205)
 	}
 
 	if err != nil || jwtStr == "" || err == redis.Nil {
 		//return u, customClaims, errors.New("redis 读取token 为空 , 失败:" + err.Error())
-		return u, customClaims, global.V.Err.New(5206)
+		return u, customClaims, global.V.Util.Err.New(5206)
 	}
 
 	//if claims.ExpiresAt-time.Now().Unix() < claims.BufferTime {
@@ -152,14 +152,14 @@ func CheckToken(myHeader request.HeaderRequest) (u model.User, customClaims requ
 	//parserTokenData.Claims = claims
 	customClaims = claims
 	var user model.User
-	err = global.V.Gorm.Where("id = ? ", claims.Id).First(&user).Error
+	err = global.V.Base.Gorm.Where("id = ? ", claims.Id).First(&user).Error
 	if err != nil {
-		//return u, customClaims, errors.New("uid not in db :" + strconv.Itoa(claims.Id))
-		replaceMap := global.V.Err.MakeOneStringReplace(err.Error() + " " + strconv.Itoa(claims.Id))
-		return u, customClaims, global.V.Err.NewReplace(5207, replaceMap)
+		//return u, customClaims, errors.New("uid not in db :" + strconV.Base.Itoa(claims.Id))
+		replaceMap := global.V.Util.Err.MakeOneStringReplace(err.Error() + " " + strconv.Itoa(claims.Id))
+		return u, customClaims, global.V.Util.Err.NewReplace(5207, replaceMap)
 	}
-	//if errors.Is(global.V.Gorm.Where("id = ? ", claims.Id).First(&user).Error, gorm.ErrRecordNotFound) {
-	//	return u, customClaims, errors.New("uid not in db :" + strconv.Itoa(claims.Id))
+	//if errors.Is(global.V.Base.Gorm.Where("id = ? ", claims.Id).First(&user).Error, gorm.ErrRecordNotFound) {
+	//	return u, customClaims, errors.New("uid not in db :" + strconV.Base.Itoa(claims.Id))
 	//}
 
 	if user.Status == model.USER_STATUS_DENY {

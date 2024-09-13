@@ -37,7 +37,7 @@ func GatewayService(c *gin.Context) {
 	// }
 
 	fmt.Println(prefix+" ServiceName:"+serviceName, " funcName:"+funcName+" data:"+string(data))
-	backData, err := global.V.MyService.Gateway.HttpCallGrpc(serviceName, funcName, "", data)
+	backData, err := global.V.Service.Gateway.HttpCallGrpc(serviceName, funcName, "", data)
 	if err != nil {
 		fmt.Println(err)
 		httpresponse.FailWithMessage(err.Error(), c)
@@ -57,7 +57,7 @@ func GatewayService(c *gin.Context) {
 // @Success 200 {object} util.NetWayOption "dddd"
 // @Router /gateway/config [get]
 func GatewayConfig(c *gin.Context) {
-	httpresponse.OkWithAll(global.V.MyService.Gateway.NetWayOption, "ok", c)
+	httpresponse.OkWithAll(global.V.Service.Gateway.NetWayOption, "ok", c)
 	// httpresponse.OkWithAll(global.V.Gate.Option, "ok", c)
 
 }
@@ -87,7 +87,7 @@ func GatewayProto(c *gin.Context) {
 // @Success 200 {string} ssss " "
 // @Router /gateway/action/map [get]
 func ActionMap(c *gin.Context) {
-	list := global.V.ProtoMap.GetServiceFuncMap()
+	list := global.V.Util.ProtoMap.GetServiceFuncMap()
 	// 格式化数据，方便前端使用
 	rsList := make(map[string]map[int]util.ProtoServiceFunc)
 	clientList := make(map[int]util.ProtoServiceFunc)
@@ -119,7 +119,7 @@ func ActionMap(c *gin.Context) {
 // @Router /gateway/total [get]
 // @Success 200 {object} util.Conn "连接结构体"
 func GatewayTotal(c *gin.Context) {
-	myMetrics, _ := global.V.MyService.Gateway.Netway.Metrics.GetAllByPrefix()
+	myMetrics, _ := global.V.Service.Gateway.Netway.Metrics.GetAllByPrefix()
 	httpresponse.OkWithAll(myMetrics, "ok", c)
 	// mm, _ := prometheus.DefaultGatherer.Gather()
 	// for _, v := range mm {
@@ -142,7 +142,7 @@ func GatewayTotal(c *gin.Context) {
 // @Router /gateway/fd/list [get]
 // @Success 200 {object} util.Conn "连接结构体"
 func GatewayFDList(c *gin.Context) {
-	connManager := global.V.MyService.Gateway.Netway.ConnManager
+	connManager := global.V.Service.Gateway.Netway.ConnManager
 	if len(connManager.Pool) <= 0 {
 		emptyMap := make(map[int32]*util.Conn)
 		httpresponse.OkWithAll(emptyMap, "ok", c)
@@ -170,7 +170,7 @@ func GatewayFDList(c *gin.Context) {
 // @Router /gateway/send/msg [post]
 // @Success 200 {string} bbbb " "
 func GatewaySendMsg(c *gin.Context) {
-	connManager := global.V.MyService.Gateway.Netway.ConnManager
+	connManager := global.V.Service.Gateway.Netway.ConnManager
 	// if len(connManager.Pool) <= 0 {
 	//	msg := "失败，user pool = 0"
 	//	httpresponse.FailWithMessage(msg, c)
@@ -200,8 +200,8 @@ func GatewaySendMsg(c *gin.Context) {
 	}
 
 	formBytes, _ := json.Marshal(&form)
-	protoMap, _ := global.V.ProtoMap.GetServiceByName("Gateway", "SC_ProjectPushMsg")
-	SifFId := global.V.ProtoMap.GetIdBySidFid(protoMap.ServiceId, protoMap.FuncId)
+	protoMap, _ := global.V.Util.ProtoMap.GetServiceByName("Gateway", "SC_ProjectPushMsg")
+	SifFId := global.V.Util.ProtoMap.GetIdBySidFid(protoMap.ServiceId, protoMap.FuncId)
 	msg := pb.Msg{
 		ServiceId:   int32(protoMap.ServiceId),
 		FuncId:      int32(protoMap.FuncId),
@@ -210,6 +210,6 @@ func GatewaySendMsg(c *gin.Context) {
 		ContentType: util.CONTENT_TYPE_JSON,
 	}
 
-	global.V.MyService.Gateway.NativeServiceFuncRouter(msg)
+	global.V.Service.Gateway.NativeServiceFuncRouter(msg)
 	httpresponse.OkWithAll(connManager.Pool, "ok", c)
 }

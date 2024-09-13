@@ -27,7 +27,7 @@ func ConfigCenterGetByModule(c *gin.Context) {
 	c.ShouldBind(&form)
 
 	// moduleName  := c.Param("name")
-	configInfo, err := global.V.MyService.ConfigCenter.GetByModule(form.Env, projectId, form.Module)
+	configInfo, err := global.V.Service.ConfigCenter.GetByModule(form.Env, projectId, form.Module)
 	if err != nil {
 		httpresponse.FailWithMessage(err.Error(), c)
 	} else {
@@ -54,7 +54,7 @@ func ConfigCenterGetByModuleByKey(c *gin.Context) {
 	var form request.ConfigCenterOpt
 	c.ShouldBind(&form)
 
-	configInfo, err := global.V.MyService.ConfigCenter.GetByKey(global.MainCmdParameter.Env, projectId, form.Module, form.Key)
+	configInfo, err := global.V.Service.ConfigCenter.GetByKey(global.MainCmdParameter.Env, projectId, form.Module, form.Key)
 	util.MyPrint(configInfo)
 	if err != nil {
 		httpresponse.FailWithMessage(err.Error(), c)
@@ -83,7 +83,7 @@ func ConfigCenterSetByModuleByKey(c *gin.Context) {
 
 	// util.MyPrint("set key form:",form.Env,form.Module,form.Value)
 
-	err := global.V.MyService.ConfigCenter.SetByKey(form.Env, projectId, form.Module, form.Key, form.Value)
+	err := global.V.Service.ConfigCenter.SetByKey(form.Env, projectId, form.Module, form.Key, form.Value)
 	if err != nil {
 		httpresponse.FailWithMessage(err.Error(), c)
 	} else {
@@ -109,7 +109,7 @@ func ConfigCenterCreateModule(c *gin.Context) {
 	var form request.ConfigCenterOpt
 	c.ShouldBind(&form)
 
-	err := global.V.MyService.ConfigCenter.CreateModule(form.Env, projectId, form.Module)
+	err := global.V.Service.ConfigCenter.CreateModule(form.Env, projectId, form.Module)
 	if err == nil {
 		httpresponse.OkWithMessage("已创建", c)
 	} else {

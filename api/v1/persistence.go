@@ -61,7 +61,7 @@ func LogPush(c *gin.Context) {
 		Msg:          string(msgJsonStr),
 	}
 	//util.ExitPrint(statisticsLog)
-	err = global.V.Gorm.Create(&statisticsLog).Error
+	err = global.V.Base.Gorm.Create(&statisticsLog).Error
 	if err != nil {
 		httpresponse.FailWithMessage("db insert failed err:"+err.Error(), c)
 		return
@@ -96,7 +96,7 @@ func LogPushFile(c *gin.Context) {
 	module := "log"
 
 	//fileUpload := global.GetUploadObj(category, module)
-	uploadRs, err := global.V.DocsManager.UploadOne(header, module, 0, 1)
+	uploadRs, err := global.V.Util.DocsManager.UploadOne(header, module, 0, 1)
 	if err != nil {
 		util.MyPrint("fileUpload.UploadOne err:", err.Error())
 		return
@@ -140,7 +140,7 @@ func LogPushFile(c *gin.Context) {
 		}
 
 		//util.ExitPrint(statisticsLog)
-		err = global.V.Gorm.Create(&statisticsLog).Error
+		err = global.V.Base.Gorm.Create(&statisticsLog).Error
 		if err != nil {
 			failed++
 			httpresponse.FailWithMessage("db insert failed err:"+err.Error(), c)
@@ -177,7 +177,7 @@ func LogPushFileJson(c *gin.Context) {
 	module := "log"
 
 	//fileUpload := global.GetUploadObj(category, module)
-	uploadRs, err := global.V.DocsManager.UploadOne(header, module, 0, 1)
+	uploadRs, err := global.V.Util.DocsManager.UploadOne(header, module, 0, 1)
 	if err != nil {
 		util.MyPrint("fileUpload.UploadOne err:", err.Error())
 		httpresponse.FailWithMessage("fileUpload.UploadOne err:"+err.Error(), c)
@@ -251,7 +251,7 @@ func LogPushFileJson(c *gin.Context) {
 			Msg:           v.Ct,
 			Action:        v.EventId,
 		}
-		err := global.V.Gorm.Create(&statisticsLog)
+		err := global.V.Base.Gorm.Create(&statisticsLog)
 		util.MyPrint("Gorm.Create er::", err)
 	}
 

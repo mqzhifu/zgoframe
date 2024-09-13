@@ -125,7 +125,7 @@ func ProjectOneInfo(c *gin.Context) {
 		return
 	}
 
-	info, empty := global.V.ProjectMng.GetById(id)
+	info, empty := global.V.Util.ProjectMng.GetById(id)
 	if empty {
 		httpresponse.FailWithMessage("id not found in db.", c)
 		return
@@ -151,7 +151,7 @@ func ProjectList(c *gin.Context) {
 	var a model.Project
 	c.ShouldBind(&a)
 
-	rs := global.V.ProjectMng.Pool
+	rs := global.V.Util.ProjectMng.Pool
 
 	httpresponse.OkWithAll(rs, "成功", c)
 }
@@ -304,7 +304,7 @@ func ConstInitTestDb(c *gin.Context) {
 	//	serverSql += serverInsertSql
 	//}
 
-	serverMng, _ := util.NewServerManger(global.V.Gorm)
+	serverMng, _ := util.NewServerManger(global.V.Base.Gorm)
 	serverList := serverMng.Pool
 
 	instanceSql := ""

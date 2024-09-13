@@ -19,7 +19,7 @@ func GetSecondAuthUserList() []SecondAuthUser {
 
 func SecondAuth() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		global.V.Zap.Debug("http middleware <SecondAuth>  start:")
+		global.V.Base.Zap.Debug("http middleware <SecondAuth>  start:")
 		myHeader, exist := c.Get("myHeader")
 		if !exist {
 			ErrAbortWithResponse(5105, c)
@@ -35,7 +35,7 @@ func SecondAuth() gin.HandlerFunc {
 			ErrAbortWithResponse(5291, c)
 			return
 		}
-		global.V.Zap.Debug("http middleware <SecondAuth>  finish.")
+		global.V.Base.Zap.Debug("http middleware <SecondAuth>  finish.")
 		c.Next()
 	}
 }

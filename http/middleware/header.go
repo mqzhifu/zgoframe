@@ -15,7 +15,7 @@ import (
 func Header() gin.HandlerFunc {
 
 	return func(c *gin.Context) {
-		global.V.Zap.Debug("http middleware <header> start:")
+		global.V.Base.Zap.Debug("http middleware <header> start:")
 
 		//string header map 映射到 request.Header 结构体中
 		header := HttpHeaderSureMapCovertSureStruct(c.Request.Header)
@@ -36,7 +36,7 @@ func Header() gin.HandlerFunc {
 
 		c.Set("myHeader", header)
 
-		global.V.Zap.Debug("http middleware <header>  finish.")
+		global.V.Base.Zap.Debug("http middleware <header>  finish.")
 
 		c.Next()
 	}

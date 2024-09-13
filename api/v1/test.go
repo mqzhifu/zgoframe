@@ -2,9 +2,6 @@ package v1
 
 import (
 	"github.com/gin-gonic/gin"
-	"strconv"
-	"zgoframe/core/global"
-	httpresponse "zgoframe/http/response"
 	"zgoframe/util"
 	"zgoframe/util/container"
 )
@@ -22,38 +19,38 @@ import (
 // @Router /test/binary/tree/list/{flag} [get]
 func BinaryTreeListByFlag(c *gin.Context) {
 
-	flagStr := c.Param("flag")
-	flag, _ := strconv.Atoi(flagStr)
-	if flag <= 0 {
-		flag = 4
-	}
-
-	if flag == 4 {
-		firstList := global.V.BinaryTree.EachByFirst()
-		middleList := global.V.BinaryTree.EachByMiddle()
-		afterFlist := global.V.BinaryTree.EachByAfter()
-
-		type RsList struct {
-			First  []int `json:"first"`
-			Middle []int `json:"middle"`
-			After  []int `json:"after"`
-		}
-
-		rsList := RsList{}
-
-		rsList.First = TreeNodeToArr(firstList)
-		rsList.Middle = TreeNodeToArr(middleList)
-		rsList.After = TreeNodeToArr(afterFlist)
-
-		httpresponse.OkWithAll(rsList, "获取列表成功1", c)
-	} else {
-		list := container.GetNewIntArrayAndFillEmpty(global.V.BinaryTree.GetLength())
-		node := global.V.BinaryTree.GetRootNode()
-		global.V.BinaryTree.EachByOrder(node, &list, flag)
-
-		rsList := TreeNodeToArr(list)
-		httpresponse.OkWithAll(rsList, "获取列表成功2", c)
-	}
+	//flagStr := c.Param("flag")
+	//flag, _ := strconv.Atoi(flagStr)
+	//if flag <= 0 {
+	//	flag = 4
+	//}
+	//
+	//if flag == 4 {
+	//	firstList := global.V.BinaryTree.EachByFirst()
+	//	middleList := global.V.BinaryTree.EachByMiddle()
+	//	afterFlist := global.V.BinaryTree.EachByAfter()
+	//
+	//	type RsList struct {
+	//		First  []int `json:"first"`
+	//		Middle []int `json:"middle"`
+	//		After  []int `json:"after"`
+	//	}
+	//
+	//	rsList := RsList{}
+	//
+	//	rsList.First = TreeNodeToArr(firstList)
+	//	rsList.Middle = TreeNodeToArr(middleList)
+	//	rsList.After = TreeNodeToArr(afterFlist)
+	//
+	//	httpresponse.OkWithAll(rsList, "获取列表成功1", c)
+	//} else {
+	//	list := container.GetNewIntArrayAndFillEmpty(global.V.BinaryTree.GetLength())
+	//	node := global.V.BinaryTree.GetRootNode()
+	//	global.V.BinaryTree.EachByOrder(node, &list, flag)
+	//
+	//	rsList := TreeNodeToArr(list)
+	//	httpresponse.OkWithAll(rsList, "获取列表成功2", c)
+	//}
 
 }
 
@@ -80,19 +77,19 @@ func TreeNodeToArr(list []*container.TreeNode) []int {
 // @Router /test/binary/tree/insert/one/{keyword} [get]
 func BinaryTreeInsertOne(c *gin.Context) {
 
-	//binaryTree := util.NewBinaryTree(100, 1, 1)
-	//llen := binaryTree.GetLength()
-	//util.MyPrint(llen)
-
-	keywordStr := c.Param("keyword")
-	keyword, _ := strconv.Atoi(keywordStr)
-	//util.MyPrint("keyword:", keyword)
-	compare, err := global.V.BinaryTree.InsertOneNode(keyword, "")
-
-	util.MyPrint(compare, err)
-	util.MyPrint(global.V.BinaryTree.GetLength())
-
-	httpresponse.OkWithAll(compare, "添加成功", c)
+	////binaryTree := util.NewBinaryTree(100, 1, 1)
+	////llen := binaryTree.GetLength()
+	////util.MyPrint(llen)
+	//
+	//keywordStr := c.Param("keyword")
+	//keyword, _ := strconv.Atoi(keywordStr)
+	////util.MyPrint("keyword:", keyword)
+	//compare, err := global.V.BinaryTree.InsertOneNode(keyword, "")
+	//
+	//util.MyPrint(compare, err)
+	//util.MyPrint(global.V.BinaryTree.GetLength())
+	//
+	//httpresponse.OkWithAll(compare, "添加成功", c)
 }
 
 // @Tags Test
@@ -107,23 +104,23 @@ func BinaryTreeInsertOne(c *gin.Context) {
 // @Router /test/binary/tree/each/deep [get]
 func BinaryTreeEachDeepByBreadthFirst(c *gin.Context) {
 
-	empty, finalNode := global.V.BinaryTree.EachDeepByBreadthFirst(true)
-	util.MyPrint(empty, finalNode)
-	rs := make(map[int][]int)
-	if !empty {
-		for level, nodeList := range finalNode {
-			var nodeArr []int
-			for _, node := range nodeList {
-				//util.MyPrint(node)
-				if node == nil {
-					nodeArr = append(nodeArr, 999)
-				} else {
-					nodeArr = append(nodeArr, node.Keyword)
-				}
-			}
-			rs[level] = nodeArr
-		}
-	}
-	//util.MyPrint(global.V.BinaryTree.GetLength())
-	httpresponse.OkWithAll(rs, "输出树成功 ", c)
+	//empty, finalNode := global.V.BinaryTree.EachDeepByBreadthFirst(true)
+	//util.MyPrint(empty, finalNode)
+	//rs := make(map[int][]int)
+	//if !empty {
+	//	for level, nodeList := range finalNode {
+	//		var nodeArr []int
+	//		for _, node := range nodeList {
+	//			//util.MyPrint(node)
+	//			if node == nil {
+	//				nodeArr = append(nodeArr, 999)
+	//			} else {
+	//				nodeArr = append(nodeArr, node.Keyword)
+	//			}
+	//		}
+	//		rs[level] = nodeArr
+	//	}
+	//}
+	////util.MyPrint(global.V.BinaryTree.GetLength())
+	//httpresponse.OkWithAll(rs, "输出树成功 ", c)
 }

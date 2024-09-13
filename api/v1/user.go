@@ -45,13 +45,13 @@ func tokenNext(c *gin.Context, user model.User, loginType int) (loginResponse ht
 		return loginResponse, errors.New("创建token失败:" + err.Error())
 	}
 	// 从redis里再取一下：可能有，可能没有(redis key=sourceType+uid ，因为可能多端同时登陆，所以得有 sourceType)
-	redisElement, _ := global.V.Redis.GetElementByIndex("jwt", strconv.Itoa(haeder.SourceType), strconv.Itoa(user.Id))
-	jwtStr, err := global.V.Redis.Get(redisElement)
+	redisElement, _ := global.V.Base.Redis.GetElementByIndex("jwt", strconv.Itoa(haeder.SourceType), strconv.Itoa(user.Id))
+	jwtStr, err := global.V.Base.Redis.Get(redisElement)
 	util.MyPrint("token key:"+redisElement.Key, " RedisJwtStr:", jwtStr, " err:", err, " ")
 
 	if err == redis.Nil { // redis里不存在，要么之前没登陆过，要么失效了...
 		// token 写入redis 并设置失效时间
-		_, err = global.V.Redis.SetEX(redisElement, token, int(global.C.Jwt.ExpiresTime))
+		_, err = global.V.Base.Redis.SetEX(redisElement, token, int(global.C.Jwt.ExpiresTime))
 		if err != nil {
 			return loginResponse, errors.New("redis 设置登录状态失败 1" + err.Error())
 		}
@@ -70,7 +70,7 @@ func tokenNext(c *gin.Context, user model.User, loginType int) (loginResponse ht
 		// 出现这种情况，就是重复登陆，有两种选择
 		// 1. 允许重复登陆了，为了兼容性，重新再写入一次
 		// 重新写入token到redis
-		_, err = global.V.Redis.SetEX(redisElement, token, int(global.C.Jwt.ExpiresTime))
+		_, err = global.V.Base.Redis.SetEX(redisElement, token, int(global.C.Jwt.ExpiresTime))
 		if err != nil {
 			return loginResponse, errors.New("redis 设置登录状态失败 3" + err.Error())
 		}
@@ -114,7 +114,7 @@ func LoginRecord(c *gin.Context, uid int, loginType int) {
 		Dpi:           header.BaseInfo.DPI,
 	}
 
-	global.V.Gorm.Create(&userLogin)
+	global.V.Base.Gorm.Create(&userLogin)
 	util.MyPrint("model.UserLogin new Id:", userLogin.Id)
 }
 
@@ -131,8 +131,8 @@ func LoginRecord(c *gin.Context, uid int, loginType int) {
 func Logout(c *gin.Context) {
 	uid, _ := request.GetUid(c)
 	header, _ := request.GetMyHeader(c)
-	redisElement, _ := global.V.Redis.GetElementByIndex("jwt", strconv.Itoa(header.SourceType), strconv.Itoa(uid))
-	global.V.Redis.Del(redisElement)
+	redisElement, _ := global.V.Base.Redis.GetElementByIndex("jwt", strconv.Itoa(header.SourceType), strconv.Itoa(uid))
+	global.V.Base.Redis.Del(redisElement)
 
 	httpresponse.OkWithAll("ok", "退出成功", c)
 	// key := service.GetLoginJwtKey(request.GetMyHeader(c).SourceType,appId,uid)
@@ -164,7 +164,7 @@ func SetPassword(c *gin.Context) {
 		return
 	}
 	uid, _ := request.GetUid(c)
-	err := global.V.MyService.User.ChangePassword(uid, form.NewPassword)
+	err := global.V.Service.User.ChangePassword(uid, form.NewPassword)
 	if err != nil {
 		httpresponse.FailWithMessage("修改失败:"+err.Error(), c)
 	} else {
@@ -236,14 +236,14 @@ func SetMobile(c *gin.Context) {
 		httpresponse.FailWithMessage("Mobile || SmsAuthCode || SmsRuleId is empty", c)
 		return
 	}
-	err := global.V.MyService.Sms.Verify(form.RuleId, form.Mobile, form.SmsAuthCode)
+	err := global.V.Service.Sms.Verify(form.RuleId, form.Mobile, form.SmsAuthCode)
 	if err != nil {
 		httpresponse.FailWithMessage("SendSms.Verify err:"+err.Error(), c)
 		return
 	}
 
 	uid, _ := request.GetUid(c)
-	err = global.V.MyService.User.BindMobile(uid, form.Mobile)
+	err = global.V.Service.User.BindMobile(uid, form.Mobile)
 	if err != nil {
 		httpresponse.FailWithMessage("User.BindMobile err:"+err.Error(), c)
 		return
@@ -272,14 +272,14 @@ func SetEmail(c *gin.Context) {
 		httpresponse.FailWithMessage("email || SmsAuthCode || SmsRuleId is empty", c)
 		return
 	}
-	err := global.V.MyService.Email.Verify(form.RuleId, form.Email, form.SmsAuthCode)
+	err := global.V.Service.Email.Verify(form.RuleId, form.Email, form.SmsAuthCode)
 	if err != nil {
 		httpresponse.FailWithMessage("SendSms.Verify err:"+err.Error(), c)
 		return
 	}
 
 	uid, _ := request.GetUid(c)
-	err = global.V.MyService.User.BindMobile(uid, form.Email)
+	err = global.V.Service.User.BindMobile(uid, form.Email)
 	if err != nil {
 		httpresponse.FailWithMessage("User.BindMobile err:"+err.Error(), c)
 		return
@@ -319,8 +319,8 @@ func SetUserInfo(c *gin.Context) {
 	}
 	user.Id = uid
 
-	if err, ReqUser := global.V.MyService.User.SetUserInfo(user); err != nil {
-		global.V.Zap.Error("设置失败", zap.Any("err", err))
+	if err, ReqUser := global.V.Service.User.SetUserInfo(user); err != nil {
+		global.V.Base.Zap.Error("设置失败", zap.Any("err", err))
 		httpresponse.FailWithMessage("设置失败", c)
 	} else {
 		httpresponse.OkWithAll(gin.H{"userInfo": ReqUser}, "设置成功", c)
@@ -352,7 +352,7 @@ func DeleteUser(c *gin.Context) {
 			continue
 		}
 		uid, _ := strconv.Atoi(v)
-		global.V.MyService.User.Delete(uid)
+		global.V.Service.User.Delete(uid)
 	}
 	// httpresponse.OkWithMessage("用户怎么能随便删除呢？不想要鸡腿了？", c)
 

@@ -21,7 +21,7 @@ import (
 // @Success 200 {boolean} true "true:成功 false:否"
 // @Router /grab/order/get/pay/category [GET]
 func GetPayCategory(c *gin.Context) {
-	data, err := global.V.MyService.GrabOrder.GetPayCategory()
+	data, err := global.V.Service.GrabOrder.GetPayCategory()
 	if err != nil {
 		httpresponse.FailWithMessage("err:"+err.Error(), c)
 	} else {
@@ -46,7 +46,7 @@ func GrabOrderGetData(c *gin.Context) {
 	//json.Unmarshal(bodyByts, &form)
 	// var form request.FrameSyncRoomHistory
 	// c.ShouldBind(&form)
-	data, err := global.V.MyService.GrabOrder.GetData()
+	data, err := global.V.Service.GrabOrder.GetData()
 	if err != nil {
 		httpresponse.FailWithMessage("err:"+err.Error(), c)
 	} else {
@@ -78,7 +78,7 @@ func GrabOrderCreate(c *gin.Context) {
 		Timeout:    form.Timeout,
 	}
 
-	err = global.V.MyService.GrabOrder.CreateOrder(o)
+	err = global.V.Service.GrabOrder.CreateOrder(o)
 	if err != nil {
 		httpresponse.FailWithMessage("err:"+err.Error(), c)
 	} else {
@@ -113,7 +113,7 @@ func GrabOrderUserOpen(c *gin.Context) {
 	//	req = append(req, o)
 	//}
 	//
-	//err = global.V.MyService.GrabOrder.UserOpenGrab(4, req)
+	//err = global.V.Service.GrabOrder.UserOpenGrab(4, req)
 	//if err != nil {
 	//	httpresponse.FailWithMessage("err:"+err.Error(), c)
 	//} else {

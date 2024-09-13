@@ -47,7 +47,7 @@ func GetUtilAgora() *util.MyAgora {
 func TwinAgoraCloudRecordList(c *gin.Context) {
 	uid, _ := request.GetUid(c)
 	var list []model.AgoraCloudRecord
-	err := global.V.Gorm.Where("uid = ?", uid).Find(&list).Error
+	err := global.V.Base.Gorm.Where("uid = ?", uid).Find(&list).Error
 	util.MyPrint("err:", err, " list:", list)
 	httpresponse.OkWithAll(list, "成功", c)
 }
@@ -82,7 +82,7 @@ func TwinAgoraCloudRecordCheck(c *gin.Context) {
 		EndTime:    util.GetNowTimeSecondToInt(),
 		StopAction: model.AGORA_CLOUD_RECORD_STOP_ACTION_REENTER,
 	}
-	global.V.Gorm.Where("channel_name = ? and listener_agora_uid = ? and status = ?", formData.Cname, formData.Uid, model.AGORA_CLOUD_RECORD_STATUS_START).
+	global.V.Base.Gorm.Where("channel_name = ? and listener_agora_uid = ? and status = ?", formData.Cname, formData.Uid, model.AGORA_CLOUD_RECORD_STATUS_START).
 		Order("start_time desc").
 		Limit(1).
 		Updates(&agoraCloudRecord)
@@ -148,7 +148,7 @@ func TwinAgoraCloudRecordCreateAcquire(c *gin.Context) {
 		Status:           model.AGORA_CLOUD_RECORD_STATUS_RESOURCE,
 		ServerStatus:     model.AGORA_CLOUD_RECORD_SERVER_STATUS_UNDO,
 	}
-	err = global.V.Gorm.Create(&agoraCloudRecord).Error
+	err = global.V.Base.Gorm.Create(&agoraCloudRecord).Error
 	if err != nil {
 		httpresponse.FailWithAll("CreateAcquire gorm err:"+err.Error(), "失败", c)
 		return
@@ -224,7 +224,7 @@ func TwinAgoraCloudRecordStart(c *gin.Context) {
 		ConfigInfo: string(ClientRequestBytes),
 	}
 	// agoraCloudRecord.Id = formData.RecordId
-	err = global.V.Gorm.Where(" id = ?", userFormData.RecordId).Updates(&agoraCloudRecord).Error
+	err = global.V.Base.Gorm.Where(" id = ?", userFormData.RecordId).Updates(&agoraCloudRecord).Error
 	if err != nil {
 		util.MyPrint("CloudRecordStart gorm updates err:", err)
 	}
@@ -237,7 +237,7 @@ func CloudRecordErr(recordId int, agoraCloudRecordRes util.AgoraCloudRecordRes) 
 	var agoraCloudRecord = model.AgoraCloudRecord{
 		ErrLog: string(errBytes),
 	}
-	err := global.V.Gorm.Where(" id = ?", recordId).Updates(&agoraCloudRecord).Error
+	err := global.V.Base.Gorm.Where(" id = ?", recordId).Updates(&agoraCloudRecord).Error
 	if err != nil {
 		util.MyPrint("CloudRecordStart gorm updates err:", err)
 	}
@@ -322,7 +322,7 @@ func TwinAgoraCloudRecordStop(c *gin.Context) {
 		StopResInfo: string(ServerResponseBytes),
 		StopAction:  util.Atoi(c.Param("type")),
 	}
-	err = global.V.Gorm.Where(" id = ?", recordId).Updates(&agoraCloudRecord).Error
+	err = global.V.Base.Gorm.Where(" id = ?", recordId).Updates(&agoraCloudRecord).Error
 	if err != nil {
 		util.MyPrint("gorm updates err:", err)
 	}
@@ -361,13 +361,13 @@ func TwinAgoraRTMGetToken(c *gin.Context) {
 
 func GetRtmToken(form request.TwinAgoraToken) (token string, err error) {
 	// 从redis中获取缓存的token
-	redisElement, err := global.V.Redis.GetElementByIndex("rtm_token", form.Username)
+	redisElement, err := global.V.Base.Redis.GetElementByIndex("rtm_token", form.Username)
 	if err != nil {
 		return token, errors.New("GetElementByIndex <rtm_token> err:" + err.Error())
 	}
 	util.MyPrint("rtm redisElement:", redisElement)
 
-	redisTokenStr, err := global.V.Redis.Get(redisElement)
+	redisTokenStr, err := global.V.Base.Redis.Get(redisElement)
 	util.MyPrint("rtm Redis.Get :", redisTokenStr, err)
 	if err != nil && err != redis.Nil {
 		return token, errors.New("redis get err:" + err.Error())
@@ -398,7 +398,7 @@ func GetRtmToken(form request.TwinAgoraToken) (token string, err error) {
 	//	return
 	// }
 
-	_, err = global.V.Redis.SetEX(redisElement, result, 0)
+	_, err = global.V.Base.Redis.SetEX(redisElement, result, 0)
 	if err != nil {
 		return token, errors.New("redis set err:" + err.Error())
 	}
@@ -407,13 +407,13 @@ func GetRtmToken(form request.TwinAgoraToken) (token string, err error) {
 
 func GetRtcToken(form request.TwinAgoraToken) (token string, err error) {
 	// 从redis中获取缓存的token
-	redisElement, err := global.V.Redis.GetElementByIndex("rtc_token", form.Username, form.Channel)
+	redisElement, err := global.V.Base.Redis.GetElementByIndex("rtc_token", form.Username, form.Channel)
 	if err != nil {
 		return token, errors.New("GetElementByIndex <rtc_token> err:" + err.Error())
 	}
 	util.MyPrint("rtc redisElement:", redisElement)
 
-	redisTokenStr, err := global.V.Redis.Get(redisElement)
+	redisTokenStr, err := global.V.Base.Redis.Get(redisElement)
 	util.MyPrint("rtc Redis.Get :", redisTokenStr, err)
 	if err != nil && err != redis.Nil {
 		return token, errors.New("redis get err:" + err.Error())
@@ -426,7 +426,7 @@ func GetRtcToken(form request.TwinAgoraToken) (token string, err error) {
 	if err != nil {
 		return token, errors.New("BuildToken err:" + err.Error())
 	}
-	_, err = global.V.Redis.SetEX(redisElement, result, 0)
+	_, err = global.V.Base.Redis.SetEX(redisElement, result, 0)
 	if err != nil {
 		return token, errors.New("BuildToken err:" + err.Error())
 	}
@@ -494,7 +494,7 @@ func GetCloudRecordById(rid int) (record model.AgoraCloudRecord, err error) {
 		return record, errors.New("RecordId <= 0")
 	}
 
-	err = global.V.Gorm.First(&record, rid).Error
+	err = global.V.Base.Gorm.First(&record, rid).Error
 	if err != nil {
 		errInfo := "db not found recordId:" + strconv.Itoa(rid)
 		return record, errors.New(errInfo)
@@ -508,7 +508,7 @@ func GenerateCloudVideo(recordId int) (err error) {
 		return errors.New("RecordId <= 0")
 	}
 
-	updateRes := global.V.Gorm.Where("id = ? and status = ? and server_status = ? and video_url = ''",
+	updateRes := global.V.Base.Gorm.Where("id = ? and status = ? and server_status = ? and video_url = ''",
 		recordId, model.AGORA_CLOUD_RECORD_STATUS_END, model.AGORA_CLOUD_RECORD_SERVER_STATUS_UNDO).
 		Updates(&model.AgoraCloudRecord{
 			ServerStatus: model.AGORA_CLOUD_RECORD_SERVER_STATUS_ING,
@@ -518,14 +518,14 @@ func GenerateCloudVideo(recordId int) (err error) {
 	}
 
 	var record model.AgoraCloudRecord
-	if err := global.V.Gorm.First(&record, recordId).Error; err != nil {
+	if err := global.V.Base.Gorm.First(&record, recordId).Error; err != nil {
 		return err
 	}
 
 	// 错误处理时，将server_status改为4处理异常
 	defer func() {
 		if err != nil {
-			_ = global.V.Gorm.Where("id = ?", recordId).Updates(&model.AgoraCloudRecord{
+			_ = global.V.Base.Gorm.Where("id = ?", recordId).Updates(&model.AgoraCloudRecord{
 				ServerStatus: model.AGORA_CLOUD_RECORD_SERVER_STATUS_ERR,
 			}).Error
 		}
@@ -543,9 +543,9 @@ func GenerateCloudVideo(recordId int) (err error) {
 	// pathPrefix := "agoraRecord/ckck/1660733248/"
 
 	// fileManager := global.GetUploadObj(1, "")
-	localDiskPath := global.V.DocsManager.GetLocalDiskDownloadBasePath() + "/" + pathPrefix
+	localDiskPath := global.V.Util.DocsManager.GetLocalDiskDownloadBasePath() + "/" + pathPrefix
 	util.MyPrint("pathPrefix:", pathPrefix, " , localDiskPath:", localDiskPath)
-	listObjectsResult, err := global.V.DocsManager.Option.AliOss.OssLs(pathPrefix)
+	listObjectsResult, err := global.V.Util.DocsManager.Option.AliOss.OssLs(pathPrefix)
 	if len(listObjectsResult.Objects) <= 0 {
 		return errors.New("path:" + pathPrefix + " is  empty,no files.")
 	}
@@ -603,7 +603,7 @@ func GenerateCloudVideo(recordId int) (err error) {
 		}
 
 		util.MyPrint("fileName:", fileName, " , fileExtName:", fileExtName, " , sid:", sid, " , cname:", cname, " , uid:", uid, " , fileCategory:", fileCategory, " fileIndex:", fileIndex)
-		if err := global.V.DocsManager.Option.AliOss.DownloadFile(v.Key, localDiskPath+fileName); err != nil {
+		if err := global.V.Util.DocsManager.Option.AliOss.DownloadFile(v.Key, localDiskPath+fileName); err != nil {
 			return err
 		}
 	}
@@ -623,10 +623,10 @@ func GenerateCloudVideo(recordId int) (err error) {
 			return errors.New("ExecShellCommand : <" + command + "> ,  has error , output:" + strOutput + err.Error())
 		}
 		// 重新上传至oss
-		if err = global.V.DocsManager.Option.AliOss.UploadOneByFile(newFileFullName, pathPrefix, newFileName); err != nil {
+		if err = global.V.Util.DocsManager.Option.AliOss.UploadOneByFile(newFileFullName, pathPrefix, newFileName); err != nil {
 			return err
 		}
-		lastFiles[newFileName] = global.V.DocsManager.Option.AliOss.Op.LocalDomain + "/" + pathPrefix + "/" + newFileName
+		lastFiles[newFileName] = global.V.Util.DocsManager.Option.AliOss.Op.LocalDomain + "/" + pathPrefix + "/" + newFileName
 	}
 
 	// 更新数据库
@@ -636,7 +636,7 @@ func GenerateCloudVideo(recordId int) (err error) {
 		ServerStatus: model.AGORA_CLOUD_RECORD_SERVER_STATUS_OK,
 		VideoUrl:     string(lastFilesJson),
 	}
-	err = global.V.Gorm.Where(" id = ? and video_url = ''", recordId).Updates(&agoraCloudRecord).Error
+	err = global.V.Base.Gorm.Where(" id = ? and video_url = ''", recordId).Updates(&agoraCloudRecord).Error
 	if err != nil {
 		return err
 	}
@@ -656,11 +656,11 @@ func GenerateCloudVideo(recordId int) (err error) {
 // @Router /twin/agora/config [GET]
 func TwinAgoraConfig(c *gin.Context) {
 	config := make(map[string]string)
-	config["call_timeout"] = strconv.Itoa(global.V.MyService.TwinAgora.CallTimeout)
-	config["exec_timeout"] = strconv.Itoa(global.V.MyService.TwinAgora.ExecTimeout)
-	config["user_heartbeat_timeout"] = strconv.Itoa(global.V.MyService.TwinAgora.UserHeartbeatTimeout)
-	config["res_accept_timeout"] = strconv.Itoa(global.V.MyService.TwinAgora.ResAcceptTimeout)
-	config["entry_timeout"] = strconv.Itoa(global.V.MyService.TwinAgora.EntryTimeout)
+	config["call_timeout"] = strconv.Itoa(global.V.Service.TwinAgora.CallTimeout)
+	config["exec_timeout"] = strconv.Itoa(global.V.Service.TwinAgora.ExecTimeout)
+	config["user_heartbeat_timeout"] = strconv.Itoa(global.V.Service.TwinAgora.UserHeartbeatTimeout)
+	config["res_accept_timeout"] = strconv.Itoa(global.V.Service.TwinAgora.ResAcceptTimeout)
+	config["entry_timeout"] = strconv.Itoa(global.V.Service.TwinAgora.EntryTimeout)
 
 	httpresponse.OkWithAll(config, "Query-成功", c)
 }
@@ -678,8 +678,8 @@ func TwinAgoraConfig(c *gin.Context) {
 // @Router /twin/agora/socket/tools [GET]
 func TwinAgoraSocketTools(c *gin.Context) {
 	config := make(map[string]interface{})
-	config["rtc_room_pool"] = global.V.MyService.TwinAgora.RTCRoomPool
-	config["rtc_user_pool"] = global.V.MyService.TwinAgora.RTCUserPool
+	config["rtc_room_pool"] = global.V.Service.TwinAgora.RTCRoomPool
+	config["rtc_user_pool"] = global.V.Service.TwinAgora.RTCUserPool
 
 	httpresponse.OkWithAll(config, "Query-成功", c)
 }
@@ -711,7 +711,7 @@ func TwinAgoraStatisticsEventAll(c *gin.Context) {
 	dateArray = append(dateArray, endDate.Format("20060102"))
 
 	// select count(*), `date`, `type` from project_push_msg where `date`>="20230505" and `date`<= "20230523" group by `date`
-	rows, err := global.V.Gorm.
+	rows, err := global.V.Base.Gorm.
 		Model(&model.ProjectPushMsg{}).
 		Select("count(*) as count", "date", "type as eventType").
 		Where("date >= ? and date <= ?", startTime, endTime).

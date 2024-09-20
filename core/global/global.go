@@ -4,6 +4,7 @@ package global
 import (
 	"context"
 	"embed"
+	"github.com/elastic/go-elasticsearch/v8"
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
@@ -15,16 +16,18 @@ import (
 )
 
 type Base struct {
-	Vip           *viper.Viper
-	Zap           *zap.Logger
-	HttpZap       *zap.Logger
-	Redis         *util.MyRedis
-	RedisGo       *util.MyRedisGo
-	Gin           *gin.Engine
-	Gorm          *gorm.DB   // 多数据库模式下，有一个库肯定会被经常访问，这里加一个快捷链接
-	GormList      []*gorm.DB // 所有数据库，连接成功后的列表
-	HttpServer    *http.Server
-	StaticFileSys embed.FS // 静态文件
+	Vip            *viper.Viper
+	Zap            *zap.Logger
+	HttpZap        *zap.Logger
+	Redis          *util.MyRedis
+	RedisGo        *util.MyRedisGo
+	Gin            *gin.Engine
+	Gorm           *gorm.DB   // 多数据库模式下，有一个库肯定会被经常访问，这里加一个快捷链接
+	GormList       []*gorm.DB // 所有数据库，连接成功后的列表
+	HttpServer     *http.Server
+	StaticFileSys  embed.FS // 静态文件
+	ES8TypedClient *elasticsearch.TypedClient
+	ES8Client      *elasticsearch.Client
 }
 
 //type Service struct {

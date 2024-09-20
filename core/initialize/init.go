@@ -3,10 +3,13 @@ package initialize
 
 import (
 	"errors"
+	"fmt"
+	"github.com/elastic/go-elasticsearch/v8"
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+	"os"
 	"strings"
 	"zgoframe/core"
 	"zgoframe/core/global"
@@ -58,6 +61,39 @@ func (initialize *Initialize) Start() error {
 		if err != nil {
 			return err
 		}
+	}
+
+	if global.C.ElasticSearch.Status == core.GLOBAL_CONFIG_MODEL_STATUS_OPEN {
+		// ES 配置
+		cfg := elasticsearch.Config{
+			Addresses: []string{
+				"http://" + global.C.ElasticSearch.Dns,
+			},
+			Username: global.C.ElasticSearch.Username,
+			Password: global.C.ElasticSearch.Password,
+		}
+
+		// 创建客户端连接
+		typedClient, err := elasticsearch.NewTypedClient(cfg)
+		if err != nil {
+			fmt.Printf("elasticsearch.NewTypedClient failed, err:%v\n", err)
+			os.Exit(999)
+		}
+		global.V.Base.ES8TypedClient = typedClient
+
+		// 创建客户端连接
+		client, err := elasticsearch.NewClient(cfg)
+		if err != nil {
+			fmt.Printf("elasticsearch.NewTypedClient failed, err:%v\n", err)
+			os.Exit(999)
+		}
+		global.V.Base.ES8Client = client
+
+	}
+
+	if err != nil {
+		// Handle error
+		panic(err)
 	}
 	//短信模块
 	if global.C.AliSms.Status == core.GLOBAL_CONFIG_MODEL_STATUS_OPEN {

@@ -29,6 +29,7 @@ type Config struct {
 	Login            Login
 	Service          Service
 	SuperVisor       SuperVisor
+	ElasticSearch    ElasticSearch
 	// Casbin           Casbin
 	// Upload           Upload
 }
@@ -37,6 +38,13 @@ type Login struct {
 	Status          string
 	MaxFailedCnt    int
 	FailedLimitTime int
+}
+
+type ElasticSearch struct {
+	Status   string
+	Dns      string
+	Username string
+	Password string
 }
 
 type Protobuf struct {

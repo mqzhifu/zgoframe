@@ -192,6 +192,11 @@ masterDirName = "master"
 gitCloneTmpDirName="clone"
 #httpPort="4455"
 
+[elasticSearch]
+status = "open"
+dns = "127.0.0.1:9200"
+username = "local_dev"
+password = "123456"
 
 #阿里云-静态文件存储
 [aliOss]

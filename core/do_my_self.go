@@ -8,7 +8,6 @@ import (
 )
 
 func DoMySelf() {
-
 }
 
 // test_command()

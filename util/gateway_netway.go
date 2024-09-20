@@ -82,7 +82,7 @@ func NewNetWay(option NetWayOption) (*NetWay, error) {
 	}
 	//设置状态为：初始化
 	netWay.Status = NETWAY_STATUS_INIT
-
+	//protobuf 映射文件
 	netWay.ProtoMap = option.ProtoMap
 	//协议管理适配器
 	protocolManagerOption := ProtocolManagerOption{
@@ -92,7 +92,7 @@ func NewNetWay(option NetWayOption) (*NetWay, error) {
 		WsUri:           option.WsUri,
 		UdpPort:         option.UdpPort,
 		IOTimeout:       option.IOTimeout,
-		OpenNewConnBack: netWay.OpenNewConn, //回调函数
+		OpenNewConnBack: netWay.OpenNewConn, //当有新的连接请求：回调函数
 		Log:             option.Log,
 	}
 	netWay.ProtocolManager = NewProtocolManager(protocolManagerOption)
@@ -100,19 +100,6 @@ func NewNetWay(option NetWayOption) (*NetWay, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	//player.fd.num
-	//player.fd.size
-
-	//http 工具
-	//httpdOption := HttpdOption {
-	//	LogOption 	: netWay.Option.LogOption,
-	//	RootPath 	: netWay.Option.HttpdRootPath,
-	//	Ip			: netWay.Option.ListenIp,
-	//	Port		: netWay.Option.HttpPort,
-	//	ParentCtx 	: option.OutCxt,
-	//}
-	//myHttpd = NewHttpd(httpdOption)
 
 	//conn FD 管理
 	connManagerOption := ConnManagerOption{
@@ -128,8 +115,9 @@ func NewNetWay(option NetWayOption) (*NetWay, error) {
 		Gorm:                option.Gorm,
 	}
 	netWay.ConnManager = NewConnManager(connManagerOption)
+	//开启每个conn fd 超时管理 守护协程
 	go netWay.ConnManager.CheckTimeout()
-
+	//初始化完成 ，更新下状态为：启动ok
 	netWay.Status = NETWAY_STATUS_START
 
 	option.Log.Info("netway startup finish.")

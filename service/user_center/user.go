@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/go-redis/redis/v8"
 	uuid "github.com/satori/go.uuid"
+	"go.uber.org/zap"
 	"gorm.io/gorm"
 	"strconv"
 	"zgoframe/http/request"
@@ -23,13 +24,15 @@ type User struct {
 	Gorm           *gorm.DB
 	Redis          *util.MyRedis
 	ProjectManager *util.ProjectManager
+	Log            *zap.Logger
 }
 
-func NewUser(gorm *gorm.DB, redis *util.MyRedis, projectManager *util.ProjectManager) *User {
+func NewUser(gorm *gorm.DB, redis *util.MyRedis, projectManager *util.ProjectManager, log *zap.Logger) *User {
 	user := new(User)
 	user.Gorm = gorm
 	user.Redis = redis
 	user.ProjectManager = projectManager
+	user.Log = log
 	return user
 }
 
@@ -112,16 +115,16 @@ func (user *User) Delete(uid int) (map[string]int, error) {
 // 最终 - 注册
 func (user *User) Register(formUser model.User, h request.HeaderRequest, userRegInfo UserRegInfo) (err error, userInter model.User) {
 	var userRegType int
-
+	//默认：新用户为正常状态
 	formUser.Status = model.USER_STATUS_NOMAL
 
 	if formUser.Test <= 0 {
+		//默认：新用户不是测试账号
 		formUser.Test = model.USER_TEST_FALSE
 	}
 
 	if formUser.Guest == model.USER_REG_TYPE_GUEST {
-		util.MyPrint("reg in GUEST")
-		//deviceId = username
+		user.Log.Warn("Register User mode :is GUEST")
 		if formUser.Username == "" {
 			formUser.Username = MakeGuestUsername()
 		}
@@ -131,7 +134,7 @@ func (user *User) Register(formUser model.User, h request.HeaderRequest, userReg
 		}
 		userRegType = model.USER_REG_TYPE_NAME
 	} else if userRegInfo.ThirdType > 0 && userRegInfo.ThirdId != "" {
-		util.MyPrint("reg in Third")
+		user.Log.Info("Register User from Third")
 		userRegType = model.USER_REG_TYPE_THIRD
 		var userThird model.UserThird
 		if !errors.Is(user.Gorm.Where("third_id = ? and platform_type = ?  ", userRegInfo.ThirdId, userRegInfo.ThirdType).First(&userThird).Error, gorm.ErrRecordNotFound) { // 判断用户名是否注册
@@ -139,7 +142,7 @@ func (user *User) Register(formUser model.User, h request.HeaderRequest, userReg
 		}
 	} else {
 		userRegType = user.TurnRegByUsername(formUser.Username)
-		util.MyPrint("reg in USERNAME , type:", userRegType)
+		user.Log.Info("reg in USERNAME , type:" + strconv.Itoa(userRegType))
 		if userRegType == model.USER_REG_TYPE_MOBILE {
 			_, empty, _ := user.FindUserByMobile(formUser.Mobile)
 			if !empty {
@@ -177,12 +180,11 @@ func (user *User) Register(formUser model.User, h request.HeaderRequest, userReg
 	if err != nil {
 		return err, userInter
 	}
-	//util.MyPrint("u.id:",u.Id)
-	channel := model.CHANNEL_DEFAULT
+	channel := model.CHANNEL_DEFAULT //用户来源渠道
 	if userRegInfo.Channel > 0 {
 		channel = userRegInfo.Channel
 	}
-
+	//专门记录：用户注册时候的环境信息
 	userReg := model.UserReg{
 		ProjectId: formUser.ProjectId,
 		Uid:       formUser.Id,

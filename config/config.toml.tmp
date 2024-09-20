@@ -6,11 +6,11 @@
 dbType       = "mysql"
 projectId    = #projectId# #项目ID，所有的项目均要在后台申请一个ID
 errorMsgFile = "data/lang.txt"#这是个相对路径,在static下面
-opDirName    = "operation"
+opDirName    = "operation" #一些工具、运维使用的脚本
 
 #域名管理
 [domain]
-static = "#domain_host#" #静态文件访问的域名
+static   = "#domain_host#" #静态文件访问的域名
 protocol = "#protocol#" #域名的HTTP协议
 
 #签名验证 token
@@ -50,7 +50,7 @@ status  = "open"
 #此目录就在项目的根目录下，不需要你手动创建，CICD会帮忙处理，如果不使用CICD，需要手动创建(软连接)
 uploadPath = "upload" #相对路径，在static下面
 #上传文件大小，这个值最好别设置太大，同时要跟nginx同步修改不然不失效
-uploadDocImgMaxSize      = 2 #单位：M，上传图片大小限制，这个值最好别设置太大，同时要跟nginx同步修改不然不失效
+uploadDocImgMaxSize      = 2  #单位：M，上传图片大小限制，这个值最好别设置太大，同时要跟nginx同步修改不然不失效
 uploadDocDocMaxSize      = 20 #单位：M，上传文档大小限制，这个值最好别设置太大，同时要跟nginx同步修改不然不失效
 uploadDocVideoMaxSize    = 50 #单位：M，上传视频大小限制，这个值最好别设置太大，同时要跟nginx同步修改不然不失效
 uploadDocPackagesMaxSize = 50 #单位：M，上传视频大小限制，这个值最好别设置太大，同时要跟nginx同步修改不然不失效
@@ -84,7 +84,7 @@ reqLimitTimes   = 100
 [login]
 status          = "open"
 maxFailedCnt    = 5 #最大失败次数
-failedLimitTime  = 86400 #失败封禁时间，1天：单位：秒
+failedLimitTime = 86400 #失败封禁时间，1天：单位：秒
 
 #mysql 数据库，注：这里是一个二维数组，支持多mysql实例,但CICD目前只能处理一个mysql 变量替换
 [[mysql]]
@@ -104,6 +104,13 @@ masterSlave     = "master"
 #标量统计
 [metrics]
 status = "open"
+
+#推送标量
+[pushGateway]
+status  = "close"
+ip      = "#push_gateway_ip#"
+port    = "#push_gateway_port#"
+#依赖 protobuf 模块的 ProtoMap
 
 [protobuf]
 status          = "open"
@@ -134,8 +141,8 @@ status  = "open"
 SendMsgChannel = 15  #发送渠道，  SMS EMAIL FEISHU WEIXIN DINGDING
 MsgTemplateRuleId = 4  #报警发送的内容(模板)，还需要动态替换变量值
 SendSync       =   true
-SmsReceiver    =   ["13522536459"]
-EmailReceiver  =   ["78878296@qq.com"]
+SmsReceiver    =   ["13*******59"]
+EmailReceiver  =   ["********@qq.com"]
 SendUid        =   9999
 
 #公共网关
@@ -162,10 +169,6 @@ username    = "#etcd_user#"
 password    = "#etcd_ps#"
 url         = ""#通过http-url，动态获取etcd配置信息
 
-[websocket]
-status  = "close"
-uri     = "/ws"
-
 [grpc]
 status                  = "close"
 ip                      = "#grpc_ip#"
@@ -176,13 +179,6 @@ servicePackagePrefix    = "#grpc_user#"
 [serviceDiscovery]
 status = "close"
 prefix = "/service"
-
-#推送标量
-[pushGateway]
-status  = "close"
-ip      = "#push_gateway_ip#"
-port    = "#push_gateway_port#"
-#依赖 protobuf 模块的 ProtoMap
 
 [cicd]
 status  = "close"
@@ -197,7 +193,7 @@ gitCloneTmpDirName="clone"
 #httpPort="4455"
 
 
-#阿里云静态文件存储
+#阿里云-静态文件存储
 [aliOss]
 status  = "open"
 accessKeyId     = "#oss_user#"
@@ -206,6 +202,7 @@ endpoint        = "#oss_ip#"
 bucket          = "#oss_port#"
 selfDomain      = "ossservicebase.seedreality.com"
 
+#阿里云-短信
 [aliSms]
 status          = "open"
 accessKeyId     = "#ali_sms_user#"
@@ -221,21 +218,19 @@ HttpKey         = "#agora_aaa#"
 HttpSecret      = "#agora_bbb#"
 domain          = "https://api.agora.io/v1/apps/"
 
-
 [superVisor]
 #这里的配置均属于本机的配置，远端的存在DB中
 rpcPort="9002"
 confTemplateFile="super_visor.ini"#所有项目的通用配置文件，在本项目中
 #confDir="D:/project/cicd/super_visor" # 暂时不用，生成的项目配置文件，直接在项目目录中即可，不再单独加目录了
 
-
-
 [service]
 sms             = "open"
 user            = "open"
 email           = "open"
+mail            = "open"
 configCenter    = "open"
-twinAgora       = "open"
+twinAgora       = "close"
 gameMatch       = "close"
 frameSync       = "close"
 grabOrder       = "open"

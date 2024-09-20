@@ -98,23 +98,23 @@ var initializeVar *initialize.Initialize
 
 func main() {
 	// 编译时，打进去的两个参数：BuildTime 编译时间，编译的 git 版本号
-	util.MyPrint("code , BuildTime:", BuildTime, " BuildGitVersion:", BuildGitVersion)
+	fmt.Println("code , BuildTime:", BuildTime, " BuildGitVersion:", BuildGitVersion)
 	// 日志文件-前缀
 	prefix := "main "
 	// 处理指令行传入的参数
 	cmdParameter := processCmdParameter(prefix)
-	util.MyPrint("cmdParameter")
+	fmt.Println("cmdParameter")
 	util.PrintStruct(cmdParameter, ":")
 	// util.MyPrint(prefix+" cmd parameter:", cmdParameter)
 	// 获取当前脚本执行用户信息
 	imUser, _ := user.Current()
-	util.MyPrint(prefix + "exec script  <user info> , name: " + imUser.Name + " uid: " + imUser.Uid + " , gid :" + imUser.Gid + " ,homeDir:" + imUser.HomeDir)
+	fmt.Println(prefix + "exec script  <user info> , name: " + imUser.Name + " uid: " + imUser.Uid + " , gid :" + imUser.Gid + " ,homeDir:" + imUser.HomeDir)
 	// 当前脚本执行的路径
 	pwd, _ := os.Getwd()
-	util.MyPrint(prefix + "exec script pwd:" + pwd)
+	fmt.Println(prefix + "exec script pwd:" + pwd)
 	// 开始初始化模块
 	// main主协程的 context
-	util.MyPrint(prefix + "create cancel context")
+	fmt.Println(prefix + "create cancel context")
 	mainCxt, mainCancelFunc := context.WithCancel(context.Background())
 	mainEnvironment := global.MainEnvironment{
 		RootDir:         pwd,
@@ -134,7 +134,7 @@ func main() {
 	initializeVar = initialize.NewInitialize()
 	err := initializeVar.Start()
 	if err != nil {
-		util.MyPrint(prefix+"initialize.Init err:", err)
+		fmt.Println(prefix+"initialize.Init err:", err)
 		panic(prefix + "initialize.Init err:" + err.Error())
 	}
 
@@ -142,7 +142,7 @@ func main() {
 	go core.DoMySelf()
 	// 监听外部进程信号
 	go global.V.Util.Process.DemonSignal()
-	util.MyPrint(prefix + "wait mainCxt.done...")
+	fmt.Println(prefix + "wait mainCxt.done...")
 	//性能 - 监控
 	//go startHttp()
 
@@ -151,7 +151,7 @@ func main() {
 		QuitAll(1)
 	}
 
-	util.MyPrint(prefix + "end.")
+	fmt.Println(prefix + "end.")
 }
 
 // 处理指令行参数

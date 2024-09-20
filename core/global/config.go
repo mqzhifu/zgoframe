@@ -13,7 +13,6 @@ type Config struct {
 	Alert            Alert
 	AlertPush        AlertPush
 	Metrics          Metrics
-	Websocket        Websocket
 	Grpc             Grpc
 	Email            Email
 	Protobuf         Protobuf
@@ -194,11 +193,6 @@ type Alert struct {
 	SendUid           int
 }
 
-type Websocket struct {
-	Status string
-	Uri    string
-}
-
 type Grpc struct {
 	Status               string
 	Ip                   string
@@ -283,6 +277,7 @@ type Service struct {
 	Sms          string
 	User         string
 	Email        string
+	Mail         string
 	ConfigCenter string
 	TwinAgora    string
 	GameMatch    string

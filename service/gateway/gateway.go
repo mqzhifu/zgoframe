@@ -10,23 +10,14 @@ import (
 	"zgoframe/util"
 )
 
-////这是个快捷变量，目前所有代码均在一起，直接挂在这个变量上即可，后期所有服务分拆出去，网关没那么多附加功能此变量就没用了
-//type MyServiceList struct {
-//	//Match      *Match
-//	GameMatch *gamematch.GameMatch
-//	FrameSync *frame_sync.FrameSync
-//	//RoomManage *frame_sync.RoomManager
-//	TwinAgora *seed_business.TwinAgora
-//}
-
 type Gateway struct {
 	GrpcManager  *util.GrpcManager //通过GRPC反射代理其它微服务
 	Log          *zap.Logger       //日志
 	Netway       *util.NetWay      //长连接公共类
 	NetWayOption util.NetWayOption //长连接公共类的初始化参数
 	//MyServiceList *MyServiceList    //快捷访问内部微服务
-	//RequestServiceAdapter *service.RequestServiceAdapter //请求3方服务 适配器
-	ServiceBridge *bridge.Bridge
+	RequestServiceAdapter *bridge.RequestServiceAdapter //请求3方服务 适配器
+	ServiceBridge         *bridge.Bridge
 }
 
 /*
@@ -35,16 +26,14 @@ type Gateway struct {
 2. 长连接代理(重点)
 3. http 代理 http(鸡肋)
 */
-func NewGateway(grpcManager *util.GrpcManager, log *zap.Logger, serviceBridge *bridge.Bridge) *Gateway {
-	//func NewGateway(grpcManager *util.GrpcManager, log *zap.Logger, requestServiceAdapter *service.RequestServiceAdapter) *Gateway {
+func NewGateway(netWayOption util.NetWayOption) *Gateway {
 	gateway := new(Gateway)
-	gateway.GrpcManager = grpcManager
-	gateway.Log = log
-	gateway.ServiceBridge = serviceBridge
+	gateway.NetWayOption = netWayOption
+	gateway.GrpcManager = netWayOption.GrpcManager
+	gateway.Log = netWayOption.Log
+
 	go gateway.ListeningBridgeMsg()
-	//gateway.MyServiceList = &MyServiceList{}
-	//gateway.RequestServiceAdapter = requestServiceAdapter
-	//go gateway.ListeningMsg()
+
 	return gateway
 }
 
@@ -69,13 +58,12 @@ func NewGateway(grpcManager *util.GrpcManager, log *zap.Logger, serviceBridge *b
 //}
 
 // 开启长连接监听
-func (gateway *Gateway) StartSocket(netWayOption util.NetWayOption) (*util.NetWay, error) {
+func (gateway *Gateway) StartSocket() (*util.NetWay, error) {
 	gateway.Log.Info("gateway StartSocket:")
-	//netWayOption.RouterBack = gateway.Router //公共回调 路由器，用于给最底层的长连接公共类回调
-	netWayOption.RouterBack = gateway.ServiceBridge.RouterBack
+	//回调函数（重点）：底层长连接在接收到消息后，会统一回调这个函数
+	gateway.NetWayOption.RouterBack = gateway.ServiceBridge.RouterBack
 	//创建长连接:底层-公共类
-	gateway.NetWayOption = netWayOption
-	netWay, err := util.NewNetWay(netWayOption)
+	netWay, err := util.NewNetWay(gateway.NetWayOption)
 	gateway.Netway = netWay
 	return netWay, err
 }

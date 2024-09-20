@@ -43,11 +43,11 @@ func NewFrameSync(Option FrameSyncOption) *FrameSync {
 
 	//帧同步 - 房间服务 - room要先实例化,math frame_sync 都强依赖room
 	roomManagerOption := RoomManagerOption{
-		Log: Option.Log,
-		//RequestServiceAdapter: Option.RequestServiceAdapter,
-		//ServiceBridge: Option.ServiceBridge,
-		Gorm:      Option.Gorm,
-		FrameSync: sync,
+		Log:                   Option.Log,
+		RequestServiceAdapter: Option.RequestServiceAdapter,
+		ServiceBridge:         Option.ServiceBridge,
+		Gorm:                  Option.Gorm,
+		FrameSync:             sync,
 	}
 	sync.RoomManage = NewRoomManager(roomManagerOption)
 

@@ -12,6 +12,7 @@ import (
 	"zgoframe/util"
 )
 
+// 监听后端：发送的过来的消息，反向推送给C端用户
 func (gateway *Gateway) ListeningBridgeMsg() {
 	for {
 		select {

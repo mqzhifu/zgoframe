@@ -22,7 +22,7 @@ type MyService struct {
 	Email        *msg_center.Email           // 电子邮件服务
 	AliSms       *util.AliSms                // 阿里-短信业务
 	Gateway      *gateway.Gateway            // 网关服务
-	TwinAgora    *seed_business.TwinAgora    // 广州 120远程专家指导
+	TwinAgora    *seed_business.TwinAgora    // 120远程专家指导
 	ConfigCenter *config_center.ConfigCenter // 配置中心
 	Cicd         *cicd.CicdManager           // 自动部署
 	Mail         *msg_center.Mail            // 站内信
@@ -72,26 +72,28 @@ func NewMyService() *MyService {
 	}
 
 	myService.Alert, _ = msg_center.NewAlert(alertOption)
-
+	// 用户中心服务
 	if global.C.Service.User == "open" {
-		// 用户服务
-		myService.User = user_center.NewUser(global.V.Base.Gorm, global.V.Base.Redis, global.V.Util.ProjectMng)
+		myService.User = user_center.NewUser(global.V.Base.Gorm, global.V.Base.Redis, global.V.Util.ProjectMng, global.V.Base.Zap)
 	}
-	if global.C.Service.Email == "open" {
-		// 站内信服务
+	// 站内信服务
+	if global.C.Service.Mail == "open" {
 		myService.Mail = msg_center.NewMail(global.V.Base.Gorm, global.V.Base.Zap)
 	}
+	// 短信服务
 	if global.C.Service.Sms == "open" {
-		// 短信服务
 		myService.Sms = msg_center.NewSms(global.V.Base.Gorm, global.V.Util.AliSms, global.V.Base.Zap)
 	}
+	// 电子邮件服务
 	if global.C.Service.Email == "open" {
-		// 电子邮件服务
 		myService.Email = msg_center.NewEmail(global.V.Base.Gorm, global.V.Util.Email)
 	}
-
-	if global.C.Service.Email == "open" {
-		// 配置中心服务
+	//抢单-服务
+	if global.C.Service.GrabOrder == "open" {
+		myService.GrabOrder = grab_order.NewGrabOrder(global.V.Base.Gorm, global.V.Base.Redis)
+	}
+	// 配置中心服务
+	if global.C.Service.ConfigCenter == "open" {
 		configCenterOption := config_center.ConfigCenterOption{
 			EnvList:            util.GetConstListEnv(),
 			Gorm:               global.V.Base.Gorm,
@@ -123,9 +125,6 @@ func NewMyService() *MyService {
 			util.ExitPrint(err)
 		}
 	}
-	if global.C.Service.GrabOrder == "open" {
-		myService.GrabOrder = grab_order.NewGrabOrder(global.V.Base.Gorm, global.V.Base.Redis)
-	}
 	// 网关
 	if global.C.Gateway.Status == "open" {
 		// 长连接通信 - 配置
@@ -148,25 +147,21 @@ func NewMyService() *MyService {
 			ClientHeartbeatTime: 3,                          // 客户端心跳时间(秒)
 			ServerHeartbeatTime: 5,                          // 服务端心跳时间(秒)
 			ProtoMap:            global.V.Util.ProtoMap,     // protobuf 映射表
+			Log:                 global.V.Base.Zap,          // 日志
+			Gorm:                global.V.Base.Gorm,         // 数据库，用于持久化
 			GrpcManager:         global.V.Util.GrpcManager,
-			Log:                 global.V.Base.Zap,
-			Gorm:                global.V.Base.Gorm,
 		}
 
-		// gateway := gateway.NewGateway(global.V.Base.GrpcManager, global.V.Base.Zap, myService.RequestServiceAdapter)
-		// gateway.MyServiceList.GameMatch = myService.GameMatch
-		// gateway.MyServiceList.FrameSync = myService.FrameSync
-		// gateway.MyServiceList.TwinAgora = myService.TwinAgora
-		gateway := gateway.NewGateway(global.V.Util.GrpcManager, global.V.Base.Zap, myService.ServiceBridge)
-		myService.Gateway = gateway
+		gatewayInc := gateway.NewGateway(netWayOption)
+		myService.Gateway = gatewayInc
 
-		_, err := gateway.StartSocket(netWayOption)
+		_, err := gatewayInc.StartSocket()
 		if err != nil {
 			util.ExitPrint("InitGateway err:" + err.Error())
 		}
 	}
+	//帧同步
 	if global.C.Service.FrameSync == "open" {
-		// 帧同步 - 房间服务 - room要先实例化,math frame_sync 都强依赖room
 		frameSyncOption := frame_sync.FrameSyncOption{
 			LockMode:              frame_sync.LOCK_MODE_PESSIMISTIC,
 			Store:                 1,

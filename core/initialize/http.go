@@ -12,9 +12,6 @@ import (
 	"time"
 	"zgoframe/core/global"
 	httpmiddleware "zgoframe/http/middleware"
-	httpresponse "zgoframe/http/response"
-	"zgoframe/http/router"
-	"zgoframe/util"
 )
 
 func StartHttpGin() {
@@ -35,12 +32,12 @@ func StartHttpGin() {
 		err := server.ListenAndServe()
 		if err != nil {
 			if strings.Contains(err.Error(), "bind: address already in use") {
-				util.MyPrint("server.ListenAndServe() err: bind port failed , ", err.Error())
+				global.V.Base.Zap.Error("server.ListenAndServe() err: bind port failed , " + err.Error())
 				global.MainEnv.RootQuitFunc(-5)
 				global.MainEnv.RootCancelFunc()
 			}
 		}
-		util.MyPrint("server.ListenAndServe() err:", err)
+		global.V.Base.Zap.Error("server.ListenAndServe() err:" + err.Error())
 	}()
 }
 
@@ -95,57 +92,6 @@ func GetNewHttpGIN(zapLog *zap.Logger, prefix string) (*gin.Engine, error) {
 
 }
 
-func RegGinHttpRoute() {
-	httpresponse.ErrManager = global.V.Util.Err
-	//公共 中间件: 限流 日志 头部解析
-	global.V.Base.Gin.Use(httpmiddleware.Limiter()).Use(httpmiddleware.Record()).Use(httpmiddleware.Header())
-	global.V.Base.Gin.Use(httpmiddleware.RecordTimeoutReq())
-
-	//设置非登陆可访问API，但是头里要加基础认证的信息
-	PublicGroup := global.V.Base.Gin.Group("")
-	//开启跨域，NGINX做了配置暂时可以先不用打开
-	//PublicGroup.Use(httpmiddleware.Cors())
-	PublicGroup.Use(httpmiddleware.HeaderAuth())
-	{
-		router.Base(PublicGroup)
-		router.Persistence(PublicGroup)
-		router.Goods(PublicGroup)
-		router.Orders(PublicGroup)
-		router.Test(PublicGroup)
-		router.Pic(PublicGroup)
-		router.GrabOrder(PublicGroup)
-	}
-	//管理员/开发/运维 使用，头部要验证，还需要二次验证，主要有些危险的操作
-	SystemGroup := global.V.Base.Gin.Group("")
-	SystemGroup.Use(httpmiddleware.HeaderAuth()).Use(httpmiddleware.SecondAuth())
-	{
-		router.Cicd(SystemGroup)
-		router.ConfigCenter(SystemGroup)
-		router.System(SystemGroup)
-		router.Tools(SystemGroup)
-	}
-
-	PrivateGroup := global.V.Base.Gin.Group("")
-	//设置正常API（需要验证）
-	PrivateGroup.Use(httpmiddleware.HeaderAuth()).Use(httpmiddleware.JWTAuth())
-	{
-		router.File(PrivateGroup)
-		router.Gateway(PrivateGroup)
-		router.GameMatch(PrivateGroup)
-		router.TwinAgora(PrivateGroup)
-		router.User(PrivateGroup)
-		router.Mail(PrivateGroup)
-		router.FrameSync(PrivateGroup)
-	}
-	//3方回调的请求
-	nobodyGroup := global.V.Base.Gin.Group("")
-	nobodyGroup.Use()
-	{
-		router.Callback(nobodyGroup)
-	}
-
-}
-
 var HttpZapLog *zap.Logger
 
 func ZapLog() gin.HandlerFunc {
@@ -172,3 +118,54 @@ func ZapLog() gin.HandlerFunc {
 		c.Next()
 	}
 }
+
+//func RegGinHttpRoute() {
+//	httpresponse.ErrManager = global.V.Util.Err
+//	//公共 中间件: 限流 日志 头部解析
+//	global.V.Base.Gin.Use(httpmiddleware.Limiter()).Use(httpmiddleware.Record()).Use(httpmiddleware.Header())
+//	global.V.Base.Gin.Use(httpmiddleware.RecordTimeoutReq())
+//
+//	//设置非登陆可访问API，但是头里要加基础认证的信息
+//	PublicGroup := global.V.Base.Gin.Group("")
+//	//开启跨域，NGINX做了配置暂时可以先不用打开
+//	//PublicGroup.Use(httpmiddleware.Cors())
+//	PublicGroup.Use(httpmiddleware.HeaderAuth())
+//	{
+//		router.Base(PublicGroup)
+//		router.Persistence(PublicGroup)
+//		router.Goods(PublicGroup)
+//		router.Orders(PublicGroup)
+//		router.Test(PublicGroup)
+//		router.Pic(PublicGroup)
+//		router.GrabOrder(PublicGroup)
+//	}
+//	//管理员/开发/运维 使用，头部要验证，还需要二次验证，主要有些危险的操作
+//	SystemGroup := global.V.Base.Gin.Group("")
+//	SystemGroup.Use(httpmiddleware.HeaderAuth()).Use(httpmiddleware.SecondAuth())
+//	{
+//		router.Cicd(SystemGroup)
+//		router.ConfigCenter(SystemGroup)
+//		router.System(SystemGroup)
+//		router.Tools(SystemGroup)
+//	}
+//
+//	PrivateGroup := global.V.Base.Gin.Group("")
+//	//设置正常API（需要验证）
+//	PrivateGroup.Use(httpmiddleware.HeaderAuth()).Use(httpmiddleware.JWTAuth())
+//	{
+//		router.File(PrivateGroup)
+//		router.Gateway(PrivateGroup)
+//		router.GameMatch(PrivateGroup)
+//		router.TwinAgora(PrivateGroup)
+//		router.User(PrivateGroup)
+//		router.Mail(PrivateGroup)
+//		router.FrameSync(PrivateGroup)
+//	}
+//	//3方回调的请求
+//	nobodyGroup := global.V.Base.Gin.Group("")
+//	nobodyGroup.Use()
+//	{
+//		router.Callback(nobodyGroup)
+//	}
+//
+//}

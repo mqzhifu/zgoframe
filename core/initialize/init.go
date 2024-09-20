@@ -10,6 +10,7 @@ import (
 	"strings"
 	"zgoframe/core"
 	"zgoframe/core/global"
+	"zgoframe/http/router"
 	"zgoframe/util"
 )
 
@@ -34,12 +35,12 @@ func (initialize *Initialize) Start() error {
 	global.C = config           //全局变量
 	//--- read config file end -----
 
-	if global.MainCmdParameter.BuildStatic == "on" { //没启用，回头处理
-		global.V.Util.StaticFileSystem = util.NewStaticFileSystem(global.V.Base.StaticFileSys, global.MainCmdParameter.BuildStatic)
-	} else {
-		global.V.Util.StaticFileSystem = util.NewStaticFileSystem(global.V.Base.StaticFileSys, global.MainCmdParameter.BuildStatic)
-	}
-
+	//if global.MainCmdParameter.BuildStatic == "on" { //没启用，回头处理
+	global.V.Util.StaticFileSystem = util.NewStaticFileSystem(global.V.Base.StaticFileSys, global.MainCmdParameter.BuildStatic)
+	//} else {
+	//	global.V.Util.StaticFileSystem = util.NewStaticFileSystem(global.V.Base.StaticFileSys, global.MainCmdParameter.BuildStatic)
+	//}
+	createLogByCategory(prefix) //创建 main 日志-类
 	//邮件与短信优先初始化，是一但有报警，就可以直接发邮件/短信
 
 	//邮件模块
@@ -80,19 +81,6 @@ func (initialize *Initialize) Start() error {
 			return err
 		}
 	}
-	//创建main日志类
-	configZap := global.C.Zap
-	configZap.FileName = "main"
-	configZap.ModuleName = "main"
-	//mainZap, configZapReturn, err := GetNewZapLog(configZap)
-	mainZap, _, err := GetNewZapLog(configZap)
-	if err != nil {
-		util.MyPrint("GetNewZapLog err:", err)
-		return err
-	}
-	global.V.Base.Zap = mainZap
-	//这个变量，主要是给gorm做日志使用，也就是DB的日志，最终也交由zap来接管
-	util.LoggerZap = global.V.Base.Zap
 	//实例化gorm db
 	global.V.Base.GormList, err = GetNewGorm(prefix)
 	if err != nil {
@@ -153,22 +141,12 @@ func (initialize *Initialize) Start() error {
 	}
 	//http server
 	if global.C.Http.Status == core.GLOBAL_CONFIG_MODEL_STATUS_OPEN {
-		configZap = global.C.Zap
-		configZap.FileName = "http"
-		configZap.ModuleName = "http"
-		//Http log zap 这里单独再开个zap 实例，用于专门记录http 请求
-		HttpZap, _, err := GetNewZapLog(configZap)
-		if err != nil {
-			global.V.Base.Zap.Error(prefix + "GetNewZapLog err:" + err.Error())
-			return err
-		}
-
-		global.V.Base.Gin, err = GetNewHttpGIN(HttpZap, prefix)
+		global.V.Base.Gin, err = GetNewHttpGIN(global.V.Base.HttpZap, prefix)
 		if err != nil {
 			global.V.Base.Zap.Error(prefix + "GetNewHttpGIN err:" + err.Error())
 			return err
 		}
-		HttpZap = LoggerWithProject(HttpZap, global.V.Util.Project.Id)
+		global.V.Base.HttpZap = LoggerWithProject(global.V.Base.HttpZap, global.V.Util.Project.Id)
 	}
 	//etcd
 	//if global.C.Etcd.Status == core.GLOBAL_CONFIG_MODEL_STATUS_OPEN {
@@ -303,7 +281,7 @@ func (initialize *Initialize) Start() error {
 	//global.C.System.ENV = initialize.Option.Env
 	//启动http
 	if global.C.Http.Status == core.GLOBAL_CONFIG_MODEL_STATUS_OPEN {
-		RegGinHttpRoute() //这里注册项目自己的http 路由策略
+		router.RegGinHttpRoute() //这里注册项目自己的http 路由策略
 		StartHttpGin()
 	}
 
@@ -425,4 +403,30 @@ func GetNewServiceDiscovery() (serviceDiscovery *util.ServiceDiscovery, err erro
 	}
 	serviceDiscovery, err = util.NewServiceDiscovery(serviceOption)
 	return serviceDiscovery, err
+}
+
+func createLogByCategory(logPrefix string) {
+	//创建main日志类
+	configZap := global.C.Zap
+
+	configZap.FileName = "main"
+	configZap.ModuleName = "main"
+	//mainZap, configZapReturn, err := GetNewZapLog(configZap)
+	mainZap, _, err := GetNewZapLog(configZap)
+	if err != nil {
+		util.MyPrint(logPrefix+" GetNewZapLog err:", err)
+	}
+	global.V.Base.Zap = mainZap
+
+	//这个变量，主要是给gorm做日志使用，也就是DB的日志，最终也交由zap来接管
+	util.LoggerZap = global.V.Base.Zap
+
+	configZap.FileName = "http"
+	configZap.ModuleName = "http"
+	//Http log zap 这里单独再开个zap 实例，用于专门记录http 请求
+	httpZap, _, err := GetNewZapLog(configZap)
+	if err != nil {
+		global.V.Base.Zap.Error(logPrefix + " GetNewZapLog err:" + err.Error())
+	}
+	global.V.Base.HttpZap = httpZap
 }

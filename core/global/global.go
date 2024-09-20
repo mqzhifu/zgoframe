@@ -17,6 +17,7 @@ import (
 type Base struct {
 	Vip           *viper.Viper
 	Zap           *zap.Logger
+	HttpZap       *zap.Logger
 	Redis         *util.MyRedis
 	RedisGo       *util.MyRedisGo
 	Gin           *gin.Engine

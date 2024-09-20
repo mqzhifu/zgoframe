@@ -7,7 +7,6 @@ import (
 	"strconv"
 	"time"
 	"zgoframe/protobuf/pb"
-	"zgoframe/service"
 	"zgoframe/util"
 )
 
@@ -22,20 +21,20 @@ type SyncOption struct {
 	LockMode  int32 `json:"lock_mode"`  //锁模式，乐观|悲观
 	Store     int32 `json:"store"`      //持久化，玩家每帧的动作，暂未使用
 	//RequestServiceAdapter *service.RequestServiceAdapter `json:"-"`          //请求3方服务 适配器
-	ServiceBridge *service.Bridge
-	RoomManage    *RoomManager `json:"-"` //外部指针-房间服务
-	Room          *Room        `json:"-"` //父类，ROOM，每个同步的单元是一个房间
-	Log           *zap.Logger  `json:"-"`
+	//ServiceBridge *service.Bridge
+	RoomManage *RoomManager `json:"-"` //外部指针-房间服务
+	Room       *Room        `json:"-"` //父类，ROOM，每个同步的单元是一个房间
+	Log        *zap.Logger  `json:"-"`
 	//MapSize               int32                          `json:"map_size"` //地址大小，给前端初始化使用
 }
 
-//断点调试
+// 断点调试
 var debugBreakPoint int
 
-//同步 - 逻辑中的自增ID - 默认值
+// 同步 - 逻辑中的自增ID - 默认值
 var logicFrameMsgDefaultId int32
 
-//同步 - 逻辑中 - 操作帧的 自增ID - 默认值
+// 同步 - 逻辑中 - 操作帧的 自增ID - 默认值
 var operationDefaultId int32
 
 //var RoomSyncMetricsPool map[string]RoomSyncMetrics
@@ -60,7 +59,7 @@ func NewSync(Option SyncOption) *Sync {
 	return sync
 }
 
-//进入战场后，场景渲染完后，进入准确状态
+// 进入战场后，场景渲染完后，进入准确状态
 func (sync *Sync) PlayerReady(requestPlayerReady pb.PlayerReady) error {
 	//roomId := myPlayerManager.GetRoomIdByPlayerId(requestPlayerReady.PlayerId)
 	roomId := requestPlayerReady.RoomId
@@ -72,13 +71,13 @@ func (sync *Sync) PlayerReady(requestPlayerReady pb.PlayerReady) error {
 		return errors.New(errMsg)
 	}
 	room.PlayersReadyListRWLock.Lock() //写锁
-	room.PlayersReadyList[requestPlayerReady.PlayerId] = service.PLAYER_HAS_READY
+	room.PlayersReadyList[requestPlayerReady.PlayerId] = PLAYER_HAS_READY
 	room.PlayersReadyListRWLock.Unlock()
 	playerReadyCnt := 0
 	//sync.Option.Log.Info("room.PlayersReadyList:", room.PlayersReadyList)
 	room.PlayersReadyListRWLock.RLock() //读锁
 	for _, v := range room.PlayersReadyList {
-		if v == service.PLAYER_HAS_READY {
+		if v == PLAYER_HAS_READY {
 			playerReadyCnt++
 		}
 	}
@@ -95,7 +94,7 @@ func (sync *Sync) PlayerReady(requestPlayerReady pb.PlayerReady) error {
 	//data, _ := proto.Marshal(&responseStartBattle)
 	//sync.boardCastFrameInRoom(room.Id, "SC_StartBattle", &responseStartBattle)
 	sync.boardCastFrameInRoom(room.Id, "SC_StartBattle", &responseStartBattle)
-	room.UpStatus(service.ROOM_STATUS_EXECING)
+	room.UpStatus(ROOM_STATUS_EXECING)
 	room.StartTime = int32(util.GetNowTimeSecondToInt())
 
 	//RoomSyncMetricsPool[roomId] = RoomSyncMetrics{}
@@ -108,7 +107,7 @@ func (sync *Sync) PlayerReady(requestPlayerReady pb.PlayerReady) error {
 
 }
 
-//匹配成功后，会通知房间服务，房间服务会检查人是否满 了，如果满了，会调用此函数，等待所有玩家确认
+// 匹配成功后，会通知房间服务，房间服务会检查人是否满 了，如果满了，会调用此函数，等待所有玩家确认
 func (sync *Sync) StartOne(room *Room) {
 	sync.Option.Log.Warn("start a new game:")
 
@@ -124,7 +123,7 @@ func (sync *Sync) StartOne(room *Room) {
 	}
 
 	for _, playerId := range room.PlayerIds {
-		room.PlayersReadyList[playerId] = service.PLAYER_NO_READY
+		room.PlayersReadyList[playerId] = PLAYER_NO_READY
 	}
 
 	if sync.Option.Store == 1 {
@@ -137,7 +136,7 @@ func (sync *Sync) StartOne(room *Room) {
 	go sync.checkReadyTimeout(room)
 }
 
-//检查 所有玩家是否 都已准确，超时了
+// 检查 所有玩家是否 都已准确，超时了
 func (sync *Sync) checkReadyTimeout(room *Room) {
 	for {
 		select {
@@ -175,7 +174,7 @@ end:
 //	return myplayer, true
 //}
 
-//同步 玩家 操作 定时器
+// 同步 玩家 操作 定时器
 func (sync *Sync) logicFrameLoop(room *Room) {
 	fpsTime := 1000 / sync.Option.FPS
 	//i := 0
@@ -217,7 +216,7 @@ end:
 	sync.Option.Log.Warn("pushLogicFrame loop routine close")
 }
 
-//同上
+// 同上
 func (sync *Sync) logicFrameLoopReal(room *Room) error {
 	queue := room.PlayersOperationQueue
 	end := queue.Len()
@@ -226,7 +225,7 @@ func (sync *Sync) logicFrameLoopReal(room *Room) error {
 		return nil
 	}
 
-	if sync.Option.LockMode == service.LOCK_MODE_PESSIMISTIC {
+	if sync.Option.LockMode == LOCK_MODE_PESSIMISTIC {
 		ack := 0
 		room.PlayersAckListRWLock.RLock()
 		for _, v := range room.PlayersAckList {
@@ -292,7 +291,7 @@ func (sync *Sync) logicFrameLoopReal(room *Room) error {
 		i++
 	}
 	room.LogicFrameWaitTime = util.GetNowMillisecond() //每帧的等待时间清0，因为走到这里证明所有玩家本帧数据均已经收齐了
-	sync.upSyncRoomPoolElementPlayersAckStatus(room.Id, service.PLAYERS_ACK_STATUS_OK)
+	sync.upSyncRoomPoolElementPlayersAckStatus(room.Id, PLAYERS_ACK_STATUS_OK)
 
 	//util.MyPrint("operations:", operations)
 	logicFrame.Operations = operations
@@ -303,7 +302,7 @@ func (sync *Sync) logicFrameLoopReal(room *Room) error {
 	return nil
 }
 
-//定时，接收玩家的操作记录
+// 定时，接收玩家的操作记录
 func (sync *Sync) ReceivePlayerOperation(logicFrame pb.LogicFrame) error {
 	util.MyPrint("sync ReceivePlayerOperation :", logicFrame)
 	//mylog.Debug(logicFrame)
@@ -335,13 +334,13 @@ func (sync *Sync) ReceivePlayerOperation(logicFrame pb.LogicFrame) error {
 	return nil
 }
 
-//检测玩家发送的:操作(每一帧)是否合规
+// 检测玩家发送的:操作(每一帧)是否合规
 func (sync *Sync) checkReceiveOperation(room *Room, logicFrame pb.LogicFrame) error {
-	if room.Status == service.ROOM_STATUS_INIT { //房间并未开始，还是初始化阶段
+	if room.Status == ROOM_STATUS_INIT { //房间并未开始，还是初始化阶段
 		return errors.New("room status err is  ROOM_STATUS_INIT  " + strconv.Itoa(int(room.Status)))
-	} else if room.Status == service.ROOM_STATUS_END { //该房间的游戏已经结束
+	} else if room.Status == ROOM_STATUS_END { //该房间的游戏已经结束
 		return errors.New("room status err is ROOM_STATUS_END  " + strconv.Itoa(int(room.Status)))
-	} else if room.Status == service.ROOM_STATUS_PAUSE {
+	} else if room.Status == ROOM_STATUS_PAUSE {
 		//暂时状态，囚徒模式下
 		//当A掉线后，会立刻更新房间状态为:暂停，但是其它未掉线的玩家依然还会发当前帧的操作数据
 		//此时，房间已进入暂停状态，如果直接拒掉该条消息，会导致A恢复后，发送当前帧数据是正常的
@@ -367,7 +366,7 @@ func (sync *Sync) checkReceiveOperation(room *Room, logicFrame pb.LogicFrame) er
 			return errors.New(msg)
 		}
 
-	} else if room.Status == service.ROOM_STATUS_EXECING { //游戏进行中
+	} else if room.Status == ROOM_STATUS_EXECING { //游戏进行中
 
 	} else {
 		return errors.New("room status num error.  " + strconv.Itoa(int(room.Status)))
@@ -393,7 +392,7 @@ func (sync *Sync) SendCloseChan() {
 	sync.Option.Room.CloseChan <- 1
 }
 
-//游戏结束 - 结算
+// 游戏结束 - 结算
 func (sync *Sync) roomEnd(roomId string, sendCloseChan int) {
 	sync.Option.Log.Info("roomEnd , id:" + roomId + " sendCloseChan:" + strconv.Itoa(sendCloseChan))
 	room, empty := sync.Option.RoomManage.GetById(roomId)
@@ -402,7 +401,7 @@ func (sync *Sync) roomEnd(roomId string, sendCloseChan int) {
 		return
 	}
 	//避免重复结束
-	if room.Status == service.ROOM_STATUS_END {
+	if room.Status == ROOM_STATUS_END {
 		sync.Option.Log.Error("roomEnd status err " + roomId)
 		return
 	}
@@ -410,7 +409,7 @@ func (sync *Sync) roomEnd(roomId string, sendCloseChan int) {
 	if sendCloseChan == 1 { //这里要立刻停了推送逻辑帧死循环
 		go sync.SendCloseChan()
 	}
-	room.UpStatus(service.ROOM_STATUS_END)
+	room.UpStatus(ROOM_STATUS_END)
 	room.EndTime = int32(util.GetNowTimeSecondToInt())
 	for _, pid := range room.PlayerIds {
 		sync.Option.RoomManage.Option.FrameSync.PlayerConnManager.UpRoomId(pid, "")
@@ -444,7 +443,7 @@ func (sync *Sync) roomEnd(roomId string, sendCloseChan int) {
 
 }
 
-//玩家操作后，触发C端主动发送游戏结束事件
+// 玩家操作后，触发C端主动发送游戏结束事件
 func (sync *Sync) GameOver(requestGameOver pb.GameOver) {
 	sync.Option.Log.Info("GameOver , roomId: " + requestGameOver.RoomId)
 	responseGameOver := pb.GameOver{
@@ -461,7 +460,7 @@ func (sync *Sync) GameOver(requestGameOver pb.GameOver) {
 
 }
 
-//玩家触发了该角色死亡
+// 玩家触发了该角色死亡
 func (sync *Sync) PlayerOver(requestGameOver pb.PlayerOver) error {
 	//roomId := mySyncPlayerRoom[requestGameOver.PlayerId]
 	roomId := requestGameOver.RoomId
@@ -480,14 +479,14 @@ func (sync *Sync) PlayerOver(requestGameOver pb.PlayerOver) error {
 	return nil
 }
 
-//更新一个逻辑帧的确认状态
+// 更新一个逻辑帧的确认状态
 func (sync *Sync) upSyncRoomPoolElementPlayersAckStatus(roomId string, status int) {
 	syncRoomPoolElement, _ := sync.Option.RoomManage.GetById(roomId)
 	sync.Option.Log.Warn("upSyncRoomPoolElementPlayersAckStatus ,old :" + strconv.Itoa(syncRoomPoolElement.PlayersAckStatus) + " , new: " + strconv.Itoa(status))
 	syncRoomPoolElement.PlayersAckStatus = status
 }
 
-//判定一个房间内，玩家在线的人
+// 判定一个房间内，玩家在线的人
 func (sync *Sync) roomOnlinePlayers(room *Room) []int32 {
 	var playerOnLine []int32
 	for _, pid := range room.PlayerIds {
@@ -499,7 +498,7 @@ func (sync *Sync) roomOnlinePlayers(room *Room) []int32 {
 		//zlib.MyPrint(player.Status)
 		player, exist := sync.Option.RoomManage.Option.FrameSync.PlayerConnManager.GetById(pid)
 		if exist {
-			if player.Status == service.PLAYER_STATUS_ONLINE {
+			if player.Status == PLAYER_STATUS_ONLINE {
 				//sync.Option.Log.Warn("playerOnLine append")
 				playerOnLine = append(playerOnLine, pid)
 			}
@@ -510,7 +509,7 @@ func (sync *Sync) roomOnlinePlayers(room *Room) []int32 {
 	return playerOnLine
 }
 
-//玩家断开连接后
+// 玩家断开连接后
 func (sync *Sync) CloseOne(FDCloseEvent pb.FDCloseEvent) {
 	sync.Option.Log.Warn("sync.close one")
 	//根据连接中的 playerId，在用户缓存池中，查找该连接是否有未结束的游戏房间ID
@@ -527,7 +526,7 @@ func (sync *Sync) CloseOne(FDCloseEvent pb.FDCloseEvent) {
 		return
 	}
 	sync.Option.Log.Info("room.Status:" + strconv.Itoa(int(room.Status)))
-	if room.Status == service.ROOM_STATUS_EXECING || room.Status == service.ROOM_STATUS_PAUSE {
+	if room.Status == ROOM_STATUS_EXECING || room.Status == ROOM_STATUS_PAUSE {
 		//判断下所有玩家是否均下线了
 		playerOnLine := sync.roomOnlinePlayers(room)
 		//mylog.Debug("playerOnLine:",playerOnLine, "len :",len(playerOnLine))
@@ -539,8 +538,8 @@ func (sync *Sync) CloseOne(FDCloseEvent pb.FDCloseEvent) {
 			sync.Option.Log.Debug("CloseOne playerOnLineCount <= 0")
 			sync.roomEnd(sync.Option.Room.Id, 1)
 		} else {
-			if room.Status == service.ROOM_STATUS_EXECING {
-				room.UpStatus(service.ROOM_STATUS_PAUSE)
+			if room.Status == ROOM_STATUS_EXECING {
+				room.UpStatus(ROOM_STATUS_PAUSE)
 			}
 			room.WaitPlayerOffline = util.GetNowTimeSecondToInt() + room.RoomManager.Option.FrameSync.Option.OffLineWaitTime
 			responseOtherPlayerOffline := pb.OtherPlayerOffline{
@@ -553,24 +552,24 @@ func (sync *Sync) CloseOne(FDCloseEvent pb.FDCloseEvent) {
 	} else {
 		sync.Option.Log.Error("room.Status exception~~~")
 		//能走到这个条件，肯定是发生过异常
-		if room.Status == service.ROOM_STATUS_INIT {
+		if room.Status == ROOM_STATUS_INIT {
 			//本该room进入ready状态，但异常了
 			sync.roomEnd(sync.Option.Room.Id, 0)
-		} else if room.Status == service.ROOM_STATUS_END {
+		} else if room.Status == ROOM_STATUS_END {
 			//roomEnd 结算方法没有执行完毕，没有清空player的room id
 			for _, pid := range room.PlayerIds {
 				sync.Option.RoomManage.Option.FrameSync.PlayerConnManager.UpRoomId(pid, room.Id)
 				//v.UpPlayerRoomId("")
 			}
-		} else if room.Status == service.ROOM_STATUS_READY {
+		} else if room.Status == ROOM_STATUS_READY {
 			//<房间准备超时>守护协程  发生异常，未捕获到此房间已超时
 			sync.roomEnd(room.Id, 0)
 		}
 	}
 }
 
-//单纯的给一个房间里的人发消息，不考虑是否有顺序号的情况
-//func (sync *Sync) boardCastInRoom(roomId string, action string, contentStruct interface{}) {
+// 单纯的给一个房间里的人发消息，不考虑是否有顺序号的情况
+// func (sync *Sync) boardCastInRoom(roomId string, action string, contentStruct interface{}) {
 func (sync *Sync) boardCastInRoom(roomId string, action string, contentStruct interface{}) {
 	sync.Option.Log.Debug("boardCastInRoom id:" + roomId + " action:" + action)
 	room, empty := sync.Option.RoomManage.GetById(roomId)
@@ -586,16 +585,17 @@ func (sync *Sync) boardCastInRoom(roomId string, action string, contentStruct in
 			continue
 		}
 
-		if player.Status == service.PLAYER_STATUS_OFFLINE {
+		if player.Status == PLAYER_STATUS_OFFLINE {
 			sync.Option.Log.Error("player offline")
 			continue
 		}
 		//sync.Option.RequestServiceAdapter.GatewaySendMsgByUid(player.Id, action, &contentStruct)
-
 		//data, _ := proto.Marshal(&playerState)
 		//sync.Option.ServiceBridge.CallByName("Gateway", "SC_PlayerState", string(contentStruct), "", 0)
-		callGatewayMsg := service.CallGatewayMsg{ServiceName: "FrameSync", FunName: action, TargetUid: pid, Data: contentStruct}
-		sync.Option.ServiceBridge.CallGateway(callGatewayMsg)
+
+		//这里先注释，但记得要打开
+		//callGatewayMsg := service.CallGatewayMsg{ServiceName: "FrameSync", FunName: action, TargetUid: pid, Data: contentStruct}
+		//sync.Option.ServiceBridge.CallGateway(callGatewayMsg)
 
 	}
 	//content ,_:= json.Marshal(contentStruct)
@@ -603,18 +603,18 @@ func (sync *Sync) boardCastInRoom(roomId string, action string, contentStruct in
 	sync.addOneRoomHistory(room, action, string(content))
 }
 
-//给一个副本里的所有玩家广播数据，且该数据必须得有C端ACK
-//func (sync *Sync) boardCastFrameInRoom(roomId string, action string, contentStruct interface{}) {
+// 给一个副本里的所有玩家广播数据，且该数据必须得有C端ACK
+// func (sync *Sync) boardCastFrameInRoom(roomId string, action string, contentStruct interface{}) {
 func (sync *Sync) boardCastFrameInRoom(roomId string, action string, contentStruct interface{}) {
 	sync.Option.Log.Warn("boardCastFrameInRoom , roomId:" + roomId + " action:" + action)
 	syncRoomPoolElement, empty := sync.Option.RoomManage.GetById(roomId)
 	if empty {
 		sync.Option.Log.Panic("syncRoomPoolElement is empty!!!")
 	}
-	if sync.Option.LockMode == service.LOCK_MODE_PESSIMISTIC {
-		if syncRoomPoolElement.PlayersAckStatus == service.PLAYERS_ACK_STATUS_WAIT {
+	if sync.Option.LockMode == LOCK_MODE_PESSIMISTIC {
+		if syncRoomPoolElement.PlayersAckStatus == PLAYERS_ACK_STATUS_WAIT {
 			util.MyPrint(syncRoomPoolElement.PlayersAckList)
-			sync.Option.Log.Error("syncRoomPoolElement PlayersAckStatus = " + strconv.Itoa(service.PLAYERS_ACK_STATUS_WAIT))
+			sync.Option.Log.Error("syncRoomPoolElement PlayersAckStatus = " + strconv.Itoa(PLAYERS_ACK_STATUS_WAIT))
 			return
 		}
 	}
@@ -622,21 +622,22 @@ func (sync *Sync) boardCastFrameInRoom(roomId string, action string, contentStru
 	for _, pid := range syncRoomPoolElement.PlayerIds {
 		PlayersAckList[pid] = 0
 		player, _ := sync.Option.RoomManage.Option.FrameSync.PlayerConnManager.GetById(pid)
-		if player.Status == service.PLAYER_STATUS_OFFLINE {
+		if player.Status == PLAYER_STATUS_OFFLINE {
 			sync.Option.Log.Error("player offline")
 			continue
 		}
 		//util.MyPrint("boardCastFrameInRoom contentStruct:", contentStruct)
 		//sync.Option.RequestServiceAdapter.GatewaySendMsgByUid(player.Id, action, &contentStruct)
 		//sync.Option.ServiceBridge.CallByName("Gateway", action, string(contentStruct), "", 0)
-		callGatewayMsg := service.CallGatewayMsg{ServiceName: "FrameSync", FunName: action, TargetUid: pid, Data: contentStruct}
-		sync.Option.ServiceBridge.CallGateway(callGatewayMsg)
+		//这里先注释，记得要打开
+		//callGatewayMsg := service.CallGatewayMsg{ServiceName: "FrameSync", FunName: action, TargetUid: pid, Data: contentStruct}
+		//sync.Option.ServiceBridge.CallGateway(callGatewayMsg)
 
 	}
 
-	if sync.Option.LockMode == service.LOCK_MODE_PESSIMISTIC {
+	if sync.Option.LockMode == LOCK_MODE_PESSIMISTIC {
 		syncRoomPoolElement.PlayersAckList = PlayersAckList
-		sync.upSyncRoomPoolElementPlayersAckStatus(roomId, service.PLAYERS_ACK_STATUS_WAIT)
+		sync.upSyncRoomPoolElementPlayersAckStatus(roomId, PLAYERS_ACK_STATUS_WAIT)
 	}
 	//content,_ := json.Marshal(contentStruct)
 	content, _ := json.Marshal(util.JsonCamelCase{contentStruct})
@@ -656,7 +657,7 @@ func (sync *Sync) addOneRoomHistory(room *Room, action, content string) {
 	room.LogicFrameHistory = append(room.LogicFrameHistory, &logicFrameHistory)
 }
 
-//一个房间的玩家的所有操作记录，一般用于C端断线重连时，恢复
+// 一个房间的玩家的所有操作记录，一般用于C端断线重连时，恢复
 func (sync *Sync) RoomHistory(roomHistory pb.ReqRoomHistory) error {
 	roomId := roomHistory.RoomId
 	room, _ := sync.Option.RoomManage.GetById(roomId)
@@ -668,13 +669,14 @@ func (sync *Sync) RoomHistory(roomHistory pb.ReqRoomHistory) error {
 	//sync.Option.RequestServiceAdapter.GatewaySendMsgByUid(roomHistory.SourceUid, "SC_RoomHistory", &responsePushRoomHistory)
 	//sync.Option.ServiceBridge.CallByName("Gateway", "SC_RoomHistory", string(data), "", 0)
 
-	callGatewayMsg := service.CallGatewayMsg{ServiceName: "FrameSync", FunName: "SC_RoomHistory", TargetUid: roomHistory.SourceUid, Data: &responsePushRoomHistory}
-	sync.Option.ServiceBridge.CallGateway(callGatewayMsg)
+	//这里先注释记得要打开
+	//callGatewayMsg := service.CallGatewayMsg{ServiceName: "FrameSync", FunName: "SC_RoomHistory", TargetUid: roomHistory.SourceUid, Data: &responsePushRoomHistory}
+	//sync.Option.ServiceBridge.CallGateway(callGatewayMsg)
 
 	return nil
 }
 
-//玩家掉线了，重新连接后，恢复游戏了~这个时候，要通知另外的玩家
+// 玩家掉线了，重新连接后，恢复游戏了~这个时候，要通知另外的玩家
 func (sync *Sync) PlayerResumeGame(requestPlayerResumeGame pb.PlayerResumeGame) error {
 	room, empty := sync.Option.RoomManage.GetById(requestPlayerResumeGame.RoomId)
 	if empty {
@@ -684,10 +686,10 @@ func (sync *Sync) PlayerResumeGame(requestPlayerResumeGame pb.PlayerResumeGame) 
 	}
 	var restartGame = 0
 	var playerIds []int32
-	if room.Status == service.ROOM_STATUS_PAUSE {
+	if room.Status == ROOM_STATUS_PAUSE {
 		playerOnlineNum := sync.roomOnlinePlayers(room)
 		if len(playerOnlineNum) == len(room.PlayerIds) {
-			room.UpStatus(service.ROOM_STATUS_EXECING)
+			room.UpStatus(ROOM_STATUS_EXECING)
 			restartGame = 1
 			for _, pid := range room.PlayerIds {
 				playerIds = append(playerIds, pid)

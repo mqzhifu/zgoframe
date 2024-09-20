@@ -2,7 +2,6 @@ package v1
 
 import (
 	"github.com/gin-gonic/gin"
-	"zgoframe/core/global"
 	"zgoframe/http/request"
 	httpresponse "zgoframe/http/response"
 )
@@ -21,7 +20,7 @@ func GoodsCreateOne(c *gin.Context) {
 	var L request.Goods
 	c.ShouldBind(&L)
 
-	insertId, err := global.V.Service.User.CreateGoods(L)
+	insertId, err := apiServices().User.CreateGoods(L)
 	if err != nil {
 		httpresponse.FailWithMessage(err.Error(), c)
 	} else {
@@ -44,7 +43,7 @@ func OrdersCreateOne(c *gin.Context) {
 	var L request.Orders
 	c.ShouldBind(&L)
 
-	insertId, err := global.V.Service.User.CreateOrders(L)
+	insertId, err := apiServices().User.CreateOrders(L)
 	if err != nil {
 		httpresponse.FailWithMessage(err.Error(), c)
 	} else {
@@ -67,7 +66,7 @@ func OrdersPayment(c *gin.Context) {
 	var L request.Payment
 	c.ShouldBind(&L)
 
-	err := global.V.Service.User.OrdersPayment(L)
+	err := apiServices().User.OrdersPayment(L)
 	if err != nil {
 		httpresponse.FailWithMessage(err.Error(), c)
 	} else {

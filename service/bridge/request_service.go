@@ -1,4 +1,4 @@
-package service
+package bridge
 
 /*
 网关->调用 后端服务 或 后端服务调用 -> 网关
@@ -30,7 +30,7 @@ type ServiceMsg struct {
 	RequestData interface{}
 }
 
-//向3方服务发送请求的适配器，属于快捷方法，也可以在自己的服务中封装
+// 向3方服务发送请求的适配器，属于快捷方法，也可以在自己的服务中封装
 type RequestServiceAdapter struct {
 	ProjectId        int
 	ServiceDiscovery *util.ServiceDiscovery
@@ -53,7 +53,7 @@ func NewRequestServiceAdapter(ServiceDiscovery *util.ServiceDiscovery, grpcManag
 	return requestService
 }
 
-//网关内部调用服务
+// 网关内部调用服务
 func (requestService *RequestServiceAdapter) GatewaySendMsgByUids(uids string, funcName string, requestData interface{}) {
 	requestService.Log.Debug("RequestServiceAdapter GatewaySendMsgByUids :" + uids + " funcName:" + funcName)
 	uidsArr := strings.Split(uids, ",")
@@ -68,7 +68,7 @@ func (requestService *RequestServiceAdapter) GatewaySendMsgByUids(uids string, f
 	}
 }
 
-//网关内部调用服务
+// 网关内部调用服务
 func (requestService *RequestServiceAdapter) GatewaySendMsgByUid(uid int32, funcName string, requestData interface{}) {
 	n := GatewayMsg{
 		Uid:        uid,
@@ -78,7 +78,7 @@ func (requestService *RequestServiceAdapter) GatewaySendMsgByUid(uid int32, func
 	requestService.QueueGatewayMsg <- n
 }
 
-//网络远程调用
+// 网络远程调用
 func (requestService *RequestServiceAdapter) RemoteCall(serviceName string, funcName string, balanceFactor string, requestData interface{}, httpUri string) (interface{}, error) {
 	switch requestService.Flag {
 	case REQ_SERVICE_METHOD_HTTP:

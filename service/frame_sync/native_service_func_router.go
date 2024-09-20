@@ -3,24 +3,22 @@ package frame_sync
 import (
 	"errors"
 	"strconv"
-	"time"
 	"zgoframe/protobuf/pb"
-	"zgoframe/service"
 	"zgoframe/util"
 )
 
 func (frameSync *FrameSync) ListeningBridgeMsg() {
-	for {
-		select {
-		case msg := <-frameSync.Option.ServiceBridge.NativeServiceList.FrameSync:
-			frameSync.NativeServiceFuncRouter(msg)
-		default:
-			time.Sleep(time.Millisecond * service.BRIDGE_SLEEP_TIME)
-		}
-	}
+	//for {
+	//	select {
+	//	case msg := <-frameSync.Option.ServiceBridge.NativeServiceList.FrameSync:
+	//		frameSync.NativeServiceFuncRouter(msg)
+	//	default:
+	//		time.Sleep(time.Millisecond * service.BRIDGE_SLEEP_TIME)
+	//	}
+	//}
 }
 
-//帧同步的路由
+// 帧同步的路由
 func (frameSync *FrameSync) NativeServiceFuncRouter(msg pb.Msg) (data []byte, err error) {
 	frameSync.Option.Log.Debug("frameSync NativeServiceFuncRouter msg.SourceUid:" + strconv.Itoa(int(msg.SourceUid)) + " targetUid:" + strconv.Itoa(int(msg.TargetUid)))
 	prefix := "RouterServiceSync "

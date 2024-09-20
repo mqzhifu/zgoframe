@@ -3,7 +3,6 @@ package v1
 import (
 	"github.com/gin-gonic/gin"
 	"strconv"
-	"zgoframe/core/global"
 	"zgoframe/http/request"
 	httpresponse "zgoframe/http/response"
 )
@@ -23,7 +22,7 @@ func MailSend(c *gin.Context) {
 	var form request.SendMail
 	_ = c.ShouldBind(&form)
 	// projectId, _ := request.GetProjectId(c)
-	recordNewId, err := global.V.Service.Mail.Send(form)
+	recordNewId, err := apiServices().Mail.Send(form)
 	if err != nil {
 		httpresponse.FailWithMessage("失败了："+err.Error(), c)
 	} else {
@@ -47,7 +46,7 @@ func MailList(c *gin.Context) {
 	_ = c.ShouldBind(&form)
 	// projectId, _ := request.GetProjectId(c)
 	uid, _ := request.GetUid(c)
-	mailList, err := global.V.Service.Mail.GetUserListByUid(uid, form)
+	mailList, err := apiServices().Mail.GetUserListByUid(uid, form)
 	if err != nil {
 		httpresponse.FailWithMessage("失败了："+err.Error(), c)
 	} else {
@@ -70,7 +69,7 @@ func MailInfo(c *gin.Context) {
 	var form request.MailInfo
 	_ = c.ShouldBind(&form)
 	uid, _ := request.GetUid(c)
-	info, err := global.V.Service.Mail.GetOneByUid(uid, form)
+	info, err := apiServices().Mail.GetOneByUid(uid, form)
 	if err != nil {
 		httpresponse.FailWithMessage("失败了："+err.Error(), c)
 	} else {
@@ -90,6 +89,6 @@ func MailInfo(c *gin.Context) {
 // @Router /mail/unread [get]
 func MailUnread(c *gin.Context) {
 	uid, _ := request.GetUid(c)
-	cnt := global.V.Service.Mail.GetUnreadCnt(uid)
+	cnt := apiServices().Mail.GetUnreadCnt(uid)
 	httpresponse.OkWithAll(cnt, "ok", c)
 }

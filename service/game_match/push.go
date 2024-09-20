@@ -10,11 +10,11 @@ import (
 	"sync"
 	"time"
 	"zgoframe/protobuf/pb"
-	"zgoframe/service"
+	"zgoframe/service/bridge"
 	"zgoframe/util"
 )
 
-//推送给3方，支持重试
+// 推送给3方，支持重试
 type PushElement struct {
 	Id       int    `json:"id"`
 	ATime    int    `json:"a_time"`   //添加时间
@@ -98,7 +98,7 @@ func (push *Push) addOnePush(redisConn redis.Conn, linkId int, category int, pay
 	pushElement := PushElement{
 		Id:       id,
 		ATime:    util.GetNowTimeSecondToInt(),
-		Status:   service.PUSH_STATUS_WAIT,
+		Status:   PUSH_STATUS_WAIT,
 		UTime:    util.GetNowTimeSecondToInt(),
 		Times:    0,
 		LinkId:   linkId,
@@ -109,7 +109,7 @@ func (push *Push) addOnePush(redisConn redis.Conn, linkId int, category int, pay
 	push.Redis.Send(redisConn, "set", redis.Args{}.Add(key).Add(pushStr)...)
 
 	pushKey := push.getRedisKeyPushStatus()
-	push.Redis.Send(redisConn, "zadd", redis.Args{}.Add(pushKey).Add(service.PUSH_STATUS_WAIT).Add(id)...)
+	push.Redis.Send(redisConn, "zadd", redis.Args{}.Add(pushKey).Add(PUSH_STATUS_WAIT).Add(id)...)
 	pushElementBytes, _ := json.Marshal(&pushElement)
 	push.Log.Debug("addOnePush finish ,info:" + string(pushElementBytes))
 	return pushElement
@@ -167,7 +167,7 @@ func (push *Push) delOneStatus(redisConn redis.Conn, pushId int) {
 	push.Redis.Send(redisConn, "ZREM", redis.Args{}.Add(key).Add(pushId)...)
 }
 
-//失败且需要重试的PUSH-ELEMENT
+// 失败且需要重试的PUSH-ELEMENT
 func (push *Push) upRetryPushInfo(element PushElement) {
 	redisConnFD := push.Redis.GetNewConnFromPool()
 	defer redisConnFD.Close()
@@ -175,7 +175,7 @@ func (push *Push) upRetryPushInfo(element PushElement) {
 	push.Log.Debug("upRetryPushElementInfo , id: " + strconv.Itoa(element.Id) + " , oldTimes:" + strconv.Itoa(element.Times) + " , oldStatus: " + strconv.Itoa(element.Status))
 
 	push.Redis.Send(redisConnFD, "multi")
-	element.Status = service.PUSH_STATUS_RETRY
+	element.Status = PUSH_STATUS_RETRY
 	element.UTime = util.GetNowTimeSecondToInt()
 	element.Times = element.Times + 1 //重试次数+1
 	key := push.getRedisKeyPush(element.Id)
@@ -186,7 +186,7 @@ func (push *Push) upRetryPushInfo(element PushElement) {
 	push.delOneStatus(redisConnFD, element.Id)
 	statusKey := push.getRedisKeyPushStatus()
 	//util.MyPrint("del pushStatus index ,pushId : ", element.Id)
-	push.Redis.Send(redisConnFD, "zadd", redis.Args{}.Add(statusKey).Add(service.PUSH_STATUS_RETRY).Add(element.Id)...)
+	push.Redis.Send(redisConnFD, "zadd", redis.Args{}.Add(statusKey).Add(PUSH_STATUS_RETRY).Add(element.Id)...)
 	//res,err = push.Redis.RedisDo("zadd",redis.Args{}.Add(statuskey).Add(PushStatusRetry).Add(element.Id)...)
 	//util.MyPrint("add  new pushStatus index : ", res, err)
 	//mylog.Info("add  new pushStatus index : ",res,err)
@@ -194,15 +194,15 @@ func (push *Push) upRetryPushInfo(element PushElement) {
 	push.Redis.Exec(redisConnFD)
 }
 
-//在业务里，删除一条push
-//走到里，前置条件肯定是HTTP-PUSH成功了
-//除了删除push相关的数据外，还得删除连带着的业务数据，这个有点烦
+// 在业务里，删除一条push
+// 走到里，前置条件肯定是HTTP-PUSH成功了
+// 除了删除push相关的数据外，还得删除连带着的业务数据，这个有点烦
 func (push *Push) delOneByIdInBusiness(redisConn redis.Conn, id int) {
 	push.Log.Debug("delOneByIdInBusiness id:" + strconv.Itoa(id))
 	push.Redis.Send(redisConn, "multi")
 	element := push.getById(id)
 	push.delOnePush(redisConn, id)
-	if element.Category == service.PushCategorySuccess || element.Category == service.PushCategorySuccessTimeout {
+	if element.Category == PushCategorySuccess || element.Category == PushCategorySuccessTimeout {
 		push.Log.Info("delOneResult")
 		success := push.Rule.QueueSuccess
 		//删除连带的业务信息，这里正确的理解应该是：业务的：回调函数
@@ -229,12 +229,12 @@ forEnd:
 	push.Log.Warn(push.prefix + "  Demon end .")
 }
 
-//检查需要抢着的数据：待推送、重试推送
+// 检查需要抢着的数据：待推送、重试推送
 func (push *Push) checkStatus() {
 	key := push.getRedisKeyPushStatus()
 	//redis 集合里的数据，其实一次均可以取出来，但拆分成两个状态：优先计算 正常推送，而重试的推送放在后面
-	push.checkOneByStatus(key, service.PUSH_STATUS_WAIT)
-	push.checkOneByStatus(key, service.PUSH_STATUS_RETRY)
+	push.checkOneByStatus(key, PUSH_STATUS_WAIT)
+	push.checkOneByStatus(key, PUSH_STATUS_RETRY)
 }
 
 func (push *Push) getAllCnt() int {
@@ -249,7 +249,7 @@ func (push *Push) getStatusCnt(status int) int {
 	return res
 }
 
-//status:待推送、重试推送
+// status:待推送、重试推送
 func (push *Push) checkOneByStatus(key string, status int) {
 	res, err := redis.Ints(push.Redis.RedisDo("ZREVRANGEBYSCORE", redis.Args{}.Add(key).Add(status).Add(status)...))
 	if err != nil {
@@ -262,7 +262,7 @@ func (push *Push) checkOneByStatus(key string, status int) {
 	}
 	push.Log.Info("push need process element total : " + strconv.Itoa(len(res)) + " status: " + strconv.Itoa(status))
 	for _, id := range res {
-		if status == service.PUSH_STATUS_WAIT { //正常/首次推送
+		if status == PUSH_STATUS_WAIT { //正常/首次推送
 			push.processWaitOne(id, status)
 		} else { //推送失败的，重试推送
 			push.processRetryOne(id, status)
@@ -271,7 +271,7 @@ func (push *Push) checkOneByStatus(key string, status int) {
 	}
 }
 
-//处理首次推送
+// 处理首次推送
 func (push *Push) processWaitOne(id int, status int) {
 	element := push.getById(id)
 	push.Log.Info("processWaitOne , push id : " + strconv.Itoa(id) + " status : " + strconv.Itoa(status) + "(retry) category:" + strconv.Itoa(element.Category))
@@ -289,7 +289,7 @@ func (push *Push) processWaitOne(id int, status int) {
 	push.Log.Info("processOne finish")
 }
 
-//处理重试推送
+// 处理重试推送
 func (push *Push) processRetryOne(id int, status int) {
 	element := push.getById(id)
 	push.Log.Info("processRetryOne , push id : " + strconv.Itoa(id) + " status : " + strconv.Itoa(status) + "(wait) category:" + strconv.Itoa(element.Category))
@@ -335,15 +335,15 @@ func (push *Push) getServiceUri(element PushElement, payload string) (uri string
 	thirdMethodUri := ""
 	//success := push.Gamematch.getContainerSuccessByRuleId(push.Rule.Id)
 	success := push.Rule.QueueSuccess
-	if element.Category == service.PushCategorySignTimeout {
+	if element.Category == PushCategorySignTimeout {
 		//push.Log.Debug("element.Category == PushCategorySignTimeout")
 		postData = push.Rule.RuleManager.Option.GameMatch.GroupStrToStruct(payload)
 		thirdMethodUri = "v1/match/error"
-	} else if element.Category == service.PushCategorySuccessTimeout {
+	} else if element.Category == PushCategorySuccessTimeout {
 		//push.Log.Debug("element.Category == PushCategorySuccessTimeout")
 		postData = push.Rule.QueueSuccess.strToStruct(payload)
 		thirdMethodUri = "v1/match/error"
-	} else if element.Category == service.PushCategorySuccess {
+	} else if element.Category == PushCategorySuccess {
 		//push.Log.Debug("element.Category == PushCategorySuccess")
 		thisResult := success.strToStruct(payload)
 		//fmt.Printf("%+v", thisResult)
@@ -356,12 +356,12 @@ func (push *Push) getServiceUri(element PushElement, payload string) (uri string
 	return thirdMethodUri, postData, nil
 }
 
-//没有单独的 room 服务做聚合，直接返回给用户
+// 没有单独的 room 服务做聚合，直接返回给用户
 func (push *Push) ServiceDiscoveryRequestUser(element PushElement) (httpRs util.ResponseMsgST, err error) {
 
 	payload := strings.Replace(element.Payload, push.RedisPayloadSeparation, push.RedisTextSeparator, -1)
 	success := push.Rule.QueueSuccess
-	if element.Category == service.PushCategorySignTimeout {
+	if element.Category == PushCategorySignTimeout {
 		push.Log.Debug("push ServiceDiscoveryRequestUser element.Category == service.PushCategorySignTimeout")
 		groupInfo := push.Rule.RuleManager.Option.GameMatch.GroupStrToStruct(payload)
 		playerIds := push.Rule.RuleManager.Option.GameMatch.GetGroupPlayerIds(groupInfo)
@@ -377,12 +377,12 @@ func (push *Push) ServiceDiscoveryRequestUser(element PushElement) (httpRs util.
 			//data, _ := proto.Marshal(&gameMatchOptResult)v
 			//push.Rule.RuleManager.Option.ServiceBridge.CallGateway("GameMatch", "SC_GameMatchOptResult", 9999, v, string(data), "", 0)
 
-			callGatewayMsg := service.CallGatewayMsg{ServiceName: "GameMatch", FunName: "SC_GameMatchOptResult", TargetUid: v, Data: &gameMatchOptResult}
+			callGatewayMsg := bridge.CallGatewayMsg{ServiceName: "GameMatch", FunName: "SC_GameMatchOptResult", TargetUid: v, Data: &gameMatchOptResult}
 			push.Rule.RuleManager.Option.ServiceBridge.CallGateway(callGatewayMsg)
 		}
-	} else if element.Category == service.PushCategorySuccessTimeout {
+	} else if element.Category == PushCategorySuccessTimeout {
 		return httpRs, nil
-	} else if element.Category == service.PushCategorySuccess {
+	} else if element.Category == PushCategorySuccess {
 		thisResult := success.strToStruct(payload)
 		resultInfo, _ := success.GetResultById(thisResult.Id, 1, 0)
 
@@ -401,7 +401,7 @@ func (push *Push) ServiceDiscoveryRequestUser(element PushElement) (httpRs util.
 			//push.Rule.RuleManager.Option.ServiceBridge.CallGateway("GameMatch", "SC_GameMatchOptResult", 9999, int32(uid), string(data), "", 0)
 			//push.Rule.RuleManager.Option.RequestServiceAdapter.GatewaySendMsgByUid(int32(uid), "SC_GameMatchOptResult", &gameMatchOptResult)
 
-			callGatewayMsg := service.CallGatewayMsg{ServiceName: "GameMatch", FunName: "SC_GameMatchOptResult", TargetUid: int32(uid), Data: &gameMatchOptResult}
+			callGatewayMsg := bridge.CallGatewayMsg{ServiceName: "GameMatch", FunName: "SC_GameMatchOptResult", TargetUid: int32(uid), Data: &gameMatchOptResult}
 			push.Rule.RuleManager.Option.ServiceBridge.CallGateway(callGatewayMsg)
 		}
 		push.Rule.RuleManager.Option.GameMatch.Option.FrameSync.RoomManage.AddOne(newRoom)
@@ -439,7 +439,7 @@ func (push *Push) ServiceDiscoveryRequest(element PushElement, upStatus int) (ht
 	return httpRs, nil
 }
 
-//到了这一步，一定是发送了http请求，并拿到了http的响应数据
+// 到了这一步，一定是发送了http请求，并拿到了http的响应数据
 func (push *Push) hook(element PushElement, httpRs util.ResponseMsgST) {
 	push.Log.Debug("hook id:" + strconv.Itoa(element.Id) + " status:" + strconv.Itoa(element.Status) + " category:" + strconv.Itoa(element.Category))
 	redisConnFD := push.Redis.GetNewConnFromPool()

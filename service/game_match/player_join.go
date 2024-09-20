@@ -7,18 +7,17 @@ import (
 	"strconv"
 	"strings"
 	"zgoframe/protobuf/pb"
-	"zgoframe/service"
 	"zgoframe/util"
 )
 
 /*
-	报名 - 加入匹配队列
-	所有玩家是以组为单位的，校验是要对：单个玩家+组ID
-	大概步骤：
-	1. 校验基础参数
-	2. 校验每个玩家的状态
-	3. 处理权重
-	4. 增加到匹配池
+报名 - 加入匹配队列
+所有玩家是以组为单位的，校验是要对：单个玩家+组ID
+大概步骤：
+1. 校验基础参数
+2. 校验每个玩家的状态
+3. 处理权重
+4. 增加到匹配池
 */
 func (gameMatch *GameMatch) PlayerJoin(form pb.GameMatchSign) (group Group, err error) {
 	//func (gameMatch *GameMatch) PlayerJoin(form request.HttpReqGameMatchPlayerSign) (group Group, err error) {
@@ -32,7 +31,7 @@ func (gameMatch *GameMatch) PlayerJoin(form pb.GameMatchSign) (group Group, err 
 		return group, gameMatch.Err.New(400)
 	}
 
-	if rule.Status != service.GAME_MATCH_RULE_STATUS_EXEC {
+	if rule.Status != GAME_MATCH_RULE_STATUS_EXEC {
 		return group, gameMatch.Err.New(624)
 	}
 
@@ -85,11 +84,11 @@ func (gameMatch *GameMatch) PlayerJoin(form pb.GameMatchSign) (group Group, err 
 			newPlayer := rule.PlayerManager.createEmptyPlayer()
 			newPlayer.Id = int(httpPlayer.Uid)
 			player = newPlayer
-		} else if player.Status == service.GAME_MATCH_PLAYER_STATUS_SUCCESS { //玩家已经匹配成功，并等待开始游戏
+		} else if player.Status == GAME_MATCH_PLAYER_STATUS_SUCCESS { //玩家已经匹配成功，并等待开始游戏
 			//queueSign.Log.Error(" player status = PlayerStatusSuccess ,demon not clean.")
 			errMsg := gameMatch.Err.MakeOneStringReplace("strconv.Itoa(player.Id)")
 			return group, gameMatch.Err.NewReplace(403, errMsg)
-		} else if player.Status == service.GAME_MATCH_PLAYER_STATUS_SIGN { //报名成功，等待匹配
+		} else if player.Status == GAME_MATCH_PLAYER_STATUS_SIGN { //报名成功，等待匹配
 			isTimeout := rule.PlayerManager.checkSignTimeout(player)
 			if !isTimeout { //未超时
 				//queueSign.Log.Error(" player status = matching...  not timeout")
@@ -158,7 +157,7 @@ func (gameMatch *GameMatch) PlayerJoin(form pb.GameMatchSign) (group Group, err 
 	//}
 
 	//这里再做一次检查，防止，此时某个 rule 关闭了
-	if rule.Status != service.GAME_MATCH_RULE_STATUS_EXEC {
+	if rule.Status != GAME_MATCH_RULE_STATUS_EXEC {
 		return group, gameMatch.Err.New(400)
 	}
 
@@ -177,7 +176,7 @@ func (gameMatch *GameMatch) PlayerJoin(form pb.GameMatchSign) (group Group, err 
 	group = gameMatch.NewGroupStruct(rule)
 	group.Id = int(outGroupId)
 	group.Players = playerList
-	group.Type = service.GAME_MATCH_GROUP_TYPE_SIGN
+	group.Type = GAME_MATCH_GROUP_TYPE_SIGN
 	group.SignTimeout = expire
 	group.SignTime = processStartTime
 	group.Person = len(playerList)
@@ -194,7 +193,7 @@ func (gameMatch *GameMatch) PlayerJoin(form pb.GameMatchSign) (group Group, err 
 
 		newPlayerStatusElement := rule.PlayerManager.createEmptyPlayer()
 		newPlayerStatusElement.Id = player.Id
-		newPlayerStatusElement.Status = service.GAME_MATCH_PLAYER_STATUS_SIGN
+		newPlayerStatusElement.Status = GAME_MATCH_PLAYER_STATUS_SIGN
 		newPlayerStatusElement.Weight = player.Weight
 		newPlayerStatusElement.SignTimeout = expire
 		newPlayerStatusElement.GroupId = group.Id
@@ -236,7 +235,7 @@ func (gameMatch *GameMatch) Cancel(form pb.GameMatchPlayerCancel) error {
 	return rule.QueueSign.CancelByGroupId(int(form.GroupId))
 }
 
-//注： formula 不支持小数点，变量用尖括号：( <age> * 20 ) + ( <level> * 50)
+// 注： formula 不支持小数点，变量用尖括号：( <age> * 20 ) + ( <level> * 50)
 func (gameMatch *GameMatch) getPlayerWeightByFormula(formula string, MatchAttr map[string]int32) float32 {
 	//mylog.Debug("getPlayerWeightByFormula , formula:",formula)
 	grep := gameMatch.Option.FormulaFirst + "([\\s\\S]*?)" + gameMatch.Option.FormulaEnd

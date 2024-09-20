@@ -1,7 +1,7 @@
 package test
 
 func Grpc() {
-	Client()
+	//Client()
 	//Service()
 }
 

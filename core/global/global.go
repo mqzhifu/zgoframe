@@ -60,9 +60,9 @@ type Util struct {
 
 // 所有容器挂 在这个上面
 type Container struct {
-	Base    *Base
-	Util    *Util
-	Service *MyService
+	Base *Base
+	Util *Util
+	//Service *MyService
 }
 
 var V = NewContainer() // 动态的容器
@@ -71,9 +71,9 @@ var C Config // 静态从配置文件中读取的
 var MainEnv MainEnvironment
 var MainCmdParameter CmdParameter
 
-// main主协程的一些参数
+// main主协程的一些参数-环境参数
 type MainEnvironment struct {
-	RootDir         string             `json:"root_dir"`
+	RootDir         string             `json:"root_dir"` //main.go 文件路径
 	RootDirName     string             `json:"root_dir_name"`
 	GoVersion       string             `json:"go_version"` // 当前go版本
 	ExecUser        *user.User         `json:"-"`          // 执行该脚本的用户信息
@@ -105,14 +105,14 @@ func NewContainer() *Container {
 }
 
 func AutoCreateUpDbTable() map[string]string {
-	mydb := util.NewDbTool(V.Base.Gorm)
-	sql := mydb.CreateTable(&model.User{}, &model.UserReg{}, &model.UserLogin{},
-		&model.AgoraCloudRecord{}, &model.AgoraCallbackRecord{}, &model.TwinAgoraRoom{},
+	dbTool := util.NewDbTool(V.Base.Gorm)
+	sql := dbTool.CreateTable(&model.User{}, &model.UserReg{}, &model.UserLogin{},
 		&model.GameMatchRule{}, &model.GameMatchSuccess{}, &model.GameMatchGroup{}, &model.GameMatchPush{}, &model.GameSyncRoom{},
-		&model.OperationRecord{}, &model.Project{}, &model.StatisticsLog{},
+		&model.OperationRecord{}, &model.Project{}, &model.ProjectPushMsg{}, &model.StatisticsLog{},
 		&model.CicdPublish{}, &model.Server{}, &model.Instance{},
-		&model.ProjectPushMsg{},
-		&model.SmsRule{}, &model.SmsLog{}, &model.EmailRule{}, &model.EmailLog{}, &model.MailRule{}, &model.MailLog{}, &model.MailGroup{}, &model.Goods{}, &model.Orders{})
+		&model.SmsRule{}, &model.SmsLog{}, &model.EmailRule{}, &model.EmailLog{}, &model.MailRule{}, &model.MailLog{}, &model.MailGroup{},
+		&model.Goods{}, &model.Orders{})
+	//&model.AgoraCloudRecord{}, &model.AgoraCallbackRecord{}, &model.TwinAgoraRoom{},
 
 	return sql
 }

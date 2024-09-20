@@ -6,7 +6,7 @@ import (
 	"gorm.io/gorm"
 	"strconv"
 	"zgoframe/model"
-	"zgoframe/service"
+	"zgoframe/service/bridge"
 	"zgoframe/util"
 )
 
@@ -29,7 +29,7 @@ type RuleManagerOption struct {
 	GameMatch      *GameMatch //父类
 	MonitorRuleIds []int      //负载时使用，当某个 rule 负载较大时，拆分到其它机器上，其它机器上启动的进程仅监听此 rule 即可
 	//RequestServiceAdapter *service.RequestServiceAdapter //请求3方服务 适配器
-	ServiceBridge *service.Bridge
+	ServiceBridge *bridge.Bridge
 }
 type RuleManager struct {
 	Option RuleManagerOption
@@ -53,16 +53,16 @@ func NewRuleManager(option RuleManagerOption) (*RuleManager, error) {
 	return ruleManager, err
 }
 
-//从 3方容器中读取出 所有 rule 的配置信息
+// 从 3方容器中读取出 所有 rule 的配置信息
 func (ruleManager *RuleManager) InitData() (err error) {
 	ruleManager.Log.Info(ruleManager.prefix + " init data RuleDataSourceType:" + strconv.Itoa(ruleManager.Option.GameMatch.Option.RuleDataSourceType))
 	var list []model.GameMatchRule
 	switch ruleManager.Option.GameMatch.Option.RuleDataSourceType {
-	case service.GAME_MATCH_DATA_SOURCE_TYPE_ETCD:
+	case GAME_MATCH_DATA_SOURCE_TYPE_ETCD:
 		return errors.New("not support etcd.")
-	case service.GAME_MATCH_DATA_SOURCE_TYPE_DB:
+	case GAME_MATCH_DATA_SOURCE_TYPE_DB:
 		list, err = ruleManager.GetDataByDb()
-	case service.GAME_MATCH_DATA_SOURCE_TYPE_SERVICE:
+	case GAME_MATCH_DATA_SOURCE_TYPE_SERVICE:
 		return errors.New("not support GAME_MATCH_DATA_SOURCE_TYPE_SERVICE.")
 	default:
 		return errors.New("dataSourceType err")
@@ -89,7 +89,7 @@ func (ruleManager *RuleManager) InitData() (err error) {
 		oneRule := Rule{}
 		oneRule.DemonDebugTime = ruleManager.Option.GameMatch.Option.RuleDebugShow
 		oneRule.Prefix = ruleManager.Option.GameMatch.prefix + "_rule_" + strconv.Itoa(rule.Id)
-		oneRule.Status = service.GAME_MATCH_RULE_STATUS_INIT
+		oneRule.Status = GAME_MATCH_RULE_STATUS_INIT
 		oneRule.RuleManager = ruleManager
 		oneRule.GameMatchRule = rule
 		oneRule.DemonDebugTime = 5
@@ -113,7 +113,7 @@ func (ruleManager *RuleManager) InitData() (err error) {
 	return nil
 }
 
-//每10秒 输出一次，避免日志过多
+// 每10秒 输出一次，避免日志过多
 func (rule *Rule) NothingToDoLog(msg string) {
 	now := util.GetNowTimeSecondToInt()
 	if now%rule.DemonDebugTime == 0 && now != rule.DemonDebugShowTime {
@@ -160,8 +160,8 @@ func (ruleManager *RuleManager) StartupAll() error {
 	return nil
 }
 
-//开启一条rule的所有守护协程，
-//虽然有4个，但是只有match是最核心、最复杂的，另外3个算是辅助
+// 开启一条rule的所有守护协程，
+// 虽然有4个，但是只有match是最核心、最复杂的，另外3个算是辅助
 func (ruleManager *RuleManager) startOneRuleDemon(rule *Rule) {
 	ruleManager.Log.Info(ruleManager.prefix + "  startOneRuleDemon:" + strconv.Itoa(rule.Id))
 	//启动守护协程后，要先执行一下，超时检测，都完成后，该 rule 的状态才是正常，才能接收新的报名，不然，redis 里数据会出现混乱
@@ -178,7 +178,7 @@ func (ruleManager *RuleManager) startOneRuleDemon(rule *Rule) {
 	//匹配
 	go rule.Match.Demon()
 
-	rule.Status = service.GAME_MATCH_RULE_STATUS_EXEC
+	rule.Status = GAME_MATCH_RULE_STATUS_EXEC
 }
 
 func (ruleManager *RuleManager) Quit() {
@@ -188,25 +188,25 @@ func (ruleManager *RuleManager) Quit() {
 	}
 }
 
-//redis公共前缀+模块名
+// redis公共前缀+模块名
 func (rule *Rule) GetCommRedisKeyByModule(module string) string {
 	return rule.RuleManager.Option.GameMatch.Option.RedisPrefix + rule.RuleManager.Option.GameMatch.Option.RedisKeySeparator + module + rule.RuleManager.Option.GameMatch.Option.RedisKeySeparator
 }
 
-//redis公共前缀+模块名+ruleId
+// redis公共前缀+模块名+ruleId
 func (rule *Rule) GetCommRedisKeyByModuleRuleId(module string, ruleId int) string {
 	return rule.GetCommRedisKeyByModule(module) + strconv.Itoa(ruleId) + rule.RuleManager.Option.GameMatch.Option.RedisKeySeparator
 }
 
 func (rule *Rule) Close() {
-	rule.Status = service.GAME_MATCH_RULE_STATUS_CLOSE
+	rule.Status = GAME_MATCH_RULE_STATUS_CLOSE
 	rule.QueueSign.Close()
 	rule.QueueSuccess.Close()
 	rule.Push.Close()
 	rule.Match.Close()
 }
 
-//删除一条rule,执行此方法前，要先停掉当前rule的各种操作守护协程
+// 删除一条rule,执行此方法前，要先停掉当前rule的各种操作守护协程
 func (ruleManager *RuleManager) delOneRuleRedisData(ruleId int) {
 	rule, err := ruleManager.GetById(ruleId)
 	if err != nil {
@@ -231,9 +231,9 @@ func (ruleManager *RuleManager) delOneRuleRedisData(ruleId int) {
 	ruleManager.Option.GameMatch.Option.Redis.ConnDo(redisConnFD, "exec")
 }
 
-//一条 rule 是后台录入的，属于其它的项目，最终会持久化到某个地方
-//而匹配服务读取进来，并不确定该条记录是正确的
-//所以需要，验证正确，才能使用
+// 一条 rule 是后台录入的，属于其它的项目，最终会持久化到某个地方
+// 而匹配服务读取进来，并不确定该条记录是正确的
+// 所以需要，验证正确，才能使用
 func (ruleManager *RuleManager) CheckRule(rule Rule) error {
 	if rule.Id <= 0 {
 		return ruleManager.Err.New(604)
@@ -260,7 +260,7 @@ func (ruleManager *RuleManager) CheckRule(rule Rule) error {
 		return ruleManager.Err.New(610)
 	}
 
-	if rule.Type == service.RULE_TYPE_TEAM_VS {
+	if rule.Type == RULE_TYPE_TEAM_VS {
 		if rule.ConditionPeople%2 != 0 {
 			return errors.New("组队互相撕杀，仅支持两个队伍，那么满足条件总人数肯定是偶数")
 		}
@@ -268,7 +268,7 @@ func (ruleManager *RuleManager) CheckRule(rule Rule) error {
 		if rule.TeamMaxPeople > rule.ConditionPeople {
 			return errors.New("组队互相撕杀，仅支持两个队伍，每个队伍最大支持5人， 剩2 肯定是 < 10人的")
 		}
-	} else if rule.Type == service.RULE_TYPE_TEAM_EACH_OTHER {
+	} else if rule.Type == RULE_TYPE_TEAM_EACH_OTHER {
 		if rule.ConditionPeople > ruleManager.Option.GameMatch.Option.RulePersonConditionMax {
 			return ruleManager.Err.NewReplace(611, ruleManager.Err.MakeOneStringReplace(strconv.Itoa(ruleManager.Option.GameMatch.Option.RulePersonConditionMax)))
 		}

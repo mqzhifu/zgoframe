@@ -656,11 +656,11 @@ func GenerateCloudVideo(recordId int) (err error) {
 // @Router /twin/agora/config [GET]
 func TwinAgoraConfig(c *gin.Context) {
 	config := make(map[string]string)
-	config["call_timeout"] = strconv.Itoa(global.V.Service.TwinAgora.CallTimeout)
-	config["exec_timeout"] = strconv.Itoa(global.V.Service.TwinAgora.ExecTimeout)
-	config["user_heartbeat_timeout"] = strconv.Itoa(global.V.Service.TwinAgora.UserHeartbeatTimeout)
-	config["res_accept_timeout"] = strconv.Itoa(global.V.Service.TwinAgora.ResAcceptTimeout)
-	config["entry_timeout"] = strconv.Itoa(global.V.Service.TwinAgora.EntryTimeout)
+	config["call_timeout"] = strconv.Itoa(apiServices().TwinAgora.CallTimeout)
+	config["exec_timeout"] = strconv.Itoa(apiServices().TwinAgora.ExecTimeout)
+	config["user_heartbeat_timeout"] = strconv.Itoa(apiServices().TwinAgora.UserHeartbeatTimeout)
+	config["res_accept_timeout"] = strconv.Itoa(apiServices().TwinAgora.ResAcceptTimeout)
+	config["entry_timeout"] = strconv.Itoa(apiServices().TwinAgora.EntryTimeout)
 
 	httpresponse.OkWithAll(config, "Query-成功", c)
 }
@@ -678,8 +678,8 @@ func TwinAgoraConfig(c *gin.Context) {
 // @Router /twin/agora/socket/tools [GET]
 func TwinAgoraSocketTools(c *gin.Context) {
 	config := make(map[string]interface{})
-	config["rtc_room_pool"] = global.V.Service.TwinAgora.RTCRoomPool
-	config["rtc_user_pool"] = global.V.Service.TwinAgora.RTCUserPool
+	config["rtc_room_pool"] = apiServices().TwinAgora.RTCRoomPool
+	config["rtc_user_pool"] = apiServices().TwinAgora.RTCUserPool
 
 	httpresponse.OkWithAll(config, "Query-成功", c)
 }

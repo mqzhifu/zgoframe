@@ -6,7 +6,7 @@ import (
 	"gorm.io/gorm"
 	"strconv"
 	"zgoframe/model"
-	"zgoframe/service"
+	"zgoframe/service/bridge"
 	"zgoframe/service/frame_sync"
 	"zgoframe/util"
 )
@@ -71,7 +71,7 @@ type GameMatchOption struct {
 	RuleSuccessTimeoutMax  int                   `json:"rule_success_timeout_max"`  //匹配成功后，最大超时时间
 	RuleSuccessTimeoutMin  int                   `json:"rule_success_timeout_min"`  //匹配成功后，最短超时时间
 	FrameSync              *frame_sync.FrameSync `json:"-"`                         //帧同步
-	ServiceBridge          *service.Bridge
+	ServiceBridge          *bridge.Bridge
 	//RequestServiceAdapter  *service.RequestServiceAdapter `json:"-"`                         //请求3方服务 适配器
 	Log              *zap.Logger            `json:"-"` //log 实例
 	Redis            *util.MyRedisGo        `json:"-"` //redis 实例
@@ -98,16 +98,16 @@ func NewGameMatch(option GameMatchOption) (*GameMatch, error) {
 	gameMatch.prefix = "gameMatch"
 	option.LoopSleepTime = 200
 	option.RuleDebugShow = 5
-	option.FormulaFirst = "<"                               //游戏匹配-计算权重公式-前缀
-	option.FormulaEnd = ">"                                 //游戏匹配-计算权重公式-后缀
-	option.RuleTeamMaxPeople = 5                            //一个小组允许最大人数
-	option.RulePersonConditionMax = 100                     //N人组团，最大人数
-	option.RuleMatchTimeoutMax = 100                        //报名，最大超时时间
-	option.RuleMatchTimeoutMin = 3                          //报名，最小时间
-	option.RuleSuccessTimeoutMax = 300                      //匹配成功后，最大超时时间
-	option.RuleSuccessTimeoutMin = 10                       //匹配成功后，最短超时时间
-	option.WeightMaxValue = 100                             //权限最终的值，不能大于 100
-	option.PersistenceType = service.PERSISTENCE_TYPE_MYSQL //数据 - 持久化
+	option.FormulaFirst = "<"                       //游戏匹配-计算权重公式-前缀
+	option.FormulaEnd = ">"                         //游戏匹配-计算权重公式-后缀
+	option.RuleTeamMaxPeople = 5                    //一个小组允许最大人数
+	option.RulePersonConditionMax = 100             //N人组团，最大人数
+	option.RuleMatchTimeoutMax = 100                //报名，最大超时时间
+	option.RuleMatchTimeoutMin = 3                  //报名，最小时间
+	option.RuleSuccessTimeoutMax = 300              //匹配成功后，最大超时时间
+	option.RuleSuccessTimeoutMin = 10               //匹配成功后，最短超时时间
+	option.WeightMaxValue = 100                     //权限最终的值，不能大于 100
+	option.PersistenceType = PERSISTENCE_TYPE_MYSQL //数据 - 持久化
 	gameMatch.Option = option
 
 	ErrorMsgFileContent, err := option.StaticFileSystem.GetStaticFileContentLine(option.StaticPath + "/data/game_match_cn.lang")
@@ -159,7 +159,7 @@ func (gameMatch *GameMatch) GetOption() GameMatchOption {
 
 // 持久化数据 - 组
 func (gameMatch *GameMatch) PersistenceRecordGroup(group Group, ruleId int) {
-	if gameMatch.Option.PersistenceType == service.PERSISTENCE_TYPE_MYSQL {
+	if gameMatch.Option.PersistenceType == PERSISTENCE_TYPE_MYSQL {
 		pids := ""
 		for _, v := range group.Players {
 			pids += strconv.Itoa(v.Id) + ","
@@ -187,7 +187,7 @@ func (gameMatch *GameMatch) PersistenceRecordGroup(group Group, ruleId int) {
 
 // 持久化数据 - 匹配成功结果
 func (gameMatch *GameMatch) PersistenceRecordSuccessResult(result Result, ruleId int) {
-	if gameMatch.Option.PersistenceType == service.PERSISTENCE_TYPE_MYSQL {
+	if gameMatch.Option.PersistenceType == PERSISTENCE_TYPE_MYSQL {
 		gameMatchSuccess := model.GameMatchSuccess{
 			RuleId:     ruleId,
 			ATime:      result.ATime,
@@ -203,7 +203,7 @@ func (gameMatch *GameMatch) PersistenceRecordSuccessResult(result Result, ruleId
 
 // 持久化数据 - 组
 func (gameMatch *GameMatch) PersistenceRecordSuccessPush(pushElement PushElement, ruleId int) {
-	if gameMatch.Option.PersistenceType == service.PERSISTENCE_TYPE_MYSQL {
+	if gameMatch.Option.PersistenceType == PERSISTENCE_TYPE_MYSQL {
 		gameMatchPush := model.GameMatchPush{
 			RuleId:   ruleId,
 			ATime:    pushElement.ATime,

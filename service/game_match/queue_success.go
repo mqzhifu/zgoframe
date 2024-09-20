@@ -7,7 +7,6 @@ import (
 	"strings"
 	"sync"
 	"time"
-	"zgoframe/service"
 	"zgoframe/util"
 )
 
@@ -86,7 +85,7 @@ func (queueSuccess *QueueSuccess) getRedisResultIncKey() string {
 	return queueSuccess.Rule.GetCommRedisKeyByModuleRuleId(queueSuccess.prefix, queueSuccess.Rule.Id) + "inc_id"
 }
 
-//最简单的string：一个组的详细信息
+// 最简单的string：一个组的详细信息
 func (queueSuccess *QueueSuccess) getRedisKeyGroupPrefix() string {
 	return queueSuccess.Rule.GetCommRedisKeyByModuleRuleId(queueSuccess.prefix, queueSuccess.Rule.Id) + "group"
 }
@@ -134,14 +133,14 @@ func (queueSuccess *QueueSuccess) getGroupElementById(id int) (group Group) {
 	return group
 }
 
-//获取并生成一个自增GROUP-ID
+// 获取并生成一个自增GROUP-ID
 func (queueSuccess *QueueSuccess) GetResultIncId() int {
 	key := queueSuccess.getRedisResultIncKey()
 	res, _ := redis.Int(queueSuccess.Redis.RedisDo("INCR", key))
 	return res
 }
 
-//添加一条匹配成功记录
+// 添加一条匹配成功记录
 func (queueSuccess *QueueSuccess) addOne(redisConn redis.Conn, result Result) PushElement {
 	queueSuccess.Log.Info("func : addOne")
 	//添加元素超时信息
@@ -152,7 +151,7 @@ func (queueSuccess *QueueSuccess) addOne(redisConn redis.Conn, result Result) Pu
 	//这里注意下：pushId = 0
 	resultStr := queueSuccess.structToStr(result)
 	payload := strings.Replace(resultStr, queueSuccess.RedisTextSeparator, queueSuccess.RedisPayloadSeparation, -1)
-	pushElement := queueSuccess.Rule.Push.addOnePush(redisConn, result.Id, service.PushCategorySuccess, payload)
+	pushElement := queueSuccess.Rule.Push.addOnePush(redisConn, result.Id, PushCategorySuccess, payload)
 	result.PushId = pushElement.Id
 	queueSuccess.Log.Info("addOnePush , newId : " + strconv.Itoa(pushElement.Id))
 	//添加一条元素
@@ -165,7 +164,7 @@ func (queueSuccess *QueueSuccess) addOne(redisConn redis.Conn, result Result) Pu
 	return pushElement
 }
 
-//一条匹配成功记录，要包括N条组信息，这是添加一个组的记录
+// 一条匹配成功记录，要包括N条组信息，这是添加一个组的记录
 func (queueSuccess *QueueSuccess) addOneGroup(redisConn redis.Conn, group Group) {
 	key := queueSuccess.getRedisKeyGroup(group.Id)
 	content := queueSuccess.Rule.RuleManager.Option.GameMatch.GroupStructToStr(group)
@@ -228,14 +227,14 @@ func (queueSuccess *QueueSuccess) structToStr(result Result) string {
 	return content
 }
 
-//删除所有：池里的报名组、玩家、索引等-有点暴力，尽量不用
-//func  (queueSuccess *QueueSuccess)   delAll(){
-//	key := queueSuccess.getRedisPrefixKey()
-//	queueSuccess.Redis.RedisDo("del",key)
+// 删除所有：池里的报名组、玩家、索引等-有点暴力，尽量不用
 //
-//	queueSuccess.Push.delAll()
-//}
+//	func  (queueSuccess *QueueSuccess)   delAll(){
+//		key := queueSuccess.getRedisPrefixKey()
+//		queueSuccess.Redis.RedisDo("del",key)
 //
+//		queueSuccess.Push.delAll()
+//	}
 func (queueSuccess *QueueSuccess) delOneRule() {
 	queueSuccess.Log.Info(" queueSuccess delOneRule ")
 	keys := queueSuccess.Rule.GetCommRedisKeyByModuleRuleId("success", queueSuccess.Rule.Id) + "*"
@@ -245,7 +244,7 @@ func (queueSuccess *QueueSuccess) delOneRule() {
 	//queueSuccess.delALLGroup()
 }
 
-//====================================================
+// ====================================================
 func (queueSuccess *QueueSuccess) delOneResult(redisConn redis.Conn, id int, isIncludeGroupInfo int, isIncludePushInfo int, isIncludeTimeout int, isIncludePlayerStatus int) {
 	queueSuccess.Log.Info("delOneResult id :" +
 		strconv.Itoa(id) + " isIncludeGroupInfo:" + strconv.Itoa(isIncludeGroupInfo) + " isIncludePushInfo:" + strconv.Itoa(isIncludePushInfo) + "isIncludeTimeout" +
@@ -340,7 +339,7 @@ func (queueSuccess *QueueSuccess) CheckTimeout() {
 
 		payload := queueSuccess.structToStr(element)
 		payload = strings.Replace(payload, queueSuccess.RedisTextSeparator, queueSuccess.RedisPayloadSeparation, -1)
-		push.addOnePush(redisConnFD, resultIdInt, service.PushCategorySuccessTimeout, payload)
+		push.addOnePush(redisConnFD, resultIdInt, PushCategorySuccessTimeout, payload)
 
 		queueSuccess.Redis.Exec(redisConnFD)
 		//queueSuccess.Redis.ConnDo(redisConnFD,"exec")

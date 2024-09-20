@@ -8,7 +8,7 @@ import (
 	"time"
 	"zgoframe/model"
 	"zgoframe/protobuf/pb"
-	"zgoframe/service"
+	"zgoframe/service/bridge"
 	"zgoframe/util"
 )
 
@@ -19,7 +19,7 @@ func (gateway *Gateway) ListeningBridgeMsg() {
 
 			gateway.NativeServiceFuncRouter(msg)
 		default:
-			time.Sleep(time.Millisecond * service.BRIDGE_SLEEP_TIME)
+			time.Sleep(time.Millisecond * bridge.BRIDGE_SLEEP_TIME)
 		}
 	}
 }

@@ -164,7 +164,7 @@ func SetPassword(c *gin.Context) {
 		return
 	}
 	uid, _ := request.GetUid(c)
-	err := global.V.Service.User.ChangePassword(uid, form.NewPassword)
+	err := apiServices().User.ChangePassword(uid, form.NewPassword)
 	if err != nil {
 		httpresponse.FailWithMessage("修改失败:"+err.Error(), c)
 	} else {
@@ -236,14 +236,14 @@ func SetMobile(c *gin.Context) {
 		httpresponse.FailWithMessage("Mobile || SmsAuthCode || SmsRuleId is empty", c)
 		return
 	}
-	err := global.V.Service.Sms.Verify(form.RuleId, form.Mobile, form.SmsAuthCode)
+	err := apiServices().Sms.Verify(form.RuleId, form.Mobile, form.SmsAuthCode)
 	if err != nil {
 		httpresponse.FailWithMessage("SendSms.Verify err:"+err.Error(), c)
 		return
 	}
 
 	uid, _ := request.GetUid(c)
-	err = global.V.Service.User.BindMobile(uid, form.Mobile)
+	err = apiServices().User.BindMobile(uid, form.Mobile)
 	if err != nil {
 		httpresponse.FailWithMessage("User.BindMobile err:"+err.Error(), c)
 		return
@@ -272,14 +272,14 @@ func SetEmail(c *gin.Context) {
 		httpresponse.FailWithMessage("email || SmsAuthCode || SmsRuleId is empty", c)
 		return
 	}
-	err := global.V.Service.Email.Verify(form.RuleId, form.Email, form.SmsAuthCode)
+	err := apiServices().Email.Verify(form.RuleId, form.Email, form.SmsAuthCode)
 	if err != nil {
 		httpresponse.FailWithMessage("SendSms.Verify err:"+err.Error(), c)
 		return
 	}
 
 	uid, _ := request.GetUid(c)
-	err = global.V.Service.User.BindMobile(uid, form.Email)
+	err = apiServices().User.BindMobile(uid, form.Email)
 	if err != nil {
 		httpresponse.FailWithMessage("User.BindMobile err:"+err.Error(), c)
 		return
@@ -319,7 +319,7 @@ func SetUserInfo(c *gin.Context) {
 	}
 	user.Id = uid
 
-	if err, ReqUser := global.V.Service.User.SetUserInfo(user); err != nil {
+	if err, ReqUser := apiServices().User.SetUserInfo(user); err != nil {
 		global.V.Base.Zap.Error("设置失败", zap.Any("err", err))
 		httpresponse.FailWithMessage("设置失败", c)
 	} else {
@@ -352,7 +352,7 @@ func DeleteUser(c *gin.Context) {
 			continue
 		}
 		uid, _ := strconv.Atoi(v)
-		global.V.Service.User.Delete(uid)
+		apiServices().User.Delete(uid)
 	}
 	// httpresponse.OkWithMessage("用户怎么能随便删除呢？不想要鸡腿了？", c)
 

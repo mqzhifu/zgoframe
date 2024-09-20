@@ -97,11 +97,11 @@ var initializeVar *initialize.Initialize
 // @in header
 
 func main() {
-	// 编译打进去的两个参数：BuildTime 编译时间，编译的 git 版本号
+	// 编译时，打进去的两个参数：BuildTime 编译时间，编译的 git 版本号
 	util.MyPrint("code , BuildTime:", BuildTime, " BuildGitVersion:", BuildGitVersion)
-	// 日志前缀
+	// 日志文件-前缀
 	prefix := "main "
-	// 处理指令行的参数
+	// 处理指令行传入的参数
 	cmdParameter := processCmdParameter(prefix)
 	util.MyPrint("cmdParameter")
 	util.PrintStruct(cmdParameter, ":")
@@ -127,8 +127,8 @@ func main() {
 		BuildTime:       BuildTime,
 		BuildGitVersion: BuildGitVersion,
 	}
-	global.MainEnv = mainEnvironment
-	global.MainCmdParameter = cmdParameter
+	global.MainEnv = mainEnvironment       //环境信息：挂到全局变量中
+	global.MainCmdParameter = cmdParameter //指令行参数信息：挂到全局变量中
 	global.V.Base.StaticFileSys = staticFileSys
 	// 开始正式全局初始化
 	initializeVar = initialize.NewInitialize()

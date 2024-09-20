@@ -3,7 +3,6 @@ package core
 import (
 	"reflect"
 	"zgoframe/core/global"
-	"zgoframe/http/request"
 	"zgoframe/test"
 	"zgoframe/util"
 )
@@ -19,7 +18,7 @@ func DoTestAction(flag string) {
 	util.MyPrint("=======================", flag)
 	switch flag {
 	case "alert":
-		global.V.Service.Alert.Send(6, "商品库存不足，请及时补充货源", "warning")
+		//global.V.Service.Alert.Send(6, "商品库存不足，请及时补充货源", "warning")
 	case "db_table":
 		sqlList := global.AutoCreateUpDbTable()
 		sqlStrings := ""
@@ -36,9 +35,9 @@ func DoTestAction(flag string) {
 	case "sms":
 		test.Sms()
 	case "service_sms":
-		SendSMS := request.SendSMS{}
-		recordNewId, err := global.V.Service.Sms.Send(6, SendSMS)
-		util.MyPrint(recordNewId, err)
+		//SendSMS := request.SendSMS{}
+		//recordNewId, err := global.V.Service.Sms.Send(6, SendSMS)
+		//util.MyPrint(recordNewId, err)
 	case "cicd":
 		test.Cicd()
 	case "ProjectAutoCreateUserDbRecord":
@@ -51,7 +50,7 @@ func DoTestAction(flag string) {
 		test.Test_command()
 		test.Test_supervisor()
 	case "gateway":
-		test.Gateway()
+		//test.Gateway()
 	case "image_slice":
 	case "calc":
 		dd := "aaaaa"

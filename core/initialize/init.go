@@ -23,7 +23,8 @@ func NewInitialize() *Initialize {
 // 框架-初始化-入口
 func (initialize *Initialize) Start() error {
 	//---read config file start -----
-	prefix := "initialize ,"
+	prefix := "initialize ," //输出日志的前缀
+	//开始：读取配置文件
 	myViper, config, err := GetNewViper(prefix)
 	if err != nil {
 		util.MyPrint(prefix+"GetNewViper err:", err)
@@ -297,7 +298,7 @@ func (initialize *Initialize) Start() error {
 	//	global.V.Base.NetWay = netWay
 	//}
 	InitFileManager()
-	global.V.Service = global.NewMyService()
+	//global.V.Service = global.NewMyService()
 
 	//global.C.System.ENV = initialize.Option.Env
 	//启动http

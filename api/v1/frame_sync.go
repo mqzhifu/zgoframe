@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"github.com/gin-gonic/gin"
 	"io/ioutil"
-	"zgoframe/core/global"
 	"zgoframe/http/request"
 	httpresponse "zgoframe/http/response"
 	"zgoframe/util"
@@ -22,7 +21,7 @@ import (
 // @Success 200 {boolean} true "true:成功 false:否"
 // @Router /frame/sync/config [get]
 func FrameSyncConfig(c *gin.Context) {
-	op := global.V.Service.FrameSync.Option
+	op := apiServices().FrameSync.Option
 	httpresponse.OkWithAll(op, "ok", c)
 }
 
@@ -47,7 +46,7 @@ func FrameSyncRoomHistory(c *gin.Context) {
 
 	util.MyPrint("=======------", form)
 
-	room, empty := global.V.Service.FrameSync.RoomManage.GetById(form.RoomId)
+	room, empty := apiServices().FrameSync.RoomManage.GetById(form.RoomId)
 	if empty {
 		httpresponse.FailWithMessage("roomId Empty id:"+form.RoomId, c)
 	} else {

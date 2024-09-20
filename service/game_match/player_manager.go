@@ -7,7 +7,6 @@ import (
 	"go.uber.org/zap"
 	"strconv"
 	"strings"
-	"zgoframe/service"
 	"zgoframe/util"
 )
 
@@ -56,7 +55,7 @@ func NewPlayerManager(rule *Rule) *PlayerManager {
 func (playerManager *PlayerManager) createEmptyPlayer() Player {
 	newPlayer := Player{
 		Id:          0,
-		Status:      service.GAME_MATCH_PLAYER_STATUS_INIT,
+		Status:      GAME_MATCH_PLAYER_STATUS_INIT,
 		SignTimeout: 0,
 		GroupId:     0,
 		ATime:       util.GetNowTimeSecondToInt(),
@@ -81,7 +80,7 @@ func (playerManager *PlayerManager) UpStatus(pid int, status int, SuccessTimeout
 	util.MyPrint(res, err)
 }
 
-//设置一个redis hash 结构茶杯，如不存在，则创建一个新的
+// 设置一个redis hash 结构茶杯，如不存在，则创建一个新的
 func (playerManager *PlayerManager) Create(player Player, redisConnFD redis.Conn) (bool, error) {
 	//playerManager.delOneRulePlayer(redisConnFD, player.Id)
 	//playerManager.addOneRulePlayer(redisConnFD, player.Id)
@@ -96,12 +95,12 @@ func (playerManager *PlayerManager) Create(player Player, redisConnFD redis.Conn
 	return true, nil
 }
 
-//redis hash 结构
+// redis hash 结构
 func (playerManager *PlayerManager) getRedisPrefix() string {
 	return playerManager.Rule.GetCommRedisKeyByModuleRuleId(playerManager.prefix, playerManager.Rule.Id) + "player_"
 }
 
-//redis hash 结构
+// redis hash 结构
 func (playerManager *PlayerManager) getRedisPrefixKeyByPid(pid int) string {
 	return playerManager.getRedisPrefix() + strconv.Itoa(pid)
 }
@@ -150,7 +149,7 @@ func (playerManager *PlayerManager) getOneRuleAllPlayerCnt() (int, error) {
 	return len(res), nil
 }
 
-//根据PID 获取一个玩家的状态信息
+// 根据PID 获取一个玩家的状态信息
 func (playerManager *PlayerManager) GetById(playerId int) (player Player, isEmpty int) {
 	//var playerStatusElement PlayerStatusElement
 	key := playerManager.getRedisPrefixKeyByPid(playerId)
@@ -170,7 +169,7 @@ func (playerManager *PlayerManager) GetById(playerId int) (player Player, isEmpt
 	return player, 0
 }
 
-//tmp process
+// tmp process
 func (playerManager *PlayerManager) delOneById(redisConn redis.Conn, playerId int) {
 	playerManager.Log.Warn("playerManager delOneById:" + strconv.Itoa(playerId))
 	_, isEmpty := playerManager.GetById(playerId)
@@ -187,7 +186,7 @@ func (playerManager *PlayerManager) delOneById(redisConn redis.Conn, playerId in
 	//playerManager.Redis.RedisDo("ping")
 }
 
-//检查报名超时
+// 检查报名超时
 func (playerManager *PlayerManager) checkSignTimeout(player Player) (isTimeout bool) {
 	now := util.GetNowTimeSecondToInt()
 	if now > player.SignTimeout {
@@ -196,7 +195,7 @@ func (playerManager *PlayerManager) checkSignTimeout(player Player) (isTimeout b
 	return false
 }
 
-//删除所有玩家状态值
+// 删除所有玩家状态值
 func (playerManager *PlayerManager) delAllPlayers() {
 	playerManager.Log.Warn("delAllPlayers ")
 	key := playerManager.getRedisPrefix()

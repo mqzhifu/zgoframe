@@ -9,11 +9,8 @@ func Callback(Router *gin.RouterGroup) {
 	BaseRouter := Router.Group("callback")
 	{
 		BaseRouter.POST("agora/cloud", v1.AgoraCallbackCloud)
-		//BaseRouter.POST("agora/cloud/test", v1.AgoraCallbackCloudTest)
 		BaseRouter.POST("agora/rtc", v1.AgoraCallbackRTC)
+		//BaseRouter.POST("agora/cloud/test", v1.AgoraCallbackCloudTest)
 		//BaseRouter.POST("agora/rtc/test", v1.AgoraCallbackRTCTest)
-
 	}
-
-	//BaseRouter.GET("avicon.ico", v1.AgoraCallbackCloud)
 }

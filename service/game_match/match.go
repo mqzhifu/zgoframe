@@ -6,11 +6,10 @@ import (
 	"strconv"
 	"sync"
 	"time"
-	"zgoframe/service"
 	"zgoframe/util"
 )
 
-//匹配 (这个就是整个包的核心)
+// 匹配 (这个就是整个包的核心)
 type Match struct {
 	Mutex      sync.Mutex
 	Rule       *Rule
@@ -38,7 +37,7 @@ func (match *Match) Close() {
 	match.CloseChan <- 1
 }
 
-//守护 协程
+// 守护 协程
 func (match *Match) Demon() {
 	match.Log.Info(match.prefix + " Demon.")
 	for {
@@ -60,17 +59,17 @@ forEnd:
 1. 先检查是否有报名超时的情况，并做超时处理
 1. 获取一下当前池子里：共有多少个组，共有多少个玩家，如果太少，直接结束
 2. 根据 rule 是否有公式(权重)，分成了两类处理方式：
-	1. 没有公式(权重)，这种比较简单，直接暴力去池子里捞用户，就一个维度：谁先报名的，谁最快匹配
-	2. 有公式(权重)，这种略复杂。先计算出一个步长，然后根据此步长循环，每次有一个权限范围值，根据这个范围，去池子里面捞用户
-	>步长的计算方式：rule 配置表里的 权重最大值 - 权重最小值
+ 1. 没有公式(权重)，这种比较简单，直接暴力去池子里捞用户，就一个维度：谁先报名的，谁最快匹配
+ 2. 有公式(权重)，这种略复杂。先计算出一个步长，然后根据此步长循环，每次有一个权限范围值，根据这个范围，去池子里面捞用户
+    >步长的计算方式：rule 配置表里的 权重最大值 - 权重最小值
+
 3. 将捞出来的用户，做进一步细致的匹配，这一步才是略核心的。这里分为两类吧，但最终会合并
-	1. N VS N ，这种是略复杂一点的，它多出了步，即：计算互补数，如：5人一队，优先匹配对策也是5人，3+2人一队，优先匹配3+2的组队。
-	2. 吃鸡模式，这个比较粗暴，略简单，就正常匹配即可。
+ 1. N VS N ，这种是略复杂一点的，它多出了步，即：计算互补数，如：5人一队，优先匹配对策也是5人，3+2人一队，优先匹配3+2的组队。
+ 2. 吃鸡模式，这个比较粗暴，略简单，就正常匹配即可。
+
 4. 做排队组合：计算出  哪个队的人数 + 哪个组的人数 = 符合条件的一个结果
 5. 将捞出来的用户数据 配合 排队组合的结合 ，计算出，最终：匹配成功的结果
 6. 格式化数据，将匹配成功的结果，创建一条记录：success result,再添加子组数据：group ，再添加超时数据，再添加push数据
-
-
 
 对于 如何捞用户的计算：
 1. 先，从最大的范围搜索，扫整个集合，如果元素过少，直接在这个维度就结束了
@@ -78,7 +77,6 @@ forEnd:
 3. 这种是介于上面两者中间~即不是全部集合，也不是单独计算一个维度，而是逐步，放大到:最大90%集合，1-1，1-2....1-9
 
 总结：以上的算法，其实就是不断切换搜索范围（由最大到中小，再到中大），加速匹配时间
-
 */
 func (match *Match) matching() {
 	//每次匹配之前，要先检查一下数据是否超时，后面就不再检查了
@@ -123,7 +121,7 @@ func (match *Match) matching() {
 
 			match.setMemberRange(rangeStart, rangeEnd)
 			//successGroupIds: map[int]map[int]int   ,外层的map 是证明一次匹配成功的结果，内层map 是 groupIds
-			successGroupIds, isEmpty := match.searchByRange(service.FilterFlagDIY)
+			successGroupIds, isEmpty := match.searchByRange(FilterFlagDIY)
 			match.Log.Info("searchByRange rs : " + rangeStart + " ~ " + rangeStart + " , rs , cnt:" + strconv.Itoa(len(successGroupIds)) + " isEmpty : " + strconv.Itoa(isEmpty))
 
 			util.MyPrint("searchByRange rs : ", successGroupIds)
@@ -158,7 +156,7 @@ func (match *Match) matching() {
 		//}
 
 		//rule 配置表中：没有设置公式，即:用户都没有权重属性，那么匹配的时候，间接等于就一个维度了：报名的时间，报名早的可能就被优先匹配了
-		groupIds, isEmpty := match.matchingRange(service.FilterFlagAll)
+		groupIds, isEmpty := match.matchingRange(FilterFlagAll)
 		if isEmpty == 1 {
 			match.Log.Warn("signed players is empty ")
 			return
@@ -180,7 +178,7 @@ func (match *Match) matching() {
 	match.clearMemberRange()
 }
 
-//用于输出测试
+// 用于输出测试
 func (match *Match) SuccessGroupIdsToStr(successGroupIds map[int]map[int]int) string {
 	if len(successGroupIds) <= 0 {
 		return " SuccessGroupIdsToStr empty"
@@ -197,7 +195,7 @@ func (match *Match) SuccessGroupIdsToStr(successGroupIds map[int]map[int]int) st
 	return str
 }
 
-//用于输出测试
+// 用于输出测试
 func (match *Match) GroupByPersonCntToStr(list map[int]int) string {
 	if len(list) <= 0 {
 		return " GroupByPersonCntToStr empty"
@@ -225,20 +223,20 @@ func (match *Match) matchingRange(flag int) (successGroupIds map[int]map[int]int
 	forStart := 0    //循环的开始值
 	//循环的结束值
 	forEnd := match.Rule.RuleManager.Option.GameMatch.Option.WeightMaxValue
-	if flag == service.FilterFlagAll { //全匹配模式下就不需要多次循环了，一次即可
+	if flag == FilterFlagAll { //全匹配模式下就不需要多次循环了，一次即可
 		forEnd = 1
 	}
 
 	match.Log.Info("matchingRange , flag : " + strconv.Itoa(flag) + " forEnd:" + strconv.Itoa(forEnd))
 
 	for i := forStart; i < forEnd; i++ {
-		if flag == service.FilterFlagBlock { //区域性的
+		if flag == FilterFlagBlock { //区域性的
 			tmpMin = i
 			tmpMax = float32(i)*10 + 0.9999
 
 			rangeStart = strconv.Itoa(tmpMin)
 			rangeEnd = util.FloatToString(tmpMax, 3)
-		} else if flag == service.FilterFlagBlockInc { //递增，范围更大
+		} else if flag == FilterFlagBlockInc { //递增，范围更大
 			if i == 0 {
 				continue
 			}
@@ -264,7 +262,7 @@ func (match *Match) matchingRange(flag int) (successGroupIds map[int]map[int]int
 		//match.Log.Info("searchByRange rs : ",rangeStart , " ~ ",rangeStart , " , rs , cnt:",len(successGroupIds) , "isEmpty : ",isEmpty)
 		match.Log.Info("searchByRange rs : " + rangeStart + " ~ " + rangeStart + " , rs , cnt:" + strconv.Itoa(len(successGroupIds)) + "isEmpty : " + strconv.Itoa(isEmpty))
 		match.Log.Debug("searchByRange rs successGroupIds : " + match.SuccessGroupIdsToStr(successGroupIds))
-		if isEmpty == 1 && flag == service.FilterFlagAll {
+		if isEmpty == 1 && flag == FilterFlagAll {
 			//最大范围的查找没有数据，并且从redis读不出数据，证明就是数据太少，不可能成团
 			match.Log.Warn(" FilterFlagAll  isEmpty  = 1 ,break this foreach")
 			match.Log.Info(" FilterFlagAll  isEmpty  = 1 ,break this foreach")
@@ -286,11 +284,11 @@ func (match *Match) matchingRange(flag int) (successGroupIds map[int]map[int]int
 	return successGroupIds, isEmpty
 }
 
-//根据具体的<权重>值，去池子里面捞用户
-//这里主要还是：查询 redis 报名池里的 总量数据，之后对总量数据进行基础检验，并没有实际的去捞用户与计算
+// 根据具体的<权重>值，去池子里面捞用户
+// 这里主要还是：查询 redis 报名池里的 总量数据，之后对总量数据进行基础检验，并没有实际的去捞用户与计算
 func (match *Match) searchByRange(flag int) (successGroupIds map[int]map[int]int, isEmpty int) {
-	playersTotal := 0                  //当前池子里共有多少个玩家
-	if flag == service.FilterFlagAll { //全匹配
+	playersTotal := 0          //当前池子里共有多少个玩家
+	if flag == FilterFlagAll { //全匹配
 		playersTotal = match.Rule.QueueSign.getAllPlayersCnt()
 	} else { //块匹配
 		playersTotal = match.Rule.QueueSign.getPlayersCntTotalByWeight(match.rangeStart, match.rangeEnd)
@@ -325,15 +323,15 @@ func (match *Match) searchByRange(flag int) (successGroupIds map[int]map[int]int
 	return successGroupIds, 0
 }
 
-//前面是基于各种<总数>汇总，的各种验证，都没有问题了，这里才算是正式的：细节匹配
+// 前面是基于各种<总数>汇总，的各种验证，都没有问题了，这里才算是正式的：细节匹配
 func (match *Match) searchFilterDetail() (defaultSuccessGroupIds map[int]map[int]int) {
-	match.Log.Info("searchFilterDetail , rule flag :" + strconv.Itoa(service.RULE_TYPE_TEAM_VS))
+	match.Log.Info("searchFilterDetail , rule flag :" + strconv.Itoa(RULE_TYPE_TEAM_VS))
 	//使用地址引用，后面的子函数，不用返回值了
 	successGroupIds := make(map[int]map[int]int)       //保留最终值：匹配成功的情况。注：N VS N 保留的结果维护：是组队成5人组，而吃鸡模式的一个维度的值就代表是完全匹配成功一次
 	TeamVSSuccessGroupIds := make(map[int]map[int]int) //用于计算N VS N 的匹配成功结果，它是先计算出一部分的值，最终会与 successGroupIds 合并
 	//N vs N ，会多一步，公平性匹配：5人组 匹配的对手 也是5人组 ，3+2 匹配的最好也是 3+2
 	//但最终两种方法，还是会统一再处理一次 groupPersonCalculateNumberCombination，N VS N处理的一步只是公平性匹配，可能还剩下不少不公平的情况
-	if match.Rule.Type == service.RULE_TYPE_TEAM_VS {
+	if match.Rule.Type == RULE_TYPE_TEAM_VS {
 		/*
 			共2轮过滤筛选
 			1、只求互补数，为了公平：5人组~匹配，对手也是5人组队的，3人组队匹配到的对手里也应该有3人组队的
@@ -371,14 +369,14 @@ func (match *Match) searchFilterDetail() (defaultSuccessGroupIds map[int]map[int
 	return successGroupIds
 }
 
-//小组人数计算  数字组合方式
+// 小组人数计算  数字组合方式
 func (match *Match) groupPersonCalculateNumberCombination(successGroupIds map[int]map[int]int) {
 	//这里吧，按说取，一条rule最大的值就行，没必要取全局最大的5，但是吧，后面的算法有点LOW，外层循环数就是5 ，除了矩阵，太麻烦，回头我再想想
 	groupPersonNum := match.Rule.QueueSign.getPlayersCntByWeight(match.rangeStart, match.rangeEnd)
 	match.Log.Info("groupPersonCalculateNumberCombination every group person total : " + match.GroupByPersonCntToStr(groupPersonNum))
 	//根据组人数，做排列组合，得到最终自然数和
 	condition := match.Rule.ConditionPeople
-	if match.Rule.Type == service.RULE_TYPE_TEAM_VS { //吃鸡模式就是只要满足设定的条件即可，而N VS N 模式并不需要那么多的人匹配，它只需要匹配出一个队伍即可
+	if match.Rule.Type == RULE_TYPE_TEAM_VS { //吃鸡模式就是只要满足设定的条件即可，而N VS N 模式并不需要那么多的人匹配，它只需要匹配出一个队伍即可
 		condition = match.Rule.ConditionPeople / 2
 	}
 	calculateNumberTotalRs := match.calculateNumberTotal(condition, groupPersonNum)
@@ -469,8 +467,8 @@ func (match *Match) oneConditionConvertGroup(oneOkPersonCondition [5]int) map[in
 	return oneConditionGroupIds
 }
 
-//N V N  ,求:互补数/对数
-//这里只是做公平匹配，如：5V5 优先匹配出来，然后是4+1 VS 4+1 ，依此类推，保证5人组最好是直接匹配成5人组
+// N V N  ,求:互补数/对数
+// 这里只是做公平匹配，如：5V5 优先匹配出来，然后是4+1 VS 4+1 ，依此类推，保证5人组最好是直接匹配成5人组
 func (match *Match) logarithmic(successGroupIds map[int]map[int]int) {
 	//match.Log.Info(zlib.GetSpaceStr(3)+ " action RuleFlagTeamVS logarithmic :")
 	prefix := "logarithmic "
@@ -573,10 +571,10 @@ func (match *Match) clearMemberRange() {
 	//match.Log.Info(" clear MemberVar : rangeStart  rangeEnd")
 }
 
-//互补数中，有一步是，取：两个互补数，人数的，最小的那个
-//如：团队满足人数是5人
-//1. 当前： 3人组 的数量是10，它需要 2人组的数量至少也要10个，这样才能合成 10个组(每组5人)
-//2. 上面是理想状态，非理想状态，3人组 的数量是10， 2人组 却只有 8个，那么 8就是此函数的结果
+// 互补数中，有一步是，取：两个互补数，人数的，最小的那个
+// 如：团队满足人数是5人
+// 1. 当前： 3人组 的数量是10，它需要 2人组的数量至少也要10个，这样才能合成 10个组(每组5人)
+// 2. 上面是理想状态，非理想状态，3人组 的数量是10， 2人组 却只有 8个，那么 8就是此函数的结果
 func (match *Match) getMinPersonNum(personTotal int, needRemainderNumPerson int) int {
 	maxNumber := personTotal
 	if needRemainderNumPerson < maxNumber {
@@ -589,9 +587,9 @@ func (match *Match) getMinPersonNum(personTotal int, needRemainderNumPerson int)
 	return maxNumber
 }
 
-//走到这里就证明，有匹配成功的玩家了
-//当匹配成功最终，成功筛选出匹配的组/玩家后，该函数开始执行后续插入操作
-//注：successGroupIds ，这里只是组ID，是从索引里拿出来的，只是单一删除了索引值，并没有删除真正的组信息
+// 走到这里就证明，有匹配成功的玩家了
+// 当匹配成功最终，成功筛选出匹配的组/玩家后，该函数开始执行后续插入操作
+// 注：successGroupIds ，这里只是组ID，是从索引里拿出来的，只是单一删除了索引值，并没有删除真正的组信息
 func (match *Match) successConditions(successGroupIds map[int]map[int]int) {
 	length := len(successGroupIds)
 	match.Log.Info("successConditions  ...   len :   " + strconv.Itoa(length))
@@ -599,7 +597,7 @@ func (match *Match) successConditions(successGroupIds map[int]map[int]int) {
 	redisConnFD := match.Redis.GetNewConnFromPool()
 	defer redisConnFD.Close()
 
-	if match.Rule.Type == service.RULE_TYPE_TEAM_EACH_OTHER { //满足人数即开团
+	if match.Rule.Type == RULE_TYPE_TEAM_EACH_OTHER { //满足人数即开团
 		match.Log.Debug("case : RuleFlagCollectPerson")
 		//zlib.MyPrint("successGroupIds",successGroupIds)
 		for _, oneCondition := range successGroupIds {
@@ -696,8 +694,8 @@ func (match *Match) successConditions(successGroupIds map[int]map[int]int) {
 	//match.Log.Info("finish successConditions  ...")
 }
 
-//取出来的groupIds 可能某些原因 最终并没有用上，但是得给塞回到redis里
-//这里其实只是将index数据补充上即可，因为计算的时候，删的也只是索引值
+// 取出来的groupIds 可能某些原因 最终并没有用上，但是得给塞回到redis里
+// 这里其实只是将index数据补充上即可，因为计算的时候，删的也只是索引值
 func (match *Match) groupPushBackCondition(redisConn redis.Conn, oneCondition map[int]int) {
 	util.MyPrint("groupPushBackCondition:", oneCondition)
 	//match.Log.Info("groupPushBackCondition", oneCondition)
@@ -707,7 +705,7 @@ func (match *Match) groupPushBackCondition(redisConn redis.Conn, oneCondition ma
 	}
 }
 
-//添加一个组
+// 添加一个组
 func (match *Match) successConditionAddOneGroup(redisConnFD redis.Conn, resultId int, groupId int, teamId int, groupIdsArr map[int]int, playerIdsArr map[int]int) Group {
 	match.Log.Info("successConditionAddOneGroup , resultId:" + strconv.Itoa(resultId) + " ,groupId:" + strconv.Itoa(groupId) + " ,teamId:" + strconv.Itoa(teamId))
 	match.Log.Info("successConditionAddOneGroup")
@@ -723,7 +721,7 @@ func (match *Match) successConditionAddOneGroup(redisConnFD redis.Conn, resultId
 	}
 	//将之前<报名小组>信息复制，并更新相关值
 	SuccessGroup := group
-	SuccessGroup.Type = service.GAME_MATCH_GROUP_TYPE_SUCCESS
+	SuccessGroup.Type = GAME_MATCH_GROUP_TYPE_SUCCESS
 	SuccessGroup.SuccessTimeout = util.GetNowTimeSecondToInt() + match.Rule.SuccessTimeout
 	//SuccessGroup.LinkId = resultId
 	SuccessGroup.SuccessTime = util.GetNowTimeSecondToInt()
@@ -748,7 +746,7 @@ func (match *Match) successConditionAddOneGroup(redisConnFD redis.Conn, resultId
 			//} else {
 			//newPlayerStatusElement = playerStatusElement
 		}
-		match.Rule.PlayerManager.UpStatus(player.Id, service.GAME_MATCH_PLAYER_STATUS_SUCCESS, group.SuccessTimeout, redisConnFD)
+		match.Rule.PlayerManager.UpStatus(player.Id, GAME_MATCH_PLAYER_STATUS_SUCCESS, group.SuccessTimeout, redisConnFD)
 
 		//newPlayerStatusElement.Status = service.GAME_MATCH_PLAYER_STATUS_SUCCESS
 		//newPlayerStatusElement.SuccessTimeout = group.SuccessTimeout

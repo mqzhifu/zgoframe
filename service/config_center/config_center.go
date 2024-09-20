@@ -9,17 +9,16 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	"zgoframe/service"
 	"zgoframe/util"
 )
 
 func GetConstListConfigPersistenceType() map[string]int {
 	list := make(map[string]int)
-	list["mysql"] = service.PERSISTENCE_TYPE_MYSQL
-	list["redis"] = service.PERSISTENCE_TYPE_REDIS
-	list["file"] = service.PERSISTENCE_TYPE_FILE
-	list["etcd"] = service.PERSISTENCE_TYPE_ETCD
-	list["consul"] = service.PERSISTENCE_TYPE_CONSULE
+	list["mysql"] = PERSISTENCE_TYPE_MYSQL
+	list["redis"] = PERSISTENCE_TYPE_REDIS
+	list["file"] = PERSISTENCE_TYPE_FILE
+	list["etcd"] = PERSISTENCE_TYPE_ETCD
+	list["consul"] = PERSISTENCE_TYPE_CONSULE
 
 	return list
 }
@@ -61,7 +60,7 @@ func (configCenter *ConfigCenter) Init() error {
 		return errors.New("PersistenceType <=0")
 	}
 
-	if configCenter.Option.PersistenceType == service.PERSISTENCE_TYPE_FILE {
+	if configCenter.Option.PersistenceType == PERSISTENCE_TYPE_FILE {
 		//return configCenter.InitPersistenceFile()//这里先注释掉，原是直接操作物理文件，但后来增加了 静态文件编译进二进制文件，所以这里先注释掉
 	}
 

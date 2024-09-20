@@ -4,7 +4,7 @@ import (
 	"errors"
 	"time"
 	"zgoframe/protobuf/pb"
-	"zgoframe/service"
+	"zgoframe/service/bridge"
 	"zgoframe/util"
 )
 
@@ -14,7 +14,7 @@ func (gameMatch *GameMatch) ListeningBridgeMsg() {
 		case msg := <-gameMatch.Option.ServiceBridge.NativeServiceList.GameMatch:
 			gameMatch.NativeServiceFuncRouter(msg)
 		default:
-			time.Sleep(time.Millisecond * service.BRIDGE_SLEEP_TIME)
+			time.Sleep(time.Millisecond * bridge.BRIDGE_SLEEP_TIME)
 		}
 	}
 }

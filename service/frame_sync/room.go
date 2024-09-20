@@ -10,7 +10,7 @@ import (
 	"time"
 	"zgoframe/model"
 	"zgoframe/protobuf/pb"
-	"zgoframe/service"
+	"zgoframe/service/bridge"
 	"zgoframe/util"
 )
 
@@ -58,11 +58,11 @@ type RoomManager struct {
 }
 
 type RoomManagerOption struct {
-	//RequestServiceAdapter *service.RequestServiceAdapter //请求3方服务 适配器
-	ServiceBridge *service.Bridge
-	Log           *zap.Logger
-	Gorm          *gorm.DB
-	FrameSync     *FrameSync
+	RequestServiceAdapter *bridge.RequestServiceAdapter //请求3方服务 适配器
+	ServiceBridge         *bridge.Bridge
+	Log                   *zap.Logger
+	Gorm                  *gorm.DB
+	FrameSync             *FrameSync
 	//ReadyTimeout          int32 //房间人数满足了，等待 所有玩家确认，超时时间
 	//RoomPeople            int32 //房间有多少人后，可以开始游戏了
 	//MapSize               int32 `json:"mapSize"` //帧同步，地图大小，给前端初始化使用（测试使用）
@@ -84,14 +84,14 @@ func NewRoomManager(roomManagerOption RoomManagerOption) *RoomManager {
 func (roomManager *RoomManager) NewEmptyRoom() *Room {
 	room := new(Room)
 	room.Id = CreateRoomId()
-	room.Status = service.ROOM_STATUS_INIT
+	room.Status = ROOM_STATUS_INIT
 	room.AddTime = int32(util.GetNowTimeSecondToInt())
 	room.StartTime = 0
 	room.EndTime = 0
 	room.SequenceNumber = -1
 	room.PlayersAckList = make(map[int32]int32)
 	room.PlayersAckListRWLock = &sync.RWMutex{}
-	room.PlayersAckStatus = service.PLAYERS_ACK_STATUS_INIT
+	room.PlayersAckStatus = PLAYERS_ACK_STATUS_INIT
 	room.RandSeek = int32(util.GetRandIntNum(100))
 	room.PlayersOperationQueue = list.New()
 	room.PlayersReadyList = make(map[int32]int32)
@@ -137,7 +137,6 @@ func (room *Room) UpStatus(status int32) {
 	room.StatusLock.Unlock()
 }
 
-// C端获取一个房间的信息
 func (roomManager *RoomManager) GetRoom(requestGetRoom pb.RoomBaseInfo) error {
 	roomId := requestGetRoom.RoomId
 	room, _ := roomManager.GetById(roomId)
@@ -155,8 +154,7 @@ func (roomManager *RoomManager) GetRoom(requestGetRoom pb.RoomBaseInfo) error {
 	//roomManager.Option.RequestServiceAdapter.GatewaySendMsgByUid(requestGetRoom.SourceUid, "SC_RoomBaseInfo", &roomBaseInfo)
 	//data, _ := proto.Marshal(&roomBaseInfo)
 	//roomManager.Option.ServiceBridge.CallByName("Gateway", "SC_RoomBaseInfo", string(data), "", 0)
-
-	callGatewayMsg := service.CallGatewayMsg{ServiceName: "FrameSync", FunName: "SC_RoomBaseInfo", TargetUid: requestGetRoom.SourceUid, Data: &roomBaseInfo}
+	callGatewayMsg := bridge.CallGatewayMsg{ServiceName: "FrameSync", FunName: "SC_RoomBaseInfo", TargetUid: requestGetRoom.SourceUid, Data: &roomBaseInfo}
 	roomManager.Option.ServiceBridge.CallGateway(callGatewayMsg)
 
 	//conn.SendMsgCompressByUid(requestGetRoom.SourceUid, "pushRoomInfo", &ResponsePushRoomInfo)
@@ -180,9 +178,9 @@ func (roomManager *RoomManager) Shutdown() {
 	}
 	//这里只做信号关闭，即：死循环的协程，而真实的关闭由netWay.Close解决
 	for _, room := range roomManager.Pool {
-		if room.Status == service.ROOM_STATUS_READY {
+		if room.Status == ROOM_STATUS_READY {
 			room.ReadyCloseChan <- 1
-		} else if room.Status == service.ROOM_STATUS_EXECING {
+		} else if room.Status == ROOM_STATUS_EXECING {
 			room.CloseChan <- 1
 		}
 	}
@@ -215,7 +213,7 @@ func (roomManager *RoomManager) AddOne(room *Room) error {
 		//uids = append(uids, int32(pid))
 	}
 	//room.PlayerIds = uids
-	room.UpStatus(service.ROOM_STATUS_READY)
+	room.UpStatus(ROOM_STATUS_READY)
 	roomManager.Pool[room.Id] = room
 
 	room.CloseChan = make(chan int)
@@ -226,11 +224,11 @@ func (roomManager *RoomManager) AddOne(room *Room) error {
 	syncOption := SyncOption{
 		//ProjectId:             C.System.ProjectId,
 		//RequestServiceAdapter: room.RoomManager.Option.RequestServiceAdapter,
-		ServiceBridge: room.RoomManager.Option.ServiceBridge,
-		Log:           room.RoomManager.Option.Log,
-		Room:          room,
-		RoomManage:    room.RoomManager,
-		FPS:           int32(rule.Fps),
+		//ServiceBridge: room.RoomManager.Option.ServiceBridge,
+		Log:        room.RoomManager.Option.Log,
+		Room:       room,
+		RoomManage: room.RoomManager,
+		FPS:        int32(rule.Fps),
 	}
 
 	room.Sync = NewSync(syncOption)

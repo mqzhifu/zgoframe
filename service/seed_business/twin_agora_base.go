@@ -10,7 +10,7 @@ import (
 	"time"
 	"zgoframe/model"
 	"zgoframe/protobuf/pb"
-	"zgoframe/service"
+	"zgoframe/service/bridge"
 	"zgoframe/util"
 )
 
@@ -60,13 +60,13 @@ type RTCRoom struct {
 }
 
 type TwinAgoraOption struct {
-	ProtoMap         *util.ProtoMap `json:"-"`
-	Gorm             *gorm.DB
-	Log              *zap.Logger
-	StaticPath       string
-	StaticFileSystem *util.StaticFileSystem
-	//RequestServiceAdapter *service.RequestServiceAdapter
-	ServiceBridge *service.Bridge
+	ProtoMap              *util.ProtoMap `json:"-"`
+	Gorm                  *gorm.DB
+	Log                   *zap.Logger
+	StaticPath            string
+	StaticFileSystem      *util.StaticFileSystem
+	RequestServiceAdapter *bridge.RequestServiceAdapter
+	ServiceBridge         *bridge.Bridge
 }
 
 func NewTwinAgora(op TwinAgoraOption) (*TwinAgora, error) {
@@ -125,13 +125,13 @@ func (twinAgora *TwinAgora) CheckTimeout() {
 			//循环遍历每个房间
 			for _, room := range twinAgora.RTCRoomPool {
 				//呼叫过程超时
-				if util.GetNowTimeSecondToInt() > room.AddTime+twinAgora.CallTimeout && room.Status == service.RTC_ROOM_STATUS_CALLING {
-					twinAgora.RoomEnd(room.Id, service.RTC_ROOM_END_STATUS_TIMEOUT_CALLING)
+				if util.GetNowTimeSecondToInt() > room.AddTime+twinAgora.CallTimeout && room.Status == RTC_ROOM_STATUS_CALLING {
+					twinAgora.RoomEnd(room.Id, RTC_ROOM_END_STATUS_TIMEOUT_CALLING)
 					continue
 				}
 				//房间运行中超时
-				if util.GetNowTimeSecondToInt() > room.Uptime+twinAgora.ExecTimeout && room.Status == service.RTC_ROOM_STATUS_EXECING {
-					twinAgora.RoomEnd(room.Id, service.RTC_ROOM_END_STATUS_TIMEOUT_EXEC)
+				if util.GetNowTimeSecondToInt() > room.Uptime+twinAgora.ExecTimeout && room.Status == RTC_ROOM_STATUS_EXECING {
+					twinAgora.RoomEnd(room.Id, RTC_ROOM_END_STATUS_TIMEOUT_EXEC)
 					continue
 				}
 			}
@@ -163,7 +163,7 @@ func (twinAgora *TwinAgora) FDCreateEvent(FDCreateEvent pb.FDCreateEvent) {
 	if ok {
 		msgInfo := twinAgora.Lang.NewReplaceOneString(405, strconv.Itoa(int(FDCreateEvent.UserId)))
 		twinAgora.MakeError(msgInfo)
-		twinAgora.PushMsg(int(FDCreateEvent.UserId), 500, service.RTC_PUSH_MSG_EVENT_FD_CREATE_REPEAT, msgInfo)
+		twinAgora.PushMsg(int(FDCreateEvent.UserId), 500, RTC_PUSH_MSG_EVENT_FD_CREATE_REPEAT, msgInfo)
 		return
 	}
 
@@ -195,7 +195,7 @@ func (twinAgora *TwinAgora) UserHeartbeat(heartbeat pb.Heartbeat) {
 	if !ok {
 		msgInfo := twinAgora.Lang.NewReplaceOneString(401, strconv.Itoa(int(heartbeat.SourceUid)))
 		twinAgora.MakeError(msgInfo)
-		twinAgora.PushMsg(int(heartbeat.SourceUid), 500, service.RTC_PUSH_MSG_EVENT_UID_NOT_IN_MAP, msgInfo)
+		twinAgora.PushMsg(int(heartbeat.SourceUid), 500, RTC_PUSH_MSG_EVENT_UID_NOT_IN_MAP, msgInfo)
 		return
 	}
 
@@ -212,7 +212,7 @@ func (twinAgora *TwinAgora) UserHeartbeat(heartbeat pb.Heartbeat) {
 		return
 	}
 	//这里是个异常，按说房间已经结束，用户基础信息应该把roomId清掉
-	if myRTCRoom.Status == service.RTC_ROOM_STATUS_END {
+	if myRTCRoom.Status == RTC_ROOM_STATUS_END {
 		//交给后台守护协程处理，roomId会被清空的
 		twinAgora.MakeError(twinAgora.Lang.NewReplaceOneString(510, myRTCUser.RoomId))
 		return
@@ -237,7 +237,7 @@ func (twinAgora *TwinAgora) RoomHeartbeat(heartbeat pb.RoomHeartbeatReq) {
 	myRTCRoom.Uptime = util.GetNowTimeSecondToInt()
 	myRTCUser.RoomHeartbeat = util.GetNowTimeSecondToInt()
 
-	if myRTCRoom.Status != service.RTC_ROOM_STATUS_EXECING {
+	if myRTCRoom.Status != RTC_ROOM_STATUS_EXECING {
 		twinAgora.MakeError(twinAgora.Lang.NewReplaceOneString(511, heartbeat.RoomId))
 		return
 	}
@@ -273,7 +273,7 @@ func (twinAgora *TwinAgora) ConnCloseProcess(rtcUserRTCUser *RTCUser, source str
 		return
 	}
 
-	if myRTCRoom.Status == service.RTC_ROOM_STATUS_END {
+	if myRTCRoom.Status == RTC_ROOM_STATUS_END {
 		//这也是异常情况，池子里虽然有个房间，但是状态是已经结束了，可能后台协程也没有来得及处理
 		twinAgora.MakeError(twinAgora.Lang.NewReplaceOneString(510, rtcUserRTCUser.RoomId))
 		twinAgora.DelUserById(rtcUserRTCUser.Id)
@@ -281,7 +281,7 @@ func (twinAgora *TwinAgora) ConnCloseProcess(rtcUserRTCUser *RTCUser, source str
 	}
 	//目前是1v1视频，只要有一个人拒绝|断线，即结束，这里后期优化一下吧
 	twinAgora.DelUserById(rtcUserRTCUser.Id) //这个得放在上面，可能有人断网后立即重连，并行的话有问题
-	twinAgora.RoomEnd(myRTCRoom.Id, service.RTC_ROOM_END_STATUS_CONN_CLOSE)
+	twinAgora.RoomEnd(myRTCRoom.Id, RTC_ROOM_END_STATUS_CONN_CLOSE)
 
 }
 
@@ -299,7 +299,7 @@ func (twinAgora *TwinAgora) RoomEnd(roomId string, endStatus int) {
 	roomInfo.RWLock.Lock()
 	defer roomInfo.RWLock.Unlock()
 
-	roomInfo.Status = service.RTC_ROOM_STATUS_END
+	roomInfo.Status = RTC_ROOM_STATUS_END
 	roomInfo.EndStatus = endStatus
 
 	twinAgora.StoreHistory(roomInfo)
@@ -332,7 +332,7 @@ func (twinAgora *TwinAgora) RoomEnd(roomId string, endStatus int) {
 
 			//data, _ := proto.Marshal(&peopleLeaveRes)
 			//twinAgora.Op.ServiceBridge.CallByName("Gateway", "SC_PeopleLeave", string(data), "", 0)
-			callGatewayMsg := service.CallGatewayMsg{ServiceName: "TwinAgora", FunName: "SC_PeopleLeave", SourceUid: int32(uid), Data: &peopleLeaveRes, TargetUid: int32(uid)}
+			callGatewayMsg := bridge.CallGatewayMsg{ServiceName: "TwinAgora", FunName: "SC_PeopleLeave", SourceUid: int32(uid), Data: &peopleLeaveRes, TargetUid: int32(uid)}
 			twinAgora.Op.ServiceBridge.CallGateway(callGatewayMsg)
 
 			//twinAgora.RequestServiceAdapter.GatewaySendMsgByUid(int32(uid), "SC_PeopleLeave", peopleLeaveRes)

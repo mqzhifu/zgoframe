@@ -6,7 +6,7 @@ import (
 	"go.uber.org/zap"
 	"strconv"
 	"zgoframe/protobuf/pb"
-	"zgoframe/service"
+	"zgoframe/service/bridge"
 	"zgoframe/util"
 )
 
@@ -26,7 +26,7 @@ type Gateway struct {
 	NetWayOption util.NetWayOption //长连接公共类的初始化参数
 	//MyServiceList *MyServiceList    //快捷访问内部微服务
 	//RequestServiceAdapter *service.RequestServiceAdapter //请求3方服务 适配器
-	ServiceBridge *service.Bridge
+	ServiceBridge *bridge.Bridge
 }
 
 /*
@@ -35,7 +35,7 @@ type Gateway struct {
 2. 长连接代理(重点)
 3. http 代理 http(鸡肋)
 */
-func NewGateway(grpcManager *util.GrpcManager, log *zap.Logger, serviceBridge *service.Bridge) *Gateway {
+func NewGateway(grpcManager *util.GrpcManager, log *zap.Logger, serviceBridge *bridge.Bridge) *Gateway {
 	//func NewGateway(grpcManager *util.GrpcManager, log *zap.Logger, requestServiceAdapter *service.RequestServiceAdapter) *Gateway {
 	gateway := new(Gateway)
 	gateway.GrpcManager = grpcManager
@@ -113,7 +113,7 @@ func (gateway *Gateway) BroadcastService(funcName string, msg pb.Msg) {
 	msg.ServiceId = int32(serviceDesc.ServiceId)
 	msg.FuncId = int32(serviceDesc.FuncId)
 	msg.SidFid = int32(gateway.NetWayOption.ProtoMap.GetIdBySidFid(serviceDesc.ServiceId, serviceDesc.FuncId))
-	gateway.ServiceBridge.Call(service.CallMsg{Msg: msg})
+	gateway.ServiceBridge.Call(bridge.CallMsg{Msg: msg})
 
 }
 

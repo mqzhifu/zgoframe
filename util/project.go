@@ -32,15 +32,16 @@ func NewProjectManager(gorm *gorm.DB) (*ProjectManager, error) {
 	return projectManager, err
 }
 
-//初始化，会从MYSQL中读取数据，而没有监听MYSQL数据的变化，可重新再加载一次
-func (projectManager *ProjectManager) DataReload() {
-	projectManager.initAppPool()
+// 初始化，会从MYSQL中读取数据，而没有监听MYSQL数据的变化，可重新再加载一次
+func (projectManager *ProjectManager) DataReload() error {
+	return projectManager.initAppPool()
 }
 
 func (projectManager *ProjectManager) initAppPool() error {
 	return projectManager.GetDataFromDb()
 }
 
+// 清空 - 内存缓存
 func (projectManager *ProjectManager) cleanPool() {
 	projectManager.Pool = make(map[int]model.Project)
 }
@@ -49,6 +50,7 @@ func (projectManager *ProjectManager) GetDataFromDb() error {
 	projectManager.cleanPool() //清空原数据，重新从DB中读取
 	db := projectManager.Gorm.Model(&model.Project{})
 	var projectList []model.Project
+	//读取DB中，所有状态为正常的 project 记录
 	err := db.Where(" status = ? ", model.PROJECT_STATUS_OPEN).Find(&projectList).Error
 	if err != nil {
 		return err
@@ -56,7 +58,7 @@ func (projectManager *ProjectManager) GetDataFromDb() error {
 	if len(projectList) == 0 {
 		return errors.New("app list empty!!!")
 	}
-
+	//将DB数据  追回到  内存中
 	for _, v := range projectList {
 		projectManager.AddOne(v)
 	}

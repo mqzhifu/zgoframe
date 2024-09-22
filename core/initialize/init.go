@@ -9,7 +9,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
-	"os"
 	"strings"
 	"zgoframe/core"
 	"zgoframe/core/global"
@@ -43,7 +42,10 @@ func (initialize *Initialize) Start() error {
 	//} else {
 	//	global.V.Util.StaticFileSystem = util.NewStaticFileSystem(global.V.Base.StaticFileSys, global.MainCmdParameter.BuildStatic)
 	//}
-	createLogByCategory(prefix) //创建 main 日志-类
+	err = createLogByCategory(prefix) //创建 main 和 http 日志-类
+	if err != nil {
+		return err
+	}
 	//邮件与短信优先初始化，是一但有报警，就可以直接发邮件/短信
 
 	//邮件模块
@@ -77,7 +79,7 @@ func (initialize *Initialize) Start() error {
 		typedClient, err := elasticsearch.NewTypedClient(cfg)
 		if err != nil {
 			fmt.Printf("elasticsearch.NewTypedClient failed, err:%v\n", err)
-			os.Exit(999)
+			return err
 		}
 		global.V.Base.ES8TypedClient = typedClient
 
@@ -85,16 +87,12 @@ func (initialize *Initialize) Start() error {
 		client, err := elasticsearch.NewClient(cfg)
 		if err != nil {
 			fmt.Printf("elasticsearch.NewTypedClient failed, err:%v\n", err)
-			os.Exit(999)
+			return err
 		}
 		global.V.Base.ES8Client = client
 
 	}
 
-	if err != nil {
-		// Handle error
-		panic(err)
-	}
 	//短信模块
 	if global.C.AliSms.Status == core.GLOBAL_CONFIG_MODEL_STATUS_OPEN {
 		op := util.AliSmsOp{
@@ -125,17 +123,17 @@ func (initialize *Initialize) Start() error {
 	if len(global.V.Base.GormList) <= 0 {
 		return errors.New("至少有一个数据库需要被连接")
 	}
+	//默认取第一个DB配置
 	global.V.Base.Gorm = global.V.Base.GormList[0]
-	//DB 快捷变量
-	//model.Db = global.V.Base.Gorm
 	//初始化APP信息，所有项目都需要有AppId或serviceId，因为要做验证，同时目录名也包含在里面
 	err = InitProject(prefix)
 	if err != nil {
 		global.V.Base.Zap.Error(prefix + err.Error())
 		return err
 	}
-	//gorm 和 project 初始化(成功)完成后，给main日志增加公共输出项：projectId
+	//gorm 和 project 初始化(成功)完成后，给日志:增加公共输出项：projectId
 	global.V.Base.Zap = LoggerWithProject(global.V.Base.Zap, global.V.Util.Project.Id)
+	global.V.Base.HttpZap = LoggerWithProject(global.V.Base.HttpZap, global.V.Util.Project.Id)
 	//项目目录名，必须跟PROJECT里的key相同(key由驼峰转为下划线模式)
 	_, err = InitPath(global.MainEnv.RootDir)
 	if err != nil {
@@ -441,7 +439,7 @@ func GetNewServiceDiscovery() (serviceDiscovery *util.ServiceDiscovery, err erro
 	return serviceDiscovery, err
 }
 
-func createLogByCategory(logPrefix string) {
+func createLogByCategory(logPrefix string) error {
 	//创建main日志类
 	configZap := global.C.Zap
 
@@ -450,7 +448,7 @@ func createLogByCategory(logPrefix string) {
 	//mainZap, configZapReturn, err := GetNewZapLog(configZap)
 	mainZap, _, err := GetNewZapLog(configZap)
 	if err != nil {
-		util.MyPrint(logPrefix+" GetNewZapLog err:", err)
+		return errors.New(logPrefix + " GetNewZapLog err:" + err.Error())
 	}
 	global.V.Base.Zap = mainZap
 
@@ -463,6 +461,7 @@ func createLogByCategory(logPrefix string) {
 	httpZap, _, err := GetNewZapLog(configZap)
 	if err != nil {
 		global.V.Base.Zap.Error(logPrefix + " GetNewZapLog err:" + err.Error())
+		return errors.New(logPrefix + " GetNewZapLog err:" + err.Error())
 	}
 	global.V.Base.HttpZap = httpZap
 }

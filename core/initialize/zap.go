@@ -53,7 +53,8 @@ func GetNewZapLog(configZap global.Zap) (logger *zap.Logger, configZapReturn glo
 
 		//以下级别日志，均要报警
 		if entry.Level == zap.ErrorLevel || entry.Level == zap.PanicLevel || entry.Level == zap.FatalLevel || entry.Level == zap.DPanicLevel {
-			InitAlert(0, entry.Message, entry.Level.String())
+			global.V.Util.AlertPush.Push(0, entry.Message, entry.Level.String())
+			//InitAlert(0, entry.Message, entry.Level.String())
 			//alert.Push(0, entry.Level.String(), entry.Message)
 		}
 		return nil
@@ -88,7 +89,7 @@ func GetNewZapLog(configZap global.Zap) (logger *zap.Logger, configZapReturn glo
 	return logger, configZapReturn, nil
 }
 
-//所有的日志都给加一个公共的项：projectId，方便给日志分类规档
+// 所有的日志都给加一个公共的项：projectId，方便给日志分类规档
 func LoggerWithProject(logger *zap.Logger, projectId int) *zap.Logger {
 	logger = logger.With(zap.Int("projectId", projectId))
 	return logger
@@ -174,6 +175,35 @@ func GetWriteSyncer(configZap *global.Zap) (zapcore.WriteSyncer, error) {
 
 	return zc, err
 	//return zapcore.AddSync(fileWriter), err
+}
+
+func createLogByCategory(logPrefix string) error {
+	//创建main日志类
+	configZap := global.C.Zap
+
+	configZap.FileName = "main"
+	configZap.ModuleName = "main"
+	//mainZap, configZapReturn, err := GetNewZapLog(configZap)
+	mainZap, _, err := GetNewZapLog(configZap)
+	if err != nil {
+		return errors.New(logPrefix + " GetNewZapLog err:" + err.Error())
+	}
+	global.V.Base.Zap = mainZap
+
+	//这个变量，主要是给gorm做日志使用，也就是DB的日志，最终也交由zap来接管
+	util.LoggerZap = global.V.Base.Zap
+
+	configZap.FileName = "http"
+	configZap.ModuleName = "http"
+	//Http log zap 这里单独再开个zap 实例，用于专门记录http 请求
+	httpZap, _, err := GetNewZapLog(configZap)
+	if err != nil {
+		global.V.Base.Zap.Error(logPrefix + " GetNewZapLog err:" + err.Error())
+		return errors.New(logPrefix + " GetNewZapLog err:" + err.Error())
+	}
+	global.V.Base.HttpZap = httpZap
+
+	return nil
 }
 
 //// getEncoderCore 获取Encoder的zapcore.Core

@@ -105,7 +105,6 @@ func main() {
 	cmdParameter := processCmdParameter(prefix)
 	fmt.Println("cmdParameter")
 	util.PrintStruct(cmdParameter, ":")
-	// util.MyPrint(prefix+" cmd parameter:", cmdParameter)
 	// 获取当前脚本执行用户信息
 	imUser, _ := user.Current()
 	fmt.Println(prefix + "exec script  <user info> , name: " + imUser.Name + " uid: " + imUser.Uid + " , gid :" + imUser.Gid + " ,homeDir:" + imUser.HomeDir)
@@ -114,7 +113,7 @@ func main() {
 	fmt.Println(prefix + "exec script pwd:" + pwd)
 	// 开始初始化模块
 	// main主协程的 context
-	fmt.Println(prefix + "create cancel context")
+	fmt.Println(prefix + "create <cancel context>")
 	mainCxt, mainCancelFunc := context.WithCancel(context.Background())
 	mainEnvironment := global.MainEnvironment{
 		RootDir:         pwd,
@@ -180,7 +179,7 @@ func processCmdParameter(prefix string) global.CmdParameter {
 	// 检测环境变量值ENV是否正常
 	if !util.CheckEnvExist(*env) {
 		msg := prefix + " argv env , is err :"
-		util.MyPrint(msg, envList)
+		fmt.Println(msg, envList)
 		panic(msg + strconv.Itoa(*env))
 	}
 

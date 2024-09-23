@@ -7,8 +7,6 @@ import (
 	"github.com/elastic/go-elasticsearch/v8"
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
 	"strings"
 	"zgoframe/core"
 	"zgoframe/core/global"
@@ -30,7 +28,7 @@ func (initialize *Initialize) Start() error {
 	//开始：读取配置文件
 	myViper, config, err := GetNewViper(prefix)
 	if err != nil {
-		util.MyPrint(prefix+"GetNewViper err:", err)
+		fmt.Println(prefix+"GetNewViper err:", err)
 		return err
 	}
 	global.V.Base.Vip = myViper //全局变量管理者
@@ -65,34 +63,6 @@ func (initialize *Initialize) Start() error {
 		}
 	}
 
-	if global.C.ElasticSearch.Status == core.GLOBAL_CONFIG_MODEL_STATUS_OPEN {
-		// ES 配置
-		cfg := elasticsearch.Config{
-			Addresses: []string{
-				"http://" + global.C.ElasticSearch.Dns,
-			},
-			Username: global.C.ElasticSearch.Username,
-			Password: global.C.ElasticSearch.Password,
-		}
-
-		// 创建客户端连接
-		typedClient, err := elasticsearch.NewTypedClient(cfg)
-		if err != nil {
-			fmt.Printf("elasticsearch.NewTypedClient failed, err:%v\n", err)
-			return err
-		}
-		global.V.Base.ES8TypedClient = typedClient
-
-		// 创建客户端连接
-		client, err := elasticsearch.NewClient(cfg)
-		if err != nil {
-			fmt.Printf("elasticsearch.NewTypedClient failed, err:%v\n", err)
-			return err
-		}
-		global.V.Base.ES8Client = client
-
-	}
-
 	//短信模块
 	if global.C.AliSms.Status == core.GLOBAL_CONFIG_MODEL_STATUS_OPEN {
 		op := util.AliSmsOp{
@@ -125,7 +95,10 @@ func (initialize *Initialize) Start() error {
 	}
 	//默认取第一个DB配置
 	global.V.Base.Gorm = global.V.Base.GormList[0]
-	//初始化APP信息，所有项目都需要有AppId或serviceId，因为要做验证，同时目录名也包含在里面
+	//初始化APP信息，所有项目都需要有AppId或serviceId.因为:
+	//1. header 要做验证
+	//2. CICD 目录名也包含在里面
+	//3. 日志里要输出
 	err = InitProject(prefix)
 	if err != nil {
 		global.V.Base.Zap.Error(prefix + err.Error())
@@ -135,13 +108,12 @@ func (initialize *Initialize) Start() error {
 	global.V.Base.Zap = LoggerWithProject(global.V.Base.Zap, global.V.Util.Project.Id)
 	global.V.Base.HttpZap = LoggerWithProject(global.V.Base.HttpZap, global.V.Util.Project.Id)
 	//项目目录名，必须跟PROJECT里的key相同(key由驼峰转为下划线模式)
-	_, err = InitPath(global.MainEnv.RootDir)
+	global.MainEnv.RootDirName, err = InitPath(global.MainEnv.RootDir)
 	if err != nil {
 		global.V.Base.Zap.Error(prefix + err.Error())
 		return err
 	}
 	//项目的根目录
-	//global.V.Base.RootDir = initialize.Option.RootDir
 	global.V.Base.Zap.Info(prefix + "global.V.Base.RootDir: " + global.MainEnv.RootDir)
 	//错误码 文案 管理（还未用起来，后期优化）
 	errorMsgFileContentDir := global.C.Http.StaticPath + "/" + global.C.System.ErrorMsgFile
@@ -183,13 +155,17 @@ func (initialize *Initialize) Start() error {
 		global.V.Base.HttpZap = LoggerWithProject(global.V.Base.HttpZap, global.V.Util.Project.Id)
 	}
 	//etcd
-	//if global.C.Etcd.Status == core.GLOBAL_CONFIG_MODEL_STATUS_OPEN {
-	//	global.V.Base.Etcd, err = GetNewEtcd(global.MainCmdParameter.Env, configZapReturn, prefix)
-	//	if err != nil {
-	//		global.V.Base.Zap.Error(prefix + "GetNewEtcd err:" + err.Error())
-	//		return err
-	//	}
-	//}
+	if global.C.Etcd.Status == core.GLOBAL_CONFIG_MODEL_STATUS_OPEN {
+		configZapReturn := global.Zap{
+			LevelInt8: 16,
+			FileName:  "etcd.zap",
+		}
+		global.V.Util.Etcd, err = GetNewEtcd(global.MainCmdParameter.Env, configZapReturn, prefix)
+		if err != nil {
+			global.V.Base.Zap.Error(prefix + "GetNewEtcd err:" + err.Error())
+			return err
+		}
+	}
 	//服务管理器，这里跟project manager 有点差不多，不同的只是：project是DB中所有记录,service是type=N的情况
 	//ps:之所以单独加一个模块，也是因为service有些特殊的结构变量，与project的结构变量不太一样
 	global.V.Util.ServiceManager, _ = util.NewServiceManager(global.V.Base.Gorm)
@@ -255,14 +231,11 @@ func (initialize *Initialize) Start() error {
 		//}
 		protobufStaticDir := global.C.Http.StaticPath + "/proto/"
 		fileContentArr, _ = global.V.Util.StaticFileSystem.GetStaticFileContentLine(protobufStaticDir + global.C.Protobuf.IdMapFileName)
-		//util.MyPrint(fileContentArr)
 		protobufStaticFullDir := global.MainEnv.RootDir + "/" + protobufStaticDir
 		global.V.Util.ProtoMap, err = util.NewProtoMap(global.V.Base.Zap, protobufStaticFullDir, global.C.Protobuf.IdMapFileName, global.V.Util.ProjectMng, fileContentArr)
 		if err != nil {
-			util.MyPrint("GetNewViper err:", err)
 			return err
 		}
-		//util.ExitPrint(global.V.Base.ProtoMap.ServiceFuncMap)
 	}
 	//grpc
 	if global.C.Grpc.Status == core.GLOBAL_CONFIG_MODEL_STATUS_OPEN {
@@ -276,6 +249,34 @@ func (initialize *Initialize) Start() error {
 			grpcManagerOption.ServiceDiscovery = global.V.Util.ServiceDiscovery
 		}
 		global.V.Util.GrpcManager, _ = util.NewGrpcManager(grpcManagerOption)
+	}
+
+	if global.C.ElasticSearch.Status == core.GLOBAL_CONFIG_MODEL_STATUS_OPEN {
+		// ES 配置
+		cfg := elasticsearch.Config{
+			Addresses: []string{
+				"http://" + global.C.ElasticSearch.Dns,
+			},
+			Username: global.C.ElasticSearch.Username,
+			Password: global.C.ElasticSearch.Password,
+		}
+
+		// 创建客户端连接
+		typedClient, err := elasticsearch.NewTypedClient(cfg)
+		if err != nil {
+			fmt.Printf("elasticsearch.NewTypedClient failed, err:%v\n", err)
+			return err
+		}
+		global.V.Base.ES8TypedClient = typedClient
+
+		// 创建客户端连接
+		client, err := elasticsearch.NewClient(cfg)
+		if err != nil {
+			fmt.Printf("elasticsearch.NewTypedClient failed, err:%v\n", err)
+			return err
+		}
+		global.V.Base.ES8Client = client
+
 	}
 
 	//预/报警,这个是真正的直接报警，如：邮件 SMS 等，不是推送3方
@@ -296,23 +297,7 @@ func (initialize *Initialize) Start() error {
 		global.V.Util.AliOss = util.NewAliOss(op)
 	}
 
-	//创建一全二叉树
-	//global.V.Util.BinaryTree = container.NewBinaryTree(100, 1, 1)
-	//global.V.Base.TrieTree = container.NewTrieTree()
-	//var netWayOption util.NetWayOption
-	//if global.C.Gateway.Status == global.GLOBAL_CONFIG_MODEL_STATUS_OPEN {
-	//	netWayOption = InitGateway()
-	//	netWay, err := util.NewNetWay(netWayOption)
-	//	if err != nil {
-	//		util.MyPrint("int Gateway err:", err)
-	//		return err
-	//	}
-	//	global.V.Base.NetWay = netWay
-	//}
 	InitFileManager()
-	//global.V.Service = global.NewMyService()
-
-	//global.C.System.ENV = initialize.Option.Env
 	//启动http
 	if global.C.Http.Status == core.GLOBAL_CONFIG_MODEL_STATUS_OPEN {
 		router.RegGinHttpRoute() //这里注册项目自己的http 路由策略
@@ -331,11 +316,6 @@ func (initialize *Initialize) Start() error {
 	}
 
 	return nil
-}
-
-func InitAlert(ProjectId int, Content string, Level string) {
-	//global.V.Base.MyService.Alert.LogSend(ProjectId, Content, Level)
-	global.V.Util.AlertPush.Push(ProjectId, Content, Level)
 }
 
 func (initialize *Initialize) OutHttpGetBaseInfo() string {
@@ -378,52 +358,15 @@ func (initialize *Initialize) Quit() {
 func InitPath(rootDir string) (rootDirName string, err error) {
 	pwdArr := strings.Split(rootDir, "/") //切割路径字符串
 	rootDirName = pwdArr[len(pwdArr)-1]   //获取路径数组最后一个元素：当前路径的文件夹名
-	//option.RootDirName = rootDirName
-	//global.V.Base.RootDir = option.RootDir
 	//这里要求，DB中项目记录里：name 与项目目录名必须一致，防止有人错用/盗用projectId
 	projectNameByte := util.CamelToSnake2([]byte(global.V.Util.Project.Name))
 	projectName := util.StrFirstToLower(string(projectNameByte))
 	if rootDirName != projectName {
 		//这里与CICD部署的时候冲突，先注释掉，回头想想怎么解决掉
-		//return rootDirName, errors.New("mainDirName != app name , rootDirName : " + rootDirName + " , ProjectName:" + projectName)
+		return rootDirName, errors.New("mainDirName != app name , rootDirName : " + rootDirName + " , ProjectName:" + projectName)
 	}
 
 	return rootDirName, nil
-}
-
-func GetNewEtcd(env int, configZapReturn global.Zap, prefix string) (myEtcd *util.MyEtcd, err error) {
-	//这个是给3方库：clientv3使用的
-	//有点操蛋，我回头想想如何优化掉
-	zl := zap.Config{
-		Level:       zap.NewAtomicLevelAt(zapcore.Level(configZapReturn.LevelInt8)),
-		Development: false,
-		Sampling: &zap.SamplingConfig{
-			Initial:    100,
-			Thereafter: 100,
-		},
-		Encoding:      "json",
-		EncoderConfig: zap.NewProductionEncoderConfig(),
-		//OutputPaths:      []string{"stderr"},
-		OutputPaths:      []string{"stdout", configZapReturn.FileName},
-		ErrorOutputPaths: []string{"stderr"},
-	}
-
-	option := util.EtcdOption{
-		ProjectName: global.V.Util.Project.Name,
-		ProjectENV:  env,
-		//ProjectKey		: global.V.Base.Project.Key,
-		FindEtcdUrl: global.C.Etcd.Url,
-		Username:    global.C.Etcd.Username,
-		Password:    global.C.Etcd.Password,
-		Ip:          global.C.Etcd.Ip,
-		Port:        global.C.Etcd.Port,
-		Log:         global.V.Base.Zap,
-		ZapConfig:   zl,
-		PrintPrefix: prefix,
-	}
-	myEtcd, err = util.NewMyEtcdSdk(option)
-	//util.ExitPrint(err)
-	return myEtcd, err
 }
 
 func GetNewServiceDiscovery() (serviceDiscovery *util.ServiceDiscovery, err error) {
@@ -437,33 +380,4 @@ func GetNewServiceDiscovery() (serviceDiscovery *util.ServiceDiscovery, err erro
 	}
 	serviceDiscovery, err = util.NewServiceDiscovery(serviceOption)
 	return serviceDiscovery, err
-}
-
-func createLogByCategory(logPrefix string) error {
-	//创建main日志类
-	configZap := global.C.Zap
-
-	configZap.FileName = "main"
-	configZap.ModuleName = "main"
-	//mainZap, configZapReturn, err := GetNewZapLog(configZap)
-	mainZap, _, err := GetNewZapLog(configZap)
-	if err != nil {
-		return errors.New(logPrefix + " GetNewZapLog err:" + err.Error())
-	}
-	global.V.Base.Zap = mainZap
-
-	//这个变量，主要是给gorm做日志使用，也就是DB的日志，最终也交由zap来接管
-	util.LoggerZap = global.V.Base.Zap
-
-	configZap.FileName = "http"
-	configZap.ModuleName = "http"
-	//Http log zap 这里单独再开个zap 实例，用于专门记录http 请求
-	httpZap, _, err := GetNewZapLog(configZap)
-	if err != nil {
-		global.V.Base.Zap.Error(logPrefix + " GetNewZapLog err:" + err.Error())
-		return errors.New(logPrefix + " GetNewZapLog err:" + err.Error())
-	}
-	global.V.Base.HttpZap = httpZap
-
-	return nil
 }

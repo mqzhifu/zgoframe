@@ -25,7 +25,7 @@ type Base struct {
 	Gorm           *gorm.DB   // 多数据库模式下，有一个库肯定会被经常访问，这里加一个快捷链接
 	GormList       []*gorm.DB // 所有数据库，连接成功后的列表
 	HttpServer     *http.Server
-	StaticFileSys  embed.FS // 静态文件
+	StaticFileSys  embed.FS // embed.FS 静态文件
 	ES8TypedClient *elasticsearch.TypedClient
 	ES8Client      *elasticsearch.Client
 }

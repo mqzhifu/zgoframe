@@ -464,4 +464,6 @@ func createLogByCategory(logPrefix string) error {
 		return errors.New(logPrefix + " GetNewZapLog err:" + err.Error())
 	}
 	global.V.Base.HttpZap = httpZap
+
+	return nil
 }

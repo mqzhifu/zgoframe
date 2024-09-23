@@ -35,11 +35,7 @@ func (initialize *Initialize) Start() error {
 	global.C = config           //全局变量
 	//--- read config file end -----
 
-	//if global.MainCmdParameter.BuildStatic == "on" { //没启用，回头处理
 	global.V.Util.StaticFileSystem = util.NewStaticFileSystem(global.V.Base.StaticFileSys, global.MainCmdParameter.BuildStatic)
-	//} else {
-	//	global.V.Util.StaticFileSystem = util.NewStaticFileSystem(global.V.Base.StaticFileSys, global.MainCmdParameter.BuildStatic)
-	//}
 	err = createLogByCategory(prefix) //创建 main 和 http 日志-类
 	if err != nil {
 		return err
@@ -213,22 +209,6 @@ func (initialize *Initialize) Start() error {
 	//将rpc service 中的方法，转化成ID（由PHP生成 的ID map）
 	if global.C.Protobuf.Status == core.GLOBAL_CONFIG_MODEL_STATUS_OPEN {
 		var fileContentArr []string
-		//if global.MainCmdParameter.BuildStatic == "on" {
-		//	content, err := global.V.Base.StaticFileSys.ReadFile("static/proto/" + global.C.Protobuf.IdMapFileName)
-		//	if err != nil {
-		//		util.MyPrint("ReadFile err:", err)
-		//		return err
-		//	}
-		//	fileContentArr = strings.Split(string(content), "\n")
-		//} else {
-		//	//dir := global.MainEnv.RootDir + "/" + global.C.Protobuf.BasePath + "/" + global.C.Protobuf.PbServicePath
-		//	pathFile := global.MainEnv.RootDir + "/" + global.C.Http.StaticPath + "/proto/" + global.C.Protobuf.IdMapFileName
-		//	fileContentArr, err = util.ReadLine(pathFile)
-		//	if err != nil {
-		//		util.MyPrint("initActionMap ReadLine err :" + err.Error())
-		//		return err
-		//	}
-		//}
 		protobufStaticDir := global.C.Http.StaticPath + "/proto/"
 		fileContentArr, _ = global.V.Util.StaticFileSystem.GetStaticFileContentLine(protobufStaticDir + global.C.Protobuf.IdMapFileName)
 		protobufStaticFullDir := global.MainEnv.RootDir + "/" + protobufStaticDir

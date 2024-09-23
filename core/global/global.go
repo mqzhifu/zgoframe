@@ -98,7 +98,7 @@ type CmdParameter struct {
 	EtcdUrl          string `json:"etcd_url"`           // etcd get url
 	Debug            int    `json:"debug"`              // debug 模式
 	TestFlag         string `json:"test_flag"`          // 是否为测试状态
-	BuildStatic      string `json:"build_static"`       // 编译时：把静态文件一并打包进二进制文件中
+	BuildStatic      string `json:"build_static"`       // 编译时：把静态文件一并打包进二进制文件中，牵扯到：读文件时，是从编译包里读还是从硬盘文件中读。默认为关闭，启动进程时 指令行操作
 }
 
 func NewContainer() *Container {

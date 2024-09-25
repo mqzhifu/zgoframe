@@ -45,7 +45,7 @@ func NewMyService() *MyService {
 	var err error
 	myService := new(MyService)
 	// 创建一个 请求3方服务 的适配器，服务之间的请求/调用
-	// myService.RequestServiceAdapter = service.NewRequestServiceAdapter(global.V.Base.ServiceDiscovery, global.V.Base.GrpcManager, service.REQ_SERVICE_METHOD_INNER, C.System.ProjectId, global.V.Base.Zap)
+	myService.RequestServiceAdapter = bridge.NewRequestServiceAdapter(global.V.Util.ServiceDiscovery, global.V.Util.GrpcManager, bridge.REQ_SERVICE_METHOD_NATIVE, global.C.System.ProjectId, global.V.Base.Zap)
 	ServiceBridgeOp := bridge.BridgeOption{
 		ProtoMap:         global.V.Util.ProtoMap,
 		ProjectId:        global.V.Util.Project.Id,
@@ -152,7 +152,7 @@ func NewMyService() *MyService {
 			GrpcManager:         global.V.Util.GrpcManager,
 		}
 
-		gatewayInc := gateway.NewGateway(netWayOption)
+		gatewayInc := gateway.NewGateway(netWayOption, myService.ServiceBridge, myService.RequestServiceAdapter)
 		myService.Gateway = gatewayInc
 
 		_, err := gatewayInc.StartSocket()

@@ -11,11 +11,10 @@ import (
 )
 
 type Gateway struct {
-	GrpcManager  *util.GrpcManager //通过GRPC反射代理其它微服务
-	Log          *zap.Logger       //日志
-	Netway       *util.NetWay      //长连接公共类
-	NetWayOption util.NetWayOption //长连接公共类的初始化参数
-	//MyServiceList *MyServiceList    //快捷访问内部微服务
+	GrpcManager           *util.GrpcManager             //通过GRPC反射代理其它微服务
+	Log                   *zap.Logger                   //日志
+	Netway                *util.NetWay                  //长连接公共类
+	NetWayOption          util.NetWayOption             //长连接公共类的初始化参数
 	RequestServiceAdapter *bridge.RequestServiceAdapter //请求3方服务 适配器
 	ServiceBridge         *bridge.Bridge
 }
@@ -26,12 +25,14 @@ type Gateway struct {
 2. 长连接代理(重点)
 3. http 代理 http(鸡肋)
 */
-func NewGateway(netWayOption util.NetWayOption) *Gateway {
+func NewGateway(netWayOption util.NetWayOption, ServiceBridge *bridge.Bridge, RequestServiceAdapter *bridge.RequestServiceAdapter) *Gateway {
+
 	gateway := new(Gateway)
 	gateway.NetWayOption = netWayOption
 	gateway.GrpcManager = netWayOption.GrpcManager
 	gateway.Log = netWayOption.Log
-
+	gateway.ServiceBridge = ServiceBridge
+	gateway.RequestServiceAdapter = RequestServiceAdapter
 	go gateway.ListeningBridgeMsg()
 
 	return gateway

@@ -11,6 +11,7 @@ import (
 	"zgoframe/core"
 	"zgoframe/core/global"
 	"zgoframe/http/router"
+	"zgoframe/service"
 	"zgoframe/util"
 )
 
@@ -283,6 +284,8 @@ func (initialize *Initialize) Start() error {
 		router.RegGinHttpRoute() //这里注册项目自己的http 路由策略
 		StartHttpGin()
 	}
+
+	service.NewMyService()
 
 	//_ ,cancelFunc := context.WithCancel(option.RootCtx)
 	//进程通信相关

@@ -10,11 +10,6 @@ import (
 	"zgoframe/util"
 )
 
-const (
-	BRIDGE_SLEEP_TIME = 5     //内部调用时，每个服务要监听 管道里的消息，睡眠时间
-	GATEWAY_ADMIN_UID = 99999 //后端反向给前端推送消息时，最好加上一个来源UID
-)
-
 type NativeServiceList struct {
 	GameMatch chan pb.Msg
 	FrameSync chan pb.Msg

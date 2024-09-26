@@ -11,7 +11,6 @@ import (
 	"zgoframe/core"
 	"zgoframe/core/global"
 	"zgoframe/http/router"
-	"zgoframe/service"
 	"zgoframe/util"
 )
 
@@ -285,7 +284,7 @@ func (initialize *Initialize) Start() error {
 		StartHttpGin()
 	}
 
-	service.NewMyService()
+	//service.NewMyService()//v1.api 里面进行初始化，也就是谁用：谁就初始化，避免循环引包
 
 	//_ ,cancelFunc := context.WithCancel(option.RootCtx)
 	//进程通信相关

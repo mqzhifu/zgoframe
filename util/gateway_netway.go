@@ -55,9 +55,9 @@ type NetWay struct {
 	//CancelCtx         	context.Context
 	//CancelFunc			func()
 	//CloseChan       	chan int32
-	Status int
-	Prefix string
 	//MetricsPool     []MyMetricsPoolItem
+	Status          int
+	Prefix          string
 	ProtocolManager *ProtocolManager //协议管理器
 	ConnManager     *ConnManager     //连接管理 器
 	Metrics         *MyMetrics       //metric管理 器

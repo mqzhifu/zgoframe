@@ -260,7 +260,7 @@ CREATE TABLE `game_match_rule` (
   `off_line_wait_time` int NOT NULL DEFAULT '0' COMMENT '某玩家掉线等待时长(秒)',
   PRIMARY KEY (`id`),
   KEY `deleted_at` (`deleted_at`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb3 COMMENT='游戏匹配';
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb3 COMMENT='游戏匹配';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --

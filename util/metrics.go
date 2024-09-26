@@ -95,10 +95,10 @@ func (myMetrics *MyMetrics) CreateGauge(name string, help string) error {
 	//labels :=  make(map[string]string)
 	//labels["label_create_type"] = "CreateGauge"
 	gauge := prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: name,
 		//Namespace: myMetrics.Option.NameSpace,
-		Help: myMetrics.Option.DescPrefix + help,
 		//ConstLabels:labels,
+		Name: name,
+		Help: myMetrics.Option.DescPrefix + help,
 	})
 
 	//myMetrics.Option.Log.Info("metrics: CreateGauge "+ name)
@@ -114,7 +114,7 @@ func (myMetrics *MyMetrics) CreateGauge(name string, help string) error {
 	return nil
 }
 
-//Gauge  start
+// Gauge  start
 func (myMetrics *MyMetrics) GaugeSet(name string, value float64) error {
 	if !myMetrics.GroupNameHasExist(name) {
 		return errors.New("GroupNameHasExist:" + name)
@@ -161,7 +161,7 @@ func (myMetrics *MyMetrics) GaugeAdd(name string, value float64) error {
 
 //Gauge end
 
-//Counter start
+// Counter start
 func (myMetrics *MyMetrics) CreateCounter(name string, help string) error {
 	if myMetrics.GroupNameHasExist(name) {
 		return errors.New("CreateCounter GroupNameHasExist:" + name)

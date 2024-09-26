@@ -143,6 +143,9 @@
             async:false,
             headers: {
                 "X-Token":playerList[GetPlayerNameByIndex(1)].token,
+                "X-Source-Type": header_X_Source_Type,
+                "X-Project-Id": header_X_Project_Id,
+                "X-Access": header_X_Access,
             },
             url:URI_MAP["rule"] +"/"+ RuleId ,
             success: function(data){
@@ -163,6 +166,9 @@
             async:false,
             headers: {
                 "X-Token":playerList[GetPlayerNameByIndex(1)].token,
+                "X-Source-Type": header_X_Source_Type,
+                "X-Project-Id": header_X_Project_Id,
+                "X-Access": header_X_Access,
             },
             url:URI_MAP["gateway_config"],
             success: function(data){
@@ -196,6 +202,9 @@
             type: "GET",
             headers: {
                 "X-Token":playerList[GetPlayerNameByIndex(1)].token,
+                "X-Source-Type": header_X_Source_Type,
+                "X-Project-Id": header_X_Project_Id,
+                "X-Access": header_X_Access,
             },
             url:URI_MAP["gateway_action_map"],
             success: function(dataActionMap){

@@ -400,7 +400,6 @@ func Login(c *gin.Context) {
 		// httpresponse.FailWithMessage(checkLoginFailedCntErr.Error(), c)
 		// return
 	}
-	// util.MyPrint("redis cnt :", cnt, err)
 	// 先从DB中做比对
 	U := &model.User{Username: L.Username, Password: L.Password}
 	err, user := apiServices().User.Login(U)

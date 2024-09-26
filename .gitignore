@@ -4,6 +4,7 @@ latest_log*
 config/config.toml
 ./zgoframe
 node_modules
+package.json
 package-lock.json
 vendor
 .DS_Store
@@ -11,6 +12,3 @@ desktop.ini
 docs
 static/upload
 static/download
-package.json
-latest_log_http
-latest_log_main

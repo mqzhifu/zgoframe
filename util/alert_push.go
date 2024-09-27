@@ -4,12 +4,13 @@ package util
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 	"time"
 )
 
-//接收报警服务
+// 接收报警服务
 type AlertPush struct {
 	Ip   string //  IP
 	Port string // 端口
@@ -101,7 +102,7 @@ func (alertPush *AlertPush) Push(projectId int, levelString string, content stri
 	req, err := http.NewRequest("POST", alertPush.Url, bytes.NewReader(str))
 	// req.Header.Set("X-Custom-Header", "myvalue")
 
-	MyPrint("alert push ,url:", alertPush.Url)
+	fmt.Println("alert push ,url:", alertPush.Url)
 	MyPrint("alert push ,content:", string(str))
 	//MyPrint("json err:",err , " http request err:",err)
 

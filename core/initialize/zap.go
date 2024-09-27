@@ -2,6 +2,7 @@ package initialize
 
 import (
 	"errors"
+	"fmt"
 	zaprotatelogs "github.com/lestrrat-go/file-rotatelogs"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -149,7 +150,7 @@ func GetWriteSyncer(configZap *global.Zap) (zapcore.WriteSyncer, error) {
 	}
 
 	configZap.FileName = configZap.SoftLinkFileName + "_" + configZap.FileName
-	util.MyPrint("initialize , GetNewZapLog , ModuleName:", configZap.ModuleName, " FileName: ", configZap.FileName, " LogInConsole:", configZap.LogInConsole)
+	fmt.Println("initialize , GetNewZapLog , ModuleName:", configZap.ModuleName, " FileName: ", configZap.FileName, " LogInConsole:", configZap.LogInConsole)
 
 	_, err := util.PathExists(configZap.BaseDir)
 	if err != nil { // 判断是否有Director文件夹

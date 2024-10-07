@@ -192,7 +192,6 @@ func (imageSlice *ImageSlice) DrawGrid(everyNodeWidthList []int, everyNodeHeight
 		MyPrint(k, "x1:", v.X1, " y1:", v.Y1, "x2:", v.X2, " y2:", v.Y2)
 	}
 
-	//ExitPrint(333)
 	return nodeList
 }
 
@@ -255,7 +254,6 @@ func (imageSlice *ImageSlice) ScaleImg(fileName string, percent int) error {
 	thumbnailImbObj := resize.Thumbnail(uint(scaleWidth), uint(scaleHeight), imgObj, resize.Lanczos3)
 
 	outFilePath := imageSlice.ThumbnailPath + fileName
-	//ExitPrint(outFilePath)
 	outFilePathFd, _ := os.Create(outFilePath)
 
 	switch imgType {

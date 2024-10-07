@@ -1,6 +1,6 @@
 package test
 
-func RedisNormal(){
+func RedisNormal() {
 	//element := util.RedisElement{Index: "userInfo",Replace: []string{"10000"}}
 	//
 	//r ,err := global.V.Redis.GetLinkElementByIndex(&element).Set(element,"bbbbb")
@@ -41,5 +41,4 @@ func RedisNormal(){
 	//tx.Discard()
 	//
 	//time.Sleep(time.Second * 1)
-	//util.ExitPrint("TestRedis exit")
 }

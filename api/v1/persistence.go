@@ -60,7 +60,6 @@ func LogPush(c *gin.Context) {
 		Category:     form.Category,
 		Msg:          string(msgJsonStr),
 	}
-	//util.ExitPrint(statisticsLog)
 	err = global.V.Base.Gorm.Create(&statisticsLog).Error
 	if err != nil {
 		httpresponse.FailWithMessage("db insert failed err:"+err.Error(), c)
@@ -139,7 +138,6 @@ func LogPushFile(c *gin.Context) {
 			Action:       arr[3],
 		}
 
-		//util.ExitPrint(statisticsLog)
 		err = global.V.Base.Gorm.Create(&statisticsLog).Error
 		if err != nil {
 			failed++

@@ -41,7 +41,7 @@ func (serviceHttp *ServiceHttp) PostGateway(serviceId int, funcId int, targetUid
 	return serviceHttp.Post(uri, data)
 }
 
-//给一个服务，发送一条http消息
+// 给一个服务，发送一条http消息
 func (serviceHttp *ServiceHttp) Post(uri string, data interface{}) (responseMsgST ResponseMsgST, errs error) {
 	//node,err := serviceDiscovery.GetLoadBalanceServiceNodeByServiceName(serviceName)
 	//if err != nil{
@@ -53,7 +53,6 @@ func (serviceHttp *ServiceHttp) Post(uri string, data interface{}) (responseMsgS
 	//serviceDiscovery.option.Log.Info("HttpPost" + serviceName + serviceHost + uri + url)
 	jsonStr, _ := json.Marshal(data)
 	//serviceDiscovery.option.Log.Info("jsonStr:" + string(jsonStr))
-	//ExitPrint(1111)
 	req, errs := http.NewRequest("POST", url, bytes.NewBuffer(jsonStr))
 	if errs != nil {
 		return responseMsgST, errors.New("NewRequest err")

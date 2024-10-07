@@ -208,7 +208,6 @@ func (sync *Sync) logicFrameLoop(room *Room) {
 			//}
 			//i++
 			//if i > 10{
-			//	zlib.ExitPrint(1111)
 			//}
 		}
 	}
@@ -645,7 +644,6 @@ func (sync *Sync) boardCastFrameInRoom(roomId string, action string, contentStru
 
 	//if debugBreakPoint == 1{
 	//	zlib.MyPrint(contentStruct)
-	//	zlib.ExitPrint(3333)
 	//}
 }
 func (sync *Sync) addOneRoomHistory(room *Room, action, content string) {

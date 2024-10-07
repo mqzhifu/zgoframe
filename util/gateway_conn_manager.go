@@ -32,7 +32,7 @@ type ConnManagerOption struct {
 	DefaultProtocolType int32  //每个连接的默认 协议 类型
 	MsgSeparator        string //传输消息时，每条消息的间隔符，防止 粘包
 
-	Gorm     *gorm.DB `json:"-"`
+	Gorm     *gorm.DB `json:"-"` //消息落盘，算是备份
 	Log      *zap.Logger
 	Metrics  *MyMetrics
 	ProtoMap *ProtoMap //协议ID管理器
@@ -56,7 +56,7 @@ func NewConnManager(connManagerOption ConnManagerOption) *ConnManager {
 	connManager.PoolRWLock = &sync.RWMutex{}
 
 	if connManagerOption.MsgSeparator == "" {
-		//消息分隔符，主要是给TCP使用，一个字符，且最好不要用：\n，因为会与protobuf 冲突
+		//消息分隔符，主要是给TCP使用，一个字符，且最好不要用：\n，因为会与 protobuf 等，冲突
 		connManagerOption.MsgSeparator = "\f"
 	}
 

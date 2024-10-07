@@ -11,10 +11,10 @@ import (
 )
 
 type NativeServiceList struct {
-	GameMatch chan pb.Msg
-	FrameSync chan pb.Msg
-	Gateway   chan pb.Msg
-	TwinAgora chan pb.Msg
+	GameMatch chan pb.Msg //匹配   - 服务消息队列
+	FrameSync chan pb.Msg //帧同步 - 服务消息队列
+	Gateway   chan pb.Msg //网关   - 服务消息队列
+	TwinAgora chan pb.Msg //AR    - 服务消息队列
 }
 
 type BridgeOption struct {
@@ -145,6 +145,7 @@ func (bridge *Bridge) CallByName(callGatewayMsg CallGatewayMsg) (resData interfa
 	return bridge.Call(callMsg)
 }
 
+// 入口，所有消息，最终会进入到这里
 func (bridge *Bridge) RouterBack(msg pb.Msg, balanceFactor string, flag int) (data interface{}, err error) {
 	callMsg := CallMsg{
 		Msg:           msg,

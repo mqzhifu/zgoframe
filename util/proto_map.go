@@ -133,7 +133,6 @@ func (protoMap *ProtoMap) loadingActionMapConfigFile(fileName string) (map[int]P
 			Desc:        contentArr[5],
 		}
 		//PrintStruct(actionMap,":")
-		//ExitPrint(111)
 		am[id] = actionMap
 	}
 	if len(am) <= 0 {

@@ -7,7 +7,6 @@ func ImageSlice() {
 	//fileList := util.ForeachDir(dir, extNameList)
 	////util.MyPrint(fileList)
 	//if len(fileList) == 0 {
-	//	util.ExitPrint("no file")
 	//}
 	//
 	//for _, v := range fileList {
@@ -18,7 +17,5 @@ func ImageSlice() {
 	//	//global.V.ImageSlice.Slice(fileName)
 	//	global.V.Util.ImageSlice.ScaleImg(fileName, 20)
 	//}
-	//
-	//util.ExitPrint(33)
 	//
 }

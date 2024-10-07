@@ -447,7 +447,6 @@ func (user *User) ProjectAutoCreateUserDbRecord() {
 			util.MyPrint("projectName exist in user table. projectName:", project.Name)
 			continue
 		}
-		//util.ExitPrint(333)
 		userInfo := model.User{
 			Username: project.Name,
 			Password: util.MD5V([]byte("123456")),

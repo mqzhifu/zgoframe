@@ -242,7 +242,6 @@ func (playerManager *PlayerManager) TestRedisKey() {
 	//util.MyPrint(key)
 	//util.MyPrint("playerStatus setInfo : ", res, err)
 	//time.Sleep(time.Second * 1)
-	//util.ExitPrint(33)
 }
 
 //func (playerManager *PlayerManager) strToStruct(str string) Player {
@@ -268,7 +267,6 @@ func (playerManager *PlayerManager) TestRedisKey() {
 //
 //	res, err := redis.Strings(playerManager.Redis.RedisDo("keys", keys))
 //	if err != nil {
-//		util.ExitPrint("redis keys err :", err.Error())
 //	}
 //	playerManager.Log.Debug("all element will num :" + strconv.Itoa(len(res)))
 //	if len(res) <= 0 {
@@ -284,11 +282,9 @@ func (playerManager *PlayerManager) TestRedisKey() {
 //		}
 //		res, err := redis.Values(playerManager.Redis.RedisDo("HGETALL", p_key))
 //		if err != nil {
-//			util.ExitPrint("get oneplay error")
 //		}
 //		player := Player{}
 //		if err := redis.ScanStruct(res, &player); err != nil {
-//			util.ExitPrint("get oneplay error 2", p_key, err)
 //		}
 //		list[player.Id] = player
 //	}

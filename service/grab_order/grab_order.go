@@ -5,6 +5,7 @@ import (
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 	"time"
+	"zgoframe/http/request"
 	"zgoframe/model"
 	"zgoframe/util"
 )
@@ -39,6 +40,7 @@ func (grabOrder *GrabOrder) Init() {
 	grabOrder.InitUserBucketOrderBucket()
 
 	grabOrder.UserTotal = NewUserTotal(grabOrder.Redis)
+
 }
 
 // 初始化 - 装载 抢单金额区间 池子
@@ -90,7 +92,6 @@ func (grabOrder *GrabOrder) CheckOrderTimeout() {
 			stop = 1
 			break
 		default:
-
 			time.Sleep(time.Second * 1)
 		}
 		if stop == 1 {
@@ -100,14 +101,16 @@ func (grabOrder *GrabOrder) CheckOrderTimeout() {
 }
 
 // 用户开启 - 自动抢单功能
-func (grabOrder *GrabOrder) UserOpenGrab(uid int, userOpenGrabSet []UserOpenGrabSet) error {
+func (grabOrder *GrabOrder) UserOpenGrab(uid int, userOpenGrabSet []request.GrabOrderUserOpen) error {
 	if uid <= 0 || len(userOpenGrabSet) == 0 {
 		return errors.New("uid <= 0 or len UserOpenGrabSet== 0")
 	}
+	fmt.Println("userOpenGrabSet:", userOpenGrabSet)
 	//200 - 2000
 	//100 - 500 | 501 - 1000  | 1000 - 5000
 	userInAmtFlag := 0
 	for _, userChannel := range userOpenGrabSet {
+		fmt.Println(userChannel.AmountMin, grabOrder.AmountRange.MinAmount)
 		if userChannel.AmountMin < grabOrder.AmountRange.MinAmount {
 			fmt.Println("此用户支付渠道不满足 userChannel.AmountMin < grabOrder.AmountRange.MinAmount")
 			continue
@@ -132,6 +135,8 @@ func (grabOrder *GrabOrder) UserOpenGrab(uid int, userOpenGrabSet []UserOpenGrab
 			}
 		}
 
+		fmt.Println("userAmountSection:", userAmountSection)
+
 		if len(userAmountSection) == 0 {
 			continue
 		}
@@ -148,7 +153,7 @@ func (grabOrder *GrabOrder) UserOpenGrab(uid int, userOpenGrabSet []UserOpenGrab
 			userBucket.QueueRedis.Push(queueItem)
 		}
 	}
-
+	fmt.Println("=======111111")
 	if userInAmtFlag == 0 {
 		errMsg := "用户的所有渠道的所有金额区间都没有匹配到，算是异常"
 		fmt.Println(errMsg)
@@ -181,7 +186,13 @@ func (grabOrder *GrabOrder) UserCloseGrab(uid int) error {
 }
 
 // 其它服务，推单过来
-func (grabOrder *GrabOrder) CreateOrder(order Order) error {
+func (grabOrder *GrabOrder) CreateOrder(req request.GrabOrder) (error, int) {
+	order := Order{
+		Id:         req.Id,
+		Amount:     req.Amount,
+		CategoryId: req.CategoryId,
+		Uid:        req.Uid,
+	}
 	//先给订单 设置 超时时间
 	order.StartTime = int(time.Now().Unix())
 	order.Timeout = order.StartTime + grabOrder.Settings.GrabTimeout
@@ -194,15 +205,17 @@ func (grabOrder *GrabOrder) CreateOrder(order Order) error {
 	}
 	if key == "" {
 		fmt.Println("err1 key empty")
-		return errors.New("key empty")
+		return errors.New("key empty"), 0
 	}
 	//订单 - 添加到公共的桶中
 	grabOrder.OrderBucketList[order.CategoryId].AddOne(order)
+	fmt.Println("grabOrder.OrderBucketList[order.CategoryId]:", grabOrder.OrderBucketList[order.CategoryId])
 	timer := time.NewTimer(time.Second * time.Duration(order.StartTime+grabOrder.Settings.GrabTimeout))
 	//根据：支付渠道类型、金额区间，找到那个用户池子，从池子找一个用户接单
 	userBucket := grabOrder.UserBucketAmountRangeList[order.CategoryId][key]
 	selectStatus := 0 //1超时2检查失败3成功
 	popQueueList := []QueueItem{}
+	successUser := 0
 	for {
 		select {
 		case msg := <-grabOrder.EventMsgCh:
@@ -214,7 +227,8 @@ func (grabOrder *GrabOrder) CreateOrder(order Order) error {
 			break
 		default:
 			if userBucket.QueueRedis.Len() == 0 {
-				return errors.New("queue empty")
+				selectStatus = LOOP_SELECT_USER_QUEUE_EMPTY
+				break
 			}
 			queueItem, err := userBucket.QueueRedis.Pop()
 			if err != nil {
@@ -222,24 +236,43 @@ func (grabOrder *GrabOrder) CreateOrder(order Order) error {
 				continue
 			}
 			popQueueList = append(popQueueList, queueItem)
-			err = grabOrder.GrabDoing(queueItem.Uid, order.Id)
+			fmt.Println("popQueueList:", popQueueList)
+			err = grabOrder.GrabDoing(queueItem.Uid, order.Id, order.CategoryId)
 			if err != nil {
 				selectStatus = LOOP_SELECT_USER_QUEUE_FAILED
+				break
 			}
 			selectStatus = LOOP_SELECT_USER_QUEUE_SUCCESS
+			successUser = queueItem.Uid
 		}
-
-		if selectStatus == LOOP_SELECT_USER_QUEUE_SUCCESS {
+		//只有匹配失败的一种情况，才需要，一直循环
+		if selectStatus != LOOP_SELECT_USER_QUEUE_FAILED {
 			break
 		}
 	}
+	//把之前弹出的用户，再放回去
+	if len(popQueueList) > 0 {
 
-	return nil
+	}
+
+	switch selectStatus {
+	case LOOP_SELECT_USER_QUEUE_SUCCESS:
+		return nil, successUser
+	case LOOP_SELECT_USER_QUEUE_EVENT_STOP:
+	case LOOP_SELECT_USER_QUEUE_TIMEOUT:
+	case LOOP_SELECT_USER_QUEUE_EMPTY:
+	case LOOP_SELECT_USER_QUEUE_FAILED:
+
+	}
+
+	return errors.New("unknow"), 0
+
 }
 
 // 正式开始抢单
-func (grabOrder *GrabOrder) GrabDoing(uid int, oid int) error {
-	err := grabOrder.CheckGrabLimit(uid, oid)
+func (grabOrder *GrabOrder) GrabDoing(uid int, oid string, categoryId int) error {
+	fmt.Println("GrabDoing uid:", uid, " categoryId:", categoryId, " oid:", oid)
+	err := grabOrder.CheckGrabLimit(categoryId, oid, uid)
 	grabOrder.UserTotal.UpdateLastGrabFailedTime()
 	if err != nil {
 		return err
@@ -256,8 +289,8 @@ func (grabOrder *GrabOrder) GrabDoing(uid int, oid int) error {
 	return nil
 }
 
-func (grabOrder *GrabOrder) CheckGrabLimit(uid int, oid int) (err error) {
-	order := grabOrder.OrderBucketList[oid].GelOne(oid)
+func (grabOrder *GrabOrder) CheckGrabLimit(category int, oid string, uid int) (err error) {
+	order := grabOrder.OrderBucketList[category].GelOne(oid)
 	if order.Timeout > int(time.Now().Unix()) {
 		return errors.New("order timeout")
 	}

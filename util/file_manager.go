@@ -486,7 +486,6 @@ func (fileManager *FileManager) GetExtName(fileName string) (extName string, err
 	//根据.切割文件名字符串
 	splitFileName := strings.Split(fileName, ".")
 	extName = splitFileName[len(splitFileName)-1]
-	//ExitPrint("=====", extName)
 	//判断下：扩展名类型是否合合法
 	fileExtNameFilter := fileManager.FilterByExtString(fileManager.Option.Category, extName)
 	if !fileExtNameFilter {

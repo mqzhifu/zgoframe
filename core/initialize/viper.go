@@ -101,7 +101,6 @@ func GetNewViper(prefix string) (myViper *viper.Viper, config global.Config, err
 		//}
 		//prefix := "/gamematch/"+viperOption.ENV
 		//etcdList,err := GetListByPrefix(cli,prefix)
-		//util.ExitPrint(err,etcdList)
 	}
 	//监听 配置文件 变化
 	//如果是简单的字符串变更还好，重新再加载一下全局变量

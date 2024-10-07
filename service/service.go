@@ -2,6 +2,7 @@
 package service
 
 import (
+	"fmt"
 	"zgoframe/core/global"
 	"zgoframe/service/bridge"
 	"zgoframe/service/cicd"
@@ -54,6 +55,7 @@ func NewMyService() *MyService {
 		Flag:             bridge.REQ_SERVICE_METHOD_NATIVE,
 		Log:              global.V.Base.Zap,
 	}
+	fmt.Println("NewBridge:")
 	// 服务之间互相调用
 	myService.ServiceBridge, _ = bridge.NewBridge(ServiceBridgeOp)
 
@@ -70,26 +72,31 @@ func NewMyService() *MyService {
 		EmailReceiver:     global.C.Alert.EmailReceiver,
 		SendUid:           global.C.Alert.SendUid,
 	}
-
+	fmt.Println("NewAlert:")
 	myService.Alert, _ = msg_center.NewAlert(alertOption)
 	// 用户中心服务
 	if global.C.Service.User == "open" {
+		fmt.Println("Service.User:")
 		myService.User = user_center.NewUser(global.V.Base.Gorm, global.V.Base.Redis, global.V.Util.ProjectMng, global.V.Base.Zap)
 	}
 	// 站内信服务
 	if global.C.Service.Mail == "open" {
+		fmt.Println("Service.Mail:")
 		myService.Mail = msg_center.NewMail(global.V.Base.Gorm, global.V.Base.Zap)
 	}
 	// 短信服务
 	if global.C.Service.Sms == "open" {
+		fmt.Println("Service.Sms:")
 		myService.Sms = msg_center.NewSms(global.V.Base.Gorm, global.V.Util.AliSms, global.V.Base.Zap)
 	}
 	// 电子邮件服务
 	if global.C.Service.Email == "open" {
+		fmt.Println("Service.Email:")
 		myService.Email = msg_center.NewEmail(global.V.Base.Gorm, global.V.Util.Email)
 	}
 	//抢单-服务
 	if global.C.Service.GrabOrder == "open" {
+		fmt.Println("Service.GrabOrder:")
 		myService.GrabOrder = grab_order.NewGrabOrder(global.V.Base.Gorm, global.V.Base.Redis)
 	}
 	// 配置中心服务
@@ -106,10 +113,12 @@ func NewMyService() *MyService {
 		}
 		myService.ConfigCenter, err = config_center.NewConfigCenter(configCenterOption)
 		if err != nil {
+			fmt.Println("Service.ConfigCenter:")
 			util.ExitPrint("NewConfigCenter err:" + err.Error())
 		}
 	}
 	if global.C.Service.TwinAgora == "open" {
+		fmt.Println("Service.TwinAgora:")
 		// 远程呼叫专家
 		twinAgoraOption := seed_business.TwinAgoraOption{
 			Log:                   global.V.Base.Zap,
@@ -127,6 +136,7 @@ func NewMyService() *MyService {
 	}
 	// 网关
 	if global.C.Gateway.Status == "open" {
+		fmt.Println("Service.Gateway:")
 		// 长连接通信 - 配置
 		netWayOption := util.NetWayOption{
 			ListenIp:            global.C.Gateway.ListenIp,  // 程序启动时监听的IP
@@ -162,6 +172,7 @@ func NewMyService() *MyService {
 	}
 	//帧同步
 	if global.C.Service.FrameSync == "open" {
+		fmt.Println("Service.FrameSync:")
 		frameSyncOption := frame_sync.FrameSyncOption{
 			LockMode:              frame_sync.LOCK_MODE_PESSIMISTIC,
 			Store:                 1,
@@ -176,6 +187,7 @@ func NewMyService() *MyService {
 	}
 
 	if global.C.Service.GameMatch == "open" {
+		fmt.Println("Service.GameMatch:")
 		// 匹配服务 , 依赖 RoomManage
 		// matchOption := service.MatchOption{
 		//	RequestServiceAdapter: myService.RequestServiceAdapter,
@@ -213,6 +225,7 @@ func NewMyService() *MyService {
 	}
 
 	if global.C.Cicd.Status == "open" {
+		fmt.Println("Service.Cicd:")
 		myService.Cicd, err = InitCicd()
 	}
 
@@ -283,7 +296,6 @@ func InitCicd() (*cicd.CicdManager, error) {
 	// // 读取配置文件中的内容
 	// err := util.ReadConfFile(configFile, &cicdConfig)
 	// if err != nil {
-	// 	util.ExitPrint(err.Error())
 	// }
 
 	cicdConfig.SuperVisor = cicd.ConfigCicdSuperVisor{
@@ -320,7 +332,6 @@ func InitCicd() (*cicd.CicdManager, error) {
 	// 发布管理
 	publicManager := cicd.NewCICDPublicManager(global.V.Base.Gorm)
 
-	// util.ExitPrint(22)
 	op := cicd.CicdManagerOption{
 		// HttpPort:         C.Http.Port,
 		ServerList:       serverList,

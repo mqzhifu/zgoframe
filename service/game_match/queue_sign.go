@@ -339,7 +339,6 @@ func (queueSign *QueueSign) delOneRule() {
 //		mylog.Notice(" GroupElement by keys(*) : is empty")
 //		return
 //	}
-//	//zlib.ExitPrint(res,-200)
 //	for _,v := range res{
 //		res,_ := redis.Int(queueSign.Redis.RedisDo("del",v))
 //		mylog.Debug("del group element v :",res)

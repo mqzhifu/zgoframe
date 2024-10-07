@@ -91,17 +91,17 @@ type FrameSyncRoomHistory struct {
 }
 
 type GrabOrder struct {
-	Id         int `json:"id"`
-	Amount     int `json:"amount"`
-	Uid        int `json:"uid"`
-	CategoryId int `json:"category_id"`
-	Timeout    int `json:"timeout"`
+	Id         string `json:"id"`
+	OrderId    string `json:"order_id"`
+	Amount     int    `json:"amount"`
+	Uid        int    `json:"uid"`
+	CategoryId int    `json:"category_id"`
 }
 
 type GrabOrderUserOpen struct {
-	PayCategoryId int
-	AmountMin     int
-	AmountMax     int
+	PayCategoryId int `json:"pay_category_id"`
+	AmountMin     int `json:"amount_min"`
+	AmountMax     int `json:"amount_max"`
 }
 
 type Goods struct {

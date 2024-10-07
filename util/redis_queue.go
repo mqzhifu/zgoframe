@@ -32,7 +32,7 @@ import (
 //	LastDeliveredID string		//游标，本组最后投递的ID值
 //}
 
-//队列结构体
+// 队列结构体
 type RedisQueue struct {
 	Name              string
 	MaxMsgContentSize int   //最大 单条消息体内容
@@ -44,7 +44,7 @@ type RedisQueue struct {
 	*redis.XInfoStream
 }
 
-//客户端开始消费后的，控制信息配置
+// 客户端开始消费后的，控制信息配置
 type RedisConsumerClientConfig struct {
 	BlockTime                  int                                      //直接消费队列时，阻塞时间,空为不阻塞
 	MsgCount                   int64                                    //直接消费队列时，每次读取消息条数，空为一次读取所有消息
@@ -54,14 +54,14 @@ type RedisConsumerClientConfig struct {
 	CancelCtx                  context.Context //当consumer为阻塞模式时，用于结束阻塞协程
 }
 
-//消费者组-结构体
+// 消费者组-结构体
 type RedisConsumerGroup struct {
 	QueueName string //队列名
 	//下面是动态从redis读取的
 	XInfoGroup redis.XInfoGroup
 }
 
-//消费者-结构体
+// 消费者-结构体
 type RedisConsumer struct {
 	Name      string //消费者名称
 	GroupName string
@@ -71,7 +71,7 @@ type RedisConsumer struct {
 	RedisConsumerClientConfig
 }
 
-//单条消息结构体
+// 单条消息结构体
 type RedisQueueMsg struct {
 	Id          string `json:"id"`
 	RedisId     string `json:"redis_id"`
@@ -154,12 +154,11 @@ func (redisQueueManager *RedisQueueManager) Init() error {
 			redisQueueManager.ConsumerGroupPool[xInfoGroup.Name] = consumerGroup
 		}
 	}
-	//ExitPrint(234234234)
 	return nil
 }
 
-//队列相关=================================
-//这个方法有点多余 ，因为在REIDS中：操作一个KYE如果不存在，会直接创建...回头我再想想吧
+// 队列相关=================================
+// 这个方法有点多余 ，因为在REIDS中：操作一个KYE如果不存在，会直接创建...回头我再想想吧
 func (redisQueueManager *RedisQueueManager) CreateQueue(queue RedisQueue) error {
 	element := RedisElement{Key: queue.Name}
 	exist, _ := redisQueueManager.Redis.Exist(element)
@@ -183,12 +182,12 @@ func (redisQueueManager *RedisQueueManager) GetQueueByName(queueName string) (Re
 
 //消费者-组=================================
 
-//获取全部消费者组列表
+// 获取全部消费者组列表
 func (redisQueueManager *RedisQueueManager) GetConsumerGroupAllList() map[string]RedisConsumerGroup {
 	return redisQueueManager.ConsumerGroupPool
 }
 
-//根据组名 获取一个消费者组的信息
+// 根据组名 获取一个消费者组的信息
 func (redisQueueManager *RedisQueueManager) GetConsumerGroupByName(consumerGroupName string) (consumerGroup RedisConsumerGroup, empty bool) {
 	if len(redisQueueManager.ConsumerGroupPool) == 0 {
 		return consumerGroup, true
@@ -201,7 +200,7 @@ func (redisQueueManager *RedisQueueManager) GetConsumerGroupByName(consumerGroup
 	return consumerGroup, true
 }
 
-//根据队列名，获取该队列下的所有绑定消费者组列表
+// 根据队列名，获取该队列下的所有绑定消费者组列表
 func (redisQueueManager *RedisQueueManager) GetConsumerGroupListByQueue(queueName string) (list map[string]RedisConsumerGroup) {
 	if len(redisQueueManager.ConsumerGroupPool) == 0 {
 		return nil
@@ -224,12 +223,12 @@ func (redisQueueManager *RedisQueueManager) DelConsumerGroup() {
 
 //========================================
 
-//消费者
+// 消费者
 func (redisQueueManager *RedisQueueManager) DelConsumer() {
 
 }
 
-//以消费者组进行消费
+// 以消费者组进行消费
 func (redisQueueManager *RedisQueueManager) ConsumerByGroup(consumer RedisConsumer) (finalMsgList []RedisQueueMsg, err error) {
 	blockTimeSecond := time.Second * time.Duration(consumer.BlockTime)
 
@@ -278,8 +277,8 @@ end:
 	return finalMsgList, err
 }
 
-//直接消费队列-注：这里可能会阻塞...\
-//不建议这么干，因为REDIS内部没有游标控制，得单独再保存，不然每次重启都是重复消费
+// 直接消费队列-注：这里可能会阻塞...\
+// 不建议这么干，因为REDIS内部没有游标控制，得单独再保存，不然每次重启都是重复消费
 func (redisQueueManager *RedisQueueManager) ConsumerByQueue(queue RedisQueue) (finalMsgList []RedisQueueMsg, err error) {
 	blockTimeSecond := time.Second * time.Duration(queue.BlockTime)
 
@@ -398,7 +397,6 @@ func (redisQueueManager *RedisQueueManager) MsgAdd(queueName string, content str
 	//str ,_ := json.Marshal(msg)
 	//msgStr := "Id " + msg.Id + " RetryTimes " + strconv.Itoa(msg.RetryTimes) + " CreateTime " + strconv.Itoa(msg.CreateTime) + " ContentType " + msg.ContentType + " Content " + msg.Content
 	msgMap := StructCovertMap(msg)
-	//ExitPrint(msgMap)
 
 	XAddArgs := redis.XAddArgs{
 		Stream: queueName,

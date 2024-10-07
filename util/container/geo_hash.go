@@ -37,12 +37,10 @@ func (geoHash *GeoHash) Calc(latitude float64, longitude float64) string {
 	util.MyPrint("latitude:", latitude, " longitude:", longitude)
 	if latitude > geoHash.LatitudeMax || latitude < geoHash.LatitudeMin {
 		util.MyPrint("geoHash.LatitudeMax:", geoHash.LatitudeMax, " geoHash.LatitudeMin:", geoHash.LatitudeMin)
-		util.ExitPrint("err 1")
 	}
 
 	if longitude > geoHash.LongitudeMax || longitude < geoHash.LongitudeMin {
 		util.MyPrint("geoHash.LongitudeMax:", geoHash.LongitudeMax, " geoHash.LongitudeMin:", geoHash.LongitudeMin)
-		util.ExitPrint("err 2")
 	}
 
 	LatitudeMaxBinary := geoHash.CalcRecursion(latitude, geoHash.LatitudeMax, geoHash.LatitudeMin, 1)

@@ -23,7 +23,6 @@ func Header() gin.HandlerFunc {
 
 		//h := request.HeaderBaseInfo{}
 		//s, _ := json.Marshal(h)
-		//util.ExitPrint(string(s))
 
 		header.ServerReceiveTime = util.GetNowTimeSecondToInt()
 		if header.RequestId == "" {
@@ -99,14 +98,11 @@ func HttpHeaderSureMapCovertSureStruct(inMap map[string][]string) request.Header
 			if err == nil {
 				ValueOfOutStruct.Elem().Field(i).Set(reflect.ValueOf(hbi))
 			}
-			//util.ExitPrint("err:", err, " hbi:", hbi)
-			//util.ExitPrint()
 		} else {
 
 			util.MyPrint("HttpHeaderSureMapCovertSureStruct err:type err ", fieldType.String())
 		}
 	}
-	//util.ExitPrint(outStruct)
 	//util.PrintStruct(outStruct,":")
 	return outStruct
 }

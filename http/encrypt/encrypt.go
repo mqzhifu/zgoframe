@@ -48,7 +48,6 @@ func DecodeBody(c *gin.Context) (projectInfo model.Project, err error) {
 	case model.DATA_ENCRYPT_AES_CBC_BASE64:
 		//R := util.AesEncryptCBC([]byte("123456"), []byte(project.SecretKey))
 		//mw := base64.StdEncoding.EncodeToString(R)
-		//util.ExitPrint(mw)
 		dataBase64Byte, err := base64.StdEncoding.DecodeString(string(bodyByte))
 		if err != nil {
 			return project, err
@@ -135,7 +134,6 @@ func EncodeBody(c *gin.Context, body string) (projectInfo model.Project, data st
 	case model.DATA_ENCRYPT_BASE64:
 		data = base64.StdEncoding.EncodeToString([]byte(body))
 	case model.DATA_ENCRYPT_AES_CBC_BASE64:
-		//util.ExitPrint(dataBase64)
 		decrypted := util.AesEncryptCBC([]byte(body), []byte(project.SecretKey))
 		dataBase64 := base64.StdEncoding.EncodeToString(decrypted)
 		data = dataBase64

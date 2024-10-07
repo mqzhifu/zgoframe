@@ -1,7 +1,7 @@
 <html>
 
 <head>
-    <title>cicd</title>
+    <title>grab</title>
     <script src="/static/js/common.js?r=8" type="text/javascript"></script>
     <script src="/static/js/jquery.min.js" type="text/javascript" ></script>
 </head>
@@ -36,65 +36,150 @@
         margin:5px;
     }
 
+    .hr-double {
+        border: 0;
+        border-top: 3px double #d0d0d5;
+    }
+
 </style>
 
 <body>
 
-<table class='table' id="pay_category">
+<div>
 
-</table>
+    <div class='table' id="pay_category" style="float: left" >
 
-<table class='table' id="grab_order">
+    </div>
 
-</table>
+    <div class='table' id="settings" style="float: left"   >
 
-<table class='table' id="order_bucket_list">
+    </div>
 
-</table>
+    <div class='table' id="amount_range"    >
+
+    </div>
+
+</div>
+
+<div></div>
+
+<hr class="hr-double" style="clear: both">
 
 
+<div class='table' id="order_bucket_list" style="clear: both;">
 
-<br/>
+</div>
+
+<hr class="hr-double" style="clear: both">
+
+<div class='table' id="user_bucket_amount_range_list" style="clear: both;">
+
+</div>
 
 
-
-
+<hr class="hr-double" style="clear: both">
 
 
 <script>
+    var category_list = new Object();
     //入口
     $(document).ready(function(){
         request(init_pay_category,"grab_order_get_pay_category","",false,"GET",null,null);
-        request(init_grab_order_data,"grab_order_get_data","",false,"GET",null,null);
+        request(init_grab_data,"grab_order_get_data","",false,"GET",null,null);
 
 
     });
+
+    function user_open_auto_grab(uid){
+
+    }
+
     function init_pay_category(data){
         var pay_category = $("#pay_category");
-        var html = "";
+        var html = "<table><tr><td>支付类型</td></tr>";
         for(var i=0;i<data.length;i++){
+            category_list[data[i]["id"]] = data[i]["name"];
             html += "<tr>";
             html += "<td>"+data[i]["id"]+"</td>"
             html += "<td>"+data[i]["name"]+"</td>"
             html += "</tr>";
         }
+        html += "</table>";
         pay_category.html(html);
+
+
     }
 
-    function init_grab_order_data(data){
-        // var grab_order = $("#grab_order");
-        //
-        // var order_bucket_list_div = $("#order_bucket_list");
-        // for (let categoryId in data.order_bucket_list) {
-        //     var list = data.order_bucket_list[categoryId];
-        //     if (list.length <= 0){
-        //         alert("order_bucket_list 某个 list 空");
-        //         continue;
-        //     }
-        //     for(var i=0;i<list;i++){
-        //
-        //     }
-        // }
+    function init_grab_data(data){
+
+        var order_bucket_list_div = $("#order_bucket_list");
+        var bucket_list_data_html = "<table><tr><td>订单</td></tr>";
+        for (let categoryId in data.order_bucket_list) {
+            bucket_list_data_html += "<tr><td>categoryId</td><td>"+category_list[categoryId]+"("+categoryId+")</td>"
+            bucket_list_data_html += "<tr>"
+            var bucket_list = data.order_bucket_list[categoryId];
+            console.log("bucket_list:",bucket_list);
+            if (!bucket_list.list || bucket_list.list.length <= 0){
+                bucket_list_data_html += "<td>数据</td><td>空</td>";
+                continue;
+            }
+            // alert(list);
+            for(var i=0;i<list;i++){
+
+            }
+            bucket_list_data_html += "</tr>"
+        }
+        bucket_list_data_html += "</table>";
+        order_bucket_list_div.html(bucket_list_data_html);
+
+
+        init_grab_data_amount(data.amount_range.range);
+        init_grab_data_settings(data.settings);
+        init_grab_data_user_total(data.user_bucket_amount_range_list);
+
+    }
+
+    function init_grab_data_settings(data){
+        // console.log("dddd:",data);
+        var html_div = $("#settings");
+        var html = "<table><tr><td>settings</td></tr>";
+        for (let key in data) {
+            html += "<tr><td>"+key+"</td><td>"+data[key]+"</td></tr>"
+        }
+        html += "</table>";
+        html_div.html(html);
+    }
+
+    function init_grab_data_amount(data){
+        var amount_range_div = $("#amount_range");
+        var amount_range_div_html = "<table><tr><td>范围</td></tr>";
+        for (let key in data) {
+            amount_range_div_html += "<tr><td>"+data[key].min_amount+"</td><td>~</td><td>"+data[key].max_amount+"</td></tr>"
+        }
+        amount_range_div_html += "</table>";
+        amount_range_div.html(amount_range_div_html);
+    }
+
+    function init_grab_data_user_total(data){
+        var html_div = $("#user_bucket_amount_range_list");
+        var html = "";
+
+        console.log("init_grab_data_user_total:",data)
+        for (let key in data) {
+            html += "<table>";
+            html += "<tr><td></td><td>"+category_list[key]+"</td>";
+
+            var row = data[key];
+            for (let key_2 in row ) {
+                html += "<tr><td>redis queue:</td><td>"+row[key_2].queue_redis.key+"</td></tr>";
+            }
+
+            html + "</tr>";
+
+            html += "</table>";
+        }
+
+        html_div.html(html);
     }
 
 

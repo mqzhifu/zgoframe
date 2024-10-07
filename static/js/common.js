@@ -57,7 +57,9 @@ var URI_MAP = {
     "test_binary_tree_insert_one":"/test/binary/tree/insert/one/keyword",
     "test_binary_tree_each_deep":"/test/binary/tree/each/deep",
     "grab_order_get_data":"/grab/order/get/data",
-    "grab_order_get_pay_category":"/grab/order/get/pay/category"
+    "grab_order_get_pay_category":"/grab/order/get/pay/category",
+    "grab_order_user_open":"/grab/order/user/open",
+    "grab_order_push_order":"/grab/order/create",
 
 
 };
@@ -199,7 +201,7 @@ function request(callback,urlMapKey , useToken,async,httpMethod,httpData,uriRepl
         success: function(data){
             console.log("back data:",data);
             if (data.code != 200){
-                return alert("UserLogin server back err:"+data.msg);
+                return alert("server back err:"+data.msg);
             }
 
             if(DATA_ENCRYPT > 0 ){

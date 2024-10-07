@@ -550,7 +550,6 @@ func (push *Push) TestRedisKey() {
 //		mylog.Notice(" GroupElement by keys(*) : is empty")
 //		return
 //	}
-//	//zlib.ExitPrint(res,-200)
 //	for _,v := range res{
 //		res,_ := redis.Int(push.Redis.RedisDo("del",v))
 //		zlib.MyPrint("del group element v :",res)

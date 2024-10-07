@@ -25,7 +25,6 @@ func DoTestAction(flag string) {
 			sqlStrings += v
 		}
 		util.MyPrint(sqlStrings)
-		util.ExitPrint("i want exit 2.")
 	case "ali_sms":
 		//AliSms := util.NewAliSms()
 		//AliSms.Send()
@@ -86,7 +85,6 @@ func DoTestAction(flag string) {
 		//
 		//fmt.Printf("%p %T %v %d %d \n", &a, a, a, len(a), cap(a))
 		//fmt.Printf("%p %T %v %d %d \n", &b, b, b, len(b), cap(b))
-		//util.ExitPrint(a, b)
 		util.ExitPrint("im die")
 		//geo := container.NewGeoHash()
 		//geo.Calc(39.923201, 116.390705)

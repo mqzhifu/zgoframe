@@ -2,7 +2,7 @@ package util
 
 import "time"
 
-func GetNowDateMonth()string{
+func GetNowDateMonth() string {
 	//cstZone := time.FixedZone("CST", 8*3600)
 	//now := time.Now().In(cstZone)
 	//now := time.Now()
@@ -11,7 +11,7 @@ func GetNowDateMonth()string{
 	return str
 }
 
-func GetNowDate()string{
+func GetNowDate() string {
 	//cstZone := time.FixedZone("CST", 8*3600)
 	//now := time.Now().In(cstZone)
 	//now := time.Now()
@@ -19,9 +19,8 @@ func GetNowDate()string{
 	str := time.Now().Format("20060102")
 	return str
 }
-func GetNowDateHour()string{
+func GetNowDateHour() string {
 	//ss := time.Now().Format("20060102")
-	//ExitPrint(ss)
 	//cstZone := time.FixedZone("CST", 8*3600)
 	//now := time.Now().In(cstZone)
 	//now := time.Now()
@@ -31,9 +30,8 @@ func GetNowDateHour()string{
 	return str
 }
 
-func GetDateHour(now int64)string{
+func GetDateHour(now int64) string {
 	//ss := time.Now().Format("20060102")
-	//ExitPrint(ss)
 	//cstZone := time.FixedZone("CST", 8*3600)
 	//now := time.Now().In(cstZone)
 	//now := time.Now()
@@ -44,15 +42,14 @@ func GetDateHour(now int64)string{
 	return str
 }
 
-
-func GetNowTimeSecondToInt()int{
-	return int( time.Now().Unix() )
+func GetNowTimeSecondToInt() int {
+	return int(time.Now().Unix())
 }
 
-func GetNowTimeSecondToInt64()int64{
+func GetNowTimeSecondToInt64() int64 {
 	return time.Now().Unix()
 }
 
-func GetNowMillisecond()int64{
+func GetNowMillisecond() int64 {
 	return time.Now().UnixNano() / 1e6
 }

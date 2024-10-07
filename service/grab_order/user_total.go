@@ -34,13 +34,14 @@ type UserDayTotal struct {
 }
 
 type UserTotal struct {
-	UserElementList map[int]UserElement
-	Redis           *util.MyRedis
+	UserElementList map[int]UserElement `json:"user_element_list"`
+	Redis           *util.MyRedis       `json:"-"`
 }
 
 func NewUserTotal(redis *util.MyRedis) *UserTotal {
 	userTotal := new(UserTotal)
 	userTotal.Redis = redis
+	userTotal.UserElementList = make(map[int]UserElement)
 	return userTotal
 }
 
@@ -68,6 +69,7 @@ func (userTotal *UserTotal) AddOrUpdateOne(uid int) (err error, optType int) {
 
 		return nil, USER_TOTAL_OPT_TYPE_UP
 	}
+	fmt.Println("==========222222")
 	//走到这里，证明，用户数据不存在进程中，需要重新创建一下
 	userElement = UserElement{
 		Uid:        uid,
@@ -94,6 +96,7 @@ func (userTotal *UserTotal) AddOrUpdateOne(uid int) (err error, optType int) {
 	} else {
 		userElement.UserDayTotal = userTotal.GetStructUserDayTotal(key)
 	}
+	fmt.Println("========33333333")
 	//添加到集合中
 	userTotal.UserElementList[uid] = userElement
 

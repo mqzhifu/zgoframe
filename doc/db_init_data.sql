@@ -45,13 +45,12 @@ INSERT INTO `user` (`id`, `uuid`, `project_id`, `sex`, `birthday`, `username`, `
 
 INSERT INTO `pay_category` (`id`, `name`, `sn`, `status`, `sort`, `remark`, `icon`,  `created_at`, `updated_at`, `deleted_at`, `min_amt`, `max_amt`) VALUES
  (1, '数字人民币', 'rmb', 1, 3, 'test', '', 0, 0, NULL, 1,2),
- (2, '数字人民币', 'rmb', 1, 3, 'test', '', 0, 0,  NULL, 1,2),
-(3, '支付宝', 'alipay', 1, 3, 'test', '', 0, 0, NULL, 1,2),
-(4, '银行卡', 'bankcard', 1, 3, 'test', '', 0, 0,  NULL, 1,2),
-(5, '微信', 'wx', 1, 3, 'test', '', 0, 0,  NULL, 1,2),
-(6, 'USDT', 'usdt', 1, 3, 'test', '', 0, 0,  NULL, 1,2),
-(7, '人工充值', 'manual', 1, 3, 'test', '', 0,  0, NULL, 1,2),
-(8, '在线充值', 'daifu', 1, 3, 'test', '', 0,  0, NULL, 1,2);
+(2, '支付宝', 'alipay', 1, 3, 'test', '', 0, 0, NULL, 1,2),
+(3, '银行卡', 'bankcard', 1, 3, 'test', '', 0, 0,  NULL, 1,2),
+(4, '微信', 'wx', 1, 3, 'test', '', 0, 0,  NULL, 1,2),
+(5, 'USDT', 'usdt', 1, 3, 'test', '', 0, 0,  NULL, 1,2),
+(6, '人工充值', 'manual', 1, 3, 'test', '', 0,  0, NULL, 1,2),
+(7, '在线充值', 'daifu', 1, 3, 'test', '', 0,  0, NULL, 1,2);
 
 
 INSERT INTO `banks` (`id`, `name`, `code`, `address`, `status`, `created_at`, `updated_at`, `deleted_at`) VALUES (1, '中国工商银行', 'ICBC', NULL, 1, NULL, NULL, NULL);

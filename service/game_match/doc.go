@@ -16,7 +16,6 @@ import "strconv"
 
 假设，满足一局游戏，需要21个人，如下：
 1+2+3+4+5 = 21
-
 */
 func (match *Match) calculateNumberTotal(sum int, groupPerson map[int]int) map[int][5]int {
 
@@ -56,5 +55,4 @@ func (match *Match) calculateNumberTotal(sum int, groupPerson map[int]int) map[i
 	//		}
 	//	}
 	//}
-	//zlib.ExitPrint(inc)
 }

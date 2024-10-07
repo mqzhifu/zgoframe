@@ -23,7 +23,6 @@ func MyPrint(a ...interface{}) (n int, err error) {
 // 这个函数只是懒......debug 调试使用
 func ExitPrint(a ...interface{}) {
 	fmt.Println(a)
-	//fmt.Println("ExitPrint...22")
 	os.Exit(999)
 }
 
@@ -177,7 +176,6 @@ func PingByShell(host string, timeOut string) bool {
 		return false
 	}
 	MyPrint(str + " ping " + cmdStr)
-	//ExitPrint(3)
 	cmd = exec.Command("ping", cmdStr)
 	//MyPrint("ping " +  host + "-c " +timeOut)
 	//fmt.Println("NetWorkStatus Start:", time.Now().Unix())
@@ -195,83 +193,10 @@ func PingByShell(host string, timeOut string) bool {
 
 func CheckIpPort(ip string, port string, timeout int64) bool {
 	timeoutDuration := time.Duration(timeout) * time.Second
-	//t1 := time.Now()
 	_, err := net.DialTimeout("tcp", ip+":"+port, timeoutDuration)
-	//fmt.Println("waist time :", time.Now().Sub(t1))
 	if err != nil {
 		//fmt.Println("Site unreachable, error: ", err)
 		return false
 	}
 	return true
-	//fmt.Println("tcp server is ok")
 }
-
-//func MapCovertStruct(inMap map[string]interface{},outStruct interface{})interface{}{
-//	//fmt.Printf("%+v",inMap)
-//	//fmt.Printf("%+v",outStruct)
-//
-//	setFiledValue := func(	outStruct interface{},name string , v interface{}) {
-//		//MyPrint(name)
-//
-//		structValue := reflect.ValueOf(outStruct).Elem()
-//		structFieldValue := structValue.FieldByName(name)
-//
-//		structFieldType := structFieldValue.Type() //结构体的类型
-//		val := reflect.ValueOf(v)              //map值的反射值
-//
-//		var err error
-//		//判断 结构体的元素类型 和 map元素的值类型
-//		if structFieldType != val.Type() {
-//			//类型不同，需要进行转换
-//			val, err = TypeConversion(fmt.Sprintf("%v", v), structFieldValue.Type().Name()) //类型转换
-//			if err != nil {
-//				ExitPrint(err.Error())
-//			}
-//		}
-//		//MyPrint(val,val.Type(),v)
-//
-//		structFieldValue.Set(val)
-//	}
-//	for k,v := range inMap{
-//		//MyPrint("MapCovertStruct for range:",outStruct,k,v)
-//		setFiledValue(outStruct,k,v)
-//	}
-//	//outStructV := reflect.ValueOf(outStruct)
-//	//outStructT := reflect.TypeOf(outStruct)
-//
-//	return outStruct
-//}
-////类型转换
-//func TypeConversion(value string, ntype string) (reflect.Value, error) {
-//	if ntype == "string" {
-//		return reflect.ValueOf(value), nil
-//	} else if ntype == "time.Time" {
-//		t, err := time.ParseInLocation("2006-01-02 15:04:05", value, time.Local)
-//		return reflect.ValueOf(t), err
-//	} else if ntype == "Time" {
-//		t, err := time.ParseInLocation("2006-01-02 15:04:05", value, time.Local)
-//		return reflect.ValueOf(t), err
-//	} else if ntype == "int" {
-//		i, err := strconv.Atoi(value)
-//		return reflect.ValueOf(i), err
-//	} else if ntype == "int8" {
-//		i, err := strconv.ParseInt(value, 10, 64)
-//		return reflect.ValueOf(int8(i)), err
-//	} else if ntype == "int32" {
-//		i, err := strconv.ParseInt(value, 10, 64)
-//		return reflect.ValueOf(int64(i)), err
-//	} else if ntype == "int64" {
-//		i, err := strconv.ParseInt(value, 10, 64)
-//		return reflect.ValueOf(i), err
-//	} else if ntype == "float32" {
-//		i, err := strconv.ParseFloat(value, 64)
-//		return reflect.ValueOf(float32(i)), err
-//	} else if ntype == "float64" {
-//		i, err := strconv.ParseFloat(value, 64)
-//		return reflect.ValueOf(i), err
-//	}
-//
-//	//else if .......增加其他一些类型的转换
-//
-//	return reflect.ValueOf(value), errors.New("未知的类型：" + ntype)
-//}

@@ -27,7 +27,6 @@ func Grpc() {
 //	//注册一个服务(不牵扯GRPC)
 //	err := global.V.ServiceDiscovery.Register(node)
 //	if err != nil{
-//		util.ExitPrint("serviceDiscovery.Register failed:"+err.Error())
 //	}
 //	//测试一下刚刚注册的服务，是否成功，从服务管理池中直接寻找
 //	testServerRegRs := false
@@ -38,7 +37,6 @@ func Grpc() {
 //		}
 //	}
 //	if !testServerRegRs{
-//		util.ExitPrint("reg failed 1.")
 //	}
 //	//服务发现注册成功后，再创建一个grpc server
 //	MyGrpcService,err := global.V.GrpcManager.CreateService(serviceName,node.Ip,node.Port)
@@ -60,7 +58,6 @@ func Client() error {
 	//zgoframeClient ,err := global.V.GrpcManager.GetZgoframeClient(serviceName,"")
 	//client,err := global.V.GrpcManager.GetLogSlaveClient("LogSlave","")
 	//if err != nil{
-	//	util.ExitPrint("GetLogSlaveClient err:",err.Error())
 	//}
 	//
 	//slavePushMsg := pb.SlavePushMsg{}
@@ -71,7 +68,6 @@ func Client() error {
 
 	//serviceNode ,err := global.V.ServiceDiscovery.GetLoadBalanceServiceNodeByServiceName(serviceName,"")
 	//if err != nil{
-	//	util.ExitPrint("GetServiceNodeByServiceName err:",err)
 	//}
 	//
 	//fmt.Println("serviceNode:",serviceNode)
@@ -178,7 +174,6 @@ func TestGrpcClient() {
 	//}
 	//
 	////if !ok {
-	////	ExitPrint("metadata.FromIncomingContext err:",md,ok)
 	////}
 	//r, err := c.SayHello(context.Background(), &requestRegPlayer)
 	//

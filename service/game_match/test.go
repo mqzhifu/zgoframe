@@ -93,7 +93,6 @@ func getOneRandomGroupId() int {
 //	//{"groupId":100001,"customProp":"","addition":"","matchCode":"test_vs","playerList":[{"uid":2,"matchAttr":{"age":1,"sex":2}}]}
 //	localIp, err := util.GetLocalIp()
 //	if err != nil {
-//		util.ExitPrint("GetLocalIp err : ", err)
 //	}
 //	myHost := localIp
 //
@@ -125,7 +124,6 @@ func getOneRandomGroupId() int {
 //		resp, errs := client.Post(url, "application/json", bytes.NewBuffer(reqData))
 //		//etcdOption.Log.Info(" get etcd config ip:port list : ",etcdOption.FindEtcdUrl,errs)
 //		if errs != nil {
-//			util.ExitPrint("http.Post err : ", errs)
 //		}
 //		htmlContentJson, _ := ioutil.ReadAll(resp.Body)
 //		util.MyPrint("post rs : ", string(htmlContentJson))
@@ -134,12 +132,10 @@ func getOneRandomGroupId() int {
 //		if htmlContent.Code == 200 {
 //			signSuccessGroup = append(signSuccessGroup, httpReqSign)
 //		}
-//		//zlib.ExitPrint("post rs : ",string(htmlContentJson))
 //		//myGamematch.Sign(ruleId,9999,customProp,playerStructArr , "im_addition")
 //	}
 //	util.MyPrint("signSuccessGroup len : ", len(signSuccessGroup), " hope len: ", len(signGroupPersonArr), "filed :", len(signGroupPersonArr)-len(signSuccessGroup))
 //	for k, v := range signSuccessGroup {
 //		util.MyPrint(k, v)
 //	}
-//	util.ExitPrint("im end")
 //}

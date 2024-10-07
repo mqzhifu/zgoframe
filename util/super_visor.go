@@ -130,8 +130,6 @@ func (superVisor *SuperVisor) ReplaceConfTemplate(replaceSource SuperVisorReplac
 	key = superVisor.Option.Separator + "process_name" + superVisor.Option.Separator
 	content = strings.Replace(content, key, superVisor.Option.ServiceNamePrefix+replaceSource.ProcessName, -1)
 
-	// ExitPrint(content)
-
 	return content, nil
 }
 
@@ -151,8 +149,6 @@ func (superVisor *SuperVisor) CreateServiceConfFile(content string, newGitCodeDi
 	contentByte := bytes.Trim([]byte(content), "\x00") // NUL
 	file.Write(contentByte)
 	file.Close()
-
-	// ExitPrint(-1)
 
 	return nil
 }

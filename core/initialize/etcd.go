@@ -38,6 +38,5 @@ func GetNewEtcd(env int, configZapReturn global.Zap, prefix string) (myEtcd *uti
 		PrintPrefix: prefix,
 	}
 	myEtcd, err = util.NewMyEtcdSdk(option)
-	//util.ExitPrint(err)
 	return myEtcd, err
 }

@@ -160,6 +160,15 @@ const (
 	NETWAY_STATUS_INIT  = 1 //网关状态 初始化中
 	NETWAY_STATUS_START = 2 //网关状态 开始初始化
 	NETWAY_STATUS_CLOSE = 3 //网关状态 已关闭
+
+	MSG_CONTENT_MAX = 1024 //长连接消息，默认最大长度(byte)
+
+)
+
+const (
+	REQ_SERVICE_METHOD_HTTP   = 1 //http
+	REQ_SERVICE_METHOD_GRPC   = 2 //grpc
+	REQ_SERVICE_METHOD_NATIVE = 3 //本地
 )
 
 // @parse xxxx

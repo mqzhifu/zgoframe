@@ -136,7 +136,6 @@ func (match *Match) matching() {
 				match.successConditions(successGroupIds)
 			}
 		}
-		//zlib.ExitPrint(11111)
 	} else {
 		match.Log.Info("case in  no Formula:")
 		//matchingRange := []int{service.FilterFlagAll, service.FilterFlagBlock, service.FilterFlagBlockInc}
@@ -502,7 +501,6 @@ func (match *Match) logarithmic(successGroupIds map[int]map[int]int) {
 			wishSuccessGroups += maxNumber / 2
 			//取出(这里才是真的取，删除redis里的数据)集合中，所有人数为5的组group_ids.
 			groupIds := match.Rule.QueueSign.getGroupPersonIndexList(match.Rule.TeamMaxPeople, match.rangeStart, match.rangeEnd, 0, maxNumber, true)
-			//util.ExitPrint("groupIds:", groupIds)
 			j := 0
 			for i := 0; i < maxNumber/2; i++ {
 				//tmp := make(map[int]int)
@@ -687,10 +685,8 @@ func (match *Match) successConditions(successGroupIds map[int]map[int]int) {
 				match.Rule.RuleManager.Option.GameMatch.PersistenceRecordSuccessPush(pushElement, match.Rule.Id)
 			}
 		}
-		//zlib.ExitPrint(123123)
 	}
 	match.Log.Info("finish successConditions  ...")
-	//util.ExitPrint(11)
 	//match.Log.Info("finish successConditions  ...")
 }
 
@@ -727,7 +723,6 @@ func (match *Match) successConditionAddOneGroup(redisConnFD redis.Conn, resultId
 	SuccessGroup.SuccessTime = util.GetNowTimeSecondToInt()
 	SuccessGroup.TeamId = teamId
 	//fmt.Printf("%+v",SuccessGroup)
-	//zlib.ExitPrint(222)
 	//添加一条新的小组
 	util.MyPrint("addOneGroup", SuccessGroup)
 	match.Rule.QueueSuccess.addOneGroup(redisConnFD, SuccessGroup)

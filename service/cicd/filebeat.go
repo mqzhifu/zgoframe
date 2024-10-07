@@ -1,10 +1,10 @@
 package cicd
 
 import (
-	"strings"
 	"os"
-	"zgoframe/util"
 	"strconv"
+	"strings"
+	"zgoframe/util"
 )
 
 func (cicdManager *CicdManager) GenerateAllFilebeat() {
@@ -34,7 +34,6 @@ func (cicdManager *CicdManager) GenerateFilebeat(server util.Server, opDir strin
 		filebeat_input_file := opDir + "/" + "filebeat_input.yaml"
 		filebeat_input_content, _ := util.ReadString(filebeat_input_file)
 		serviceLogDir := cicdManager.Option.Config.System.LogDir + "/" + service.Name + "/*.log"
-		//ExitPrint(serviceLogDir)
 		filebeat_input_content = strings.Replace(filebeat_input_content, "#paths#", serviceLogDir, -1)
 		filebeat_input_content = strings.Replace(filebeat_input_content, "#source#", service.Name, -1)
 

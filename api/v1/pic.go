@@ -95,8 +95,6 @@ func Split(c *gin.Context) {
 			}
 			fmt.Println(everyBlockWidthStepX0, everyBlockHeightStepY0, everyBlockWidthStepX1, everyBlockHeightStepY1, " fileName2:", fileName2)
 		}
-		//os.Exit(3)
-
 	}
 
 }

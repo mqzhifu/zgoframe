@@ -31,7 +31,6 @@ func GatewayService(c *gin.Context) {
 	util.MyPrint("c.GetRawData data:", data, " err:", err)
 	// if err != nil {
 	//	errMsg := prefix + " GetRawData err:" + err.Error()
-	//	//util.ExitPrint(prefix + " GetRawData err:"+err.Error())
 	//	httpresponse.FailWithMessage(errMsg, c)
 	//	c.Abort()
 	// }

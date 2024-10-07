@@ -29,14 +29,14 @@ type QueueItem struct {
 	Score int `json:"score"`
 }
 
-func NewUserBucket(r *util.MyRedis, categoryId int, minAmount int, maxAmount int) *UserBucket {
+func NewUserBucket(redis *util.MyRedis, categoryId int, minAmount int, maxAmount int) *UserBucket {
 	userBucket := new(UserBucket)
 	userBucket.CategoryId = categoryId
 	userBucket.MinAmount = minAmount
 	userBucket.MaxAmount = maxAmount
 
 	redisKey := "grab_order_queue_" + strconv.Itoa(categoryId) + "_" + GetRangeKey(minAmount, maxAmount)
-	userBucket.QueueRedis = NewQueueRedis(r, redisKey)
+	userBucket.QueueRedis = NewQueueRedis(redis, redisKey)
 	return userBucket
 }
 
@@ -44,7 +44,7 @@ func NewQueueRedis(r *util.MyRedis, key string) *QueueRedis {
 	q := new(QueueRedis)
 	q.Key = key
 
-	fmt.Println("---=====", r)
+	//fmt.Println("---=====", r)
 	q.Redis = r
 	return q
 }

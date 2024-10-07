@@ -397,7 +397,6 @@ func (cicdManager *CicdManager) GetSuperVisorList() (list ServerServiceSuperViso
 		} else {
 			// jsonStr,_  := json.Marshal(processInfoList)
 			// util.MyPrint(jsonStr)
-			// util.ExitPrint(string(jsonStr))
 		}
 		superVisorStatus[server.Id] = util.SV_ERROR_NONE
 
@@ -659,7 +658,6 @@ func (cicdManager *CicdManager) GetServerList() map[int]util.Server {
 //
 //		list[server.Id] = serverDirList
 //	}
-//	//util.ExitPrint(list)
 //	return list
 // }
 
@@ -725,7 +723,6 @@ func (cicdManager *CicdManager) GetServerList() map[int]util.Server {
 //
 //	//scp local_file remote_username@remote_ip:remote_folder
 //	//shellArgc := " -r " + localDir + " root@"+server.OutIp + ":" + targetDir
-//	//util.ExitPrint("scp "+ shellArgc)
 //	//ExecShellCommand("scp",shellArgc)
 //
 //	shellArgc := "scp  -r " + localDir + " root@" + server.OutIp + ":" + targetDir

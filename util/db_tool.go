@@ -48,7 +48,6 @@ func (db *DbTool) CreateTable(tableStruct ...interface{}) map[string]string {
 
 	for i := 0; i < len(tableStruct); i++ {
 		tableName, sql := db.processOneTable(tableStruct[i])
-		//ExitPrint(111)
 		sql_script[tableName] = sql
 	}
 
@@ -65,7 +64,7 @@ func (db *DbTool) AddField(tableStruct ...interface{}) {
 	//ALTER TABLE `sms_rule` ADD `purpose` TINYINT(1) NOT NULL DEFAULT '0' COMMENT '用途,1注册2找回密码3修改密码4登陆' AFTER `third_callback_info`;
 }
 
-//公共model中的 创建时间 更新时间 是否删除 3个字段统一放到最后面
+// 公共model中的 创建时间 更新时间 是否删除 3个字段统一放到最后面
 func (db *DbTool) ProcessCommonModelFiledSort(columnsOption []TableColumnOption) []TableColumnOption {
 	if len(columnsOption) <= 4 { //公共字段一共就4个，小于4就没必要处理了
 		return columnsOption
@@ -74,7 +73,6 @@ func (db *DbTool) ProcessCommonModelFiledSort(columnsOption []TableColumnOption)
 
 	frontArr := db.mergeTwoArr(columnsOption[0:1], columnsOption[4:])
 	newColumnsOption = db.mergeTwoArr(frontArr, columnsOption[1:4])
-	//ExitPrint(newColumnsOption)
 	//firstField := columnsOption[0:1]
 	//frontField := tmp[1:4]
 	//endField := columnsOption[4:]
@@ -82,10 +80,7 @@ func (db *DbTool) ProcessCommonModelFiledSort(columnsOption []TableColumnOption)
 	//MyPrint("firstField:", firstField, "frontField:", frontField, "endField:", endField)
 	//
 	//frontArr := append(firstField, endField...)
-	//ExitPrint(frontField)
 	//newColumnsOption = append(frontArr, frontField...)
-
-	//ExitPrint(newColumnsOption)
 
 	return newColumnsOption
 }
@@ -253,5 +248,4 @@ func (db *DbTool) GetField(typeOfStruct reflect.Type) []TableColumnOption {
 		columnsOption = append(columnsOption, tableOneColumnOption)
 	}
 	return columnsOption
-	//ExitPrint(1)
 }

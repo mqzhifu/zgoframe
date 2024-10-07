@@ -1,10 +1,11 @@
 package v1
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
+	"strconv"
 	"zgoframe/http/request"
 	httpresponse "zgoframe/http/response"
-	"zgoframe/service/grab_order"
 	"zgoframe/util"
 )
 
@@ -70,18 +71,18 @@ func GrabOrderCreate(c *gin.Context) {
 	err := c.ShouldBind(&form)
 	util.MyPrint("form:", form, " err:", err)
 
-	o := grab_order.Order{
-		Id:         form.Id,
-		Uid:        form.Uid,
-		CategoryId: form.CategoryId,
-		Timeout:    form.Timeout,
-	}
+	//o := grab_order.Order{
+	//	Id:         form.Id,
+	//	Uid:        form.Uid,
+	//	CategoryId: form.CategoryId,
+	//	Timeout:    form.Timeout,
+	//}
 
-	err = apiServices().GrabOrder.CreateOrder(o)
+	err, uid := apiServices().GrabOrder.CreateOrder(form)
 	if err != nil {
 		httpresponse.FailWithMessage("err:"+err.Error(), c)
 	} else {
-		httpresponse.OkWithAll("可以的哟~", "ok", c)
+		httpresponse.OkWithAll("可以的哟~uid:"+strconv.Itoa(uid), "ok", c)
 	}
 }
 
@@ -98,10 +99,10 @@ func GrabOrderCreate(c *gin.Context) {
 // @Success 200 {object} request.FrameSyncRoomHistory
 // @Router /grab/order/user/open [POST]
 func GrabOrderUserOpen(c *gin.Context) {
-	//var form []request.GrabOrderUserOpen
-	//err := c.ShouldBind(&form)
-	//util.MyPrint("form:", form, " err:", err)
-	//
+	var form []request.GrabOrderUserOpen
+	err := c.ShouldBind(&form)
+	util.MyPrint("GrabOrderUserOpen form:", form, " err:", err)
+
 	//req := []grab_order.UserGrabInfo{}
 	//for _, v := range form {
 	//	o := grab_order.UserGrabInfo{
@@ -112,10 +113,11 @@ func GrabOrderUserOpen(c *gin.Context) {
 	//	req = append(req, o)
 	//}
 	//
-	//err = apiServices().GrabOrder.UserOpenGrab(4, req)
-	//if err != nil {
-	//	httpresponse.FailWithMessage("err:"+err.Error(), c)
-	//} else {
-	//	httpresponse.OkWithAll("可以的哟~", "ok", c)
-	//}
+	err = apiServices().GrabOrder.UserOpenGrab(4, form)
+	fmt.Println("33==========")
+	if err != nil {
+		httpresponse.FailWithMessage("err:"+err.Error(), c)
+	} else {
+		httpresponse.OkWithAll("可以的哟~", "ok", c)
+	}
 }

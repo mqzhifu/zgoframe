@@ -82,13 +82,7 @@ func TestQueue() {
 		util.MyPrint("client consumer sleep 1")
 		finishForTimes++
 	}
-
-	//time.Sleep(time.Second * 5)
-	//util.ExitPrint(22222)
-
 	util.MyPrint("end end end ...")
-	//cancelFunc()
-	util.ExitPrint("finish.")
 }
 
 func RedisShutdown() {

@@ -20,11 +20,12 @@ type Gateway struct {
 }
 
 /*
-网关，目前主要是分为3个主要功能：
-1. http 代理 grpc(中等)
-2. 长连接代理(重点)
-3. http 代理 http(鸡肋)
+	网关，目前主要是分为3个主要功能：(仅仅做了长连接，消息转发后端服务)
+	1. http 代理 grpc(中等)
+	2. 长连接代理(重点)
+	3. http 代理 http(鸡肋)
 */
+
 func NewGateway(netWayOption util.NetWayOption, ServiceBridge *bridge.Bridge, RequestServiceAdapter *bridge.RequestServiceAdapter) *Gateway {
 
 	gateway := new(Gateway)
@@ -78,7 +79,6 @@ func (gateway *Gateway) BroadcastService(funcName string, msg pb.Msg) {
 
 	//serviceDesc, empty := gateway.NetWayOption.ProtoMap.GetServiceByName("FrameSync", funcName)
 	//if empty {
-	//	util.ExitPrint("BroadcastService get service1 empty , name:" + funcName)
 	//}
 	//msg.ServiceId = int32(serviceDesc.ServiceId)
 	//msg.FuncId = int32(serviceDesc.FuncId)
@@ -88,7 +88,6 @@ func (gateway *Gateway) BroadcastService(funcName string, msg pb.Msg) {
 	//
 	//serviceDesc, _ = gateway.NetWayOption.ProtoMap.GetServiceByName("GameMatch", funcName)
 	//if empty {
-	//	util.ExitPrint("BroadcastService get service2 empty, name:" + funcName)
 	//}
 	//msg.ServiceId = int32(serviceDesc.ServiceId)
 	//msg.FuncId = int32(serviceDesc.FuncId)

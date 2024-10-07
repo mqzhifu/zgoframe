@@ -146,7 +146,6 @@ func (configCenter *ConfigCenter) CreateModule(env int, projectId int, module st
 			configCenter.pool[env][project.Name] = vipMap
 		}
 		//a , ok := configCenter.pool[env][project.Name]
-		//util.ExitPrint(a,ok)
 
 		return nil
 	} else {
@@ -196,7 +195,6 @@ func (configCenter *ConfigCenter) InitPersistenceFile() error {
 
 		projectPool := make(map[string]map[string]*viper.Viper)
 		//util.MyPrint(configCenter.Option.ProjectManager.Pool)
-		//util.ExitPrint(configCenter.Option.ProjectManager.Pool)
 		for _, projectInfo := range configCenter.Option.ProjectManager.Pool {
 			//util.MyPrint(projectInfo)
 			//if projectDirInfo.Cate != "dir" {
@@ -213,12 +211,10 @@ func (configCenter *ConfigCenter) InitPersistenceFile() error {
 			_, err = util.PathExists(projectDir)
 			if err != nil { //
 				if !os.IsNotExist(err) {
-					//util.ExitPrint("err 1:",err)
 					return errors.New(prefix + err.Error())
 				} else {
 					err = os.Mkdir(projectDir, os.ModePerm)
 					if err != nil {
-						//util.ExitPrint("err 2:",err)
 						return errors.New(prefix + err.Error())
 					}
 				}
@@ -252,7 +248,6 @@ func (configCenter *ConfigCenter) InitPersistenceFile() error {
 					return err
 				}
 				//info := myViper.Get("mysql")
-				//util.ExitPrint(err, "tt:", info)
 				filePool[fileNameArr[0]] = myViper
 			}
 			projectPool[projectInfo.Name] = filePool

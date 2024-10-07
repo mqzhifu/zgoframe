@@ -335,7 +335,6 @@ func (deploy *Deploy) SyncOneServiceToRemoteOld(serviceDeployConfig ServiceDeplo
 		// util.MyPrint(serviceDeployConfig)
 		// syncCodeShellCommand = GetRsyncCommandPre() + " --exclude=node_modules " + newGitCodeDir + " rsync@" + server.OutIp + "::www/" + serviceDeployConfig.Name
 		syncCodeShellCommand = GetRsyncCommand(rsyncInstance.Host, rsyncInstance.Port, rsyncInstance.User, "", rsyncInstance.Ext+"/"+serviceDeployConfig.Name, "node_modules", newGitCodeDir)
-		// util.ExitPrint(syncCodeShellCommand)
 		_, err := ExecShellCommand(syncCodeShellCommand, "")
 		// util.MyPrint("SyncOneServiceToRemote:", syncCodeShellCommand, " err:", err)
 		if err != nil {

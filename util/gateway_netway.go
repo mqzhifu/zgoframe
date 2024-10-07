@@ -77,8 +77,8 @@ func NewNetWay(option NetWayOption) (*NetWay, error) {
 	myMetrics = netWay.Metrics
 	//单条消息最大值
 	netWay.Option = option
-	if option.MsgContentMax > 10240 {
-		option.MsgContentMax = 10240 //最大10KB
+	if option.MsgContentMax > MSG_CONTENT_MAX {
+		option.MsgContentMax = MSG_CONTENT_MAX //最大10KB
 	}
 	//设置状态为：初始化
 	netWay.Status = NETWAY_STATUS_INIT
@@ -239,7 +239,7 @@ func (netWay *NetWay) OpenNewConn(connFD FDAdapter) {
 
 // 这个是快捷方法类似   gateway_conn_mannger.go  CloseOneConn 方法会调用
 func (netWay *NetWay) Router(msg pb.Msg, conn *Conn) (data interface{}, err error) {
-	return netWay.Option.RouterBack(msg, "", 3)
+	return netWay.Option.RouterBack(msg, "", REQ_SERVICE_METHOD_NATIVE)
 }
 
 func (netWay *NetWay) heartbeat(requestClientHeartbeat pb.Heartbeat, conn *Conn) {

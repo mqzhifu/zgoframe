@@ -74,7 +74,7 @@ func (grabOrder *GrabOrder) InitUserBucketOrderBucket() {
 	grabOrder.UserBucketAmountRangeList = make(map[int]map[string]*UserBucket)
 	grabOrder.OrderBucketList = make(map[int]*OrderBucket)
 	for categoryId, _ := range PayCategoryList() { //每个支付分类 - 有一个 订单桶
-		grabOrder.OrderBucketList[categoryId] = NewOrderBucket(categoryId)
+		grabOrder.OrderBucketList[categoryId] = NewOrderBucket(categoryId, grabOrder.Redis, grabOrder.Gorm)
 		mapUserBucket := make(map[string]*UserBucket)
 		for _, v := range grabOrder.AmountRange.Range {
 			key := GetRangeKey(v.MinAmount, v.MaxAmount)
@@ -175,7 +175,7 @@ func (grabOrder *GrabOrder) UserCloseGrab(uid int) error {
 
 	userTotal.GrabStatus = USER_GRAP_STATUS_CLOSE
 	for categoryId, _ := range PayCategoryList() { //每个支付分类 - 有一个 订单桶
-		grabOrder.OrderBucketList[categoryId] = NewOrderBucket(categoryId)
+		grabOrder.OrderBucketList[categoryId] = NewOrderBucket(categoryId, grabOrder.Redis, grabOrder.Gorm)
 		for _, v := range grabOrder.AmountRange.Range {
 			key := GetRangeKey(v.MinAmount, v.MaxAmount)
 			userBucket := grabOrder.UserBucketAmountRangeList[categoryId][key]

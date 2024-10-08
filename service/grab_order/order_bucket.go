@@ -1,5 +1,10 @@
 package grab_order
 
+import (
+	"gorm.io/gorm"
+	"zgoframe/util"
+)
+
 type Order struct {
 	Id                string `json:"id"`                   //订单ID
 	Amount            int    `json:"amount"`               //金额
@@ -16,16 +21,22 @@ type Order struct {
 type OrderBucket struct {
 	CategoryId int              `json:"category_id"`
 	List       map[string]Order `json:"list"`
+	Redis      *util.MyRedis
+	Gorm       *gorm.DB
 }
 
-func NewOrderBucket(categoryId int) *OrderBucket {
+func NewOrderBucket(categoryId int, redis *util.MyRedis, gorm *gorm.DB) *OrderBucket {
 	orderBucket := new(OrderBucket)
 	orderBucket.CategoryId = categoryId
 	orderBucket.List = make(map[string]Order)
+	orderBucket.Redis = redis
+	orderBucket.Gorm = gorm
 
 	return orderBucket
 }
+func (ob OrderBucket) LoadDataFromRedis() {
 
+}
 func (ob OrderBucket) AddOne(order Order) error {
 	ob.List[order.Id] = order
 	return nil

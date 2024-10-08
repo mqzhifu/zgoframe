@@ -10,13 +10,13 @@ import (
 )
 
 type UserElement struct {
-	Uid                 int
-	WsStatus            int   //web-socket 在线状态
-	GrabStatus          int   //抢单开关
-	LastGrabSuccessTime int64 //最后抢单成功的时间，用于计算间隔
-	CreateTime          int64
-	UpdateTime          int64
-	UserDayTotal        UserDayTotal
+	Uid                 int          `json:"uid"`
+	WsStatus            int          `json:"ws_status"`              //web-socket 在线状态
+	GrabStatus          int          `json:"grab_status"`            //抢单开关
+	LastGrabSuccessTime int64        `json:"last_grab_success_time"` //最后抢单成功的时间，用于计算间隔
+	CreateTime          int64        `json:"create_time"`
+	UpdateTime          int64        `json:"update_time"`
+	UserDayTotal        UserDayTotal `json:"user_day_total"`
 	//GrabTotalCnt        int //已抢订单总数量
 	//GrabTotalAmount     int //已抢订单总金额
 	//PayCategoryStatus   int   //支付分类的状态

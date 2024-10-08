@@ -39,6 +39,26 @@ func GetPayCategory(c *gin.Context) {
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
 // @Produce  application/json
 // @Success 200 {object} request.FrameSyncRoomHistory
+// @Router /grab/order/get/order/bucket/list [GET]
+func GrabOrderBucketList(c *gin.Context) {
+	data, err := apiServices().GrabOrder.GetBucketList()
+	if err != nil {
+		httpresponse.FailWithMessage("err:"+err.Error(), c)
+	} else {
+		httpresponse.OkWithAll(data, "ok", c)
+	}
+}
+
+// @Tags GrabOrder
+// @Summary 抢单-订单列表
+// @Description 获取所有，订单列表
+// @Security ApiKeyAuth
+// @accept application/json
+// @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
+// @Param X-Project-Id header string true "项目ID" default(6)
+// @Param X-Access header string true "访问KEY" default(imzgoframe)
+// @Produce  application/json
+// @Success 200 {object} request.FrameSyncRoomHistory
 // @Router /grab/order/get/data [GET]
 func GrabOrderGetData(c *gin.Context) {
 	//bodyByts, _ := ioutil.ReadAll(c.Request.Body)

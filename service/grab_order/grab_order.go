@@ -216,18 +216,20 @@ func (grabOrder *GrabOrder) CreateOrder(req request.GrabOrder) (error, int) {
 	selectStatus := 0 //1超时2检查失败3成功
 	popQueueList := []QueueItem{}
 	successUser := 0
+	order.MatchQueueUserCnt = userBucket.QueueRedis.Len()
+	matchTimes := 0
 	for {
+		matchTimes++
 		select {
 		case msg := <-grabOrder.EventMsgCh:
 			fmt.Println(msg)
 			selectStatus = LOOP_SELECT_USER_QUEUE_EVENT_STOP
-			//exceptUid = append(exceptUid, msg.Uid)
 		case <-timer.C:
 			selectStatus = LOOP_SELECT_USER_QUEUE_TIMEOUT
 			break
 		default:
+			//为空也需要等待超时，不排队其它协程拿走了数据
 			if userBucket.QueueRedis.Len() == 0 {
-				selectStatus = LOOP_SELECT_USER_QUEUE_EMPTY
 				break
 			}
 			queueItem, err := userBucket.QueueRedis.Pop()
@@ -257,10 +259,10 @@ func (grabOrder *GrabOrder) CreateOrder(req request.GrabOrder) (error, int) {
 
 	switch selectStatus {
 	case LOOP_SELECT_USER_QUEUE_SUCCESS:
+
 		return nil, successUser
 	case LOOP_SELECT_USER_QUEUE_EVENT_STOP:
 	case LOOP_SELECT_USER_QUEUE_TIMEOUT:
-	case LOOP_SELECT_USER_QUEUE_EMPTY:
 	case LOOP_SELECT_USER_QUEUE_FAILED:
 
 	}
@@ -377,4 +379,9 @@ func (grabOrder *GrabOrder) GetPayCategory() ([]model.PayCategory, error) {
 // 给前端API
 func (grabOrder *GrabOrder) GetData() (*GrabOrder, error) {
 	return grabOrder, nil
+}
+
+// 给前端API
+func (grabOrder *GrabOrder) GetBucketList() (map[int]*OrderBucket, error) {
+	return grabOrder.OrderBucketList, nil
 }

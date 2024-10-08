@@ -60,6 +60,7 @@ var URI_MAP = {
     "grab_order_get_pay_category":"/grab/order/get/pay/category",
     "grab_order_user_open":"/grab/order/user/open",
     "grab_order_push_order":"/grab/order/create",
+    "grab_order_order_list":"grab_order_get_order_list",
 
 
 };
@@ -426,4 +427,11 @@ function concatenate(...arrays) {
 
     return res.buffer
 
+}
+
+function isEmptyObject(obj){
+    for(var key in obj){
+        return false
+    }
+    return true
 }

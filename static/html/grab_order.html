@@ -91,8 +91,10 @@
     $(document).ready(function(){
         request(init_pay_category,"grab_order_get_pay_category","",false,"GET",null,null);
         request(init_data_order_bucket,"grab_order_order_list","",false,"GET",null,null);
-        request(init_grab_data,"grab_order_get_data","",false,"GET",null,null);
+        request(init_grab_data,"grab_order_get_base_data","",false,"GET",null,null);
+        request(init_grab_data_user_total,"grab_order_user_total","",false,"GET",null,null);
 
+        // init_grab_data_user_bucket_amount_range_list(data.user_bucket_amount_range_list);
     });
 
     function user_open_auto_grab(uid){
@@ -135,11 +137,10 @@
     }
 
     function init_grab_data(data){
-        init_grab_data_amount(data.amount_range.range);
+        init_grab_data_amount(data.range.range);
         init_grab_data_settings(data.settings);
-        init_grab_data_user_bucket_amount_range_list(data.user_bucket_amount_range_list);
-        init_grab_data_user_total(data.user_total.user_element_list);
     }
+
     function init_grab_data_user_total(data){
         console.log("user total:",data)
         var html_div = $("#user_total");

@@ -56,12 +56,12 @@ var URI_MAP = {
     // "test_binary_tree_list_end" :  "/test/binary/tree/list/end",
     "test_binary_tree_insert_one":"/test/binary/tree/insert/one/keyword",
     "test_binary_tree_each_deep":"/test/binary/tree/each/deep",
-    "grab_order_get_data":"/grab/order/get/data",
+    "grab_order_get_base_data":"/grab/order/get/base/data",
     "grab_order_get_pay_category":"/grab/order/get/pay/category",
     "grab_order_user_open":"/grab/order/user/open",
     "grab_order_push_order":"/grab/order/create",
-    "grab_order_order_list":"grab_order_get_order_list",
-
+    "grab_order_order_list":"/grab/order/get/order/bucket/list",
+    "grab_order_user_total":"/grab/order/get/user/total",
 
 };
 //用户列表，用于测试

@@ -376,12 +376,41 @@ func (grabOrder *GrabOrder) GetPayCategory() ([]model.PayCategory, error) {
 	return list, nil
 }
 
+type BaseData struct {
+	Range    AmountRange `json:"range"`
+	Settings Settings    `json:"settings"`
+}
+
 // 给前端API
-func (grabOrder *GrabOrder) GetData() (*GrabOrder, error) {
-	return grabOrder, nil
+func (grabOrder *GrabOrder) GetBaseData() (BaseData, error) {
+
+	baseData := BaseData{
+		Range:    grabOrder.AmountRange,
+		Settings: grabOrder.Settings,
+	}
+
+	return baseData, nil
 }
 
 // 给前端API
 func (grabOrder *GrabOrder) GetBucketList() (map[int]*OrderBucket, error) {
 	return grabOrder.OrderBucketList, nil
+}
+
+// 给前端API
+func (grabOrder *GrabOrder) GetUserTotal() (map[int]UserElement, error) {
+	return grabOrder.UserTotal.UserElementList, nil
+}
+
+// 给前端API
+func (grabOrder *GrabOrder) GetUserBucketAmountList() (map[int]map[string][]SetRs, error) {
+	userBucketAmountListRs := make(map[int]map[string][]SetRs)
+
+	for categoryId, userBucketList := range grabOrder.UserBucketAmountRangeList {
+		for _, userBucket := range userBucketList {
+			rr := userBucket.QueueRedis.GetAll()
+			userBucketAmountListRs[categoryId][userBucket.QueueRedis.Key] = rr
+		}
+	}
+	return userBucketAmountListRs, nil
 }

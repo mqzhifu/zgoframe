@@ -54,6 +54,27 @@ func (queue *QueueRedis) Len() int {
 	return int(redisRs.Val())
 }
 
+type SetRs struct {
+	Score float64 `json:"score"`
+	Uid   int     `json:"uid"`
+}
+
+func (queue *QueueRedis) GetAll() []SetRs {
+
+	rs := []SetRs{}
+
+	res := queue.Redis.Redis.ZRangeWithScores(context.Background(), queue.Key, 0, -1)
+	for _, v := range res.Val() {
+		setRs := SetRs{
+			Score: v.Score,
+			Uid:   v.Member.(int),
+		}
+		rs = append(rs, setRs)
+	}
+
+	return rs
+}
+
 // 有序队列中 添加一个UID，可能用户池的UID会重复，但用序队列会自动覆盖
 func (queue *QueueRedis) Push(item QueueItem) {
 	res := queue.Redis.Redis.ZAdd(context.Background(), queue.Key, &redis.Z{Score: float64(item.Score), Member: item.Uid})

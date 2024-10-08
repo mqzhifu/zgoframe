@@ -59,14 +59,49 @@ func GrabOrderBucketList(c *gin.Context) {
 // @Param X-Access header string true "访问KEY" default(imzgoframe)
 // @Produce  application/json
 // @Success 200 {object} request.FrameSyncRoomHistory
-// @Router /grab/order/get/data [GET]
-func GrabOrderGetData(c *gin.Context) {
-	//bodyByts, _ := ioutil.ReadAll(c.Request.Body)
-	//form := request.FrameSyncRoomHistory{}
-	//json.Unmarshal(bodyByts, &form)
-	// var form request.FrameSyncRoomHistory
-	// c.ShouldBind(&form)
-	data, err := apiServices().GrabOrder.GetData()
+// @Router /grab/order/get/base/data [GET]
+func GrabOrderGetBaseData(c *gin.Context) {
+	data, err := apiServices().GrabOrder.GetBaseData()
+	if err != nil {
+		httpresponse.FailWithMessage("err:"+err.Error(), c)
+	} else {
+		httpresponse.OkWithAll(data, "ok", c)
+	}
+}
+
+// @Tags GrabOrder
+// @Summary 抢单-用户汇总列表
+// @Description 获取所有，用户汇总列表
+// @Security ApiKeyAuth
+// @accept application/json
+// @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
+// @Param X-Project-Id header string true "项目ID" default(6)
+// @Param X-Access header string true "访问KEY" default(imzgoframe)
+// @Produce  application/json
+// @Success 200 {object} request.FrameSyncRoomHistory
+// @Router /grab/order/get/user/total [GET]
+func GrabOrderGetUserTotal(c *gin.Context) {
+	data, err := apiServices().GrabOrder.GetUserTotal()
+	if err != nil {
+		httpresponse.FailWithMessage("err:"+err.Error(), c)
+	} else {
+		httpresponse.OkWithAll(data, "ok", c)
+	}
+}
+
+// @Tags GrabOrder
+// @Summary 抢单-用户汇总列表
+// @Description 获取所有，用户汇总列表
+// @Security ApiKeyAuth
+// @accept application/json
+// @Param X-Source-Type header string true "来源" Enums(11,12,21,22)
+// @Param X-Project-Id header string true "项目ID" default(6)
+// @Param X-Access header string true "访问KEY" default(imzgoframe)
+// @Produce  application/json
+// @Success 200 {object} request.FrameSyncRoomHistory
+// @Router /grab/order/get/user/total [GET]
+func GrabOrderGetUserBucketAmountList(c *gin.Context) {
+	data, err := apiServices().GrabOrder.GetUserBucketAmountList()
 	if err != nil {
 		httpresponse.FailWithMessage("err:"+err.Error(), c)
 	} else {

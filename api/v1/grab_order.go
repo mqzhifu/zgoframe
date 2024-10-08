@@ -1,7 +1,6 @@
 package v1
 
 import (
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"strconv"
 	"zgoframe/http/request"
@@ -169,7 +168,6 @@ func GrabOrderUserOpen(c *gin.Context) {
 	//}
 	//
 	err = apiServices().GrabOrder.UserOpenGrab(4, form)
-	fmt.Println("33==========")
 	if err != nil {
 		httpresponse.FailWithMessage("err:"+err.Error(), c)
 	} else {

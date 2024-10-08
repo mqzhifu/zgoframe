@@ -62,6 +62,7 @@ var URI_MAP = {
     "grab_order_push_order":"/grab/order/create",
     "grab_order_order_list":"/grab/order/get/order/bucket/list",
     "grab_order_user_total":"/grab/order/get/user/total",
+    "grab_order_user_bucket_list":"/grab/order/get/user/bucket/list",
 
 };
 //用户列表，用于测试

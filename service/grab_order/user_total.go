@@ -49,7 +49,7 @@ func (userTotal *UserTotal) AddOrUpdateOne(uid int) (err error, optType int) {
 	userElement, exist := userTotal.GetOne(uid)
 
 	ymd := time.Now().Format("2006") + time.Now().Format("01") + time.Now().Format("02")
-	key := "grab_order_day_total_" + ymd + strconv.Itoa(uid)
+	key := "grab_order_day_total_" + ymd + "_" + strconv.Itoa(uid)
 
 	if exist { //如果已经存在，做更新处理
 		userElement.UpdateTime = time.Now().Unix()
@@ -69,7 +69,6 @@ func (userTotal *UserTotal) AddOrUpdateOne(uid int) (err error, optType int) {
 
 		return nil, USER_TOTAL_OPT_TYPE_UP
 	}
-	fmt.Println("==========222222")
 	//走到这里，证明，用户数据不存在进程中，需要重新创建一下
 	userElement = UserElement{
 		Uid:        uid,
@@ -96,7 +95,6 @@ func (userTotal *UserTotal) AddOrUpdateOne(uid int) (err error, optType int) {
 	} else {
 		userElement.UserDayTotal = userTotal.GetStructUserDayTotal(key)
 	}
-	fmt.Println("========33333333")
 	//添加到集合中
 	userTotal.UserElementList[uid] = userElement
 

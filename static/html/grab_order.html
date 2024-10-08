@@ -79,8 +79,39 @@
 
 <hr class="hr-double" style="clear: both">
 
-<div class='table' id="user_total" style="clear: both;">
+<div>
+    <table>
+        <tr>
+            <td>category_id</td><td><input id="category_id" type="text" /></td>
+        </tr>
+        <tr>
+            <td>min_amount</td><td><input id="min_amount" type="text" /></td>
+        </tr>
+        <tr>
+            <td>max_amount</td><td><input id="max_amount" type="text" /></td>
+        </tr>
+        <tr>
+            <td></td><td> <input type="button" onclick="user_open_auto_grab(1)" value="用户1开启抢单"></td>
+        </tr>
+    </table>
+</div>
 
+<div>
+    <table>
+        <tr>
+            <td>category_id</td><td><input id="push_category_id" type="text" /></td>
+        </tr>
+        <tr>
+            <td>订单号</td><td><input id="order_id" type="text" /></td>
+        </tr>
+        <tr>
+            <td>金额</td><td><input id="amount" type="text" /></td>
+        </tr>
+
+        <tr>
+            <td></td><td> <input type="button" onclick="push_order()" value="推单"></td>
+        </tr>
+    </table>
 </div>
 
 <hr class="hr-double" style="clear: both">
@@ -141,23 +172,7 @@
         init_grab_data_settings(data.settings);
     }
 
-    function init_grab_data_user_total(data){
-        console.log("user total:",data)
-        var html_div = $("#user_total");
-        var html ="<table><tr><td>开启抢单用户</td></tr>";
-        html += "<tr><td>uid</td><td>ws_status</td><td>create_time</td><td>failed_time</td><td>success_time</td><td>grab_amount</td><td>grab_amount_progress</td></tr>";
-        for (let key in data) {
-            html += "<tr><td>"+data[key].uid+"</td><td>"+data[key].ws_status+"</td><td>"+data[key].create_time+"</td>";
-            html += "<td>"+data[key].user_day_total.failed_time+"</td>";
-            html += "<td>"+data[key].user_day_total.success_time+"</td>"
-            html += "<td>"+data[key].user_day_total.grab_amount+"</td>";
-            html += "<td>"+data[key].user_day_total.grab_amount_progress+"</td>";
-            html += "</br>";
-        }
 
-        html += "</table>";
-        html_div.html(html);
-    }
     function init_grab_data_settings(data){
         // console.log("dddd:",data);
         var html_div = $("#settings");
@@ -202,7 +217,40 @@
     }
 
 
+
+
+
 </script>
+
+<script>
+    function push_order(){
+        var order_id = $("#order_id").val();
+        var amount = $("#amount").val();
+        var push_category_id = $("#push_category_id").val();
+        // Uid        int `json:"uid"`
+        // Timeout    int `json:"timeout"`
+        var data = {"id":order_id,"amount":parseInt(amount),"uid":99,"category_id":parseInt(push_category_id)};
+        request(push_order_back,"grab_order_push_order","",false,"POST",data,null);
+    }
+    function user_open_auto_grab(uid){
+        var categoryId = $("#category_id").val();
+        var min_amount = $("#min_amount").val();
+        var max_amount = $("#max_amount").val();
+
+        var data = [{"pay_category_id":parseInt(categoryId),"amount_min":parseInt(min_amount),"amount_max":parseInt(max_amount)}];
+        request(user_open_auto_grab_back,"grab_order_user_open","",false,"POST",data,null);
+    }
+
+    function push_order_back(data){
+
+    }
+
+    function user_open_auto_grab_back(data){
+
+    }
+
+</script>
+
 
 </body>
 

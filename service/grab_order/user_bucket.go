@@ -56,7 +56,7 @@ func (queue *QueueRedis) Len() int {
 
 type SetRs struct {
 	Score float64 `json:"score"`
-	Uid   int     `json:"uid"`
+	Uid   string  `json:"uid"`
 }
 
 func (queue *QueueRedis) GetAll() []SetRs {
@@ -67,7 +67,7 @@ func (queue *QueueRedis) GetAll() []SetRs {
 	for _, v := range res.Val() {
 		setRs := SetRs{
 			Score: v.Score,
-			Uid:   v.Member.(int),
+			Uid:   v.Member.(string),
 		}
 		rs = append(rs, setRs)
 	}

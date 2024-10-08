@@ -44,71 +44,77 @@
 </style>
 
 <body>
-<div>
-    <table>
-        <tr>
-            <td>category_id</td><td><input id="category_id" type="text" /></td>
-        </tr>
-        <tr>
-            <td>min_amount</td><td><input id="min_amount" type="text" /></td>
-        </tr>
-        <tr>
-            <td>max_amount</td><td><input id="max_amount" type="text" /></td>
-        </tr>
-        <tr>
-            <td></td><td> <input type="button" onclick="user_open_auto_grab(1)" value="用户1开启抢单"></td>
-        </tr>
-    </table>
+
+<div class='table' id="user_total" style="clear: both;">
+
 </div>
 
-<div>
-    <table>
-        <tr>
-            <td>category_id</td><td><input id="push_category_id" type="text" /></td>
-        </tr>
-        <tr>
-            <td>订单号</td><td><input id="order_id" type="text" /></td>
-        </tr>
-        <tr>
-            <td>金额</td><td><input id="amount" type="text" /></td>
-        </tr>
+<hr class="hr-double" style="clear: both">
 
-        <tr>
-            <td></td><td> <input type="button" onclick="push_order()" value="推单"></td>
-        </tr>
-    </table>
+<div class='table' id="user_bucket_list" style="clear: both;">
+
 </div>
+
+<hr class="hr-double" style="clear: both">
 
 </body>
-
-
 <script>
-    function push_order(){
-        var order_id = $("#order_id").val();
-        var amount = $("#amount").val();
-        var push_category_id = $("#push_category_id").val();
-        // Uid        int `json:"uid"`
-        // Timeout    int `json:"timeout"`
-        var data = {"id":order_id,"amount":parseInt(amount),"uid":99,"category_id":parseInt(push_category_id)};
-        request(push_order_back,"grab_order_push_order","",false,"POST",data,null);
+    //入口
+    $(document).ready(function(){
+        request(init_grab_data_user_total,"grab_order_user_total","",false,"GET",null,null);
+        request(init_grab_data_user_bucket_total,"grab_order_user_bucket_list","",false,"GET",null,null);
+
+        // init_grab_data_user_bucket_amount_range_list(data.user_bucket_amount_range_list);
+    });
+    function init_grab_data_user_bucket_total(data){
+        var html = "";
+
+        console.log("init_grab_data_user_bucket_total:",data)
+        for (let categoryId in data) {
+            html += "<table>"
+            html += "<tr><td>"+categoryId+"</td><td>";
+            html += "<table>"
+            for (let redisKey in data[categoryId]) {
+                html += "<tr><td>"+redisKey+"</td><td>";
+                var userList = data[categoryId][redisKey];
+                if (isEmptyObject(userList)){
+                    html += "</td></tr>";
+                    continue;
+                }
+                html += "<table><tr><td>score</td><td>uid</td></tr>";
+                for (let key in userList) {
+                    html += "<tr><td>"+userList[key].score+"</td><td>"+userList[key].uid+"</td></tr>"
+                }
+                html += "</table>";
+                html += "</td></tr>";
+
+            }
+            html += "</table>"
+            html += "</td></tr>";
+            html += "</table>"
+        }
+        $("#user_bucket_list").html(html);
     }
-    function user_open_auto_grab(uid){
-        var categoryId = $("#category_id").val();
-        var min_amount = $("#min_amount").val();
-        var max_amount = $("#max_amount").val();
+    function init_grab_data_user_total(data){
+        console.log("user total:",data)
+        var html_div = $("#user_total");
+        var html ="<table><tr><td>开启抢单用户</td></tr>";
+        html += "<tr><td>uid</td><td>ws_status</td><td>create_time</td><td>failed_time</td><td>success_time</td><td>grab_amount</td><td>grab_amount_progress</td></tr>";
+        for (let key in data) {
+            html += "<tr><td>"+data[key].uid+"</td><td>"+data[key].ws_status+"</td><td>"+data[key].create_time+"</td>";
+            html += "<td>"+data[key].user_day_total.failed_time+"</td>";
+            html += "<td>"+data[key].user_day_total.success_time+"</td>"
+            html += "<td>"+data[key].user_day_total.grab_amount+"</td>";
+            html += "<td>"+data[key].user_day_total.grab_amount_progress+"</td>";
+            html += "</br>";
+        }
 
-        var data = [{"pay_category_id":parseInt(categoryId),"amount_min":parseInt(min_amount),"max_amount":parseInt(max_amount)}];
-        request(user_open_auto_grab_back,"grab_order_user_open","",false,"POST",data,null);
-    }
-
-    function push_order_back(data){
-
-    }
-
-    function user_open_auto_grab_back(data){
-
+        html += "</table>";
+        html_div.html(html);
     }
 
 </script>
+
+
 
 </html>

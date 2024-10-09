@@ -157,17 +157,7 @@ func GrabOrderUserOpen(c *gin.Context) {
 	err := c.ShouldBind(&form)
 	util.MyPrint("GrabOrderUserOpen form:", form, " err:", err)
 
-	//req := []grab_order.UserGrabInfo{}
-	//for _, v := range form {
-	//	o := grab_order.UserGrabInfo{
-	//		PayCategoryId: v.PayCategoryId,
-	//		AmountMin:     v.AmountMin,
-	//		AmountMax:     v.AmountMax,
-	//	}
-	//	req = append(req, o)
-	//}
-	//
-	err = apiServices().GrabOrder.UserOpenGrab(4, form)
+	err = apiServices().GrabOrder.UserOpenGrab(form[0].Uid, form)
 	if err != nil {
 		httpresponse.FailWithMessage("err:"+err.Error(), c)
 	} else {

@@ -82,16 +82,19 @@
 <div>
     <table>
         <tr>
-            <td>category_id</td><td><input id="category_id" type="text" /></td>
+            <td>category_id</td><td><input id="uid" type="text" value="10" /></td>
         </tr>
         <tr>
-            <td>min_amount</td><td><input id="min_amount" type="text" /></td>
+            <td>category_id</td><td><input id="category_id" type="text" value="1" /></td>
         </tr>
         <tr>
-            <td>max_amount</td><td><input id="max_amount" type="text" /></td>
+            <td>min_amount</td><td><input id="min_amount" type="text" value="100" /></td>
         </tr>
         <tr>
-            <td></td><td> <input type="button" onclick="user_open_auto_grab(1)" value="用户1开启抢单"></td>
+            <td>max_amount</td><td><input id="max_amount" type="text" value="500" /></td>
+        </tr>
+        <tr>
+            <td></td><td> <input type="button" onclick="user_open_auto_grab()" value="用户开启抢单"></td>
         </tr>
     </table>
 </div>
@@ -99,10 +102,10 @@
 <div>
     <table>
         <tr>
-            <td>category_id</td><td><input id="push_category_id" type="text" /></td>
+            <td>category_id</td><td><input id="push_category_id" type="text" value="1" /></td>
         </tr>
         <tr>
-            <td>订单号</td><td><input id="order_id" type="text" /></td>
+            <td>订单号</td><td><input id="order_id" type="text" /></td><td ><input type="button" onclick="make_order_id()" value="机器生成"></td>
         </tr>
         <tr>
             <td>金额</td><td><input id="amount" type="text" /></td>
@@ -123,14 +126,10 @@
         request(init_pay_category,"grab_order_get_pay_category","",false,"GET",null,null);
         request(init_data_order_bucket,"grab_order_order_list","",false,"GET",null,null);
         request(init_grab_data,"grab_order_get_base_data","",false,"GET",null,null);
-        request(init_grab_data_user_total,"grab_order_user_total","",false,"GET",null,null);
+        // request(init_grab_data_user_total,"grab_order_user_total","",false,"GET",null,null);
 
         // init_grab_data_user_bucket_amount_range_list(data.user_bucket_amount_range_list);
     });
-
-    function user_open_auto_grab(uid){
-
-    }
 
     function init_pay_category(data){
         var pay_category = $("#pay_category");
@@ -146,6 +145,11 @@
         pay_category.html(html);
     }
 
+    function make_order_id(){
+        var s = GetNowDate() +"-" + RangeRandNumber(1000,9999);
+        $("#order_id").val(s);
+    }
+
     function init_data_order_bucket(data){
         var order_bucket_list_div = $("#order_bucket_list");
         var bucket_list_data_html = "<table><tr><td>订单</td></tr>";
@@ -157,10 +161,15 @@
                 bucket_list_data_html += "<td>数据-空</td></tr>";
                 continue;
             }
+            bucket_list_data_html += "<td><table><tr><td>id</td><td>in_id</td><td>amount</td><td>timeout</td><td>grab_uid</td><td>status</td><td>start_time</td><td>end_time</td><td>match_times</td></tr>";
             for (let key_2 in bucket_list.list) {
                 var row = bucket_list.list[key_2];
-                bucket_list_data_html += "<td>"+row.id+"</td><td>"+row.amount+"</td><td>"+row.start_time+"</td><td>"+row.timeout+"</td><td>"+row.success_time+"</td><td>"+grab_uid+"</td>";
+                bucket_list_data_html += "<tr>";
+                bucket_list_data_html += "<td>"+row.id+"</td><td>"+row.in_id+"</td><td>"+row.amount+"</td><td>"+unix10ToDate(row.timeout)+"</td><td>"+row.grab_uid+"</td><td>"+row.status+"</td>";
+                bucket_list_data_html += "<td>"+unix10ToDate(row.start_time)+"</td><td>"+unix10ToDate(row.end_time)+"</td><td>"+row.match_times+"</td>";
+                bucket_list_data_html += "</tr>"
             }
+            bucket_list_data_html += "</table></td>";
             bucket_list_data_html += "</tr>"
         }
         bucket_list_data_html += "</table>";
@@ -232,12 +241,13 @@
         var data = {"id":order_id,"amount":parseInt(amount),"uid":99,"category_id":parseInt(push_category_id)};
         request(push_order_back,"grab_order_push_order","",false,"POST",data,null);
     }
-    function user_open_auto_grab(uid){
+    function user_open_auto_grab(){
+        var uid = $("#uid").val();
         var categoryId = $("#category_id").val();
         var min_amount = $("#min_amount").val();
         var max_amount = $("#max_amount").val();
 
-        var data = [{"pay_category_id":parseInt(categoryId),"amount_min":parseInt(min_amount),"amount_max":parseInt(max_amount)}];
+        var data = [{"pay_category_id":parseInt(categoryId),"amount_min":parseInt(min_amount),"amount_max":parseInt(max_amount),"uid":parseInt(uid)}];
         request(user_open_auto_grab_back,"grab_order_user_open","",false,"POST",data,null);
     }
 

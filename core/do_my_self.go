@@ -1,6 +1,8 @@
 package core
 
 import (
+	"fmt"
+	"os"
 	"reflect"
 	"zgoframe/core/global"
 	"zgoframe/test"
@@ -19,12 +21,14 @@ func DoTestAction(flag string) {
 	case "alert":
 		//global.V.Service.Alert.Send(6, "商品库存不足，请及时补充货源", "warning")
 	case "db_table":
+		fmt.Println("=====")
 		sqlList := global.AutoCreateUpDbTable()
 		sqlStrings := ""
 		for _, v := range sqlList {
 			sqlStrings += v
 		}
 		util.MyPrint(sqlStrings)
+		os.Exit(3)
 	case "ali_sms":
 		//AliSms := util.NewAliSms()
 		//AliSms.Send()

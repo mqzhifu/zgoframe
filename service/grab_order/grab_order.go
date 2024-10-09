@@ -187,11 +187,12 @@ func (grabOrder *GrabOrder) UserCloseGrab(uid int) error {
 
 // 其它服务，推单过来
 func (grabOrder *GrabOrder) CreateOrder(req request.GrabOrder) (error, int) {
-	order := Order{
-		Id:         req.Id,
+	order := model.PayOrderMatch{
+		InId:       req.Id,
 		Amount:     req.Amount,
 		CategoryId: req.CategoryId,
 		Uid:        req.Uid,
+		Status:     ORDER_MATCH_STATUS_ING,
 	}
 	//先给订单 设置 超时时间
 	order.StartTime = int(time.Now().Unix())
@@ -226,9 +227,9 @@ func (grabOrder *GrabOrder) CreateOrder(req request.GrabOrder) (error, int) {
 		select {
 		case msg := <-grabOrder.EventMsgCh:
 			fmt.Println(msg)
-			selectStatus = LOOP_SELECT_USER_QUEUE_EVENT_STOP
+			selectStatus = ORDER_MATCH_STATUS_EVENT_STOP
 		case <-timer.C:
-			selectStatus = LOOP_SELECT_USER_QUEUE_TIMEOUT
+			selectStatus = ORDER_MATCH_STATUS_TIMEOUT
 			break
 		default:
 			//为空也需要等待超时，不排队其它协程拿走了数据
@@ -242,19 +243,19 @@ func (grabOrder *GrabOrder) CreateOrder(req request.GrabOrder) (error, int) {
 			}
 			popQueueUserList = append(popQueueUserList, queueItem)
 			fmt.Println("popQueueList:", popQueueUserList)
-			err = grabOrder.GrabDoing(queueItem.Uid, order.Id, order.CategoryId)
+			err = grabOrder.GrabDoing(queueItem.Uid, order.InId, order.CategoryId)
 			if err != nil {
 				fmt.Println("GrabDoing err:", err)
-				selectStatus = LOOP_SELECT_USER_QUEUE_FAILED
+				selectStatus = ORDER_MATCH_STATUS_FAILED
 				break
 			}
-			selectStatus = LOOP_SELECT_USER_QUEUE_SUCCESS
+			selectStatus = ORDER_MATCH_STATUS_SUCCESS
 			successUser = queueItem.Uid
 
 		}
 		fmt.Println("order match once status:"+strconv.Itoa(selectStatus), ", successUser:", successUser, ",matchTimes:", matchTimes)
 		//只有匹配失败的一种情况，才需要，一直循环
-		if selectStatus != LOOP_SELECT_USER_QUEUE_FAILED {
+		if selectStatus != ORDER_MATCH_STATUS_FAILED {
 			break
 		}
 		time.Sleep(time.Millisecond * 100)
@@ -263,15 +264,20 @@ func (grabOrder *GrabOrder) CreateOrder(req request.GrabOrder) (error, int) {
 	if len(popQueueUserList) > 0 {
 
 	}
+	order.Status = selectStatus
+	order.GrabUid = successUser
+	order.EndTime = int(time.Now().Unix())
+	order.MatchTimes = matchTimes
+	grabOrder.OrderBucketList[order.CategoryId].UpOneRecord(order)
 
 	switch selectStatus {
-	case LOOP_SELECT_USER_QUEUE_SUCCESS:
+	case ORDER_MATCH_STATUS_SUCCESS:
 		return nil, successUser
-	case LOOP_SELECT_USER_QUEUE_EVENT_STOP:
+	case ORDER_MATCH_STATUS_EVENT_STOP:
 		return errors.New("EVENT_STOP"), 0
-	case LOOP_SELECT_USER_QUEUE_TIMEOUT:
+	case ORDER_MATCH_STATUS_TIMEOUT:
 		return errors.New("user timeout"), 0
-	case LOOP_SELECT_USER_QUEUE_FAILED:
+	case ORDER_MATCH_STATUS_FAILED:
 		return errors.New("user fail"), 0
 	}
 

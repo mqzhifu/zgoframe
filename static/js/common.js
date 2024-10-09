@@ -436,3 +436,40 @@ function isEmptyObject(obj){
     }
     return true
 }
+
+function GetNowDate(){
+    var today = new Date();
+
+//日期
+    var DD = String(today.getDate()).padStart(2, '0'); // 获取日
+    var MM = String(today.getMonth() + 1).padStart(2, '0'); //获取月份，1 月为 0
+    var yyyy = today.getFullYear(); // 获取年
+
+// 时间
+    hh =  String(today.getHours()).padStart(2, '0');       //获取当前小时数(0-23)
+    mm = String(today.getMinutes()).padStart(2, '0');     //获取当前分钟数(0-59)
+    ss = String(today.getSeconds()).padStart(2, '0');     //获取当前秒数(0-59)
+    // today = yyyy + '-' + MM + '-' + DD + ' ' + hh + ':' + mm + ':' + ss;
+    today = yyyy + MM   + DD + '_' + hh +   mm +   ss;
+    return today;
+}
+
+function RangeRandNumber(min,max){
+    return Math.floor(Math.random()*(max-min+1)+min);
+}
+
+function unix10ToDate(unixTime){
+    if (!unixTime){
+        return "-";
+    }
+    unixTime = unixTime * 1000;
+    var date = new Date(unixTime);  // 参数需要毫秒数，所以这里将秒数乘于 1000
+    Y = date.getFullYear() + '-';
+    M = (date.getMonth()+1 < 10 ? '0'+(date.getMonth()+1) : date.getMonth()+1) + '-';
+    D = date.getDate() + ' ';
+    h = date.getHours() + ':';
+    m = date.getMinutes() + ':';
+    s = date.getSeconds();
+
+    return Y+M+D+h+m+s;
+}

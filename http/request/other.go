@@ -99,6 +99,7 @@ type GrabOrder struct {
 }
 
 type GrabOrderUserOpen struct {
+	Uid           int `json:"uid"`
 	PayCategoryId int `json:"pay_category_id"`
 	AmountMin     int `json:"amount_min"`
 	AmountMax     int `json:"amount_max"`

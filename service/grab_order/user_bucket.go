@@ -97,3 +97,7 @@ func (queue *QueueRedis) Pop() (item QueueItem, err error) {
 func (queue *QueueRedis) DelOneByUid(uid int) {
 	queue.Redis.Redis.ZRem(context.Background(), queue.Key, uid)
 }
+
+func (queue *QueueRedis) IncScore(uid int, v int) {
+	queue.Redis.Redis.ZIncrBy(context.Background(), queue.Key, float64(v), strconv.Itoa(uid))
+}

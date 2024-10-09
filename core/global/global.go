@@ -115,7 +115,7 @@ func AutoCreateUpDbTable() map[string]string {
 		&model.OperationRecord{}, &model.Project{}, &model.ProjectPushMsg{}, &model.StatisticsLog{},
 		&model.CicdPublish{}, &model.Server{}, &model.Instance{},
 		&model.SmsRule{}, &model.SmsLog{}, &model.EmailRule{}, &model.EmailLog{}, &model.MailRule{}, &model.MailLog{}, &model.MailGroup{},
-		&model.Goods{}, &model.Orders{}, &model.PayOrder{}, &model.PayOrderMatch{})
+		&model.Goods{}, &model.Orders{}, &model.PayOrder{}, &model.PayOrderMatch{}, &model.UserTotal{})
 	//&model.AgoraCloudRecord{}, &model.AgoraCallbackRecord{}, &model.TwinAgoraRoom{},
 
 	return sql

@@ -193,46 +193,47 @@ func (grabOrder *GrabOrder) CreateOrder(req request.GrabOrder) (error, int) {
 		CategoryId: req.CategoryId,
 		Uid:        req.Uid,
 		Status:     ORDER_MATCH_STATUS_ING,
+		StartTime:  int(time.Now().Unix()),
 	}
-	//先给订单 设置 超时时间
-	order.StartTime = int(time.Now().Unix())
 	order.Timeout = order.StartTime + grabOrder.Settings.GrabTimeout
-	key := ""
+	userBucketAmountRangeKey := ""
 	//判断 - 当前订单的金额 属性哪个 金额区间
 	for _, v := range grabOrder.AmountRange.Range {
 		if order.Amount >= v.MinAmount && order.Amount <= v.MaxAmount {
-			key = GetRangeKey(v.MinAmount, v.MaxAmount)
+			userBucketAmountRangeKey = GetRangeKey(v.MinAmount, v.MaxAmount)
 		}
 	}
-	if key == "" {
+	if userBucketAmountRangeKey == "" {
 		fmt.Println("err1 key empty")
 		return errors.New("key empty"), 0
 	}
 
-	fmt.Println("CreateOrder info id:", order.Id, ",amount:", order.Amount, ",uid:", order.Uid, "categoryId:", order.CategoryId, ",timeout:", order.Timeout, ",key:", key)
+	fmt.Println("CreateOrder info id:", order.Id, ",amount:", order.Amount, ",uid:", order.Uid, "categoryId:", order.CategoryId, ",timeout:", order.Timeout, ",userBucketAmountRangeKey:", userBucketAmountRangeKey)
 
 	//订单 - 添加到公共的桶中
 	grabOrder.OrderBucketList[order.CategoryId].AddOne(order)
-	fmt.Println("grabOrder.OrderBucketList[order.CategoryId]:", grabOrder.OrderBucketList[order.CategoryId])
+	//fmt.Println("grabOrder.OrderBucketList[order.CategoryId]:", grabOrder.OrderBucketList[order.CategoryId])
 	timer := time.NewTimer(time.Second * time.Duration(grabOrder.Settings.GrabTimeout))
 	//根据：支付渠道类型、金额区间，找到那个用户池子，从池子找一个用户接单
-	userBucket := grabOrder.UserBucketAmountRangeList[order.CategoryId][key]
-	selectStatus := 0 //1超时2检查失败3成功
+	userBucket := grabOrder.UserBucketAmountRangeList[order.CategoryId][userBucketAmountRangeKey]
+	matchStatus := 0 //1超时2检查失败3成功
 	popQueueUserList := []QueueItem{}
 	successUser := 0
-	order.MatchQueueUserCnt = userBucket.QueueRedis.Len()
-	matchTimes := 0
+	order.MatchQueueUserCnt = userBucket.QueueRedis.Len() //记录下，开始匹配时，队列里的用户总数
+	matchTimes := 0                                       //匹配次数
 	for {
 		matchTimes++
+		fmt.Println("select match times:", matchTimes)
 		select {
 		case msg := <-grabOrder.EventMsgCh:
 			fmt.Println(msg)
-			selectStatus = ORDER_MATCH_STATUS_EVENT_STOP
+			matchStatus = ORDER_MATCH_STATUS_EVENT_STOP
 		case <-timer.C:
-			selectStatus = ORDER_MATCH_STATUS_TIMEOUT
+			matchStatus = ORDER_MATCH_STATUS_TIMEOUT
 			break
 		default:
-			//为空也需要等待超时，不排队其它协程拿走了数据
+			fmt.Println("queue len:", userBucket.QueueRedis.Len())
+			//为空也需要等待：超时，不排队其它协程拿走了数据
 			if userBucket.QueueRedis.Len() == 0 {
 				break
 			}
@@ -241,68 +242,69 @@ func (grabOrder *GrabOrder) CreateOrder(req request.GrabOrder) (error, int) {
 				fmt.Println("userBucket.PopOne err:", err.Error())
 				continue
 			}
+			fmt.Println("pop one uid:", queueItem.Uid, ",score:", queueItem.Score)
 			popQueueUserList = append(popQueueUserList, queueItem)
-			fmt.Println("popQueueList:", popQueueUserList)
-			err = grabOrder.GrabDoing(queueItem.Uid, order.InId, order.CategoryId)
+			err = grabOrder.CheckGrabLimit(order.CategoryId, order.InId, queueItem.Uid)
 			if err != nil {
-				fmt.Println("GrabDoing err:", err)
-				selectStatus = ORDER_MATCH_STATUS_FAILED
+				grabOrder.UserTotal.UpGrabFailedTime(queueItem.Uid)
+				fmt.Println("CheckGrabLimit err:", err)
+				matchStatus = ORDER_MATCH_STATUS_FAILED
 				break
 			}
-			selectStatus = ORDER_MATCH_STATUS_SUCCESS
+			matchStatus = ORDER_MATCH_STATUS_SUCCESS
 			successUser = queueItem.Uid
 
 		}
-		fmt.Println("order match once status:"+strconv.Itoa(selectStatus), ", successUser:", successUser, ",matchTimes:", matchTimes)
+		fmt.Println("order match once status:"+strconv.Itoa(matchStatus), ", successUser:", successUser, ",matchTimes:", matchTimes)
 		//只有匹配失败的一种情况，才需要，一直循环
-		if selectStatus != ORDER_MATCH_STATUS_FAILED {
+		if matchStatus != ORDER_MATCH_STATUS_FAILED {
 			break
 		}
 		time.Sleep(time.Millisecond * 100)
 	}
 	//把之前弹出的用户，再放回去
-	if len(popQueueUserList) > 0 {
+	grabOrder.QueuePushBack(popQueueUserList, userBucket)
 
-	}
-	order.Status = selectStatus
+	order.Status = matchStatus
 	order.GrabUid = successUser
 	order.EndTime = int(time.Now().Unix())
 	order.MatchTimes = matchTimes
 	grabOrder.OrderBucketList[order.CategoryId].UpOneRecord(order)
 
-	switch selectStatus {
+	switch matchStatus {
 	case ORDER_MATCH_STATUS_SUCCESS:
+		grabOrder.GrabSuccessUpData(order, userBucket)
 		return nil, successUser
 	case ORDER_MATCH_STATUS_EVENT_STOP:
 		return errors.New("EVENT_STOP"), 0
 	case ORDER_MATCH_STATUS_TIMEOUT:
-		return errors.New("user timeout"), 0
+		return errors.New("order timeout"), 0
 	case ORDER_MATCH_STATUS_FAILED:
-		return errors.New("user fail"), 0
+		return errors.New("checkout user info failed"), 0
 	}
 
 	return errors.New("unknow"), 0
 
 }
 
-// 正式开始抢单
-func (grabOrder *GrabOrder) GrabDoing(uid int, oid string, categoryId int) error {
-	fmt.Println("GrabDoing uid:", uid, " categoryId:", categoryId, " oid:", oid)
-	err := grabOrder.CheckGrabLimit(categoryId, oid, uid)
-	grabOrder.UserTotal.UpdateLastGrabFailedTime()
-	if err != nil {
-		return err
+func (grabOrder *GrabOrder) QueuePushBack(popQueueUserList []QueueItem, userBucket *UserBucket) {
+	if len(popQueueUserList) > 0 {
+		for _, queueItem := range popQueueUserList {
+			userBucket.QueueRedis.Push(queueItem)
+		}
 	}
-	//order record 落盘
+}
+
+func (grabOrder *GrabOrder) GrabSuccessUpData(order model.PayOrderMatch, userBucket *UserBucket) {
 	//更新用户：余额、冻结金额
 	//合建账变记录
 
-	grabOrder.UserTotal.UpdateGrabDayTotalOrderCnt()
-	//grabOrder.UserTotal.UpdateGrabDayTotalAmountProgress()
-	grabOrder.UserTotal.UpdateGrabDayTotalAmount()
-	grabOrder.UserTotal.UpdateLastGrabSuccessTime()
+	userBucket.QueueRedis.IncScore(order.GrabUid, -1)
 
-	return nil
+	grabOrder.UserTotal.UpGrabDayTotalOrderCnt(order.GrabUid)
+	grabOrder.UserTotal.UpGrabDayTotalAmount(order.GrabUid, order.Amount)
+	grabOrder.UserTotal.UpGrabSuccessTime(order.GrabUid)
+	grabOrder.UserTotal.UpLastGrabSuccessTime(order.GrabUid)
 }
 
 func (grabOrder *GrabOrder) CheckGrabLimit(category int, oid string, uid int) (err error) {
@@ -344,15 +346,15 @@ func (grabOrder *GrabOrder) CheckGrabLimit(category int, oid string, uid int) (e
 	if userInfo.Status == 2 { //用户被禁用
 		return errors.New("用户被禁用")
 	}
-	//userTotalInfo := model.UserTotal{}
-	//grabOrder.Gorm.First(&userTotalInfo, uid)
-	//if userTotalInfo.Id <= 0 {
-	//	return errors.New("uid not in userTotal table")
-	//}
-	////可抢额度=账户余额-押金-冻结金额
-	//if order.Amount > userTotalInfo.Cash { //余额不足
-	//	return errors.New("余额不足")
-	//}
+	userTotalInfo := model.UserTotal{}
+	grabOrder.Gorm.First(&userTotalInfo, uid)
+	if userTotalInfo.Id <= 0 {
+		return errors.New("uid not in userTotal table")
+	}
+	//可抢额度=账户余额-押金-冻结金额
+	if order.Amount > userTotalInfo.Cash { //余额不足
+		return errors.New("余额不足")
+	}
 	//if userTotal.PayCategoryStatus == 0 {
 	//
 	//}
@@ -367,68 +369,24 @@ func (grabOrder *GrabOrder) CheckGrabLimit(category int, oid string, uid int) (e
 
 func (grabOrder *GrabOrder) ReceiveEventMsg(msg EventMsg) {
 	switch msg.TypeId {
-	case EVENT_TYPE_USER_COLOSE_GRAB:
-		break
-	case EVENT_TYPE_USER_WS_CLOSE:
+	case EVENT_TYPE_USER_WS_CHANGE:
+		grabOrder.UserTotal.UpWs(msg.Uid, 1)
 		break
 	case EVENT_TYPE_USER_FREEZE:
+		grabOrder.UserCloseGrab(msg.Uid)
 		break
 	case EVENT_TYPE_USER_PAY_CHANNEL_CLOSE:
+		grabOrder.UserCloseGrab(msg.Uid)
 		break
 	case EVENT_TYPE_PAY_CATEGORY_CLOSE:
+		grabOrder.UserCloseGrab(msg.Uid)
 		break
 	case EVENT_TYPE_SET_CHANGE:
+		grabOrder.UserCloseGrab(msg.Uid)
 		break
 	default:
 		fmt.Println("event type id err")
 	}
-}
 
-// 给前端API
-func (grabOrder *GrabOrder) GetPayCategory() ([]model.PayCategory, error) {
-	list := []model.PayCategory{}
-	grabOrder.Gorm.Find(&list)
-	return list, nil
-}
-
-type BaseData struct {
-	Range    AmountRange `json:"range"`
-	Settings Settings    `json:"settings"`
-}
-
-// 给前端API
-func (grabOrder *GrabOrder) GetBaseData() (BaseData, error) {
-
-	baseData := BaseData{
-		Range:    grabOrder.AmountRange,
-		Settings: grabOrder.Settings,
-	}
-
-	return baseData, nil
-}
-
-// 给前端API
-func (grabOrder *GrabOrder) GetBucketList() (map[int]*OrderBucket, error) {
-	return grabOrder.OrderBucketList, nil
-}
-
-// 给前端API
-func (grabOrder *GrabOrder) GetUserTotal() (map[int]UserElement, error) {
-	return grabOrder.UserTotal.UserElementList, nil
-}
-
-// 给前端API
-func (grabOrder *GrabOrder) GetUserBucketAmountList() (map[int]map[string][]SetRs, error) {
-	userBucketAmountListRs := make(map[int]map[string][]SetRs)
-
-	for categoryId, userBucketList := range grabOrder.UserBucketAmountRangeList {
-		userBucketAmountListRs[categoryId] = make(map[string][]SetRs)
-		for _, userBucket := range userBucketList {
-			//fmt.Println("=====", userBucket.QueueRedis.Key)
-			rr := userBucket.QueueRedis.GetAll()
-			//_, ok := userBucketAmountListRs[categoryId][userBucket.QueueRedis.Key]
-			userBucketAmountListRs[categoryId][userBucket.QueueRedis.Key] = rr
-		}
-	}
-	return userBucketAmountListRs, nil
+	grabOrder.EventMsgCh <- msg
 }

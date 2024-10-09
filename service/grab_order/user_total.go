@@ -25,7 +25,6 @@ type UserElement struct {
 
 type UserDayTotal struct {
 	Date                string `json:"date"`                   //天
-	GrabAmountProgress  int    `json:"grab_amount_progress"`   //进行中的金额，防止多个池子同时抢单
 	GrabCnt             int    `json:"grab_cnt"`               //今天已抢订单数量
 	GrabAmount          int    `json:"grab_amount"`            //今天已抢总金额数
 	SuccessTime         int    `json:"success_time"`           //今天总成功次数
@@ -82,7 +81,6 @@ func (userTotal *UserTotal) AddOrUpdateOne(uid int) (err error, optType int) {
 	if keyExist <= 0 {
 		userDayTotal := UserDayTotal{
 			Date:                ymd,
-			GrabAmountProgress:  0,
 			GrabCnt:             0,
 			GrabAmount:          0,
 			SuccessTime:         0,
@@ -138,27 +136,48 @@ func (userTotal *UserTotal) GetUserOrderAmountDay() {
 
 }
 
-// 获取 - 用户当天抢单-进行中的-订单数量
-//func (userTotal *UserTotal) UpdateGrabDayTotalAmountProgress() {
-//
-//}
+func (userTotal *UserTotal) UpWs(uid int, status int) {
+	info, exist := userTotal.GetOne(uid)
+	if exist { // 获取 - 用户当天抢单-进行中的-订单数量
+		info.WsStatus = status
+	} //
+} //}
 
 // 更新 - 用户当天抢单总数
-func (userTotal *UserTotal) UpdateGrabDayTotalOrderCnt() {
-
+func (userTotal *UserTotal) UpGrabDayTotalOrderCnt(uid int) {
+	info, exist := userTotal.GetOne(uid)
+	if exist {
+		info.UserDayTotal.GrabCnt++
+	}
 }
 
 // 更新 - 用户当天抢单总金额
-func (userTotal *UserTotal) UpdateGrabDayTotalAmount() {
+func (userTotal *UserTotal) UpGrabDayTotalAmount(uid int, amount int) {
+	info, exist := userTotal.GetOne(uid)
+	if exist {
+		info.UserDayTotal.GrabAmount += amount
+	}
+}
 
+// 更新 - 用户当天抢单-失败次数
+func (userTotal *UserTotal) UpGrabFailedTime(uid int) {
+	info, exist := userTotal.GetOne(uid)
+	if exist {
+		info.UserDayTotal.FailedTime++
+	}
 }
 
 // 更新 - 用户当天抢单-进行中的-订单数量
-func (userTotal *UserTotal) UpdateLastGrabFailedTime() {
-
+func (userTotal *UserTotal) UpGrabSuccessTime(uid int) {
+	info, exist := userTotal.GetOne(uid)
+	if exist {
+		info.UserDayTotal.SuccessTime++
+	}
 }
 
-// 更新 - 用户当天抢单-进行中的-订单数量
-func (userTotal *UserTotal) UpdateLastGrabSuccessTime() {
-
+func (userTotal *UserTotal) UpLastGrabSuccessTime(uid int) {
+	info, exist := userTotal.GetOne(uid)
+	if exist {
+		info.UserDayTotal.LastGrabSuccessTime = time.Now().Unix()
+	}
 }

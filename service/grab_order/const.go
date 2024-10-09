@@ -9,9 +9,8 @@ const (
 
 	DEFAULT_PRIORITY = 100 //抢单，用户默认权重值
 
-	EVENT_TYPE_USER_COLOSE_GRAB       = 1 //用户关闭了抢单
-	EVENT_TYPE_USER_WS_CLOSE          = 2 //用户ws断了
-	EVENT_TYPE_USER_FREEZE            = 3 //用户账户被冻结
+	EVENT_TYPE_USER_WS_CHANGE         = 1 //用户ws状态变更
+	EVENT_TYPE_USER_FREEZE            = 2 //用户账户被冻结
 	EVENT_TYPE_USER_PAY_CHANNEL_CLOSE = 4 //用户支付渠道已关闭
 	EVENT_TYPE_PAY_CATEGORY_CLOSE     = 5 //系统支付分类，已关闭
 	EVENT_TYPE_SET_CHANGE             = 6 //配置文件修改

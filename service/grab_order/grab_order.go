@@ -107,11 +107,16 @@ func (grabOrder *GrabOrder) UserOpenGrab(uid int, userOpenGrabSet []request.Grab
 		return errors.New("uid <= 0 or len UserOpenGrabSet== 0")
 	}
 	fmt.Println("userOpenGrabSet:", userOpenGrabSet)
+
+	maxAmount := userOpenGrabSet[0].AmountMax //找出用户配置的渠道中，最大的那个值
 	//200 - 2000
 	//100 - 500 | 501 - 1000  | 1000 - 5000
 	userInAmtFlag := 0
 	for _, userChannel := range userOpenGrabSet {
 		fmt.Println(userChannel.AmountMin, grabOrder.AmountRange.MinAmount)
+		if userChannel.AmountMax > maxAmount {
+			maxAmount = userChannel.AmountMax
+		}
 		if userChannel.AmountMin < grabOrder.AmountRange.MinAmount {
 			fmt.Println("此用户支付渠道不满足 userChannel.AmountMin < grabOrder.AmountRange.MinAmount")
 			continue
@@ -159,8 +164,19 @@ func (grabOrder *GrabOrder) UserOpenGrab(uid int, userOpenGrabSet []request.Grab
 		fmt.Println(errMsg)
 		return errors.New(errMsg)
 	}
+
+	userTotalDB := model.UserTotal{}
+	grabOrder.Gorm.Where("uid = ?", uid).First(&userTotalDB)
+	if userTotalDB.Id <= 0 {
+		return errors.New("uid not in user_total table.")
+	}
+	//接单最大额度 ，不能大于 自己的账户额度，不然没法扣款了
+	if maxAmount > userTotalDB.Cash {
+
+	}
+
 	//UID会在多个渠道、金额区间的池子里，还得有个用户的总控，在这里添加/更新
-	err, optType := grabOrder.UserTotal.AddOrUpdateOne(uid)
+	err, optType := grabOrder.UserTotal.AddOrUpdateOne(uid, userOpenGrabSet)
 	fmt.Println("AddOrUpdateOne rs , err:", err, " , optType:", optType)
 
 	return nil
@@ -194,6 +210,7 @@ func (grabOrder *GrabOrder) CreateOrder(req request.GrabOrder) (error, int) {
 		Uid:        req.Uid,
 		Status:     ORDER_MATCH_STATUS_ING,
 		StartTime:  int(time.Now().Unix()),
+		PayStatus:  1,
 	}
 	order.Timeout = order.StartTime + grabOrder.Settings.GrabTimeout
 	userBucketAmountRangeKey := ""
@@ -297,8 +314,14 @@ func (grabOrder *GrabOrder) QueuePushBack(popQueueUserList []QueueItem, userBuck
 
 func (grabOrder *GrabOrder) GrabSuccessUpData(order model.PayOrderMatch, userBucket *UserBucket) {
 	//更新用户：余额、冻结金额
-	//合建账变记录
+	userTotal := model.UserTotal{}
+	upData := make(map[string]interface{})
+	upData["cash"] = gorm.Expr("cash - ?", order.Amount)
+	upData["FreezeCash"] = gorm.Expr("freezeCash + ?", order.Amount)
+	grabOrder.Gorm.Model(&userTotal).Where("uid = ?", order.Uid).Updates(upData)
+	//创建账变记录:冻结金额
 
+	//抢单成功后，权重要下降
 	userBucket.QueueRedis.IncScore(order.GrabUid, -1)
 
 	grabOrder.UserTotal.UpGrabDayTotalOrderCnt(order.GrabUid)
@@ -306,7 +329,14 @@ func (grabOrder *GrabOrder) GrabSuccessUpData(order model.PayOrderMatch, userBuc
 	grabOrder.UserTotal.UpGrabSuccessTime(order.GrabUid)
 	grabOrder.UserTotal.UpLastGrabSuccessTime(order.GrabUid)
 }
+func (grabOrder *GrabOrder) CheckUserTotal(uid int) {
+	userTotalDB := model.UserTotal{}
+	grabOrder.Gorm.Where("uid = ?", uid).First(&userTotalDB)
+	if userTotalDB.Id <= 0 {
 
+	}
+	//userTotalDB.
+}
 func (grabOrder *GrabOrder) CheckGrabLimit(category int, oid string, uid int) (err error) {
 	order := grabOrder.OrderBucketList[category].GelOne(oid)
 	fmt.Println("CheckGrabLimit ", order.StartTime, order.Timeout)
@@ -318,10 +348,11 @@ func (grabOrder *GrabOrder) CheckGrabLimit(category int, oid string, uid int) (e
 	if exist == false {
 		return errors.New("uid not in UserTotal")
 	}
+	//当日 可抢数量
 	if userTotal.UserDayTotal.GrabAmount > grabOrder.Settings.GrabDayTotalAmount {
 
 	}
-
+	//当日 可抢额度
 	if userTotal.UserDayTotal.GrabCnt > grabOrder.Settings.GrabDayOrderCnt {
 
 	}

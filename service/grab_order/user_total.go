@@ -6,17 +6,19 @@ import (
 	"fmt"
 	"strconv"
 	"time"
+	"zgoframe/http/request"
 	"zgoframe/util"
 )
 
 type UserElement struct {
-	Uid                 int          `json:"uid"`
-	WsStatus            int          `json:"ws_status"`              //web-socket 在线状态
-	GrabStatus          int          `json:"grab_status"`            //抢单开关
-	LastGrabSuccessTime int64        `json:"last_grab_success_time"` //最后抢单成功的时间，用于计算间隔
-	CreateTime          int64        `json:"create_time"`
-	UpdateTime          int64        `json:"update_time"`
-	UserDayTotal        UserDayTotal `json:"user_day_total"`
+	Uid                 int                         `json:"uid"`
+	WsStatus            int                         `json:"ws_status"`              //web-socket 在线状态
+	GrabStatus          int                         `json:"grab_status"`            //抢单开关
+	LastGrabSuccessTime int64                       `json:"last_grab_success_time"` //最后抢单成功的时间，用于计算间隔
+	CreateTime          int64                       `json:"create_time"`
+	UpdateTime          int64                       `json:"update_time"`
+	UserDayTotal        UserDayTotal                `json:"user_day_total"`
+	UserOpenGrab        []request.GrabOrderUserOpen `json:"user_open_grab"`
 	//GrabTotalCnt        int //已抢订单总数量
 	//GrabTotalAmount     int //已抢订单总金额
 	//PayCategoryStatus   int   //支付分类的状态
@@ -44,7 +46,7 @@ func NewUserTotal(redis *util.MyRedis) *UserTotal {
 	return userTotal
 }
 
-func (userTotal *UserTotal) AddOrUpdateOne(uid int) (err error, optType int) {
+func (userTotal *UserTotal) AddOrUpdateOne(uid int, grabOrderUserOpen []request.GrabOrderUserOpen) (err error, optType int) {
 	userElement, exist := userTotal.GetOne(uid)
 
 	ymd := time.Now().Format("2006") + time.Now().Format("01") + time.Now().Format("02")
@@ -54,6 +56,7 @@ func (userTotal *UserTotal) AddOrUpdateOne(uid int) (err error, optType int) {
 		userElement.UpdateTime = time.Now().Unix()
 		userElement.GrabStatus = USER_GRAP_STATUS_OPEN
 		userElement.WsStatus = userTotal.GetUserWsStatus()
+		userElement.UserOpenGrab = grabOrderUserOpen
 		if userElement.UserDayTotal.Date == "" {
 			fmt.Println("err userElement.UserDayTotal.Date empty")
 			//重新获取一下，当日的金额相关的统计数据

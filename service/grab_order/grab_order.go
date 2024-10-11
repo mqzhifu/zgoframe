@@ -84,23 +84,6 @@ func (grabOrder *GrabOrder) InitUserBucketOrderBucket() {
 	}
 }
 
-// 监听：订单超时
-func (grabOrder *GrabOrder) CheckOrderTimeout() {
-	stop := 0
-	for {
-		select {
-		case <-grabOrder.CloseOrderTimeoutDemon:
-			stop = 1
-			break
-		default:
-			time.Sleep(time.Second * 1)
-		}
-		if stop == 1 {
-			break
-		}
-	}
-}
-
 // 用户开启 - 自动抢单功能
 func (grabOrder *GrabOrder) UserOpenGrab(uid int, userOpenGrabSet []request.GrabOrderUserOpen) error {
 	if uid <= 0 || len(userOpenGrabSet) == 0 {
@@ -189,7 +172,7 @@ func (grabOrder *GrabOrder) UserCloseGrab(uid int) error {
 		return errors.New("user total does not exist")
 	}
 
-	userTotal.GrabStatus = USER_GRAP_STATUS_CLOSE
+	userTotal.GrabStatus = USER_GRAB_STATUS_CLOSE
 	for categoryId, _ := range PayCategoryList() { //每个支付分类 - 有一个 订单桶
 		grabOrder.OrderBucketList[categoryId] = NewOrderBucket(categoryId, grabOrder.Redis, grabOrder.Gorm)
 		for _, v := range grabOrder.AmountRange.Range {
@@ -203,15 +186,15 @@ func (grabOrder *GrabOrder) UserCloseGrab(uid int) error {
 
 // 其它服务，推单过来
 func (grabOrder *GrabOrder) CreateOrder(req request.GrabOrder) (error, int) {
-	order := model.PayOrderMatch{
-		InId:       req.Id,
-		Amount:     req.Amount,
-		CategoryId: req.CategoryId,
-		Uid:        req.Uid,
-		Status:     ORDER_MATCH_STATUS_ING,
-		StartTime:  int(time.Now().Unix()),
-		PayStatus:  1,
-	}
+	order := Order{}
+	order.InId = req.OrderId
+	order.Amount = req.Amount
+	order.CategoryId = req.CategoryId
+	order.Uid = req.Uid
+	order.Status = ORDER_MATCH_STATUS_ING
+	order.StartTime = int(time.Now().Unix())
+	order.PayStatus = 1
+
 	order.Timeout = order.StartTime + grabOrder.Settings.GrabTimeout
 	userBucketAmountRangeKey := ""
 	//判断 - 当前订单的金额 属性哪个 金额区间
@@ -312,7 +295,7 @@ func (grabOrder *GrabOrder) QueuePushBack(popQueueUserList []QueueItem, userBuck
 	}
 }
 
-func (grabOrder *GrabOrder) GrabSuccessUpData(order model.PayOrderMatch, userBucket *UserBucket) {
+func (grabOrder *GrabOrder) GrabSuccessUpData(order Order, userBucket *UserBucket) {
 	//更新用户：余额、冻结金额
 	userTotal := model.UserTotal{}
 	upData := make(map[string]interface{})
@@ -365,7 +348,7 @@ func (grabOrder *GrabOrder) CheckGrabLimit(category int, oid string, uid int) (e
 		return errors.New("用户长连接状态为：关闭")
 	}
 
-	if userTotal.GrabStatus == USER_GRAP_STATUS_CLOSE {
+	if userTotal.GrabStatus == USER_GRAB_STATUS_CLOSE {
 		return errors.New("uid not in UserTotal")
 	}
 

@@ -2,6 +2,7 @@ package grab_order
 
 import (
 	"gorm.io/gorm"
+	"time"
 	"zgoframe/model"
 	"zgoframe/util"
 )
@@ -20,16 +21,21 @@ import (
 
 // 支付-类型桶
 type OrderBucket struct {
-	CategoryId int                            `json:"category_id"`
-	List       map[string]model.PayOrderMatch `json:"list"`
-	Redis      *util.MyRedis                  `json:"-"`
-	Gorm       *gorm.DB                       `json:"-"`
+	CategoryId int              `json:"category_id"`
+	List       map[string]Order `json:"list"`
+	Redis      *util.MyRedis    `json:"-"`
+	Gorm       *gorm.DB         `json:"-"`
+}
+
+type Order struct {
+	model.PayOrderMatch
+	//CloseOrderTimeoutDemon chan int
 }
 
 func NewOrderBucket(categoryId int, redis *util.MyRedis, gorm *gorm.DB) *OrderBucket {
 	orderBucket := new(OrderBucket)
 	orderBucket.CategoryId = categoryId
-	orderBucket.List = make(map[string]model.PayOrderMatch)
+	orderBucket.List = make(map[string]Order)
 	orderBucket.Redis = redis
 	orderBucket.Gorm = gorm
 
@@ -46,29 +52,45 @@ func (ob OrderBucket) LoadDataFromRedis(categoryId int) {
 	}
 
 	for _, dbOrder := range list {
-		ob.List[dbOrder.InId] = dbOrder
+		oo := Order{}
+		ob.List[dbOrder.InId] = oo
 	}
 
 	return
 }
-func (ob OrderBucket) AddOne(order model.PayOrderMatch) error {
+func (ob OrderBucket) AddOne(order Order) error {
+	//order.CloseOrderTimeoutDemon = make(chan int)
 	ob.List[order.InId] = order
 	ob.Gorm.Create(&order)
-
+	go ob.CheckOrderTimeout(order)
 	return nil
 }
 
 // 更新一整条记录
-func (ob OrderBucket) UpOneRecord(order model.PayOrderMatch) {
+func (ob OrderBucket) UpOneRecord(order Order) {
 	ob.List[order.InId] = order
 	ob.Gorm.Save(&order)
 }
 
-func (ob OrderBucket) GelOne(oid string) model.PayOrderMatch {
+func (ob OrderBucket) GelOne(oid string) Order {
 	return ob.List[oid]
 }
 
 func (ob OrderBucket) DelOne(oid string) error {
 	delete(ob.List, oid)
 	return nil
+}
+
+// 监听：订单超时
+func (ob OrderBucket) CheckOrderTimeout(order Order) {
+	for {
+		if order.Status != ORDER_MATCH_STATUS_ING {
+			break
+		}
+		//这里多一秒，是前面的方法已经做了超时算是，这里做个保底操作
+		if int(time.Now().Unix()) > order.Timeout+1 {
+
+		}
+		time.Sleep(time.Second * 1)
+	}
 }

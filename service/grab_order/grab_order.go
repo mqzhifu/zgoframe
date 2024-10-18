@@ -40,7 +40,7 @@ func (grabOrder *GrabOrder) Init() {
 	grabOrder.InitSettings()
 	grabOrder.InitUserBucketOrderBucket()
 
-	grabOrder.UserTotal = NewUserTotal(grabOrder.Redis)
+	grabOrder.UserTotal = NewUserTotal(grabOrder.Redis, grabOrder.Gorm)
 
 }
 
@@ -91,6 +91,17 @@ func (grabOrder *GrabOrder) UserOpenGrab(uid int, userOpenGrabSet []request.Grab
 	}
 	fmt.Println("userOpenGrabSet:", userOpenGrabSet)
 
+	userTotalInfo, exist := grabOrder.UserTotal.GetOne(uid)
+	if exist {
+		err := grabOrder.CheckGrabLimit(uid, userTotalInfo)
+		if err != nil {
+			return err
+		}
+		if userTotalInfo.GrabStatus == 1 {
+			return errors.New("用户已经开启了抢单，不要重复操作")
+		}
+	}
+
 	maxAmount := userOpenGrabSet[0].AmountMax //找出用户配置的渠道中，最大的那个值
 	//200 - 2000
 	//100 - 500 | 501 - 1000  | 1000 - 5000
@@ -101,14 +112,27 @@ func (grabOrder *GrabOrder) UserOpenGrab(uid int, userOpenGrabSet []request.Grab
 			maxAmount = userChannel.AmountMax
 		}
 		if userChannel.AmountMin < grabOrder.AmountRange.MinAmount {
-			fmt.Println("此用户支付渠道不满足 userChannel.AmountMin < grabOrder.AmountRange.MinAmount")
+			fmt.Println("用户支付渠道(" + strconv.Itoa(userChannel.PayCategoryId) + ")不满足 userChannel.AmountMin < grabOrder.AmountRange.MinAmount")
 			continue
 		}
 
 		if userChannel.AmountMax > grabOrder.AmountRange.MaxAmount {
-			fmt.Println("此用户支付渠道不满足 userChannel.AmountMax > grabOrder.AmountRange.MaxAmount")
+			fmt.Println("此用户支付渠道(" + strconv.Itoa(userChannel.PayCategoryId) + ")不满足 userChannel.AmountMax > grabOrder.AmountRange.MaxAmount")
 			continue
 		}
+
+		userPayAccount := model.UserPayAccount{}
+		grabOrder.Gorm.Where("uid = ? and category_id = ? ", uid, userChannel.PayCategoryId).First(&userPayAccount)
+		if userPayAccount.Id <= 0 {
+			return errors.New("该用户并没有：支付分类账户(" + strconv.Itoa(userChannel.PayCategoryId) + ")")
+		}
+		if userPayAccount.AmountMin > userChannel.AmountMin || userPayAccount.AmountMax < userChannel.AmountMax {
+			return errors.New("用户支付账号：金额范围错误")
+		}
+		if userPayAccount.Status == 2 {
+			return errors.New("用户支付账号:状态已关闭")
+		}
+
 		//每个渠道，根据每个金额范围，都会有一个用户桶
 		//用户：每个渠道，会设置一个 金额范围
 		//一个渠道  => 多个金额区间的用户池 ，用户可能同时在多个用户池中
@@ -155,7 +179,7 @@ func (grabOrder *GrabOrder) UserOpenGrab(uid int, userOpenGrabSet []request.Grab
 	}
 	//接单最大额度 ，不能大于 自己的账户额度，不然没法扣款了
 	if maxAmount > userTotalDB.Cash {
-
+		return errors.New("接单最大额度 ，不能大于 自己的账户额度，不然没法扣款了")
 	}
 
 	//UID会在多个渠道、金额区间的池子里，还得有个用户的总控，在这里添加/更新
@@ -244,7 +268,7 @@ func (grabOrder *GrabOrder) CreateOrder(req request.GrabOrder) (error, int) {
 			}
 			fmt.Println("pop one uid:", queueItem.Uid, ",score:", queueItem.Score)
 			popQueueUserList = append(popQueueUserList, queueItem)
-			err = grabOrder.CheckGrabLimit(order.CategoryId, order.InId, queueItem.Uid)
+			err = grabOrder.CreateOrderCheckGrabLimit(order.CategoryId, order.InId, queueItem.Uid)
 			if err != nil {
 				grabOrder.UserTotal.UpGrabFailedTime(queueItem.Uid)
 				fmt.Println("CheckGrabLimit err:", err)
@@ -320,17 +344,37 @@ func (grabOrder *GrabOrder) CheckUserTotal(uid int) {
 	}
 	//userTotalDB.
 }
-func (grabOrder *GrabOrder) CheckGrabLimit(category int, oid string, uid int) (err error) {
-	order := grabOrder.OrderBucketList[category].GelOne(oid)
-	fmt.Println("CheckGrabLimit ", order.StartTime, order.Timeout)
-	if int(time.Now().Unix()) > order.Timeout {
-		return errors.New("order timeout")
-	}
 
+func (grabOrder *GrabOrder) CreateOrderCheckGrabLimit(categoryId int, oid string, uid int) (err error) {
 	userTotal, exist := grabOrder.UserTotal.GetOne(uid)
 	if exist == false {
 		return errors.New("uid not in UserTotal")
 	}
+
+	err = grabOrder.CheckGrabLimit(uid, userTotal)
+	if err != nil {
+		return err
+	}
+
+	order := grabOrder.OrderBucketList[categoryId].GelOne(oid)
+	userTotalInfo := model.UserTotal{}
+	grabOrder.Gorm.First(&userTotalInfo, uid)
+	if userTotalInfo.Id <= 0 {
+		return errors.New("uid not in userTotal table")
+	}
+	//可抢额度=账户余额-押金-冻结金额
+	if order.Amount > userTotalInfo.Cash { //余额不足
+		return errors.New("余额不足")
+	}
+
+	if userTotal.GrabStatus == USER_GRAB_STATUS_CLOSE {
+		return errors.New("用户抢单状态：关闭")
+	}
+
+	return nil
+}
+
+func (grabOrder *GrabOrder) CheckGrabLimit(uid int, userTotal UserElement) (err error) {
 	//当日 可抢数量
 	if userTotal.UserDayTotal.GrabAmount > grabOrder.Settings.GrabDayTotalAmount {
 
@@ -339,17 +383,13 @@ func (grabOrder *GrabOrder) CheckGrabLimit(category int, oid string, uid int) (e
 	if userTotal.UserDayTotal.GrabCnt > grabOrder.Settings.GrabDayOrderCnt {
 
 	}
-
+	//下单间隔
 	if int(time.Now().Unix()-userTotal.LastGrabSuccessTime) < grabOrder.Settings.GrabIntervalTime {
 		return errors.New("下单间隔")
 	}
 
 	if userTotal.WsStatus == USER_WS_STATUS_OFFLINE {
 		return errors.New("用户长连接状态为：关闭")
-	}
-
-	if userTotal.GrabStatus == USER_GRAB_STATUS_CLOSE {
-		return errors.New("uid not in UserTotal")
 	}
 
 	userInfo := model.User{}
@@ -360,23 +400,6 @@ func (grabOrder *GrabOrder) CheckGrabLimit(category int, oid string, uid int) (e
 	if userInfo.Status == 2 { //用户被禁用
 		return errors.New("用户被禁用")
 	}
-	userTotalInfo := model.UserTotal{}
-	grabOrder.Gorm.First(&userTotalInfo, uid)
-	if userTotalInfo.Id <= 0 {
-		return errors.New("uid not in userTotal table")
-	}
-	//可抢额度=账户余额-押金-冻结金额
-	if order.Amount > userTotalInfo.Cash { //余额不足
-		return errors.New("余额不足")
-	}
-	//if userTotal.PayCategoryStatus == 0 {
-	//
-	//}
-	//
-	//if userTotal.PayChannelStatus == 0 {
-	//
-	//}
-	//
 
 	return nil
 }

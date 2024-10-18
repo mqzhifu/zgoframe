@@ -4,9 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"gorm.io/gorm"
 	"strconv"
 	"time"
 	"zgoframe/http/request"
+	"zgoframe/model"
 	"zgoframe/util"
 )
 
@@ -18,7 +20,7 @@ type UserElement struct {
 	CreateTime          int64                       `json:"create_time"`
 	UpdateTime          int64                       `json:"update_time"`
 	UserDayTotal        UserDayTotal                `json:"user_day_total"`
-	UserOpenGrab        []request.GrabOrderUserOpen `json:"user_open_grab"`
+	UserOpenGrab        []request.GrabOrderUserOpen `json:"user_open_grab"` //用户开始自动抢单时的配置数据
 	//GrabTotalCnt        int //已抢订单总数量
 	//GrabTotalAmount     int //已抢订单总金额
 	//PayCategoryStatus   int   //支付分类的状态
@@ -37,13 +39,30 @@ type UserDayTotal struct {
 type UserTotal struct {
 	UserElementList map[int]UserElement `json:"user_element_list"`
 	Redis           *util.MyRedis       `json:"-"`
+	Gorm            *gorm.DB            `json:"-"`
 }
 
-func NewUserTotal(redis *util.MyRedis) *UserTotal {
+func NewUserTotal(redis *util.MyRedis, gorm *gorm.DB) *UserTotal {
 	userTotal := new(UserTotal)
 	userTotal.Redis = redis
+	userTotal.Gorm = gorm
 	userTotal.UserElementList = make(map[int]UserElement)
 	return userTotal
+}
+
+func (userTotal *UserTotal) InsertGrabOrderUserOpenRecord(list []request.GrabOrderUserOpen) {
+	rowMax := model.GrabUserAutoOpen{}
+	userTotal.Gorm.Select("max(id) as id ").First(&rowMax)
+
+	for _, v := range list {
+		row := model.GrabUserAutoOpen{}
+		row.Uid = v.Uid
+		row.CategoryId = v.PayCategoryId
+		row.AmountMax = v.AmountMax
+		row.AmountMin = v.AmountMin
+		row.BatchId = rowMax.BatchId + 1
+		userTotal.Gorm.Create(&row)
+	}
 }
 
 func (userTotal *UserTotal) AddOrUpdateOne(uid int, grabOrderUserOpen []request.GrabOrderUserOpen) (err error, optType int) {
@@ -54,8 +73,8 @@ func (userTotal *UserTotal) AddOrUpdateOne(uid int, grabOrderUserOpen []request.
 
 	if exist { //如果已经存在，做更新处理
 		userElement.UpdateTime = time.Now().Unix()
-		userElement.GrabStatus = USER_GRAP_STATUS_OPEN
-		userElement.WsStatus = userTotal.GetUserWsStatus()
+		userElement.GrabStatus = USER_GRAB_STATUS_OPEN
+		userElement.WsStatus = userTotal.GetUserWsStatus(uid)
 		userElement.UserOpenGrab = grabOrderUserOpen
 		if userElement.UserDayTotal.Date == "" {
 			fmt.Println("err userElement.UserDayTotal.Date empty")
@@ -69,13 +88,15 @@ func (userTotal *UserTotal) AddOrUpdateOne(uid int, grabOrderUserOpen []request.
 			userElement.UserDayTotal = userTotal.GetStructUserDayTotal(key)
 		}
 
+		userTotal.InsertGrabOrderUserOpenRecord(grabOrderUserOpen)
+
 		return nil, USER_TOTAL_OPT_TYPE_UP
 	}
 	//走到这里，证明，用户数据不存在进程中，需要重新创建一下
 	userElement = UserElement{
 		Uid:        uid,
-		WsStatus:   userTotal.GetUserWsStatus(),
-		GrabStatus: USER_GRAP_STATUS_OPEN,
+		WsStatus:   userTotal.GetUserWsStatus(uid),
+		GrabStatus: USER_GRAB_STATUS_OPEN,
 		CreateTime: time.Now().Unix(),
 		UpdateTime: time.Now().Unix(),
 	}
@@ -98,12 +119,14 @@ func (userTotal *UserTotal) AddOrUpdateOne(uid int, grabOrderUserOpen []request.
 	}
 	//添加到集合中
 	userTotal.UserElementList[uid] = userElement
+	userTotal.InsertGrabOrderUserOpenRecord(grabOrderUserOpen)
 
 	return nil, USER_TOTAL_OPT_TYPE_ADD
 }
 
-func (userTotal *UserTotal) GetUserWsStatus() int {
-	return USER_WS_STATUS_ONLINE
+func (userTotal *UserTotal) GetUserWsStatus(uid int) int {
+	info, _ := userTotal.GetOne(uid)
+	return info.WsStatus
 }
 
 func (userTotal *UserTotal) GetStructUserDayTotal(key string) (userDayTotal UserDayTotal) {

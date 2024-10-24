@@ -113,7 +113,7 @@ func AutoCreateUpDbTable() map[string]string {
 	sql := dbTool.CreateTable(&model.User{}, &model.UserReg{}, &model.UserLogin{},
 		&model.GameMatchRule{}, &model.GameMatchSuccess{}, &model.GameMatchGroup{}, &model.GameMatchPush{}, &model.GameSyncRoom{},
 		&model.OperationRecord{}, &model.Project{}, &model.ProjectPushMsg{}, &model.StatisticsLog{},
-		&model.CicdPublish{}, &model.Server{}, &model.Instance{},
+		&model.CicdPublish{}, &model.Server{}, &model.Instance{}, &model.ConnRecord{},
 		&model.SmsRule{}, &model.SmsLog{}, &model.EmailRule{}, &model.EmailLog{}, &model.MailRule{}, &model.MailLog{}, &model.MailGroup{},
 		&model.Goods{}, &model.Orders{}, &model.PayOrder{}, &model.PayOrderMatch{}, &model.UserTotal{})
 	//&model.AgoraCloudRecord{}, &model.AgoraCallbackRecord{}, &model.TwinAgoraRoom{},

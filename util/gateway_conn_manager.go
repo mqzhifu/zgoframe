@@ -171,8 +171,18 @@ func (connManager *ConnManager) addConnPool(NewConn *Conn) error {
 	}
 	connManager.Option.Log.Info("addConnPool : " + strconv.Itoa(int(NewConn.UserId)))
 	connManager.PoolRWLock.Lock()
-	defer connManager.PoolRWLock.Unlock()
 	connManager.Pool[NewConn.UserId] = NewConn
+	connManager.PoolRWLock.Unlock()
+
+	record := model.ConnRecord{}
+	record.Uid = NewConn.UserId
+	record.ContentType = NewConn.ContentType
+	record.ProtocolType = NewConn.ProtocolType
+	record.Status = NewConn.Status
+
+	connManager.Option.Gorm.Create(&record)
+
+	connManager.Pool[NewConn.UserId].DbId = record.Id
 
 	return nil
 }
@@ -400,6 +410,7 @@ type Conn struct {
 	ContentType  int32        `json:"content_type"`  //传输数据的内容类型	此值由第一次通信时确定，直到断开连接前，不会变更
 	ProtocolType int32        `json:"protocol_type"` //传输数据的类型		此值由第一次通信时确定，直到断开连接前，不会变更
 	Metrics      ConnMetrics  `json:"metrics"`       //测量/统计，公共metrics是放汇总数据的，这个是针对一个用户的
+	DbId         int          `json:"db_id"`         //如果长连接持久化DB中，最后需要这个ID进行更新
 	Conn         FDAdapter    `json:"-"`             //TCP/WS 真实的 socket FD
 	CloseChan    chan int     `json:"-"`             //减半信号管道
 	netWay       *NetWay      `json:"-"`             //父父类,快捷指针
@@ -556,6 +567,13 @@ func (conn *Conn) CloseOneConn(source int) {
 		return
 	}
 	conn.Status = CONN_STATUS_CLOSE_ING
+
+	upDataConnRecord := make(map[string]interface{})
+	upDataConnRecord["close_time"] = time.Now().Unix()
+	upDataConnRecord["status"] = CONN_STATUS_CLOSE
+	upDataConnRecord["close_type"] = source
+	conn.ConnManager.Option.Gorm.Debug().Model(&model.ConnRecord{}).Where("id= ?", conn.DbId).Updates(upDataConnRecord)
+	//fmt.Println("update =======", upDataConnRecord, " ,connDbId:", conn.DbId, " e:", e)
 
 	connCloseEvent := pb.FDCloseEvent{
 		UserId:       conn.UserId,

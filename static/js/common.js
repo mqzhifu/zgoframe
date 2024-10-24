@@ -67,8 +67,8 @@ var URI_MAP = {
 };
 //用户列表，用于测试
 var UserList = {
-    10 :{id:10 ,"username"  :"doctor", "password":"123456","info":{},"token":"","roomId":"","channel":"ckck"},
-     9 :{id:9  ,"username":"calluser", "password":"123456","info":{},"token":"","roomId":"","channel":"ckck"},
+    10 :{id:10 ,"username"  :"frame_sync_1", "password":"123456","info":{},"token":"","roomId":"","channel":"ckck"},
+     9 :{id:9  ,"username":"frame_sync_2", "password":"123456","info":{},"token":"","roomId":"","channel":"ckck"},
 }
 //根据 KEY 获取 URI 的完成URL地址
 function get_uri_by_name(name){

@@ -572,6 +572,9 @@ func (conn *Conn) CloseOneConn(source int) {
 	upDataConnRecord["close_time"] = time.Now().Unix()
 	upDataConnRecord["status"] = CONN_STATUS_CLOSE
 	upDataConnRecord["close_type"] = source
+	upDataConnRecord["rtt"] = conn.RTT
+	upDataConnRecord["total_output_num"] = conn.Metrics.ReceiveMsgTimes
+	upDataConnRecord["total_input_num"] = conn.Metrics.SendMsgTimes
 	conn.ConnManager.Option.Gorm.Debug().Model(&model.ConnRecord{}).Where("id= ?", conn.DbId).Updates(upDataConnRecord)
 	//fmt.Println("update =======", upDataConnRecord, " ,connDbId:", conn.DbId, " e:", e)
 

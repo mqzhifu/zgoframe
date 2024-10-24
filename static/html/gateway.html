@@ -101,16 +101,17 @@
     var contentType = 1;
     var protocolType = 2;
     var userInfo = null;
+
     function Init(){
-        // return 1;
-        // GetFDUserList();
+        //需要先登陆，获取token ，不然其它请求均失败
         AutoUserLogin(9,LoginRes);
     }
 
     function LoginRes(data){
         console.log("UserLoginBack data:",data);
         userInfo = data;
-        initServerConfig();
+        //S端配置信息
+        request(processServerConfig,"gateway_config",userInfo["token"],false,"GET",null,null);
 
         request(GetFDUserList,"gateway_fd_list",userInfo["token"],false,"GET",null,null);
         request(total,"gateway_total",userInfo["token"],false,"GET",null,null)
@@ -174,40 +175,8 @@
         if (!content){
             return alert("content 不能为空");
         }
-
-        // $.ajax({
-        //     type: "POST",
-        //     async:false,
-        //     data:{"uid":uid,"content":content},
-        //     headers: {
-        //         "X-Source-Type": header_X_Source_Type,
-        //         "X-Project-Id": header_X_Project_Id,
-        //         "X-Access": header_X_Access,
-        //     },
-        //     url:URI_MAP["gateway_send_msg"],
-        //     success: function(data){
-        //         console.log("send msg res:",data)
-        //     }
-        // });
     }
 
-    function initServerConfig(){
-        request(processServerConfig,"gateway_config",userInfo["token"],false,"GET",null,null);
-
-        // $.ajax({
-        //     type: "GET",
-        //     async:false,
-        //     headers: {
-        //         "X-Token":UserList[9].token,
-        //     },
-        //     url:URI_MAP["gateway_config"],
-        //     success: function(data){
-        //         console.log("data:",data)
-        //         processServerConfig(data.data);
-        //         // ServerConfig = data.data;
-        //     }
-        // });
-    }
 
     function total(data){
         // $.ajax({

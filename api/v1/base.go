@@ -82,7 +82,7 @@ func SendSms(c *gin.Context) {
 	// }
 
 	projectId, _ := request.GetProjectId(c)
-	dbNewId, err := apiServices().Sms.Send(projectId, sendSMSForm)
+	dbNewId, err := ApiServices().Sms.Send(projectId, sendSMSForm)
 	if err != nil {
 		httpresponse.FailWithMessage("失败了："+err.Error(), c)
 	} else {
@@ -109,7 +109,7 @@ func SendEmail(c *gin.Context) {
 	}
 
 	projectId, _ := request.GetProjectId(c)
-	dbNewId, err := apiServices().Email.Send(projectId, sendEmailForm)
+	dbNewId, err := ApiServices().Email.Send(projectId, sendEmailForm)
 	if err != nil {
 		httpresponse.FailWithMessage("失败了："+err.Error(), c)
 	} else {
@@ -141,14 +141,14 @@ func ResetPasswordSms(c *gin.Context) {
 		return
 	}
 
-	err := apiServices().Sms.Verify(form.SmsRuleId, form.Mobile, form.SmsAuthCode)
+	err := ApiServices().Sms.Verify(form.SmsRuleId, form.Mobile, form.SmsAuthCode)
 	if err != nil {
 		httpresponse.FailWithMessage(err.Error(), c)
 		return
 	}
 
 	uid, _ := request.GetUid(c)
-	err = apiServices().User.ChangePassword(uid, form.NewPassword)
+	err = ApiServices().User.ChangePassword(uid, form.NewPassword)
 	if err != nil {
 		httpresponse.FailWithMessage("修改失败:"+err.Error(), c)
 	} else {
@@ -182,7 +182,7 @@ func Register(c *gin.Context) {
 	}
 
 	header, _ := request.GetMyHeader(c)
-	err, userInfo := apiServices().User.RegisterByUsername(R, header)
+	err, userInfo := ApiServices().User.RegisterByUsername(R, header)
 	if err != nil {
 		// global.V.Base.Zap.Error("注册失败", zap.Any("err", err))
 		httpresponse.FailWithAll(userInfo, "注册失败:"+err.Error(), c)
@@ -213,13 +213,13 @@ func RegisterSms(c *gin.Context) {
 		Test:     model.USER_TEST_FALSE,
 	}
 
-	err := apiServices().Sms.Verify(registerSmsForm.SmsRuleId, registerSmsForm.Mobile, registerSmsForm.SmsAuthCode)
+	err := ApiServices().Sms.Verify(registerSmsForm.SmsRuleId, registerSmsForm.Mobile, registerSmsForm.SmsAuthCode)
 	if err != nil {
 		httpresponse.FailWithMessage(err.Error(), c)
 		return
 	}
 	header, _ := request.GetMyHeader(c)
-	err, userInfo := apiServices().User.Register(user, header, user_center.UserRegInfo{})
+	err, userInfo := ApiServices().User.Register(user, header, user_center.UserRegInfo{})
 	if err != nil {
 		// global.V.Base.Zap.Error("注册失败", zap.Any("err", err))
 		httpresponse.FailWithAll(userInfo, "注册失败:"+err.Error(), c)
@@ -255,7 +255,7 @@ func CheckMobileExist(c *gin.Context) {
 		return
 	}
 
-	_, empty, err := apiServices().User.FindUserByMobile(form.Mobile)
+	_, empty, err := ApiServices().User.FindUserByMobile(form.Mobile)
 	util.MyPrint("CheckMobileExist empty:", empty)
 	if err != nil {
 		httpresponse.FailWithMessage("服务器错误，请等待或重试", c)
@@ -294,7 +294,7 @@ func CheckUsernameExist(c *gin.Context) {
 		return
 	}
 
-	_, empty, err := apiServices().User.FindUserByUsername(form.Username)
+	_, empty, err := ApiServices().User.FindUserByUsername(form.Username)
 	util.MyPrint("CheckMobileExist empty:", empty)
 	if err != nil {
 		httpresponse.FailWithMessage("服务器错误，请等待或重试", c)
@@ -339,7 +339,7 @@ func CheckEmailExist(c *gin.Context) {
 		return
 	}
 
-	_, empty, err := apiServices().User.FindUserByEmail(form.Email)
+	_, empty, err := ApiServices().User.FindUserByEmail(form.Email)
 	if err != nil {
 		httpresponse.FailWithMessage("服务器错误，请等待或重试", c)
 	} else {
@@ -395,16 +395,16 @@ func Login(c *gin.Context) {
 
 	util.MyPrint(L)
 
-	failedCnt, checkLoginFailedCntErr := apiServices().User.CheckLoginFailedLimit(c.ClientIP(), L.Username, global.C.Login.MaxFailedCnt, global.C.Login.FailedLimitTime)
+	failedCnt, checkLoginFailedCntErr := ApiServices().User.CheckLoginFailedLimit(c.ClientIP(), L.Username, global.C.Login.MaxFailedCnt, global.C.Login.FailedLimitTime)
 	if checkLoginFailedCntErr != nil {
 		// httpresponse.FailWithMessage(checkLoginFailedCntErr.Error(), c)
 		// return
 	}
 	// 先从DB中做比对
 	U := &model.User{Username: L.Username, Password: L.Password}
-	err, user := apiServices().User.Login(U)
+	err, user := ApiServices().User.Login(U)
 	if err != nil {
-		apiServices().User.IncrLoginFailedLimit(c.ClientIP(), L.Username)
+		ApiServices().User.IncrLoginFailedLimit(c.ClientIP(), L.Username)
 		errMsg := "用户名不存在或者密码错误"
 		if global.C.Login.MaxFailedCnt > 0 {
 			balance := global.C.Login.MaxFailedCnt - failedCnt
@@ -412,7 +412,7 @@ func Login(c *gin.Context) {
 		}
 		httpresponse.FailWithMessage(errMsg, c)
 	} else {
-		loginType := apiServices().User.TurnRegByUsername(L.Username)
+		loginType := ApiServices().User.TurnRegByUsername(L.Username)
 		// DB比较OK，开始做JWT处理
 		loginResponse, err := tokenNext(c, user, loginType)
 		if err != nil {
@@ -440,13 +440,13 @@ func LoginSms(c *gin.Context) {
 	var L request.LoginSMS
 	c.ShouldBind(&L)
 
-	err := apiServices().Sms.Verify(L.SmsRuleId, L.Mobile, L.SmsAuthCode)
+	err := ApiServices().Sms.Verify(L.SmsRuleId, L.Mobile, L.SmsAuthCode)
 	if err != nil {
 		httpresponse.FailWithMessage(err.Error(), c)
 		return
 	}
 
-	user, err := apiServices().User.LoginSms(L.Mobile)
+	user, err := ApiServices().User.LoginSms(L.Mobile)
 	if err != nil {
 		httpresponse.FailWithMessage(err.Error(), c)
 		return
@@ -490,7 +490,7 @@ func LoginThird(c *gin.Context) {
 	// 先从DB中做比对
 	// U := &model.User{ThirdId: L.Code}
 	header, _ := request.GetMyHeader(c)
-	user, newReg, err := apiServices().User.LoginThird(L, header)
+	user, newReg, err := ApiServices().User.LoginThird(L, header)
 	if err != nil {
 		httpresponse.FailWithMessage("用户名不存在或者密码错误 ,err:"+err.Error(), c)
 	} else {
@@ -550,12 +550,12 @@ func AccessToken(c *gin.Context) {
 	}
 
 	U := &model.User{Username: projectInfo.Name, Password: "123456"}
-	err, user := apiServices().User.Login(U)
+	err, user := ApiServices().User.Login(U)
 	if err != nil {
 		httpresponse.FailWithMessage("未找到该用户", c)
 		return
 	}
-	loginType := apiServices().User.TurnRegByUsername(projectInfo.Name)
+	loginType := ApiServices().User.TurnRegByUsername(projectInfo.Name)
 	// DB比较OK，开始做JWT处理
 	loginResponse, err := tokenNext(c, user, loginType)
 	if err != nil {

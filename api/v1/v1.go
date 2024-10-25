@@ -5,7 +5,7 @@ import "zgoframe/service"
 
 var apiServicesMount *service.MyService
 
-func apiServices() *service.MyService {
+func ApiServices() *service.MyService {
 	if apiServicesMount == nil {
 		apiServicesMount = service.NewMyService()
 	}

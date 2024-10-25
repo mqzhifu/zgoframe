@@ -42,6 +42,7 @@ type RequestServiceAdapter struct {
 }
 
 func NewRequestServiceAdapter(ServiceDiscovery *util.ServiceDiscovery, grpcManager *util.GrpcManager, flag int, projectId int, log *zap.Logger) *RequestServiceAdapter {
+	log.Info("NewRequestServiceAdapter")
 	requestService := new(RequestServiceAdapter)
 	requestService.ServiceDiscovery = ServiceDiscovery
 	requestService.GrpcManager = grpcManager

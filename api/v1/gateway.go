@@ -36,7 +36,7 @@ func GatewayService(c *gin.Context) {
 	// }
 
 	fmt.Println(prefix+" ServiceName:"+serviceName, " funcName:"+funcName+" data:"+string(data))
-	backData, err := apiServices().Gateway.HttpCallGrpc(serviceName, funcName, "", data)
+	backData, err := ApiServices().Gateway.HttpCallGrpc(serviceName, funcName, "", data)
 	if err != nil {
 		fmt.Println(err)
 		httpresponse.FailWithMessage(err.Error(), c)
@@ -56,7 +56,7 @@ func GatewayService(c *gin.Context) {
 // @Success 200 {object} util.NetWayOption "dddd"
 // @Router /gateway/config [get]
 func GatewayConfig(c *gin.Context) {
-	httpresponse.OkWithAll(apiServices().Gateway.NetWayOption, "ok", c)
+	httpresponse.OkWithAll(ApiServices().Gateway.NetWayOption, "ok", c)
 	// httpresponse.OkWithAll(global.V.Gate.Option, "ok", c)
 
 }
@@ -118,7 +118,7 @@ func ActionMap(c *gin.Context) {
 // @Router /gateway/total [get]
 // @Success 200 {object} util.Conn "连接结构体"
 func GatewayTotal(c *gin.Context) {
-	myMetrics, _ := apiServices().Gateway.Netway.Metrics.GetAllByPrefix()
+	myMetrics, _ := ApiServices().Gateway.Netway.Metrics.GetAllByPrefix()
 	httpresponse.OkWithAll(myMetrics, "ok", c)
 	// mm, _ := prometheus.DefaultGatherer.Gather()
 	// for _, v := range mm {
@@ -141,7 +141,7 @@ func GatewayTotal(c *gin.Context) {
 // @Router /gateway/fd/list [get]
 // @Success 200 {object} util.Conn "连接结构体"
 func GatewayFDList(c *gin.Context) {
-	connManager := apiServices().Gateway.Netway.ConnManager
+	connManager := ApiServices().Gateway.Netway.ConnManager
 	if len(connManager.Pool) <= 0 {
 		emptyMap := make(map[int32]*util.Conn)
 		httpresponse.OkWithAll(emptyMap, "ok", c)
@@ -169,7 +169,7 @@ func GatewayFDList(c *gin.Context) {
 // @Router /gateway/send/msg [post]
 // @Success 200 {string} bbbb " "
 func GatewaySendMsg(c *gin.Context) {
-	connManager := apiServices().Gateway.Netway.ConnManager
+	connManager := ApiServices().Gateway.Netway.ConnManager
 	// if len(connManager.Pool) <= 0 {
 	//	msg := "失败，user pool = 0"
 	//	httpresponse.FailWithMessage(msg, c)
@@ -209,6 +209,6 @@ func GatewaySendMsg(c *gin.Context) {
 		ContentType: util.CONTENT_TYPE_JSON,
 	}
 
-	apiServices().Gateway.NativeServiceFuncRouter(msg)
+	ApiServices().Gateway.NativeServiceFuncRouter(msg)
 	httpresponse.OkWithAll(connManager.Pool, "ok", c)
 }

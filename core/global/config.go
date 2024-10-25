@@ -193,6 +193,7 @@ type AlertPush struct {
 }
 
 type Alert struct {
+	Status            string
 	SendMsgChannel    int
 	MsgTemplateRuleId int
 	SendSync          bool

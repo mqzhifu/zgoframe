@@ -98,6 +98,8 @@ func NewTwinAgora(op TwinAgoraOption) (*TwinAgora, error) {
 	}
 	twinAgora.Lang = lang
 
+	op.Log.Info("NewTwinAgora")
+
 	go twinAgora.ListeningBridgeMsg()
 	return twinAgora, nil
 }

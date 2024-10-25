@@ -17,7 +17,7 @@ func NewStaticFileSystem(static embed.FS, buildStatic string) *StaticFileSystem 
 	return fileSystem
 }
 
-// 这个是兼容模式，是正常硬盘上的物理文件，也可以是EDFS上的文件
+// 这个是兼容模式，是正常硬盘上的物理文件，也可以是 EDFS 上的文件
 func (staticFileSystem StaticFileSystem) GetStaticFileContent(pathFile string) (a string, err error) {
 	var content string
 	if staticFileSystem.BuildStatic == "on" {

@@ -36,6 +36,7 @@ func NewGateway(netWayOption util.NetWayOption, ServiceBridge *bridge.Bridge, Re
 	gateway.RequestServiceAdapter = RequestServiceAdapter
 	go gateway.ListeningBridgeMsg()
 
+	netWayOption.Log.Info("NewGateway success")
 	return gateway
 }
 

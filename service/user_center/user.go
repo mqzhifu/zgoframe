@@ -33,6 +33,9 @@ func NewUser(gorm *gorm.DB, redis *util.MyRedis, projectManager *util.ProjectMan
 	user.Redis = redis
 	user.ProjectManager = projectManager
 	user.Log = log
+
+	log.Info("NewUser")
+
 	return user
 }
 

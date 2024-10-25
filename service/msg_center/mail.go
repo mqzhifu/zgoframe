@@ -17,10 +17,13 @@ type Mail struct {
 	Log  *zap.Logger
 }
 
-func NewMail(gorm *gorm.DB, Log *zap.Logger) *Mail {
+func NewMail(gorm *gorm.DB, log *zap.Logger) *Mail {
 	mail := new(Mail)
 	mail.Gorm = gorm
-	mail.Log = Log
+	mail.Log = log
+
+	log.Info("NewMail")
+
 	return mail
 }
 

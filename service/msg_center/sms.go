@@ -26,6 +26,9 @@ func NewSms(gorm *gorm.DB, aliSms *util.AliSms, log *zap.Logger) *Sms {
 	sendSms.AliSms = aliSms
 	sendSms.Log = log
 	sendSms.TestNotRealSendSms = false
+
+	log.Info("NewSms")
+
 	return sendSms
 }
 
@@ -115,8 +118,8 @@ func (sms *Sms) Send(projectId int, info request.SendSMS) (recordNewId int, err 
 
 }
 
-//检测：已失效(未使用过)的 短信，并更新状态为：已失效
-//验证码类型的字段sms_log中没直接存，所以 expire_time > 0 即可.
+// 检测：已失效(未使用过)的 短信，并更新状态为：已失效
+// 验证码类型的字段sms_log中没直接存，所以 expire_time > 0 即可.
 func (sms *Sms) CheckExpireAndUpStatus() {
 	var smsLog model.SmsLog
 	now := util.GetNowTimeSecondToInt()
@@ -163,7 +166,7 @@ func (sms *Sms) CheckRule(rule model.SmsRule) error {
 	return nil
 }
 
-//检查一定周期内，发送次数
+// 检查一定周期内，发送次数
 func (sms *Sms) CheckLimiterPeriod(rule model.SmsRule, receiver string) error {
 	var count int64
 	now := util.GetNowTimeSecondToInt()
@@ -183,7 +186,7 @@ func (sms *Sms) CheckLimiterPeriod(rule model.SmsRule, receiver string) error {
 	return nil
 }
 
-//检查一天内，发送的总次数
+// 检查一天内，发送的总次数
 func (sms *Sms) CheckLimiterDay(rule model.SmsRule, receiver string) error {
 	var count int64
 
@@ -204,7 +207,7 @@ func (sms *Sms) CheckLimiterDay(rule model.SmsRule, receiver string) error {
 	return nil
 }
 
-//对 短信 验证码 进行校验
+// 对 短信 验证码 进行校验
 func (sms *Sms) Verify(ruleId int, mobile string, authCode string) error {
 	if ruleId <= 0 || mobile == "" || authCode == "" {
 		return errors.New("ruleId   || mobile   || authCode is empty")
@@ -266,7 +269,7 @@ func (sms *Sms) Verify(ruleId int, mobile string, authCode string) error {
 	return nil
 }
 
-//取出：当前天的起始时间  2022-02-25 00:00:00
+// 取出：当前天的起始时间  2022-02-25 00:00:00
 func GetNowDayStartTime() int64 {
 	timeStr := time.Now().Format("2006-01-02")
 	t, _ := time.Parse("2006-01-02", timeStr)

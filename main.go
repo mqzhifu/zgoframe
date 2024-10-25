@@ -98,7 +98,7 @@ var initializeVar *initialize.Initialize
 
 func main() {
 	// 编译时，打进去的两个参数：BuildTime 编译时间，编译的 git 版本号
-	fmt.Println("code , BuildTime:", BuildTime, " BuildGitVersion:", BuildGitVersion)
+	fmt.Println("code build CONST   , BuildTime:", BuildTime, " BuildGitVersion:", BuildGitVersion)
 	// 日志文件-前缀
 	prefix := "main "
 	// 处理指令行传入的参数

@@ -18,24 +18,24 @@ import (
 )
 
 type MyService struct {
-	User         *user_center.User           // 用户中心
-	Sms          *msg_center.Sms             // 短信服务
-	Email        *msg_center.Email           // 电子邮件服务
-	AliSms       *util.AliSms                // 阿里-短信业务
-	Gateway      *gateway.Gateway            // 网关服务
-	TwinAgora    *seed_business.TwinAgora    // 120远程专家指导
-	ConfigCenter *config_center.ConfigCenter // 配置中心
-	Cicd         *cicd.CicdManager           // 自动部署
-	Mail         *msg_center.Mail            // 站内信
-	GameMatch    *gamematch.GameMatch        // 游戏匹配
-	FrameSync    *frame_sync.FrameSync       // 游戏帧同步
-	Alert        *msg_center.Alert           // 报警
-	GrabOrder    *grab_order.GrabOrder       // 抢单服务
+	User                  *user_center.User             // 用户中心
+	Sms                   *msg_center.Sms               // 短信服务
+	Email                 *msg_center.Email             // 电子邮件服务
+	AliSms                *util.AliSms                  // 阿里-短信业务
+	Gateway               *gateway.Gateway              // 网关服务
+	TwinAgora             *seed_business.TwinAgora      // 120远程专家指导
+	ConfigCenter          *config_center.ConfigCenter   // 配置中心
+	Cicd                  *cicd.CicdManager             // 自动部署
+	Mail                  *msg_center.Mail              // 站内信
+	GameMatch             *gamematch.GameMatch          // 游戏匹配
+	FrameSync             *frame_sync.FrameSync         // 游戏帧同步
+	Alert                 *msg_center.Alert             // 报警
+	GrabOrder             *grab_order.GrabOrder         // 抢单服务
+	ServiceBridge         *bridge.Bridge                // 服务之间通信-桥连接
+	RequestServiceAdapter *bridge.RequestServiceAdapter // 请求3方服务 适配器
 	// StaticFileSystem *util.StaticFileSystem
 	// Match                 *gamematch.GameMatch        //匹配服务
 	// RoomManage            *frame_sync.RoomManager     //房间服务
-	ServiceBridge         *bridge.Bridge                //服务之间通信-桥连接
-	RequestServiceAdapter *bridge.RequestServiceAdapter //请求3方服务 适配器
 }
 
 var GateDefaultProtocol = int32(util.PROTOCOL_WEBSOCKET)
@@ -43,6 +43,7 @@ var GateDefaultContentType = int32(util.CONTENT_TYPE_PROTOBUF)
 
 // 内部服务，按说：一个项目里最多也就1-2个服务，其它的服务应该在其它项目，并且访问的时候通过HTTP/TCP，这里方便使用，先把其它服务当成一个类使用
 func NewMyService() *MyService {
+	global.V.Base.Zap.Info("NewMyService start")
 	var err error
 	myService := new(MyService)
 	// 创建一个 请求3方服务 的适配器，服务之间的请求/调用
@@ -55,7 +56,6 @@ func NewMyService() *MyService {
 		Flag:             bridge.REQ_SERVICE_METHOD_NATIVE,
 		Log:              global.V.Base.Zap,
 	}
-	fmt.Println("NewBridge:")
 	// 服务之间互相调用
 	myService.ServiceBridge, _ = bridge.NewBridge(ServiceBridgeOp)
 
@@ -72,21 +72,18 @@ func NewMyService() *MyService {
 		EmailReceiver:     global.C.Alert.EmailReceiver,
 		SendUid:           global.C.Alert.SendUid,
 	}
-	fmt.Println("NewAlert:")
+	global.V.Base.Zap.Info("NewAlert:")
 	myService.Alert, _ = msg_center.NewAlert(alertOption)
 	// 用户中心服务
 	if global.C.Service.User == "open" {
-		fmt.Println("Service.User:")
 		myService.User = user_center.NewUser(global.V.Base.Gorm, global.V.Base.Redis, global.V.Util.ProjectMng, global.V.Base.Zap)
 	}
 	// 站内信服务
 	if global.C.Service.Mail == "open" {
-		fmt.Println("Service.Mail:")
 		myService.Mail = msg_center.NewMail(global.V.Base.Gorm, global.V.Base.Zap)
 	}
 	// 短信服务
 	if global.C.Service.Sms == "open" {
-		fmt.Println("Service.Sms:")
 		myService.Sms = msg_center.NewSms(global.V.Base.Gorm, global.V.Util.AliSms, global.V.Base.Zap)
 	}
 	// 电子邮件服务
@@ -118,7 +115,6 @@ func NewMyService() *MyService {
 		}
 	}
 	if global.C.Service.TwinAgora == "open" {
-		fmt.Println("Service.TwinAgora:")
 		// 远程呼叫专家
 		twinAgoraOption := seed_business.TwinAgoraOption{
 			Log:                   global.V.Base.Zap,
@@ -136,7 +132,6 @@ func NewMyService() *MyService {
 	}
 	// 网关
 	if global.C.Gateway.Status == "open" {
-		fmt.Println("Service.Gateway:")
 		// 长连接通信 - 配置
 		netWayOption := util.NetWayOption{
 			ListenIp:            global.C.Gateway.ListenIp,  // 程序启动时监听的IP

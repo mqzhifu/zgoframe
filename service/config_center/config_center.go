@@ -48,6 +48,8 @@ func NewConfigCenter(Option ConfigCenterOption) (*ConfigCenter, error) {
 		util.ExitPrint(err)
 	}
 
+	Option.Log.Info("NewConfigCenter")
+
 	return configCenter, nil
 }
 

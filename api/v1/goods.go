@@ -20,7 +20,7 @@ func GoodsCreateOne(c *gin.Context) {
 	var L request.Goods
 	c.ShouldBind(&L)
 
-	insertId, err := apiServices().User.CreateGoods(L)
+	insertId, err := ApiServices().User.CreateGoods(L)
 	if err != nil {
 		httpresponse.FailWithMessage(err.Error(), c)
 	} else {
@@ -43,7 +43,7 @@ func OrdersCreateOne(c *gin.Context) {
 	var L request.Orders
 	c.ShouldBind(&L)
 
-	insertId, err := apiServices().User.CreateOrders(L)
+	insertId, err := ApiServices().User.CreateOrders(L)
 	if err != nil {
 		httpresponse.FailWithMessage(err.Error(), c)
 	} else {
@@ -66,7 +66,7 @@ func OrdersPayment(c *gin.Context) {
 	var L request.Payment
 	c.ShouldBind(&L)
 
-	err := apiServices().User.OrdersPayment(L)
+	err := ApiServices().User.OrdersPayment(L)
 	if err != nil {
 		httpresponse.FailWithMessage(err.Error(), c)
 	} else {

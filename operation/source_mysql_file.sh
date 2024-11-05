@@ -20,8 +20,8 @@ echo "" > all.sql
 
 for i in $dir
 do
-    cat "$DB_FILE_DIR/$i;" >> all.sql
+    cat "$DB_FILE_DIR/$i" >> all.sql
 done
 
-mysql -uroot -p123456 -h127.0.0.1 -e "drop database $DB_NAME"
-mysql -uroot -p123456 -h127.0.0.1 -e "create database $DB_NAME charset=utf8;show databases;use $DB_NAME;all.sql;"
+#mysql -uroot -p123456 -h127.0.0.1 -e "drop database $DB_NAME"
+#mysql -uroot -p123456 -h127.0.0.1 -e "create database $DB_NAME charset=utf8;show databases;use $DB_NAME;all.sql;"

@@ -13,3 +13,7 @@ docs
 static/upload
 static/download
 a.log
+node_modules
+.env
+*.log
+.cache
